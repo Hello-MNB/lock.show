@@ -3,10 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { PageShell, Wordmark, Loading, SourceLabel, LanguageToggle } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { SOURCE_STATUS } from '../../lib/constants.js'
-import { DEMO, demoPassportPayload } from '../../lib/demo.js'
+import { DEMO } from '../../lib/demo.js'
+import { getPublicPassport } from '../../lib/db.js'
 
-// Public, buyer-facing. Data comes from the server-enforced /api/passport/:id endpoint.
-// Firewall is enforced server-side — no score, no exact head-count, no gaps, no private fields.
+// Public, buyer-facing. NO server: reads LIVE via anon + RLS (getPublicPassport).
+// Firewall is enforced by the DB — published-gate + passport-ok RLS + the 016
+// column grants block score / exact head-count / gaps / private fields.
 export default function Passport() {
   const { T } = useLang()
   const { id } = useParams()
@@ -17,27 +19,18 @@ export default function Passport() {
   const [claims, setClaims] = useState([])
 
   useEffect(() => {
-    if (DEMO) {
-      setArtist(demoPassportPayload.artist)
-      setItems(demoPassportPayload.items)
-      setClaims(demoPassportPayload.claims)
-      setLoading(false)
-      return
-    }
-    (async () => {
+    let alive = true
+    ;(async () => {
       try {
-        const res = await fetch(`/api/passport/${id}`)
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}))
-          throw new Error(json.error || 'Not found')
-        }
-        const data = await res.json()
+        const data = await getPublicPassport(id)
+        if (!alive) return
         setArtist(data.artist)
         setItems(data.items ?? [])
         setClaims(data.claims ?? [])
       } catch { /* artist stays null → shows not-found */ }
-      finally { setLoading(false) }
+      finally { if (alive) setLoading(false) }
     })()
+    return () => { alive = false }
   }, [id])
 
   if (loading) return <Loading />

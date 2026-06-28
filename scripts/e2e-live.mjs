@@ -104,19 +104,29 @@ async function main() {
     }
   }
 
-  // ── 5 · publish + ANON firewall read ──
+  // ── 5 · NO-SECRET publish (owner sets published + writes snapshot under RLS) + ANON firewall ──
   const { error: pubErr } = await sb.from('artists').update({ published: true }).eq('id', artistId)
-  pubErr ? fail('5a publish (published=true)', pubErr) : pass('5a publish (artist.published=true) under org-RLS')
+  pubErr ? fail('5a publish (published=true)', pubErr) : pass('5a publish — owner set artist.published=true under RLS (no server)')
 
-  // 5b — anon reads only buyer-safe ROWS (published artist + passport-ok strong claims; mirror hidden)
-  const aArt = await anon.from('artists').select('id, stage_name, published').eq('id', artistId).maybeSingle()
-  const aClaims = await anon.from('claims').select('claim_type, verification_status').eq('artist_id', artistId)
+  // 5a2 — owner writes the buyer-safe immutable snapshot under RLS (pv_owner_insert / migration 017)
+  const snapItems = (await sb.from('profile_items').select('id, item_type, title, detail, item_date, public_url, source_status').eq('artist_id', artistId).eq('visibility', OK)).data || []
+  const snapClaims = (await sb.from('claims').select('id, claim_type, value, source_type, verification_status, reason_code, method_label').eq('artist_id', artistId).eq('visibility', OK).in('verification_status', STRONG)).data || []
+  const snapshot = { artist: { id: artistId, stage_name: 'E2E Artist', published: true }, items: snapItems, claims: snapClaims }
+  const { error: snapErr } = await sb.from('passport_versions').insert({ artist_id: artistId, snapshot })
+  if (!snapErr) pass('5a2 owner snapshot insert (pv_owner_insert / 017 active)', `${snapItems.length} items · ${snapClaims.length} claims`)
+  else if (/row-level|42501|policy/i.test(e(snapErr))) console.log(`⏳ 5a2 snapshot insert BLOCKED — apply migration 017 (pv_owner_insert). Live-read view is unaffected. [${e(snapErr).slice(0, 60)}]`)
+  else fail('5a2 owner snapshot insert', snapErr)
+
+  // 5b — anon LIVE read (the getPublicPassport path): published artist + passport-ok items/claims; mirror hidden
+  const aArt = await anon.from('artists').select('id, stage_name, published, photo_url, lineup_frequency_band, price_band').eq('id', artistId).maybeSingle()
+  const aItems = await anon.from('profile_items').select('id, item_type, title, source_status').eq('artist_id', artistId)
+  const aClaims = await anon.from('claims').select('claim_type, verification_status, method_label').eq('artist_id', artistId)
   const own = await sb.from('claims').select('id, visibility').eq('artist_id', artistId)
   const sees = !!aArt.data?.published
   const allStrong = (aClaims.data || []).every((c) => STRONG.includes(c.verification_status))
   const mirrorTotal = (own.data || []).filter((c) => c.visibility === MIRROR).length
   const mirrorHidden = mirrorTotal > 0 && (aClaims.data || []).length === (own.data || []).length - mirrorTotal
-  ;(sees && allStrong && mirrorHidden) ? pass('5b FIREWALL — anon reads only published + passport-ok rows', `anon ${(aClaims.data || []).length}/${(own.data || []).length} claims · ${mirrorTotal} mirror hidden`) : fail('5b FIREWALL row read', { message: `sees=${sees} allStrong=${allStrong} mirrorHidden=${mirrorHidden} anon=${JSON.stringify(aClaims.data || aClaims.error?.message)} own=${JSON.stringify(own.data)}` })
+  ;(sees && allStrong && mirrorHidden && !aItems.error) ? pass('5b NO-SECRET passport read — anon live-reads published + passport-ok (mirror hidden)', `artist✓ · ${(aItems.data || []).length} items · anon ${(aClaims.data || []).length}/${(own.data || []).length} claims · ${mirrorTotal} mirror hidden`) : fail('5b live passport read', { message: `sees=${sees} allStrong=${allStrong} mirrorHidden=${mirrorHidden} items=${aItems.error?.message || 'ok'} anon=${JSON.stringify(aClaims.data || aClaims.error?.message)}` })
 
   // 5c — COLUMN SECURITY (migration 016): anon must be DENIED private/PII columns
   const wa = await anon.from('artists').select('whatsapp_number').eq('id', artistId).maybeSingle()
@@ -124,6 +134,14 @@ async function main() {
   const waBlocked = !!wa.error
   const icBlocked = !!ic.error
   ;(waBlocked && icBlocked) ? pass('5c FIREWALL column security — anon DENIED private columns', `whatsapp_number=${waBlocked ? 'denied' : 'READABLE("' + wa.data?.whatsapp_number + '")'} · claims.internal_confidence=${icBlocked ? 'denied' : 'READABLE'}`) : fail('5c FIREWALL column security — anon read a PRIVATE column', { message: `whatsapp blocked=${waBlocked} (${wa.data?.whatsapp_number ?? wa.error?.message}) · internal_confidence blocked=${icBlocked}` })
+
+  // 5d — anon reads the immutable snapshot (pv_public_read); verify it is buyer-safe (no mirror/PII/score)
+  const aSnap = await anon.from('passport_versions').select('snapshot').eq('artist_id', artistId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  if (aSnap.data?.snapshot) {
+    const blob = JSON.stringify(aSnap.data.snapshot).toLowerCase()
+    const snapSafe = !blob.includes('mirror-only') && !blob.includes('whatsapp') && !blob.includes('internal_confidence')
+    snapSafe ? pass('5d anon reads immutable snapshot (pv_public_read) — buyer-safe', `${(aSnap.data.snapshot.items || []).length} items · ${(aSnap.data.snapshot.claims || []).length} claims`) : fail('5d snapshot firewall', { message: 'snapshot blob contains mirror/PII/score token' })
+  } else console.log('⏳ 5d snapshot read — none yet (apply migration 017 so publish writes one).')
 
   // ── 6 · demand + seat-limit trigger ──
   const { error: arErr } = await anon.from('availability_requests').insert({ artist_id: artistId, requester_name: 'E2E Booker', event_type: 'Club night', location: 'Tel Aviv', capacity_band: '300–800', status: 'new' })

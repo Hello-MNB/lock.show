@@ -1013,3 +1013,10 @@ grant select (id, artist_id, item_type, title, detail, item_date, public_url, so
 revoke select on public.claims from anon;
 grant select (id, artist_id, claim_type, value, source_type, verification_status, reason_code, method_label)
   on public.claims to anon;
+
+-- ============================================================
+-- (017) owner publish snapshot — mirrors migrations/017_owner_publish_snapshot.sql
+-- ============================================================
+drop policy if exists pv_owner_insert on public.passport_versions;
+create policy pv_owner_insert on public.passport_versions for insert
+  with check (public.can_access_artist(artist_id));

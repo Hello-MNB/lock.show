@@ -1,7 +1,7 @@
 import { supabase } from './supabase.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
-import { DEMO, demoArtist, demoArtist2, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit } from './demo.js'
+import { DEMO, demoArtist, demoArtist2, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload } from './demo.js'
 
 // In DEMO mode every function returns local fixtures (no Supabase client exists).
 
@@ -209,13 +209,64 @@ export async function updateItemVisibility(id, visibility) {
   if (error) throw error
 }
 
-// ── Passport publish (server builds the immutable snapshot) ──
+// ── Public Passport — buyer view, NO server (anon + RLS, firewall via 016) ──
+// The artist row is visible to anon only when published (artists_public_read);
+// items/claims are RLS-filtered to passport-ok (items/claims_public_read); the
+// 016 column grants block PII/score/raw-timestamp. So a direct anon read is
+// firewall-safe — no service-role, no /api/passport. getArtist() already selects
+// buyer-safe columns only.
+export async function getPublicPassport(id) {
+  if (DEMO) return demoPassportPayload
+  const artist = await getArtist(id) // null if not published (RLS hides it from anon)
+  if (!artist || !artist.published) return { artist: null, items: [], claims: [] }
+  const [itemsRes, claimsRes] = await Promise.all([
+    supabase.from('profile_items')
+      .select('id, item_type, title, detail, item_date, public_url, source_status')
+      .eq('artist_id', id).order('item_date', { ascending: false, nullsFirst: false }),
+    supabase.from('claims')
+      .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
+      .eq('artist_id', id),
+  ])
+  if (itemsRes.error) throw itemsRes.error
+  if (claimsRes.error) throw claimsRes.error
+  return { artist, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
+}
+
+// Owner-side immutable snapshot. The owner's RLS sees ALL visibilities, so unlike
+// the anon read we MUST filter to passport-ok explicitly here (mirrors the server's
+// buildSafePayload). Buyer-safe columns only — never private/score columns.
+async function buildPassportSnapshot(artistId) {
+  const artist = await getArtist(artistId)
+  const [itemsRes, claimsRes] = await Promise.all([
+    supabase.from('profile_items')
+      .select('id, item_type, title, detail, item_date, public_url, source_status')
+      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
+    supabase.from('claims')
+      .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
+      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES),
+  ])
+  return { artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
+}
+
+// ── Passport publish — NO server. The connected owner flips published + writes a
+// buyer-safe immutable snapshot, both under RLS on their own artist. published=true
+// is the firewall gate (anon then reads live via getPublicPassport). The snapshot
+// (pv_owner_insert / migration 017) is the immutable record; it's best-effort so a
+// missing 017 never blocks publishing — the live-read view works regardless.
 export async function publishPassport(artistId) {
-  if (DEMO) return { ok: true, published: true }
-  const res = await fetch(`/api/publish/${artistId}`, { method: 'POST' })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.error || 'publish failed')
-  return json
+  if (DEMO) return { ok: true, published: true, snapshotWritten: true }
+  const { error: upErr } = await supabase.from('artists').update({ published: true }).eq('id', artistId)
+  if (upErr) throw upErr
+  let snapshotWritten = false
+  try {
+    const snapshot = await buildPassportSnapshot(artistId)
+    const { error: snapErr } = await supabase.from('passport_versions').insert({ artist_id: artistId, snapshot })
+    if (snapErr) throw snapErr
+    snapshotWritten = true
+  } catch (e) {
+    console.warn('[publish] immutable snapshot deferred (apply migration 017 pv_owner_insert):', e?.message || e)
+  }
+  return { ok: true, published: true, snapshotWritten }
 }
 
 export async function unpublishArtist(artist) {
