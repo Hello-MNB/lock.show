@@ -16,6 +16,11 @@ export const ROLE_VALUES = Object.values(ROLES)
 // The roles a user may pick at signup (excludes the internal operator role).
 export const SIGNUP_ROLES = [ROLES.ARTIST, ROLES.BOOKER, ROLES.PRODUCER, ROLES.AGENCY]
 
+// OAuth (Google/Facebook) stays OFF until the providers are configured in the
+// Supabase dashboard. Flip on with VITE_OAUTH_ENABLED=1 (e.g. Netlify env) — no
+// code change. Pilot auth = email + password (anon + RLS); never a dead button.
+export const OAUTH_ENABLED = import.meta.env.VITE_OAUTH_ENABLED === '1'
+
 // Bounded status vocabulary — the ONLY statuses the firewall permits in the UI
 // (חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך). Keys map to i18n status.*.
 export const STATUS = {

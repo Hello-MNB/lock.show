@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope } from '../../lib/db.js'
+import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
@@ -82,14 +82,9 @@ export default function EvidenceCapture() {
   async function process() {
     setProcessing(true); setError('')
     try {
-      const res = await fetch('/api/process-evidence', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ artistId }),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || T.common.error)
+      await processEvidence(artistId) // server (real AI) if present, else client-side canon stub
       await load()
-    } catch (err) { setError(err.message) } finally { setProcessing(false) }
+    } catch (err) { setError(err.message || T.common.error) } finally { setProcessing(false) }
   }
 
   if (loading) return <Loading />

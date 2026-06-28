@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
+import { StubClaimProcessor } from './ai/stub.js'
 import { DEMO, demoArtist, demoArtist2, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit } from './demo.js'
 
 // In DEMO mode every function returns local fixtures (no Supabase client exists).
@@ -140,6 +141,52 @@ export async function updateRequestStatus(id, status) {
   if (DEMO) return
   const { error } = await supabase.from('availability_requests').update({ status }).eq('id', id)
   if (error) throw error
+}
+
+// ── Evidence → method-labeled Claims ──────────────────────────────
+// The artist's core loop. Tries the serverless API first (enables real Anthropic
+// AI on a key — Phase-2). On a STATIC deploy with no server, falls back to the
+// SAME deterministic canon stub CLIENT-SIDE, so evidence→claim→method-label works
+// with the anon key alone (no server, no secret). FIREWALL: bounded statuses +
+// bands + method-labels only — never a score/percentile/head-count.
+const _clientProcessor = new StubClaimProcessor()
+async function processEvidenceClientSide(artistId) {
+  const { data: evidence, error } = await supabase
+    .from('evidence_artifacts').select('*').eq('artist_id', artistId).eq('status', 'submitted')
+  if (error) throw error
+  const claims = []
+  for (const ev of evidence ?? []) {
+    const labelled = await _clientProcessor.label(ev)
+    const claim = {
+      artist_id: artistId, evidence_id: ev.id,
+      claim_type: labelled.claim_type || 'claim',
+      value: labelled.value || ev.value || null,
+      source_type: ev.source_type,
+      verification_status: labelled.status,
+      verified_by: 'system', verified_at: new Date().toISOString(),
+      visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
+      extraction_method: 'mock', model_version: 'mock-v1',
+      reason_code: labelled.reason || null,
+    }
+    const { data: inserted, error: cErr } = await supabase.from('claims').insert(claim).select().single()
+    if (cErr) throw cErr
+    claims.push(inserted)
+    await supabase.from('evidence_artifacts').update({ status: 'processed' }).eq('id', ev.id)
+  }
+  return { processed: claims.length, ai: 'client-stub', claims }
+}
+
+export async function processEvidence(artistId) {
+  if (DEMO) return { processed: demoClaims.length, ai: 'demo', claims: demoClaims }
+  try {
+    const res = await fetch('/api/process-evidence', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artistId }),
+    })
+    const ct = res.headers.get('content-type') || ''
+    if (res.ok && ct.includes('application/json')) return await res.json()
+  } catch { /* no server (static deploy) — fall through to the client-side stub */ }
+  return processEvidenceClientSide(artistId)
 }
 
 // ── Claims ─────────────────────────────────────────────── (extended)

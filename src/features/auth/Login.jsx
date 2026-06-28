@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, SocialAuthButtons, OrDivider, LanguageToggle } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { ROLES } from '../../lib/constants.js'
+import { ROLES, OAUTH_ENABLED } from '../../lib/constants.js'
 
 export default function Login() {
   const { T } = useLang()
@@ -63,10 +63,12 @@ export default function Login() {
         <LanguageToggle />
         <h1 className="text-xl font-bold text-soft">{T.login.title}</h1>
       </div>
-      <div className="card">
-        <SocialAuthButtons onOAuth={signInWithOAuth} />
-        <OrDivider />
-      </div>
+      {OAUTH_ENABLED && (
+        <div className="card">
+          <SocialAuthButtons onOAuth={signInWithOAuth} />
+          <OrDivider />
+        </div>
+      )}
       <form onSubmit={onSubmit} className="card">
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.login.email}>
