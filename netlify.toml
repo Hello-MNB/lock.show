@@ -1,0 +1,30 @@
+# GIGPROOF — Netlify build config (static frontend).
+# Production build (real anon+RLS login; OAuth gated off until VITE_OAUTH_ENABLED=1).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA client-side routing (react-router): every path serves index.html.
+# /api/* has no handler on a static deploy → returns index.html (non-JSON), which
+# makes the client fall back to the deterministic evidence→claims stub (B2).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ── Environment variables to set in Netlify → Site settings → Environment ──
+# (PUBLIC / publishable — safe to expose; NEVER commit secrets to git)
+#   VITE_SUPABASE_URL       = https://qexfndiyallwqhhzeerd.supabase.co
+#   VITE_SUPABASE_ANON_KEY  = sb_publishable_…   (the publishable key)
+#   VITE_OAUTH_ENABLED      = 1   (only after Google/Facebook providers are configured)
+#
+# NOTE — server-dependent features (server /api/* + service-role) are NOT served by
+# a static deploy: publish-snapshot (/api/publish), public Passport serving
+# (/api/passport), real Anthropic AI, producer-confirm. The no-secret core
+# (login · onboarding · evidence→claims via the B2 stub · availability requests ·
+# org management) works on static against Supabase + RLS. For the buyer-facing
+# Passport + publish, deploy the server too (Vercel via vercel.json + the
+# service-role env) — see the launch report.
