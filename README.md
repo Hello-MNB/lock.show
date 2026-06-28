@@ -1,42 +1,69 @@
-# GIGPROOF — local app
+# GIGPROOF
 
-Real, end-to-end app for all three users (artist · agency · booker), built from the
-MD canon (START HERE, Screen Registry, Technical Spec, Functional Flow, Passport Spec).
-Runs and is tested **fully on your machine**; deploy + domain come later with no rewrite.
+Pre-booking proof tool for Israeli booking managers / אמרגנים: evaluate an unfamiliar
+artist via standardized, method-labeled evidence — **before** risking your name.
+Not an EPK, not a CRM. Draw is shown as **bands only**; the firewall forbids any
+score / percentile / ranking / exact head-count.
 
-## Stack
-- **Frontend:** React + Vite + Tailwind (Hebrew RTL, mobile-first)
-- **Backend:** Supabase (Postgres + Auth + Row-Level Security + Storage) — free cloud project
-- **AI:** Anthropic Claude (evidence → labelled claims), via a small local API server
-  (`server/index.js`). Runs in deterministic **mock** mode until you add a key, then
-  switches to the real API automatically.
+- **Stack:** React + Vite + Tailwind · Supabase (Auth + Postgres + RLS + Storage) · Express API (→ Vercel serverless) · Anthropic Claude (stubbed until a key is added)
+- **Language:** English is primary (LTR). Hebrew is a full RTL localization — toggle in-app. `dir`/`lang` flip automatically.
+- **Users:** artist · agency · booker · operator (admin)
 
-## One-time setup
-1. **Supabase:** create a free project at https://supabase.com → copy the Project URL +
-   anon key (Settings → API). In **SQL Editor**, paste & run `supabase/schema.sql`.
-2. **Env:** copy `.env.local.example` → `.env.local`, fill in the values.
-3. **Install:** `npm install`
+## Quick start (local)
 
-## Run (local)
-```
+```bash
+npm install
 npm run dev
 ```
-- Web app → http://localhost:5173
-- AI/API server → http://localhost:8787 (health: /api/health)
+- Web app → http://localhost:5173  (loads in English; switch to Hebrew RTL via the header toggle)
+- API/AI server → http://localhost:8787  (health: `/api/health`)
 
-## The end-to-end test (the "real product" slice)
-1. Sign up as an **artist** → consent → onboarding (identity, links, draw bands, experience, readiness) → publish.
-2. Open **Add / process evidence** → add a file or a draw band → **"עבד את ההוכחות"** →
-   the AI labels each into a Claim (`מאומת` / `נתמך` / `מדווח עצמי`).
-3. View the public **Passport** → it renders from published claims/items (draw as bands, no score).
-4. As a **booker**, tap **"בדוק זמינות"** → submit the form → confirmation.
-5. As the **agency** that owns the artist, open **בקשות זמינות** → see the request → mark replied/closed.
+The app loads even before the DB is configured (it shows a setup notice instead of crashing).
 
-## Firewall (enforced in UI + data)
-Draw is stored & shown as **bands / booleans** with a source label; **never** a score,
-percentile, prediction, "bookability %", or an exact head-count. Bounded statuses only:
-חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך.
+## One-time setup (DB + seed)
 
-## Deploy later (no rewrite)
-The same Supabase project + this frontend deploy to Vercel; `server/` becomes a serverless
-function. See `../GIGPROOF-APIs-and-Accounts-Checklist.md`.
+Needs a Supabase **Personal Access Token** (`sbp_…`, from supabase.com/dashboard/account/tokens).
+
+1. Add to `.env.local` (git-ignored): `SUPABASE_ACCESS_TOKEN=sbp_…`
+2. `node scripts/setup-remote.mjs` — applies `supabase/apply_to_supabase.sql` to the project and writes the real `service_role` key into `.env.local`.
+3. `npm run seed` — creates 4 test users + realistic Hebrew data.
+4. Restart `npm run dev`.
+
+> Without the access token you can instead apply `supabase/apply_to_supabase.sql` manually in the Supabase SQL Editor and paste the `service_role` key into `.env.local`, then run `npm run seed`.
+>
+> For a clean **signup** test, disable "Confirm email" in the Supabase Auth settings (otherwise signup requires clicking an emailed link).
+
+### Test users (after `npm run seed`) — password for all: `Gigproof!2026`
+| Persona | Email | Lands on |
+|---|---|---|
+| Artist | `artist@gigproof.test` | `/artist/home` |
+| Agency | `agency@gigproof.test` | `/agency` |
+| Booker | `booker@gigproof.test` | `/discover` |
+| Operator | `operator@gigproof.test` | `/admin` |
+
+## Flows to verify (QA, once the DB is live)
+
+1. **Auth + routing** — sign in as each persona above → lands on the correct home. Sign up a new email → role select → consent → onboarding.
+2. **Artist spine** — onboarding (identity → links → draw bands → experience → readiness → publish) → dashboard/Mirror (next-actions, no score) → Readiness (bounded status chips) → public Passport renders from the published snapshot (bands only).
+3. **Evidence → AI(stub) → claims** — `/evidence/:artistId`: upload a file or add a band → "Process & verify" → claims appear with source labels (verified / supporting / self-reported). Stub is deterministic and varied.
+4. **Claim review** — `/artist/claims`: flip a claim mirror-only ↔ passport-ok; "Refresh public profile" re-snapshots.
+5. **Booker → request** — open `/passport/<artistId>` (no login) → "Check availability" → submit → confirmation (+ WhatsApp deep-link if the artist set a number).
+6. **Agency inbox** — sign in as agency → `/agency/requests` → mark requests replied/closed; roster shows bounded status chips.
+7. **Operator console** — sign in as operator → `/admin` → stats, all artists (publish toggle), all requests, recent claims.
+8. **i18n + RTL** — toggle EN⇄HE on any screen; layout flips LTR⇄RTL; selection persists.
+
+## Firewall (enforced server-side)
+The public Passport is served by `/api/passport/:id` from an immutable snapshot built with an **explicit safe-column list** — it physically cannot return a score, percentile, exact head-count, gaps, or any private/mirror-only value. Draw is bands/booleans with a method label; statuses are only חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך.
+
+## Deploy (config ready; not yet deployed)
+`vercel.json` builds the SPA and routes `/api/*` to `api/index.js` (the same Express app; `server/index.js` skips `listen()` when `VERCEL=1`). To deploy: connect the repo to Vercel and set env vars (`VITE_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_*`) in the dashboard.
+
+## Scripts
+| Script | What |
+|---|---|
+| `npm run dev` | Vite (5173) + API server (8787) |
+| `npm run build` | Production build → `dist/` |
+| `npm run seed` | Seed 4 test users + Hebrew data (needs DB + service key) |
+| `node scripts/setup-remote.mjs` | Apply schema + fetch service key (needs access token) |
+
+See `CLAUDE.md` / `ARCHITECTURE.md` / `BUILD-TASKS.md` for canon, architecture rules, and task status.

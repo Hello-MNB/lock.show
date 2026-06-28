@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
-import { recordConsents } from '../../lib/db.js'
+import { recordConsentScope } from '../../lib/db.js'
 import { PageShell, Wordmark, ErrorNote } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
@@ -12,19 +12,23 @@ export default function ConsentLegal() {
   const nav = useNavigate()
   const [privacy, setPrivacy] = useState(false)
   const [processing, setProcessing] = useState(false)
-  const [evidence, setEvidence] = useState(false)
   const [marketing, setMarketing] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const allRequired = privacy && processing && evidence
+  // First gate: privacy + processing (required) before any evidence processing.
+  // Third-party evidence consent is collected inline in Evidence; publish consent
+  // is collected at publish time. Marketing stays optional here.
+  const allRequired = privacy && processing
 
   async function accept() {
     if (!allRequired) { setError(T.consent.allRequired); return }
     setBusy(true)
     setError('')
     try {
-      await recordConsents(user.id, { marketing })
+      await recordConsentScope(user.id, 'privacy-policy')
+      await recordConsentScope(user.id, 'data-processing')
+      await recordConsentScope(user.id, 'marketing', { status: marketing ? 'accepted' : 'declined', marketing_opt_in: marketing })
       logEvent(EVENTS.CONSENT_ACCEPTED, { marketing })
       nav('/onboarding')
     } catch (e) {
@@ -59,15 +63,8 @@ export default function ConsentLegal() {
           label={T.consent.processing}
           required
         />
-        {/* 3. Third-party evidence (required) */}
-        <ConsentBox
-          checked={evidence}
-          onChange={setEvidence}
-          title={T.consent.evidenceTitle}
-          label={T.consent.evidence}
-          required
-        />
-        {/* 4. Marketing (optional) */}
+        {/* Third-party evidence consent is now collected inline in the Evidence step. */}
+        {/* Marketing (optional) */}
         <ConsentBox
           checked={marketing}
           onChange={setMarketing}

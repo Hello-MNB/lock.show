@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote } from '../../components/ui.jsx'
+import { useLang } from '../../context/LangContext.jsx'
 
 export default function ResetPassword() {
+  const { T } = useLang()
   const nav = useNavigate()
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -21,7 +23,7 @@ export default function ResetPassword() {
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (password !== confirm) { setError('הסיסמאות אינן תואמות'); return }
+    if (password !== confirm) { setError(T.reset.mismatch); return }
     setError('')
     setLoading(true)
     try {
@@ -30,7 +32,7 @@ export default function ResetPassword() {
       setDone(true)
       setTimeout(() => nav('/'), 2000)
     } catch (e) {
-      setError(e.message || 'שגיאה באיפוס הסיסמה')
+      setError(e.message || T.reset.saveError)
     } finally {
       setLoading(false)
     }
@@ -41,8 +43,8 @@ export default function ResetPassword() {
       <PageShell max="max-w-sm">
         <div className="card text-center mt-20">
           <div className="text-4xl mb-3">✅</div>
-          <p className="font-bold text-soft">הסיסמה עודכנה!</p>
-          <p className="text-sm text-muted mt-1">מועבר לאפליקציה…</p>
+          <p className="font-bold text-soft">{T.reset.doneTitle}</p>
+          <p className="text-sm text-muted mt-1">{T.reset.redirecting}</p>
         </div>
       </PageShell>
     )
@@ -54,9 +56,9 @@ export default function ResetPassword() {
         <div className="text-center mb-8"><Wordmark className="justify-center mb-3" /></div>
         <div className="card text-center">
           <Spinner className="mx-auto mb-3" />
-          <p className="text-muted text-sm">מאמת קישור איפוס…</p>
+          <p className="text-muted text-sm">{T.reset.verifying}</p>
           <p className="mt-4 text-xs text-muted">
-            הגעת ישירות לדף הזה? <Link to="/forgot-password" className="text-accent">בקש קישור חדש</Link>
+            {T.reset.directHit} <Link to="/forgot-password" className="text-accent">{T.reset.requestNew}</Link>
           </p>
         </div>
       </PageShell>
@@ -67,20 +69,20 @@ export default function ResetPassword() {
     <PageShell max="max-w-sm">
       <div className="text-center mb-8">
         <Wordmark className="justify-center mb-3" />
-        <h1 className="text-xl font-bold text-soft">סיסמה חדשה</h1>
+        <h1 className="text-xl font-bold text-soft">{T.reset.newTitle}</h1>
       </div>
       <form onSubmit={onSubmit} className="card">
         <ErrorNote>{error}</ErrorNote>
-        <Field label="סיסמה חדשה" hint="לפחות 6 תווים">
+        <Field label={T.reset.newLabel} hint={T.common.minChars}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
             value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>
-        <Field label="אימות סיסמה">
+        <Field label={T.reset.confirmLabel}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
             value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </Field>
         <button className="btn-primary w-full" disabled={loading}>
-          {loading ? <><Spinner /> שומר…</> : 'שמור סיסמה'}
+          {loading ? <><Spinner /> {T.common.saving}</> : T.reset.savePassword}
         </button>
       </form>
     </PageShell>

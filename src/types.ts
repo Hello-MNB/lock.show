@@ -1,7 +1,7 @@
 // Domain types for GIGPROOF — mirrors the DB schema in supabase/migrations/001_initial_schema.sql.
 // NOTE: internal_confidence is intentionally absent from Claim — never expose it.
 
-export type UserRole = 'artist' | 'agency' | 'booker'
+export type UserRole = 'artist' | 'agency' | 'booker' | 'operator'
 export type VerificationStatus = 'verified' | 'supporting' | 'self-reported' | 'not-assessable'
 export type Visibility = 'passport-ok' | 'mirror-only' | 'internal'
 export type EvidenceStatus = 'submitted' | 'processed' | 'error'

@@ -16,11 +16,6 @@ export function logEvent(name, props = {}) {
   } catch {}
 }
 
-export function getEvents() {
-  if (typeof localStorage === 'undefined') return []
-  try { return JSON.parse(localStorage.getItem(KEY) || '[]') } catch { return [] }
-}
-
 // Common event names (exhaustive list helps keep naming consistent)
 export const EVENTS = {
   SIGNUP: 'signup',

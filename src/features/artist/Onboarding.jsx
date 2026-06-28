@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, upsertArtist, listProfileItems, addProfileItem, deleteProfileItem } from '../../lib/db.js'
+import { getMyArtist, upsertArtist, listProfileItems, addProfileItem, deleteProfileItem, publishPassport, hasConsent, recordConsentScope } from '../../lib/db.js'
+import { SOURCE_STATUS } from '../../lib/constants.js'
 import { uploadFile } from '../../lib/storage.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -9,12 +10,13 @@ import { useLang } from '../../context/LangContext.jsx'
 const STEPS = 6
 
 function ProgressBar({ step }) {
+  const { T } = useLang()
   return (
     <div className="mb-6">
       <div className="h-1.5 w-full rounded-full bg-line overflow-hidden">
         <div className="h-full bg-accent transition-all" style={{ width: `${(step / STEPS) * 100}%` }} />
       </div>
-      <p className="mt-2 text-xs text-muted">שלב {step} מתוך {STEPS}</p>
+      <p className="mt-2 text-xs text-muted">{T.onboarding.stepOf(step, STEPS)}</p>
     </div>
   )
 }
@@ -111,8 +113,8 @@ function StepIdentity({ artist, save, user }) {
       <Field label={T.onboarding.stageName}><input className="field" value={f.stage_name} onChange={set('stage_name')} /></Field>
       <Field label={T.onboarding.genre}><input className="field" value={f.genre} onChange={set('genre')} /></Field>
       <Field label={T.onboarding.city}><input className="field" value={f.city} onChange={set('city')} /></Field>
-      <Field label={T.onboarding.oneLine}><input className="field" value={f.one_line} onChange={set('one_line')} placeholder="פרוגרסיב שממלא רחבות מתל אביב לאתונה" /></Field>
-      <Field label={T.onboarding.photo} hint="העלה קובץ או הדבק קישור לתמונה">
+      <Field label={T.onboarding.oneLine}><input className="field" value={f.one_line} onChange={set('one_line')} placeholder={T.onboarding.oneLinePlaceholder} /></Field>
+      <Field label={T.onboarding.photo} hint={T.onboarding.photoHint}>
         <input type="file" accept="image/*" onChange={onPhoto} className="text-sm text-muted mb-2" />
         {uploading && <Spinner />}
         <input className="field" dir="ltr" value={f.photo_url} onChange={set('photo_url')} placeholder="https://…" />
@@ -132,7 +134,7 @@ function StepLinks({ artist, items, refresh }) {
   async function add() {
     if (!url.trim()) return
     setBusy(true)
-    await addProfileItem({ artist_id: artist.id, item_type: 'link', title: url.trim(), public_url: url.trim(), source_status: 'public-verified' })
+    await addProfileItem({ artist_id: artist.id, item_type: 'link', title: url.trim(), public_url: url.trim(), source_status: SOURCE_STATUS.PUBLIC_VERIFIED })
     setUrl(''); await refresh(); setBusy(false)
   }
   async function remove(id) { await deleteProfileItem(id); await refresh() }
@@ -144,13 +146,13 @@ function StepLinks({ artist, items, refresh }) {
       <div className="flex gap-2 mb-4">
         <input className="field" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)}
           placeholder={T.onboarding.linkPlaceholder} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <button className="btn-primary" onClick={add} disabled={busy}>הוסף</button>
+        <button className="btn-primary" onClick={add} disabled={busy}>{T.common.add}</button>
       </div>
       <ul className="space-y-2">
         {links.map((l) => (
           <li key={l.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
             <span dir="ltr" className="truncate text-soft">{l.public_url}</span>
-            <button className="text-muted hover:text-red-400" onClick={() => remove(l.id)}>הסר</button>
+            <button className="text-muted hover:text-red-400" onClick={() => remove(l.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
@@ -178,9 +180,9 @@ function StepDraw({ artist, save }) {
 
       <Field label={T.onboarding.sellsTickets}>
         <div className="flex gap-2">
-          {[['כן', true], ['לא', false]].map(([t, v]) => (
+          {[[T.common.yes, true], [T.common.no, false]].map(([t, v]) => (
             <button key={t} onClick={() => pick('sells_tickets', v)}
-              className={`chip px-4 py-2 ${f.sells_tickets === v ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{t}</button>
+              className={`chip min-h-[44px] px-5 py-2 ${f.sells_tickets === v ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{t}</button>
           ))}
         </div>
       </Field>
@@ -197,7 +199,7 @@ function BandPicker({ label, options, value, onPick }) {
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button key={o} onClick={() => onPick(o)}
-            className={`chip px-3 py-2 ${value === o ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{o}</button>
+            className={`chip min-h-[44px] px-4 py-2 ${value === o ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{o}</button>
         ))}
       </div>
     </Field>
@@ -218,7 +220,7 @@ function StepExperience({ artist, items, refresh }) {
     await addProfileItem({
       artist_id: artist.id, item_type: f.item_type, title: f.title.trim(),
       item_date: f.item_date || null, public_url: f.public_url || null,
-      source_status: f.public_url ? 'public-verified' : 'artist-provided',
+      source_status: f.public_url ? SOURCE_STATUS.PUBLIC_VERIFIED : SOURCE_STATUS.ARTIST_PROVIDED,
     })
     setF({ item_type: f.item_type, title: '', item_date: '', public_url: '' })
     await refresh(); setBusy(false)
@@ -229,14 +231,14 @@ function StepExperience({ artist, items, refresh }) {
     <div className="card">
       <h2 className="text-lg font-bold text-soft mb-1">{T.onboarding.step4Title}</h2>
       <p className="text-sm text-muted mb-4">{T.onboarding.itemHelp}</p>
-      <Field label="סוג">
+      <Field label={T.onboarding.itemType}>
         <select className="field" value={f.item_type} onChange={set('item_type')}>
           {PROFILE_ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </Field>
-      <Field label="כותרת"><input className="field" value={f.title} onChange={set('title')} placeholder="שם האירוע / השותף" /></Field>
-      <Field label="תאריך (אופציונלי)"><input className="field" type="date" value={f.item_date} onChange={set('item_date')} /></Field>
-      <Field label="קישור ציבורי (אופציונלי)" hint="קישור הופך את הפריט ל'מאומת · רישום ציבורי'">
+      <Field label={T.onboarding.itemTitle}><input className="field" value={f.title} onChange={set('title')} placeholder={T.onboarding.itemTitlePlaceholder} /></Field>
+      <Field label={T.onboarding.itemDate}><input className="field" type="date" value={f.item_date} onChange={set('item_date')} /></Field>
+      <Field label={T.onboarding.itemUrl} hint={T.onboarding.itemUrlHint}>
         <input className="field" dir="ltr" value={f.public_url} onChange={set('public_url')} placeholder="https://…" />
       </Field>
       <button className="btn-ghost w-full mb-4" onClick={add} disabled={busy}>{T.onboarding.addItem}</button>
@@ -244,7 +246,7 @@ function StepExperience({ artist, items, refresh }) {
         {exp.map((i) => (
           <li key={i.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
             <span className="text-soft">{i.title}{i.item_date ? ` · ${i.item_date}` : ''}</span>
-            <button className="text-muted hover:text-red-400" onClick={() => remove(i.id)}>הסר</button>
+            <button className="text-muted hover:text-red-400" onClick={() => remove(i.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
@@ -273,8 +275,8 @@ function StepReadiness({ artist, save, user }) {
   return (
     <div className="card" onBlur={() => save(f)}>
       <h2 className="text-lg font-bold text-soft mb-4">{T.onboarding.step5Title}</h2>
-      <Field label={T.onboarding.setLength}><input className="field" value={f.set_length} onChange={set('set_length')} placeholder="60–90 דק׳" /></Field>
-      <Field label={T.onboarding.regions}><input className="field" value={f.regions} onChange={set('regions')} placeholder="מרכז, צפון" /></Field>
+      <Field label={T.onboarding.setLength}><input className="field" value={f.set_length} onChange={set('set_length')} placeholder={T.onboarding.setLengthPlaceholder} /></Field>
+      <Field label={T.onboarding.regions}><input className="field" value={f.regions} onChange={set('regions')} placeholder={T.onboarding.regionsPlaceholder} /></Field>
       <label className="flex items-center gap-3 text-soft mb-4">
         <input type="checkbox" checked={f.invoice_ready} onChange={(e) => { const v = e.target.checked; setF((p) => ({ ...p, invoice_ready: v })); save({ ...f, invoice_ready: v }) }} />
         {T.onboarding.invoice}
@@ -294,21 +296,56 @@ function StepReadiness({ artist, save, user }) {
 /* ── Step 6: review + publish ── */
 function StepReview({ artist, items, save, nav }) {
   const { T } = useLang()
+  const { user } = useAuth()
   const [busy, setBusy] = useState(false)
-  async function publish() {
+  const [needConsent, setNeedConsent] = useState(false)
+
+  async function doPublish() {
     setBusy(true)
     await save({ published: true })
+    // Build the immutable public snapshot (server, service-role). Best-effort:
+    // if the AI/API server isn't configured yet, publishing still succeeds and
+    // the passport falls back to a live build once the server key is added.
+    try { await publishPassport(artist.id) } catch { /* snapshot deferred */ }
     nav(`/passport/${artist.id}`)
   }
+
+  // Publish gate: require public-publish consent before going live (once).
+  async function publish() {
+    setBusy(true)
+    const ok = await hasConsent(user.id, 'public-publish')
+    setBusy(false)
+    if (!ok) { setNeedConsent(true); return }
+    await doPublish()
+  }
+
+  async function agreeAndPublish() {
+    setBusy(true)
+    try { await recordConsentScope(user.id, 'public-publish') } catch { /* non-blocking */ }
+    setNeedConsent(false)
+    await doPublish()
+  }
+
   return (
     <div className="card text-center">
       <h2 className="text-lg font-bold text-soft mb-2">{T.onboarding.step6Title}</h2>
-      <p className="text-muted mb-4">{artist.stage_name || 'האמן'} · {artist.genre} · {items.length} פריטים</p>
+      <p className="text-muted mb-4">{artist.stage_name || T.onboarding.theArtist} · {artist.genre} · {items.length} {T.onboarding.items}</p>
       {artist.photo_url && <img src={artist.photo_url} alt="" className="mx-auto mb-4 h-32 w-32 rounded-full object-cover" />}
-      <div className="flex flex-col gap-3">
-        <button className="btn-primary" onClick={publish} disabled={busy}>{busy ? <Spinner /> : T.onboarding.publish}</button>
-        <button className="btn-ghost" onClick={() => nav('/artist/home')} disabled={busy}>{T.onboarding.backToEdit}</button>
-      </div>
+      {needConsent ? (
+        <div className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-start">
+          <p className="font-bold text-soft mb-1">{T.consent.publishTitle}</p>
+          <p className="text-sm text-muted mb-4">{T.consent.publishBody}</p>
+          <div className="flex flex-col gap-2">
+            <button className="btn-primary" onClick={agreeAndPublish} disabled={busy}>{busy ? <Spinner /> : T.consent.publishAgree}</button>
+            <button className="btn-ghost" onClick={() => setNeedConsent(false)} disabled={busy}>{T.common.cancel}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <button className="btn-primary" onClick={publish} disabled={busy}>{busy ? <Spinner /> : T.onboarding.publish}</button>
+          <button className="btn-ghost" onClick={() => nav('/artist/home')} disabled={busy}>{T.onboarding.backToEdit}</button>
+        </div>
+      )}
     </div>
   )
 }

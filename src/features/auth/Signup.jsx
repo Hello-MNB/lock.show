@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, SocialAuthButtons, OrDivider, LanguageToggle } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -8,8 +8,9 @@ export default function Signup() {
   const { T } = useLang()
   const { signUp, signInWithOAuth } = useAuth()
   const nav = useNavigate()
+  const loc = useLocation()
   const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(loc.state?.email || '')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -20,7 +21,7 @@ export default function Signup() {
     setError('')
     setLoading(true)
     try {
-      const data = await signUp({ email, password, fullName, role: 'artist' })
+      const data = await signUp({ email, password, fullName })
       if (!data.session) {
         // Supabase requires email confirmation — user is not yet logged in.
         setConfirmPending(true)
@@ -42,12 +43,9 @@ export default function Signup() {
         </div>
         <div className="card text-center">
           <div className="text-4xl mb-3">📧</div>
-          <h2 className="text-lg font-bold text-soft mb-2">בדוק את תיבת הדואר שלך</h2>
-          <p className="text-sm text-muted mb-4">
-            שלחנו לך קישור אישור לכתובת <span className="text-soft" dir="ltr">{email}</span>.
-            <br />לחץ על הקישור כדי להפעיל את החשבון ואז חזור להתחבר.
-          </p>
-          <Link to="/login" className="btn-primary block">חזרה לכניסה</Link>
+          <h2 className="text-lg font-bold text-soft mb-2">{T.signup.confirmTitle}</h2>
+          <p className="text-sm text-muted mb-4">{T.signup.confirmBody(email)}</p>
+          <Link to="/login" className="btn-primary block">{T.signup.backToLogin}</Link>
         </div>
       </PageShell>
     )
@@ -73,7 +71,7 @@ export default function Signup() {
           <input className="field" type="email" dir="ltr" autoComplete="email"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>
-        <Field label={T.signup.password} hint="לפחות 6 תווים">
+        <Field label={T.signup.password} hint={T.common.minChars}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
             value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>

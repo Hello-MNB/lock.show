@@ -21,7 +21,7 @@ export default function RequestConfirmation() {
 
   useEffect(() => { getArtist(id).then(setArtist) }, [id])
 
-  const artistName = artist?.stage_name || loc.state?.artist_name || 'האמן'
+  const artistName = artist?.stage_name || loc.state?.artist_name || T.request.theArtist
   const requesterName = loc.state?.requester_name || ''
   const rawWa = artist?.whatsapp_number
   const waNumber = formatWaNumber(rawWa)

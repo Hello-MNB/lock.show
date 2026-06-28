@@ -1,11 +1,36 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase, isConfigured } from '../../lib/supabase.js'
-import { getProfile, upsertProfile } from '../../lib/db.js'
+import { getProfile } from '../../lib/db.js'
+import { DEMO } from '../../lib/demo.js'
 
 const AuthCtx = createContext(null)
 export const useAuth = () => useContext(AuthCtx)
 
+// DEMO: pick a persona (stored in localStorage) — no real auth, no Supabase.
+function DemoAuthProvider({ children }) {
+  const [role, setRole] = useState(() => localStorage.getItem('gigproof_demo_role') || null)
+  const setDemoRole = useCallback((r) => {
+    if (r) localStorage.setItem('gigproof_demo_role', r)
+    else localStorage.removeItem('gigproof_demo_role')
+    setRole(r)
+  }, [])
+  const user = role ? { id: 'demo-user', email: 'demo@gigproof.test' } : null
+  const profile = role ? { id: 'demo-user', role, full_name: 'Demo' } : null
+  const value = {
+    isConfigured: true, loading: false, session: user ? { user } : null,
+    user, profile, role, demo: true, setDemoRole,
+    reloadProfile: async () => {},
+    signUp: async () => ({}), signIn: async () => ({}), signInWithOAuth: async () => {},
+    signOut: async () => setDemoRole(null),
+  }
+  return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
+}
+
 export function AuthProvider({ children }) {
+  return DEMO ? <DemoAuthProvider>{children}</DemoAuthProvider> : <RealAuthProvider>{children}</RealAuthProvider>
+}
+
+function RealAuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null) // { id, role, full_name }
   const [loading, setLoading] = useState(true)
@@ -35,20 +60,17 @@ export function AuthProvider({ children }) {
     return () => sub.subscription.unsubscribe()
   }, [loadProfile])
 
-  const signUp = useCallback(async ({ email, password, fullName, role }) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  const signUp = useCallback(async ({ email, password, fullName }) => {
+    // Auth FIRST. No role/profile is created here — the user picks their type at
+    // /select (UserTypeSelect) AFTER auth, which creates the profile row. Keeps the
+    // flow uniform for email + OAuth: auth → choose user-type → route. The name is
+    // stashed in auth metadata so /select can persist it.
+    const { data, error } = await supabase.auth.signUp({
+      email, password, options: { data: { full_name: fullName ?? null } },
+    })
     if (error) throw error
-    const user = data.user
-    // data.session is null when Supabase requires email confirmation.
-    // Only write the profile row if we already have a live session.
-    // If not, the profile is created after the user confirms and logs in
-    // (RoleHome sends them to /select → UserTypeSelect creates the row).
-    if (user && data.session) {
-      await upsertProfile({ id: user.id, role: role ?? 'artist', full_name: fullName ?? null })
-      await loadProfile(user.id)
-    }
     return data
-  }, [loadProfile])
+  }, [])
 
   const signIn = useCallback(async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })

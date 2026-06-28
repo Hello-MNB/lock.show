@@ -1,5 +1,52 @@
-import { useState } from 'react'
+import { useState, useCallback, createContext, useContext } from 'react'
 import { useLang } from '../context/LangContext.jsx'
+import { STATUS, methodLabelFor } from '../lib/constants.js'
+
+// ── BottomSheet — mobile-first sheet (slides from the bottom in the thumb zone;
+// centered card on desktop). Controlled: <BottomSheet open onClose title>…</BottomSheet>.
+export function BottomSheet({ open, onClose, title, children }) {
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-card border-t sm:border border-line rounded-t-2xl sm:rounded-2xl p-5"
+        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+        {title && (
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-soft">{title}</h2>
+            <button onClick={onClose} aria-label="close" className="text-muted text-2xl leading-none min-h-[40px] px-2">×</button>
+          </div>
+        )}
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Toast — global, bottom-anchored (thumb zone). useToast().show(msg, 'ok'|'warn').
+const ToastCtx = createContext(null)
+export const useToast = () => useContext(ToastCtx) || { show: () => {} }
+export function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([])
+  const show = useCallback((msg, type = 'ok') => {
+    const id = Math.random().toString(36).slice(2)
+    setToasts((t) => [...t, { id, msg, type }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600)
+  }, [])
+  return (
+    <ToastCtx.Provider value={{ show }}>
+      {children}
+      <div className="fixed bottom-4 inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none">
+        {toasts.map((t) => (
+          <div key={t.id} role="status"
+            className={`pointer-events-auto rounded-xl px-4 py-2 text-sm font-bold shadow-lg ${t.type === 'warn' ? 'bg-warn text-ink' : 'bg-ok text-ink'}`}>
+            {t.msg}
+          </div>
+        ))}
+      </div>
+    </ToastCtx.Provider>
+  )
+}
 
 function GoogleIcon() {
   return (
@@ -21,6 +68,7 @@ function FacebookIcon() {
 }
 
 export function SocialAuthButtons({ onOAuth }) {
+  const { T } = useLang()
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
 
@@ -30,7 +78,7 @@ export function SocialAuthButtons({ onOAuth }) {
     try {
       await onOAuth(provider)
     } catch (e) {
-      setErr(e.message || 'שגיאה בכניסה עם רשת חברתית')
+      setErr(e.message || T.login.socialError)
       setBusy(false)
     }
   }
@@ -42,23 +90,24 @@ export function SocialAuthButtons({ onOAuth }) {
         className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface hover:bg-card text-soft text-sm font-medium transition-colors"
         onClick={() => handle('google')}>
         <GoogleIcon />
-        כניסה עם Google
+        {T.login.googleCta}
       </button>
       <button type="button" disabled={busy}
         className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface hover:bg-card text-soft text-sm font-medium transition-colors"
         onClick={() => handle('facebook')}>
         <FacebookIcon />
-        כניסה עם Facebook
+        {T.login.facebookCta}
       </button>
     </div>
   )
 }
 
 export function OrDivider() {
+  const { T } = useLang()
   return (
     <div className="flex items-center gap-3 my-5">
       <div className="flex-1 h-px bg-line" />
-      <span className="text-xs text-muted">או</span>
+      <span className="text-xs text-muted">{T.common.or}</span>
       <div className="flex-1 h-px bg-line" />
     </div>
   )
@@ -73,49 +122,61 @@ export function Spinner({ className = '' }) {
   )
 }
 
-export function Loading({ label = T.common.loading }) {
+export function Loading({ label }) {
+  const { T } = useLang()
   return (
     <div className="flex items-center justify-center gap-3 py-16 text-muted">
-      <Spinner /> <span>{label}</span>
+      <Spinner /> <span>{label ?? T.common.loading}</span>
     </div>
   )
 }
 
 // Bounded status pill — the ONLY status vocabulary the firewall permits.
+// UX §15.1: text + a distinct SHAPE icon (filled/half/empty/dash), never
+// color alone — satisfies WCAG 1.4.1 and the firewall (categorical, not a gauge).
 export function StatusChip({ status }) {
   const { T } = useLang()
   const map = {
-    strong: { t: T.status.strong, c: 'bg-ok/15 text-ok' },
-    developing: { t: T.status.developing, c: 'bg-warn/15 text-warn' },
-    missing: { t: T.status.missing, c: 'bg-gap/20 text-soft' },
-    notAssessable: { t: T.status.notAssessable, c: 'bg-gap/20 text-muted' },
+    [STATUS.STRONG]: { t: T.status.strong, c: 'bg-ok/15 text-ok', icon: '●' },
+    [STATUS.DEVELOPING]: { t: T.status.developing, c: 'bg-warn/15 text-warn', icon: '◐' },
+    [STATUS.MISSING]: { t: T.status.missing, c: 'bg-gap/20 text-soft', icon: '○' },
+    [STATUS.NOT_ASSESSABLE]: { t: T.status.notAssessable, c: 'bg-gap/20 text-muted', icon: '–' },
   }
-  const s = map[status] ?? map.notAssessable
-  return <span className={`chip ${s.c}`}>{s.t}</span>
+  const s = map[status] ?? map[STATUS.NOT_ASSESSABLE]
+  return <span className={`chip ${s.c}`}><span aria-hidden="true">{s.icon}</span> {s.t}</span>
 }
 
-// Quiet provenance label for a fact (verified / supporting / self-reported).
-export function SourceLabel({ status }) {
+// The 6 METHOD LABELS (firewall §3) — distinct SHAPE icon each (UX §15.1).
+// Producer-confirmed is strongest. Categorical icons, never a gauge.
+const METHOD_ICON = {
+  'producer-confirmed': { icon: '★', c: 'text-accent' },
+  'evidence-supported': { icon: '✓', c: 'text-ok' },
+  'source-linked': { icon: '↗', c: 'text-soft' },
+  'artist-declared': { icon: '✎', c: 'text-muted' },
+  'unable-to-verify': { icon: '?', c: 'text-muted' },
+  stale: { icon: '↻', c: 'text-warn' },
+}
+
+// Method label for a fact (the 6-label SSOT). Pass a claim's verification_status
+// as `status` and (optionally) its `methodLabel` override (e.g. producer-confirmed).
+export function SourceLabel({ status, methodLabel, expiresAt }) {
   const { T } = useLang()
-  const map = {
-    verified: { t: `${T.source.verified} · ${T.source.publicRecord}`, c: 'text-accent' },
-    supporting: { t: T.source.supporting, c: 'text-soft' },
-    'self-reported': { t: T.source.byArtist, c: 'text-muted' },
-  }
-  const s = map[status] ?? map['self-reported']
-  return <span className={`text-[11px] ${s.c}`}>{s.t}</span>
+  const key = methodLabelFor({ method_label: methodLabel, verification_status: status, expires_at: expiresAt })
+  const m = METHOD_ICON[key] ?? METHOD_ICON['artist-declared']
+  return <span className={`text-[11px] ${m.c}`}><span aria-hidden="true">{m.icon}</span> {T.methodLabel[key]}</span>
 }
 
 // Language toggle pill — place in any header.
 export function LanguageToggle() {
-  const { lang, setLang } = useLang()
+  const { lang, setLang, T } = useLang()
   return (
     <button
       onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
       className="text-xs font-semibold text-muted border border-line rounded-full px-3 py-1 hover:text-soft hover:border-soft transition"
-      title={lang === 'he' ? 'Switch to English' : 'עבור לעברית'}
+      title={T.common.switchLanguage}
+      aria-label={T.common.switchLanguage}
     >
-      {lang === 'he' ? 'EN' : 'עב'}
+      <span aria-hidden="true">🌐 </span>{T.common.langCode}
     </button>
   )
 }
@@ -126,7 +187,7 @@ export function Field({ label, hint, error, children }) {
       {label && <label className="label">{label}</label>}
       {children}
       {hint && !error && <p className="mt-1 text-xs text-muted">{hint}</p>}
-      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   )
 }
@@ -147,15 +208,6 @@ export function Wordmark({ className = '' }) {
   )
 }
 
-// Sticky bottom CTA bar (mobile-first CTA law: primary always reachable).
-export function StickyCTA({ children }) {
-  return (
-    <div className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-line bg-ink/95 px-4 py-3 backdrop-blur">
-      {children}
-    </div>
-  )
-}
-
 export function EmptyState({ title, action }) {
   return (
     <div className="card text-center">
@@ -167,5 +219,18 @@ export function EmptyState({ title, action }) {
 
 export function ErrorNote({ children }) {
   if (!children) return null
-  return <p className="mb-4 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{children}</p>
+  return <p role="alert" className="mb-4 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">{children}</p>
+}
+
+// Load-failure state with an optional retry. Use in place of a silent empty list.
+export function ErrorState({ title, onRetry }) {
+  const { T } = useLang()
+  return (
+    <div className="card text-center" role="alert">
+      <p className="text-soft">{title ?? T.common.error}</p>
+      {onRetry && (
+        <button onClick={onRetry} className="btn-ghost mt-4">{T.common.continue}</button>
+      )}
+    </div>
+  )
 }

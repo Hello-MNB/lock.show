@@ -1,6 +1,9 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
+import { useOrg } from './context/OrgContext.jsx'
 import { Loading } from './components/ui.jsx'
+import { ROLES } from './lib/constants.js'
+import { DEMO } from './lib/demo.js'
 
 import SetupNotice from './features/setup/SetupNotice.jsx'
 import Login from './features/auth/Login.jsx'
@@ -12,15 +15,25 @@ import Onboarding from './features/artist/Onboarding.jsx'
 import ArtistDashboard from './features/artist/ArtistDashboard.jsx'
 import ArtistReadiness from './features/artist/ArtistReadiness.jsx'
 import ClaimReview from './features/artist/ClaimReview.jsx'
+import OfferPayment from './features/artist/OfferPayment.jsx'
 import EvidenceCapture from './features/evidence/EvidenceCapture.jsx'
 import Passport from './features/passport/Passport.jsx'
 import AvailabilityRequest from './features/passport/AvailabilityRequest.jsx'
 import RequestConfirmation from './features/passport/RequestConfirmation.jsx'
 import AgencyDashboard from './features/agency/AgencyDashboard.jsx'
 import AgencyRequestsInbox from './features/agency/AgencyRequestsInbox.jsx'
+import RadarFeed from './features/agency/RadarFeed.jsx'
 import BookerHome from './features/booker/BookerHome.jsx'
+import ProducerHome from './features/producer/ProducerHome.jsx'
+import ProducerConfirm from './features/producer/ProducerConfirm.jsx'
+import AdminDashboard from './features/admin/AdminDashboard.jsx'
 import ForgotPassword from './features/auth/ForgotPassword.jsx'
 import ResetPassword from './features/auth/ResetPassword.jsx'
+import OrgSettings from './features/org/OrgSettings.jsx'
+import Members from './features/org/Members.jsx'
+import UpgradePlan from './features/org/UpgradePlan.jsx'
+import Billing from './features/org/Billing.jsx'
+import AcceptInvite from './features/org/AcceptInvite.jsx'
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth()
@@ -30,14 +43,42 @@ function RequireAuth({ children }) {
   return children
 }
 
+// Auth + role gate. A logged-in user on the wrong role's screen is bounced to
+// "/" (RoleHome), which redirects them to their OWN home — no dead-ends, no loop.
+function RequireRole({ role: need, children }) {
+  const { user, role, loading } = useAuth()
+  const loc = useLocation()
+  if (loading) return <Loading />
+  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
+  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
+  const ok = Array.isArray(need) ? need.includes(role) : role === need
+  if (!ok) return <Navigate to="/" replace />
+  return children
+}
+
+// Agency-feature gate: an agency is a GROWN booker-org. Access is granted by org
+// PLAN (isAgency) OR the legacy agency role — so an upgraded booker reaches the
+// agency screens on the SAME account, no migration, no role swap.
+function RequireAgency({ children }) {
+  const { user, role, loading } = useAuth()
+  const { isAgency } = useOrg()
+  const loc = useLocation()
+  if (loading) return <Loading />
+  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
+  if (role === ROLES.AGENCY || isAgency) return children
+  return <Navigate to="/" replace />
+}
+
 // Sends a logged-in user to the right home based on role.
 function RoleHome() {
   const { user, role, loading } = useAuth()
   if (loading) return <Loading />
   if (!user) return <Navigate to="/login" replace />
-  if (!role) return <Navigate to="/select" replace />
-  if (role === 'agency') return <Navigate to="/agency" replace />
-  if (role === 'booker') return <Navigate to="/discover" replace />
+  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
+  if (role === ROLES.OPERATOR) return <Navigate to="/admin" replace />
+  if (role === ROLES.AGENCY) return <Navigate to="/agency" replace />
+  if (role === ROLES.BOOKER) return <Navigate to="/discover" replace />
+  if (role === ROLES.PRODUCER) return <Navigate to="/producer" replace />
   return <Navigate to="/artist/home" replace />
 }
 
@@ -59,24 +100,41 @@ export default function App() {
       {/* universal settings (any role) */}
       <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
 
+      {/* org-first account model (any authed member; in-screen owner/admin guards) */}
+      <Route path="/org/settings" element={<RequireAuth><OrgSettings /></RequireAuth>} />
+      <Route path="/org/members" element={<RequireAuth><Members /></RequireAuth>} />
+      <Route path="/org/upgrade" element={<RequireAuth><UpgradePlan /></RequireAuth>} />
+      <Route path="/org/billing" element={<RequireAuth><Billing /></RequireAuth>} />
+      <Route path="/invite/:token" element={<AcceptInvite />} />
+
       {/* artist flow */}
-      <Route path="/consent" element={<RequireAuth><ConsentLegal /></RequireAuth>} />
-      <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-      <Route path="/artist/home" element={<RequireAuth><ArtistDashboard /></RequireAuth>} />
-      <Route path="/artist/readiness" element={<RequireAuth><ArtistReadiness /></RequireAuth>} />
-      <Route path="/artist/claims" element={<RequireAuth><ClaimReview /></RequireAuth>} />
-      <Route path="/evidence/:artistId" element={<RequireAuth><EvidenceCapture /></RequireAuth>} />
+      <Route path="/consent" element={<RequireRole role={ROLES.ARTIST}><ConsentLegal /></RequireRole>} />
+      <Route path="/onboarding" element={<RequireRole role={ROLES.ARTIST}><Onboarding /></RequireRole>} />
+      <Route path="/artist/home" element={<RequireRole role={ROLES.ARTIST}><ArtistDashboard /></RequireRole>} />
+      <Route path="/artist/readiness" element={<RequireRole role={ROLES.ARTIST}><ArtistReadiness /></RequireRole>} />
+      <Route path="/artist/claims" element={<RequireRole role={ROLES.ARTIST}><ClaimReview /></RequireRole>} />
+      <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}><OfferPayment /></RequireRole>} />
+      <Route path="/evidence/:artistId" element={<RequireRole role={ROLES.ARTIST}><EvidenceCapture /></RequireRole>} />
 
       {/* agency flow */}
-      <Route path="/agency" element={<RequireAuth><AgencyDashboard /></RequireAuth>} />
-      <Route path="/agency/requests" element={<RequireAuth><AgencyRequestsInbox /></RequireAuth>} />
+      <Route path="/agency" element={<RequireAgency><AgencyDashboard /></RequireAgency>} />
+      <Route path="/agency/requests" element={<RequireAgency><AgencyRequestsInbox /></RequireAgency>} />
+      <Route path="/agency/radar" element={<RequireAgency><RadarFeed /></RequireAgency>} />
+
+      {/* operator / admin */}
+      <Route path="/admin" element={<RequireRole role={ROLES.OPERATOR}><AdminDashboard /></RequireRole>} />
 
       {/* public — the wedge */}
       <Route path="/passport/:id" element={<Passport />} />
       <Route path="/passport/:id/request" element={<AvailabilityRequest />} />
       <Route path="/passport/:id/sent" element={<RequestConfirmation />} />
+      {/* producer (מפיק) magic-link claim confirmation — no login (P1) */}
+      <Route path="/confirm/:token" element={<ProducerConfirm />} />
       {/* booker discovery deferred post-validation; bookers open a passport via link */}
-      <Route path="/discover" element={<RequireAuth><BookerHome /></RequireAuth>} />
+      <Route path="/discover" element={<RequireRole role={ROLES.BOOKER}><BookerHome /></RequireRole>} />
+
+      {/* producer (מפיק) — confirmer; real action is the no-login magic-link (P1) */}
+      <Route path="/producer" element={<RequireRole role={ROLES.PRODUCER}><ProducerHome /></RequireRole>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -39,10 +39,12 @@
 - [x] ArtistReadiness: 4 axes with StatusChip (חזק/מתפתח/חסר-הוכחה/לא-ניתן-להעריך)
 - [x] Claims list with source labels (מאומת/נתמך/מדווח עצמי)
 
-## TASK 4 — Claim Review & Passport Approval ⬜
-- [ ] Claims review screen in Mirror: artist can flip claim visibility mirror-only → passport-ok
-- [ ] Passport snapshot: on publish, write `passport_versions` row (immutable snapshot)
-- [ ] Server Passport endpoint reads from snapshot, not live claims
+## TASK 4 — Claim Review & Passport Approval ✅ (code-complete; happy-path pending live DB + real service_role key)
+- [x] Claims review screen in Mirror: artist can flip claim visibility mirror-only ↔ passport-ok (`ClaimReview.jsx`)
+- [x] Passport snapshot: on publish, server writes immutable `passport_versions` row (`POST /api/publish/:id`)
+- [x] Server Passport endpoint reads from latest snapshot, not live claims (live build kept only as fallback)
+- [x] Publish flow wired in `ArtistDashboard` (publish/unpublish + "refresh public profile" re-snapshot) and `Onboarding` (best-effort snapshot)
+- Note: the public Passport + publish require a real `SUPABASE_SERVICE_ROLE_KEY` (server is the firewall). Verified: endpoints build, run, and degrade honestly when the key is absent.
 
 ## TASK 5 — Public Passport (full build) ✅
 - [x] Hero: photo, stage_name, one_line, verified chip, CTA above fold + sticky bottom
@@ -50,7 +52,7 @@
 - [x] Track record: profile_items with source labels
 - [x] Readiness chips: genre / set_length / regions / invoice
 - [x] Firewall line at bottom
-- [ ] Reads from /api/passport/:id server endpoint (server-enforced)
+- [x] Reads from /api/passport/:id server endpoint (server-enforced) — `Passport.jsx` fetches the endpoint; now also returns the `published` flag so the page renders
 
 ## TASK 6 — Availability Request & Agency Inbox ✅
 - [x] Availability request form (no login required)
@@ -70,12 +72,27 @@
 - [ ] LTR (English) rendering correct on all screens
 - [ ] Sticky CTAs visible above fold on mobile
 
-## TASK 9 — Deploy ⬜
-- [ ] Vercel project connected to repo
-- [ ] Env vars set in Vercel
-- [ ] server/ becomes a Vercel serverless function (or Supabase Edge Function)
+## TASK 9 — Deploy 🔄 (config prepped; deploy pending Maria's Vercel account)
+- [x] `server/` becomes a Vercel serverless function — `api/index.js` re-exports the Express app; `server/index.js` skips `listen()` when `VERCEL=1` (local dev unchanged, verified)
+- [x] `vercel.json` — `vite build` → `dist`, `/api/*` → serverless fn, SPA fallback to `index.html`
+- [x] Server runtime deps (express/cors/dotenv/@anthropic-ai/sdk) moved to `dependencies` so Vercel installs them
+- [ ] Vercel project connected to repo (needs Maria's Vercel account)
+- [ ] Env vars set in Vercel dashboard (VITE_SUPABASE_*, SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_*)
 - [ ] Custom domain connected
-- [ ] Production smoke test
+- [ ] Production smoke test — verify `vercel.json` routing on first deploy
+
+## TASK 10 — Operator/Admin user type + QA hardening ✅ (code-complete; live verify pending DB)
+- [x] New `operator` role: `types.ts`, schema CHECK widened, migration `003_operator_admin.sql` + folded into `apply_to_supabase.sql`
+- [x] Operator oversight RLS: platform-wide READ + targeted moderation UPDATE via `is_operator()` (SECURITY DEFINER)
+- [x] `AdminDashboard` — stats, all-artists list with publish toggle, all requests, recent claims (firewall-safe: bands/statuses/provenance only, no scores)
+- [x] `RoleHome` routes operator → `/admin`; `UserTypeSelect` exposes operator (internal; assign server-side in prod)
+- [x] **`RequireRole` guards** on every role's routes (fixes: any logged-in user could open another role's screens)
+- [x] **P0 fix:** `Loading` referenced an out-of-scope `T` → crashed every authenticated route on first paint. Now uses `useLang()`. Runtime-verified: login renders, console clean.
+- [x] **Bug fix:** `/api/passport/:id` payload now includes `published` (Passport page would otherwise always render "not found")
+- [x] **Honest server:** placeholder env values (`PASTE_…`) treated as unset → truthful `/api/health`
+- [x] i18n QA: hardcoded Hebrew replaced with `T()` across auth/booker/agency/admin/artist-home/passport; he⇄en parity 227/227 (verified by script)
+- [x] Edge-states: try/catch + `ErrorState` on agency dashboard, requests inbox, admin loads
+- [x] Runtime smoke test (Vite preview): login renders RTL, EN toggle flips to LTR, no console errors
 
 ---
 *Each task = one PM review checkpoint. Do not combine tasks.*

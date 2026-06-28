@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { upsertProfile, requestAccountDeletion } from '../../lib/db.js'
+import { ROLES } from '../../lib/constants.js'
 import { PageShell, Wordmark, Field, ErrorNote, LanguageToggle } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useOrg } from '../../context/OrgContext.jsx'
+import ContextSwitcher from '../org/ContextSwitcher.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 
 export default function Settings() {
   const { T, lang } = useLang()
   const { user, profile, role, signOut, reloadProfile } = useAuth()
+  const { activeOrg, isAgency, isOwner } = useOrg()
   const nav = useNavigate()
   const [name, setName] = useState(profile?.full_name || '')
   const [saving, setSaving] = useState(false)
@@ -54,7 +58,7 @@ export default function Settings() {
     <PageShell max="max-w-md">
       <div className="flex items-center justify-between mb-6">
         <Wordmark />
-        <Link to={role === 'artist' ? '/artist/home' : role === 'agency' ? '/agency' : '/'} className="text-sm text-muted">
+        <Link to={role === ROLES.ARTIST ? '/artist/home' : role === ROLES.AGENCY ? '/agency' : '/'} className="text-sm text-muted">
           {T.common.back}
         </Link>
       </div>
@@ -69,17 +73,32 @@ export default function Settings() {
 
       {/* Profile */}
       <div className="card mb-4">
-        <h2 className="font-bold text-soft mb-3">פרופיל</h2>
+        <h2 className="font-bold text-soft mb-3">{T.settings.profile}</h2>
         <Field label={T.settings.displayName}>
           <input className="field" value={name} onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && saveProfile()} />
         </Field>
-        <Field label="אימייל" hint={T.settings.emailReadOnly}>
+        <Field label={T.settings.email} hint={T.settings.emailReadOnly}>
           <input className="field opacity-60" value={user?.email || ''} readOnly />
         </Field>
         <button className="btn-primary w-full" onClick={saveProfile} disabled={saving}>
           {saving ? T.common.loading : saved ? T.settings.saved + ' ✓' : T.settings.save}
         </button>
+      </div>
+
+      {/* Organization (org-first account model) */}
+      <div className="card mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-soft truncate">{activeOrg?.name || (isAgency ? T.org.entityAgency : T.org.entitySolo)}</h2>
+          <ContextSwitcher />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Link to="/org/settings" className="btn-ghost">{T.org.settingsTitle}</Link>
+          <Link to="/org/members" className="btn-ghost">{T.org.membersTitle}</Link>
+          {!isAgency && <Link to="/org/upgrade" className="btn-ghost">{T.org.upgradeTitle}</Link>}
+          {isOwner && <Link to="/org/billing" className="btn-ghost">{T.org.billingTitle}</Link>}
+          {isAgency && <Link to="/agency" className="btn-primary mt-1">{T.agency.title}</Link>}
+        </div>
       </div>
 
       {/* Language */}
@@ -96,15 +115,11 @@ export default function Settings() {
         <h2 className="font-bold text-soft mb-1">{T.settings.consents}</h2>
         <p className="text-xs text-muted mb-3">{T.settings.consentsHint}</p>
         <div className="space-y-1 text-xs text-muted">
-          <p>• Privacy Policy (v2) — {lang === 'he' ? 'מאושר' : 'Accepted'}</p>
-          <p>• Data Processing (v2) — {lang === 'he' ? 'מאושר' : 'Accepted'}</p>
-          <p>• Evidence Storage (v2) — {lang === 'he' ? 'מאושר' : 'Accepted'}</p>
+          <p>• Privacy Policy (v2) — {T.settings.accepted}</p>
+          <p>• Data Processing (v2) — {T.settings.accepted}</p>
+          <p>• Evidence Storage (v2) — {T.settings.accepted}</p>
         </div>
-        <p className="mt-3 text-[11px] text-muted italic">
-          {lang === 'he'
-            ? 'לניהול מלא צור קשר: privacy@gigproof.com (DRAFT)'
-            : 'For full management contact: privacy@gigproof.com (DRAFT)'}
-        </p>
+        <p className="mt-3 text-[11px] text-muted italic">{T.settings.consentsContact}</p>
       </div>
 
       {/* Sign out */}
@@ -123,7 +138,7 @@ export default function Settings() {
           </button>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-red-300 font-bold">{lang === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}</p>
+            <p className="text-sm text-red-300 font-bold">{T.settings.deleteSure}</p>
             <div className="flex gap-2">
               <button className="flex-1 rounded-xl border border-red-600 bg-red-900/50 py-2 text-sm text-red-300 hover:bg-red-800/50 transition"
                 onClick={handleDeleteAccount} disabled={deleteBusy}>
@@ -137,7 +152,7 @@ export default function Settings() {
         )}
       </div>
 
-      <p className="text-center text-[11px] text-muted">{lang === 'he' ? 'GIGPROOF v1 · DRAFT' : 'GIGPROOF v1 · DRAFT'}</p>
+      <p className="text-center text-[11px] text-muted">GIGPROOF v1 · DRAFT</p>
     </PageShell>
   )
 }

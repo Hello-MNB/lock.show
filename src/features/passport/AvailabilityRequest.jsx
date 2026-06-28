@@ -32,7 +32,7 @@ export default function AvailabilityRequest() {
   }
 
   if (loading) return <Loading />
-  const name = artist?.stage_name || 'האמן'
+  const name = artist?.stage_name || T.request.theArtist
 
   return (
     <PageShell max="max-w-md">
