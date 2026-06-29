@@ -66,7 +66,7 @@ export default function RadarFeed() {
           <select aria-label={T.radar.filterType} value={fType} onChange={(e) => setFType(e.target.value)}
             className="bg-surface text-soft text-xs rounded-lg px-2 py-2 border border-line flex-1 min-h-[40px]">
             <option value="">{T.radar.filterType}: {T.radar.filterAll}</option>
-            {types.map((t) => <option key={t} value={t}>{t}</option>)}
+            {types.map((t) => <option key={t} value={t}>{T.radar.ruleLabel?.[t] || t}</option>)}
           </select>
         </div>
       )}

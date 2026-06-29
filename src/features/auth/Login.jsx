@@ -63,12 +63,10 @@ export default function Login() {
         <LanguageToggle />
         <h1 className="text-xl font-bold text-soft">{T.login.title}</h1>
       </div>
-      {OAUTH_ENABLED && (
-        <div className="card">
-          <SocialAuthButtons onOAuth={signInWithOAuth} />
-          <OrDivider />
-        </div>
-      )}
+      <div className="card">
+        <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} />
+        <OrDivider />
+      </div>
       <form onSubmit={onSubmit} className="card">
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.login.email}>

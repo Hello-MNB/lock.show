@@ -7,6 +7,7 @@ import { PageShell, Wordmark, Loading, EmptyState, ErrorState, SourceLabel, Spin
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { markPassportDirty, clearPassportDirty, isPassportDirty } from '../../lib/passportState.js'
+import { DEMO } from '../../lib/demo.js'
 
 export default function ClaimReview() {
   const { T } = useLang()
@@ -99,7 +100,11 @@ export default function ClaimReview() {
         <Link to="/artist/home" className="text-sm text-muted">{T.common.back}</Link>
       </div>
 
-      <h1 className="text-xl font-bold text-soft mb-1">{T.claims.title}</h1>
+      <div className="flex items-center gap-2 flex-wrap mb-1">
+        <h1 className="text-xl font-bold text-soft">{T.claims.title}</h1>
+        <span className="chip bg-accent/10 text-accent text-xs">{T.common.aiAssistedBeta}</span>
+        {DEMO && <span className="chip bg-surface text-muted text-xs border border-line">{T.demo.sampleData}</span>}
+      </div>
       <p className="text-sm text-muted mb-4">{T.claims.subtitle}</p>
 
       {/* Unpublished-changes banner — edits are private until re-published to the
@@ -220,15 +225,34 @@ function ItemRow({ item, onToggle, toggling, T }) {
 function ClaimRow({ claim, onToggle, toggling, T }) {
   const isPassportOk = claim.visibility === VISIBILITY.PASSPORT_OK
   const busy = toggling === claim.id
-  const confirmed = claim.method_label === 'producer-confirmed'
+  const isConfirmed = claim.method_label === 'producer-confirmed'
+  const LS_KEY = `gp_confirm_${claim.id}`
+
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [link, setLink] = useState('')
+  // Persist generated link across navigation; clear when confirmed.
+  const [link, setLinkRaw] = useState(() => isConfirmed ? '' : (localStorage.getItem(LS_KEY) || ''))
   const [reqBusy, setReqBusy] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [reqError, setReqError] = useState('')
+
+  function setLink(val) {
+    setLinkRaw(val)
+    if (val) localStorage.setItem(LS_KEY, val)
+    else localStorage.removeItem(LS_KEY)
+  }
+
+  useEffect(() => {
+    if (isConfirmed) localStorage.removeItem(LS_KEY)
+  }, [isConfirmed, LS_KEY])
 
   async function generate() {
     if (reqBusy) return
+    setReqError('')
+    if (DEMO) {
+      setLink(`${window.location.origin}/confirm/demo-token-preview`)
+      return
+    }
     setReqBusy(true)
     try {
       const res = await fetch('/api/request-confirmation', {
@@ -237,36 +261,49 @@ function ClaimRow({ claim, onToggle, toggling, T }) {
       })
       const json = await res.json().catch(() => ({}))
       if (res.ok && json.path) setLink(`${window.location.origin}${json.path}`)
-    } finally { setReqBusy(false) }
+      else setReqError(json.error || T.producer.serverOffline)
+    } catch { setReqError(T.producer.serverOffline) } finally { setReqBusy(false) }
   }
+
+  const hasPending = !isConfirmed && !!link
 
   return (
     <div className={`card transition ${busy ? 'opacity-60' : ''}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="text-soft text-sm font-medium truncate">{claim.value || claim.claim_type}</p>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <SourceLabel status={claim.verification_status} methodLabel={claim.method_label} expiresAt={claim.expires_at} />
+            {isConfirmed && (
+              <span className="chip bg-accent/20 text-accent text-xs font-bold">★ {T.methodLabel['producer-confirmed']}</span>
+            )}
+            {hasPending && (
+              <span className="chip bg-warn/15 text-warn text-xs">⏳ {T.producer.pendingChip}</span>
+            )}
             {claim.reason_code && <span className="text-xs text-muted truncate">{claim.reason_code}</span>}
           </div>
         </div>
         <VisibilityToggle isPassportOk={isPassportOk} busy={busy} onClick={() => onToggle(claim)} T={T} />
       </div>
 
-      {!confirmed && (
+      {!isConfirmed && (
         <button className="text-xs text-muted mt-2 hover:text-soft" onClick={() => setOpen((o) => !o)}>
           {T.producer.requestTitle}
         </button>
       )}
-      {open && !confirmed && (
+      {open && !isConfirmed && (
         <div className="mt-2 border-t border-line pt-2">
+          {reqError && <p className="text-xs text-red-400 mb-2">{reqError}</p>}
           {link ? (
             <>
               <p className="text-xs text-muted mb-1">{T.producer.linkReady}</p>
               <p className="text-xs text-accent break-all" dir="ltr">{link}</p>
-              <button className="btn-ghost text-xs mt-2" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>
-                {copied ? T.producer.copied : T.producer.copyLink}
-              </button>
+              <div className="flex gap-2 mt-2">
+                <button className="btn-ghost text-xs flex-1" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>
+                  {copied ? T.producer.copied : T.producer.copyLink}
+                </button>
+                <button className="text-xs text-muted hover:text-warn px-2" onClick={() => setLink('')} aria-label="clear">×</button>
+              </div>
             </>
           ) : (
             <>

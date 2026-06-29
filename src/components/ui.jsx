@@ -67,12 +67,13 @@ function FacebookIcon() {
   )
 }
 
-export function SocialAuthButtons({ onOAuth }) {
+export function SocialAuthButtons({ onOAuth, disabled = false }) {
   const { T } = useLang()
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
 
   async function handle(provider) {
+    if (disabled) return
     setErr('')
     setBusy(true)
     try {
@@ -83,21 +84,28 @@ export function SocialAuthButtons({ onOAuth }) {
     }
   }
 
+  const btnClass = `w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface text-sm font-medium transition-colors ${
+    disabled ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-card text-soft'
+  }`
+
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${disabled ? 'pointer-events-none' : ''}`}>
       {err && <ErrorNote>{err}</ErrorNote>}
-      <button type="button" disabled={busy}
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface hover:bg-card text-soft text-sm font-medium transition-colors"
+      <button type="button" disabled={busy || disabled}
+        className={btnClass}
+        title={disabled ? T.login.oauthComingSoon : undefined}
         onClick={() => handle('google')}>
         <GoogleIcon />
         {T.login.googleCta}
       </button>
-      <button type="button" disabled={busy}
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface hover:bg-card text-soft text-sm font-medium transition-colors"
+      <button type="button" disabled={busy || disabled}
+        className={btnClass}
+        title={disabled ? T.login.oauthComingSoon : undefined}
         onClick={() => handle('facebook')}>
         <FacebookIcon />
         {T.login.facebookCta}
       </button>
+      {disabled && <p className="text-xs text-muted text-center">{T.login.oauthComingSoon}</p>}
     </div>
   )
 }
