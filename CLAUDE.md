@@ -38,6 +38,53 @@ Real accounts · real evidence upload · AI-stub creates reviewable claims · ar
 **NOT allowed in this repo:** venture docs, screen specs, terminology glossaries, GTM, legal, PM/strategy docs, audit reports, gap maps, correction guides. Those live in Google Drive only.
 **Drive is the source of truth** for: Screen Spec 01 · Feature Registry · Technical Spec · Terminology/Glossary · GAP-MAP · VENTURE-PM · GTM · Legal. Reference them by name in CLAUDE.md but do not copy them into the repo.
 
+## PLATFORMS (registered services — never recreate, use these)
+
+| Service | Account / ID | URL |
+|---|---|---|
+| **GitHub** | `Hello-MNB` org · repo `V6.B4-Artist-Pre-Booking-Intelligence-Growth-System` | https://github.com/Hello-MNB/V6.B4-Artist-Pre-Booking-Intelligence-Growth-System |
+| **Vercel** | Project `v6-b4-artist-pre-booking-intelligence-growth-system` | https://v6-b4-artist-pre-booking-intelligen.vercel.app |
+| **Supabase** | Project ref `qexfndiyallwqhhzeerd` | https://supabase.com/dashboard/project/qexfndiyallwqhhzeerd |
+| **Anthropic API** | Key in Vercel env vars only · never in code/chat/git | Stub active until real key added |
+
+**Deploy flow:** `git push origin main` → Vercel auto-deploys → serverless API at `/api/*`
+
+**Supabase Auth config:**
+- Site URL: `https://v6-b4-artist-pre-booking-intelligen.vercel.app`
+- Redirect URLs: `http://localhost:5173/**` + `https://v6-b4-artist-pre-booking-intelligen.vercel.app/**`
+- Providers: email+password · Google OAuth · Facebook OAuth
+
+**Env vars (Vercel dashboard only — never in git):**
+`VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` · `ANTHROPIC_API_KEY`
+
+## TECH STACK HIERARCHY
+
+```
+Browser (mobile-first, RTL Hebrew primary)
+  └── React 18 + Vite SPA
+        ├── Tailwind CSS + src/tokens.ts (single design-token source)
+        ├── LangContext — he/en i18n; T() calls only, no hardcoded strings
+        └── src/features/* — artist · evidence · auth · passport · agency · booker · admin
+              └── src/lib/db/* — ONLY layer allowed to call Supabase
+
+Vercel (hosting + serverless functions)
+  ├── /dist          → static SPA build
+  └── /api/*         → Express app (server/index.js) as serverless function
+        ├── POST /api/process-evidence  → AiClaimProcessor (stub/real)
+        ├── POST /api/publish/:id       → writes passport_versions (firewall gate)
+        ├── GET  /api/passport/:id      → public read (no score/headcount/gaps enforced)
+        └── GET  /api/health            → env-var status check
+
+Supabase (PostgreSQL + Auth + Storage)
+  ├── Auth: email · Google · Facebook (RLS tied to auth.uid())
+  ├── Core tables: artists · evidence_artifacts · claims · passport_versions
+  │               availability_requests · consents · organizations · org_members
+  │               producer_confirmations · radar_alerts · payments · org_upgrades
+  ├── Storage: evidence bucket (file uploads)
+  ├── RLS: artists see own data · agency sees roster · operator sees all
+  └── Migrations: supabase/migrations/ (001→018 — never skip numbers)
+```
+
 ## ANTI-DRIFT RULES (read before every code session)
 1. Read `CLAUDE.md` before starting any task.
 2. Open `BUILD-TASKS.md` — work only the next `⬜ Not started` task. Never skip, never chain.
