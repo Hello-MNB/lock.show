@@ -32,3 +32,19 @@ Follow `./BUILD-TASKS.md` one task at a time. After each task: confirm it builds
 
 ## DEFINITION OF DONE (no demo)
 Real accounts · real evidence upload · AI-stub creates reviewable claims · artist approves → Mirror/Passport · public Passport built from an approved snapshot · availability-request (no login) reaches the artist. No hard-coded artist, no fake numbers, no score, draw as bands only.
+
+## REPO BOUNDARY (strict — enforce every session)
+**Allowed in this repo:** source code + `CLAUDE.md` + `BUILD-TASKS.md` + `ARCHITECTURE.md`. Nothing else.
+**NOT allowed in this repo:** venture docs, screen specs, terminology glossaries, GTM, legal, PM/strategy docs, audit reports, gap maps, correction guides. Those live in Google Drive only.
+**Drive is the source of truth** for: Screen Spec 01 · Feature Registry · Technical Spec · Terminology/Glossary · GAP-MAP · VENTURE-PM · GTM · Legal. Reference them by name in CLAUDE.md but do not copy them into the repo.
+
+## ANTI-DRIFT RULES (read before every code session)
+1. Read `CLAUDE.md` before starting any task.
+2. Open `BUILD-TASKS.md` — work only the next `⬜ Not started` task. Never skip, never chain.
+3. Never add a score, percentile, headcount, or prediction field/display anywhere. Firewall is absolute.
+4. Never create a DB column without a migration file in `supabase/migrations/`.
+5. Never add a hardcoded UI string — use `T('key')` from `LangContext` (both `he.js` + `en.js` must be updated together).
+6. Never import Supabase directly in feature code — route through `/src/lib/db/` only.
+7. Never call `console.log` in production paths — use `logEvent()` from the analytics stub.
+8. Run `npm run build` after completing every task. Report ✅ only if the build passes with zero errors.
+9. Stop and report to PM after each task. PM reviews before the next task begins.

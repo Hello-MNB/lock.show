@@ -94,5 +94,90 @@
 - [x] Edge-states: try/catch + `ErrorState` on agency dashboard, requests inbox, admin loads
 - [x] Runtime smoke test (Vite preview): login renders RTL, EN toggle flips to LTR, no console errors
 
+## TASK 11 — P0 Blockers: password toggle + chip tap-targets + demo gate ⬜
+*(Source: BT-01, BT-02, BT-03 — must all ship together; they are tightly coupled)*
+- [ ] BT-01: Add password show/hide 👁 toggle to `Signup.jsx` and `ResetPassword.jsx` (P0 — mobile UX blocker)
+- [ ] BT-02: Set `chip` CSS class default to `min-h-[44px]` in `index.css` / `tokens.ts`; remove `min-h-[36px]` + `min-h-[40px]` from `org/Members.jsx` and `admin/AdminDashboard.jsx`
+- [ ] BT-03: Gate demo persona switcher in `auth/Login.jsx` behind `import.meta.env.VITE_DEMO === 'true'`; remove from production build
+
+## TASK 12 — Auth / Settings UX fixes ⬜
+*(Source: BT-04–08)*
+- [ ] BT-04: `auth/Settings.jsx` — replace hardcoded consent list with dynamic `listConsents(user.id)` call
+- [ ] BT-05: `auth/Settings.jsx` — move `logEvent(EVENTS.SETTINGS_OPENED)` into `useEffect(()=>{…},[])`
+- [ ] BT-06: Add `dir="auto"` to display-name `<input>` in `auth/Settings.jsx` and `artist/Onboarding.jsx` StepIdentity
+- [ ] BT-07: `auth/UserTypeSelect.jsx` — confirm selected-card ring/highlight renders on tap (fix if not visible)
+- [ ] BT-08: `auth/ConsentLegal.jsx` — confirm each `<label>` wraps its `<input type="checkbox">` for ≥44px tap target
+
+## TASK 13 — Artist flow UX fixes ⬜
+*(Source: BT-09–17)*
+- [ ] BT-09: `artist/Onboarding.jsx` — add step name labels to ProgressBar (e.g. "2 · לינקים") via i18n
+- [ ] BT-10: `artist/Onboarding.jsx` — show "Saved ✓" tick after auto-save on blur (StepIdentity, StepReadiness)
+- [ ] BT-11: `artist/Onboarding.jsx` StepReadiness — show accepted file-type hint text on rider upload field
+- [ ] BT-12: `artist/ArtistDashboard.jsx` — persist dismissed suggestions to `localStorage` (key: `gigproof.dismissedSuggestions`)
+- [ ] BT-13: `artist/ClaimReview.jsx` — make "Apply to Passport" banner a sticky footer action bar when page is dirty
+- [ ] BT-14: `artist/ClaimReview.jsx` — show magic link expiry date next to copy button; persist `{ link, expiresAt }` to `localStorage`
+- [ ] BT-15: `evidence/EvidenceCapture.jsx` — Path B "Connect account": replace chip with BottomSheet explainer stub (what it means, coming when)
+- [ ] BT-16: `evidence/EvidenceCapture.jsx` — after AI processing: show inline outcome ("X claims created — Review in Claims →")
+- [ ] BT-17: `artist/OfferPayment.jsx` — pending state: show "Marked as paid on [date]" + support contact line; add i18n keys
+
+## TASK 14 — Booker flow UX fixes ⬜
+*(Source: BT-18–23)*
+- [ ] BT-18: `passport/Passport.jsx` — add one-line intro above ActionLadder rungs ("Let the artist know your interest without committing"); add i18n keys
+- [ ] BT-19: `passport/Passport.jsx` — add `<LanguageToggle>` to public Passport page header
+- [ ] BT-20: `passport/AvailabilityRequest.jsx` — add descriptive hint labels to capacity_band + budget_band selects (e.g. "עד 100 אנשים"); add i18n keys
+- [ ] BT-21: `passport/AvailabilityRequest.jsx` — add per-field `<ErrorNote>` on validation failure (replace HTML5 browser popups)
+- [ ] BT-22: `passport/RequestConfirmation.jsx` — add "Copy contact info" fallback button for users without WhatsApp
+- [ ] BT-23: `booker/BookerHome.jsx` — add helper copy: "No link? Ask the artist for their GIGPROOF link, then paste it here"
+
+## TASK 15 — Producer flow UX fixes ⬜
+*(Source: BT-24–27)*
+- [ ] BT-24: `producer/ProducerHome.jsx` — add copy: "Have a confirmation link? Click it directly from the email you received"
+- [ ] BT-25: `producer/ProducerConfirm.jsx` — after "wrong_person" selection: show "Thank you — no further action needed"
+- [ ] BT-26: `producer/ProducerConfirm.jsx` — show link expiry date on page (requires adding `expiresAt` to `/api/confirm/:token` response)
+- [ ] BT-27: `producer/ProducerConfirm.jsx` — verify 4 answer buttons are stacked vertically with `min-h-[44px]` on mobile (not inline)
+
+## TASK 16 — Agency flow UX fixes ⬜
+*(Source: BT-28–31)*
+- [ ] BT-28: `agency/AgencyDashboard.jsx` — show toast after `upsertArtist()` success: "Artist added — share their login link"; add i18n keys
+- [ ] BT-29: `agency/AgencyRequestsInbox.jsx` — make request rows tappable; expand to BottomSheet with full request detail (date, location, bands, message)
+- [ ] BT-30: `agency/AgencyRequestsInbox.jsx` — add BottomSheet confirmation before `markReplied` / `markClosed`
+- [ ] BT-31: `agency/RadarFeed.jsx` — replace "Rule ID" filter with plain-language labels mapped from `T.radar.ruleLabel` (R1–R8)
+
+## TASK 17 — Org screens fixes ⬜
+*(Source: BT-32–36)*
+- [ ] BT-32: `org/OrgSettings.jsx` — on org delete: `await signOut()` before `window.location.href = '/'`
+- [ ] BT-33: `org/UpgradePlan.jsx` — add "Pricing on request — contact us" copy below upgrade CTA; add i18n keys
+- [ ] BT-34: `org/Billing.jsx` — disable `addSeats` button OR reroute to "Contact us to add seats" (email link); do not silently increment counter
+- [ ] BT-35: `org/Billing.jsx` — add support contact line ("Questions about your plan? [email]"); add i18n keys
+- [ ] BT-36: PM decision required — is O3 a planned standalone screen? If yes: scaffold route + empty component. If no: remove from spec.
+
+## TASK 18 — Admin / Operator improvements ⬜
+*(Source: BT-37–40)*
+- [ ] BT-37: `admin/AdminDashboard.jsx` — replace delete confirm `fixed` overlay with `<BottomSheet>` (consistent with rest of app)
+- [ ] BT-38: `admin/AdminDashboard.jsx` — add section anchor links at top of page (Payments · Upgrades · Artists · Requests · Claims · Consents · Audit)
+- [ ] BT-39: `admin/AdminDashboard.jsx` — add pagination to all lists: show first 50, "Load more" button
+- [ ] BT-40: `admin/AdminDashboard.jsx` — fix stat grid: change `grid-cols-3` to `grid-cols-2 sm:grid-cols-3` (5 cards, no orphan on mobile)
+
+## TASK 19 — RTL / Hebrew corrections ⬜
+*(Source: BT-41–50 — Screen Audit Phase 2)*
+- [ ] BT-41: `lib/i18n/he.js` — replace ASCII `"` with gershayim `״` (U+05F4) in ALL `ע"י` occurrences (methodLabel, radar.ruleLabel.R5)
+- [ ] BT-42: `lib/i18n/he.js` — fix `evidence.connectNote`: remove EN "ticketing" + "Phase 2" → Hebrew equivalents
+- [ ] BT-43: `lib/i18n/he.js` + `artist/OfferPayment.jsx` — reorder `offer.payMethods` for RTL; wrap "Bit" in `<span dir="ltr">`
+- [ ] BT-44: Add `<bdi>` wrappers to all numbers in HE strings: A8 price range, seat fractions (Members/Billing), age in days (RADAR R1/R7)
+- [ ] BT-45: `components/ui.jsx` (SocialAuthButtons) — wrap "Google" / "Facebook" in `<span dir="ltr" lang="en">`
+- [ ] BT-46: `agency/RadarFeed.jsx`, `org/UpgradePlan.jsx`, `org/Billing.jsx` — wrap "RADAR" in `<span dir="ltr">` in JSX
+- [ ] BT-47: `artist/Onboarding.jsx` ProgressBar — set `dir="ltr"` on `<progress>` element so fill goes right→left in RTL
+- [ ] BT-48: All nav chevron icons — add `rtl:scale-x-[-1]` Tailwind class to flip direction in RTL (Onboarding, Settings, Org screens)
+- [ ] BT-49: Band value chips in `evidence/EvidenceCapture.jsx` + `artist/Onboarding.jsx` StepDraw — wrap display values in `<span dir="ltr">`
+- [ ] BT-50: `auth/Signup.jsx` — wrap `{email}` in `<bdi>` inside `confirmBody()` interpolation
+
+## TASK 20 — Localization stubs (RU · DE · AR) ⬜
+*(Source: BT-51–55 — requires native-speaker review before merge; stubs only)*
+- [ ] BT-51: Create `src/lib/i18n/ru.js` from terminology table (SCREEN-AUDIT-PHASE2-4.md §3-A); flag: native RU review required before merge
+- [ ] BT-52: Create `src/lib/i18n/de.js` from terminology table; flag: native DE review required; "Booker" stays EN in DE
+- [ ] BT-53: Create `src/lib/i18n/ar.js` from terminology table; AR = RTL; apply same bidi rules as HE; flag: native AR review required
+- [ ] BT-54: `context/LangContext.jsx` — add RU/DE/AR to `dicts`; set `dir="rtl"` when AR is active
+- [ ] BT-55: `components/ui.jsx` LanguageToggle — add RU / DE / AR options
+
 ---
 *Each task = one PM review checkpoint. Do not combine tasks.*
