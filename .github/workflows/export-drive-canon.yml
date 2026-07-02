@@ -1,0 +1,68 @@
+name: Export Drive Canon
+
+on:
+  push:
+    paths:
+      - '.github/workflows/export-drive-canon.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Export allowlisted canon
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/canon
+          export_doc() {
+            local id="$1" version="$2" file="$3"
+            local tmp
+            tmp="$(mktemp)"
+            curl --fail --location --silent --show-error \
+              "https://docs.google.com/document/d/${id}/export?format=md" -o "$tmp"
+            if grep -qi '<html' "$tmp"; then
+              echo "Drive returned HTML instead of document content for ${id}" >&2
+              exit 1
+            fi
+            {
+              printf '> EXPORTED FROM Drive %s %s on 2 Jul 2026 — READ-ONLY REFERENCE for Claude Code. Authoritative source is Drive. Do not edit here; re-export on canon change.\n\n' "$id" "$version"
+              cat "$tmp"
+            } > "docs/canon/${file}"
+            rm -f "$tmp"
+          }
+          export_doc '1hFnEddTyeqvwNTHJYeBkq9WPVDBOIqKY_ykqmWGpAWw' 'v3.6' 'B4-Master-Canon.md'
+          export_doc '1avyYgJQO1gWTQqe03zGkoEyMWYqX-Te_74GuThexV14' 'v1.5' 'B4-40.10-Technical-Spec.md'
+          export_doc '1zMUtrVDSNT-CZq0O29ElV3iHq_AZzpT8QrTg9zGj9yY' 'v1.6' 'B4-35.00-Role-Charter-Folder-Authority.md'
+          export_doc '1tT1aTLIWmPr2IHMWed_Y0UH7lofYaZ4al-QlwRj2Dpg' 'v1.5' 'B4-35.10-Brand-Foundation-Product-Positioning.md'
+          export_doc '1S1ec242nwfxPkisTSMxUJ99g41gG-s8igk_IYyq79dc' 'v2.4' 'B4-35.20-Product-Language-Localization.md'
+          export_doc '1ZgEA4QkgqOSCeWtcCIYFke_9iIrh7hxSvVBsHlbeVDs' 'v1.5' 'B4-35.30-Design-System-Trust-UX.md'
+          export_doc '1klkaUnciPuC6heDsAxs_eqGQO9rCaZB-5hjmApQ0eWM' 'v1.8' 'B4-35.40-Experience-Architecture-Screen-Tree.md'
+          export_doc '1O8Sz51xdLNKdrvITBRQoMwsBQi2EhpHkPn5u-U_Nl8g' 'v1.8' 'B4-35.50-Per-Persona-Screen-Spec.md'
+          export_doc '1iIt8NBnVtZfJIQkDYbnZ8aWNesuGSaQCb5w8sahRyb8' 'v1.8' 'B4-35.60-Design-QA-Release-Acceptance.md'
+          rm -f docs/canon/test-title.md docs/canon/test-zws.md docs/canon/test-header-title.md docs/canon/test-fenced.md docs/canon/test-entities.md
+          rm -rf .canon-export
+          test "$(find docs/canon -maxdepth 1 -type f -name '*.md' | wc -l)" -eq 9
+          while IFS= read -r f; do
+            head -n 1 "$f" | grep -Fq 'EXPORTED FROM Drive'
+            head -n 1 "$f" | grep -Fq 'READ-ONLY REFERENCE for Claude Code'
+          done < <(find docs/canon -maxdepth 1 -type f -name '*.md' | sort)
+          if find docs/canon -maxdepth 1 -type f | grep -Eqi '(monetization|economics|cost|fundraising|ecosystem|wedge|website-brief)'; then
+            echo 'Excluded business document detected' >&2
+            exit 1
+          fi
+      - name: Commit export
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'canon-export-bot'
+          git config user.email 'canon-export-bot@users.noreply.github.com'
+          git add docs/canon .canon-export
+          git add -u docs/canon .canon-export
+          git commit -m 'Export build-critical Drive canon as read-only Markdown' || exit 0
+          git push
