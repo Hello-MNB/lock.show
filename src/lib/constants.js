@@ -3,8 +3,13 @@
 // supabase/apply_to_supabase.sql. Localized display labels live in src/lib/i18n.
 
 // User roles — profiles.role CHECK.
-// Self-signup roles (S2): artist · booker (אמרגן) · producer (מפיק) · agency (סוכנות).
-// 'operator' is internal — assigned via seed/admin, never self-selected at signup.
+// Self-signup roles shown in UserTypeSelect: artist · booker · agency.
+// Vocabulary (domain-accurate):
+//   artist   = אמן              (supply side, self-serve)
+//   booker   = מזמין/מפיק אירוע  (demand side, trust-receiver — NOT אמרגן)
+//   agency   = אמרגן/סוכנות     (talent agency, payer — manages artist roster)
+//   producer = מפיק מאשר        (claim-confirmer: magic-link only, never self-selects)
+//   operator = מפעיל             (internal — seed/admin only, never shown at signup)
 export const ROLES = {
   ARTIST: 'artist',
   BOOKER: 'booker',

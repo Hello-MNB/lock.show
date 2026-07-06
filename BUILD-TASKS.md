@@ -1,5 +1,12 @@
 # GIGPROOF — Build Tasks (ordered; one task at a time)
 
+> ⚠️ **ARCHITECTURE STATUS (added 2 Jul 2026 — READ FIRST):**
+> Tasks 0–10 were **built to the ORG-FIRST architecture (v1.1, 28 Jun)**, NOT the current workspace model.
+> Current canon (v3.5+) locks **person → workspace → role** as the FULL-BETA target. The built code is the **Gate-1 proof** — it runs the core loop (artist → evidence → claim → Passport → booker request → producer confirm) and is what we take to Yossi.
+> The **workspace model · artist-agnostic taxonomy engine · active-discovery Radar · discovery_candidate/field_applicability tables** are **NOT built** — they are the FULL-BETA target (see entity map + DB structure), built AFTER Gate-1 validation.
+> Do NOT assume any FULL-BETA feature exists because a task looks done. Tasks 0–10 = org-first Gate-1 build only.
+
+
 ## Legend
 - ✅ Done · 🔄 In progress · ⬜ Not started
 - After each task: `npm run build` must pass. Report to PM before next task.

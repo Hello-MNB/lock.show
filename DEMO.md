@@ -1,5 +1,8 @@
 # GIGPROOF — Demo build & deploy (no secrets)
 
+> ⚠️ **CANON NOTE (added 2 Jul):** `netlify.toml` must NOT exist in the repo (canon rule — real app is Vercel). Netlify Drop here is a **throwaway static demo host ONLY** (drag `dist/`, no repo config, no `netlify.toml`). The real app deploys to **Vercel**. Do not add Netlify config to the codebase.
+
+
 A **demo / mock mode** that runs the whole app with **no backend** — no Supabase, no OAuth,
 no token, no secrets. It uses local fixtures (sample Hebrew data) so you can host a public
 URL that shows every screen and persona. Perfect for a quick "see it live" link.

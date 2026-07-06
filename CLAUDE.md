@@ -1,97 +1,97 @@
-# GIGPROOF — Project Guardrails (read this every task)
-PM: R16 (Cowork) · Owner: Maria (R00) · Stack: React + Vite + Tailwind · Supabase (project ref `qexfndiyallwqhhzeerd`) · Vercel · Anthropic API (stubbed for now).
-Full canon (Google-native, source of truth): Drive `35 · GIGPROOF — תיאור קצר · ייחודיות · דגשים` + `35 · Screen Spec 01` + `35 · Screen Feature Registry` + `40 · Technical Spec` + `40 · Profile Capture Build Guide`.
+# CLAUDE.md — GIGPROOF build guide for Claude Code
+*Read this fully before any task. Under 200 lines by design — it loads every session.*
+*Authority: subordinate to ★ START HERE + the 7 CURRENT canon docs. On any conflict, canon wins; ask, don't guess.*
 
-## WHAT THIS PRODUCT IS (never drift from this)
-A pre-booking proof tool: helps Israeli booking managers/אמרגנים evaluate an unfamiliar artist via standardized, method-labeled evidence — BEFORE they risk their name. Talent ≠ bookability; GIGPROOF gives the talented-but-invisible artist a proof + marketing substitute. It is NOT a generic EPK, NOT a booking-ops CRM.
+---
 
-## ★ FIREWALL — HARD RULES (a build that breaks these is wrong)
-- **NO overall score, NO percentile, NO rank, NO "bookability %", NO booking probability/prediction, NO guarantee.**
-- **NO exact head-count / attendance number anywhere.** Draw is shown ONLY as **bands / binaries** (draw_band, sells_tickets yes/developing/not-assessable, fee_band, community_size_band), each with a **method label**.
-- Bounded statuses only where status shows: **חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך**.
-- Streaming/social = secondary **context**, never proof of draw.
-- **Never fabricate** a value, source, producer confirmation or testimonial. Unsupported = "self-reported", or omit.
-- **Mirror (artist, private)** shows gaps + next actions; **Passport (public, buyer)** shows verified **strengths only**. The artist approves what crosses Mirror→Passport. Never expose private exact values, community member PII, gaps, or rejections on the Passport.
+## WHAT THE APP IS
+Pre-booking proof / risk-reduction tool. Helps Israeli booking managers (אמרגנים) evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name. **Talent ≠ bookability.** NOT an EPK, NOT a booking CRM, NOT a guarantee, NOT a marketplace.
 
-## STACK / DATA
-- Use the canonical schema at `./supabase/schema.sql` (run it in Supabase SQL editor). Migrations live in `./supabase/migrations/`. It already encodes bands + RLS + no-score. Do not add a score/headcount column.
-- Auth: email+password + Google/Facebook OAuth (configured in Supabase dashboard).
-- Hebrew RTL primary throughout. English language toggle available. Mobile-first. One primary CTA per screen, sticky.
-- AI claim-processing = **stub** (deterministic placeholder) until a real Anthropic API key is added later via `.env` (never in chat/git). The stub and real implementation share the `AiClaimProcessor` interface at `src/lib/ai/interface.ts`.
+Three actors: **אמן** (artist — builds proof, the payer candidate) · **אמרגן** (booking manager — evaluates, reputation risk, free) · **מפיק** (producer — confirms one claim, money risk). אמרגן ≠ מפיק — never merge them, in code or analytics.
 
-## ARCHITECTURE (see ARCHITECTURE.md for full rules)
-- `/src/lib/db/` — ONLY place that talks to Supabase. Typed.
-- `/src/lib/ai/` — claim engine behind `AiClaimProcessor` interface.
-- `/src/features/*` — artist, evidence, claims, mirror, passport, requests, agency, auth.
-- `/src/components/ui/` — design-system primitives only.
-- `/src/tokens.ts` — single source of visual truth (colors, spacing, radii).
-- Server-side `/api/passport/:id` enforces the firewall physically.
+Two surfaces, one truth: **Mirror** (artist-private) shows gaps + next action · **Passport** (public, buyer-facing) shows verified strengths ONLY. Same claims, different face.
 
-## BUILD ORDER
-Follow `./BUILD-TASKS.md` one task at a time. After each task: confirm it builds, then stop and report (the PM reviews against this canon before the next task).
+---
 
-## DEFINITION OF DONE (no demo)
-Real accounts · real evidence upload · AI-stub creates reviewable claims · artist approves → Mirror/Passport · public Passport built from an approved snapshot · availability-request (no login) reaches the artist. No hard-coded artist, no fake numbers, no score, draw as bands only.
+## THE FIREWALL — ABSOLUTE (this is the product; violating it kills it)
+NEVER build, in any surface, public or private:
+- ❌ score · percentile · rank · rating · "bookability %" · grade · gauge · progress-ring · prediction · probability · booking-forecast
+- ❌ artist-vs-artist comparison · cohort · benchmark · "top X%" · "you vs segment"
+- ❌ exact public head-count or fee (bands only) · radar/spider/polygon chart
+- ❌ any number that grades the artist
 
-## REPO BOUNDARY (strict — enforce every session)
-**Allowed in this repo:** source code + `CLAUDE.md` + `BUILD-TASKS.md` + `ARCHITECTURE.md`. Nothing else.
-**NOT allowed in this repo:** venture docs, screen specs, terminology glossaries, GTM, legal, PM/strategy docs, audit reports, gap maps, correction guides. Those live in Google Drive only.
-**Drive is the source of truth** for: Screen Spec 01 · Feature Registry · Technical Spec · Terminology/Glossary · GAP-MAP · VENTURE-PM · GTM · Legal. Reference them by name in CLAUDE.md but do not copy them into the repo.
+ALWAYS:
+- ✅ Draw = **band pill** (`50–150`) + method label + reviewed date. Never a gauge, never a fill bar.
+- ✅ Every claim renders as a **Proof Unit**: `claim · context · method-label · reviewed-date` as ONE block. Never a bare number.
+- ✅ Method label always visible (`TICKET EXPORT · REVIEWED OCT 2025`) — it's the product, not fine print. "Verified" never stands alone.
+- ✅ **Omit, don't show weakness** — a domain with no supported claim is REMOVED from the public DOM. Never "developing"/"missing" on a Passport.
+- ✅ **N/A ≠ ZERO** — a field irrelevant to the artist's type is removed, never counted as a gap.
+- ✅ Streaming = secondary context strip only, never a draw signal.
 
-## PLATFORMS (registered services — never recreate, use these)
+If a task seems to require a forbidden element, STOP and ask. Do not improvise a "compliant score."
 
-| Service | Account / ID | URL |
-|---|---|---|
-| **GitHub** | `Hello-MNB` org · repo `V6.B4-Artist-Pre-Booking-Intelligence-Growth-System` | https://github.com/Hello-MNB/V6.B4-Artist-Pre-Booking-Intelligence-Growth-System |
-| **Vercel** | Project `v6-b4-artist-pre-booking-intelligence-growth-system` | https://v6-b4-artist-pre-booking-intelligen.vercel.app |
-| **Supabase** | Project ref `qexfndiyallwqhhzeerd` | https://supabase.com/dashboard/project/qexfndiyallwqhhzeerd |
-| **Anthropic API** | Key in Vercel env vars only · never in code/chat/git | Stub active until real key added |
+## FIREWALL AT SCHEMA LEVEL
+These columns must NEVER exist: `score`, `rating`, `percentile`, `rank`, `bookability_pct`, `fill_value`, `completion_pct`, `benchmark_cohort`, `comparison_population`, `weight_numeric`. Their absence = the firewall. Every `claim` carries: `certainty · method_label · reviewed_at · visibility · passport_eligibility`.
 
-**Deploy flow:** `git push origin main` → Vercel auto-deploys → serverless API at `/api/*`
+---
 
-**Supabase Auth config:**
-- Site URL: `https://v6-b4-artist-pre-booking-intelligen.vercel.app`
-- Redirect URLs: `http://localhost:5173/**` + `https://v6-b4-artist-pre-booking-intelligen.vercel.app/**`
-- Providers: email+password · Google OAuth · Facebook OAuth
+## STACK
+React + Vite + Tailwind · Supabase (ref `qexfndiyallwqhhzeerd`, Postgres + RLS) · Vercel · Anthropic API **stubbed** (AI claim-pipeline is concierge-processed BY HAND until volume justifies automation — do NOT build automated extraction yet; build the stub + human-review UI).
+Canonical codebase: `C:\Users\user\GIGPROOF` (local) → GitHub → Vercel. `netlify.toml` must NOT exist.
+Mobile-first, always. The Passport must pass the WhatsApp 390px test.
 
-**Env vars (Vercel dashboard only — never in git):**
-`VITE_SUPABASE_URL` · `VITE_SUPABASE_ANON_KEY` · `SUPABASE_SERVICE_ROLE_KEY` · `ANTHROPIC_API_KEY`
+## SOURCE OF TRUTH
+★ START HERE + this CLAUDE.md + the 7 CURRENT canon docs (folder 35: B4-35.00 through 35.60) + tech spec B4-40.10. Build ONLY from these. NEVER from older HTML prototypes, score-era docs, or Base44-era screens. If unsure which doc governs, check B4-35.00 (the authority index) or ask.
 
-## TECH STACK HIERARCHY
+## DRIVE RULE
+Read canon from Drive folder `1QyQtp-vVcqosKplB_zMmtWNweBH_PaS3`. UPDATE files, never DUPLICATE. Claude Code does NOT write to Drive — it works in the repo. Drive writes happen via GPT/Cowork only.
 
-```
-Browser (mobile-first, RTL Hebrew primary)
-  └── React 18 + Vite SPA
-        ├── Tailwind CSS + src/tokens.ts (single design-token source)
-        ├── LangContext — he/en i18n; T() calls only, no hardcoded strings
-        └── src/features/* — artist · evidence · auth · passport · agency · booker · admin
-              └── src/lib/db/* — ONLY layer allowed to call Supabase
+---
 
-Vercel (hosting + serverless functions)
-  ├── /dist          → static SPA build
-  └── /api/*         → Express app (server/index.js) as serverless function
-        ├── POST /api/process-evidence  → AiClaimProcessor (stub/real)
-        ├── POST /api/publish/:id       → writes passport_versions (firewall gate)
-        ├── GET  /api/passport/:id      → public read (no score/headcount/gaps enforced)
-        └── GET  /api/health            → env-var status check
+## STAGE & SCOPE — BUILD ONLY THE GATE-1 SLICE
+**Pre-validation.** Gate = one אמרגן reacts to a real Passport AND one artist pays. No price/ICP locked until then.
+Build ONLY these (the trust loop that reaches the first booker):
+1. Person + one artist workspace (schema = full model; UI = artist only)
+2. Act/alias + evidence + claim (the data spine)
+3. Artist Radar (Mirror): evidence states + ONE next-action (NO aggregate score)
+4. Public Passport: verified strengths, method-labeled, WhatsApp-scannable, renders from live claims
+5. Source-confirmer magic-link (ONE claim, bounded, no account)
+6. Contextual consent (account · data-connection · publication · counterparty-name)
+7. Manual payment (Bit/transfer → founder approves → entitlement) — NO Stripe
+8. Concierge claim-processing UI + minimal ops queue
 
-Supabase (PostgreSQL + Auth + Storage)
-  ├── Auth: email · Google · Facebook (RLS tied to auth.uid())
-  ├── Core tables: artists · evidence_artifacts · claims · passport_versions
-  │               availability_requests · consents · organizations · org_members
-  │               producer_confirmations · radar_alerts · payments · org_upgrades
-  ├── Storage: evidence bucket (file uploads)
-  ├── RLS: artists see own data · agency sees roster · operator sees all
-  └── Migrations: supabase/migrations/ (001→018 — never skip numbers)
-```
+**DO NOT build now** (schema-ready, UI deferred to FULL-BETA): management/agency + event-producer workspaces, workspace switcher, billing centre, subscription families, roster/coverage-compare, opportunities, automated discovery engine (counsel-gated).
 
-## ANTI-DRIFT RULES (read before every code session)
-1. Read `CLAUDE.md` before starting any task.
-2. Open `BUILD-TASKS.md` — work only the next `⬜ Not started` task. Never skip, never chain.
-3. Never add a score, percentile, headcount, or prediction field/display anywhere. Firewall is absolute.
-4. Never create a DB column without a migration file in `supabase/migrations/`.
-5. Never add a hardcoded UI string — use `T('key')` from `LangContext` (both `he.js` + `en.js` must be updated together).
-6. Never import Supabase directly in feature code — route through `/src/lib/db/` only.
-7. Never call `console.log` in production paths — use `logEvent()` from the analytics stub.
-8. Run `npm run build` after completing every task. Report ✅ only if the build passes with zero errors.
-9. Stop and report to PM after each task. PM reviews before the next task begins.
+## ACCOUNT MODEL (build the schema, not the full UI)
+person (one login) → workspace (artist/management/producer) → role inside workspace → subscription attaches to the WORKSPACE. Agency = workspace TYPE, not a role. Source-confirmer (bounded magic-link) ≠ event-producer (full workspace). At Gate-1, build only the artist workspace UI; keep other workspace tables in schema.
+
+## ARTIST-AGNOSTIC LAW
+No table/column/enum/logic may assume a specific artist type, genre, or platform (no assuming Spotify, ticket draw, catalogue, or DJ format). Artist type is expressed ONLY via taxonomy + field_applicability (switches fields on/off, N/A≠ZERO). The Radar serves ANY artist on one engine. Hardcoded type-specific logic = defect.
+
+## THE RADAR IS AN ACTIVE TOOL
+The Artist Radar discovers information about the artist (surfaces web-found candidates), it is not only a passive form. Path: discover → SURFACE candidate → artist confirms → method-label → claim. NEVER publish web data as fact without artist confirmation. At Gate-1 discovery is concierge (human-run), opt-in, post-consent only.
+
+---
+
+## LOCALIZATION
+UI ships EN + HE (Phase 1), RU + DE (Phase 2). Full scene-native localization, NOT translation. HE authored native-first, not derived from EN (EN = dev/string-key baseline only). אמרגן ≠ מפיק preserved in every string. Use a `string_key → translation` table so RU/DE add without schema change. RU/DE = scaffold, not shipped until native-editor pass.
+
+## CONSENT (Amendment 13 — HARD BLOCKER)
+No real PII/evidence stored before consent. Consents are SEPARATE + contextual, never one bundled pre-checked screen: account terms · data-connection · public-publication (Mirror→Passport) · counterparty-name · marketing (optional). Real-data launch BLOCKED until counsel sign-off + SEC-01 (Drive folder Restricted).
+
+## RLS / PRIVACY (non-negotiable)
+- `claim.value`, `gig.exact_count`, `claim.internal_confidence` → never SELECT-able by public/buyer session.
+- `artist.contact` → never SELECT-able by non-operator.
+- Public passport session → INSERT professional_reaction + availability_request; SELECT only passport-ok claims of the viewed passport.
+- Every operator write → `audit_event` (actor, reason, prev→new). No silent overrides.
+
+---
+
+## HOW TO WORK (token discipline + safety)
+- **Plan Mode (Shift+Tab) before any big change.** Get plan approved before writing code.
+- One screen / one migration per session, then `/clear`. Short scoped sessions — no giant accumulating contexts.
+- Single agent — NO parallel agent teams (7x token burn).
+- Sonnet default; Opus only for schema, firewall-enforcement, and Passport render logic.
+- Migrations: write from Gate-1 tables only, in build order (account spine → artist truth → proof engine → publication → buyer actions → confirmation → consent/ops).
+- "Live but unverified" is forbidden — every build step needs environment-verification evidence.
+- When unsure, STOP and ask. Never improvise around the firewall or invent brand/pricing/taxonomy values (those are OPEN — R00 only).

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="דוגמת פספורט GIGPROOF — כך נראה דרכון הופעות לאמרגנים.">
+  <title>GIGPROOF · דרכון הופעות — דוגמה</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── NAVBAR ────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner container">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;transform:rotate(-4deg);flex-shrink:0;">
+        <circle cx="30" cy="30" r="27" fill="none" stroke="#5B3FD6" stroke-width="1.5"/>
+        <circle cx="30" cy="30" r="21" fill="none" stroke="#5B3FD6" stroke-width="0.5"/>
+        <text font-family="'Space Mono',monospace" font-size="6" fill="#5B3FD6" font-weight="700" text-anchor="middle" x="30" y="33">GP</text>
+      </svg>
+      <span class="nav-logo-text">GIGPROOF</span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="index.html"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a></li>
+      <li><a href="artists.html"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a></li>
+      <li><a href="bookers.html"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a></li>
+      <li><a href="how-it-works.html"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
+      <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink btn-sm">
+        <span class="lang-he-inline">בנה פספורט</span>
+        <span class="lang-en-inline" style="display:none">Build Passport</span>
+      </a>
+      <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
+    </div>
+  </div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer-links">
+      <a href="index.html" onclick="toggleMenu()"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a>
+      <a href="artists.html" onclick="toggleMenu()"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a>
+      <a href="bookers.html" onclick="toggleMenu()"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a>
+    </div>
+    <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink nav-drawer-cta">
+      <span class="lang-he-inline">בנה פספורט</span><span class="lang-en-inline" style="display:none">Build Passport</span>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ── DISCLAIMER BANNER (always visible) ───────────── -->
+<div class="disclaimer-banner">
+  ⚠️
+  <span class="lang-he-inline"> זו דוגמה בלבד — ליאור אזולאי הוא אמן פיקטיבי לצורך המחשה. כל הנתונים בדויים.</span>
+  <span class="lang-en-inline" style="display:none"> Sample only — Lior Azulay is a fictional artist for illustration. All data is fabricated.</span>
+</div>
+
+
+<!-- ── PASSPORT HEADER ───────────────────────────────── -->
+<header class="passport-header">
+  <div class="grain"></div>
+  <div class="container passport-header-inner">
+    <!-- Left: Stamp -->
+    <div class="passport-stamp-col">
+      <svg class="door-stamp" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="width:130px;height:130px;transform:rotate(-7deg);">
+        <defs>
+          <path id="pp-curve" d="M100,100 m-82,0 a82,82 0 1,1 164,0 a82,82 0 1,1 -164,0"/>
+        </defs>
+        <circle cx="100" cy="100" r="90" fill="none" stroke="#5B3FD6" stroke-width="2.5"/>
+        <circle cx="100" cy="100" r="72" fill="none" stroke="#5B3FD6" stroke-width="0.75"/>
+        <text font-family="'Space Mono',monospace" font-size="11" fill="#5B3FD6" letter-spacing="3">
+          <textPath href="#pp-curve">GIGPROOF · מאומת · 2026 · VERIFIED ·</textPath>
+        </text>
+        <text x="100" y="93" text-anchor="middle" font-family="'Space Mono',monospace" font-size="16" fill="#5B3FD6" font-weight="700" letter-spacing="1">PROOF</text>
+        <text x="100" y="118" text-anchor="middle" font-family="'Space Mono',monospace" font-size="11" fill="#5B3FD6">· · ·</text>
+      </svg>
+    </div>
+
+    <!-- Center / Right: Artist info -->
+    <div class="passport-bio">
+      <p class="eyebrow on-dark" style="margin-bottom:8px;">
+        <span class="lang-he-inline">דרכון הופעות · BOOKABILITY PASSPORT</span>
+        <span class="lang-en-inline" style="display:none">BOOKABILITY PASSPORT · דרכון הופעות</span>
+      </p>
+      <h1 style="margin-bottom:4px;">
+        <span class="lang-he-inline">ליאור אזולאי</span>
+        <span class="lang-en-inline" style="display:none">Lior Azulay</span>
+      </h1>
+      <p style="font-family:var(--f-mono);font-size:0.8rem;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:16px;">
+        אלקטרוניקה · Electronic &nbsp;/&nbsp;
+        <span class="lang-he-inline">שלב: מתפתח</span>
+        <span class="lang-en-inline" style="display:none">Stage: Developing</span>
+      </p>
+
+      <div class="geo-chips">
+        <span class="geo-chip">תל אביב</span>
+        <span class="geo-chip">חיפה</span>
+        <span class="geo-chip">רדיוס ≤ 50 ק"מ</span>
+      </div>
+
+      <div class="passport-meta" style="margin-top:20px;display:flex;gap:20px;flex-wrap:wrap;">
+        <div class="passport-meta-item">
+          <span class="meta-label">
+            <span class="lang-he-inline">פורסם</span><span class="lang-en-inline" style="display:none">Published</span>
+          </span>
+          <span class="meta-value">מרץ 2026</span>
+        </div>
+        <div class="passport-meta-item">
+          <span class="meta-label">
+            <span class="lang-he-inline">הופעות מתועדות</span><span class="lang-en-inline" style="display:none">Documented gigs</span>
+          </span>
+          <span class="meta-value">3</span>
+        </div>
+        <div class="passport-meta-item">
+          <span class="meta-label">
+            <span class="lang-he-inline">מידת אימות</span><span class="lang-en-inline" style="display:none">Verification level</span>
+          </span>
+          <span class="meta-value" style="color:#5B3FD6;">
+            <span class="lang-he-inline">אושר ע"י מפיק</span>
+            <span class="lang-en-inline" style="display:none">Producer-confirmed</span>
+          </span>
+        </div>
+        <div class="passport-meta-item">
+          <span class="meta-label">GP-ID</span>
+          <span class="meta-value" style="font-family:var(--f-mono);font-size:0.72rem;">GP-2026-0412</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+
+<!-- ── DRAW BLOCK ────────────────────────────────────── -->
+<section class="section-alt" style="padding: 40px 0;">
+  <div class="container">
+    <div class="draw-block">
+      <div class="draw-left">
+        <p class="eyebrow">
+          <span class="lang-he-inline">כוח משיכת קהל · AUDIENCE DRAW</span>
+          <span class="lang-en-inline" style="display:none">AUDIENCE DRAW · כוח משיכת קהל</span>
+        </p>
+        <div class="draw-band-display">
+          <span class="band-pill-lg">60–100</span>
+        </div>
+        <p class="draw-sub">
+          <span class="lang-he-inline">ממוצע ב-3 הופעות מאומתות (תל אביב · חיפה · ינואר–מרץ 2026)</span>
+          <span class="lang-en-inline" style="display:none">Average across 3 verified shows (Tel Aviv · Haifa · Jan–Mar 2026)</span>
+        </p>
+        <div class="draw-method">
+          <span class="method-badge">
+            <span class="lang-he-inline">✓ אושר ע"י מפיק · Club 45</span>
+            <span class="lang-en-inline" style="display:none">✓ Confirmed by producer · Club 45</span>
+          </span>
+          <span class="method-badge">
+            <span class="lang-he-inline">✓ אושר ע"י מפיק · Voltage TLV</span>
+            <span class="lang-en-inline" style="display:none">✓ Confirmed by producer · Voltage TLV</span>
+          </span>
+        </div>
+      </div>
+      <div class="draw-right">
+        <div class="draw-context-card">
+          <p class="draw-context-label">
+            <span class="lang-he-inline">הקשר לפירוש הנתון</span>
+            <span class="lang-en-inline" style="display:none">Context for interpreting this figure</span>
+          </p>
+          <ul class="draw-context-list">
+            <li>
+              <span class="lang-he-inline">📍 כל ההופעות ברדיוס של 25–50 ק"מ מתל אביב</span>
+              <span class="lang-en-inline" style="display:none">📍 All shows within 25–50 km radius of Tel Aviv</span>
+            </li>
+            <li>
+              <span class="lang-he-inline">🏟️ קיבולת מקומות: 120–180</span>
+              <span class="lang-en-inline" style="display:none">🏟️ Venue capacity range: 120–180</span>
+            </li>
+            <li>
+              <span class="lang-he-inline">📅 נתונים מינואר–מרץ 2026 (3 חודשים)</span>
+              <span class="lang-en-inline" style="display:none">📅 Data from Jan–Mar 2026 (3 months)</span>
+            </li>
+            <li>
+              <span class="lang-he-inline">🎤 הופעות סולו (לא פסטיבל)</span>
+              <span class="lang-en-inline" style="display:none">🎤 Standalone shows (not festival)</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── EVIDENCE TABLE ────────────────────────────────── -->
+<section class="section">
+  <div class="container">
+    <p class="eyebrow">
+      <span class="lang-he-inline">יחידות ראיה מאומתות</span>
+      <span class="lang-en-inline" style="display:none">VERIFIED PROOF UNITS</span>
+    </p>
+    <h2>
+      <span class="lang-he">3 הופעות מתועדות.</span>
+      <span class="lang-en">3 documented shows.</span>
+    </h2>
+
+    <!-- Proof Unit 1 -->
+    <div class="proof-unit">
+      <div class="pu-header">
+        <span class="pu-gig-name">
+          <span class="lang-he-inline">Club 45 · תל אביב</span>
+          <span class="lang-en-inline" style="display:none">Club 45 · Tel Aviv</span>
+        </span>
+        <span class="pu-date">ינואר 2026</span>
+        <span class="pu-vrf">VRF-401</span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CLAIM</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">קהל <span class="band-inline">70–100</span> בהופעה</span>
+          <span class="lang-en-inline" style="display:none">Audience band <span class="band-inline">70–100</span></span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CONTEXT</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">הופעה סולו · קיבולת 180 · יום שלישי</span>
+          <span class="lang-en-inline" style="display:none">Standalone show · capacity 180 · Tuesday</span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">METHOD</span>
+        <span class="pu-value pu-method">
+          <span class="lang-he-inline">✓ אושר ע"י מפיק · שי לוי, Club 45</span>
+          <span class="lang-en-inline" style="display:none">✓ Confirmed by producer · Shai Levi, Club 45</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Proof Unit 2 -->
+    <div class="proof-unit">
+      <div class="pu-header">
+        <span class="pu-gig-name">
+          <span class="lang-he-inline">Voltage TLV · תל אביב</span>
+          <span class="lang-en-inline" style="display:none">Voltage TLV · Tel Aviv</span>
+        </span>
+        <span class="pu-date">פברואר 2026</span>
+        <span class="pu-vrf">VRF-407</span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CLAIM</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">קהל <span class="band-inline">60–90</span> בהופעה</span>
+          <span class="lang-en-inline" style="display:none">Audience band <span class="band-inline">60–90</span></span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CONTEXT</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">B2B עם די.ג'יי נוסף · קיבולת 150 · יום שישי</span>
+          <span class="lang-en-inline" style="display:none">B2B with second DJ · capacity 150 · Friday</span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">METHOD</span>
+        <span class="pu-value pu-method">
+          <span class="lang-he-inline">✓ אושר ע"י מפיק · נועם ברק, Voltage TLV</span>
+          <span class="lang-en-inline" style="display:none">✓ Confirmed by producer · Noam Barak, Voltage TLV</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Proof Unit 3 -->
+    <div class="proof-unit">
+      <div class="pu-header">
+        <span class="pu-gig-name">
+          <span class="lang-he-inline">The Underground · חיפה</span>
+          <span class="lang-en-inline" style="display:none">The Underground · Haifa</span>
+        </span>
+        <span class="pu-date">מרץ 2026</span>
+        <span class="pu-vrf">VRF-412</span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CLAIM</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">קהל <span class="band-inline">60–80</span> בהופעה</span>
+          <span class="lang-en-inline" style="display:none">Audience band <span class="band-inline">60–80</span></span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">CONTEXT</span>
+        <span class="pu-value">
+          <span class="lang-he-inline">הופעה סולו · עיר חדשה · קיבולת 120 · שבת</span>
+          <span class="lang-en-inline" style="display:none">Standalone show · new city · capacity 120 · Saturday</span>
+        </span>
+      </div>
+      <div class="pu-row">
+        <span class="pu-label">METHOD</span>
+        <span class="pu-value pu-method">
+          <span class="lang-he-inline">✓ אושר ע"י מפיק · The Underground</span>
+          <span class="lang-en-inline" style="display:none">✓ Confirmed by producer · The Underground</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── ADDITIONAL EVIDENCE ───────────────────────────── -->
+<section class="section section-alt">
+  <div class="container">
+    <p class="eyebrow">
+      <span class="lang-he-inline">ראיות משלימות</span>
+      <span class="lang-en-inline" style="display:none">SUPPLEMENTARY EVIDENCE</span>
+    </p>
+    <p style="color:var(--tally);font-size:0.8rem;font-family:var(--f-mono);margin-bottom:28px;letter-spacing:0.5px;">
+      <span class="lang-he-inline">הקשר בלבד · לא ראיית משיכה ראשונית</span>
+      <span class="lang-en-inline" style="display:none">CONTEXT ONLY · NOT primary draw evidence</span>
+    </p>
+
+    <div class="supp-grid">
+      <div class="supp-card">
+        <span class="supp-label">
+          <span class="lang-he-inline">היסטוריית הופעות</span>
+          <span class="lang-en-inline" style="display:none">GIG HISTORY</span>
+        </span>
+        <div class="supp-value">
+          <span class="lang-he-inline">12+ הופעות חיות ב-18 חודשים</span>
+          <span class="lang-en-inline" style="display:none">12+ live gigs over 18 months</span>
+        </div>
+        <span class="supp-method">
+          <span class="lang-he-inline">🗂 דיווח עצמי · לא אומת</span>
+          <span class="lang-en-inline" style="display:none">🗂 Self-reported · not verified</span>
+        </span>
+      </div>
+
+      <div class="supp-card">
+        <span class="supp-label">
+          <span class="lang-he-inline">כרטיסים שנמכרו</span>
+          <span class="lang-en-inline" style="display:none">TICKETS SOLD</span>
+        </span>
+        <div class="supp-value">
+          <span class="lang-he-inline">מוכר כרטיסים ← מתפתח</span>
+          <span class="lang-en-inline" style="display:none">Sells tickets ← developing</span>
+        </div>
+        <span class="supp-method">
+          <span class="lang-he-inline">🎟 פלטפורמת כרטיסים · חלקי</span>
+          <span class="lang-en-inline" style="display:none">🎟 Ticket platform · partial</span>
+        </span>
+      </div>
+
+      <div class="supp-card">
+        <span class="supp-label">
+          <span class="lang-he-inline">קהילה דיגיטלית</span>
+          <span class="lang-en-inline" style="display:none">DIGITAL COMMUNITY</span>
+        </span>
+        <div class="supp-value">
+          <span class="lang-he-inline">מדיום ← מתפתח</span>
+          <span class="lang-en-inline" style="display:none">Medium ← developing</span>
+        </div>
+        <span class="supp-method">
+          <span class="lang-he-inline">📱 ספירת עוקבים · הקשר בלבד</span>
+          <span class="lang-en-inline" style="display:none">📱 Follower count · context only</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── WHAT THIS SHOWS / DOESN'T SHOW ───────────────── -->
+<section class="section">
+  <div class="container" style="max-width:720px;">
+    <p class="eyebrow">
+      <span class="lang-he-inline">שקיפות · מה הפספורט הזה מראה ומה לא</span>
+      <span class="lang-en-inline" style="display:none">TRANSPARENCY · WHAT THIS PASSPORT SHOWS AND DOESN'T</span>
+    </p>
+
+    <div class="transparency-grid">
+      <div>
+        <h4 style="color:var(--stamp);margin-bottom:12px;">
+          <span class="lang-he-inline">✓ מה מופיע כאן</span>
+          <span class="lang-en-inline" style="display:none">✓ What's shown here</span>
+        </h4>
+        <ul class="transparency-list">
+          <li><span class="lang-he-inline">נדיפת קהל מאומתת ע"י מפיקים</span><span class="lang-en-inline" style="display:none">Draw confirmed by producers</span></li>
+          <li><span class="lang-he-inline">בנדים — לא ספרות מדויקות</span><span class="lang-en-inline" style="display:none">Bands — not exact figures</span></li>
+          <li><span class="lang-he-inline">שיטת האימות לכל ראיה</span><span class="lang-en-inline" style="display:none">Verification method per claim</span></li>
+          <li><span class="lang-he-inline">תאריך ואזור גיאוגרפי</span><span class="lang-en-inline" style="display:none">Date and geographic area</span></li>
+          <li><span class="lang-he-inline">ראיות שהאמן אישר לפרסם</span><span class="lang-en-inline" style="display:none">Evidence the artist approved</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color:var(--tally);margin-bottom:12px;">
+          <span class="lang-he-inline">✗ מה לא מופיע כאן</span>
+          <span class="lang-en-inline" style="display:none">✗ What's NOT shown here</span>
+        </h4>
+        <ul class="transparency-list">
+          <li><span class="lang-he-inline">ציון, אחוז או דירוג</span><span class="lang-en-inline" style="display:none">No score, percentage or ranking</span></li>
+          <li><span class="lang-he-inline">ספרות ספירה מדויקות</span><span class="lang-en-inline" style="display:none">No exact attendance counts</span></li>
+          <li><span class="lang-he-inline">פערים ונקודות שיפור (פרטי לאמן)</span><span class="lang-en-inline" style="display:none">Gaps and improvement points (artist-private)</span></li>
+          <li><span class="lang-he-inline">ראיות שלא אומתו</span><span class="lang-en-inline" style="display:none">Unverified evidence</span></li>
+          <li><span class="lang-he-inline">הבטחה להצלחת הופעה</span><span class="lang-en-inline" style="display:none">No guarantee of performance success</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── CTA BAND ──────────────────────────────────────── -->
+<section class="section-night" style="padding: 56px 0;">
+  <div class="grain"></div>
+  <div class="container" style="text-align:center;max-width:560px;">
+    <p class="eyebrow on-dark" style="margin-bottom:16px;">
+      <span class="lang-he-inline">פספורט כזה — לאמן שלך</span>
+      <span class="lang-en-inline" style="display:none">WANT A PASSPORT LIKE THIS?</span>
+    </p>
+    <h2>
+      <span class="lang-he">בנה פספורט מהופעות שלך.</span>
+      <span class="lang-en">Build a Passport from your own gigs.</span>
+    </h2>
+    <p style="color:rgba(255,255,255,0.5);font-size:0.9rem;margin:16px 0 32px;">
+      <span class="lang-he-inline">שלח למפיקים, קבל אימות — ותן לאמרגן לראות עובדות.</span>
+      <span class="lang-en-inline" style="display:none">Send to producers, get verification — and give booking managers facts.</span>
+    </p>
+    <div class="cta-row" style="justify-content:center;">
+      <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-stamp btn-lg">
+        <span class="lang-he-inline">בנה פספורט — זה בחינם →</span>
+        <span class="lang-en-inline" style="display:none">Build your Passport — free →</span>
+      </a>
+      <a href="artists.html" class="btn btn-ghost btn-lg">
+        <span class="lang-he-inline">עוד על אמנים</span>
+        <span class="lang-en-inline" style="display:none">More for artists</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <span class="footer-logo-text">GIGPROOF</span>
+        <p class="footer-tagline">Pre-booking intelligence for live music.<br>הוכחה. לא הייפ.</p>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">מוצר</span><span class="lang-en-inline" style="display:none">PRODUCT</span></h4>
+        <ul>
+          <li><a href="how-it-works.html"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+          <li><a href="passport-demo.html"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">אנשים</span><span class="lang-en-inline" style="display:none">PEOPLE</span></h4>
+        <ul>
+          <li><a href="artists.html"><span class="lang-he-inline">לאמנים</span><span class="lang-en-inline" style="display:none">For Artists</span></a></li>
+          <li><a href="bookers.html"><span class="lang-he-inline">לאמרגנים</span><span class="lang-en-inline" style="display:none">For Booking Managers</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">יצירת קשר</span><span class="lang-en-inline" style="display:none">CONTACT</span></h4>
+        <ul>
+          <li><a href="contact.html"><span class="lang-he-inline">צור קשר</span><span class="lang-en-inline" style="display:none">Contact</span></a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <span class="footer-copy">© 2026 GIGPROOF</span>
+        <span class="footer-disclaimer">No booking guarantee, ranking or prediction. Evidence freshness shown on every public unit.</span>
+        <div class="footer-links">
+          <a href="#"><span class="lang-he-inline">פרטיות</span><span class="lang-en-inline" style="display:none">Privacy</span></a>
+          <a href="#"><span class="lang-he-inline">תנאי שימוש</span><span class="lang-en-inline" style="display:none">Terms</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ── JS ────────────────────────────────────────────── -->
+<script>
+  const savedLang = localStorage.getItem('gp_lang') || 'he';
+
+  function applyLang(lang) {
+    const isEn = lang === 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+    document.body.classList.toggle('en', isEn);
+    localStorage.setItem('gp_lang', lang);
+    const btn = document.getElementById('langBtn');
+    if (btn) btn.textContent = isEn ? 'HE' : 'EN';
+    document.querySelectorAll('.lang-en-inline').forEach(el => { el.style.display = isEn ? 'inline' : 'none'; });
+    document.querySelectorAll('.lang-he-inline').forEach(el => { el.style.display = isEn ? 'none' : 'inline'; });
+    document.querySelectorAll('.lang-en').forEach(el => { el.style.display = isEn ? 'block' : 'none'; });
+    document.querySelectorAll('.lang-he').forEach(el => { el.style.display = isEn ? 'none' : 'block'; });
+  }
+
+  function toggleLang() {
+    const current = localStorage.getItem('gp_lang') || 'he';
+    applyLang(current === 'he' ? 'en' : 'he');
+  }
+
+  function toggleMenu() {
+    const d = document.getElementById('navDrawer');
+    if (d) d.classList.toggle('open');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    applyLang(savedLang);
+  });
+</script>
+</body>
+</html>

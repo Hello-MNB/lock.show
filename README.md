@@ -6,7 +6,7 @@ Not an EPK, not a CRM. Draw is shown as **bands only**; the firewall forbids any
 score / percentile / ranking / exact head-count.
 
 - **Stack:** React + Vite + Tailwind · Supabase (Auth + Postgres + RLS + Storage) · Express API (→ Vercel serverless) · Anthropic Claude (stubbed until a key is added)
-- **Language:** English is primary (LTR). Hebrew is a full RTL localization — toggle in-app. `dir`/`lang` flip automatically.
+- **Language:** EN + HE (Phase 1); RU + DE (Phase 2). Full scene-native localization, NOT translation. **Hebrew is authored native-first** (scene-native IL terms); English is the dev/string-key baseline. RTL/LTR `dir`/`lang` flip automatically. Per Master Canon v3.5.
 - **Users:** artist · agency · booker · operator (admin)
 
 ## Quick start (local)

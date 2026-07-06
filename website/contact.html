@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="צור קשר עם GIGPROOF — שאלות, משוב, שיתופי פעולה.">
+  <title>GIGPROOF · צור קשר</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── NAVBAR ────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner container">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;transform:rotate(-4deg);flex-shrink:0;">
+        <circle cx="30" cy="30" r="27" fill="none" stroke="#5B3FD6" stroke-width="1.5"/>
+        <circle cx="30" cy="30" r="21" fill="none" stroke="#5B3FD6" stroke-width="0.5"/>
+        <text font-family="'Space Mono',monospace" font-size="6" fill="#5B3FD6" font-weight="700" text-anchor="middle" x="30" y="33">GP</text>
+      </svg>
+      <span class="nav-logo-text">GIGPROOF</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a></li>
+      <li><a href="artists.html"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a></li>
+      <li><a href="bookers.html"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a></li>
+      <li><a href="how-it-works.html"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+      <li><a href="passport-demo.html"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
+      <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink btn-sm">
+        <span class="lang-he-inline">בנה פספורט</span><span class="lang-en-inline" style="display:none">Build Passport</span>
+      </a>
+      <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
+    </div>
+  </div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer-links">
+      <a href="index.html" onclick="toggleMenu()"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a>
+      <a href="artists.html" onclick="toggleMenu()"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a>
+      <a href="bookers.html" onclick="toggleMenu()"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a>
+      <a href="passport-demo.html" onclick="toggleMenu()"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a>
+    </div>
+    <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink nav-drawer-cta">
+      <span class="lang-he-inline">בנה פספורט</span><span class="lang-en-inline" style="display:none">Build Passport</span>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ── PAGE HEADER ───────────────────────────────────── -->
+<div class="page-header">
+  <div class="container">
+    <p class="eyebrow">
+      <span class="lang-he-inline">צור קשר · CONTACT</span>
+      <span class="lang-en-inline" style="display:none">CONTACT · צור קשר</span>
+    </p>
+    <h1>
+      <span class="lang-he">שאלות? רעיונות? שיתופי פעולה?</span>
+      <span class="lang-en">Questions? Ideas? Collaboration?</span>
+    </h1>
+    <p class="hero-sub" style="color:var(--tally);max-width:500px;">
+      <span class="lang-he-inline">GIGPROOF בשלב בטא סגור — תמיד שמחים לשמוע מאמנים, אמרגנים ומפיקים.</span>
+      <span class="lang-en-inline" style="display:none">GIGPROOF is in closed beta — we always want to hear from artists, booking managers, and producers.</span>
+    </p>
+  </div>
+</div>
+
+
+<!-- ── CONTACT GRID ──────────────────────────────────── -->
+<section class="section">
+  <div class="container contact-grid">
+    <!-- Form -->
+    <div class="contact-form-col">
+      <p class="eyebrow" style="margin-bottom:20px;">
+        <span class="lang-he-inline">שלח הודעה</span>
+        <span class="lang-en-inline" style="display:none">SEND A MESSAGE</span>
+      </p>
+
+      <!-- Static form — action TBD; shows success state via JS -->
+      <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
+        <div class="form-group">
+          <label for="f-name">
+            <span class="lang-he-inline">שם</span>
+            <span class="lang-en-inline" style="display:none">Name</span>
+          </label>
+          <input type="text" id="f-name" name="name" required
+            placeholder="" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="f-email">
+            <span class="lang-he-inline">כתובת מייל</span>
+            <span class="lang-en-inline" style="display:none">Email address</span>
+          </label>
+          <input type="email" id="f-email" name="email" required
+            placeholder="" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="f-role">
+            <span class="lang-he-inline">תפקיד</span>
+            <span class="lang-en-inline" style="display:none">Role</span>
+          </label>
+          <select id="f-role" name="role">
+            <option value="">
+              <span class="lang-he-inline">— בחר —</span>
+              <span class="lang-en-inline">— Select —</span>
+            </option>
+            <option value="artist">
+              <span class="lang-he-inline">אמן/ית</span>
+              <span class="lang-en-inline">Artist</span>
+            </option>
+            <option value="booker">
+              <span class="lang-he-inline">אמרגן/ית</span>
+              <span class="lang-en-inline">Booking Manager</span>
+            </option>
+            <option value="producer">
+              <span class="lang-he-inline">מפיק/ה</span>
+              <span class="lang-en-inline">Producer</span>
+            </option>
+            <option value="other">
+              <span class="lang-he-inline">אחר</span>
+              <span class="lang-en-inline">Other</span>
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="f-message">
+            <span class="lang-he-inline">הודעה</span>
+            <span class="lang-en-inline" style="display:none">Message</span>
+          </label>
+          <textarea id="f-message" name="message" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-stamp btn-lg" style="width:100%;">
+          <span class="lang-he-inline">שלח →</span>
+          <span class="lang-en-inline" style="display:none">Send →</span>
+        </button>
+        <p class="form-note">
+          <span class="lang-he-inline">אין ספאם. הנתונים לא יועברו לצד שלישי.</span>
+          <span class="lang-en-inline" style="display:none">No spam. Data is not shared with third parties.</span>
+        </p>
+      </form>
+
+      <div class="form-success" id="formSuccess" style="display:none;">
+        <p style="font-size:1.5rem;margin-bottom:8px;">✓</p>
+        <h3><span class="lang-he-inline">הודעה נשלחה!</span><span class="lang-en-inline" style="display:none">Message sent!</span></h3>
+        <p style="color:var(--tally);"><span class="lang-he-inline">נחזור אליך בהקדם.</span><span class="lang-en-inline" style="display:none">We'll get back to you soon.</span></p>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="contact-info-col">
+      <div class="contact-box">
+        <p class="eyebrow" style="margin-bottom:16px;">
+          <span class="lang-he-inline">פרטי קשר</span>
+          <span class="lang-en-inline" style="display:none">CONTACT INFO</span>
+        </p>
+        <div class="contact-detail">
+          <span class="contact-detail-label">
+            <span class="lang-he-inline">ישראל</span>
+            <span class="lang-en-inline" style="display:none">Israel</span>
+          </span>
+          <span class="contact-detail-value">Tel Aviv</span>
+        </div>
+        <div class="contact-detail">
+          <span class="contact-detail-label">
+            <span class="lang-he-inline">שלב</span>
+            <span class="lang-en-inline" style="display:none">Stage</span>
+          </span>
+          <span class="contact-detail-value">
+            <span class="lang-he-inline">בטא סגור 2026</span>
+            <span class="lang-en-inline" style="display:none">Closed Beta 2026</span>
+          </span>
+        </div>
+        <div class="contact-detail">
+          <span class="contact-detail-label">
+            <span class="lang-he-inline">שפות</span>
+            <span class="lang-en-inline" style="display:none">Languages</span>
+          </span>
+          <span class="contact-detail-value">עברית · English</span>
+        </div>
+      </div>
+
+      <div class="contact-box" style="margin-top:24px;">
+        <p class="eyebrow" style="margin-bottom:16px;">
+          <span class="lang-he-inline">מה אנחנו מחפשים</span>
+          <span class="lang-en-inline" style="display:none">WHAT WE'RE LOOKING FOR</span>
+        </p>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+          <li style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="color:var(--stamp);font-family:var(--f-mono);font-size:0.75rem;padding-top:2px;flex-shrink:0;">✓</span>
+            <span style="font-size:0.875rem;color:var(--tally);">
+              <span class="lang-he-inline">אמנים עצמאיים שרוצים להוכיח כוח משיכה</span>
+              <span class="lang-en-inline" style="display:none">Independent artists who want to prove their draw</span>
+            </span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="color:var(--stamp);font-family:var(--f-mono);font-size:0.75rem;padding-top:2px;flex-shrink:0;">✓</span>
+            <span style="font-size:0.875rem;color:var(--tally);">
+              <span class="lang-he-inline">אמרגנים שרוצים להעריך אמנים לא מוכרים</span>
+              <span class="lang-en-inline" style="display:none">Booking managers evaluating unfamiliar talent</span>
+            </span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="color:var(--stamp);font-family:var(--f-mono);font-size:0.75rem;padding-top:2px;flex-shrink:0;">✓</span>
+            <span style="font-size:0.875rem;color:var(--tally);">
+              <span class="lang-he-inline">מפיקים שמוכנים לאמת הופעות</span>
+              <span class="lang-en-inline" style="display:none">Producers willing to verify shows</span>
+            </span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;">
+            <span style="color:var(--stamp);font-family:var(--f-mono);font-size:0.75rem;padding-top:2px;flex-shrink:0;">✓</span>
+            <span style="font-size:0.875rem;color:var(--tally);">
+              <span class="lang-he-inline">משוב — מה עובד, מה לא</span>
+              <span class="lang-en-inline" style="display:none">Feedback — what works, what doesn't</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── CTA BAND ──────────────────────────────────────── -->
+<section class="section-night" style="padding:48px 0;">
+  <div class="grain"></div>
+  <div class="container" style="text-align:center;max-width:500px;">
+    <h2>
+      <span class="lang-he">מוכן להתחיל בלי לחכות?</span>
+      <span class="lang-en">Ready to start without waiting?</span>
+    </h2>
+    <p style="color:rgba(255,255,255,0.5);margin:12px 0 28px;font-size:0.9rem;">
+      <span class="lang-he-inline">הרשמה פתוחה — גש ישירות לאפליקציה.</span>
+      <span class="lang-en-inline" style="display:none">Registration is open — go directly to the app.</span>
+    </p>
+    <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-stamp btn-lg">
+      <span class="lang-he-inline">בנה פספורט — זה בחינם →</span>
+      <span class="lang-en-inline" style="display:none">Build your Passport — free →</span>
+    </a>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <span class="footer-logo-text">GIGPROOF</span>
+        <p class="footer-tagline">Pre-booking intelligence for live music.<br>הוכחה. לא הייפ.</p>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">מוצר</span><span class="lang-en-inline" style="display:none">PRODUCT</span></h4>
+        <ul>
+          <li><a href="how-it-works.html"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+          <li><a href="passport-demo.html"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">אנשים</span><span class="lang-en-inline" style="display:none">PEOPLE</span></h4>
+        <ul>
+          <li><a href="artists.html"><span class="lang-he-inline">לאמנים</span><span class="lang-en-inline" style="display:none">For Artists</span></a></li>
+          <li><a href="bookers.html"><span class="lang-he-inline">לאמרגנים</span><span class="lang-en-inline" style="display:none">For Booking Managers</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">יצירת קשר</span><span class="lang-en-inline" style="display:none">CONTACT</span></h4>
+        <ul><li><a href="contact.html" class="active"><span class="lang-he-inline">צור קשר</span><span class="lang-en-inline" style="display:none">Contact</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <span class="footer-copy">© 2026 GIGPROOF</span>
+        <span class="footer-disclaimer">No booking guarantee, ranking or prediction.</span>
+        <div class="footer-links">
+          <a href="#"><span class="lang-he-inline">פרטיות</span><span class="lang-en-inline" style="display:none">Privacy</span></a>
+          <a href="#"><span class="lang-he-inline">תנאי שימוש</span><span class="lang-en-inline" style="display:none">Terms</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const savedLang = localStorage.getItem('gp_lang') || 'he';
+  function applyLang(lang) {
+    const isEn = lang === 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+    document.body.classList.toggle('en', isEn);
+    localStorage.setItem('gp_lang', lang);
+    const btn = document.getElementById('langBtn');
+    if (btn) btn.textContent = isEn ? 'HE' : 'EN';
+    document.querySelectorAll('.lang-en-inline').forEach(el => { el.style.display = isEn ? 'inline' : 'none'; });
+    document.querySelectorAll('.lang-he-inline').forEach(el => { el.style.display = isEn ? 'none' : 'inline'; });
+    document.querySelectorAll('.lang-en').forEach(el => { el.style.display = isEn ? 'block' : 'none'; });
+    document.querySelectorAll('.lang-he').forEach(el => { el.style.display = isEn ? 'none' : 'block'; });
+  }
+  function toggleLang() { applyLang(localStorage.getItem('gp_lang') === 'en' ? 'he' : 'en'); }
+  function toggleMenu() { document.getElementById('navDrawer')?.classList.toggle('open'); }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    // Stub — form action to be wired to Formspree/similar before launch
+    document.getElementById('contactForm').style.display = 'none';
+    document.getElementById('formSuccess').style.display = 'block';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => applyLang(savedLang));
+</script>
+</body>
+</html>

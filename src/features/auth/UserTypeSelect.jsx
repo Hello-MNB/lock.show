@@ -13,13 +13,23 @@ export default function UserTypeSelect() {
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
 
-  // S2 "what do you do?" (§19.5): אמן / אמרגן / מפיק. 'agency' is NOT offered —
-  // an agency is a booker-org that upgraded + added seats (O5). 'operator' is
-  // internal. Everyone starts in a personal SOLO org.
+  // S2 "what do you do?" — three self-select roles:
+  //   ARTIST  = אמן            (supply side, self-serve Passport builder)
+  //   BOOKER  = מזמין/מפיק אירוע (demand side, trust-receiver — evaluates Passports)
+  //   AGENCY  = אמרגן/סוכנות    (talent agency, primary payer — manages artist roster)
+  //
+  // NOTE: PRODUCER (claim-confirmer / מפיק מאשר) is NOT self-selected here.
+  // Claim-confirmers arrive via a one-time magic link (/confirm/:token) and never
+  // need a full account. Putting PRODUCER here caused venue-bookers to tap it
+  // thinking they were the demand-side מפיק — wrong flow entirely.
+  //
+  // NOTE: אמרגן in Israeli music = talent AGENT (supply side). The demand-side
+  // event organizer is called מזמין or מפיק אירוע — hence BOOKER label above.
+  // Mapping אמרגן → BOOKER was a critical domain inversion (fixed BT-56–58).
   const ROLE_OPTIONS = [
     { key: ROLES.ARTIST, label: T.roleSelect.artist, route: '/consent' },
     { key: ROLES.BOOKER, label: T.roleSelect.booker, route: '/discover' },
-    { key: ROLES.PRODUCER, label: T.roleSelect.producer, route: '/producer' },
+    { key: ROLES.AGENCY, label: T.roleSelect.agency, route: '/agency' },
   ]
 
   async function choose(role, route) {

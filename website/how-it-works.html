@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GIGPROOF — איך זה עובד. מהופעה לפספורט מאומת בשלושה שלבים.">
+  <title>GIGPROOF · איך זה עובד</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ── NAVBAR ────────────────────────────────────────── -->
+<nav class="navbar">
+  <div class="nav-inner container">
+    <a href="index.html" class="nav-logo">
+      <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;transform:rotate(-4deg);flex-shrink:0;">
+        <circle cx="30" cy="30" r="27" fill="none" stroke="#5B3FD6" stroke-width="1.5"/>
+        <circle cx="30" cy="30" r="21" fill="none" stroke="#5B3FD6" stroke-width="0.5"/>
+        <text font-family="'Space Mono',monospace" font-size="6" fill="#5B3FD6" font-weight="700" text-anchor="middle" x="30" y="33">GP</text>
+      </svg>
+      <span class="nav-logo-text">GIGPROOF</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a></li>
+      <li><a href="artists.html"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a></li>
+      <li><a href="bookers.html"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a></li>
+      <li><a href="how-it-works.html" class="active"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+      <li><a href="passport-demo.html"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
+      <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink btn-sm">
+        <span class="lang-he-inline">בנה פספורט</span><span class="lang-en-inline" style="display:none">Build Passport</span>
+      </a>
+      <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
+    </div>
+  </div>
+  <div class="nav-drawer" id="navDrawer">
+    <div class="nav-drawer-links">
+      <a href="index.html" onclick="toggleMenu()"><span class="lang-he-inline">בית</span><span class="lang-en-inline" style="display:none">Home</span></a>
+      <a href="artists.html" onclick="toggleMenu()"><span class="lang-he-inline">אמנים</span><span class="lang-en-inline" style="display:none">Artists</span></a>
+      <a href="bookers.html" onclick="toggleMenu()"><span class="lang-he-inline">אמרגנים</span><span class="lang-en-inline" style="display:none">Booking Managers</span></a>
+      <a href="passport-demo.html" onclick="toggleMenu()"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a>
+    </div>
+    <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-ink nav-drawer-cta">
+      <span class="lang-he-inline">בנה פספורט</span><span class="lang-en-inline" style="display:none">Build Passport</span>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ── PAGE HEADER ───────────────────────────────────── -->
+<div class="page-header">
+  <div class="container">
+    <p class="eyebrow">
+      <span class="lang-he-inline">איך זה עובד · THE PROCESS</span>
+      <span class="lang-en-inline" style="display:none">HOW IT WORKS · THE PROCESS</span>
+    </p>
+    <h1>
+      <span class="lang-he">מהופעה — לראיה מאומתת.</span>
+      <span class="lang-en">From gig to verified evidence.</span>
+    </h1>
+    <p class="hero-sub" style="color:var(--tally);max-width:540px;">
+      <span class="lang-he-inline">שלושה שחקנים. שלושה צעדים. ראיה שאפשר לסמוך עליה.</span>
+      <span class="lang-en-inline" style="display:none">Three players. Three steps. Evidence you can trust.</span>
+    </p>
+  </div>
+</div>
+
+
+<!-- ── THREE PLAYERS ─────────────────────────────────── -->
+<section class="section section-alt">
+  <div class="container">
+    <p class="eyebrow">
+      <span class="lang-he-inline">שלושה שחקנים</span>
+      <span class="lang-en-inline" style="display:none">THREE PLAYERS</span>
+    </p>
+    <div class="players-grid">
+      <div class="player-card">
+        <span class="player-num">A</span>
+        <h3><span class="lang-he-inline">אמן</span><span class="lang-en-inline" style="display:none">Artist</span></h3>
+        <p><span class="lang-he-inline">בונה פרופיל, מוסיף הופעות, שולח לינקים לאימות מפיקים ומחליט מה לפרסם בפספורט.</span><span class="lang-en-inline" style="display:none">Builds a profile, logs gigs, sends verification links to producers, and decides what to publish in the Passport.</span></p>
+      </div>
+      <div class="player-card">
+        <span class="player-num">B</span>
+        <h3><span class="lang-he-inline">מפיק</span><span class="lang-en-inline" style="display:none">Producer</span></h3>
+        <p><span class="lang-he-inline">מקבל לינק קסם, מאשר את נתוני ההופעה ב-30 שניות — ללא חשבון, ללא סיסמה, ללא אפליקציה.</span><span class="lang-en-inline" style="display:none">Receives a magic link, confirms the gig data in 30 seconds — no account, no password, no app.</span></p>
+      </div>
+      <div class="player-card">
+        <span class="player-num">C</span>
+        <h3><span class="lang-he-inline">אמרגן</span><span class="lang-en-inline" style="display:none">Booking Manager</span></h3>
+        <p><span class="lang-he-inline">מקבל לינק לפספורט, פותח בדפדפן, רואה ראיות עם שיטת אימות ותאריך — ומחליט.</span><span class="lang-en-inline" style="display:none">Receives a Passport link, opens in browser, sees evidence with method labels and dates — and decides.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── STEP BY STEP ──────────────────────────────────── -->
+<section class="section">
+  <div class="container" style="max-width:740px;">
+    <p class="eyebrow">
+      <span class="lang-he-inline">השלבים בפרוטרוט</span>
+      <span class="lang-en-inline" style="display:none">STEP BY STEP</span>
+    </p>
+    <h2>
+      <span class="lang-he">מהרשמה לפספורט — הכל.</span>
+      <span class="lang-en">From signup to Passport — everything.</span>
+    </h2>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-marker">1</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">אמן נרשם ובונה פרופיל</span><span class="lang-en-inline" style="display:none">Artist signs up and builds a profile</span></h3>
+          <p><span class="lang-he-inline">הרשמה עם מייל, גוגל או פייסבוק. מוסיפים שם, ז'אנר, אזור גיאוגרפי. זה הבסיס.</span><span class="lang-en-inline" style="display:none">Sign up with email, Google or Facebook. Add name, genre, geographic area. That's the foundation.</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">2</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">מוסיפים הופעה</span><span class="lang-en-inline" style="display:none">Log a gig</span></h3>
+          <p><span class="lang-he-inline">תאריך, מקום, הערכת קהל. ההופעה נכנסת לרדאר האישי עם סטטוס "ממתין לאימות".</span><span class="lang-en-inline" style="display:none">Date, venue, audience estimate. The gig enters the personal radar with status "awaiting verification".</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">3</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">שולחים לינק למפיק</span><span class="lang-en-inline" style="display:none">Send magic link to producer</span></h3>
+          <p><span class="lang-he-inline">GIGPROOF יוצר לינק ייחודי להופעה. שולחים בוואטסאפ, SMS או מייל למפיק/ית שיכולים לאשר.</span><span class="lang-en-inline" style="display:none">GIGPROOF creates a unique link for the gig. Send via WhatsApp, SMS or email to the producer who can confirm.</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">4</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">מפיק מאשר ב-30 שניות</span><span class="lang-en-inline" style="display:none">Producer confirms in 30 seconds</span></h3>
+          <p><span class="lang-he-inline">מפיק פותח לינק, בודק תאריך ומקום, לוחץ "מאשר". ההופעה מקבלת תווית "אושר ע"י מפיק".</span><span class="lang-en-inline" style="display:none">Producer opens link, checks date and venue, clicks "confirm". The gig gets a "producer-confirmed" label.</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">5</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">אמן מאשר לפרסום</span><span class="lang-en-inline" style="display:none">Artist approves for publication</span></h3>
+          <p><span class="lang-he-inline">כל ראיה מחכה לאישורך. אתה בוחר מה חוצה לפספורט הציבורי — שלב חובה, לא אופציונלי.</span><span class="lang-en-inline" style="display:none">Every piece of evidence waits for your approval. You choose what crosses into the public Passport — required step, not optional.</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">6</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">פספורט ציבורי מוכן — שולחים לאמרגן</span><span class="lang-en-inline" style="display:none">Public Passport ready — send to booking manager</span></h3>
+          <p><span class="lang-he-inline">לינק ייחודי לפספורט. שולחים בוואטסאפ. האמרגן פותח בדפדפן ורואה ראיות — ללא חשבון.</span><span class="lang-en-inline" style="display:none">Unique Passport link. Send via WhatsApp. The booking manager opens in a browser and sees evidence — no account needed.</span></p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker">7</div>
+        <div class="timeline-body">
+          <h3><span class="lang-he-inline">בקשת זמינות (אופציונלי)</span><span class="lang-en-inline" style="display:none">Availability request (optional)</span></h3>
+          <p><span class="lang-he-inline">אמרגן שמעוניין יכול לשלוח בקשת זמינות דרך הפספורט — ישירות אליך, ללא מתווך.</span><span class="lang-en-inline" style="display:none">An interested booking manager can send an availability request through the Passport — directly to you, no intermediary.</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── WHAT THE PASSPORT SHOWS ───────────────────────── -->
+<section class="section-night">
+  <div class="grain"></div>
+  <div class="container" style="max-width:680px;">
+    <p class="eyebrow on-dark">
+      <span class="lang-he-inline">עקרונות הפיירוול</span>
+      <span class="lang-en-inline" style="display:none">FIREWALL PRINCIPLES</span>
+    </p>
+    <h2>
+      <span class="lang-he">כל ראיה ציבורית עומדת בחמישה כללים.</span>
+      <span class="lang-en">Every public claim meets five rules.</span>
+    </h2>
+    <div class="pillars-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:32px;">
+      <div class="pillar">
+        <span class="pillar-num">✓</span>
+        <p><span class="lang-he-inline">בנד — לא ספרה מדויקת</span><span class="lang-en-inline" style="display:none">Band — not exact figure</span></p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">✓</span>
+        <p><span class="lang-he-inline">שיטת אימות ברורה</span><span class="lang-en-inline" style="display:none">Clear verification method</span></p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">✓</span>
+        <p><span class="lang-he-inline">תאריך ואזור גיאוגרפי</span><span class="lang-en-inline" style="display:none">Date and geographic area</span></p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">✓</span>
+        <p><span class="lang-he-inline">אושר ע"י האמן לפרסום</span><span class="lang-en-inline" style="display:none">Approved by artist for publication</span></p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-num">✗</span>
+        <p style="color:var(--void);"><span class="lang-he-inline">אין ציון, דירוג או הבטחה</span><span class="lang-en-inline" style="display:none">No score, ranking or guarantee</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── CTA ───────────────────────────────────────────── -->
+<section class="section">
+  <div class="container" style="text-align:center;max-width:520px;">
+    <h2>
+      <span class="lang-he">מוכן להתחיל?</span>
+      <span class="lang-en">Ready to start?</span>
+    </h2>
+    <div class="cta-row" style="justify-content:center;margin-top:24px;">
+      <a href="https://v6-b4-artist-pre-booking-intelligen.vercel.app" target="_blank" class="btn btn-stamp btn-lg">
+        <span class="lang-he-inline">בנה פספורט — זה בחינם →</span>
+        <span class="lang-en-inline" style="display:none">Build your Passport — free →</span>
+      </a>
+      <a href="passport-demo.html" class="btn btn-outline btn-lg">
+        <span class="lang-he-inline">ראה דוגמה</span>
+        <span class="lang-en-inline" style="display:none">See a sample</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── FOOTER ────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <span class="footer-logo-text">GIGPROOF</span>
+        <p class="footer-tagline">Pre-booking intelligence for live music.<br>הוכחה. לא הייפ.</p>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">מוצר</span><span class="lang-en-inline" style="display:none">PRODUCT</span></h4>
+        <ul>
+          <li><a href="how-it-works.html"><span class="lang-he-inline">איך זה עובד</span><span class="lang-en-inline" style="display:none">How It Works</span></a></li>
+          <li><a href="passport-demo.html"><span class="lang-he-inline">דוגמת פספורט</span><span class="lang-en-inline" style="display:none">Sample Passport</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">אנשים</span><span class="lang-en-inline" style="display:none">PEOPLE</span></h4>
+        <ul>
+          <li><a href="artists.html"><span class="lang-he-inline">לאמנים</span><span class="lang-en-inline" style="display:none">For Artists</span></a></li>
+          <li><a href="bookers.html"><span class="lang-he-inline">לאמרגנים</span><span class="lang-en-inline" style="display:none">For Booking Managers</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <h4><span class="lang-he-inline">יצירת קשר</span><span class="lang-en-inline" style="display:none">CONTACT</span></h4>
+        <ul><li><a href="contact.html"><span class="lang-he-inline">צור קשר</span><span class="lang-en-inline" style="display:none">Contact</span></a></li></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <span class="footer-copy">© 2026 GIGPROOF</span>
+        <span class="footer-disclaimer">No booking guarantee, ranking or prediction.</span>
+        <div class="footer-links">
+          <a href="#"><span class="lang-he-inline">פרטיות</span><span class="lang-en-inline" style="display:none">Privacy</span></a>
+          <a href="#"><span class="lang-he-inline">תנאי שימוש</span><span class="lang-en-inline" style="display:none">Terms</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const savedLang = localStorage.getItem('gp_lang') || 'he';
+  function applyLang(lang) {
+    const isEn = lang === 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+    document.body.classList.toggle('en', isEn);
+    localStorage.setItem('gp_lang', lang);
+    const btn = document.getElementById('langBtn');
+    if (btn) btn.textContent = isEn ? 'HE' : 'EN';
+    document.querySelectorAll('.lang-en-inline').forEach(el => { el.style.display = isEn ? 'inline' : 'none'; });
+    document.querySelectorAll('.lang-he-inline').forEach(el => { el.style.display = isEn ? 'none' : 'inline'; });
+    document.querySelectorAll('.lang-en').forEach(el => { el.style.display = isEn ? 'block' : 'none'; });
+    document.querySelectorAll('.lang-he').forEach(el => { el.style.display = isEn ? 'none' : 'block'; });
+  }
+  function toggleLang() { applyLang(localStorage.getItem('gp_lang') === 'en' ? 'he' : 'en'); }
+  function toggleMenu() { document.getElementById('navDrawer')?.classList.toggle('open'); }
+  document.addEventListener('DOMContentLoaded', () => applyLang(savedLang));
+</script>
+</body>
+</html>
