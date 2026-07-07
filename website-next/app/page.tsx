@@ -1,6 +1,5 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
-import { DoorStamp } from '@/components/door-stamp'
 
 const APP_URL = 'https://app.gigproof.co'
 const SITE_URL = 'https://gigproof.co'
@@ -75,19 +74,59 @@ const jsonLd = {
   ],
 }
 
-// ─── Inline sub-components ─────────────────────────────────────────────────
+// ─── Inline icon helper ────────────────────────────────────────────────────
+// Paths sourced from gigproof-icons.svg (Codex design system)
+const ICON_PATHS: Record<string, string> = {
+  artist:   '<circle cx="12" cy="8" r="3"/><path d="M5.5 20c.7-4 2.8-6 6.5-6s5.8 2 6.5 6"/><path d="M19 4v7M16.5 6.5 19 4l2.5 2.5"/>',
+  manager:  '<circle cx="8" cy="8" r="2.5"/><circle cx="17" cy="9" r="2"/><path d="M3.5 19c.5-3.4 2-5.2 4.5-5.2s4 1.8 4.5 5.2M13.5 18c.4-2.7 1.6-4.1 3.5-4.1s3.1 1.4 3.5 4.1"/><path d="M12 5.5 14.5 3 17 5.5"/>',
+  producer: '<path d="M4 5h16v11H4zM8 20h8M12 16v4"/><path d="m8 12 3-3 2.5 2 3-3"/>',
+  approved: '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 8"/>',
+  arrow:    '<path d="M4 12h15M14 7l5 5-5 5"/>',
+  lock:     '<path d="M6 10h12v11H6zM8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/><circle cx="12" cy="15" r="1.2"/>',
+  passport: '<path d="M5 3h14v18H5z"/><circle cx="12" cy="10" r="3"/><path d="M8 17c.7-2 2-3 4-3s3.3 1 4 3"/>',
+}
 
-function Tag({ children }: { children: React.ReactNode }) {
+function Icon({
+  id,
+  size = 18,
+  color = 'currentColor',
+}: {
+  id: string
+  size?: number
+  color?: string
+}) {
+  const paths = ICON_PATHS[id] ?? ''
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}
+      dangerouslySetInnerHTML={{ __html: paths }}
+    />
+  )
+}
+
+// ─── Shared sub-components ─────────────────────────────────────────────────
+
+function RoleTag({ children }: { children: React.ReactNode }) {
   return (
     <span
       style={{
         display: 'inline-block',
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.7rem',
+        fontSize: '0.65rem',
         fontWeight: 700,
         letterSpacing: '0.1em',
-        color: 'var(--color-stamp)',
-        border: '1px solid var(--color-stamp)',
+        color: 'var(--color-ink)',
+        background: 'rgba(200,240,77,0.14)',
+        border: '1px solid rgba(200,240,77,0.4)',
         borderRadius: 'var(--radius-sm)',
         padding: '0.15rem 0.5rem',
         marginBottom: '0.75rem',
@@ -103,92 +142,18 @@ function MethodBadge({ label }: { label: string }) {
     <span
       style={{
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.65rem',
+        fontSize: '0.6rem',
         fontWeight: 700,
         letterSpacing: '0.08em',
         color: 'var(--color-stamp)',
         background: 'rgba(200,240,77,0.08)',
         border: '1px solid rgba(200,240,77,0.2)',
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: '2px',
         padding: '0.15rem 0.4rem',
       }}
     >
       {label}
     </span>
-  )
-}
-
-function InlineProofUnit({
-  claim,
-  context,
-  method,
-  reviewed,
-  isBand = false,
-  note,
-}: {
-  claim: string
-  context: string
-  method: string
-  reviewed: string
-  isBand?: boolean
-  note?: string
-}) {
-  return (
-    <div
-      style={{
-        borderInlineStart: '2px solid var(--color-stamp)',
-        paddingInlineStart: '1rem',
-        marginBottom: '1.25rem',
-      }}
-    >
-      <div
-        style={{
-          fontFamily: isBand ? 'var(--font-space-mono)' : 'var(--font-archivo)',
-          fontSize: isBand ? '1.4rem' : '1.05rem',
-          fontWeight: 700,
-          color: 'var(--color-ink)',
-          lineHeight: 1.2,
-          marginBottom: '0.2rem',
-        }}
-      >
-        {claim}
-      </div>
-      <div
-        style={{
-          fontSize: '0.85rem',
-          color: 'var(--color-tally)',
-          marginBottom: '0.4rem',
-          lineHeight: 1.4,
-        }}
-      >
-        {context}
-      </div>
-      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <MethodBadge label={method} />
-        <span
-          style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.65rem',
-            color: 'var(--color-tally)',
-            letterSpacing: '0.06em',
-          }}
-        >
-          {reviewed}
-        </span>
-      </div>
-      {note && (
-        <div
-          style={{
-            marginTop: '0.3rem',
-            fontSize: '0.75rem',
-            color: 'var(--color-tally)',
-            fontStyle: 'italic',
-          }}
-        >
-          {note}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -206,141 +171,438 @@ export default function HomePage() {
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section
           style={{
-            background: 'var(--color-ink)',
+            background: `
+              linear-gradient(135deg,
+                rgba(10,13,11,0.97) 0%,
+                rgba(10,13,11,0.88) 52%,
+                rgba(10,13,11,0.5)  100%
+              ),
+              url('/gigproof-live-hero.webp') center/cover no-repeat
+            `,
             color: 'var(--color-paper)',
-            padding: 'clamp(4rem, 10vw, 7rem) 1.25rem clamp(3rem, 7vw, 5rem)',
-            textAlign: 'center',
+            minHeight: '640px',
+            padding: 'clamp(3.5rem, 8vw, 5.5rem) 1.5rem',
             position: 'relative',
             overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          {/* Grain texture */}
+          {/* Lime ambient glow — the תמנון */}
           <div
             aria-hidden="true"
             style={{
               position: 'absolute',
-              inset: 0,
-              backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'1\'/%3E%3C/svg%3E")',
-              backgroundSize: '256px 256px',
-              opacity: 0.04,
+              width: '480px',
+              height: '480px',
+              borderRadius: '50%',
+              right: '-140px',
+              bottom: '-220px',
+              background: 'rgba(200,240,77,0.12)',
+              filter: 'blur(75px)',
               pointerEvents: 'none',
             }}
           />
-          {/* Stamp watermark — top right */}
+          {/* Secondary top-left glow */}
           <div
             aria-hidden="true"
             style={{
               position: 'absolute',
-              top: '-20px',
-              right: '-60px',
-              transform: 'rotate(-12deg)',
-              color: 'var(--color-paper)',
-              opacity: 0.06,
-              pointerEvents: 'none',
-            }}
-          >
-            <DoorStamp size={320} />
-          </div>
-          {/* Stamp watermark — bottom left, fainter */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              bottom: '-30px',
+              width: '300px',
+              height: '300px',
+              borderRadius: '50%',
               left: '-80px',
-              transform: 'rotate(9deg)',
-              color: 'var(--color-paper)',
-              opacity: 0.03,
+              top: '-60px',
+              background: 'rgba(200,240,77,0.05)',
+              filter: 'blur(60px)',
               pointerEvents: 'none',
             }}
+          />
+
+          {/* Hero grid */}
+          <div
+            className="hero-grid"
+            style={{
+              maxWidth: '1100px',
+              margin: '0 auto',
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(300px, 0.7fr)',
+              gap: 'clamp(2rem, 6vw, 5rem)',
+              alignItems: 'center',
+              position: 'relative',
+            }}
           >
-            <DoorStamp size={260} />
-          </div>
-          <div style={{ maxWidth: '760px', margin: '0 auto', position: 'relative' }}>
-            <p
-              style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.12em',
-                color: 'var(--color-stamp)',
-                marginBottom: '1.5rem',
-              }}
-            >
-              CLOSED BETA · TEL AVIV
-            </p>
-
-            <h1
-              style={{
-                fontFamily: 'var(--font-archivo)',
-                fontSize: 'clamp(2.4rem, 7vw, 4.5rem)',
-                fontWeight: 900,
-                lineHeight: 1.05,
-                letterSpacing: '-0.02em',
-                color: 'var(--color-paper)',
-                marginBottom: '1.5rem',
-              }}
-            >
-              Before a booking manager risks their name, they need proof.
-            </h1>
-
-            <p
-              style={{
-                fontSize: 'clamp(1.05rem, 2.5vw, 1.3rem)',
-                lineHeight: 1.65,
-                color: 'rgba(243,245,239,0.75)',
-                maxWidth: '600px',
-                margin: '0 auto 2.5rem',
-              }}
-            >
-              GIGPROOF turns your live-performance evidence into a verified, method-labelled
-              Bookability Passport — so booking managers can evaluate without guessing.
-            </p>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'center',
-                flexWrap: 'wrap',
-              }}
-            >
-              <a
-                href={APP_URL}
+            {/* ── LEFT: hero copy ── */}
+            <div>
+              {/* Pulsing badge */}
+              <div
                 style={{
-                  display: 'inline-block',
-                  background: 'var(--color-stamp)',
-                  color: 'var(--color-ink)',
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  padding: '0.9rem 2rem',
-                  borderRadius: 'var(--radius-sm)',
-                  textDecoration: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginBottom: '1.75rem',
                 }}
               >
-                BUILD YOUR PASSPORT →
-              </a>
-              <Link
-                href="/passport/demo"
+                <span
+                  className="pulse-dot"
+                  style={{
+                    display: 'inline-block',
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    background: 'var(--color-stamp)',
+                    boxShadow: '0 0 10px var(--color-stamp)',
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.65rem',
+                    letterSpacing: '0.14em',
+                    color: 'var(--color-stamp)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Closed Beta · Tel Aviv
+                </span>
+              </div>
+
+              {/* Headline */}
+              <h1
                 style={{
-                  display: 'inline-block',
-                  background: 'transparent',
+                  fontFamily: 'var(--font-archivo)',
+                  fontSize: 'clamp(2.4rem, 5.5vw, 4.25rem)',
+                  fontWeight: 900,
+                  lineHeight: 1.0,
+                  letterSpacing: '-0.03em',
                   color: 'var(--color-paper)',
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  padding: '0.9rem 2rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid rgba(243,245,239,0.3)',
-                  textDecoration: 'none',
+                  marginBottom: '1.5rem',
                 }}
               >
-                SEE A SAMPLE PASSPORT
-              </Link>
+                Build the proof
+                <br />
+                <em
+                  style={{
+                    fontFamily: 'Georgia, "Times New Roman", serif',
+                    fontWeight: 400,
+                    fontStyle: 'italic',
+                    color: 'rgba(243,245,239,0.52)',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  that books you.
+                </em>
+              </h1>
+
+              {/* Sub */}
+              <p
+                style={{
+                  fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                  lineHeight: 1.7,
+                  color: 'rgba(243,245,239,0.68)',
+                  maxWidth: '480px',
+                  marginBottom: '2.25rem',
+                }}
+              >
+                Turn live-performance evidence into a verified Bookability Passport —
+                so booking managers can evaluate before they risk their name.
+              </p>
+
+              {/* CTAs */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.75rem',
+                  flexWrap: 'wrap',
+                  marginBottom: '2rem',
+                }}
+              >
+                <a
+                  href={APP_URL}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: 'var(--color-stamp)',
+                    color: 'var(--color-ink)',
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    padding: '0.85rem 1.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  BUILD YOUR PASSPORT
+                  <Icon id="arrow" size={16} color="var(--color-ink)" />
+                </a>
+                <Link
+                  href="/passport/demo"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: 'transparent',
+                    color: 'var(--color-paper)',
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    padding: '0.85rem 1.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid rgba(243,245,239,0.25)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  SEE A SAMPLE
+                </Link>
+              </div>
+
+              {/* Confidence row */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1.25rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                {[
+                  { icon: 'approved', text: 'No scores or rankings' },
+                  { icon: 'lock',     text: 'Artist-controlled' },
+                  { icon: 'approved', text: 'Evidence with method labels' },
+                ].map(({ icon, text }) => (
+                  <div
+                    key={text}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Icon id={icon} size={15} color="rgba(200,240,77,0.7)" />
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-space-mono)',
+                        fontSize: '0.65rem',
+                        letterSpacing: '0.04em',
+                        color: 'rgba(243,245,239,0.45)',
+                      }}
+                    >
+                      {text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── RIGHT: Bookability Passport preview card ── */}
+            <div
+              className="hero-passport-card"
+              style={{
+                background: 'rgba(243,245,239,0.04)',
+                border: '1px solid rgba(243,245,239,0.1)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '1.5rem',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
+              {/* Passport header */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.58rem',
+                  letterSpacing: '0.14em',
+                  color: 'var(--color-stamp)',
+                  marginBottom: '1rem',
+                  textTransform: 'uppercase',
+                }}
+              >
+                GIGPROOF · BOOKABILITY PASSPORT
+              </div>
+
+              {/* Artist identity */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-archivo)',
+                  fontSize: '1.15rem',
+                  fontWeight: 900,
+                  color: 'var(--color-paper)',
+                  marginBottom: '0.2rem',
+                }}
+              >
+                Lior Noy
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.1em',
+                  color: 'rgba(243,245,239,0.35)',
+                  marginBottom: '1.25rem',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Electronic · Tel Aviv
+              </div>
+
+              {/* Audience draw */}
+              <div
+                style={{
+                  borderTop: '1px solid rgba(243,245,239,0.08)',
+                  paddingTop: '1rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.55rem',
+                    letterSpacing: '0.12em',
+                    color: 'rgba(243,245,239,0.3)',
+                    marginBottom: '0.4rem',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Audience Draw
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '1.6rem',
+                    fontWeight: 700,
+                    color: 'var(--color-paper)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  200–350
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <MethodBadge label="TICKET EXPORT" />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-space-mono)',
+                      fontSize: '0.58rem',
+                      color: 'rgba(243,245,239,0.28)',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    REVIEWED JAN 2026
+                  </span>
+                </div>
+              </div>
+
+              {/* Gig claim */}
+              <div
+                style={{
+                  borderTop: '1px solid rgba(243,245,239,0.08)',
+                  paddingTop: '1rem',
+                  marginBottom: '1rem',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.55rem',
+                    letterSpacing: '0.12em',
+                    color: 'rgba(243,245,239,0.3)',
+                    marginBottom: '0.4rem',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Gig History
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-archivo)',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    color: 'var(--color-paper)',
+                    marginBottom: '0.2rem',
+                  }}
+                >
+                  Zappa Tel Aviv — headline
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.78rem',
+                    color: 'rgba(243,245,239,0.4)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  May 2025 · sold out
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <MethodBadge label="PRODUCER-CONFIRMED" />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-space-mono)',
+                      fontSize: '0.58rem',
+                      color: 'rgba(243,245,239,0.28)',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    REVIEWED MAY 2025
+                  </span>
+                </div>
+              </div>
+
+              {/* Card footer */}
+              <div
+                style={{
+                  borderTop: '1px solid rgba(243,245,239,0.06)',
+                  paddingTop: '0.85rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.52rem',
+                    letterSpacing: '0.06em',
+                    color: 'rgba(243,245,239,0.18)',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Sample · Fictional artist
+                </span>
+                <Link
+                  href="/passport/demo"
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.58rem',
+                    letterSpacing: '0.08em',
+                    color: 'var(--color-stamp)',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  VIEW FULL
+                  <Icon id="arrow" size={12} color="var(--color-stamp)" />
+                </Link>
+              </div>
             </div>
           </div>
+
+          <style>{`
+            @keyframes gp-pulse {
+              0%, 100% { opacity: 1; box-shadow: 0 0 8px #c8f04d; }
+              50%       { opacity: 0.55; box-shadow: 0 0 20px #c8f04d; }
+            }
+            .pulse-dot { animation: gp-pulse 2.4s ease-in-out infinite; }
+
+            @media (max-width: 720px) {
+              .hero-grid { grid-template-columns: 1fr !important; }
+              .hero-passport-card { display: none !important; }
+            }
+          `}</style>
         </section>
 
         {/* ── FIREWALL BANNER ──────────────────────────────────────────── */}
@@ -377,12 +639,13 @@ export default function HomePage() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-stamp)',
+                color: 'var(--color-tally)',
                 marginBottom: '0.5rem',
                 textAlign: 'center',
+                textTransform: 'uppercase',
               }}
             >
-              THREE DISTINCT ROLES
+              Three Distinct Roles
             </p>
             <h2
               style={{
@@ -429,7 +692,10 @@ export default function HomePage() {
                   padding: '2rem',
                 }}
               >
-                <Tag>אמן · ARTIST</Tag>
+                <div style={{ marginBottom: '0.6rem', color: 'var(--color-ink)', opacity: 0.7 }}>
+                  <Icon id="artist" size={22} color="var(--color-ink)" />
+                </div>
+                <RoleTag>אמן · ARTIST</RoleTag>
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo)',
@@ -448,15 +714,19 @@ export default function HomePage() {
                 <Link
                   href="/artists"
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-ink)',
                     textDecoration: 'none',
                   }}
                 >
-                  FOR ARTISTS →
+                  FOR ARTISTS
+                  <Icon id="arrow" size={14} color="var(--color-ink)" />
                 </Link>
               </div>
 
@@ -469,7 +739,10 @@ export default function HomePage() {
                   padding: '2rem',
                 }}
               >
-                <Tag>אמרגן · BOOKING MANAGER</Tag>
+                <div style={{ marginBottom: '0.6rem' }}>
+                  <Icon id="manager" size={22} color="var(--color-ink)" />
+                </div>
+                <RoleTag>אמרגן · BOOKING MANAGER</RoleTag>
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo)',
@@ -489,15 +762,19 @@ export default function HomePage() {
                 <Link
                   href="/bookers"
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-ink)',
                     textDecoration: 'none',
                   }}
                 >
-                  FOR BOOKING MANAGERS →
+                  FOR BOOKING MANAGERS
+                  <Icon id="arrow" size={14} color="var(--color-ink)" />
                 </Link>
               </div>
 
@@ -510,7 +787,10 @@ export default function HomePage() {
                   padding: '2rem',
                 }}
               >
-                <Tag>מפיק · PRODUCER</Tag>
+                <div style={{ marginBottom: '0.6rem' }}>
+                  <Icon id="producer" size={22} color="var(--color-ink)" />
+                </div>
+                <RoleTag>מפיק · PRODUCER</RoleTag>
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo)',
@@ -530,15 +810,19 @@ export default function HomePage() {
                 <Link
                   href="/producers"
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.75rem',
+                    fontSize: '0.72rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-ink)',
                     textDecoration: 'none',
                   }}
                 >
-                  FOR PRODUCERS →
+                  FOR PRODUCERS
+                  <Icon id="arrow" size={14} color="var(--color-ink)" />
                 </Link>
               </div>
             </div>
@@ -570,9 +854,10 @@ export default function HomePage() {
                     letterSpacing: '0.12em',
                     color: 'var(--color-stamp)',
                     marginBottom: '0.75rem',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  THE PROOF UNIT
+                  The Proof Unit
                 </p>
                 <h2
                   style={{
@@ -602,15 +887,19 @@ export default function HomePage() {
                 <Link
                   href="/methodology"
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-paper)',
                     textDecoration: 'none',
                   }}
                 >
-                  READ THE METHODOLOGY →
+                  READ THE METHODOLOGY
+                  <Icon id="arrow" size={14} color="var(--color-paper)" />
                 </Link>
               </div>
 
@@ -630,9 +919,10 @@ export default function HomePage() {
                     letterSpacing: '0.1em',
                     color: 'rgba(243,245,239,0.3)',
                     marginBottom: '1.5rem',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  SAMPLE PROOF UNITS — FICTIONAL ARTIST
+                  Sample Proof Units — Fictional Artist
                 </p>
 
                 {/* BandPill proof unit */}
@@ -762,12 +1052,13 @@ export default function HomePage() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-stamp)',
+                color: 'var(--color-tally)',
                 marginBottom: '0.5rem',
                 textAlign: 'center',
+                textTransform: 'uppercase',
               }}
             >
-              HOW IT WORKS
+              How It Works
             </p>
             <h2
               style={{
@@ -821,11 +1112,11 @@ export default function HomePage() {
                     <div
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.75rem',
+                        fontSize: '0.72rem',
                         fontWeight: 700,
-                        color: 'var(--color-stamp)',
-                        background: 'rgba(200,240,77,0.08)',
-                        border: '1px solid rgba(200,240,77,0.2)',
+                        color: 'var(--color-ink)',
+                        background: 'rgba(10,13,11,0.06)',
+                        border: '1px solid rgba(10,13,11,0.1)',
                         borderRadius: 'var(--radius-sm)',
                         width: '2.5rem',
                         height: '2.5rem',
@@ -842,7 +1133,7 @@ export default function HomePage() {
                         style={{
                           flex: 1,
                           width: '1px',
-                          background: 'rgba(200,240,77,0.15)',
+                          background: 'rgba(10,13,11,0.1)',
                           marginTop: '0.5rem',
                         }}
                       />
@@ -880,15 +1171,19 @@ export default function HomePage() {
               <Link
                 href="/how-it-works"
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.8rem',
                   fontWeight: 700,
                   letterSpacing: '0.08em',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-ink)',
                   textDecoration: 'none',
                 }}
               >
-                SEE THE FULL WALKTHROUGH →
+                SEE THE FULL WALKTHROUGH
+                <Icon id="arrow" size={14} color="var(--color-ink)" />
               </Link>
             </div>
           </div>
@@ -910,9 +1205,10 @@ export default function HomePage() {
                 letterSpacing: '0.12em',
                 color: 'var(--color-stamp)',
                 marginBottom: '1.5rem',
+                textTransform: 'uppercase',
               }}
             >
-              THE DESIGN PRINCIPLE
+              The Design Principle
             </p>
             <h2
               style={{
@@ -1045,7 +1341,9 @@ export default function HomePage() {
             <a
               href={APP_URL}
               style={{
-                display: 'inline-block',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
                 background: 'var(--color-ink)',
                 color: 'var(--color-paper)',
                 fontFamily: 'var(--font-space-mono)',
@@ -1057,7 +1355,8 @@ export default function HomePage() {
                 textDecoration: 'none',
               }}
             >
-              REQUEST ACCESS →
+              REQUEST ACCESS
+              <Icon id="arrow" size={16} color="var(--color-paper)" />
             </a>
           </div>
         </section>
