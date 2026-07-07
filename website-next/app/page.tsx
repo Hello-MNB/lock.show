@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 const APP_URL = 'https://app.gigproof.co'
@@ -7,7 +7,7 @@ const SITE_URL = 'https://gigproof.co'
 export const metadata: Metadata = {
   title: 'GIGPROOF — Booking Proof for Independent Artists',
   description:
-    'GIGPROOF turns live-performance evidence into a verified Artist Passport — so booking managers can evaluate before they risk their reputation.',
+    'GIGPROOF turns live-performance evidence into a verified Bookability Passport — so booking managers can evaluate before they risk their reputation.',
   openGraph: {
     title: 'GIGPROOF — Booking Proof for Independent Artists',
     description:
@@ -39,10 +39,10 @@ const jsonLd = {
       mainEntity: [
         {
           '@type': 'Question',
-          name: 'What is a GIGPROOF Artist Passport?',
+          name: 'What is a Bookability Passport?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: "A GIGPROOF Artist Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
+            text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
           },
         },
         {
@@ -50,7 +50,7 @@ const jsonLd = {
           name: 'Is GIGPROOF free for booking managers?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes. Booking managers (אמרגנים) view Artist Passports at no cost. Artists pay to build and publish their proof profile.',
+            text: 'Yes. Booking managers (אמרגנים) view Bookability Passports at no cost. Artists pay to build and publish their proof profile.',
           },
         },
         {
@@ -87,7 +87,7 @@ function Tag({ children }: { children: React.ReactNode }) {
         letterSpacing: '0.1em',
         color: 'var(--color-stamp)',
         border: '1px solid var(--color-stamp)',
-        borderRadius: '2px',
+        borderRadius: 'var(--radius-sm)',
         padding: '0.15rem 0.5rem',
         marginBottom: '0.75rem',
       }}
@@ -106,9 +106,9 @@ function MethodBadge({ label }: { label: string }) {
         fontWeight: 700,
         letterSpacing: '0.08em',
         color: 'var(--color-stamp)',
-        background: 'rgba(91,63,214,0.08)',
-        border: '1px solid rgba(91,63,214,0.2)',
-        borderRadius: '2px',
+        background: 'rgba(200,240,77,0.08)',
+        border: '1px solid rgba(200,240,77,0.2)',
+        borderRadius: 'var(--radius-sm)',
         padding: '0.15rem 0.4rem',
       }}
     >
@@ -135,8 +135,8 @@ function InlineProofUnit({
   return (
     <div
       style={{
-        borderLeft: '2px solid var(--color-stamp)',
-        paddingLeft: '1rem',
+        borderInlineStart: '2px solid var(--color-stamp)',
+        paddingInlineStart: '1rem',
         marginBottom: '1.25rem',
       }}
     >
@@ -242,13 +242,13 @@ export default function HomePage() {
               style={{
                 fontSize: 'clamp(1.05rem, 2.5vw, 1.3rem)',
                 lineHeight: 1.65,
-                color: 'rgba(239,235,223,0.75)',
+                color: 'rgba(243,245,239,0.75)',
                 maxWidth: '600px',
                 margin: '0 auto 2.5rem',
               }}
             >
               GIGPROOF turns your live-performance evidence into a verified, method-labelled
-              Artist Passport — so bookers can evaluate without guessing.
+              Bookability Passport — so booking managers can evaluate without guessing.
             </p>
 
             <div
@@ -264,13 +264,13 @@ export default function HomePage() {
                 style={{
                   display: 'inline-block',
                   background: 'var(--color-stamp)',
-                  color: '#fff',
+                  color: 'var(--color-ink)',
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.85rem',
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   padding: '0.9rem 2rem',
-                  borderRadius: '2px',
+                  borderRadius: 'var(--radius-sm)',
                   textDecoration: 'none',
                 }}
               >
@@ -287,8 +287,8 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   padding: '0.9rem 2rem',
-                  borderRadius: '2px',
-                  border: '1px solid rgba(239,235,223,0.3)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid rgba(243,245,239,0.3)',
                   textDecoration: 'none',
                 }}
               >
@@ -302,7 +302,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-paper)',
-            borderBottom: '1px solid rgba(22,21,15,0.1)',
+            borderBottom: '1px solid rgba(10,13,11,0.1)',
             padding: '0.85rem 1.25rem',
             textAlign: 'center',
           }}
@@ -378,9 +378,9 @@ export default function HomePage() {
               {/* ARTIST */}
               <div
                 style={{
-                  background: '#fff',
-                  border: '1px solid rgba(22,21,15,0.1)',
-                  borderRadius: '2px',
+                  background: 'var(--color-paper)',
+                  border: '1px solid rgba(10,13,11,0.1)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '2rem',
                 }}
               >
@@ -418,9 +418,9 @@ export default function HomePage() {
               {/* BOOKING MANAGER */}
               <div
                 style={{
-                  background: '#fff',
-                  border: '1px solid rgba(22,21,15,0.1)',
-                  borderRadius: '2px',
+                  background: 'var(--color-paper)',
+                  border: '1px solid rgba(10,13,11,0.1)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '2rem',
                 }}
               >
@@ -437,8 +437,8 @@ export default function HomePage() {
                   Evaluate before you risk your name
                 </h3>
                 <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-                  Read an Artist Passport in under two minutes. Every claim shows its
-                  method and review date — no algorithm, no algorithm, no guessing.
+                  Read a Bookability Passport in under two minutes. Every claim shows its
+                  method and review date — no algorithm, no guesswork, no black box.
                   Viewing is always free.
                 </p>
                 <Link
@@ -459,9 +459,9 @@ export default function HomePage() {
               {/* PRODUCER */}
               <div
                 style={{
-                  background: '#fff',
-                  border: '1px solid rgba(22,21,15,0.1)',
-                  borderRadius: '2px',
+                  background: 'var(--color-paper)',
+                  border: '1px solid rgba(10,13,11,0.1)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '2rem',
                 }}
               >
@@ -545,13 +545,13 @@ export default function HomePage() {
                 <p
                   style={{
                     fontSize: '1rem',
-                    color: 'rgba(239,235,223,0.65)',
+                    color: 'rgba(243,245,239,0.65)',
                     lineHeight: 1.7,
                     marginBottom: '1.5rem',
                   }}
                 >
                   No bare numbers. No unexplained assertions. Every piece of evidence on
-                  an Artist Passport carries a method label and a review date —
+                  a Bookability Passport carries a method label and a review date —
                   so a booking manager can judge the strength of each claim, not just its value.
                 </p>
                 <Link
@@ -572,9 +572,9 @@ export default function HomePage() {
               {/* Right: live proof units */}
               <div
                 style={{
-                  background: 'rgba(239,235,223,0.04)',
-                  border: '1px solid rgba(239,235,223,0.1)',
-                  borderRadius: '2px',
+                  background: 'rgba(243,245,239,0.04)',
+                  border: '1px solid rgba(243,245,239,0.1)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '2rem',
                 }}
               >
@@ -583,7 +583,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.65rem',
                     letterSpacing: '0.1em',
-                    color: 'rgba(239,235,223,0.3)',
+                    color: 'rgba(243,245,239,0.3)',
                     marginBottom: '1.5rem',
                   }}
                 >
@@ -609,7 +609,7 @@ export default function HomePage() {
                   >
                     200–350
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'rgba(239,235,223,0.5)', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
                     Headline audience draw, Zappa Club TLV, Feb 2025
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -618,7 +618,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.65rem',
-                        color: 'rgba(239,235,223,0.35)',
+                        color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -646,7 +646,7 @@ export default function HomePage() {
                   >
                     Self-managed touring since 2021
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'rgba(239,235,223,0.5)', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
                     Full booking coordination, rider management, sound requirements
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -655,7 +655,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.65rem',
-                        color: 'rgba(239,235,223,0.35)',
+                        color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -682,7 +682,7 @@ export default function HomePage() {
                   >
                     70–120
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'rgba(239,235,223,0.5)', marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
                     Capacity, Shapira Arts Hub, support slot, Dec 2024
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -691,7 +691,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.65rem',
-                        color: 'rgba(239,235,223,0.35)',
+                        color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -757,7 +757,7 @@ export default function HomePage() {
                 },
                 {
                   step: '04',
-                  title: 'Publish your Artist Passport',
+                  title: 'Publish your Bookability Passport',
                   body: 'Your Passport shows verified strengths only. Share the link with a booking manager — they see exactly what was verified and how.',
                 },
               ].map(({ step, title, body }, i, arr) => (
@@ -779,9 +779,9 @@ export default function HomePage() {
                         fontSize: '0.75rem',
                         fontWeight: 700,
                         color: 'var(--color-stamp)',
-                        background: 'rgba(91,63,214,0.08)',
-                        border: '1px solid rgba(91,63,214,0.2)',
-                        borderRadius: '2px',
+                        background: 'rgba(200,240,77,0.08)',
+                        border: '1px solid rgba(200,240,77,0.2)',
+                        borderRadius: 'var(--radius-sm)',
                         width: '2.5rem',
                         height: '2.5rem',
                         display: 'flex',
@@ -797,7 +797,7 @@ export default function HomePage() {
                         style={{
                           flex: 1,
                           width: '1px',
-                          background: 'rgba(91,63,214,0.15)',
+                          background: 'rgba(200,240,77,0.15)',
                           marginTop: '0.5rem',
                         }}
                       />
@@ -885,7 +885,7 @@ export default function HomePage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: 'rgba(239,235,223,0.65)',
+                color: 'rgba(243,245,239,0.65)',
                 lineHeight: 1.75,
                 marginBottom: '2.5rem',
               }}
@@ -900,9 +900,9 @@ export default function HomePage() {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                 gap: '1px',
-                background: 'rgba(239,235,223,0.1)',
-                border: '1px solid rgba(239,235,223,0.1)',
-                borderRadius: '2px',
+                background: 'rgba(243,245,239,0.1)',
+                border: '1px solid rgba(243,245,239,0.1)',
+                borderRadius: 'var(--radius-sm)',
                 overflow: 'hidden',
                 marginBottom: '2.5rem',
               }}
@@ -917,7 +917,7 @@ export default function HomePage() {
                     fontSize: '0.7rem',
                     fontWeight: 700,
                     letterSpacing: '0.1em',
-                    color: 'rgba(239,235,223,0.45)',
+                    color: 'rgba(243,245,239,0.45)',
                     textAlign: 'center',
                   }}
                 >
@@ -936,8 +936,8 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
-                  border: '1px solid rgba(239,235,223,0.3)',
-                  borderRadius: '2px',
+                  border: '1px solid rgba(243,245,239,0.3)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '0.85rem 1.75rem',
                   textDecoration: 'none',
                 }}
@@ -953,8 +953,8 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
-                  border: '1px solid rgba(239,235,223,0.3)',
-                  borderRadius: '2px',
+                  border: '1px solid rgba(243,245,239,0.3)',
+                  borderRadius: 'var(--radius-sm)',
                   padding: '0.85rem 1.75rem',
                   textDecoration: 'none',
                 }}
@@ -980,7 +980,7 @@ export default function HomePage() {
                 fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.02em',
-                color: '#fff',
+                color: 'var(--color-ink)',
                 marginBottom: '1rem',
                 lineHeight: 1.15,
               }}
@@ -990,7 +990,7 @@ export default function HomePage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: 'rgba(255,255,255,0.75)',
+                color: 'rgba(10,13,11,0.65)',
                 marginBottom: '2rem',
                 lineHeight: 1.65,
               }}
@@ -1001,14 +1001,14 @@ export default function HomePage() {
               href={APP_URL}
               style={{
                 display: 'inline-block',
-                background: '#fff',
-                color: 'var(--color-stamp)',
+                background: 'var(--color-ink)',
+                color: 'var(--color-paper)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.9rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 padding: '1rem 2.5rem',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 textDecoration: 'none',
               }}
             >

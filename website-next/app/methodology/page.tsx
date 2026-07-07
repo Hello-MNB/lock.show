@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Methodology — How Evidence Is Verified | GIGPROOF',
@@ -77,7 +77,7 @@ export default function Methodology() {
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
       {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(22,21,15,0.08)' }}>
+      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -139,9 +139,9 @@ export default function Methodology() {
                   gridTemplateColumns: 'minmax(200px, 260px) 1fr',
                   gap: '32px',
                   padding: '32px 28px',
-                  backgroundColor: i % 2 === 0 ? 'rgba(22,21,15,0.02)' : 'transparent',
-                  border: '1px solid rgba(22,21,15,0.06)',
-                  borderRadius: '2px',
+                  backgroundColor: i % 2 === 0 ? 'rgba(10,13,11,0.02)' : 'transparent',
+                  border: '1px solid rgba(10,13,11,0.06)',
+                  borderRadius: 'var(--radius-sm)',
                   alignItems: 'start',
                 }}
               >
@@ -151,10 +151,10 @@ export default function Methodology() {
                     fontSize: '0.65rem',
                     letterSpacing: '0.1em',
                     color: 'var(--color-stamp)',
-                    backgroundColor: 'rgba(91,63,214,0.08)',
+                    backgroundColor: 'rgba(200,240,77,0.08)',
                     display: 'inline-block',
                     padding: '4px 8px',
-                    borderRadius: '2px',
+                    borderRadius: 'var(--radius-sm)',
                     marginBottom: '12px',
                   }}>
                     {m.label}
@@ -228,9 +228,9 @@ export default function Methodology() {
                   <div style={{
                     width: '32px',
                     height: '32px',
-                    borderRadius: '2px',
-                    backgroundColor: 'rgba(91,63,214,0.3)',
-                    border: '1px solid rgba(91,63,214,0.5)',
+                    borderRadius: 'var(--radius-sm)',
+                    backgroundColor: 'rgba(200,240,77,0.3)',
+                    border: '1px solid rgba(200,240,77,0.5)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -278,7 +278,7 @@ export default function Methodology() {
       </section>
 
       {/* FIREWALL RULES */}
-      <section style={{ padding: '80px 24px', backgroundColor: '#f5f2ea' }}>
+      <section style={{ padding: '80px 24px', backgroundColor: 'var(--color-paper)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -312,8 +312,8 @@ export default function Methodology() {
                   alignItems: 'flex-start',
                   padding: '16px 20px',
                   backgroundColor: 'var(--color-paper)',
-                  border: '1px solid rgba(22,21,15,0.08)',
-                  borderRadius: '2px',
+                  border: '1px solid rgba(10,13,11,0.08)',
+                  borderRadius: 'var(--radius-sm)',
                 }}
               >
                 <span style={{
@@ -335,7 +335,7 @@ export default function Methodology() {
       </section>
 
       {/* WHAT WE DON'T DO */}
-      <section style={{ padding: '64px 24px', borderTop: '1px solid rgba(22,21,15,0.08)' }}>
+      <section style={{ padding: '64px 24px', borderTop: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <h2 style={{
             fontFamily: 'var(--font-archivo)',
@@ -366,7 +366,7 @@ export default function Methodology() {
                   alignItems: 'flex-start',
                   padding: '14px 16px',
                   border: '1px solid rgba(178,59,46,0.2)',
-                  borderRadius: '2px',
+                  borderRadius: 'var(--radius-sm)',
                   backgroundColor: 'rgba(178,59,46,0.03)',
                 }}
               >
@@ -408,12 +408,12 @@ export default function Methodology() {
                 display: 'inline-block',
                 padding: '14px 28px',
                 backgroundColor: 'var(--color-stamp)',
-                color: '#fff',
+                color: 'var(--color-ink)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 fontWeight: 700,
               }}
             >
@@ -426,12 +426,12 @@ export default function Methodology() {
                 padding: '14px 28px',
                 backgroundColor: 'transparent',
                 color: 'var(--color-ink)',
-                border: '1px solid rgba(22,21,15,0.2)',
+                border: '1px solid rgba(10,13,11,0.2)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               HOW IT WORKS

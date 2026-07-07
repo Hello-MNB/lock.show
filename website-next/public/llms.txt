@@ -18,7 +18,7 @@ These three roles are distinct. Booking manager ≠ producer. They are never mer
 ## Two surfaces
 
 - **Artist Radar (Mirror)** — private workspace for the artist. Shows evidence states, gaps, and one next action per dimension. Never visible to outsiders.
-- **Artist Passport** — public, buyer-facing document. Shows verified strengths only. Method-labeled. WhatsApp-scannable. Never shows gaps, weaknesses, or unverified claims.
+- **Bookability Passport** — public, buyer-facing document. Shows verified strengths only. Method-labeled. WhatsApp-scannable. Never shows gaps, weaknesses, or unverified claims.
 
 ## Verification methodology
 

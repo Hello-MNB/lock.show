@@ -1,0 +1,65 @@
+/*
+ * GIGPROOF Design System — Codex Theme
+ * ─────────────────────────────────────────────────────
+ * SINGLE SOURCE OF TRUTH for all visual tokens.
+ * Edit values here; everything else inherits.
+ *
+ * Palette: dark-first. Lime accent. No scores, no gauges.
+ * Typefaces: Manrope (body + display) · DM Mono (labels + mono)
+ * ─────────────────────────────────────────────────────
+ */
+
+/* ── SURFACES ─────────────────────────────────────── */
+/* --color-ink    : primary dark bg         → #0a0d0b  */
+/* --color-night  : dark panel / card bg    → #111612  */
+/* --color-paper  : light section bg        → #f3f5ef  */
+
+/* ── ACCENT ────────────────────────────────────────── */
+/* --color-stamp  : lime primary accent     → #c8f04d  */
+/*   Used for: CTAs, method badge borders,             */
+/*   proof-unit accent bar, links on dark              */
+
+/* ── TEXT ──────────────────────────────────────────── */
+/* --color-tally  : muted / secondary text  → #929b94  */
+/* --color-void   : error / destructive     → #B23B2E  */
+
+/* ── RADIUS SCALE ──────────────────────────────────── */
+/* --radius       : default UI radius       → 10px     */
+/* --radius-sm    : small tags / badges     → 6px      */
+/* --radius-md    : cards / panels          → 10px     */
+/* --radius-lg    : hero cards / modals     → 20px     */
+/* --radius-full  : pills                   → 9999px   */
+
+/* ── RGBA SHORTHAND ────────────────────────────────── */
+/* Lime tint overlays (use on dark backgrounds):       */
+/*   faint: rgba(200,240,77,0.08)                      */
+/*   light: rgba(200,240,77,0.15)                      */
+/*   mid:   rgba(200,240,77,0.2)                       */
+/*   strong:rgba(200,240,77,0.35)                      */
+/* Dark dividers:                                      */
+/*   rgba(255,255,255,0.08)  — on dark bg              */
+/*   rgba(10,13,11,0.1)      — on light bg             */
+
+/* ── SUPPLEMENTAL ROOT VARS ────────────────────────── */
+/* Radius tokens not in Tailwind @theme (used inline)  */
+:root {
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   20px;
+  --radius-full: 9999px;
+
+  /* Nav glass effect */
+  --nav-bg:     rgba(10, 13, 11, 0.88);
+  --nav-blur:   blur(18px);
+  --nav-border: rgba(255, 255, 255, 0.08);
+
+  /* Card on dark */
+  --card-bg:     rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+
+  /* Lime-tinted overlays */
+  --lime-tint-faint:  rgba(200, 240, 77, 0.06);
+  --lime-tint-light:  rgba(200, 240, 77, 0.12);
+  --lime-tint-border: rgba(200, 240, 77, 0.22);
+  --lime-tint-mid:    rgba(200, 240, 77, 0.25);
+}

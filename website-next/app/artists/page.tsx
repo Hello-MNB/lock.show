@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'For Artists — Own Your Live-Performance Evidence',
   description:
-    'GIGPROOF helps independent artists build a verified Artist Passport. Log gigs, get producer confirmation, share proof — not promises.',
+    'GIGPROOF helps independent artists build a verified Bookability Passport. Log gigs, get producer confirmation, share proof — not promises.',
   openGraph: {
     title: 'For Artists | GIGPROOF',
     description: 'A Spotify link doesn\'t close a booking. Method-labelled proof does.',
@@ -46,7 +46,7 @@ const steps = [
   {
     num: '03',
     title: 'Producer confirms in 30 seconds',
-    body: 'They open the link, review the data, and click confirm. The gig becomes "producer-verified."',
+    body: 'They open the link, review the data, and click confirm. The claim becomes "producer-confirmed."',
   },
   {
     num: '04',
@@ -83,7 +83,7 @@ export default function ArtistsPage() {
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
               letterSpacing: '0.1em',
-              color: 'rgba(239,235,223,0.6)',
+              color: 'rgba(243,245,239,0.6)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}
@@ -105,7 +105,7 @@ export default function ArtistsPage() {
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
               fontSize: '1.1rem',
-              color: 'rgba(239,235,223,0.75)',
+              color: 'rgba(243,245,239,0.75)',
               lineHeight: 1.6,
               maxWidth: '42rem',
               marginBottom: '2.5rem',
@@ -120,15 +120,15 @@ export default function ArtistsPage() {
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                background: 'var(--color-paper)',
-                color: 'var(--color-stamp)',
+                background: 'var(--color-ink)',
+                color: 'var(--color-paper)',
                 fontFamily: 'var(--font-archivo), system-ui, sans-serif',
                 fontSize: '0.9rem',
                 fontWeight: 700,
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
@@ -137,14 +137,14 @@ export default function ArtistsPage() {
             <Link
               href="/passport/demo"
               style={{
-                border: '1px solid rgba(239,235,223,0.3)',
+                border: '1px solid rgba(243,245,239,0.3)',
                 color: 'var(--color-paper)',
                 fontFamily: 'var(--font-archivo), system-ui, sans-serif',
                 fontSize: '0.9rem',
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
@@ -157,9 +157,9 @@ export default function ArtistsPage() {
       {/* ── THE PROBLEM ──────────────────────────────────── */}
       <section
         style={{
-          background: 'rgba(22,21,15,0.03)',
+          background: 'var(--color-paper)',
           padding: '4rem 1.5rem',
-          borderBottom: '1px solid rgba(22,21,15,0.06)',
+          borderBottom: '1px solid rgba(10,13,11,0.06)',
         }}
       >
         <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
@@ -190,8 +190,8 @@ export default function ArtistsPage() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
               gap: '1px',
-              background: 'rgba(22,21,15,0.08)',
-              border: '1px solid rgba(22,21,15,0.08)',
+              background: 'rgba(10,13,11,0.08)',
+              border: '1px solid rgba(10,13,11,0.08)',
             }}
           >
             {problems.map((p) => (
@@ -238,7 +238,7 @@ export default function ArtistsPage() {
       </section>
 
       {/* ── WHAT YOU GET ─────────────────────────────────── */}
-      <section style={{ padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '4rem 1.5rem' }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
           <p
             style={{
@@ -269,7 +269,7 @@ export default function ArtistsPage() {
                 body: "Your private dashboard: see exactly what evidence you have, what you're missing, and the single highest-value next action. A growth tool — never exposed publicly.",
               },
               {
-                title: 'Artist Passport (public — with your approval)',
+                title: 'Bookability Passport (public — with your approval)',
                 body: 'A clean, method-labelled view of your verified strengths. Only what you approve is shown. No scores, no rankings — evidence with bands, verification method, and date.',
               },
               {
@@ -285,7 +285,7 @@ export default function ArtistsPage() {
                 key={i}
                 style={{
                   padding: '1.75rem 0',
-                  borderBottom: '1px solid rgba(22,21,15,0.06)',
+                  borderBottom: '1px solid rgba(10,13,11,0.06)',
                 }}
               >
                 <h3
@@ -348,7 +348,7 @@ export default function ArtistsPage() {
                   display: 'flex',
                   gap: '1.5rem',
                   padding: '1.5rem 0',
-                  borderBottom: '1px solid rgba(239,235,223,0.07)',
+                  borderBottom: '1px solid rgba(243,245,239,0.07)',
                   alignItems: 'flex-start',
                 }}
               >
@@ -379,7 +379,7 @@ export default function ArtistsPage() {
                     style={{
                       fontFamily: 'var(--font-heebo), system-ui, sans-serif',
                       fontSize: '0.875rem',
-                      color: 'rgba(239,235,223,0.55)',
+                      color: 'rgba(243,245,239,0.55)',
                       lineHeight: 1.6,
                     }}
                   >
@@ -393,7 +393,7 @@ export default function ArtistsPage() {
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
-              color: 'rgba(239,235,223,0.3)',
+              color: 'rgba(243,245,239,0.3)',
               letterSpacing: '0.06em',
               marginTop: '2rem',
             }}
@@ -405,7 +405,7 @@ export default function ArtistsPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────── */}
-      <section style={{ padding: '5rem 1.5rem', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '5rem 1.5rem', textAlign: 'center' }}>
         <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
           <p
             style={{
@@ -447,13 +447,14 @@ export default function ArtistsPage() {
               rel="noopener noreferrer"
               style={{
                 background: 'var(--color-stamp)',
-                color: 'var(--color-paper)',
+                color: 'var(--color-ink)',
                 fontFamily: 'var(--font-archivo), system-ui, sans-serif',
                 fontSize: '0.9rem',
+                fontWeight: 700,
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
@@ -469,7 +470,7 @@ export default function ArtistsPage() {
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >

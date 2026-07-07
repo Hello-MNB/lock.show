@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Contact — Get in Touch | GIGPROOF',
@@ -23,7 +23,7 @@ export default function Contact() {
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
       {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(22,21,15,0.08)' }}>
+      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -99,8 +99,8 @@ export default function Contact() {
                   autoComplete="name"
                   style={{
                     padding: '12px 14px',
-                    border: '1px solid rgba(22,21,15,0.15)',
-                    borderRadius: '2px',
+                    border: '1px solid rgba(10,13,11,0.15)',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: '#fff',
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.95rem',
@@ -131,8 +131,8 @@ export default function Contact() {
                   autoComplete="email"
                   style={{
                     padding: '12px 14px',
-                    border: '1px solid rgba(22,21,15,0.15)',
-                    borderRadius: '2px',
+                    border: '1px solid rgba(10,13,11,0.15)',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: '#fff',
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.95rem',
@@ -160,8 +160,8 @@ export default function Contact() {
                   name="role"
                   style={{
                     padding: '12px 14px',
-                    border: '1px solid rgba(22,21,15,0.15)',
-                    borderRadius: '2px',
+                    border: '1px solid rgba(10,13,11,0.15)',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: '#fff',
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.95rem',
@@ -198,8 +198,8 @@ export default function Contact() {
                   rows={5}
                   style={{
                     padding: '12px 14px',
-                    border: '1px solid rgba(22,21,15,0.15)',
-                    borderRadius: '2px',
+                    border: '1px solid rgba(10,13,11,0.15)',
+                    borderRadius: 'var(--radius-sm)',
                     backgroundColor: '#fff',
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.95rem',
@@ -218,12 +218,13 @@ export default function Contact() {
                 style={{
                   padding: '14px 28px',
                   backgroundColor: 'var(--color-stamp)',
-                  color: '#fff',
+                  color: 'var(--color-ink)',
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.75rem',
+                  fontWeight: 700,
                   letterSpacing: '0.08em',
                   border: 'none',
-                  borderRadius: '2px',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   fontWeight: 700,
                   width: '100%',
@@ -250,8 +251,8 @@ export default function Contact() {
             {/* Contact details */}
             <div style={{
               padding: '28px 24px',
-              border: '1px solid rgba(22,21,15,0.08)',
-              borderRadius: '2px',
+              border: '1px solid rgba(10,13,11,0.08)',
+              borderRadius: 'var(--radius-sm)',
             }}>
               <p style={{
                 fontFamily: 'var(--font-space-mono)',
@@ -272,7 +273,7 @@ export default function Contact() {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       paddingBottom: '12px',
-                      borderBottom: '1px solid rgba(22,21,15,0.06)',
+                      borderBottom: '1px solid rgba(10,13,11,0.06)',
                     }}
                   >
                     <span style={{
@@ -295,9 +296,9 @@ export default function Contact() {
             {/* What we're looking for */}
             <div style={{
               padding: '28px 24px',
-              border: '1px solid rgba(91,63,214,0.2)',
-              borderRadius: '2px',
-              backgroundColor: 'rgba(91,63,214,0.03)',
+              border: '1px solid rgba(200,240,77,0.2)',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'rgba(200,240,77,0.03)',
             }}>
               <p style={{
                 fontFamily: 'var(--font-space-mono)',
@@ -358,12 +359,13 @@ export default function Contact() {
               display: 'inline-block',
               padding: '14px 32px',
               backgroundColor: 'var(--color-stamp)',
-              color: '#fff',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
+              fontWeight: 700,
               fontSize: '0.75rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
               fontWeight: 700,
             }}
           >

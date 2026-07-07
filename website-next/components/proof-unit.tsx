@@ -15,8 +15,8 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
   return (
     <div
       style={{
-        borderLeft: '2px solid var(--color-stamp)',
-        paddingLeft: '1rem',
+        borderInlineStart: '2px solid var(--color-stamp)',
+        paddingInlineStart: '1rem',
         marginBottom: '1.25rem',
       }}
     >
@@ -62,9 +62,9 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
             fontWeight: 700,
             letterSpacing: '0.08em',
             color: 'var(--color-stamp)',
-            background: 'rgba(91,63,214,0.08)',
-            border: '1px solid rgba(91,63,214,0.2)',
-            borderRadius: '2px',
+            background: 'var(--lime-tint-light)',
+            border: '1px solid var(--lime-tint-border)',
+            borderRadius: 'var(--radius-sm)',
             padding: '0.15rem 0.4rem',
           }}
         >

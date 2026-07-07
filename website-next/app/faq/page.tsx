@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'FAQ — Frequently Asked Questions | GIGPROOF',
@@ -20,8 +20,8 @@ const faqs = [
         a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. GIGPROOF gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
       },
       {
-        q: 'What is a GIGPROOF Artist Passport?',
-        a: 'The Passport is the public-facing document a booking manager receives. It contains only verified, method-labelled evidence. No self-reported claims appear on the Passport. Each item shows what was claimed, the verification method, the geographic area, and the date of review. There are no scores, no rankings, and no predictions.',
+        q: 'What is a Bookability Passport?',
+        a: 'The Bookability Passport is the public-facing document a booking manager receives. It contains only verified, method-labelled evidence. No self-reported claims appear on the Passport. Each item shows what was claimed, the verification method, the geographic area, and the date of review. There are no scores, no rankings, and no predictions.',
       },
       {
         q: 'What is the Artist Radar?',
@@ -124,7 +124,7 @@ export default function FAQ() {
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
       {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(22,21,15,0.08)' }}>
+      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -164,7 +164,7 @@ export default function FAQ() {
                 textTransform: 'uppercase',
                 marginBottom: '24px',
                 paddingBottom: '12px',
-                borderBottom: '1px solid rgba(22,21,15,0.08)',
+                borderBottom: '1px solid rgba(10,13,11,0.08)',
               }}>
                 {section.category}
               </p>
@@ -174,7 +174,7 @@ export default function FAQ() {
                   <details
                     key={qi}
                     style={{
-                      borderBottom: '1px solid rgba(22,21,15,0.08)',
+                      borderBottom: '1px solid rgba(10,13,11,0.08)',
                     }}
                   >
                     <summary style={{
@@ -241,12 +241,12 @@ export default function FAQ() {
                 display: 'inline-block',
                 padding: '14px 28px',
                 backgroundColor: 'var(--color-stamp)',
-                color: '#fff',
+                color: 'var(--color-ink)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 fontWeight: 700,
               }}
             >
@@ -264,7 +264,7 @@ export default function FAQ() {
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               SEE A SAMPLE PASSPORT

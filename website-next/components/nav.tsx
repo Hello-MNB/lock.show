@@ -7,7 +7,6 @@ import type { Locale } from '@/lib/i18n'
 
 const APP_URL = 'https://app.gigproof.co'
 
-// Nav links use message keys — translated at render time
 const NAV_LINK_KEYS = [
   { href: '/artists',      key: 'artists'      },
   { href: '/bookers',      key: 'bookers'      },
@@ -17,7 +16,6 @@ const NAV_LINK_KEYS = [
   { href: '/pricing',      key: 'pricing'      },
 ] as const
 
-// Locale toggle pill
 function LocaleToggle() {
   const { locale, setLocale } = useLocale()
   const next: Locale = locale === 'en' ? 'he' : 'en'
@@ -32,8 +30,8 @@ function LocaleToggle() {
         letterSpacing: '0.06em',
         color: 'var(--color-tally)',
         background: 'none',
-        border: '1px solid rgba(122,118,106,0.35)',
-        borderRadius: '2px',
+        border: '1px solid rgba(255,255,255,0.15)',
+        borderRadius: 'var(--radius-sm)',
         padding: '5px 9px',
         cursor: 'pointer',
         flexShrink: 0,
@@ -49,7 +47,6 @@ export function Nav() {
   const { messages } = useLocale()
   const nav = messages.nav
 
-  // Map key to translated label
   const navLinks = NAV_LINK_KEYS.map(({ href, key }) => ({
     href,
     label: nav[key as keyof typeof nav] as string,
@@ -60,8 +57,10 @@ export function Nav() {
       role="navigation"
       aria-label="Main navigation"
       style={{
-        borderBottom: '1px solid rgba(22,21,15,0.1)',
-        backgroundColor: 'var(--color-paper)',
+        backgroundColor: 'var(--nav-bg)',
+        backdropFilter: 'var(--nav-blur)',
+        WebkitBackdropFilter: 'var(--nav-blur)',
+        borderBottom: '1px solid var(--nav-border)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
@@ -74,7 +73,7 @@ export function Nav() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        height: '56px',
+        height: '64px',
       }}>
         {/* Wordmark */}
         <Link
@@ -84,7 +83,7 @@ export function Nav() {
             fontWeight: 700,
             fontSize: '0.9rem',
             letterSpacing: '0.06em',
-            color: 'var(--color-ink)',
+            color: 'var(--color-paper)',
             textDecoration: 'none',
             flexShrink: 0,
           }}
@@ -124,12 +123,13 @@ export function Nav() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.65rem',
               letterSpacing: '0.08em',
-              color: 'var(--color-stamp)',
+              color: 'var(--color-ink)',
               textDecoration: 'none',
-              border: '1px solid var(--color-stamp)',
-              padding: '8px 14px',
-              borderRadius: '2px',
+              backgroundColor: 'var(--color-stamp)',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-sm)',
               whiteSpace: 'nowrap',
+              fontWeight: 700,
             }}
           >
             {nav.getStarted} →
@@ -153,19 +153,19 @@ export function Nav() {
             gap: '5px',
           }}
         >
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-ink)', transition: 'all 0.2s', transform: open ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-ink)', opacity: open ? 0 : 1, transition: 'all 0.2s' }} />
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-ink)', transition: 'all 0.2s', transform: open ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
+          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', transition: 'all 0.2s', transform: open ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
+          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', opacity: open ? 0 : 1, transition: 'all 0.2s' }} />
+          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', transition: 'all 0.2s', transform: open ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
         </button>
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile menu */}
       {open && (
         <div
           id="mobile-menu"
           style={{
-            backgroundColor: 'var(--color-paper)',
-            borderTop: '1px solid rgba(22,21,15,0.1)',
+            backgroundColor: 'rgba(10,13,11,0.97)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
             padding: '16px 24px 24px',
           }}
           className="nav-mobile-menu"
@@ -179,16 +179,15 @@ export function Nav() {
                 display: 'block',
                 fontFamily: 'var(--font-heebo)',
                 fontSize: '1rem',
-                color: 'var(--color-ink)',
+                color: 'var(--color-paper)',
                 textDecoration: 'none',
                 padding: '12px 0',
-                borderBottom: '1px solid rgba(22,21,15,0.06)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
               }}
             >
               {label}
             </Link>
           ))}
-          {/* Locale toggle in mobile menu */}
           <div style={{ paddingTop: '16px', paddingBottom: '4px' }}>
             <LocaleToggle />
           </div>
@@ -199,13 +198,14 @@ export function Nav() {
               marginTop: '12px',
               padding: '14px 20px',
               backgroundColor: 'var(--color-stamp)',
-              color: '#fff',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.7rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
               textAlign: 'center',
+              fontWeight: 700,
             }}
           >
             {nav.getStarted} →
@@ -213,7 +213,6 @@ export function Nav() {
         </div>
       )}
 
-      {/* Inline responsive styles */}
       <style>{`
         @media (max-width: 768px) {
           .nav-desktop { display: none !important; }

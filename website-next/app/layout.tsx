@@ -1,26 +1,19 @@
 import type { Metadata } from 'next'
-import { Heebo, Archivo_Black, Space_Mono } from 'next/font/google'
+import { Manrope, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 
-const heebo = Heebo({
-  subsets: ['latin', 'hebrew'],
+const manrope = Manrope({
+  subsets: ['latin'],
   variable: '--font-heebo',
   display: 'swap',
 })
 
-const archivo = Archivo_Black({
+const dmMono = DM_Mono({
   subsets: ['latin'],
-  weight: '400',
-  variable: '--font-archivo',
-  display: 'swap',
-})
-
-const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: ['400', '500'],
   variable: '--font-space-mono',
   display: 'swap',
 })
@@ -32,7 +25,7 @@ const OG_IMAGE = `${SITE_URL}/og/og-default.png`
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#16150F',
+  themeColor: '#111612',
 } as const
 
 export const metadata: Metadata = {
@@ -143,11 +136,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${heebo.variable} ${archivo.variable} ${spaceMono.variable} antialiased`}
+        className={`${manrope.variable} ${dmMono.variable} antialiased`}
         style={{
-          fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-          backgroundColor: 'var(--color-paper)',
-          color: 'var(--color-ink)',
+          fontFamily: 'var(--font-heebo), Manrope, system-ui, sans-serif',
+          backgroundColor: 'var(--color-night)',
+          color: 'var(--color-paper)',
         }}
       >
         <LocaleProvider>

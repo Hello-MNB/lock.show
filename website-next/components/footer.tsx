@@ -78,12 +78,13 @@ export function Footer() {
               display: 'inline-block',
               padding: '12px 24px',
               backgroundColor: 'var(--color-stamp)',
-              color: '#fff',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.68rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: 700,
               flexShrink: 0,
             }}
           >
@@ -135,7 +136,7 @@ export function Footer() {
           padding: '20px',
           backgroundColor: 'rgba(255,255,255,0.03)',
           border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: '2px',
+          borderRadius: 'var(--radius-sm)',
           marginBottom: '32px',
         }}>
           <p style={{

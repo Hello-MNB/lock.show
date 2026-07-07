@@ -1,8 +1,8 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Sample Passport — Verified Live Performance Evidence | GIGPROOF',
-  description: 'A sample GIGPROOF Artist Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
+  description: 'A sample GIGPROOF Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
 const APP_URL = 'https://app.gigproof.co'
@@ -119,7 +119,7 @@ function ProofUnitBlock({ unit, isDrawUnit = false }: { unit: ProofUnitData; isD
   return (
     <div style={{
       padding: '16px 0',
-      borderBottom: '1px solid rgba(22,21,15,0.07)',
+      borderBottom: '1px solid rgba(10,13,11,0.07)',
     }}>
       <MethodLabel method={unit.method} reviewed={unit.reviewed} />
       {isDrawUnit ? (
@@ -173,7 +173,7 @@ export default function PassportDemo() {
       {/* DEMO BANNER */}
       <div style={{
         backgroundColor: 'var(--color-stamp)',
-        color: '#fff',
+        color: 'var(--color-ink)',
         textAlign: 'center',
         padding: '10px 16px',
         fontFamily: 'var(--font-space-mono)',
@@ -204,7 +204,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp)',
             textTransform: 'uppercase',
           }}>
-            GIGPROOF · ARTIST PASSPORT
+            GIGPROOF · BOOKABILITY PASSPORT
           </span>
         </div>
 
@@ -257,7 +257,7 @@ export default function PassportDemo() {
         </div>
 
         {/* SEPARATOR */}
-        <div style={{ height: '1px', backgroundColor: 'rgba(22,21,15,0.12)', margin: '4px 0 28px' }} />
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
 
         {/* LIVE PERFORMANCE */}
         <div style={{ marginBottom: '24px' }}>
@@ -270,7 +270,7 @@ export default function PassportDemo() {
         </div>
 
         {/* SEPARATOR */}
-        <div style={{ height: '1px', backgroundColor: 'rgba(22,21,15,0.12)', margin: '4px 0 28px' }} />
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
 
         {/* COMMUNITY — contextual only */}
         <div style={{ marginBottom: '24px' }}>
@@ -292,7 +292,7 @@ export default function PassportDemo() {
         </div>
 
         {/* SEPARATOR */}
-        <div style={{ height: '1px', backgroundColor: 'rgba(22,21,15,0.12)', margin: '4px 0 28px' }} />
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
 
         {/* READINESS */}
         <div style={{ marginBottom: '36px' }}>
@@ -337,9 +337,9 @@ export default function PassportDemo() {
         <div style={{
           marginTop: '40px',
           padding: '24px',
-          backgroundColor: 'rgba(91,63,214,0.05)',
-          border: '1px solid rgba(91,63,214,0.2)',
-          borderRadius: '2px',
+          backgroundColor: 'rgba(200,240,77,0.05)',
+          border: '1px solid rgba(200,240,77,0.2)',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center',
         }}>
           <p style={{
@@ -366,12 +366,13 @@ export default function PassportDemo() {
               display: 'inline-block',
               padding: '12px 28px',
               backgroundColor: 'var(--color-stamp)',
-              color: '#fff',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
+              fontWeight: 700,
               fontSize: '0.7rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
             }}
           >
             BUILD YOUR PASSPORT →

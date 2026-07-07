@@ -1,29 +1,39 @@
 @import "tailwindcss";
+@import "../styles/design-system.css";
 
-/* ─── GIGPROOF Design Tokens ─── */
+/* ─── GIGPROOF Design Tokens — Codex Theme ─── */
+/* To retheme: edit values here + in design-system.css  */
 @theme {
-  --color-paper:  #EFEBDF;
-  --color-ink:    #16150F;
-  --color-stamp:  #5B3FD6;
-  --color-night:  #0E0E13;
-  --color-tally:  #7A766A;
-  --color-void:   #B23B2E;
+  /* Surfaces */
+  --color-paper:  #f3f5ef;   /* light section bg */
+  --color-ink:    #0a0d0b;   /* near-black, primary dark bg */
+  --color-night:  #111612;   /* dark panel */
 
-  --font-family-body:    var(--font-heebo), system-ui, sans-serif;
-  --font-family-display: var(--font-archivo), system-ui, sans-serif;
-  --font-family-mono:    var(--font-space-mono), monospace;
+  /* Accent — LIME (was purple #5B3FD6) */
+  --color-stamp:  #c8f04d;
 
-  --radius: 2px;
-  --radius-none: 0px;
-  --radius-sm: 2px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
+  /* Text */
+  --color-tally:  #929b94;   /* muted / secondary */
+  --color-void:   #B23B2E;   /* error */
+
+  /* Typography — Manrope (body + display) · DM Mono (labels) */
+  --font-family-body:    var(--font-heebo), Manrope, system-ui, sans-serif;
+  --font-family-display: var(--font-heebo), Manrope, system-ui, sans-serif;
+  --font-family-mono:    var(--font-space-mono), 'DM Mono', monospace;
+
+  /* Radius */
+  --radius: 10px;
+}
+
+/* Alias: --font-archivo → --font-heebo (Manrope handles both roles) */
+:root {
+  --font-archivo: var(--font-heebo);
 }
 
 html {
-  font-family: var(--font-heebo), system-ui, sans-serif;
+  font-family: var(--font-heebo), Manrope, system-ui, sans-serif;
   color: var(--color-ink);
-  background-color: var(--color-paper);
+  background-color: var(--color-night);
 }
 
 * {

@@ -23,7 +23,7 @@
     "hero": {
       "badge": "CLOSED BETA · TEL AVIV",
       "headline": "Before a booking manager risks their name, they need proof.",
-      "sub": "GIGPROOF turns your live-performance evidence into a verified, method-labelled Artist Passport — so bookers can evaluate without guessing.",
+      "sub": "GIGPROOF turns your live-performance evidence into a verified, method-labelled Bookability Passport — so booking managers can evaluate without guessing.",
       "ctaBuild": "BUILD YOUR PASSPORT →",
       "ctaDemo": "SEE A SAMPLE PASSPORT"
     },
@@ -40,7 +40,7 @@
       "booker": {
         "tag": "אמרגן · BOOKING MANAGER",
         "title": "Evaluate before you risk your name",
-        "body": "Read an Artist Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing. Viewing is always free.",
+        "body": "Read a Bookability Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing. Viewing is always free.",
         "cta": "FOR BOOKING MANAGERS →"
       },
       "producer": {

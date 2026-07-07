@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Artist Radar — Your Private Evidence Workspace | GIGPROOF',
@@ -63,7 +63,7 @@ const evidenceStates = [
     state: 'ABSENT',
     label: 'No data for this dimension',
     desc: 'Nothing logged for this area. The Radar surfaces this so you can decide whether to act on it.',
-    color: 'rgba(22,21,15,0.3)',
+    color: 'rgba(10,13,11,0.3)',
   },
 ]
 
@@ -80,7 +80,7 @@ export default function Radar() {
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
       {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(22,21,15,0.08)' }}>
+      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -118,7 +118,7 @@ export default function Radar() {
       </section>
 
       {/* WHAT IT IS */}
-      <section style={{ padding: '80px 24px', backgroundColor: '#f5f2ea' }}>
+      <section style={{ padding: '80px 24px', backgroundColor: 'var(--color-paper)' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{
             display: 'grid',
@@ -236,9 +236,9 @@ export default function Radar() {
                 key={d.id}
                 style={{
                   padding: '24px',
-                  border: '1px solid rgba(22,21,15,0.08)',
-                  borderRadius: '2px',
-                  backgroundColor: 'rgba(22,21,15,0.01)',
+                  border: '1px solid rgba(10,13,11,0.08)',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'rgba(10,13,11,0.01)',
                 }}
               >
                 <p style={{
@@ -302,7 +302,7 @@ export default function Radar() {
                   padding: '20px 24px',
                   backgroundColor: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.06)',
-                  borderRadius: '2px',
+                  borderRadius: 'var(--radius-sm)',
                   alignItems: 'center',
                 }}
               >
@@ -378,7 +378,7 @@ export default function Radar() {
                     letterSpacing: '0.1em',
                     color: 'var(--color-tally)',
                     textTransform: 'uppercase',
-                    borderBottom: '2px solid rgba(22,21,15,0.1)',
+                    borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
                   }}>Dimension</th>
                   <th style={{
@@ -389,7 +389,7 @@ export default function Radar() {
                     letterSpacing: '0.1em',
                     color: 'var(--color-stamp)',
                     textTransform: 'uppercase',
-                    borderBottom: '2px solid rgba(22,21,15,0.1)',
+                    borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
                   }}>Artist Radar (private)</th>
                   <th style={{
@@ -400,7 +400,7 @@ export default function Radar() {
                     letterSpacing: '0.1em',
                     color: 'var(--color-tally)',
                     textTransform: 'uppercase',
-                    borderBottom: '2px solid rgba(22,21,15,0.1)',
+                    borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
                   }}>Passport (public)</th>
                 </tr>
@@ -409,7 +409,7 @@ export default function Radar() {
                 {radarVsPassport.map((row, i) => (
                   <tr
                     key={i}
-                    style={{ backgroundColor: i % 2 === 0 ? 'rgba(22,21,15,0.02)' : 'transparent' }}
+                    style={{ backgroundColor: i % 2 === 0 ? 'rgba(10,13,11,0.02)' : 'transparent' }}
                   >
                     <td style={{
                       padding: '14px 16px',
@@ -417,20 +417,20 @@ export default function Radar() {
                       fontFamily: 'var(--font-space-mono)',
                       fontSize: '0.7rem',
                       letterSpacing: '0.06em',
-                      borderBottom: '1px solid rgba(22,21,15,0.06)',
+                      borderBottom: '1px solid rgba(10,13,11,0.06)',
                       whiteSpace: 'nowrap',
                     }}>{row.dimension}</td>
                     <td style={{
                       padding: '14px 16px',
                       color: 'var(--color-ink)',
                       lineHeight: 1.5,
-                      borderBottom: '1px solid rgba(22,21,15,0.06)',
+                      borderBottom: '1px solid rgba(10,13,11,0.06)',
                     }}>{row.radar}</td>
                     <td style={{
                       padding: '14px 16px',
                       color: 'var(--color-tally)',
                       lineHeight: 1.5,
-                      borderBottom: '1px solid rgba(22,21,15,0.06)',
+                      borderBottom: '1px solid rgba(10,13,11,0.06)',
                     }}>{row.passport}</td>
                   </tr>
                 ))}
@@ -443,7 +443,7 @@ export default function Radar() {
       {/* CTA */}
       <section style={{
         backgroundColor: 'var(--color-stamp)',
-        color: '#fff',
+        color: 'var(--color-ink)',
         padding: '80px 24px',
         textAlign: 'center',
       }}>
@@ -452,7 +452,7 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'rgba(255,255,255,0.6)',
+            color: 'rgba(10,13,11,0.55)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -466,7 +466,7 @@ export default function Radar() {
           }}>
             Build the Radar. Publish the Passport.
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '36px', lineHeight: 1.6 }}>
+          <p style={{ color: 'rgba(10,13,11,0.65)', marginBottom: '36px', lineHeight: 1.6 }}>
             Your evidence, organized. Your career, legible.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -481,7 +481,7 @@ export default function Radar() {
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 fontWeight: 700,
               }}
             >
@@ -499,7 +499,7 @@ export default function Radar() {
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
               }}
             >
               SEE A PASSPORT

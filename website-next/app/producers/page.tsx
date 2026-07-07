@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -67,7 +67,7 @@ export default function ProducersPage() {
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
               letterSpacing: '0.1em',
-              color: 'rgba(239,235,223,0.4)',
+              color: 'rgba(243,245,239,0.4)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}
@@ -90,7 +90,7 @@ export default function ProducersPage() {
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
               fontSize: '1.1rem',
-              color: 'rgba(239,235,223,0.6)',
+              color: 'rgba(243,245,239,0.6)',
               lineHeight: 1.6,
               maxWidth: '42rem',
               marginBottom: '2.5rem',
@@ -105,13 +105,14 @@ export default function ProducersPage() {
               href="/passport/demo"
               style={{
                 background: 'var(--color-stamp)',
-                color: 'var(--color-paper)',
+                color: 'var(--color-ink)',
                 fontFamily: 'var(--font-archivo), system-ui, sans-serif',
                 fontSize: '0.9rem',
+                fontWeight: 700,
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
@@ -120,14 +121,14 @@ export default function ProducersPage() {
             <Link
               href="/how-it-works"
               style={{
-                border: '1px solid rgba(239,235,223,0.15)',
-                color: 'rgba(239,235,223,0.7)',
+                border: '1px solid rgba(243,245,239,0.15)',
+                color: 'rgba(243,245,239,0.7)',
                 fontFamily: 'var(--font-archivo), system-ui, sans-serif',
                 fontSize: '0.9rem',
                 letterSpacing: '0.02em',
                 padding: '0.875rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: '2px',
+                borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
@@ -138,7 +139,7 @@ export default function ProducersPage() {
       </header>
 
       {/* ── YOUR ROLE ────────────────────────────────────── */}
-      <section style={{ padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '4rem 1.5rem' }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
           <p
             style={{
@@ -168,8 +169,8 @@ export default function ProducersPage() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: '1px',
-              background: 'rgba(22,21,15,0.08)',
-              border: '1px solid rgba(22,21,15,0.08)',
+              background: 'rgba(10,13,11,0.08)',
+              border: '1px solid rgba(10,13,11,0.08)',
               marginBottom: '3rem',
             }}
           >
@@ -229,10 +230,10 @@ export default function ProducersPage() {
           {/* Entity firewall callout — CRITICAL per CLAUDE.md */}
           <div
             style={{
-              border: '1px solid rgba(91,63,214,0.2)',
-              background: 'rgba(91,63,214,0.04)',
+              border: '1px solid rgba(200,240,77,0.2)',
+              background: 'rgba(200,240,77,0.04)',
               padding: '1.5rem',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
             }}
           >
             <p
@@ -268,10 +269,10 @@ export default function ProducersPage() {
       {/* ── WHY IT MATTERS ───────────────────────────────── */}
       <section
         style={{
-          background: 'rgba(22,21,15,0.03)',
+          background: 'var(--color-paper)',
           padding: '4rem 1.5rem',
-          borderTop: '1px solid rgba(22,21,15,0.06)',
-          borderBottom: '1px solid rgba(22,21,15,0.06)',
+          borderTop: '1px solid rgba(10,13,11,0.06)',
+          borderBottom: '1px solid rgba(10,13,11,0.06)',
         }}
       >
         <div style={{ maxWidth: '48rem', margin: '0 auto' }}>
@@ -303,7 +304,7 @@ export default function ProducersPage() {
                 key={i}
                 style={{
                   padding: '1.5rem 0',
-                  borderBottom: '1px solid rgba(22,21,15,0.06)',
+                  borderBottom: '1px solid rgba(10,13,11,0.06)',
                 }}
               >
                 <h3
@@ -333,13 +334,13 @@ export default function ProducersPage() {
       </section>
 
       {/* ── HOW IT FEELS FROM YOUR SIDE ──────────────────── */}
-      <section style={{ padding: '4rem 1.5rem', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '4rem 1.5rem', textAlign: 'center' }}>
         <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
           <div
             style={{
               background: 'var(--color-night)',
               padding: '2.5rem',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
               marginBottom: '2rem',
               textAlign: 'left',
             }}
@@ -363,7 +364,7 @@ export default function ProducersPage() {
                   style={{
                     fontFamily: 'var(--font-space-mono), monospace',
                     fontSize: '0.75rem',
-                    color: 'rgba(239,235,223,0.6)',
+                    color: 'rgba(243,245,239,0.6)',
                     letterSpacing: '0.02em',
                     lineHeight: 1.5,
                   }}
@@ -388,13 +389,14 @@ export default function ProducersPage() {
             href="/passport/demo"
             style={{
               background: 'var(--color-stamp)',
-              color: 'var(--color-paper)',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-archivo), system-ui, sans-serif',
               fontSize: '0.9rem',
+              fontWeight: 700,
               letterSpacing: '0.02em',
               padding: '0.875rem 1.75rem',
               textDecoration: 'none',
-              borderRadius: '2px',
+              borderRadius: 'var(--radius-sm)',
               display: 'inline-block',
             }}
           >
