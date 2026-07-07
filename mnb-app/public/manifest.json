@@ -1,0 +1,19 @@
+{
+  "name": "MNB — My New Baby",
+  "short_name": "MNB",
+  "description": "היכרויות פרמיום מאומתות. ליווי אישי, התאמה חכמה, וכסף שמוגן עד שאתם מאשרים.",
+  "dir": "rtl",
+  "lang": "he",
+  "start_url": "/app/discover",
+  "display": "standalone",
+  "background_color": "#0C0F16",
+  "theme_color": "#0C0F16",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
