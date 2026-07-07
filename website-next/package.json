@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm --prefix .. ci --no-audit --no-fund && npm --prefix .. run build:embed && next build",
-    "build:site-only": "next build",
+    "build": "next build",
+    "build:with-embed": "npm --prefix .. ci --no-audit --no-fund && npm --prefix .. run build:embed && next build",
     "start": "next start",
     "lint": "eslint"
   },
