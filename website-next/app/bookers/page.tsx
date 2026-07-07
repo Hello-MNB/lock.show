@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { DoorStamp } from '@/components/door-stamp'
 
@@ -56,26 +56,25 @@ const passportFeatures = [
 
 export default function BookersPage() {
   return (
-    <>
+    <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
+
       {/* ── HERO ─────────────────────────────────────────── */}
-      <header
+      <section
         style={{
-          background: 'var(--color-night)',
-          color: 'var(--color-paper)',
-          padding: '4.5rem 1.5rem',
-          position: 'relative',
+          margin: '28px max(24px, 4vw) 0',
+          border: '1px solid #2a362c',
+          borderRadius: '20px',
           overflow: 'hidden',
+          minHeight: '620px',
+          background: `linear-gradient(160deg, rgba(10,13,11,0.97) 0%, rgba(10,13,11,0.84) 55%, rgba(10,13,11,0.52) 100%), url('/gigproof-persona-manager-v1.webp') center/cover no-repeat`,
+          color: 'var(--color-paper)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.05\'/%3E%3C/svg%3E")',
-            pointerEvents: 'none',
-          }}
-        />
         {/* Stamp watermarks */}
         <div
           aria-hidden="true"
@@ -105,38 +104,44 @@ export default function BookersPage() {
         >
           <DoorStamp size={240} />
         </div>
-        <div style={{ maxWidth: '48rem', margin: '0 auto', position: 'relative' }}>
+        <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
-              letterSpacing: '0.1em',
+              letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
-              marginBottom: '1rem',
+              marginBottom: '1.75rem',
             }}
           >
             FOR BOOKING MANAGERS · לאמרגנים
           </p>
           <h1
             style={{
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: 'clamp(2rem, 6vw, 3.25rem)',
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 'clamp(2.4rem, 5vw, 4rem)',
+              fontWeight: 400,
+              lineHeight: 0.96,
+              letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              lineHeight: 1.05,
-              marginBottom: '1.25rem',
+              marginBottom: '1.5rem',
             }}
           >
-            Evaluate before you commit.
+            Evaluate before
+            <br />
+            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
+              you commit.
+            </em>
           </h1>
           <p
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '1.1rem',
-              color: 'rgba(243,245,239,0.65)',
-              lineHeight: 1.6,
-              maxWidth: '42rem',
-              marginBottom: '2.5rem',
+              fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
+              lineHeight: 1.65,
+              color: 'rgba(243,245,239,0.62)',
+              maxWidth: '520px',
+              marginBottom: '2.25rem',
             }}
           >
             GIGPROOF is free for booking managers. An artist sends you a link;
@@ -149,43 +154,44 @@ export default function BookersPage() {
               style={{
                 background: 'var(--color-stamp)',
                 color: 'var(--color-ink)',
-                fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                fontSize: '0.9rem',
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.78rem',
                 fontWeight: 700,
-                letterSpacing: '0.02em',
-                padding: '0.875rem 1.75rem',
+                letterSpacing: '0.08em',
+                padding: '0.9rem 1.75rem',
                 textDecoration: 'none',
                 borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
-              See a sample Passport →
+              SEE A SAMPLE PASSPORT →
             </Link>
             <Link
               href="/how-it-works"
               style={{
-                border: '1px solid rgba(243,245,239,0.2)',
+                border: '1px solid rgba(243,245,239,0.22)',
                 color: 'var(--color-paper)',
-                fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                fontSize: '0.9rem',
-                letterSpacing: '0.02em',
-                padding: '0.875rem 1.75rem',
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                padding: '0.9rem 1.75rem',
                 textDecoration: 'none',
                 borderRadius: 'var(--radius-sm)',
                 display: 'inline-block',
               }}
             >
-              How it works
+              HOW IT WORKS
             </Link>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* ── THE RISK ─────────────────────────────────────── */}
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: '4rem 1.5rem',
+          padding: '4rem max(24px, 4vw)',
           borderBottom: '1px solid rgba(10,13,11,0.06)',
         }}
       >
@@ -265,7 +271,7 @@ export default function BookersPage() {
       </section>
 
       {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '4rem 1.5rem' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
         <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
           <p
             style={{
@@ -339,7 +345,12 @@ export default function BookersPage() {
       </section>
 
       {/* ── WHAT GIGPROOF DOESN'T PROMISE ────────────────── */}
-      <section style={{ background: 'var(--color-night)', padding: '4rem 1.5rem' }}>
+      <section style={{
+        background: 'var(--color-night)',
+        padding: '4rem max(24px, 4vw)',
+        borderTop: '1px solid #2a342d',
+        borderBottom: '1px solid #2a342d',
+      }}>
         <div style={{ maxWidth: '48rem', margin: '0 auto' }}>
           <p
             style={{
@@ -404,7 +415,7 @@ export default function BookersPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '5rem 1.5rem', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-paper)', padding: '5rem max(24px, 4vw)', textAlign: 'center' }}>
         <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
           <h2
             style={{
@@ -433,19 +444,21 @@ export default function BookersPage() {
             style={{
               background: 'var(--color-ink)',
               color: 'var(--color-paper)',
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: '0.9rem',
-              letterSpacing: '0.02em',
-              padding: '0.875rem 1.75rem',
+              fontFamily: 'var(--font-space-mono), monospace',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              padding: '0.9rem 1.75rem',
               textDecoration: 'none',
               borderRadius: 'var(--radius-sm)',
               display: 'inline-block',
             }}
           >
-            See a sample Passport →
+            SEE A SAMPLE PASSPORT →
           </Link>
         </div>
       </section>
-    </>
+
+    </main>
   )
 }
