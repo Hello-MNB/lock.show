@@ -2,14 +2,15 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   trailingSlash: false,
-  // The real app (Vite SPA) is built into public/app by the website build
-  // (see package.json "build"). These afterFiles rewrites give it SPA deep
-  // links: real files (public/app/assets/*) are served first; any /app route
-  // WITHOUT a dot falls back to the SPA shell.
+  // The real app (Vite SPA) ships pre-built in public/app. afterFiles rewrites
+  // run AFTER the filesystem, so real files (assets, icons) are served first
+  // and every other /app route falls back to the SPA shell. NOTE: keep the
+  // catch-all plain — Vercel's production router rejected a lookahead regex
+  // here (deep links 404'd) while dev accepted it.
   async rewrites() {
     return [
       { source: '/app', destination: '/app/index.html' },
-      { source: '/app/:path((?!.*\\.).*)', destination: '/app/index.html' },
+      { source: '/app/:path*', destination: '/app/index.html' },
     ]
   },
 }
