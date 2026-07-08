@@ -127,14 +127,16 @@ export function LegalDocument({ content }: { content: LegalContent }) {
         <div style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '36px' }}>
           {t.sections.map((s, i) => (
             <div key={i}>
-              <h2 style={{
-                fontFamily: 'var(--font-archivo)',
-                fontSize: '1.15rem',
-                letterSpacing: '-0.01em',
-                marginBottom: '10px',
-              }}>
-                {renderInline(s.heading)}
-              </h2>
+              {s.heading && (
+                <h2 style={{
+                  fontFamily: 'var(--font-archivo)',
+                  fontSize: '1.15rem',
+                  letterSpacing: '-0.01em',
+                  marginBottom: '10px',
+                }}>
+                  {renderInline(s.heading)}
+                </h2>
+              )}
               {s.paragraphs?.map((p, j) => (
                 <p key={j} style={{ fontSize: '0.925rem', color: 'var(--color-tally)', lineHeight: 1.7, margin: '0 0 10px' }}>
                   {renderInline(p)}
