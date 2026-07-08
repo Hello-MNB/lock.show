@@ -29,10 +29,10 @@ const RING = {
 }
 // Bounded state chips — low-saturation tints (≤10% alpha), text does the work.
 const NODE_CHIP = {
-  [NODE.CONFIRMED]: { icon: '✓', c: 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72]' },
-  [NODE.FOUND]: { icon: '✦', c: 'bg-[rgba(242,192,99,0.10)] text-gold' },
-  [NODE.REVIEW]: { icon: '?', c: 'bg-[rgba(227,154,75,0.10)] text-[#F0B478]' },
-  [NODE.MISSING]: { icon: '+', c: 'bg-white/[0.05] text-[#9AA29B]' },
+  [NODE.CONFIRMED]: { icon: '✓', c: 'bg-good-bg text-good' },
+  [NODE.FOUND]: { icon: '✦', c: 'bg-found-bg text-found' },
+  [NODE.REVIEW]: { icon: '?', c: 'bg-need-bg text-need' },
+  [NODE.MISSING]: { icon: '+', c: 'bg-na-bg text-na' },
 }
 
 const hostOf = (u = '') => { try { return new URL(u).hostname.replace(/^www\./, '') } catch { return '' } }
@@ -187,7 +187,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
         {FILTERS.map((f) => (
           <button key={f.key} role="tab" aria-selected={filter === f.key} onClick={() => pickFilter(f.key)}
             className={`relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
-              filter === f.key ? 'border-line2 bg-white/[0.08] text-ink' : 'border-transparent bg-white/[0.04] text-muted hover:bg-white/[0.07]'
+              filter === f.key ? 'border-line2 bg-raise text-ink' : 'border-transparent bg-surface2 text-muted hover:bg-raise'
             }`}>
             {f.label}
             {/* found-items live here — a quiet gold dot on the Needs-you lens */}
@@ -219,8 +219,8 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
         /* ── THE UNIVERSE — always mounted, never reflows ── */
         <div className="relative mx-auto aspect-square max-w-[400px]">
           {/* thin orbit rings — the quiet geometry of the night */}
-          <div className="absolute inset-[9%] rounded-full border border-white/[0.08]" aria-hidden />
-          <div className="absolute inset-[27%] rounded-full border border-white/[0.05]" aria-hidden />
+          <div className="absolute inset-[9%] rounded-full border border-line" aria-hidden />
+          <div className="absolute inset-[27%] rounded-full border border-line" aria-hidden />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <CenterStar artist={artist} T={T} />
           </div>
@@ -238,7 +238,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
                 style={{ left: `${x}%`, top: `${y}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
                 aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${complete ? ` · ${S.complete}` : ''}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-glow-gold' : ''}`}>
                   <GpIcon id={p.icon} className="h-6 w-6 text-ink/90" />
                   {/* found — a small gold dot, not a badge shouting */}
                   {info.foundCount > 0 && (
@@ -246,7 +246,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
                   )}
                   {/* accomplishment — deliberately quiet: a small settled ✓ */}
                   {complete && (
-                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-[rgba(190,226,78,0.10)] text-[8px] text-[#CBEE72] ring-1 ring-bg2">✓</span>
+                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-good-bg text-[8px] text-good ring-1 ring-bg2">✓</span>
                   )}
                 </span>
                 <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight">
@@ -260,7 +260,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
 
       {/* ── ONE next move — folded INTO the canvas (1-screen mobile) ── */}
       {!blossom && nextAction && (
-        <div className="relative mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-white/[0.03] px-3 py-2.5">
+        <div className="relative mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5">
           <div className="min-w-0">
             <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>
             <p className="truncate text-sm font-semibold text-ink">{nextAction.title}</p>
@@ -276,7 +276,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
       {/* named receipt + undo — dark green card, lime dot, says WHAT landed WHERE */}
       {undo && (
         <div role="status" tabIndex={0} onMouseEnter={pauseUndo} onMouseLeave={resumeUndo} onFocus={pauseUndo} onBlur={resumeUndo}
-          className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl border border-accent/25 bg-[#141B12] px-3.5 py-2.5 text-xs text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+          className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center justify-between gap-3 rounded-xl border border-accent/25 bg-surface px-3.5 py-2.5 text-xs text-ink shadow-card">
           <span className="flex min-w-0 items-center gap-2">
             <span aria-hidden className="mt-px h-2 w-2 shrink-0 rounded-full bg-accent" />
             <span className="min-w-0">
@@ -292,7 +292,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
 
       {/* generic saved / bulk receipt */}
       {flashMsg && !undo && (
-        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-[#141B12] px-3.5 py-2.5 text-xs font-semibold text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-surface px-3.5 py-2.5 text-xs font-semibold text-ink shadow-card">
           <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
           <span className="truncate">{flashMsg}</span>
         </div>
@@ -367,7 +367,7 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
 
   const icon = n.url
     ? <PlatformMark platform={platformOf(n.url)} />
-    : <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/[0.05] text-muted"><GpIcon id={PLANETS.find((p) => p.key === planet)?.icon || 'gp-source'} className="h-4 w-4" /></span>
+    : <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-na-bg text-muted"><GpIcon id={PLANETS.find((p) => p.key === planet)?.icon || 'gp-source'} className="h-4 w-4" /></span>
 
   if (actionable) {
     return (
@@ -390,7 +390,7 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
           <span className={`chip shrink-0 text-[10px] ${chip.c}`}>{chip.icon}</span>
         </div>
         <button
-          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-white/[0.04] px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
           onClick={onConfirm} disabled={busy}
           aria-label={`Confirm: ${wording}`}>
           {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">Confirm: “{wording}”</span></>}
@@ -412,7 +412,7 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {n.state === NODE.MISSING && !n.fill && n.evidence && (
-          <button className="rounded-lg border border-line2 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-ink transition-colors hover:bg-white/[0.08]" onClick={onEvidence}>
+          <button className="rounded-lg border border-line2 bg-surface2 px-3 py-1.5 text-xs font-bold text-ink transition-colors hover:bg-raise" onClick={onEvidence}>
             {S.fill.openEvidence}
           </button>
         )}
@@ -557,8 +557,8 @@ function CenterStar({ artist, T, dim }) {
   return (
     <div className={`text-center transition-opacity ${dim ? 'opacity-50' : ''}`}>
       {artist.photo_url
-        ? <img src={artist.photo_url} alt="" className="mx-auto h-20 w-20 rounded-full border border-gold/70 object-cover shadow-[0_0_28px_rgba(242,192,99,0.25)]" />
-        : <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-gold/70 bg-surface2 font-display text-xl text-ink shadow-[0_0_28px_rgba(242,192,99,0.18)]">
+        ? <img src={artist.photo_url} alt="" className="mx-auto h-20 w-20 rounded-full border border-gold/70 object-cover shadow-glow-gold" />
+        : <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-gold/70 bg-surface2 font-display text-xl text-ink shadow-glow-gold">
             {(artist.stage_name || '★').slice(0, 1)}
           </span>}
       <span className="font-display mt-2 block text-sm font-bold tracking-[-0.01em] text-ink">

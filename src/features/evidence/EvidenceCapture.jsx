@@ -204,7 +204,7 @@ export default function EvidenceCapture() {
               <div className="flex flex-wrap gap-2">
                 {p.intents.map((k) => (
                   <button key={k} type="button" onClick={() => { setIntent(k); setError('') }}
-                    className="min-h-[44px] rounded-xl border border-white/[0.12] bg-surface2 px-3 py-2 text-sm font-semibold text-ink/90 transition-colors hover:border-line2">
+                    className="min-h-[44px] rounded-xl border border-line bg-surface2 px-3 py-2 text-sm font-semibold text-ink/90 transition-colors hover:border-line2">
                     {T.evidence.intents[k]}
                   </button>
                 ))}
@@ -237,7 +237,7 @@ export default function EvidenceCapture() {
                 <div className="flex flex-wrap gap-2">
                   {BANDS.frequency.map((o) => (
                     <button key={o} onClick={() => setBand(o)}
-                      className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${band === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
+                      className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${band === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-line2 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
                   ))}
                 </div>
               </Field>
@@ -273,7 +273,7 @@ export default function EvidenceCapture() {
               <Field label={T.evidence.communityLabel}>
                 <input className="field" type="number" min="1" inputMode="numeric" value={numVal} onChange={(e) => setNumVal(e.target.value)} placeholder="1200" />
               </Field>
-              <p className="mb-3 text-xs text-[#F0B478]">{T.evidence.communityPII}</p>
+              <p className="mb-3 text-xs text-need">{T.evidence.communityPII}</p>
               <button className="btn-ghost w-full" onClick={addCommunityCount}>{T.common.add}</button>
             </>
           )}
@@ -321,9 +321,9 @@ export default function EvidenceCapture() {
           <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.collected}</p>
           <ul className="space-y-2">
             {evidence.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface2 px-3 py-2 text-sm">
+              <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
                 <span className="min-w-0 truncate text-ink/90">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
-                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72]' : 'bg-white/[0.05] text-muted'}`}>
+                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
                   {e.status === 'processed' ? T.evidence.processed : T.evidence.pending}
                 </span>
               </li>
@@ -342,9 +342,9 @@ export default function EvidenceCapture() {
           <p className="mb-3 text-xs text-muted">Nothing publishes without you — every claim waits for your confirmation.</p>
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="animate-pulse rounded-xl border border-white/[0.06] bg-surface2 px-3 py-3">
-                <div className="mb-2 h-3 w-2/3 rounded bg-white/[0.08]" />
-                <div className="h-2.5 w-1/3 rounded bg-white/[0.05]" />
+              <div key={i} className="animate-pulse rounded-xl border border-line bg-surface2 px-3 py-3">
+                <div className="mb-2 h-3 w-2/3 rounded bg-line" />
+                <div className="h-2.5 w-1/3 rounded bg-na-bg" />
               </div>
             ))}
           </div>
@@ -357,7 +357,7 @@ export default function EvidenceCapture() {
           <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.results}</p>
           <ul className="space-y-2">
             {claims.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface2 px-3 py-2 text-sm">
+              <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
                 <span className="min-w-0 truncate text-ink/90">{c.value || c.claim_type}</span>
                 <SourceLabel status={c.verification_status} methodLabel={c.method_label} expiresAt={c.expires_at} />
               </li>

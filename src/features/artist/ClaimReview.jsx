@@ -206,7 +206,7 @@ export default function ClaimReview() {
             {artist.community_size_band && <DrawLine label={T.passport.drawCommunity} value={artist.community_size_band} T={T} />}
           </div>
           <p className="mt-2 text-xs text-muted">{T.claims.drawNote}</p>
-          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-white/20 hover:text-ink">{T.claims.drawEditHint}</Link>
+          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
         </div>
       )}
 
@@ -220,7 +220,7 @@ export default function ClaimReview() {
       {/* A8 · needs review — the artist-approval gate comes first */}
       {pendingReview.length > 0 && (
         <div className="mb-4">
-          <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#F0B478]">{T.claims.needsReview} ({pendingReview.length})</p>
+          <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-need">{T.claims.needsReview} ({pendingReview.length})</p>
           <p className="mb-2 text-xs text-muted">{T.claims.needsReviewHint}</p>
           <div className="space-y-2">
             {pendingReview.map((c) => (
@@ -275,7 +275,7 @@ export default function ClaimReview() {
 
       {/* named receipt — says WHAT was confirmed and WHERE it now appears */}
       {receipt && (
-        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-[#141B12] px-3.5 py-2.5 text-xs font-semibold text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-surface px-3.5 py-2.5 text-xs font-semibold text-ink shadow-card">
           <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
           <span className="truncate">{receipt}</span>
         </div>
@@ -291,7 +291,7 @@ function DrawLine({ label, value, T }) {
         <span className="truncate">{label}</span>
         <BandPill>{value}</BandPill>
       </span>
-      <span className="chip shrink-0 bg-white/[0.05] text-muted text-xs">{T.claims.alwaysVisible}</span>
+      <span className="chip shrink-0 bg-na-bg text-muted text-xs">{T.claims.alwaysVisible}</span>
     </div>
   )
 }
@@ -304,8 +304,8 @@ function VisibilityToggle({ isPassportOk, busy, onClick, T }) {
       disabled={busy}
       className={`chip min-h-[40px] shrink-0 px-3 py-1.5 text-xs font-bold transition ${
         isPassportOk
-          ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72] hover:bg-[rgba(190,226,78,0.15)]'
-          : 'border border-white/15 bg-white/[0.04] text-muted hover:bg-white/[0.08]'
+          ? 'bg-good-bg text-good hover:bg-good/15'
+          : 'border border-line2 bg-surface2 text-muted hover:bg-raise'
       }`}
     >
       {isPassportOk ? T.claims.passportOk : T.claims.mirrorOnly}
@@ -416,13 +416,13 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {claim.artist_approved && (
-              <span className="chip bg-[rgba(190,226,78,0.10)] text-[#CBEE72] text-xs">✓ {T.claims.approvedChip}</span>
+              <span className="chip bg-good-bg text-good text-xs">✓ {T.claims.approvedChip}</span>
             )}
             {isFlagged && (
-              <span className="chip bg-[rgba(227,154,75,0.10)] text-[#F0B478] text-xs">{T.claims.flaggedChip}</span>
+              <span className="chip bg-need-bg text-need text-xs">{T.claims.flaggedChip}</span>
             )}
             {hasPending && (
-              <span className="chip bg-[rgba(70,220,194,0.10)] text-[#82E8D6] text-xs">{T.producer.pendingChip}</span>
+              <span className="chip bg-dev-bg text-dev text-xs">{T.producer.pendingChip}</span>
             )}
           </div>
         </div>
@@ -449,21 +449,21 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
 
       {/* A8 review actions — single-tap; the confirm button NAMES what it confirms */}
       {needsReview && !isFlagged && (
-        <div className="mt-3 flex flex-wrap gap-2 border-t border-white/[0.08] pt-3">
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
           <button
-            className="flex min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-white/[0.04] px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+            className="flex min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
             onClick={() => onApprove(claim)} disabled={busy}
             aria-label={`${T.claims.approve}: ${claimTitle}`}>
             {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{T.claims.approve}: “{claimTitle}”</span></>}
           </button>
           <button className="btn-ghost text-sm" onClick={() => setCorrecting((v) => !v)} disabled={busy}>{T.claims.correct}</button>
           <button className="btn-ghost text-sm" onClick={() => onFlag(claim)} disabled={busy}>{T.claims.flag}</button>
-          <button className="btn-ghost text-sm text-[#F0B478]" onClick={() => onOmit(claim)} disabled={busy}>{T.claims.omit}</button>
+          <button className="btn-ghost text-sm text-need" onClick={() => onOmit(claim)} disabled={busy}>{T.claims.omit}</button>
         </div>
       )}
       {isFlagged && (
-        <div className="mt-3 flex gap-2 border-t border-white/[0.08] pt-3">
-          <button className="btn-ghost text-sm text-[#F0B478]" onClick={() => onOmit(claim)} disabled={busy}>{T.claims.omit}</button>
+        <div className="mt-3 flex gap-2 border-t border-line pt-3">
+          <button className="btn-ghost text-sm text-need" onClick={() => onOmit(claim)} disabled={busy}>{T.claims.omit}</button>
         </div>
       )}
       {correcting && needsReview && (
@@ -481,8 +481,8 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
         </button>
       )}
       {open && !isConfirmed && (
-        <div className="mt-2 border-t border-white/[0.08] pt-2">
-          {reqError && <p className="mb-2 text-xs text-[#F0B478]">{reqError}</p>}
+        <div className="mt-2 border-t border-line pt-2">
+          {reqError && <p className="mb-2 text-xs text-need">{reqError}</p>}
           {link ? (
             <>
               <p className="mb-1 text-xs text-muted">{T.producer.linkReady}</p>

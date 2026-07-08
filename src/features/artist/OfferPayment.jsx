@@ -57,7 +57,7 @@ export default function OfferPayment() {
 
       {status === 'active' ? (
         <div className="card text-center" role="status">
-          <span aria-hidden className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-line2 text-xl text-[#CBEE72]">✓</span>
+          <span aria-hidden className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-line2 text-xl text-good">✓</span>
           <h1 className="font-display mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{O.activeTitle}</h1>
           <p className="mb-4 text-muted">{O.activeBody}</p>
           {artist && <Link to={`/passport/${artist.id}`} className="btn-primary block">{T.dashboard.viewPublic}</Link>}

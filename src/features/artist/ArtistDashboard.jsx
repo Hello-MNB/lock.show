@@ -196,7 +196,7 @@ export default function ArtistDashboard() {
         onArtistChange={saveArtist} onItemsRefresh={refreshItems} reviewSignal={reviewSignal} />
 
       {/* ── ONE dominant next step — the coach's single clearest move ── */}
-      <div className="mb-4 rounded-2xl border border-line bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+      <div className="mb-4 rounded-2xl border border-line bg-surface p-5 shadow-card">
         <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{T.radar.nextActionEyebrow}</p>
         <p className="font-display text-lg font-bold tracking-[-0.01em] text-ink">{nextAction.title}</p>
         {nextAction.why && <p className="mt-1 text-xs leading-relaxed text-muted">{nextAction.why}</p>}
@@ -228,7 +228,7 @@ export default function ArtistDashboard() {
         <span className="text-xs text-muted">
           <span className={`me-2 inline-block h-2 w-2 rounded-full align-middle ${artist.published ? 'bg-accent' : 'bg-faint'}`} aria-hidden />
           <span className="font-semibold text-ink">{artist.published ? T.dashboard.statusActive : T.dashboard.statusOff}</span>
-          {dirty && <span className="ms-2 font-semibold text-[#F0B478]">{T.dashboard.unpublishedBadge}</span>}
+          {dirty && <span className="ms-2 font-semibold text-need">{T.dashboard.unpublishedBadge}</span>}
         </span>
         <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{T.dashboard.managePassport} ▸</span>
       </button>
@@ -238,7 +238,7 @@ export default function ArtistDashboard() {
         <div className="flex items-center justify-between">
           <span className="text-sm text-ink">{artist.published ? T.dashboard.publishOn : T.dashboard.publishOff}</span>
           <button onClick={togglePublish} disabled={publishing || (!artist.published && !canPublish)}
-            className={`chip min-h-[40px] px-4 py-2 transition ${publishing || (!artist.published && !canPublish) ? 'opacity-60' : ''} ${artist.published ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72]' : 'bg-white/[0.05] text-muted'}`}>
+            className={`chip min-h-[40px] px-4 py-2 transition ${publishing || (!artist.published && !canPublish) ? 'opacity-60' : ''} ${artist.published ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
             {publishing ? T.dashboard.publishing : artist.published ? T.dashboard.statusActive : T.dashboard.statusOff}
           </button>
         </div>
@@ -255,7 +255,7 @@ export default function ArtistDashboard() {
         {artist.published && (
           <>
             {dirty
-              ? <p className="mt-3 text-xs font-bold text-[#F0B478]">{T.dashboard.unpublishedBadge}</p>
+              ? <p className="mt-3 text-xs font-bold text-need">{T.dashboard.unpublishedBadge}</p>
               : <p className="mt-3 text-xs text-muted">{T.dashboard.publishedHint}</p>}
             <button onClick={refreshPublic} disabled={publishing}
               className={`mt-2 w-full text-sm ${dirty ? 'btn-primary' : 'btn-ghost'}`}>
@@ -263,16 +263,16 @@ export default function ArtistDashboard() {
             </button>
           </>
         )}
-        {pubError && <p className="mt-2 text-xs text-[#F0B478]">{pubError}</p>}
+        {pubError && <p className="mt-2 text-xs text-need">{pubError}</p>}
         {/* commercial state folded here — a line, never a wall; no emoji */}
         <p className="mt-3 border-t border-line pt-2 text-xs text-muted">
           {ent?.status === 'active'
             ? <>{T.offer.activeTitle}</>
             : ent?.status === 'pending'
               ? <>{T.offer.pendingTitle}</>
-              : <Link to="/artist/offer" className="font-semibold text-ink/80 underline decoration-white/20 hover:text-ink">{T.offer.getPassport} · {T.offer.price}</Link>}
+              : <Link to="/artist/offer" className="font-semibold text-ink/80 underline decoration-line2 hover:text-ink">{T.offer.getPassport} · {T.offer.price}</Link>}
           {artist.published && (
-            <Link to={`/passport/${artist.id}`} className="ms-3 font-semibold text-ink/80 underline decoration-white/20 hover:text-ink">{T.dashboard.viewPublic} →</Link>
+            <Link to={`/passport/${artist.id}`} className="ms-3 font-semibold text-ink/80 underline decoration-line2 hover:text-ink">{T.dashboard.viewPublic} →</Link>
           )}
         </p>
       </div>

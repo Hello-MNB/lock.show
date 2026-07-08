@@ -25,7 +25,7 @@ function ProgressSegments({ step }) {
           <span
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-              i + 1 < step ? 'bg-white/25' : i + 1 === step ? 'bg-accent' : 'bg-white/10'
+              i + 1 < step ? 'bg-line2' : i + 1 === step ? 'bg-accent' : 'bg-line'
             }`}
           />
         ))}
@@ -98,7 +98,7 @@ export default function Onboarding() {
       {step === 6 && <StepReadiness artist={artist} save={save} user={user} />}
       {step === 7 && <StepReview artist={artist} items={items} save={save} nav={nav} />}
 
-      <div className="sticky bottom-0 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-white/[0.08] bg-bg/95 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-0 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
         <button className="btn-ghost" disabled={step === 1 || saving} onClick={() => setStep((s) => s - 1)}>
           {T.common.back}
         </button>
@@ -149,7 +149,7 @@ function StepGoal({ act, setAct, artistId, flash, setError }) {
             }`}
           >
             {/* selection = a thin lime ring + a small dot; never a tinted fill */}
-            <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full ${current === g ? 'bg-accent' : 'bg-white/15'}`} />
+            <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full ${current === g ? 'bg-accent' : 'bg-line2'}`} />
             {T.onboarding.goals[g]}
           </button>
         ))}
@@ -217,7 +217,7 @@ function StepLinks({ artist, items, refresh }) {
     <div className="card">
       <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step2Title}</h2>
       <p className="mb-4 text-sm text-muted">{T.onboarding.linkHelp}</p>
-      <div className="mb-3 rounded-xl border border-white/[0.08] bg-surface2 p-3">
+      <div className="mb-3 rounded-xl border border-line bg-surface2 p-3">
         <p className="label">{T.onboarding.linkPlaceholder}</p>
         <div className="flex gap-2">
           <input className="field" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)}
@@ -227,7 +227,7 @@ function StepLinks({ artist, items, refresh }) {
       </div>
       <ul className="space-y-2">
         {links.map((l) => (
-          <li key={l.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm">
+          <li key={l.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5 text-sm">
             <span className="flex min-w-0 items-center gap-2">
               <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />
               <span dir="ltr" className="truncate text-ink/90">{l.public_url}</span>
@@ -265,7 +265,7 @@ function StepDraw({ artist, save }) {
         <div className="flex gap-2">
           {[[T.common.yes, true], [T.common.no, false]].map(([t, v]) => (
             <button key={t} onClick={() => pick('sells_tickets', v)}
-              className={`chip min-h-[44px] border px-5 py-2 font-mono transition-colors ${f.sells_tickets === v ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{t}</button>
+              className={`chip min-h-[44px] border px-5 py-2 font-mono transition-colors ${f.sells_tickets === v ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-line2 bg-surface2 text-ink/85 hover:border-line2'}`}>{t}</button>
           ))}
         </div>
       </Field>
@@ -282,7 +282,7 @@ function BandPicker({ label, options, value, onPick }) {
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button key={o} onClick={() => onPick(o)}
-            className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${value === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
+            className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${value === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-line2 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
         ))}
       </div>
     </Field>
@@ -327,7 +327,7 @@ function StepExperience({ artist, items, refresh }) {
       <button className="btn-ghost mb-4 w-full" onClick={add} disabled={busy}>{T.onboarding.addItem}</button>
       <ul className="space-y-2">
         {exp.map((i) => (
-          <li key={i.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm">
+          <li key={i.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5 text-sm">
             <span className="min-w-0 truncate text-ink/90">
               {i.title}
               {i.item_date && <span className="ms-2 font-mono text-[10px] text-faint">{i.item_date}</span>}
@@ -363,8 +363,8 @@ function StepReadiness({ artist, save, user }) {
       <h2 className="font-display mb-4 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step5Title}</h2>
       <Field label={T.onboarding.setLength}><input className="field" value={f.set_length} onChange={set('set_length')} placeholder={T.onboarding.setLengthPlaceholder} /></Field>
       <Field label={T.onboarding.regions}><input className="field" value={f.regions} onChange={set('regions')} placeholder={T.onboarding.regionsPlaceholder} /></Field>
-      <label className="mb-4 flex min-h-[44px] items-center gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm text-ink/90">
-        <input type="checkbox" className="accent-[#BEE24E]" checked={f.invoice_ready} onChange={(e) => { const v = e.target.checked; setF((p) => ({ ...p, invoice_ready: v })); save({ ...f, invoice_ready: v }) }} />
+      <label className="mb-4 flex min-h-[44px] items-center gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5 text-sm text-ink/90">
+        <input type="checkbox" className="accent-accent" checked={f.invoice_ready} onChange={(e) => { const v = e.target.checked; setF((p) => ({ ...p, invoice_ready: v })); save({ ...f, invoice_ready: v }) }} />
         {T.onboarding.invoice}
       </label>
       <Field label={T.onboarding.rider}>
@@ -420,7 +420,7 @@ function StepReview({ artist, items, save, nav }) {
       <h2 className="font-display relative mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step6Title}</h2>
       <p className="relative mb-4 text-muted">{artist.stage_name || T.onboarding.theArtist} · {artist.genre} · {items.length} {T.onboarding.items}</p>
       {artist.photo_url && (
-        <img src={artist.photo_url} alt="" className="relative mx-auto mb-4 h-32 w-32 rounded-full border border-gold/70 object-cover shadow-[0_0_28px_rgba(242,192,99,0.22)]" />
+        <img src={artist.photo_url} alt="" className="relative mx-auto mb-4 h-32 w-32 rounded-full border border-gold/70 object-cover shadow-glow-gold" />
       )}
       {needConsent ? (
         <div className="relative rounded-xl border border-line2 bg-surface2 p-4 text-start">

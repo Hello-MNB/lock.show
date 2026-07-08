@@ -105,7 +105,7 @@ export default function ArtistReadiness() {
       </div>
 
       {/* one dominant next step — the coach's move, quiet and typographic */}
-      <div className="rounded-2xl border border-line bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+      <div className="rounded-2xl border border-line bg-surface p-5 shadow-card">
         <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{T.readiness.nextStep}</p>
         <p className="font-display text-lg font-bold tracking-[-0.01em] text-ink">{data.nextAction}</p>
       </div>
