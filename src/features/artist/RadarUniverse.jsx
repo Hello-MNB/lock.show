@@ -457,8 +457,9 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
 // One node = one tiny form. Saving updates the data and the node flips to ✓
 // without ever leaving the panel. (Ticket exports stay in the evidence flow —
 // they carry the third-party consent gate.)
-function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onClaimsChange, onDone }) {
-  const { kind, field, max, placeholder } = node.fill
+function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onDone }) {
+  const { T, BANDS } = useLang() // band options + goal labels are localized
+  const { kind, field, max, placeholder, set } = node.fill
   const [v, setV] = useState('')
   const [v2, setV2] = useState('')
   const [busy, setBusy] = useState(false)
@@ -487,6 +488,49 @@ function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onClaims
         <button className="btn-ghost w-full" disabled={busy} onClick={() => saveArtist({ [field]: true })}>
           {busy ? <Spinner /> : S.fill.invoiceYes}
         </button>
+      )}
+
+      {/* band — the deferred draw bands (firewall: a BAND is the only public
+          form; chips reuse the old wizard's picker pattern, in place) */}
+      {kind === 'band' && (
+        <div className="flex flex-wrap gap-2">
+          {(BANDS[set] || []).map((o) => (
+            <button key={o} disabled={busy} onClick={() => saveArtist({ [field]: o })}
+              className="chip min-h-[44px] border border-white/15 bg-surface2 px-4 py-2 font-mono text-ink/85 transition-colors hover:border-line2">
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* yes/no — deferred booleans that carry information either way (e.g.
+          sells own tickets); an honest "no" is a valid, saveable answer */}
+      {kind === 'yesno' && (
+        <div className="flex gap-2">
+          {[[T.common.yes, true], [T.common.no, false]].map(([t, val]) => (
+            <button key={t} disabled={busy} onClick={() => saveArtist({ [field]: val })}
+              className="chip min-h-[44px] border border-white/15 bg-surface2 px-5 py-2 font-mono text-ink/85 transition-colors hover:border-line2">
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* goal (Act-level, canon A4) — guidance only: prioritizes evidence
+          paths, never changes what is true. "Not sure" is a valid answer. */}
+      {kind === 'goal' && (
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(T.onboarding.goals).map(([g, label]) => (
+            <button key={g} disabled={busy}
+              onClick={() => run(async () => {
+                if (onActChange) await onActChange({ artist_goal: g })
+                else await updateAct(artist.id, { artist_goal: g })
+              })}
+              className="chip min-h-[44px] border border-white/15 bg-surface2 px-3 py-2 text-sm font-semibold text-ink/85 transition-colors hover:border-line2">
+              {label}
+            </button>
+          ))}
+        </div>
       )}
 
       {(kind === 'text' || kind === 'url') && (
