@@ -12,20 +12,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: number
     changeFrequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'always' | 'hourly' | 'never'
   }> = [
+    // Priorities per owner spec: home 1.0; personas 0.8; methodology/
+    // how-it-works 0.7; pricing 0.6; faq/radar/contact 0.5; legal 0.2.
+    // /passport/demo isn't in any named tier — it's the flagship proof
+    // artifact (closest thing to a product demo), so it sits with the
+    // personas at 0.8 rather than inventing an unlisted priority band.
     { path: '',               priority: 1.0,  changeFrequency: 'weekly'  },
-    { path: '/passport/demo', priority: 0.95, changeFrequency: 'monthly' },
-    { path: '/artists',       priority: 0.9,  changeFrequency: 'monthly' },
-    { path: '/bookers',       priority: 0.9,  changeFrequency: 'monthly' },
-    { path: '/producers',     priority: 0.85, changeFrequency: 'monthly' },
-    { path: '/how-it-works',  priority: 0.85, changeFrequency: 'monthly' },
-    { path: '/methodology',   priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/pricing',       priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/radar',         priority: 0.75, changeFrequency: 'monthly' },
-    { path: '/faq',           priority: 0.7,  changeFrequency: 'monthly' },
-    { path: '/contact',       priority: 0.65, changeFrequency: 'monthly' },
-    { path: '/privacy',       priority: 0.3,  changeFrequency: 'yearly'  },
-    { path: '/terms',         priority: 0.3,  changeFrequency: 'yearly'  },
-    { path: '/accessibility', priority: 0.3,  changeFrequency: 'yearly'  },
+    { path: '/passport/demo', priority: 0.8,  changeFrequency: 'monthly' },
+    { path: '/artists',       priority: 0.8,  changeFrequency: 'monthly' },
+    { path: '/bookers',       priority: 0.8,  changeFrequency: 'monthly' },
+    { path: '/producers',     priority: 0.8,  changeFrequency: 'monthly' },
+    { path: '/how-it-works',  priority: 0.7,  changeFrequency: 'monthly' },
+    { path: '/methodology',   priority: 0.7,  changeFrequency: 'monthly' },
+    { path: '/pricing',       priority: 0.6,  changeFrequency: 'monthly' },
+    { path: '/radar',         priority: 0.5,  changeFrequency: 'monthly' },
+    { path: '/faq',           priority: 0.5,  changeFrequency: 'monthly' },
+    { path: '/contact',       priority: 0.5,  changeFrequency: 'monthly' },
+    { path: '/privacy',       priority: 0.2,  changeFrequency: 'yearly'  },
+    { path: '/terms',         priority: 0.2,  changeFrequency: 'yearly'  },
+    { path: '/accessibility', priority: 0.2,  changeFrequency: 'yearly'  },
   ]
 
   return pages.map(({ path, priority, changeFrequency }) => ({

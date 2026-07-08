@@ -81,20 +81,27 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
+    // No verified @lock handle exists yet — omit `site`/`creator` rather than
+    // claim a handle that may belong to someone else. Add back once secured.
     card: 'summary_large_image',
-    site: '@lock',
     images: [OG_IMAGE],
   },
   alternates: {
+    // No /he route ships yet (see messages/he.json — used for in-page locale
+    // toggle only, not a separate URL). Declaring an 'he' hreflang alternate
+    // that 404s is an SEO error, so we keep a single-locale canonical until a
+    // Hebrew route exists.
     canonical: SITE_URL,
-    languages: {
-      'en': SITE_URL,
-      'he': `${SITE_URL}/he`,
-    },
+  },
+  icons: {
+    icon: [{ url: '/favicon.ico' }],
+    apple: [{ url: '/app/apple-touch-icon.png' }],
   },
 }
 
-// JSON-LD: WebSite + Organization schema
+// JSON-LD: WebSite + Organization + SoftwareApplication schema.
+// No SearchAction on WebSite — the site has no internal search.
+// No aggregateRating / review anywhere — firewall: no scores, and we have none.
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -121,8 +128,40 @@ const jsonLd = {
         '@type': 'Place',
         name: 'Tel Aviv, Israel',
       },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Tel Aviv',
+        addressCountry: 'IL',
+      },
+      areaServed: {
+        '@type': 'Country',
+        name: 'Israel',
+      },
       description:
         'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE_URL}/#software`,
+      name: 'LOCK — Bookability Passport',
+      url: SITE_URL,
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      description:
+        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (אמרגנים) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
+      provider: { '@id': `${SITE_URL}/#organization` },
+      areaServed: {
+        '@type': 'Country',
+        name: 'Israel',
+      },
+      inLanguage: ['en', 'he'],
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description:
+          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
+      },
     },
   ],
 }

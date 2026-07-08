@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Methodology — How Evidence Is Verified | LOCK',
+  title: 'Methodology — How Evidence Is Verified',
   description: 'Every claim in a LOCK Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 

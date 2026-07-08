@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sample Passport — Verified Live Performance Evidence | LOCK',
+  title: 'Sample Passport — Verified Live Performance Evidence',
   description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 

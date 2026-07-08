@@ -2,6 +2,7 @@
 
 > Pre-booking proof and risk-reduction tool for the live music industry.
 > Helps Israeli booking managers (אמרגנים) evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
+> Formerly known as GIGPROOF, rebranded to LOCK in 2026 — same product, same team.
 
 ## What LOCK is
 
@@ -39,17 +40,21 @@ Every claim on a Passport carries a method label and reviewed date. Method label
 
 ## Pages
 
-- / — Homepage
-- /artists — For artists (אמן): how to build a Passport
-- /bookers — For booking managers (אמרגן): how to read a Passport
-- /producers — For producers (מפיק): the magic-link confirmation flow
-- /passport/demo — A sample Passport showing verified evidence
-- /how-it-works — Three players, seven steps
-- /methodology — How evidence is verified; method labels explained
-- /pricing — Free for booking managers; artist access by arrangement during beta
-- /radar — The Artist Radar feature explained
-- /faq — Frequently asked questions
-- /contact — Contact form and information
+- https://lock.show/ — Homepage
+- https://lock.show/artists — For artists (אמן): how to build a Passport
+- https://lock.show/bookers — For booking managers (אמרגן): how to read a Passport
+- https://lock.show/producers — For producers (מפיק): the magic-link confirmation flow
+- https://lock.show/passport/demo — A sample Passport showing verified evidence
+- https://lock.show/how-it-works — Three players, seven steps
+- https://lock.show/methodology — How evidence is verified; method labels explained
+- https://lock.show/pricing — Free for booking managers; artist access by arrangement during beta
+- https://lock.show/radar — The Artist Radar feature explained
+- https://lock.show/faq — Frequently asked questions
+- https://lock.show/contact — Contact form and information
+
+Not indexed for AI retrieval: https://lock.show/app/* (the product application
+itself — private tool screens and auth-walled workspace, not marketing or
+reference content).
 
 ## Current stage
 
