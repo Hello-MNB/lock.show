@@ -29,6 +29,12 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 ## Monetization (APPROVED)
 No booking commission ever. Each entity pays its own plan; artist always owns/pays his evidence-truth layer (portable); office pays roster layer; Billing Sponsor mechanism. Plans: Passport (free) / Momentum (artist) / Roster (manager). Buyer free forever. No prices published until Gate. Payment: Bit 054-4555060, reference GP-XXXX, manual activation.
 
+## Legal/compliance set (8 Jul, from Maria's uploads → docs/legal/)
+- TERMS-HE, PRIVACY-HE, ACCESSIBILITY-HE: v0.1 drafts pending counsel (#23). Placeholders open: business entity/ח.פ., jurisdiction city, contact email, refund policy, accessibility coordinator.
+- CONSENT-BANNER-SPEC implemented: GA4 Consent Mode v2, defaults denied, gtag injected only on grant, localStorage gigproof_consent, 12-month re-ask — on BOTH app and site, bilingual.
+- docs/COSTS.md: verified stack costs; new needs surfaced: Resend for auth emails (free tier), Vercel/Supabase Pro decisions for commercial launch.
+- Vocabulary flag: Terms draft uses "Mirror" — canon retired it (one Passport, views). Counsel draft should be aligned before publication.
+
 ## Open pending-from-Maria (repeat at end of every reply until resolved)
 1. Anthropic key → Vercel v6-b4 env → Redeploy.
 2. Approve migration 027 (+ ruling: 'producer' vs 'production'; consent 4-vs-6).
@@ -40,6 +46,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 9. Later, low urgency: rotate Anthropic + Tavily keys (both pasted in chat).
 
 ## Standing instructions from Maria
+- LANGUAGE LAW (8 Jul): EN and HE content each fully professional, localized per language, NEVER mixed in one view. LOCALIZATION MATRIX (docs/LOCALIZATION-MATRIX.md) must stay current. Docs managed at the same effectiveness level. Cheap resources allocated, supervised.
 - Answer ALWAYS in English. Task board at end of EVERY chat reply, sorted by priority.
 - Pending-from-her items repeated at end of every answer until resolved.
 - After compaction: FIRST refresh memory (this file + board + keys registry).

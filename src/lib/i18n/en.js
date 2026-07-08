@@ -1,4 +1,12 @@
 export const T = {
+  consent: {
+    ariaLabel: 'Cookie consent',
+    message:
+      'We use analytics cookies to understand how the product is used. Essential cookies always work; measurement runs only with your consent.',
+    privacyLink: 'Privacy Policy',
+    accept: 'Accept',
+    decline: 'Decline',
+  },
   brand: 'GIGPROOF',
   common: {
     continue: 'Continue',

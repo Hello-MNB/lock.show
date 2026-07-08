@@ -1,4 +1,12 @@
 export const T = {
+  consent: {
+    ariaLabel: 'הסכמה לקובצי Cookie',
+    message:
+      'אנחנו משתמשים בקובצי Cookie למדידה כדי להבין איך המוצר משמש אתכם. קובצי Cookie חיוניים פועלים תמיד; מדידה פועלת רק בהסכמתכם.',
+    privacyLink: 'מדיניות פרטיות',
+    accept: 'אישור',
+    decline: 'דחייה',
+  },
   brand: 'GIGPROOF',
   common: {
     continue: 'המשך',

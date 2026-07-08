@@ -36,6 +36,7 @@ import Members from './features/org/Members.jsx'
 import UpgradePlan from './features/org/UpgradePlan.jsx'
 import Billing from './features/org/Billing.jsx'
 import AcceptInvite from './features/org/AcceptInvite.jsx'
+import ConsentBanner from './components/ConsentBanner.jsx'
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth()
@@ -89,6 +90,8 @@ export default function App() {
   if (!isConfigured) return <SetupNotice />
 
   return (
+    <>
+    <ConsentBanner />
     <Routes>
       {/* ── Public — no AppShell ──────────────────────────────────────── */}
       <Route path="/login" element={<Login />} />
@@ -143,5 +146,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   )
 }

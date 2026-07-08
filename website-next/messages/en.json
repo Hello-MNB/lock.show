@@ -79,11 +79,26 @@
   "methodology": {
     "firewallPrinciple": "GIGPROOF publishes no score, ranking, percentile, prediction, or guarantee.",
     "methodLabels": {
-      "ticketExport": { "label": "TICKET EXPORT", "desc": "Exported ticket sales data from the ticketing platform operator." },
-      "producerConfirmed": { "label": "PRODUCER-CONFIRMED", "desc": "A producer with first-hand knowledge confirmed this claim via a bounded magic link." },
-      "platformData": { "label": "PLATFORM DATA", "desc": "Public data sourced directly from the platform (contextual, not draw evidence)." },
-      "operatorReviewed": { "label": "OPERATOR-REVIEWED", "desc": "GIGPROOF reviewed documentation and approved this claim." },
-      "selfReported": { "label": "SELF-REPORTED", "desc": "Provided by the artist without external verification." }
+      "ticketExport": {
+        "label": "TICKET EXPORT",
+        "desc": "Exported ticket sales data from the ticketing platform operator."
+      },
+      "producerConfirmed": {
+        "label": "PRODUCER-CONFIRMED",
+        "desc": "A producer with first-hand knowledge confirmed this claim via a bounded magic link."
+      },
+      "platformData": {
+        "label": "PLATFORM DATA",
+        "desc": "Public data sourced directly from the platform (contextual, not draw evidence)."
+      },
+      "operatorReviewed": {
+        "label": "OPERATOR-REVIEWED",
+        "desc": "GIGPROOF reviewed documentation and approved this claim."
+      },
+      "selfReported": {
+        "label": "SELF-REPORTED",
+        "desc": "Provided by the artist without external verification."
+      }
     }
   },
   "common": {
@@ -91,5 +106,13 @@
     "sampleFictional": "FICTIONAL ARTIST FOR ILLUSTRATION ONLY",
     "closedBeta": "CLOSED BETA",
     "telAviv": "TEL AVIV, ISRAEL"
+  },
+  "consent": {
+    "ariaLabel": "Cookie consent",
+    "message": "We use analytics cookies to understand how the site is used. Essential cookies always work; measurement runs only with your consent.",
+    "privacyLink": "Privacy Policy",
+    "accept": "Accept",
+    "decline": "Decline",
+    "preferences": "Change preferences"
   }
 }

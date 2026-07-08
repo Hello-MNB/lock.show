@@ -51,6 +51,14 @@ export async function getMessages(locale: Locale = DEFAULT_LOCALE) {
 // Derived from messages/en.json — keep in sync.
 
 export interface Messages {
+  consent: {
+    ariaLabel: string
+    message: string
+    privacyLink: string
+    accept: string
+    decline: string
+    preferences: string
+  }
   nav: {
     artists: string
     bookers: string

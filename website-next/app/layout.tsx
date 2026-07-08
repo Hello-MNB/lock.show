@@ -5,6 +5,7 @@ import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
+import { ConsentBanner } from '@/components/consent-banner'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -151,21 +152,20 @@ export default function RootLayout({
           <Nav />
           {children}
           <Footer />
+          <ConsentBanner gaId={GA_ID} />
         </LocaleProvider>
-        {GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga4-init" strategy="afterInteractive">
-              {`window.dataLayer = window.dataLayer || [];
+        {/* GA4 Consent Mode v2 — defaults DENIED; gtag.js loads only after the
+            visitor grants consent in the banner (docs/legal/CONSENT-BANNER-SPEC.md) */}
+        <Script id="ga4-consent-default" strategy="beforeInteractive">
+          {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${GA_ID}', { anonymize_ip: true });`}
-            </Script>
-          </>
-        )}
+gtag('consent', 'default', {
+  ad_storage: 'denied', analytics_storage: 'denied',
+  ad_user_data: 'denied', ad_personalization: 'denied',
+  wait_for_update: 500
+});
+gtag('js', new Date());`}
+        </Script>
       </body>
     </html>
   )

@@ -80,11 +80,26 @@
   "methodology": {
     "firewallPrinciple": "GIGPROOF לא מפרסם ציון, דירוג, אחוזון, חיזוי, או ערובה.",
     "methodLabels": {
-      "ticketExport": { "label": "TICKET EXPORT", "desc": "נתוני מכירת כרטיסים שיוצאו ממפעיל פלטפורמת כרטיסים." },
-      "producerConfirmed": { "label": "PRODUCER-CONFIRMED", "desc": "מפיק עם ידע ישיר אישר טענה זו דרך קישור מגיק מוגבל." },
-      "platformData": { "label": "PLATFORM DATA", "desc": "נתונים ציבוריים שנאספו ישירות מהפלטפורמה (הקשרי, לא ראיית קהל)." },
-      "operatorReviewed": { "label": "OPERATOR-REVIEWED", "desc": "GIGPROOF סקר תיעוד ואישר טענה זו." },
-      "selfReported": { "label": "SELF-REPORTED", "desc": "סופק על ידי האמן ללא אימות חיצוני." }
+      "ticketExport": {
+        "label": "TICKET EXPORT",
+        "desc": "נתוני מכירת כרטיסים שיוצאו ממפעיל פלטפורמת כרטיסים."
+      },
+      "producerConfirmed": {
+        "label": "PRODUCER-CONFIRMED",
+        "desc": "מפיק עם ידע ישיר אישר טענה זו דרך קישור מגיק מוגבל."
+      },
+      "platformData": {
+        "label": "PLATFORM DATA",
+        "desc": "נתונים ציבוריים שנאספו ישירות מהפלטפורמה (הקשרי, לא ראיית קהל)."
+      },
+      "operatorReviewed": {
+        "label": "OPERATOR-REVIEWED",
+        "desc": "GIGPROOF סקר תיעוד ואישר טענה זו."
+      },
+      "selfReported": {
+        "label": "SELF-REPORTED",
+        "desc": "סופק על ידי האמן ללא אימות חיצוני."
+      }
     }
   },
   "common": {
@@ -92,5 +107,13 @@
     "sampleFictional": "אמן בדיוני לצורך המחשה בלבד",
     "closedBeta": "בטא סגורה",
     "telAviv": "תל אביב, ישראל"
+  },
+  "consent": {
+    "ariaLabel": "הסכמה לקובצי Cookie",
+    "message": "אנחנו משתמשים בקובצי Cookie למדידה כדי להבין איך האתר משמש אתכם. קובצי Cookie חיוניים פועלים תמיד; מדידה פועלת רק בהסכמתכם.",
+    "privacyLink": "מדיניות פרטיות",
+    "accept": "אישור",
+    "decline": "דחייה",
+    "preferences": "שינוי העדפות"
   }
 }

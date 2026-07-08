@@ -14,13 +14,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
     <title>GIGPROOF — proof before booking</title>
-    <!-- GA4 — property GIGPROOF (544738110), stream GIGPROOF App -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZX907M2NY8"></script>
+    <!-- GA4 Consent Mode v2 — defaults DENIED; gtag.js is injected only after
+         the user grants consent (ConsentBanner). Spec: docs/legal/CONSENT-BANNER-SPEC.md -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      gtag('consent', 'default', {
+        ad_storage: 'denied', analytics_storage: 'denied',
+        ad_user_data: 'denied', ad_personalization: 'denied',
+        wait_for_update: 500
+      });
       gtag('js', new Date());
-      gtag('config', 'G-ZX907M2NY8', { anonymize_ip: true });
     </script>
   </head>
   <body>
