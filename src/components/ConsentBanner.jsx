@@ -62,9 +62,9 @@ export default function ConsentBanner() {
       role="dialog"
       aria-label={t.ariaLabel}
       dir={dir}
-      className="fixed inset-x-0 bottom-0 z-[90] border-t border-line bg-bg2/95 backdrop-blur px-4 py-3 sm:px-6"
+      className="fixed inset-x-3 bottom-20 z-[90] mx-auto max-w-3xl rounded-md border border-line bg-bg2/95 shadow-card backdrop-blur px-4 py-3 sm:inset-x-6 sm:px-6"
     >
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <p className="flex-1 text-sm text-muted">
           {t.message}{' '}
           <a
