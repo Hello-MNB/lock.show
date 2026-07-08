@@ -12,7 +12,7 @@
 | P0-2 | 3 | Pasted link → evidence → real AI labeling | ✅ (stub AI) | 🟡 key in Vercel ✅ | No migration. Key added to Vercel by Maria (8 Jul). Remaining: live test that labeling is real, not stub. |
 | P0-3 | 5 | Consent handshake (invite → artist approves w/ scopes → revoke) | ✅ full | 🟡 UI live, degrades gracefully | **MIGRATION 027 — awaiting YOUR approval.** One approval also unlocks #16 + #17. |
 | P0-4 | 8 | Manual payment (Bit + reference code + activation) | ✅ | ✅ LIVE mechanics | No migration. **YOU:** fixed price (rec ₪179) + Green Invoice signup for receipts. |
-| P0-5 | 22 | Domain + auth email URLs | ⬜ | 🟡 **lock.show PURCHASED** ✅ | No migration. **YOU:** attach in Vercel + 3 DNS records (steps sent) → **ME:** Supabase URLs + code SITE_URL/APP_URL + redeploy. |
+| P0-5 | 22 | Domain | ⬜ | ✅ **lock.show LIVE + LOCK rebrand deployed** | Residual: Supabase Site URL → app.lock.show (YOU or sbp_ token). |
 | P0-6 | 7 | Producer confirmation ceremony (magic link) | ✅ | 🟡 works only on v6-b4 URL; dead on site /app embed | No migration. Resolves with #22: app.gigproof.co → v6-b4 becomes the canonical app. |
 | P0-7 | 11 | Analytics events (funnel + Gate measurement) | 🔴 | 🔴 partial (passport views + reactions record) | Small migration (M1 event types → bundle 028). GA4 fully wired ✅ (G-ZX907M2NY8, site + app). Remaining: **ME:** M1 event writers. |
 

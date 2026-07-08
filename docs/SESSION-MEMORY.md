@@ -9,6 +9,7 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Demo persona: Shai Perlman — 3 hats: DJ PERLMAN (artist, multi-genre Acts) / artist representative (roster) / INSOMNIA TLV (production company).
 
 ## Deployments
+- 8 Jul night: **lock.show LIVE** (Maria attached domains + DNS; confirmed 'באוויר') → LOCK rebrand deployed to main (7472688). Mapping live: lock.show=site, app.lock.show=app. Remaining: Supabase Site URL → https://app.lock.show + redirect https://*.lock.show/** (Maria or sbp_ token); GA4 stream label + Google OAuth client display name cosmetic renames (external dashboards).
 - 8 Jul DEPLOYED: main fast-forwarded 9c99873→b410824 (Maria's explicit approval). Ships: unified design (0 off-palette), consent banner (Consent Mode v2, conversion-safe), GA4 G-ZX907M2NY8, legal pages /terms /privacy /accessibility, notifications P1-1, producer-trust fix, brand vocabulary cleanup, platform-logo + today's batch merged.
 - gigproof-website.vercel.app — Next.js marketing site + committed pre-built /app embed (NO /api).
 - v6-b4-artist-pre-booking-intelligen.vercel.app — full app + API (service-role key). Producer-confirm works ONLY here.
@@ -40,7 +41,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 1. Verify real AI labeling works on v6-b4 (key now in Vercel ✅ — needs a live test after redeploy).
 2. Approve migration 027 (+ ruling: 'producer' vs 'production'; consent 4-vs-6).
 3. Fixed pilot price (rec ₪179).
-4. DOMAIN PURCHASED 8 Jul: **lock.show** (GoDaddy, +Full Domain Protection, receipt to garmel.maria@gmail.com). Mapping: lock.show=site, app.lock.show=app. RESOLVED 8 Jul: owner ordered full rebrand — product renamed GIGPROOF → LOCK everywhere in user-facing copy (privacy policy's temporary-name clause updated accordingly). Code URL updates applied; DNS attach still pending.
+4. RESOLVED — domain LIVE, rebrand deployed. Residual: Supabase URL update (above). Was: DOMAIN PURCHASED 8 Jul: **lock.show** (GoDaddy, +Full Domain Protection, receipt to garmel.maria@gmail.com). Mapping: lock.show=site, app.lock.show=app. RESOLVED 8 Jul: owner ordered full rebrand — product renamed GIGPROOF → LOCK everywhere in user-facing copy (privacy policy's temporary-name clause updated accordingly). Code URL updates applied; DNS attach still pending.
 5. Google OAuth: client CREATED ✅ ('GIGPROOF Supabase', redirect verified). Final step (Maria): paste Client ID+Secret into Supabase Google provider, toggle ON, Save → then ME: VITE_OAUTH_ENABLED=1 (Vercel env + .env.embed) + rebuild.
 6. Green Invoice signup.
 8. Send counsel email (docs/COUNSEL-EMAIL-DRAFT.md).
