@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, addProfileItem, deleteProfileItem, publishPassport, hasConsent, recordConsentScope } from '../../lib/db.js'
+import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, addProfileItem, deleteProfileItem, publishPassport, hasConsent, recordConsentScope, addEvidence, processEvidence } from '../../lib/db.js'
 import { SOURCE_STATUS } from '../../lib/constants.js'
 import { uploadFile } from '../../lib/storage.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
@@ -243,10 +243,22 @@ function StepLinks({ artist, items, refresh }) {
   const [busy, setBusy] = useState(false)
 
   async function add() {
-    if (!url.trim()) return
+    const value = url.trim()
+    if (!value) return
     setBusy(true)
-    await addProfileItem({ artist_id: artist.id, item_type: 'link', title: url.trim(), public_url: url.trim(), source_status: SOURCE_STATUS.PUBLIC_VERIFIED })
+    await addProfileItem({ artist_id: artist.id, item_type: 'link', title: value, public_url: value, source_status: SOURCE_STATUS.PUBLIC_VERIFIED })
     setUrl(''); await refresh(); setBusy(false)
+    // Also drop this link into the AI claim pipeline (canon: a pasted source is
+    // evidence, not just a bookmark) — fire-and-forget so Add stays instant;
+    // the resulting claim surfaces as a found/review node on the Radar once
+    // labeled, real Claude if ANTHROPIC_API_KEY is live, deterministic stub if not.
+    try {
+      await addEvidence({
+        artist_id: artist.id, evidence_type: 'link', source_type: 'public-profile',
+        value, public_url: value, claim_intent: 'consistent-frequency', source_owner_consent: true,
+      })
+      processEvidence(artist.id).catch(() => { /* radar retries on next visit */ })
+    } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
   }
   async function remove(id) { await deleteProfileItem(id); await refresh() }
 

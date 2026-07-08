@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { updateClaim, updateAct, addProfileItem } from '../../lib/db.js'
+import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
 import { BottomSheet, Spinner, GpIcon, PlatformMark, platformOf } from '../../components/ui.jsx'
 import { MethodLabel } from './proofBits.jsx'
@@ -173,7 +173,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
   const rowProps = {
     S, T,
     onEvidence: goEvidence,
-    artist, onArtistChange, onItemsRefresh,
+    artist, onArtistChange, onItemsRefresh, onClaimsChange,
   }
 
   return (
@@ -356,7 +356,7 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
 // identifiable reference), (3) the honest proves / doesn't-prove line. The
 // button names what it confirms. Non-claim rows keep the inline expander +
 // in-place fill form. Never a second modal above the panel.
-function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist, onArtistChange, onItemsRefresh, onSaved }) {
+function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist, onArtistChange, onItemsRefresh, onClaimsChange, onSaved }) {
   const [open, setOpen] = useState(false)
   const chip = NODE_CHIP[n.state]
   const actionable = (n.state === NODE.FOUND || n.state === NODE.REVIEW) && !!n.claim
@@ -436,6 +436,7 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
               node={n} artist={artist} S={S}
               onArtistChange={onArtistChange}
               onItemsRefresh={onItemsRefresh}
+              onClaimsChange={onClaimsChange}
               onDone={() => { setOpen(false); onSaved() }}
             />
           )}
@@ -539,8 +540,19 @@ function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onDone }
           <input className="field" dir="ltr" placeholder={S.fill.urlPlaceholder} value={v} onChange={(e) => setV(e.target.value)} />
           <button className="btn-ghost w-full" disabled={busy || !/^https?:\/\//i.test(v.trim())}
             onClick={() => run(async () => {
-              await addProfileItem({ artist_id: artist.id, item_type: 'link', title: 'link', public_url: v.trim(), visibility: 'passport-ok', source_status: 'artist-provided' })
+              const value = v.trim()
+              await addProfileItem({ artist_id: artist.id, item_type: 'link', title: 'link', public_url: value, visibility: 'passport-ok', source_status: 'artist-provided' })
               await onItemsRefresh?.()
+              // Same source also becomes evidence → the AI claim pipeline runs on
+              // it so it can surface as a found/review node next time the radar
+              // reloads, instead of sitting only as a connected-source dot.
+              try {
+                await addEvidence({
+                  artist_id: artist.id, evidence_type: 'link', source_type: 'public-profile',
+                  value, public_url: value, claim_intent: 'consistent-frequency', source_owner_consent: true,
+                })
+                processEvidence(artist.id).catch(() => {})
+              } catch { /* best-effort */ }
             })}>
             {busy ? <Spinner /> : S.fill.save}
           </button>
