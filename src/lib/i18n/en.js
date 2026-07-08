@@ -79,6 +79,12 @@ export const T = {
     producer: "I'm a producer",  // kept for magic-link edge-case fallback; NOT shown in UserTypeSelect
     agency: "I'm an agency / artist manager",
     operator: "I'm an operator (internal)",
+    // Jobs-first framing (canon §5) — UserTypeSelect asks the JOB, not the role;
+    // the same role values are written underneath, unchanged.
+    jobTitle: 'What would you like to do first?',
+    jobArtist: 'Build my artist world',
+    jobAgency: 'Manage artists',
+    jobBooker: 'Evaluate artists for an event',
   },
   demo: {
     title: 'Demo — choose a role',
@@ -397,6 +403,8 @@ export const T = {
     tosDraft: 'Terms of Service (DRAFT)',
     allRequired: 'You must agree to the two required consents to continue.',
     contextualNote: 'Two more consents will be asked for later, each in its own context — third-party evidence (when you add such evidence) and public publication (before your Passport goes live). Nothing is ever bundled.',
+    inlineTitle: 'Privacy & data use',
+    inlineAgree: 'I agree to the GIGPROOF Privacy Policy and to the processing of the information I provide to build my profile.',
     publishTitle: 'Publish to your public Passport',
     publishBody: 'I approve publishing the strengths I selected to a public Passport that booking managers can view. I can unpublish at any time.',
     publishAgree: 'I approve & publish',
@@ -533,6 +541,7 @@ export const T = {
     seatLimit: 'No seats available.',
     seatUpsell: 'Upgrade to agency to add team seats.',
     switchOrg: 'Switch account / agency',
+    switchNote: 'Switching context — never re-registration.',
     acceptTitle: 'Accept invitation',
     acceptBody: (name, role) => `You have been invited to join ${name} as ${role}.`,
     join: 'Join',

@@ -78,6 +78,10 @@ export const T = {
     producer: 'אני מפיק',  // kept for magic-link edge-case fallback; NOT shown in UserTypeSelect
     agency: 'אני מסוכנות / ניהול אמנים',
     operator: 'מנהל מערכת (פנימי)',
+    jobTitle: 'מה תרצה לעשות קודם?',
+    jobArtist: 'לבנות את עולם האמן שלי',
+    jobAgency: 'לנהל אמנים',
+    jobBooker: 'להעריך אמנים לקראת אירוע',
   },
   demo: {
     title: 'דמו — בחר תפקיד',
@@ -381,6 +385,8 @@ export const T = {
     policyDraft: 'מדיניות פרטיות (DRAFT)',
     tosDraft: 'תנאי שימוש (DRAFT)',
     allRequired: 'יש להסכים לשתי ההסכמות הנדרשות כדי להמשיך.',
+    inlineTitle: 'פרטיות ושימוש בנתונים',
+    inlineAgree: 'אני מסכים למדיניות הפרטיות של GIGPROOF ולעיבוד המידע שסיפקתי לצורך בניית הפרופיל שלי.',
     publishTitle: 'פרסום לפספורט הציבורי',
     publishBody: 'אני מאשר לפרסם את החוזקות שבחרתי לפספורט ציבורי שאמרגנים יכולים לראות. ניתן לבטל פרסום בכל עת.',
     publishAgree: 'אני מאשר ומפרסם',
@@ -504,6 +510,7 @@ export const T = {
     seatLimit: 'אין מושבים פנויים.',
     seatUpsell: 'שדרג לסוכנות כדי להוסיף מושבי צוות.',
     switchOrg: 'החלף חשבון/סוכנות',
+    switchNote: 'מעבר הקשר — לעולם לא רישום מחדש.',
     acceptTitle: 'קבלת הזמנה',
     acceptBody: (name, role) => `הוזמנת להצטרף ל${name} כ${role}.`,
     join: 'הצטרף',

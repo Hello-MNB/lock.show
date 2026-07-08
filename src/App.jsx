@@ -10,7 +10,6 @@ import SetupNotice from './features/setup/SetupNotice.jsx'
 import Login from './features/auth/Login.jsx'
 import Signup from './features/auth/Signup.jsx'
 import UserTypeSelect from './features/auth/UserTypeSelect.jsx'
-import ConsentLegal from './features/auth/ConsentLegal.jsx'
 import Settings from './features/auth/Settings.jsx'
 import Onboarding from './features/artist/Onboarding.jsx'
 import ArtistDashboard from './features/artist/ArtistDashboard.jsx'
@@ -117,7 +116,9 @@ export default function App() {
         <Route path="/org/billing" element={<RequireAuth><Billing /></RequireAuth>} />
 
         {/* artist workspace */}
-        <Route path="/consent" element={<RequireRole role={ROLES.ARTIST}><ConsentLegal /></RequireRole>} />
+        {/* /consent kept for deep links — the wall moved inline (Onboarding step 1);
+            consent now fires contextually, not as a gate before first value. */}
+        <Route path="/consent" element={<RequireRole role={ROLES.ARTIST}><Navigate to="/onboarding" replace /></RequireRole>} />
         <Route path="/onboarding" element={<RequireRole role={ROLES.ARTIST}><Onboarding /></RequireRole>} />
         <Route path="/artist/home" element={<RequireRole role={ROLES.ARTIST}><ArtistDashboard /></RequireRole>} />
         <Route path="/artist/readiness" element={<RequireRole role={ROLES.ARTIST}><ArtistReadiness /></RequireRole>} />

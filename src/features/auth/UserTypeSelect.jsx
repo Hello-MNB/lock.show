@@ -13,10 +13,14 @@ export default function UserTypeSelect() {
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
 
-  // S2 "what do you do?" — three self-select roles:
+  // Jobs-first framing (canon §5): the question is "what would you like to do
+  // first?", never a role list. Same underlying role values are written
+  // unchanged — this is a copy/IA swap only, no schema/route-target change
+  // beyond ARTIST now going straight to onboarding (see item 1, contextual
+  // consent replaces the /consent wall).
   //   ARTIST  = אמן            (supply side, self-serve Passport builder)
-  //   BOOKER  = מזמין/מפיק אירוע (demand side, trust-receiver — evaluates Passports)
   //   AGENCY  = אמרגן/סוכנות    (talent agency, primary payer — manages artist roster)
+  //   BOOKER  = מזמין/מפיק אירוע (demand side, trust-receiver — evaluates Passports)
   //
   // NOTE: PRODUCER (claim-confirmer / מפיק מאשר) is NOT self-selected here.
   // Claim-confirmers arrive via a one-time magic link (/confirm/:token) and never
@@ -28,16 +32,16 @@ export default function UserTypeSelect() {
   // Mapping אמרגן → BOOKER was a critical domain inversion (fixed BT-56–58).
   const ROLE_OPTIONS = [
     {
-      key: ROLES.ARTIST, label: T.roleSelect.artist, route: '/consent', icon: 'gp-artist',
+      key: ROLES.ARTIST, label: T.roleSelect.jobArtist, route: '/onboarding', icon: 'gp-artist',
       what: 'Build a Passport of provable evidence — bands and confirmed facts, never a score.',
     },
     {
-      key: ROLES.BOOKER, label: T.roleSelect.booker, route: '/discover', icon: 'gp-booking',
-      what: 'Evaluate an unfamiliar artist on method-labeled evidence before you risk your name.',
+      key: ROLES.AGENCY, label: T.roleSelect.jobAgency, route: '/agency', icon: 'gp-manager',
+      what: 'Keep your whole roster’s proof in one place — ready to send, always current.',
     },
     {
-      key: ROLES.AGENCY, label: T.roleSelect.agency, route: '/agency', icon: 'gp-manager',
-      what: 'Keep your whole roster’s proof in one place — ready to send, always current.',
+      key: ROLES.BOOKER, label: T.roleSelect.jobBooker, route: '/discover', icon: 'gp-booking',
+      what: 'Evaluate an unfamiliar artist on method-labeled evidence before you risk your name.',
     },
   ]
 
@@ -62,7 +66,7 @@ export default function UserTypeSelect() {
       <div className="mb-8 text-center">
         <Wordmark className="mb-4 justify-center" />
         <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">One quick question</p>
-        <h1 className="text-2xl font-bold text-ink">{T.roleSelect.title}</h1>
+        <h1 className="text-2xl font-bold text-ink">{T.roleSelect.jobTitle}</h1>
       </div>
       <div className="space-y-3">
         {ROLE_OPTIONS.map((r) => (

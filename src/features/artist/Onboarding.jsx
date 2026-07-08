@@ -6,6 +6,7 @@ import { SOURCE_STATUS } from '../../lib/constants.js'
 import { uploadFile } from '../../lib/storage.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
 
 const STEPS = 7
 
@@ -49,6 +50,11 @@ export default function Onboarding() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
+  // Contextual consent (item 1): privacy + processing fire HERE, inline, on
+  // step 1 — never as a /consent wall before first value. `consentAlready`
+  // covers returning users (already recorded) so they never see it twice.
+  const [consentAlready, setConsentAlready] = useState(false)
+  const [consentChecked, setConsentChecked] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -59,9 +65,33 @@ export default function Onboarding() {
         // Default Act shares the artist id (020 transition model) — goal/format live there.
         try { setAct(await getMyAct(a.id)) } catch { setAct(null) }
         setItems(await listProfileItems(a.id))
+        try {
+          const [privacyOk, processingOk] = await Promise.all([
+            hasConsent(user.id, 'privacy-policy'),
+            hasConsent(user.id, 'data-processing'),
+          ])
+          setConsentAlready(privacyOk && processingOk)
+        } catch { setConsentAlready(false) }
       } catch (e) { setError(e.message) } finally { setLoading(false) }
     })()
   }, [user.id])
+
+  // Step-1 gate: record consent (once) before advancing past the goal step.
+  async function advance() {
+    if (step === 1 && !consentAlready) {
+      setSaving(true); setError('')
+      try {
+        await recordPrivacyConsent(user.id)
+        setConsentAlready(true)
+      } catch (e) {
+        setError(e.message || T.common.error)
+        setSaving(false)
+        return
+      }
+      setSaving(false)
+    }
+    setStep((s) => s + 1)
+  }
 
   function flash(msg) { setToast(msg); setTimeout(() => setToast(''), 1500) }
 
@@ -91,6 +121,11 @@ export default function Onboarding() {
       )}
 
       {step === 1 && <StepGoal act={act} setAct={setAct} artistId={artist.id} flash={flash} setError={setError} />}
+      {step === 1 && !consentAlready && (
+        <div className="mt-3">
+          <ConsentLegal checked={consentChecked} onChange={setConsentChecked} />
+        </div>
+      )}
       {step === 2 && <StepIdentity artist={artist} save={save} user={user} />}
       {step === 3 && <StepLinks artist={artist} items={items} refresh={refreshItems} />}
       {step === 4 && <StepDraw artist={artist} save={save} />}
@@ -103,7 +138,9 @@ export default function Onboarding() {
           {T.common.back}
         </button>
         {step < STEPS ? (
-          <button className="btn-primary flex-1" disabled={saving} onClick={() => setStep((s) => s + 1)}>
+          <button className="btn-primary flex-1"
+            disabled={saving || (step === 1 && !consentAlready && !consentChecked)}
+            onClick={advance}>
             {saving ? <Spinner /> : T.common.continue}
           </button>
         ) : null}

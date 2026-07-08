@@ -31,10 +31,11 @@ export default function Login() {
 
   // DEMO: persona switcher instead of a real login — subtle chips, same scene.
   if (demo) {
-    // Artist starts at /consent → onboarding (the real first-run journey, so the
-    // demo shows the full flow). Other personas go to their home via RoleHome ('/').
+    // Artist goes STRAIGHT to onboarding — first value first, no consent wall
+    // (privacy+processing consent now fires inline on onboarding step 1).
+    // Other personas go to their home via RoleHome ('/').
     const personas = [
-      [ROLES.ARTIST, T.roleSelect.artist, '/consent'], [ROLES.BOOKER, T.roleSelect.booker, '/'],
+      [ROLES.ARTIST, T.roleSelect.artist, '/onboarding'], [ROLES.BOOKER, T.roleSelect.booker, '/'],
       [ROLES.PRODUCER, T.roleSelect.producer, '/'], [ROLES.AGENCY, T.roleSelect.agency, '/'],
       [ROLES.OPERATOR, T.roleSelect.operator, '/'],
     ]
