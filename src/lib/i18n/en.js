@@ -797,6 +797,10 @@ export const T = {
       blossomTitle: 'Let your universe form',
       blossomBody: 'Connect your 3 strongest sources — a gig, a ticket export, a music link. Strengths appear first; gaps can wait.',
       blossomCta: 'Add your first evidence',
+      // Platform ring (radar stage) — small orbiting nodes, ONE per detected
+      // real platform (profile_items/claims), never an invented count.
+      platformNodeAria: (value) => `Platform — ${value}`,
+      platformConnectAria: 'Connect a platform — add a link',
       src: {
         photo: 'Press photo',
         positioning: 'One-line positioning',

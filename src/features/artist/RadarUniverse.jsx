@@ -57,6 +57,30 @@ function destinationOf(claim) {
   return publicBound ? 'your Passport view' : 'your private record'
 }
 
+// ── Platform ring (META-FIELD LAW) — small nodes orbiting the universe, ONE
+// per platform actually DETECTED in this Act's own data (a profile_items link
+// or a claim's value/source_type), each showing the REAL row value — never an
+// invented count/follower number. A platform with no data simply isn't
+// rendered; the ring's one "+ connect" affordance (below) stands in for every
+// not-yet-connected platform, instead of a per-platform empty state.
+function derivePlatformNodes(items = [], claims = []) {
+  const byKey = new Map()
+  for (const it of items) {
+    if (it.item_type !== 'link' || !it.public_url) continue
+    const platform = detectPlatform(it.public_url)
+    if (!platform || byKey.has(platform)) continue
+    byKey.set(platform, { key: platform, platform, value: hostOf(it.public_url) || human(it.title) || platform })
+  }
+  for (const c of claims) {
+    const platform = detectPlatform(c.value) || detectPlatform(c.source_type)
+    if (!platform) continue
+    const prev = byKey.get(platform)
+    if (prev?.fromClaim) continue // first real claim wins — richer than a bare host
+    byKey.set(platform, { key: platform, platform, value: c.value || human(c.claim_type), fromClaim: true })
+  }
+  return [...byKey.values()]
+}
+
 export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
   const { T } = useLang()
   const S = T.radar.universe
@@ -169,6 +193,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
+  // The platform ring — real detected platforms + one trailing "+ connect" node.
+  const platformNodes = useMemo(() => derivePlatformNodes(effItems, effClaims), [effItems, effClaims])
+  const ringNodes = useMemo(() => [...platformNodes, { key: 'connect' }], [platformNodes])
+
   // Every found/review node across all planets — the radar's review mode.
   // A just-confirmed node stays in this list for its bloom duration (bloomIds)
   // even though its state has already flipped to CONFIRMED — otherwise the row
@@ -280,13 +308,15 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   }
 
   return (
-    <div className="relative mb-5 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5">
-      {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels) */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64"
+    <div className="relative mb-5 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:mb-0 md:flex md:min-h-[min(82vh,780px)] md:flex-col md:justify-center md:p-8">
+      {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels).
+          Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"
         style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.12), transparent 70%)' }} />
 
-      {/* ONE control row: state lenses + worlds dropdown */}
-      <div className="relative mb-3 flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="radar filters">
+      {/* ONE control row: state lenses + worlds dropdown. Full-stage (md+): floats
+          top-start over the universe, like the prototype's .rfilters strip. */}
+      <div className="relative z-10 mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:start-8 md:top-8 md:mb-0 md:w-auto md:pb-0" role="tablist" aria-label="radar filters">
         {FILTERS.map((f) => (
           <button key={f.key} role="tab" aria-selected={filter === f.key} onClick={() => pickFilter(f.key)}
             className={`relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
@@ -321,11 +351,15 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           <button className="btn-primary mt-4 px-4 py-2.5 text-xs" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
         </div>
       ) : (
-        /* ── THE UNIVERSE — always mounted, never reflows ── */
-        <div className="relative mx-auto aspect-square max-w-[400px]">
-          {/* thin orbit rings — the quiet geometry of the night */}
+        /* ── THE UNIVERSE — always mounted, never reflows. Full-stage (md+):
+              the same square grows to fill the taller canvas — orbit math is
+              percentage-based so every node scales with it for free. ── */
+        <div className="relative mx-auto aspect-square max-w-[400px] md:w-[620px] md:max-w-[620px]">
+          {/* thin orbit rings — the quiet geometry of the night. A third,
+              outermost hairline (md+) carries the platform ring below. */}
           <div className="absolute inset-[9%] rounded-full border border-line" aria-hidden />
           <div className="absolute inset-[27%] rounded-full border border-line" aria-hidden />
+          <div className="absolute inset-[4%] hidden rounded-full border border-line/60 md:block" aria-hidden />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <CenterStar artist={effArtist} T={T} S={S}
               onOpenSwitch={() => setActSheet(true)}
@@ -345,8 +379,8 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 style={{ left: `${x}%`, top: `${y}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
                 aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${complete ? ` · ${S.complete}` : ''}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
-                  <GpIcon id={p.icon} className="h-6 w-6 text-ink/90" />
+                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 md:h-16 md:w-16 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                  <GpIcon id={p.icon} className="h-6 w-6 text-ink/90 md:h-7 md:w-7" />
                   {/* found — a small gold dot, not a badge shouting */}
                   {info.foundCount > 0 && (
                     <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-gold ring-2 ring-bg2" />
@@ -356,23 +390,66 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                     <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-[rgba(190,226,78,0.10)] text-[8px] text-[#CBEE72] ring-1 ring-bg2">✓</span>
                   )}
                 </span>
-                <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight">
+                <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight md:text-[9px]">
                   {S.planets[p.key]}
                 </span>
               </button>
             )
           })}
+
+          {/* ── PLATFORM RING (META-FIELD LAW) — one small muted node per REAL
+                detected platform (a profile_items link or a claim), showing the
+                real row value; never an invented count. Sits just outside the
+                category-planet orbit. The trailing node is always the single
+                muted "+ connect" affordance, never a per-platform empty state. */}
+          {ringNodes.map((pn, i) => {
+            // Fixed slots exactly BETWEEN the 6 category-planet angles
+            // (-90/-30/30/90/150/210), never on top of one, on a wider radius
+            // just outside the planet orbit — a visually distinct outer ring.
+            const SLOTS = [-60, 0, 60, 120, 180, 240]
+            const angle = SLOTS[i % SLOTS.length]
+            const rad = (angle * Math.PI) / 180
+            const x = 50 + 47 * Math.cos(rad)
+            const y = 50 + 47 * Math.sin(rad)
+            const isConnect = pn.key === 'connect'
+            return (
+              <div key={pn.key} style={{ left: `${x}%`, top: `${y}%` }}
+                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1">
+                {isConnect ? (
+                  <button type="button" onClick={goEvidence}
+                    aria-label={S.platformConnectAria} title={S.platformConnectAria}
+                    className="grid h-7 w-7 place-items-center rounded-full border border-dashed border-line2 bg-surface2 text-faint transition-colors hover:border-line2 hover:text-ink">
+                    <span aria-hidden className="text-xs font-bold leading-none">+</span>
+                  </button>
+                ) : (
+                  <span aria-label={S.platformNodeAria(pn.value)} title={pn.value}
+                    className="relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
+                    <PlatformLogo name={pn.platform} size={16} />
+                    <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg2" />
+                  </span>
+                )}
+                {!isConnect && (
+                  <span className="block max-w-[72px] truncate font-mono text-[7px] uppercase tracking-[0.06em] text-faint">
+                    {pn.value}
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {/* ── ONE next move — folded INTO the canvas (1-screen mobile) ── */}
+      {/* ── ONE next move — full-stage (md+) ONLY: floats bottom-start OVER
+            the universe, like the prototype's .next card. Mobile keeps its
+            existing separate card below the radar (ArtistDashboard) unchanged
+            — this one stays hidden below md so nothing doubles up. ── */}
       {!blossom && nextAction && (
-        <div className="relative mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2.5">
+        <div className="relative z-10 hidden items-center justify-between gap-3 rounded-xl border border-gold/25 bg-surface/95 px-3 py-2.5 shadow-card backdrop-blur md:absolute md:bottom-8 md:start-8 md:flex md:w-[380px] md:max-w-[calc(100%-4rem)]">
           <div className="min-w-0">
             <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>
             <p className="truncate text-sm font-semibold text-ink">{nextAction.title}</p>
           </div>
-          {nextAction.to && (
+          {(nextAction.to || nextAction.planet) && (
             <button className="btn-primary shrink-0 px-3 py-2 text-xs" onClick={() => onNextAction?.(nextAction)}>
               {T.common.continue}
             </button>
@@ -762,8 +839,8 @@ function CenterStar({ artist, T, S, dim, onOpenSwitch, onTagClick }) {
       <button type="button" onClick={onOpenSwitch} aria-haspopup="dialog" aria-label={S?.actSwitch?.switchAria}
         className="mx-auto flex flex-col items-center rounded-2xl px-2 py-1 transition-opacity hover:opacity-90">
         {artist.photo_url
-          ? <img src={artist.photo_url} alt="" className="mx-auto h-20 w-20 rounded-full border border-gold/70 object-cover shadow-[0_0_28px_rgba(242,192,99,0.25)]" />
-          : <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border border-gold/70 bg-surface2 font-display text-xl text-ink shadow-[0_0_28px_rgba(242,192,99,0.18)]">
+          ? <img src={artist.photo_url} alt="" className="glow-found mx-auto h-20 w-20 rounded-full border border-gold/70 object-cover shadow-[0_0_28px_rgba(242,192,99,0.25)] md:h-24 md:w-24" />
+          : <span className="glow-found mx-auto grid h-20 w-20 place-items-center rounded-full border border-gold/70 bg-surface2 font-display text-xl text-ink shadow-[0_0_28px_rgba(242,192,99,0.18)] md:h-24 md:w-24 md:text-2xl">
               {(artist.stage_name || '★').slice(0, 1)}
             </span>}
         <span className="font-display mt-2 flex items-center gap-1 text-sm font-bold tracking-[-0.01em] text-ink">

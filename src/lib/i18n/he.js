@@ -669,6 +669,8 @@ export const T = {
         sellsTickets: 'מוכר כרטיסים בעצמו',
         priceBand: 'מחיר / גרנטי (בנד)',
       },
+      platformNodeAria: (value) => `פלטפורמה — ${value}`,
+      platformConnectAria: 'חבר פלטפורמה — הוסף קישור',
       actSwitch: {
         title: 'האקטים שלך',
         active: 'פעיל',

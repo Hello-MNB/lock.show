@@ -197,18 +197,23 @@ export default function ArtistDashboard() {
   ]
 
   return (
-    <PageShell>
+    <PageShell max="max-w-xl md:max-w-[1360px]">
       <h1 className="font-display mb-0.5 text-2xl font-bold tracking-[-0.01em] text-ink">{T.radar.artistTitle}</h1>
       <p className="mb-4 text-xs text-muted">{T.radar.artistSubtitle}</p>
 
       {/* ── THE UNIVERSE — the Radar IS evidence collection; review/confirm
-            open as panels inside it (reviewSignal). ── */}
+            open as panels inside it (reviewSignal). Full-stage (md+): owns
+            the main content area's height; the next-step card floats INSIDE
+            it (see RadarUniverse) instead of stacking below. ── */}
       <RadarUniverse artist={artist} act={act} items={items} claims={claims} onClaimsChange={setClaims}
         onArtistChange={saveArtist} onActChange={saveAct} onItemsRefresh={refreshItems}
-        reviewSignal={reviewSignal} focusPlanet={focusPlanet} focusSignal={focusSignal} />
+        reviewSignal={reviewSignal} focusPlanet={focusPlanet} focusSignal={focusSignal}
+        nextAction={nextAction} onNextAction={runNextAction} />
 
-      {/* ── ONE dominant next step — the coach's single clearest move ── */}
-      <div className="mb-4 rounded-2xl border border-line bg-surface p-5 shadow-card">
+      {/* ── ONE dominant next step — the coach's single clearest move. Mobile
+            only: on the full-stage (md+) this same card floats over the
+            universe itself (RadarUniverse's internal next-action overlay). ── */}
+      <div className="mb-4 rounded-2xl border border-line bg-surface p-5 shadow-card md:hidden">
         <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{T.radar.nextActionEyebrow}</p>
         <p className="font-display text-lg font-bold tracking-[-0.01em] text-ink">{nextAction.title}</p>
         {nextAction.why && <p className="mt-1 text-xs leading-relaxed text-muted">{nextAction.why}</p>}
