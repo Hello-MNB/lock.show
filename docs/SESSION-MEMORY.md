@@ -9,6 +9,7 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Demo persona: Shai Perlman — 3 hats: DJ PERLMAN (artist, multi-genre Acts) / artist representative (roster) / INSOMNIA TLV (production company).
 
 ## Deployments
+- 8 Jul DEPLOYED: main fast-forwarded 9c99873→b410824 (Maria's explicit approval). Ships: unified design (0 off-palette), consent banner (Consent Mode v2, conversion-safe), GA4 G-ZX907M2NY8, legal pages /terms /privacy /accessibility, notifications P1-1, producer-trust fix, brand vocabulary cleanup, platform-logo + today's batch merged.
 - gigproof-website.vercel.app — Next.js marketing site + committed pre-built /app embed (NO /api).
 - v6-b4-artist-pre-booking-intelligen.vercel.app — full app + API (service-role key). Producer-confirm works ONLY here.
 - Deploy routine: main auto-deploys both; app changes need `npm run build:embed` → commit → push. Gate: vite build + build:demo + lint:i18n (3 known radarUniverse.js violations = accepted baseline) + website-next build.
