@@ -320,8 +320,10 @@ app.post('/api/confirm/:token', async (req, res) => {
     await admin.from('producer_confirmations').update({
       response, revoked: false, responded_at: new Date().toISOString(),
     }).eq('id', pc.id)
-    // yes/partial → strongest method label; no/wrong_person → clear it.
-    const method = ['yes', 'partial'].includes(response) ? 'producer-confirmed' : null
+    // Only an unqualified "yes" earns the strongest label. A "partial" reply
+    // means the wording needs correction — it must NOT read as fully confirmed
+    // until the fix is reviewed (canon: correction-pending, not confirmed).
+    const method = response === 'yes' ? 'producer-confirmed' : null
     await admin.from('claims').update({ method_label: method }).eq('id', pc.claim_id)
     res.json({ ok: true, response })
   } catch (e) {
