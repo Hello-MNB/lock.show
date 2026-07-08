@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote } from '../../components/ui.jsx'
+import { Field, Spinner, ErrorNote } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import AuthScene from './AuthScene.jsx'
 
 export default function ResetPassword() {
   const { T } = useLang()
@@ -40,51 +41,50 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <PageShell max="max-w-sm">
-        <div className="card text-center mt-20">
-          <div className="text-4xl mb-3">✅</div>
-          <p className="font-bold text-soft">{T.reset.doneTitle}</p>
-          <p className="text-sm text-muted mt-1">{T.reset.redirecting}</p>
+      <AuthScene>
+        <div className="card text-center">
+          <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-accent text-2xl font-black text-[#12160A]" aria-hidden>✓</span>
+          <p className="font-bold text-ink">{T.reset.doneTitle}</p>
+          <p className="mt-1 text-sm text-muted">{T.reset.redirecting}</p>
         </div>
-      </PageShell>
+      </AuthScene>
     )
   }
 
   if (!ready) {
     return (
-      <PageShell max="max-w-sm">
-        <div className="text-center mb-8"><Wordmark className="justify-center mb-3" /></div>
+      <AuthScene>
         <div className="card text-center">
-          <Spinner className="mx-auto mb-3" />
-          <p className="text-muted text-sm">{T.reset.verifying}</p>
+          <Spinner className="mx-auto mb-3 text-muted" />
+          <p className="text-sm text-muted">{T.reset.verifying}</p>
           <p className="mt-4 text-xs text-muted">
-            {T.reset.directHit} <Link to="/forgot-password" className="text-accent">{T.reset.requestNew}</Link>
+            {T.reset.directHit} <Link to="/forgot-password" className="font-semibold text-accent hover:underline">{T.reset.requestNew}</Link>
           </p>
         </div>
-      </PageShell>
+      </AuthScene>
     )
   }
 
   return (
-    <PageShell max="max-w-sm">
-      <div className="text-center mb-8">
-        <Wordmark className="justify-center mb-3" />
-        <h1 className="text-xl font-bold text-soft">{T.reset.newTitle}</h1>
-      </div>
-      <form onSubmit={onSubmit} className="card">
+    <AuthScene>
+      <h1 className="mb-1 text-2xl font-bold text-ink">{T.reset.newTitle}</h1>
+      <p className="mb-6 text-sm text-muted">Pick a new password — you’ll stay signed in.</p>
+      <form onSubmit={onSubmit}>
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.reset.newLabel} hint={T.common.minChars}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
+            placeholder="••••••••"
             value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>
         <Field label={T.reset.confirmLabel}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
+            placeholder="••••••••"
             value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
         </Field>
         <button className="btn-primary w-full" disabled={loading}>
           {loading ? <><Spinner /> {T.common.saving}</> : T.reset.savePassword}
         </button>
       </form>
-    </PageShell>
+    </AuthScene>
   )
 }

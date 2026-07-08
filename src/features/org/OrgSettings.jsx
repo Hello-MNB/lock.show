@@ -109,14 +109,14 @@ export default function OrgSettings() {
             <div className="space-y-2">
               {transferable.map((m) => (
                 <button key={m.id} className="card w-full text-start hover:border-accent" onClick={() => setTransferTo(m)}>
-                  <p className="text-soft text-sm font-medium">{m.person?.display_name || m.person?.email}</p>
+                  <p className="text-ink text-sm font-medium">{m.person?.display_name || m.person?.email}</p>
                 </button>
               ))}
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm text-soft mb-4">{T.org.transferConfirm(transferTo.person?.display_name || transferTo.person?.email)}</p>
+            <p className="text-sm text-ink mb-4">{T.org.transferConfirm(transferTo.person?.display_name || transferTo.person?.email)}</p>
             <div className="flex gap-2">
               <button className="btn-primary flex-1" onClick={doTransfer} disabled={busy}>{busy ? <Spinner /> : T.org.transferCta}</button>
               <button className="btn-ghost" onClick={() => setTransferTo(null)} disabled={busy}>{T.common.back}</button>

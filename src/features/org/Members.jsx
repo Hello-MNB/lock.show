@@ -84,10 +84,10 @@ export default function Members() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6"><Wordmark /><Link to="/" className="text-sm text-muted">{T.common.back}</Link></div>
+      <div className="flex items-center justify-between mb-6"><Wordmark /><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-xl font-bold text-soft">{T.org.membersTitle}</h1>
-        <button onClick={() => setPermsOpen(true)} aria-label={T.org.permsTitle} className="text-muted text-sm border border-line rounded-full w-7 h-7 min-h-[36px] min-w-[36px]">?</button>
+        <h1 className="font-display text-xl font-bold text-ink">{T.org.membersTitle}</h1>
+        <button onClick={() => setPermsOpen(true)} aria-label={T.org.permsTitle} className="text-muted hover:text-ink text-sm border border-line rounded-full w-7 h-7 min-h-[36px] min-w-[36px] transition">?</button>
       </div>
       <p className="text-sm text-muted mb-3">{T.org.seatsInUse(seatsUsed, seatsTotal)}</p>
 
@@ -95,7 +95,7 @@ export default function Members() {
       <div className="card mb-4">
         <div className="flex gap-1.5">
           {Array.from({ length: lanes }).map((_, i) => (
-            <div key={i} className={`h-2 flex-1 rounded ${i < seatsUsed ? 'bg-accent' : 'bg-surface'}`} />
+            <div key={i} className={`h-2 flex-1 rounded ${i < seatsUsed ? 'bg-accent' : 'bg-surface2'}`} />
           ))}
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function Members() {
       {/* team-of-1 nudge */}
       {activeCount <= 1 && !members.some((m) => m.status === 'invited') && (
         <div className="card mb-4 border border-line text-center">
-          <p className="text-sm text-soft mb-3">{T.org.teamOfOne}</p>
+          <p className="text-sm text-ink mb-3">{T.org.teamOfOne}</p>
           {isAdmin && <button className="btn-primary w-full" onClick={() => { setInviteErr(''); setInviteOpen(true) }}>{T.org.invite}</button>}
         </div>
       )}
@@ -114,21 +114,21 @@ export default function Members() {
           <div key={m.id} className={`card ${m._optimistic ? 'opacity-60' : ''}`}>
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-soft text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
+                <p className="text-ink text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
                 <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitedRow : T.org.statusActive}</p>
               </div>
               {isAdmin && (
                 <div className="flex gap-1 shrink-0">
                   {m.status === 'invited' ? (
                     <>
-                      <button className="chip bg-surface text-xs min-h-[36px] px-2" onClick={() => resend(m)} disabled={busy || m._optimistic}>{T.org.resend}</button>
-                      <button className="chip bg-surface text-xs text-warn min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy || m._optimistic}>{T.org.cancelInvite}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => resend(m)} disabled={busy || m._optimistic}>{T.org.resend}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy || m._optimistic}>{T.org.cancelInvite}</button>
                     </>
                   ) : m.org_role !== 'owner' && (
                     <>
-                      {isOwner && m.person && <button className="chip bg-surface text-xs min-h-[36px] px-2" onClick={() => setRole(m, 'owner')} disabled={busy}>{T.org.roleOwner}</button>}
-                      <button className="chip bg-surface text-xs min-h-[36px] px-2" onClick={() => setRole(m, m.org_role === 'admin' ? 'member' : 'admin')} disabled={busy}>{T.org.changeRole}</button>
-                      <button className="chip bg-surface text-xs text-warn min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
+                      {isOwner && m.person && <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, 'owner')} disabled={busy}>{T.org.roleOwner}</button>}
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, m.org_role === 'admin' ? 'member' : 'admin')} disabled={busy}>{T.org.changeRole}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
                     </>
                   )}
                 </div>
@@ -145,7 +145,7 @@ export default function Members() {
       <BottomSheet open={inviteOpen} onClose={() => setInviteOpen(false)} title={T.org.inviteSheetTitle}>
         {full ? (
           <div>
-            <p className="text-sm text-warn mb-3">{T.org.seatCapSoft}</p>
+            <p className="text-sm text-amber mb-3">{T.org.seatCapSoft}</p>
             {isOwner
               ? <Link to="/org/billing" className="btn-primary w-full block text-center">{T.org.addSeats}</Link>
               : <p className="text-xs text-muted">{T.org.contactOwner}</p>}
@@ -169,7 +169,7 @@ export default function Members() {
 
       {/* permissions legend */}
       <BottomSheet open={permsOpen} onClose={() => setPermsOpen(false)} title={T.org.permsTitle}>
-        <ul className="space-y-2 text-sm text-soft">
+        <ul className="space-y-2 text-sm text-ink">
           <li><span className="font-bold">{T.org.roleOwner}</span> — {T.org.permsOwner.split('—')[1]?.trim() || T.org.permsOwner}</li>
           <li><span className="font-bold">{T.org.roleAdmin}</span> — {T.org.permsAdmin.split('—')[1]?.trim() || T.org.permsAdmin}</li>
           <li><span className="font-bold">{T.org.roleMember}</span> — {T.org.permsMember.split('—')[1]?.trim() || T.org.permsMember}</li>
@@ -178,7 +178,7 @@ export default function Members() {
 
       {/* remove / cancel confirm */}
       <BottomSheet open={!!removeTarget} onClose={() => setRemoveTarget(null)} title={removeTarget?.status === 'invited' ? T.org.cancelInvite : T.org.removeMember}>
-        <p className="text-sm text-soft mb-4">{T.org.removeConfirmName(removeTarget?.person?.display_name || removeTarget?.person?.email || removeTarget?.invited_email || '')}</p>
+        <p className="text-sm text-ink mb-4">{T.org.removeConfirmName(removeTarget?.person?.display_name || removeTarget?.person?.email || removeTarget?.invited_email || '')}</p>
         <div className="flex gap-2">
           <button className="btn-primary flex-1" onClick={doRemove} disabled={busy}>{busy ? <Spinner /> : T.org.removeMember}</button>
           <button className="btn-ghost" onClick={() => setRemoveTarget(null)} disabled={busy}>{T.common.cancel}</button>

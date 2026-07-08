@@ -197,7 +197,7 @@ export default function AgencyDashboard() {
                 <form onSubmit={addArtist} className="card">
                   <Field label={T.onboarding.stageName}><input className="field" value={f.stage_name} onChange={(e) => setF({ ...f, stage_name: e.target.value })} /></Field>
                   <Field label={T.onboarding.genre}><input className="field" value={f.genre} onChange={(e) => setF({ ...f, genre: e.target.value })} /></Field>
-                  {saveError && <p className="text-xs text-warn mb-2">{saveError}</p>}
+                  {saveError && <p className="text-xs text-amber mb-2">{saveError}</p>}
                   <div className="flex gap-2">
                     <button className="btn-primary flex-1" disabled={busy}>{busy ? <Spinner /> : T.common.save}</button>
                     <button type="button" className="btn-ghost" onClick={() => setAdding(false)}>{T.common.cancel}</button>

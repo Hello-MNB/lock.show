@@ -9,21 +9,30 @@ import { useLang } from '../../context/LangContext.jsx'
 
 const STEPS = 7
 
-// Silent position dots — "you are here", never a completion percentage
-// (canon SmartOnboarding: dots, not a progress bar).
-function ProgressDots({ step }) {
+// One label per step — the header now names EXACTLY what the current card asks,
+// so the step number and the step content can never drift apart again.
+// (English-first; purely presentational.)
+const STEP_LABELS = ['Goal', 'Identity', 'Links', 'Draw', 'Experience', 'Readiness', 'Review']
+
+// Segmented progress — bounded position ("you are here"), never a completion
+// percentage. Past segments settle warm; the current one glows lime.
+function ProgressSegments({ step }) {
   const { T } = useLang()
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-center gap-1.5" aria-hidden>
+      <div className="flex items-center gap-1" aria-hidden>
         {Array.from({ length: STEPS }, (_, i) => (
           <span
             key={i}
-            className={`h-1.5 w-1.5 rounded-full transition-colors ${i + 1 === step ? 'bg-accent' : 'bg-line'}`}
+            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+              i + 1 < step ? 'bg-accent/45' : i + 1 === step ? 'bg-accent' : 'bg-white/10'
+            }`}
           />
         ))}
       </div>
-      <p className="mt-2 text-center text-xs text-muted">{T.onboarding.stepOf(step, STEPS)}</p>
+      <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+        {T.onboarding.stepOf(step, STEPS)} · <span className="text-gold">{STEP_LABELS[step - 1]}</span>
+      </p>
     </div>
   )
 }
@@ -72,10 +81,14 @@ export default function Onboarding() {
 
   return (
     <PageShell max="max-w-lg">
-      <div className="text-center mb-4"><Wordmark className="justify-center" /></div>
-      <ProgressDots step={step} />
+      <div className="mb-4 text-center"><Wordmark className="justify-center" /></div>
+      <ProgressSegments step={step} />
       <ErrorNote>{error}</ErrorNote>
-      {toast && <p className="mb-3 text-sm text-ok">{toast}</p>}
+      {toast && (
+        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink" role="status">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />{toast}
+        </p>
+      )}
 
       {step === 1 && <StepGoal act={act} setAct={setAct} artistId={artist.id} flash={flash} setError={setError} />}
       {step === 2 && <StepIdentity artist={artist} save={save} user={user} />}
@@ -85,7 +98,7 @@ export default function Onboarding() {
       {step === 6 && <StepReadiness artist={artist} save={save} user={user} />}
       {step === 7 && <StepReview artist={artist} items={items} save={save} nav={nav} />}
 
-      <div className="sticky bottom-0 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur">
+      <div className="sticky bottom-0 -mx-4 mt-6 flex items-center justify-between gap-3 border-t border-white/[0.08] bg-bg/95 px-4 py-3 backdrop-blur">
         <button className="btn-ghost" disabled={step === 1 || saving} onClick={() => setStep((s) => s - 1)}>
           {T.common.back}
         </button>
@@ -119,20 +132,25 @@ function StepGoal({ act, setAct, artistId, flash, setError }) {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-bold text-soft mb-1">{T.onboarding.goalTitle}</h2>
-      <p className="text-xs text-muted mb-4">{T.onboarding.goalWhy}</p>
-      <div className="flex flex-wrap gap-2 mb-3">
+      <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.goalTitle}</h2>
+      <p className="mb-4 text-xs text-muted">{T.onboarding.goalWhy}</p>
+      {/* goal cards — a warm grid, one tap each */}
+      <div className="mb-3 grid grid-cols-2 gap-2">
         {goals.map((g) => (
           <button
             key={g}
             type="button"
             onClick={() => pick(g)}
-            className={`rounded border px-3 py-2 text-sm transition-colors ${
+            aria-pressed={current === g}
+            className={`min-h-[64px] rounded-xl border px-3 py-3 text-start text-sm font-semibold transition-all ${
               current === g
-                ? 'border-accent bg-accent text-ink font-bold'
-                : 'border-line text-soft hover:border-accent'
+                ? 'border-accent bg-accent/10 text-ink shadow-[0_0_0_1px_rgba(190,226,78,0.35)]'
+                : 'border-white/[0.08] bg-surface2 text-ink/85 hover:border-accent/40'
             }`}
           >
+            <span className={`mb-1 block font-mono text-[9px] uppercase tracking-[0.1em] ${current === g ? 'text-accent' : 'text-faint'}`} aria-hidden>
+              {current === g ? '✓ chosen' : 'goal'}
+            </span>
             {T.onboarding.goals[g]}
           </button>
         ))}
@@ -163,22 +181,25 @@ function StepIdentity({ artist, save, user }) {
 
   return (
     <div className="card" onBlur={() => save({ ...f, name: f.stage_name })}>
-      <h2 className="text-lg font-bold text-soft mb-4">{T.onboarding.step1Title}</h2>
+      <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step1Title}</h2>
+      <p className="mb-4 text-xs text-muted">The human behind the calendar — this is what a booking manager meets first.</p>
       <Field label={T.onboarding.stageName}><input className="field" value={f.stage_name} onChange={set('stage_name')} /></Field>
       <Field label={T.onboarding.genre}><input className="field" value={f.genre} onChange={set('genre')} /></Field>
       <Field label={T.onboarding.city}><input className="field" value={f.city} onChange={set('city')} /></Field>
       <Field label={T.onboarding.oneLine}><input className="field" value={f.one_line} onChange={set('one_line')} placeholder={T.onboarding.oneLinePlaceholder} /></Field>
       <Field label={T.onboarding.photo} hint={T.onboarding.photoHint}>
-        <input type="file" accept="image/*" onChange={onPhoto} className="text-sm text-muted mb-2" />
+        <input type="file" accept="image/*" onChange={onPhoto} className="mb-2 text-sm text-muted" />
         {uploading && <Spinner />}
         <input className="field" dir="ltr" value={f.photo_url} onChange={set('photo_url')} placeholder="https://…" />
       </Field>
-      {f.photo_url && <img src={f.photo_url} alt="" className="mt-2 h-40 w-full rounded-xl object-cover" />}
+      {f.photo_url && (
+        <img src={f.photo_url} alt="" className="mt-2 h-40 w-full rounded-xl border border-gold/30 object-cover shadow-[0_0_34px_rgba(242,192,99,0.15)]" />
+      )}
     </div>
   )
 }
 
-/* ── Step 2: links ── */
+/* ── Step 3: links — source-connect cards ── */
 function StepLinks({ artist, items, refresh }) {
   const { T } = useLang()
   const links = items.filter((i) => i.item_type === 'link')
@@ -195,26 +216,35 @@ function StepLinks({ artist, items, refresh }) {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-bold text-soft mb-1">{T.onboarding.step2Title}</h2>
-      <p className="text-sm text-muted mb-4">{T.onboarding.linkHelp}</p>
-      <div className="flex gap-2 mb-4">
-        <input className="field" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)}
-          placeholder={T.onboarding.linkPlaceholder} onKeyDown={(e) => e.key === 'Enter' && add()} />
-        <button className="btn-primary" onClick={add} disabled={busy}>{T.common.add}</button>
+      <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step2Title}</h2>
+      <p className="mb-4 text-sm text-muted">{T.onboarding.linkHelp}</p>
+      <div className="mb-3 rounded-xl border border-white/[0.08] bg-surface2 p-3">
+        <p className="label">{T.onboarding.linkPlaceholder}</p>
+        <div className="flex gap-2">
+          <input className="field" dir="ltr" value={url} onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://…" onKeyDown={(e) => e.key === 'Enter' && add()} />
+          <button className="btn-primary shrink-0" onClick={add} disabled={busy}>{T.common.add}</button>
+        </div>
       </div>
       <ul className="space-y-2">
         {links.map((l) => (
-          <li key={l.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
-            <span dir="ltr" className="truncate text-soft">{l.public_url}</span>
-            <button className="text-muted hover:text-void" onClick={() => remove(l.id)}>{T.common.remove}</button>
+          <li key={l.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm">
+            <span className="flex min-w-0 items-center gap-2">
+              <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />
+              <span dir="ltr" className="truncate text-ink/90">{l.public_url}</span>
+            </span>
+            <button className="shrink-0 text-muted transition-colors hover:text-amber" onClick={() => remove(l.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
+      {links.length === 0 && (
+        <p className="mt-1 text-[11px] text-faint">Instagram, SoundCloud, YouTube — each connected source strengthens what can be checked.</p>
+      )}
     </div>
   )
 }
 
-/* ── Step 3: draw bands (firewall: bands/booleans only) ── */
+/* ── Step 4: draw bands (firewall: bands/booleans only) ── */
 function StepDraw({ artist, save }) {
   const { T, BANDS } = useLang()
   const [f, setF] = useState({
@@ -227,8 +257,8 @@ function StepDraw({ artist, save }) {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-bold text-soft mb-1">{T.onboarding.step3Title}</h2>
-      <p className="text-sm text-muted mb-4">{T.onboarding.drawHelp}</p>
+      <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step3Title}</h2>
+      <p className="mb-4 text-sm text-muted">{T.onboarding.drawHelp}</p>
 
       <BandPicker label={T.onboarding.freqBand} options={BANDS.frequency} value={f.lineup_frequency_band} onPick={(v) => pick('lineup_frequency_band', v)} />
 
@@ -236,7 +266,7 @@ function StepDraw({ artist, save }) {
         <div className="flex gap-2">
           {[[T.common.yes, true], [T.common.no, false]].map(([t, v]) => (
             <button key={t} onClick={() => pick('sells_tickets', v)}
-              className={`chip min-h-[44px] px-5 py-2 ${f.sells_tickets === v ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{t}</button>
+              className={`chip min-h-[44px] px-5 py-2 font-mono transition-colors ${f.sells_tickets === v ? 'bg-accent text-[#12160A]' : 'border border-white/15 bg-surface2 text-ink/85 hover:border-accent/40'}`}>{t}</button>
           ))}
         </div>
       </Field>
@@ -253,14 +283,14 @@ function BandPicker({ label, options, value, onPick }) {
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button key={o} onClick={() => onPick(o)}
-            className={`chip min-h-[44px] px-4 py-2 ${value === o ? 'bg-accent text-ink' : 'bg-surface text-soft'}`}>{o}</button>
+            className={`chip min-h-[44px] px-4 py-2 font-mono transition-colors ${value === o ? 'bg-accent text-[#12160A]' : 'border border-white/15 bg-surface2 text-ink/85 hover:border-accent/40'}`}>{o}</button>
         ))}
       </div>
     </Field>
   )
 }
 
-/* ── Step 4: professional experience ── */
+/* ── Step 5: professional experience ── */
 function StepExperience({ artist, items, refresh }) {
   const { T, TYPES: PROFILE_ITEM_TYPES } = useLang()
   const exp = items.filter((i) => !['link'].includes(i.item_type))
@@ -283,8 +313,8 @@ function StepExperience({ artist, items, refresh }) {
 
   return (
     <div className="card">
-      <h2 className="text-lg font-bold text-soft mb-1">{T.onboarding.step4Title}</h2>
-      <p className="text-sm text-muted mb-4">{T.onboarding.itemHelp}</p>
+      <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step4Title}</h2>
+      <p className="mb-4 text-sm text-muted">{T.onboarding.itemHelp}</p>
       <Field label={T.onboarding.itemType}>
         <select className="field" value={f.item_type} onChange={set('item_type')}>
           {PROFILE_ITEM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -295,12 +325,15 @@ function StepExperience({ artist, items, refresh }) {
       <Field label={T.onboarding.itemUrl} hint={T.onboarding.itemUrlHint}>
         <input className="field" dir="ltr" value={f.public_url} onChange={set('public_url')} placeholder="https://…" />
       </Field>
-      <button className="btn-ghost w-full mb-4" onClick={add} disabled={busy}>{T.onboarding.addItem}</button>
+      <button className="btn-ghost mb-4 w-full" onClick={add} disabled={busy}>{T.onboarding.addItem}</button>
       <ul className="space-y-2">
         {exp.map((i) => (
-          <li key={i.id} className="flex items-center justify-between rounded-xl bg-surface px-3 py-2 text-sm">
-            <span className="text-soft">{i.title}{i.item_date ? ` · ${i.item_date}` : ''}</span>
-            <button className="text-muted hover:text-void" onClick={() => remove(i.id)}>{T.common.remove}</button>
+          <li key={i.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm">
+            <span className="min-w-0 truncate text-ink/90">
+              {i.title}
+              {i.item_date && <span className="ms-2 font-mono text-[10px] text-faint">{i.item_date}</span>}
+            </span>
+            <button className="shrink-0 text-muted transition-colors hover:text-amber" onClick={() => remove(i.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
@@ -308,7 +341,7 @@ function StepExperience({ artist, items, refresh }) {
   )
 }
 
-/* ── Step 5: readiness ── */
+/* ── Step 6: readiness ── */
 function StepReadiness({ artist, save, user }) {
   const { T } = useLang()
   const [f, setF] = useState({
@@ -328,17 +361,17 @@ function StepReadiness({ artist, save, user }) {
 
   return (
     <div className="card" onBlur={() => save(f)}>
-      <h2 className="text-lg font-bold text-soft mb-4">{T.onboarding.step5Title}</h2>
+      <h2 className="font-display mb-4 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step5Title}</h2>
       <Field label={T.onboarding.setLength}><input className="field" value={f.set_length} onChange={set('set_length')} placeholder={T.onboarding.setLengthPlaceholder} /></Field>
       <Field label={T.onboarding.regions}><input className="field" value={f.regions} onChange={set('regions')} placeholder={T.onboarding.regionsPlaceholder} /></Field>
-      <label className="flex items-center gap-3 text-soft mb-4">
-        <input type="checkbox" checked={f.invoice_ready} onChange={(e) => { const v = e.target.checked; setF((p) => ({ ...p, invoice_ready: v })); save({ ...f, invoice_ready: v }) }} />
+      <label className="mb-4 flex min-h-[44px] items-center gap-3 rounded-xl border border-white/[0.08] bg-surface2 px-3 py-2.5 text-sm text-ink/90">
+        <input type="checkbox" className="accent-[#BEE24E]" checked={f.invoice_ready} onChange={(e) => { const v = e.target.checked; setF((p) => ({ ...p, invoice_ready: v })); save({ ...f, invoice_ready: v }) }} />
         {T.onboarding.invoice}
       </label>
       <Field label={T.onboarding.rider}>
         <input type="file" onChange={onRider} className="text-sm text-muted" />
         {uploading && <Spinner />}
-        {f.rider_url && <p className="mt-1 text-xs text-ok">{T.common.saved}</p>}
+        {f.rider_url && <p className="mt-1 text-xs text-accent">✓ {T.common.saved}</p>}
       </Field>
       <Field label={T.onboarding.whatsapp} hint={T.onboarding.whatsappHelp}>
         <input className="field" dir="ltr" type="tel" value={f.whatsapp_number} onChange={set('whatsapp_number')} placeholder="0523456789" />
@@ -347,7 +380,7 @@ function StepReadiness({ artist, save, user }) {
   )
 }
 
-/* ── Step 6: review + publish ── */
+/* ── Step 7: review + publish ── */
 function StepReview({ artist, items, save, nav }) {
   const { T } = useLang()
   const { user } = useAuth()
@@ -381,21 +414,26 @@ function StepReview({ artist, items, save, nav }) {
   }
 
   return (
-    <div className="card text-center">
-      <h2 className="text-lg font-bold text-soft mb-2">{T.onboarding.step6Title}</h2>
-      <p className="text-muted mb-4">{artist.stage_name || T.onboarding.theArtist} · {artist.genre} · {items.length} {T.onboarding.items}</p>
-      {artist.photo_url && <img src={artist.photo_url} alt="" className="mx-auto mb-4 h-32 w-32 rounded-full object-cover" />}
+    <div className="card relative overflow-hidden text-center">
+      {/* the warm light lands on the finished Passport */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-16 h-44"
+        style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.14), transparent 70%)' }} />
+      <h2 className="font-display relative mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step6Title}</h2>
+      <p className="relative mb-4 text-muted">{artist.stage_name || T.onboarding.theArtist} · {artist.genre} · {items.length} {T.onboarding.items}</p>
+      {artist.photo_url && (
+        <img src={artist.photo_url} alt="" className="relative mx-auto mb-4 h-32 w-32 rounded-full border-2 border-gold object-cover shadow-[0_0_34px_rgba(242,192,99,0.35)]" />
+      )}
       {needConsent ? (
-        <div className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-start">
-          <p className="font-bold text-soft mb-1">{T.consent.publishTitle}</p>
-          <p className="text-sm text-muted mb-4">{T.consent.publishBody}</p>
+        <div className="relative rounded-xl border border-accent/40 bg-accent/10 p-4 text-start">
+          <p className="mb-1 font-bold text-ink">{T.consent.publishTitle}</p>
+          <p className="mb-4 text-sm text-muted">{T.consent.publishBody}</p>
           <div className="flex flex-col gap-2">
             <button className="btn-primary" onClick={agreeAndPublish} disabled={busy}>{busy ? <Spinner /> : T.consent.publishAgree}</button>
             <button className="btn-ghost" onClick={() => setNeedConsent(false)} disabled={busy}>{T.common.cancel}</button>
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="relative flex flex-col gap-3">
           <button className="btn-primary" onClick={publish} disabled={busy}>{busy ? <Spinner /> : T.onboarding.publish}</button>
           <button className="btn-ghost" onClick={() => nav('/artist/home')} disabled={busy}>{T.onboarding.backToEdit}</button>
         </div>

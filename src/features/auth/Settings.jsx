@@ -56,24 +56,25 @@ export default function Settings() {
 
   return (
     <PageShell max="max-w-md">
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-7 flex items-center justify-between">
         <Wordmark />
-        <Link to={role === ROLES.ARTIST ? '/artist/home' : role === ROLES.AGENCY ? '/agency' : '/'} className="text-sm text-muted">
+        <Link to={role === ROLES.ARTIST ? '/artist/home' : role === ROLES.AGENCY ? '/agency' : '/'}
+          className="text-sm text-muted transition hover:text-ink">
           {T.common.back}
         </Link>
       </div>
-      <h1 className="text-xl font-bold text-soft mb-4">{T.settings.title}</h1>
+      <h1 className="mb-5 text-2xl font-bold text-ink">{T.settings.title}</h1>
 
       <ErrorNote>{error}</ErrorNote>
       {deleteSubmitted && (
-        <div className="card bg-ok/10 border-ok/30 mb-4">
-          <p className="text-ok text-sm">{T.settings.deleteSubmitted}</p>
+        <div className="card mb-4 border-accent/30 bg-accent/10">
+          <p className="text-sm text-accent">{T.settings.deleteSubmitted}</p>
         </div>
       )}
 
       {/* Profile */}
-      <div className="card mb-4">
-        <h2 className="font-bold text-soft mb-3">{T.settings.profile}</h2>
+      <div className="card mb-3">
+        <SectionHead>{T.settings.profile}</SectionHead>
         <Field label={T.settings.displayName}>
           <input className="field" value={name} onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && saveProfile()} />
@@ -87,9 +88,9 @@ export default function Settings() {
       </div>
 
       {/* Organization (org-first account model) */}
-      <div className="card mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-soft truncate">{activeOrg?.name || (isAgency ? T.org.entityAgency : T.org.entitySolo)}</h2>
+      <div className="card mb-3">
+        <div className="mb-3 flex items-center justify-between">
+          <SectionHead className="mb-0 truncate">{activeOrg?.name || (isAgency ? T.org.entityAgency : T.org.entitySolo)}</SectionHead>
           <ContextSwitcher />
         </div>
         <div className="flex flex-col gap-2">
@@ -102,49 +103,49 @@ export default function Settings() {
       </div>
 
       {/* Language */}
-      <div className="card mb-4">
-        <h2 className="font-bold text-soft mb-3">{T.settings.language}</h2>
+      <div className="card mb-3">
+        <SectionHead>{T.settings.language}</SectionHead>
         <div className="flex items-center justify-between">
-          <span className="text-soft text-sm">{lang === 'he' ? T.settings.languageHe : T.settings.languageEn}</span>
+          <span className="text-sm text-ink">{lang === 'he' ? T.settings.languageHe : T.settings.languageEn}</span>
           <LanguageToggle />
         </div>
       </div>
 
       {/* Consents */}
-      <div className="card mb-4">
-        <h2 className="font-bold text-soft mb-1">{T.settings.consents}</h2>
-        <p className="text-xs text-muted mb-3">{T.settings.consentsHint}</p>
-        <div className="space-y-1 text-xs text-muted">
-          <p>• Privacy Policy (v2) — {T.settings.accepted}</p>
-          <p>• Data Processing (v2) — {T.settings.accepted}</p>
-          <p>• Evidence Storage (v2) — {T.settings.accepted}</p>
+      <div className="card mb-3">
+        <SectionHead className="mb-1">{T.settings.consents}</SectionHead>
+        <p className="mb-3 text-xs text-muted">{T.settings.consentsHint}</p>
+        <div className="space-y-1.5 text-xs text-muted">
+          <p><span className="text-accent" aria-hidden>✓</span> Privacy Policy (v2) — {T.settings.accepted}</p>
+          <p><span className="text-accent" aria-hidden>✓</span> Data Processing (v2) — {T.settings.accepted}</p>
+          <p><span className="text-accent" aria-hidden>✓</span> Evidence Storage (v2) — {T.settings.accepted}</p>
         </div>
-        <p className="mt-3 text-[11px] text-muted italic">{T.settings.consentsContact}</p>
+        <p className="mt-3 text-[11px] italic text-faint">{T.settings.consentsContact}</p>
       </div>
 
       {/* Sign out */}
-      <button className="btn-ghost w-full mb-4" onClick={handleSignOut}>
+      <button className="btn-ghost mb-3 w-full" onClick={handleSignOut}>
         {T.settings.logout}
       </button>
 
       {/* Delete account */}
-      <div className="card border-void/30 mb-4">
-        <h2 className="font-bold text-void mb-1">{T.settings.dangerZone}</h2>
-        <p className="text-xs text-muted mb-3">{T.settings.deleteWarning}</p>
+      <div className="card mb-5 border-amber/30">
+        <SectionHead className="mb-1 text-amber">{T.settings.dangerZone}</SectionHead>
+        <p className="mb-3 text-xs text-muted">{T.settings.deleteWarning}</p>
         {!showDeleteConfirm ? (
-          <button className="w-full rounded-xl border border-void/40 bg-[#FFF0ED] min-h-[44px] py-2 text-sm text-void hover:bg-[#F7E1DB] transition"
+          <button className="min-h-[44px] w-full rounded-xl border border-amber/40 bg-amber/10 py-2 text-sm text-amber transition hover:bg-amber/20"
             onClick={() => setShowDeleteConfirm(true)}>
             {T.settings.deleteBtn}
           </button>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-void font-bold">{T.settings.deleteSure}</p>
+            <p className="text-sm font-bold text-amber">{T.settings.deleteSure}</p>
             <div className="flex gap-2">
-              <button className="flex-1 rounded-xl border border-void bg-void min-h-[44px] py-2 text-sm text-white hover:bg-[#75291F] transition"
+              <button className="min-h-[44px] flex-1 rounded-xl border border-amber bg-amber py-2 text-sm font-bold text-[#231506] transition hover:brightness-110"
                 onClick={handleDeleteAccount} disabled={deleteBusy}>
                 {deleteBusy ? T.common.loading : T.settings.deleteConfirm}
               </button>
-              <button className="flex-1 btn-ghost" onClick={() => setShowDeleteConfirm(false)}>
+              <button className="btn-ghost flex-1" onClick={() => setShowDeleteConfirm(false)}>
                 {T.common.cancel}
               </button>
             </div>
@@ -152,7 +153,14 @@ export default function Settings() {
         )}
       </div>
 
-      <p className="text-center text-[11px] text-muted">GIGPROOF v1 · DRAFT</p>
+      <div className="flex items-center justify-center gap-2 text-[11px] text-faint">
+        <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">Controlled beta</span>
+        <span>GIGPROOF v1</span>
+      </div>
     </PageShell>
   )
+}
+
+function SectionHead({ children, className = 'mb-3' }) {
+  return <h2 className={`font-bold text-ink ${className}`}>{children}</h2>
 }

@@ -35,16 +35,16 @@ export default function AcceptInvite() {
 
   return (
     <PageShell max="max-w-sm">
-      <div className="text-center mb-6"><Wordmark className="justify-center mb-3" /><h1 className="text-xl font-bold text-soft">{T.org.acceptTitle}</h1></div>
+      <div className="text-center mb-6"><Wordmark className="justify-center mb-3" /><h1 className="font-display text-xl font-bold text-ink">{T.org.acceptTitle}</h1></div>
       <div className="card text-center">
         <ErrorNote>{error}</ErrorNote>
         {done ? (
-          <p className="text-ok font-bold text-lg">{T.org.welcomeTeam(orgName)}</p>
+          <p className="text-accent font-bold text-lg">{T.org.welcomeTeam(orgName)}</p>
         ) : !info ? (
-          <p className="text-sm text-warn">{T.org.inviteExpired}</p>
+          <p className="text-sm text-amber">{T.org.inviteExpired}</p>
         ) : (
           <>
-            <p className="text-soft mb-4">{T.org.invitedByLine(info.inviter_name, orgName, roleLabel(info.org_role, T))}</p>
+            <p className="text-ink mb-4">{T.org.invitedByLine(info.inviter_name, orgName, roleLabel(info.org_role, T))}</p>
             {!user ? (
               <>
                 <p className="text-sm text-muted mb-3">{T.org.acceptNeedAccount}</p>

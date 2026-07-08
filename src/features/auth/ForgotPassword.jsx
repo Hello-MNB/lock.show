@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote } from '../../components/ui.jsx'
+import { Field, Spinner, ErrorNote } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import AuthScene from './AuthScene.jsx'
 
 export default function ForgotPassword() {
   const { T } = useLang()
@@ -30,40 +31,35 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <PageShell max="max-w-sm">
-        <div className="text-center mb-8">
-          <Wordmark className="justify-center mb-3" />
-        </div>
+      <AuthScene>
         <div className="card text-center">
-          <div className="text-4xl mb-3">📧</div>
-          <h2 className="text-lg font-bold text-soft mb-2">{T.reset.sentTitle}</h2>
-          <p className="text-sm text-muted mb-4">{T.reset.sentBody}</p>
-          <Link to="/login" className="text-accent text-sm">{T.reset.backToLogin}</Link>
+          <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface2 text-2xl" aria-hidden>✉️</span>
+          <h2 className="mb-2 text-lg font-bold text-ink">{T.reset.sentTitle}</h2>
+          <p className="mb-5 text-sm text-muted">{T.reset.sentBody}</p>
+          <Link to="/login" className="text-sm font-semibold text-accent hover:underline">{T.reset.backToLogin}</Link>
         </div>
-      </PageShell>
+      </AuthScene>
     )
   }
 
   return (
-    <PageShell max="max-w-sm">
-      <div className="text-center mb-8">
-        <Wordmark className="justify-center mb-3" />
-        <h1 className="text-xl font-bold text-soft">{T.reset.forgotTitle}</h1>
-      </div>
-      <form onSubmit={onSubmit} className="card">
+    <AuthScene>
+      <h1 className="mb-1 text-2xl font-bold text-ink">{T.reset.forgotTitle}</h1>
+      <p className="mb-6 text-sm text-muted">{T.reset.forgotIntro}</p>
+      <form onSubmit={onSubmit}>
         <ErrorNote>{error}</ErrorNote>
-        <p className="text-sm text-muted mb-4">{T.reset.forgotIntro}</p>
         <Field label={T.login.email}>
           <input className="field" type="email" dir="ltr" autoComplete="email"
+            placeholder="you@stage.com"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>
         <button className="btn-primary w-full" disabled={loading}>
           {loading ? <><Spinner /> {T.common.sending}</> : T.reset.sendLink}
         </button>
-        <p className="text-center mt-4 text-sm text-muted">
-          <Link to="/login" className="text-accent">{T.reset.backToLogin}</Link>
+        <p className="mt-4 text-center text-sm">
+          <Link to="/login" className="text-muted transition hover:text-ink">{T.reset.backToLogin}</Link>
         </p>
       </form>
-    </PageShell>
+    </AuthScene>
   )
 }
