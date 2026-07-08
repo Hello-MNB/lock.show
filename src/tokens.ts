@@ -34,12 +34,16 @@ export const colors = {
 // ONE color + ONE icon + ONE verb per state, everywhere. Categorical words +
 // shape icons, NEVER a score/gauge (firewall). Motion utilities live in
 // src/index.css: .glow-found · .bloom-confirm · .aura-gold · .veil-photo
+// RESTRAINT DOSAGE (owner round 2): neutral surfaces dominate (≥85% of any
+// screen is bg/surface/ink/muted); these tints (≤10% alpha) appear only on
+// small elements — dots, chips ≤24px, thin rings, text accents. ONE lime
+// moment per view; gold only for method labels + one hero aura.
 export const status = {
-  found: { fg: '#F2C063', bg: 'rgba(242,192,99,.12)' }, // ✦ Found (gentle gold glow)
-  good:  { fg: '#CBEE72', bg: 'rgba(190,226,78,.12)' }, // ✓ Confirmed
-  dev:   { fg: '#82E8D6', bg: 'rgba(70,220,194,.12)' }, // ◌ Developing
-  need:  { fg: '#F0B478', bg: 'rgba(227,154,75,.15)' }, // + Needs you
-  na:    { fg: '#9AA29B', bg: 'rgba(255,255,255,.06)' }, // ○ Not assessable
+  found: { fg: '#F2C063', bg: 'rgba(242,192,99,.08)' }, // ✦ Found (barely-there glow)
+  good:  { fg: '#CBEE72', bg: 'rgba(190,226,78,.08)' }, // ✓ Confirmed
+  dev:   { fg: '#82E8D6', bg: 'rgba(70,220,194,.08)' }, // ◌ Developing
+  need:  { fg: '#F0B478', bg: 'rgba(227,154,75,.09)' }, // + Needs you
+  na:    { fg: '#9AA29B', bg: 'rgba(255,255,255,.05)' }, // ○ Not assessable
 } as const
 
 export const fontFamily = {
@@ -58,7 +62,8 @@ export const borderRadius = {
 
 export const shadow = {
   card: '0 24px 60px -24px rgba(0,0,0,.75)',
-  glow: '0 10px 26px -10px rgba(190,226,78,.6)', // lime glow — primary CTA only
+  glow: '0 10px 26px -10px rgba(190,226,78,.5)',   // lime glow — THE one primary CTA per view
+  glowGold: '0 0 12px 0 rgba(242,192,99,.22)',     // found-state edge — subtle, never loud
 } as const
 
 export const spacing = {

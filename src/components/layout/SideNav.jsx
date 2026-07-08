@@ -27,7 +27,7 @@ export default function SideNav() {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium border transition-colors ${
                 isActive
-                  ? 'bg-gradient-to-r from-accent/15 to-accent/[0.04] border-accent/20 text-accent'
+                  ? 'bg-accent/[0.07] border-accent/15 text-accent'
                   : 'border-transparent text-muted hover:text-ink hover:bg-surface'
               }`
             }
