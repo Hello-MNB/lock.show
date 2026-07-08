@@ -1,5 +1,5 @@
 # GIGPROOF — MASTER TASK STATUS BOARD (PRIORITY-SORTED)
-**Version:** 2.0 · **Date:** 8 July 2026 · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
+**Version:** 2.2 · **Date:** 8 July 2026 (evening) · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
 **Sort:** by launch priority. **P0** = blocks real launch · **P1** = needed for a strong launch · **P2** = growth/polish after launch · **DONE** = live and verified.
 **"Migration needed?"** = does going real require a live-DB schema change? Demo data never migrates; migrations are one-time schema upgrades.
 
@@ -57,7 +57,16 @@
 - **028** (I write next, one bundle): discovery fields (#4), M1 analytics events (#11), plan flags (#9). One approval when ready.
 - Everything else: NO migration — live already or pure code builds.
 
+## TODAY'S DECISIONS LOG (8 Jul — owner rulings + events)
+- DEPLOYED to production (b410824, explicit owner approval): unified design, consent banner, GA4, legal pages, notifications, trust fix, brand cleanup.
+- Owner REJECTED privacy v0.2 for glossary violations → binding docs/GLOSSARY.md created; corrected v0.2 produced (פספורט, no Mirror, Vercel, Anthropic-active, GA4 consent-gated) + live /privacy updated — awaiting next deploy.
+- LANGUAGE LAW declared: EN+HE each professional, never mixed; LOCALIZATION-MATRIX live (app 79.3% HE; 8 site pages EN-only).
+- Owner did via Cowork: Anthropic key → Vercel ✅; Google OAuth client created ✅ (4 Supabase clicks remain).
+- GA4 G-ZX907M2NY8 received + wired (site+app, Consent Mode v2). Tavily key received + verified (EN+HE) — discovery unblocked.
+- Site visual crisis (owner): design-system enforcement committed (9 colors, widths, CTA); visual QA sweep in progress; suspicion of live-vs-repo divergence unresolved (need owner screenshot).
+
 ## CHANGELOG
+- v2.2 (8 Jul evening): deploy recorded; privacy v0.2 cycle; glossary governance; site design round.
 - v2.1 (8 Jul 2026): +P0-8 consent banner (done) · #23 upgraded to drafts-exist · +P1-10/11/12 legal pages, Resend, accessibility · GA4 + Tavily closed.
 - v2.0 (8 Jul 2026): Re-sorted by launch priority (P0/P1/P2/DONE) per Maria's request; split #14→14b and #21→21b to track remaining slices.
 - v1.0 (8 Jul 2026): Initial board — 23 tasks by number.
