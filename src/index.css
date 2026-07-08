@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── CODEX Design System v1.2.0 — "Proof Lime" (paper · forest · lime) ─────── */
+/* ── GIGPROOF "Live Intelligence" — warm cinematic night ─────────────────────
+   Dark canvas, one warm light, lime accent. Tokens live in tailwind.config.js
+   (mirrored in src/tokens.ts). Lime ALWAYS carries dark text (#12160A). */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html,
@@ -15,8 +17,8 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.paper');
-  color: theme('colors.soft');
+  background: theme('colors.bg');
+  color: theme('colors.ink');
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -24,42 +26,84 @@ body {
   font-size: 16px;
 }
 
+::selection {
+  background: rgba(190, 226, 78, 0.28); /* lime-tinted */
+  color: theme('colors.ink');
+}
+
 @layer base {
-  /* Display headings — Georgia serif (the CODEX editorial voice). Heebo serves
-     Hebrew until the dedicated HE display treatment. */
+  /* Display headings — Frank Ruhl Libre (the editorial serif voice).
+     Heebo serves Hebrew until the dedicated HE display treatment. */
   h1, h2, h3 {
     font-family: theme('fontFamily.display');
+    font-weight: 700;
+  }
+  h1, h2 {
+    letter-spacing: -0.01em;
+  }
+
+  /* Global keyboard-focus ring — 2px lime outline (accessibility).
+     NEVER strip focus rings; components may layer their own on top. */
+  :focus-visible {
+    outline: 2px solid theme('colors.accent');
+    outline-offset: 2px;
   }
 }
 
 @layer components {
   .btn {
-    /* CODEX buttons: Manrope 800, soft 9px corners, comfortable height */
     @apply inline-flex items-center justify-center gap-2 rounded-sm px-5 py-3
-           font-extrabold text-sm
+           font-bold text-sm
            transition active:scale-[0.99] active:translate-y-px
            disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    /* lime with DARK text — never white on lime (contrast) */
-    @apply btn bg-accent text-ink hover:bg-accent-700;
+    /* lime gradient with DARK text — never light text on lime (contrast) */
+    @apply btn font-extrabold shadow-glow;
+    color: #12160A;
+    background: linear-gradient(180deg, theme('colors.accent'), theme('colors.accent-deep'));
+  }
+  .btn-primary:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
   }
   .btn-ghost {
-    @apply btn bg-transparent text-soft hover:bg-surface border border-line;
+    @apply btn bg-surface2 text-ink border border-line2 hover:bg-raise;
   }
   .field {
-    @apply w-full rounded bg-card border border-line px-4 py-3 text-soft
-           placeholder:text-muted outline-none focus:border-accent transition;
+    /* input: surface2 bg, line2 border, 11px radius, 12/14 padding */
+    @apply w-full bg-surface2 border border-line2 text-ink
+           placeholder:text-faint outline-none transition;
+    border-radius: 11px;
+    padding: 12px 14px;
+  }
+  .field:focus {
+    border-color: theme('colors.accent');
+    box-shadow: 0 0 0 3px rgba(190, 226, 78, 0.15); /* visible lime focus ring */
   }
   .label {
-    @apply block text-[10px] font-mono uppercase tracking-[0.1em] text-muted mb-1.5;
+    /* block label above the input — 12.5px, bold, muted */
+    @apply block font-bold text-muted mb-1.5;
+    font-size: 12.5px;
   }
   .card {
-    @apply rounded-xl2 bg-card border border-line p-5;
+    @apply rounded-xl2 bg-surface border border-line p-5;
   }
   .chip {
-    /* status pills (gp-status): fully rounded, quiet tints, dark-on-light text */
+    /* status pills: fully rounded, quiet tints, icon + text — never a gauge */
     @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .skeleton {
+    /* skeleton loading shimmer (prefer over spinners) */
+    @apply rounded-md;
+    background: linear-gradient(
+      90deg,
+      theme('colors.surface2') 25%,
+      theme('colors.raise') 50%,
+      theme('colors.surface2') 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
   }
 }
 

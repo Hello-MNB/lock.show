@@ -6,35 +6,36 @@ import { BottomSheet, Spinner, GpIcon, PlatformMark, platformOf } from '../../co
 import { useLang } from '../../context/LangContext.jsx'
 import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount } from '../../lib/radarUniverse.js'
 
-// ── The Radar Universe (Radar-Interface-Design-Spec v2.1) — MOBILE FIRST ─────
-// Artist PHOTO at the center (they are the center of the universe) · 6 planets
-// with bounded state rings · established planets carry a VERY subtle ✓ mark
-// (accomplishment, never gamification) · planet drill-in opens as a FULL
-// OVERLAY above the radar — the canvas never reflows, nothing jumps.
-// Two filter axes: STATE chips + WORLDS tags (an artist lives in several
-// content worlds — techno · festivals · weddings — tags subset, never rank).
+// ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
+// Full-canvas dark universe. The artist's PHOTO is the center (gold aura, serif
+// name); 6 planets orbit on thin rings with bounded state colors
+// (accent = established · teal = developing · amber = needs you).
+// FLATTENED: tapping a planet opens ONE panel — every source row carries an
+// inline one-tap Confirm and an inline "what does it prove?" expander. There is
+// never a second modal above the panel.
 // FIREWALL: no numbers, no fills, no position, no peer comparison. Ever.
 
 const RING = {
-  established: 'border-[#3E6B49]',
-  developing: 'border-white/20',
-  needs: 'border-accent',
+  established: 'border-accent/70',
+  developing: 'border-teal/60',
+  needs: 'border-amber/70',
 }
 const NODE_CHIP = {
-  [NODE.CONFIRMED]: { icon: '✓', c: 'bg-[#DFF2D8] text-[#295B32]' },
-  [NODE.FOUND]: { icon: '✦', c: 'bg-accent text-ink' },
-  [NODE.REVIEW]: { icon: '?', c: 'bg-[#FFF0D9] text-[#8A591B]' },
-  [NODE.MISSING]: { icon: '+', c: 'bg-[#F2E6DC] text-[#8A5432]' },
+  [NODE.CONFIRMED]: { icon: '✓', c: 'bg-[rgba(190,226,78,0.12)] text-[#CBEE72]' },
+  [NODE.FOUND]: { icon: '✦', c: 'bg-accent text-[#12160A]' },
+  [NODE.REVIEW]: { icon: '?', c: 'bg-[rgba(227,154,75,0.15)] text-[#F0B478]' },
+  [NODE.MISSING]: { icon: '+', c: 'bg-white/[0.06] text-[#9AA29B]' },
 }
 
 export default function RadarUniverse({ artist, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onItemsRefresh }) {
   const { T } = useLang()
   const S = T.radar.universe
   const nav = useNavigate()
-  const [selected, setSelected] = useState(null)       // planet key → opens the OVERLAY
+  const [selected, setSelected] = useState(null)       // planet key → opens the ONE panel
   const [filter, setFilter] = useState('needsYou')
   const [world, setWorld] = useState(null)             // world tag filter (null = all)
-  const [card, setCard] = useState(null)
+  const [confirming, setConfirming] = useState(null)   // node id mid-confirm
+  const [bulkBusy, setBulkBusy] = useState(false)
   const [undo, setUndo] = useState(null)
   const [savedFlash, setSavedFlash] = useState(false)
   const undoRef = useRef(null)
@@ -50,31 +51,37 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
   const worlds = useMemo(() => deriveWorlds({ artist, items }), [artist, items])
   const evidenceRoute = `/evidence/${artist.id}`
 
-  // lock body scroll while the planet overlay is open (mobile flawlessness)
+  // lock body scroll while the planet panel is open (mobile flawlessness)
   useEffect(() => {
     document.body.style.overflow = selected ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [selected])
 
+  // Three calm lenses: All · Needs you · Ready (bounded words, never counts)
+  const FILTERS = [
+    { key: 'all', label: S.filters.all },
+    { key: 'needsYou', label: S.filters.needsYou },
+    { key: 'ready', label: 'Ready' },
+  ]
   const matchesFilter = (n) =>
     (filter === 'all' ? true :
-      filter === 'needsYou' ? (n.state === NODE.FOUND || n.state === NODE.REVIEW) :
-      filter === 'found' ? n.state === NODE.FOUND :
-      filter === 'missing' ? n.state === NODE.MISSING :
+      filter === 'needsYou' ? (n.state === NODE.FOUND || n.state === NODE.REVIEW || n.state === NODE.MISSING) :
       n.state === NODE.CONFIRMED) &&
     (!world || (n.worlds || []).includes(world))
 
   const blossom = claims.length === 0 && items.filter((i) => i.item_type === 'link').length === 0
 
   async function confirm(node) {
-    if (!node?.claim) return
+    if (!node?.claim || confirming) return
     const c = node.claim
-    await updateClaim(c.id, { artist_approved: true })
-    onClaimsChange((prev) => prev.map((x) => x.id === c.id ? { ...x, artist_approved: true } : x))
-    setCard(null)
-    clearTimeout(undoRef.current)
-    setUndo({ claim: c })
-    undoRef.current = setTimeout(() => setUndo(null), 6000)
+    setConfirming(node.id)
+    try {
+      await updateClaim(c.id, { artist_approved: true })
+      onClaimsChange((prev) => prev.map((x) => x.id === c.id ? { ...x, artist_approved: true } : x))
+      clearTimeout(undoRef.current)
+      setUndo({ claim: c })
+      undoRef.current = setTimeout(() => setUndo(null), 6000)
+    } finally { setConfirming(null) }
   }
   async function undoConfirm() {
     if (!undo) return
@@ -86,33 +93,44 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
   const pauseUndo = () => clearTimeout(undoRef.current)
   const resumeUndo = () => { if (undo) undoRef.current = setTimeout(() => setUndo(null), 3000) }
 
-  function nodeAction(node) {
-    if (node.state === NODE.FOUND || node.state === NODE.REVIEW) return confirm(node)
-    setCard(null)
-    setSelected(null)
-    if (node.evidence) return nav(evidenceRoute)
-    if (node.to) return nav(node.to)
+  const sel = selected ? uni.planets[selected] : null
+  const batchable = sel ? sel.nodes.filter((n) => n.state === NODE.FOUND && n.claim) : []
+
+  // Confirm every found signal in this planet — inline, no extra sheet.
+  async function confirmAll() {
+    if (!batchable.length || bulkBusy) return
+    setBulkBusy(true)
+    try {
+      for (const n of batchable) await updateClaim(n.claim.id, { artist_approved: true })
+      const ids = new Set(batchable.map((n) => n.claim.id))
+      onClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
+      flashSaved()
+    } finally { setBulkBusy(false) }
   }
 
-  const sel = selected ? uni.planets[selected] : null
-  const batchable = sel ? sel.nodes.filter((n) => n.state === NODE.FOUND) : []
-  const [batchOpen, setBatchOpen] = useState(false)
+  function goEvidence() {
+    setSelected(null)
+    nav(evidenceRoute)
+  }
 
-  // The drill-in shows the planet's FULL picture — actionable first. Filters
-  // steer the canvas only; hiding nodes inside a planet just costs clicks.
+  // The panel shows the planet's FULL picture — actionable first.
   const STATE_ORDER = { [NODE.FOUND]: 0, [NODE.REVIEW]: 1, [NODE.MISSING]: 2, [NODE.CONFIRMED]: 3 }
-  const overlayNodes = sel ? [...sel.nodes].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]) : []
+  const panelNodes = sel ? [...sel.nodes].sort((a, b) => STATE_ORDER[a.state] - STATE_ORDER[b.state]) : []
 
   return (
-    <div className="relative mb-5 overflow-hidden rounded-xl bg-[#131A15] p-4">
-      {/* ONE control row: state filters + worlds DROPDOWN (mobile: no room for two rows) */}
-      <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="radar filters">
-        {['needsYou', 'found', 'missing', 'confirmed', 'all'].map((f) => (
-          <button key={f} role="tab" aria-selected={filter === f} onClick={() => setFilter(f)}
-            className={`shrink-0 rounded-full px-3 py-1 font-mono text-[10px] font-medium transition-colors ${
-              filter === f ? 'bg-accent text-ink' : 'bg-white/5 text-[#AEB9AD] hover:bg-white/10'
+    <div className="relative mb-5 overflow-hidden rounded-3xl border border-white/[0.06] bg-bg2 p-4 sm:p-5">
+      {/* one warm light — the backstage lamp above the universe */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64"
+        style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.16), transparent 70%)' }} />
+
+      {/* ONE control row: state lenses + worlds dropdown */}
+      <div className="relative mb-3 flex items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="radar filters">
+        {FILTERS.map((f) => (
+          <button key={f.key} role="tab" aria-selected={filter === f.key} onClick={() => setFilter(f.key)}
+            className={`shrink-0 rounded-full px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
+              filter === f.key ? 'bg-accent text-[#12160A]' : 'bg-white/5 text-muted hover:bg-white/10'
             }`}>
-            {S.filters[f]}
+            {f.label}
           </button>
         ))}
         {worlds.length > 0 && (
@@ -120,8 +138,8 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
             value={world || ''}
             onChange={(e) => setWorld(e.target.value || null)}
             aria-label={S.worldsHint}
-            className={`ms-auto shrink-0 appearance-none rounded-full border bg-[#131A15] px-3 py-1 font-mono text-[10px] outline-none ${
-              world ? 'border-accent text-accent' : 'border-white/15 text-[#89958A]'
+            className={`ms-auto shrink-0 appearance-none rounded-full border bg-surface2 px-3 py-1 font-mono text-[10px] outline-none ${
+              world ? 'border-accent text-accent' : 'border-white/15 text-faint'
             }`}>
             <option value="">{S.allWorlds}</option>
             {worlds.map((w) => <option key={w} value={w}>{w.toUpperCase()}</option>)}
@@ -130,16 +148,18 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
       </div>
 
       {blossom ? (
-        <div className="py-10 text-center">
+        <div className="relative py-10 text-center">
           <CenterStar artist={artist} T={T} dim />
-          <h3 className="font-display mt-5 text-lg text-[#EEF4E7]">{S.blossomTitle}</h3>
-          <p className="mx-auto mt-1 max-w-[300px] text-xs leading-relaxed text-[#AEB9AD]">{S.blossomBody}</p>
+          <h3 className="font-display mt-5 text-xl font-bold text-ink">{S.blossomTitle}</h3>
+          <p className="mx-auto mt-1.5 max-w-[300px] text-xs leading-relaxed text-muted">{S.blossomBody}</p>
           <button className="btn-primary mt-4 text-xs px-4 py-2.5" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
         </div>
       ) : (
         /* ── THE UNIVERSE — always mounted, never reflows ── */
         <div className="relative mx-auto aspect-square max-w-[400px]">
-          <div className="absolute inset-[9%] rounded-full border border-white/[0.07]" aria-hidden />
+          {/* thin orbit rings — white/8%, the quiet geometry of the night */}
+          <div className="absolute inset-[9%] rounded-full border border-white/[0.08]" aria-hidden />
+          <div className="absolute inset-[27%] rounded-full border border-white/[0.05]" aria-hidden />
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <CenterStar artist={artist} T={T} />
           </div>
@@ -157,17 +177,17 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
                 style={{ left: `${x}%`, top: `${y}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
                 aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${complete ? ` · ${S.complete}` : ''}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border-2 bg-[#1B241D] transition-transform hover:scale-105 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_18px_rgba(200,240,77,0.25)]' : ''}`}>
-                  <GpIcon id={p.icon} className="h-6 w-6 text-[#EEF4E7]" />
+                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border-2 bg-surface2 transition-transform hover:scale-105 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_20px_rgba(190,226,78,0.25)]' : ''}`}>
+                  <GpIcon id={p.icon} className="h-6 w-6 text-ink" />
                   {info.foundCount > 0 && (
-                    <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent font-mono text-[9px] font-bold text-ink">✦</span>
+                    <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-accent font-mono text-[9px] font-bold text-[#12160A]">✦</span>
                   )}
                   {/* accomplishment — deliberately quiet: a small settled ✓, no glow, no animation */}
                   {complete && (
-                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-[#24402C] text-[8px] text-[#9FD3A8] ring-1 ring-[#131A15]">✓</span>
+                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-[rgba(190,226,78,0.18)] text-[8px] text-[#CBEE72] ring-1 ring-bg2">✓</span>
                   )}
                 </span>
-                <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-[#89958A] leading-tight">
+                <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight">
                   {S.planets[p.key]}
                 </span>
               </button>
@@ -178,10 +198,10 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
 
       {/* ── ONE next move — folded INTO the canvas (1-screen mobile) ── */}
       {!blossom && nextAction && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5">
+        <div className="relative mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
           <div className="min-w-0">
-            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-[#89958A]">{T.radar.nextActionEyebrow}</p>
-            <p className="truncate text-sm font-semibold text-[#EEF4E7]">{nextAction.title}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>
+            <p className="truncate text-sm font-semibold text-ink">{nextAction.title}</p>
           </div>
           {nextAction.to && (
             <button className="btn-primary shrink-0 px-3 py-2 text-xs" onClick={() => onNextAction?.(nextAction)}>
@@ -191,116 +211,124 @@ export default function RadarUniverse({ artist, items, claims, onClaimsChange, n
         </div>
       )}
 
-      {/* undo toast */}
+      {/* undo toast — floats above everything, dark green card + lime dot */}
       {undo && (
         <div role="status" tabIndex={0} onMouseEnter={pauseUndo} onMouseLeave={resumeUndo} onFocus={pauseUndo} onBlur={resumeUndo}
-          className="absolute inset-x-3 bottom-3 z-10 flex items-center justify-between gap-3 rounded-md bg-[#DFF2D8] px-3 py-2 text-xs font-semibold text-[#295B32]">
-          <span className="truncate">✓ {S.confirmedToast}</span>
-          <button className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.08em] underline" onClick={undoConfirm}>
+          className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-sm items-center justify-between gap-3 rounded-xl border border-accent/30 bg-[#141B12] px-3.5 py-2.5 text-xs font-semibold text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+          <span className="flex min-w-0 items-center gap-2">
+            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+            <span className="truncate">{S.confirmedToast}</span>
+          </span>
+          <button className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-accent underline" onClick={undoConfirm}>
             {S.undo}
           </button>
         </div>
       )}
 
-      {/* ── PLANET OVERLAY — a screen ABOVE the radar; nothing underneath moves ── */}
-      {selected && (
-        <div className="fixed inset-0 z-40 flex flex-col bg-paper animate-fade-in" role="dialog" aria-modal="true" aria-label={S.planets[selected]}>
-          <div className="flex items-center justify-between border-b border-line px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-            <button className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted hover:text-ink min-h-[44px]" onClick={() => setSelected(null)}>
-              {S.backToUniverse}
-            </button>
-            <span className="font-display text-base text-ink">{S.planets[selected]}</span>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      {/* saved-in-place flash */}
+      {savedFlash && (
+        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-sm items-center gap-2 rounded-xl border border-accent/30 bg-[#141B12] px-3.5 py-2.5 text-xs font-semibold text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
+          {S.fill.savedInPlace}
+        </div>
+      )}
+
+      {/* ── THE ONE PANEL — planet drill-in. Confirm + "what does it prove?"
+            live INLINE on every row. No second modal, ever. ── */}
+      <BottomSheet open={!!selected} onClose={() => setSelected(null)} title={selected ? S.planets[selected] : ''}>
+        {sel && (
+          <div className="max-h-[65vh] overflow-y-auto pe-0.5">
             {batchable.length >= 2 && (
-              <button className="btn-primary mb-3 w-full text-xs py-2.5" onClick={() => setBatchOpen(true)}>
-                ✦ {S.reviewAll(batchable.length)}
+              <button className="btn-primary mb-3 w-full py-2.5 text-xs" onClick={confirmAll} disabled={bulkBusy}>
+                {bulkBusy ? <Spinner /> : <>✦ {S.reviewAll(batchable.length)}</>}
               </button>
             )}
-            <div className="space-y-1.5">
-              {overlayNodes.map((n) => (
-                <button key={n.id} onClick={() => setCard(n)}
-                  className="flex w-full items-center gap-3 rounded-md border border-line bg-card px-3 py-3 text-start transition-colors hover:border-accent min-h-[52px]">
-                  {n.url
-                    ? <PlatformMark platform={platformOf(n.url)} />
-                    : <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface text-muted"><GpIcon id={PLANETS.find((p) => p.key === selected)?.icon || 'gp-source'} className="h-4 w-4" /></span>}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-ink">{n.label}</span>
-                    <span className="block truncate text-[11px] text-muted">{n.sub}</span>
-                  </span>
-                  <span className={`chip shrink-0 text-[10px] ${NODE_CHIP[n.state].c}`}>{NODE_CHIP[n.state].icon}</span>
-                </button>
+            <div className="space-y-2">
+              {panelNodes.map((n) => (
+                <PlanetRow key={n.id} node={n} planet={selected} S={S}
+                  busy={confirming === n.id}
+                  onConfirm={() => confirm(n)}
+                  onEvidence={goEvidence}
+                  artist={artist}
+                  onArtistChange={onArtistChange}
+                  onItemsRefresh={onItemsRefresh}
+                  onSaved={flashSaved} />
               ))}
-              {overlayNodes.length === 0 && (
+              {panelNodes.length === 0 && (
                 <p className="py-6 text-center font-mono text-[10px] text-muted">—</p>
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Impact Card — above the overlay */}
-      <BottomSheet open={!!card} onClose={() => setCard(null)} title={card?.label || ''}>
-        {card && (
-          <div>
-            <div className="mb-3 flex items-center gap-2">
-              {card.url && <PlatformMark platform={platformOf(card.url)} size="h-6 w-6" />}
-              <span className={`chip text-[10px] ${NODE_CHIP[card.state].c}`}>{NODE_CHIP[card.state].icon}</span>
-              <span className="text-xs text-muted">{card.sub}</span>
-            </div>
-            <p className="label">{S.whatItProves}</p>
-            <p className="mb-3 text-sm text-soft">{card.proves}</p>
-            <p className="label">{S.whatItDoesNotProve}</p>
-            <p className="mb-4 text-sm text-muted">{card.notProves}</p>
-
-            {/* MISSING + fillable → the form lives RIGHT HERE. No screen swaps. */}
-            {card.state === NODE.MISSING && card.fill ? (
-              <MissingFill
-                node={card} artist={artist} S={S}
-                onArtistChange={onArtistChange}
-                onItemsRefresh={onItemsRefresh}
-                onDone={() => { setCard(null); flashSaved() }}
-              />
-            ) : card.state === NODE.MISSING && card.evidence ? (
-              <button className="btn-primary w-full" onClick={() => nodeAction(card)}>{S.fill.openEvidence}</button>
-            ) : (
-              <button className="btn-primary w-full" onClick={() => nodeAction(card)}>
-                {card.state === NODE.FOUND || card.state === NODE.REVIEW ? `✦ ${S.confirmCta}` : S.viewCta}
-              </button>
-            )}
-          </div>
         )}
-      </BottomSheet>
-
-      {/* saved-in-place flash */}
-      {savedFlash && (
-        <div role="status" className="absolute inset-x-3 bottom-3 z-10 rounded-md bg-[#DFF2D8] px-3 py-2 text-xs font-semibold text-[#295B32]">
-          ✓ {S.fill.savedInPlace}
-        </div>
-      )}
-
-      {/* batch confirm */}
-      <BottomSheet open={batchOpen} onClose={() => setBatchOpen(false)} title={selected ? S.planets[selected] : ''}>
-        <div className="space-y-2">
-          {batchable.map((n) => (
-            <div key={n.id} className="flex items-center justify-between gap-3 rounded-md border border-line px-3 py-2.5">
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-soft">{n.label}</span>
-                <span className="block truncate text-[11px] text-muted">{n.proves}</span>
-              </span>
-              <button className="btn-primary shrink-0 px-3 py-2 text-xs" onClick={() => confirm(n)}>✦ {S.confirmCta}</button>
-            </div>
-          ))}
-          {batchable.length === 0 && <p className="py-3 text-center text-xs text-muted">✓</p>}
-        </div>
       </BottomSheet>
     </div>
   )
 }
 
-// ── MissingFill — the in-place fill form inside the Impact Card ──────────────
+// ── One source row inside the planet panel ────────────────────────────────────
+// Row = source · state chip · inline one-tap Confirm · inline "what does it
+// prove?" expander. A missing-but-fillable node expands its tiny form RIGHT
+// HERE — the panel never opens anything above itself.
+function PlanetRow({ node: n, planet, S, busy, onConfirm, onEvidence, artist, onArtistChange, onItemsRefresh, onSaved }) {
+  const [open, setOpen] = useState(false)
+  const chip = NODE_CHIP[n.state]
+  const actionable = n.state === NODE.FOUND || n.state === NODE.REVIEW
+
+  return (
+    <div className={`rounded-xl border border-white/[0.08] bg-surface2 px-3 py-3 transition ${busy ? 'opacity-60' : ''}`}>
+      <div className="flex items-center gap-3">
+        {n.url
+          ? <PlatformMark platform={platformOf(n.url)} />
+          : <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/[0.06] text-muted"><GpIcon id={PLANETS.find((p) => p.key === planet)?.icon || 'gp-source'} className="h-4 w-4" /></span>}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold text-ink">{n.label}</span>
+          <span className="block truncate text-[11px] text-muted">{n.sub}</span>
+        </span>
+        <span className={`chip shrink-0 text-[10px] ${chip.c}`}>{chip.icon}</span>
+      </div>
+
+      {/* inline action line — one tap, right here */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {actionable && (
+          <button className="btn-primary px-3 py-1.5 text-xs" onClick={onConfirm} disabled={busy}>
+            {busy ? <Spinner /> : <>✦ {S.confirmCta}</>}
+          </button>
+        )}
+        {n.state === NODE.MISSING && !n.fill && n.evidence && (
+          <button className="btn-primary px-3 py-1.5 text-xs" onClick={onEvidence}>{S.fill.openEvidence}</button>
+        )}
+        <button
+          className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.08em] text-gold/80 hover:text-gold"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}>
+          {S.whatItProves} {open ? '▴' : '▾'}
+        </button>
+      </div>
+
+      {/* inline expander — honesty text + (for fillable gaps) the form itself */}
+      {open && (
+        <div className="mt-2 border-t border-white/[0.08] pt-2">
+          <p className="label">{S.whatItProves}</p>
+          <p className="mb-2 text-sm text-ink/90">{n.proves}</p>
+          <p className="label">{S.whatItDoesNotProve}</p>
+          <p className="mb-2 text-sm text-muted">{n.notProves}</p>
+          {n.state === NODE.MISSING && n.fill && (
+            <MissingFill
+              node={n} artist={artist} S={S}
+              onArtistChange={onArtistChange}
+              onItemsRefresh={onItemsRefresh}
+              onDone={() => { setOpen(false); onSaved() }}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── MissingFill — the in-place fill form inside the row expander ─────────────
 // One node = one tiny form. Saving updates the data and the node flips to ✓
-// without ever leaving the Radar. (Ticket exports stay in the evidence flow —
+// without ever leaving the panel. (Ticket exports stay in the evidence flow —
 // they carry the third-party consent gate.)
 function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onDone }) {
   const { kind, field, max, placeholder } = node.fill
@@ -400,21 +428,21 @@ function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onDone }
         </>
       )}
 
-      {err && <p className="text-xs text-warn" role="alert">{err}</p>}
+      {err && <p className="text-xs text-amber" role="alert">{err}</p>}
     </div>
   )
 }
 
 function CenterStar({ artist, T, dim }) {
-  // The artist IS the center of the universe — photo first, always.
+  // The artist IS the center of the universe — photo first, in a warm gold aura.
   return (
     <div className={`text-center transition-opacity ${dim ? 'opacity-50' : ''}`}>
       {artist.photo_url
-        ? <img src={artist.photo_url} alt="" className="mx-auto h-20 w-20 rounded-full border-2 border-accent object-cover shadow-[0_0_24px_rgba(200,240,77,0.18)]" />
-        : <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border-2 border-accent bg-[#1B241D] font-display text-xl text-[#EEF4E7]">
+        ? <img src={artist.photo_url} alt="" className="mx-auto h-20 w-20 rounded-full border-2 border-gold object-cover shadow-[0_0_34px_rgba(242,192,99,0.35)]" />
+        : <span className="mx-auto grid h-20 w-20 place-items-center rounded-full border-2 border-gold bg-surface2 font-display text-xl text-ink shadow-[0_0_34px_rgba(242,192,99,0.25)]">
             {(artist.stage_name || '★').slice(0, 1)}
           </span>}
-      <span className="mt-1.5 block font-mono text-[9px] uppercase tracking-[0.1em] text-[#89958A]">
+      <span className="font-display mt-2 block text-sm font-bold tracking-[-0.01em] text-ink">
         {artist.stage_name || T.radar.universe.you}
       </span>
     </div>

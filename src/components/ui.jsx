@@ -8,13 +8,13 @@ export function BottomSheet({ open, onClose, title, children }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full sm:max-w-sm bg-card border-t sm:border border-line rounded-t-2xl sm:rounded-2xl p-5"
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative w-full sm:max-w-sm bg-surface border-t sm:border border-line2 rounded-t-2xl sm:rounded-2xl p-5 shadow-card"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
         {title && (
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-soft">{title}</h2>
-            <button onClick={onClose} aria-label="close" className="text-muted text-2xl leading-none min-h-[40px] px-2">×</button>
+            <h2 className="font-bold text-ink">{title}</h2>
+            <button onClick={onClose} aria-label="close" className="text-muted hover:text-ink text-2xl leading-none min-h-[40px] px-2">×</button>
           </div>
         )}
         {children}
@@ -39,7 +39,8 @@ export function ToastProvider({ children }) {
       <div className="fixed bottom-4 inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} role="status"
-            className={`pointer-events-auto rounded px-4 py-2 text-sm font-bold shadow-lg ${t.type === 'warn' ? 'bg-[#FFF2D9] text-[#76501D]' : 'bg-[#E5F5DF] text-[#285B31]'}`}>
+            className="pointer-events-auto flex items-center gap-2.5 rounded bg-[#131A14] border border-line2 px-4 py-2.5 text-sm font-bold text-ink shadow-card">
+            <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${t.type === 'warn' ? 'bg-amber' : 'bg-accent'}`} />
             {t.msg}
           </div>
         ))}
@@ -84,8 +85,8 @@ export function SocialAuthButtons({ onOAuth, disabled = false }) {
     }
   }
 
-  const btnClass = `w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-line bg-surface text-sm font-medium transition-colors ${
-    disabled ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-card text-soft'
+  const btnClass = `w-full flex items-center justify-center gap-3 py-3 px-4 rounded-sm border border-line2 bg-surface2 text-sm font-medium transition-colors ${
+    disabled ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-raise text-ink'
   }`
 
   return (
@@ -132,9 +133,13 @@ export function Spinner({ className = '' }) {
 
 export function Loading({ label }) {
   const { T } = useLang()
+  // Skeleton shimmer, not a spinner — the screen "arrives", it doesn't churn.
   return (
-    <div className="flex items-center justify-center gap-3 py-16 text-muted">
-      <Spinner /> <span>{label ?? T.common.loading}</span>
+    <div className="py-10 space-y-3" role="status" aria-live="polite">
+      <div className="skeleton h-5 w-2/5" />
+      <div className="skeleton h-4 w-4/5" />
+      <div className="skeleton h-4 w-3/5" />
+      <span className="sr-only">{label ?? T.common.loading}</span>
     </div>
   )
 }
@@ -144,28 +149,52 @@ export function Loading({ label }) {
 // color alone — satisfies WCAG 1.4.1 and the firewall (categorical, not a gauge).
 export function StatusChip({ status }) {
   const { T } = useLang()
-  // CODEX v1.2.0 bounded-status tints (design-system-states.css)
+  // "Live Intelligence" status pairs — icon + text on quiet dark tints
   const map = {
-    [STATUS.STRONG]: { t: T.status.strong, c: 'bg-[#DFF2D8] text-[#295B32]', icon: '●' },
-    [STATUS.DEVELOPING]: { t: T.status.developing, c: 'bg-[#FFF0D9] text-[#8A591B]', icon: '◐' },
-    // warm brown, deliberately NOT error-red: "unknown evidence is never presented
+    [STATUS.STRONG]: { t: T.status.strong, c: 'bg-good-bg text-good', icon: '✓' },       // Established
+    [STATUS.DEVELOPING]: { t: T.status.developing, c: 'bg-dev-bg text-dev', icon: '◐' }, // Developing
+    // warm amber, deliberately NOT error-red: "unknown evidence is never presented
     // as weak evidence" (canon) — a gap is an invitation, not a failure
-    [STATUS.MISSING]: { t: T.status.missing, c: 'bg-[#F2E6DC] text-[#8A5432]', icon: '○' },
-    [STATUS.NOT_ASSESSABLE]: { t: T.status.notAssessable, c: 'bg-[#E9ECE8] text-[#5F6761]', icon: '–' },
+    [STATUS.MISSING]: { t: T.status.missing, c: 'bg-need-bg text-need', icon: '+' },     // Needs you
+    [STATUS.NOT_ASSESSABLE]: { t: T.status.notAssessable, c: 'bg-na-bg text-na', icon: '–' }, // Not assessed
   }
   const s = map[status] ?? map[STATUS.NOT_ASSESSABLE]
   return <span className={`chip ${s.c}`}><span aria-hidden="true">{s.icon}</span> {s.t}</span>
 }
 
+// ── MethodLabel — the transparency badge (firewall §3). Mono, uppercase,
+// gold border/text on transparent; producer-confirmed (strongest) in lime.
+// <MethodLabel variant="lime">PRODUCER-CONFIRMED</MethodLabel>
+export function MethodLabel({ children, variant = 'gold' }) {
+  const v = variant === 'lime' || variant === 'producer'
+    ? 'border-accent/40 text-accent'
+    : 'border-gold/40 text-gold'
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border bg-transparent px-2 py-0.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] ${v}`}>
+      {children}
+    </span>
+  )
+}
+
+// ── BandPill — a bounded range, e.g. "180–300 heads". Bordered mono capsule.
+// NEVER a progress bar / gauge (firewall).
+export function BandPill({ children }) {
+  return (
+    <span className="inline-flex items-center rounded-full border border-line2 bg-surface2 px-2.5 py-1 font-mono text-xs text-ink">
+      {children}
+    </span>
+  )
+}
+
 // The 6 METHOD LABELS (firewall §3) — distinct SHAPE icon each (UX §15.1).
 // Producer-confirmed is strongest. Categorical icons, never a gauge.
 const METHOD_ICON = {
-  'producer-confirmed': { icon: '★', c: 'text-accent' },
-  'evidence-supported': { icon: '✓', c: 'text-ok' },
-  'source-linked': { icon: '↗', c: 'text-soft' },
-  'artist-declared': { icon: '✎', c: 'text-muted' },
-  'unable-to-verify': { icon: '?', c: 'text-muted' },
-  stale: { icon: '↻', c: 'text-warn' },
+  'producer-confirmed': { icon: '★', variant: 'lime' }, // strongest — lime
+  'evidence-supported': { icon: '✓', variant: 'gold' },
+  'source-linked': { icon: '↗', variant: 'gold' },
+  'artist-declared': { icon: '✎', variant: 'gold' },
+  'unable-to-verify': { icon: '?', variant: 'gold' },
+  stale: { icon: '↻', variant: 'gold' },
 }
 
 // Method label for a fact (the 6-label SSOT). Pass a claim's verification_status
@@ -174,7 +203,11 @@ export function SourceLabel({ status, methodLabel, expiresAt }) {
   const { T } = useLang()
   const key = methodLabelFor({ method_label: methodLabel, verification_status: status, expires_at: expiresAt })
   const m = METHOD_ICON[key] ?? METHOD_ICON['artist-declared']
-  return <span className={`text-[11px] ${m.c}`}><span aria-hidden="true">{m.icon}</span> {T.methodLabel[key]}</span>
+  return (
+    <MethodLabel variant={m.variant}>
+      <span aria-hidden="true">{m.icon}</span> {T.methodLabel[key]}
+    </MethodLabel>
+  )
 }
 
 // Language toggle pill — place in any header.
@@ -183,7 +216,7 @@ export function LanguageToggle() {
   return (
     <button
       onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
-      className="text-xs font-mono font-semibold text-muted border border-line rounded px-3 py-1 hover:text-soft hover:border-soft transition"
+      className="text-xs font-mono font-semibold text-muted border border-line rounded-full px-3 py-1 hover:text-ink hover:border-line2 transition"
       title={T.common.switchLanguage}
       aria-label={T.common.switchLanguage}
     >
@@ -198,7 +231,7 @@ export function Field({ label, hint, error, children }) {
       {label && <label className="label">{label}</label>}
       {children}
       {hint && !error && <p className="mt-1 text-xs text-muted">{hint}</p>}
-      {error && <p role="alert" className="mt-1 text-xs text-void">{error}</p>}
+      {error && <p role="alert" className="mt-1 text-xs text-need">{error}</p>}
     </div>
   )
 }
@@ -256,13 +289,13 @@ export function PlatformMark({ platform, size = 'h-7 w-7' }) {
 }
 
 export function Wordmark({ className = '' }) {
-  // CODEX v1.2.0 logo pattern: lime square + bold name (ds-logo)
+  // "Live Intelligence" brand mark: lime "G" square (30px, rounded) + wordmark
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className="grid h-8 w-8 place-items-center rounded-[10px] bg-accent text-[9px] font-black text-[#10150F]" aria-hidden>
-        GP
+      <span className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-accent font-display text-[15px] font-black text-bg" aria-hidden>
+        G
       </span>
-      <b className="text-sm font-extrabold tracking-tight text-soft">GIGPROOF</b>
+      <b className="text-sm font-extrabold tracking-tight text-ink">GIGPROOF</b>
     </div>
   )
 }
@@ -278,7 +311,7 @@ export function EmptyState({ title, action }) {
 
 export function ErrorNote({ children }) {
   if (!children) return null
-  return <p role="alert" className="mb-4 rounded-xl bg-[#FFF0ED] px-4 py-3 text-sm text-void">{children}</p>
+  return <p role="alert" className="mb-4 rounded-lg bg-need-bg border border-need/25 px-4 py-3 text-sm text-need">{children}</p>
 }
 
 // Load-failure state with an optional retry. Use in place of a silent empty list.
@@ -286,7 +319,7 @@ export function ErrorState({ title, onRetry }) {
   const { T } = useLang()
   return (
     <div className="card text-center" role="alert">
-      <p className="text-soft">{title ?? T.common.error}</p>
+      <p className="text-ink">{title ?? T.common.error}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn-ghost mt-4">{T.common.continue}</button>
       )}

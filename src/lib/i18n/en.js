@@ -816,10 +816,10 @@ export const T = {
     results: 'Labelling results',
   },
   status: {
-    strong: 'Strong',
+    strong: 'Established',
     developing: 'Developing',
-    missing: 'No proof',
-    notAssessable: 'Not assessable',
+    missing: 'Needs you',
+    notAssessable: 'Not assessed',
   },
   methodLabel: {
     'producer-confirmed': 'Producer-confirmed',

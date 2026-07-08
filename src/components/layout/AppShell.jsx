@@ -4,7 +4,8 @@ import BottomNav from './BottomNav.jsx'
 import SideNav from './SideNav.jsx'
 
 // Layout route wrapper — renders persistent nav shell around all authenticated screens.
-// Mobile: fixed bottom tab nav. Desktop (md+): fixed 240px left sidebar.
+// Mobile: fixed bottom tab nav. Desktop (md+): fixed 248px inline-start sidebar
+// (logical CSS — start/border-e/ps — so a future RTL pass flips it for free).
 // Public routes (Passport, confirm, login) are NOT wrapped — they use separate Route entries.
 export default function AppShell() {
   const { user, loading } = useAuth()
@@ -13,14 +14,14 @@ export default function AppShell() {
   if (!user || loading) return <Outlet />
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-bg">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 flex-col bg-paper border-r border-line z-30">
+      <aside className="hidden md:flex fixed start-0 top-0 bottom-0 w-[248px] flex-col bg-bg2 border-e border-line z-30">
         <SideNav />
       </aside>
 
       {/* Scrollable content — offset for sidebar on desktop, padded bottom for nav on mobile */}
-      <main className="md:pl-60 pb-16 md:pb-0">
+      <main className="md:ps-[248px] pb-16 md:pb-0">
         <Outlet />
       </main>
 

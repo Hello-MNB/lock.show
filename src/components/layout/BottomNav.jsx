@@ -12,7 +12,7 @@ export default function BottomNav() {
   if (tabs.length === 0) return null
 
   return (
-    <div className="bg-paper border-t border-line">
+    <div className="bg-bg2 border-t border-line">
       <div className="h-16 flex items-stretch">
         {tabs.map((tab) => (
           <NavLink
@@ -21,7 +21,7 @@ export default function BottomNav() {
             end={tab.end}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors min-h-[44px] ${
-                isActive ? 'text-[#657530]' : 'text-muted hover:text-soft'
+                isActive ? 'text-accent' : 'text-muted hover:text-ink'
               }`
             }
           >

@@ -25,10 +25,10 @@ export default function SideNav() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium border transition-colors ${
                 isActive
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-muted hover:text-soft hover:bg-surface'
+                  ? 'bg-gradient-to-r from-accent/15 to-accent/[0.04] border-accent/20 text-accent'
+                  : 'border-transparent text-muted hover:text-ink hover:bg-surface'
               }`
             }
           >
