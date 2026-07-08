@@ -17,7 +17,8 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 ## Keys (values in gitignored .env.local + Maria's side; statuses only here)
 - Anthropic: RECEIVED + VERIFIED locally. PENDING: Maria adds to Vercel v6-b4 env + Redeploy.
 - Spotify: client id+secret VERIFIED (token + search OK). Not wired into app yet.
-- Google API key: rescoped YouTube Data v3 only (CSE closed to new signups → Tavily replaces it; Tavily key still MISSING).
+- Google API key: rescoped YouTube Data v3 only (CSE closed → Tavily replaces it).
+- Tavily: RECEIVED + VERIFIED 8 Jul (EN+HE live searches OK). In .env.local; pending → Vercel env. Discovery build unblocked (counsel sign-off still gates go-live).
 - GA4: property GIGPROOF 544738110 created (account 400389625). PENDING: Web data stream → G-XXXX measurement id.
 
 ## Migrations
@@ -37,8 +38,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 6. Green Invoice signup.
 7. GA4: property created ✅ — now Web data stream → send G-XXXX measurement id.
 8. Send counsel email (docs/COUNSEL-EMAIL-DRAFT.md).
-9. Tavily key (free tier).
-10. Later, low urgency: rotate the Anthropic key (was pasted in chat).
+9. Later, low urgency: rotate Anthropic + Tavily keys (both pasted in chat).
 
 ## Standing instructions from Maria
 - Answer ALWAYS in English. Task board at end of EVERY chat reply, sorted by priority.

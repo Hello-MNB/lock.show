@@ -20,7 +20,7 @@
 | Pri | # | Task | Demo env | Real launch | Notes |
 |---|---|---|---|---|---|
 | P1-1 | 10 | Notifications (confirmation arrived / payment activated / request received) | 🔴 | 🔴 | No migration (table since 002). Pure build — highest-value P1. |
-| P1-2 | 4 | Deep discovery scan (web search by name HE/EN) | 🔴 | 🔴 | Small migration ('discovered' source + HE/EN names → 028). **YOU:** free Tavily key. **ME:** Phase-A build (~2-3 days). |
+| P1-2 | 4 | Deep discovery scan (web search by name HE/EN) | 🔴 | 🔴 | Small migration ('discovered' source + HE/EN names → 028). Tavily key verified ✅ (EN+HE). **ME:** Phase-A build (~2-3 days) — unblocked. |
 | P1-3 | 12 | Google/Facebook login | ✅ (demo notice) | 🔴 OFF (safe) | No migration. **YOU:** Google OAuth client → Supabase providers. **ME:** flag ON + redeploy. |
 | P1-4 | 16 | Representation workspace (roster as consented grants) | ✅ prototype | 🔴 in app | Needs 027 (P0-3) → then UI build from prototype. |
 | P1-5 | 17 | Production-company workspace (INSOMNIA: team, events, lineup) | ✅ prototype | 🔴 in app | Needs 027 (P0-3) → then UI build. gigs table exists unused. |
