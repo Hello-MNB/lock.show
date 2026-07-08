@@ -56,35 +56,34 @@ export default function OfferPayment() {
       </div>
 
       {status === 'active' ? (
-        <div className="card relative overflow-hidden text-center" role="status">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-14 h-40"
-            style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(190,226,78,0.12), transparent 70%)' }} />
-          <p className="relative mb-3 text-3xl" aria-hidden="true">🌐</p>
-          <h1 className="font-display relative mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{O.activeTitle}</h1>
-          <p className="relative mb-4 text-muted">{O.activeBody}</p>
-          {artist && <Link to={`/passport/${artist.id}`} className="btn-primary relative block">{T.dashboard.viewPublic}</Link>}
+        <div className="card text-center" role="status">
+          <span aria-hidden className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-line2 text-xl text-[#CBEE72]">✓</span>
+          <h1 className="font-display mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{O.activeTitle}</h1>
+          <p className="mb-4 text-muted">{O.activeBody}</p>
+          {artist && <Link to={`/passport/${artist.id}`} className="btn-primary block">{T.dashboard.viewPublic}</Link>}
         </div>
       ) : status === 'pending' ? (
         /* "I've paid" confirmation state — date on record + calm operator note */
         <div className="card relative overflow-hidden text-center" role="status">
+          {/* the one warm aura on this view */}
           <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-14 h-40"
-            style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.14), transparent 70%)' }} />
-          <span aria-hidden className="relative mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-gold/50 text-xl text-gold">✓</span>
+            style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.10), transparent 70%)' }} />
+          <span aria-hidden className="relative mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-line2 text-xl text-ink/80">✓</span>
           <h1 className="font-display relative mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{O.pendingTitle}</h1>
           {paidOn && (
-            <p className="relative mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-gold">Payment confirmation received · {paidOn}</p>
+            <p className="relative mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">Payment confirmation received · {paidOn}</p>
           )}
           <p className="relative text-sm text-muted">{O.pendingBody}</p>
-          <p className="relative mt-3 border-t border-white/[0.08] pt-3 text-xs text-muted">
+          <p className="relative mt-3 border-t border-line pt-3 text-xs text-muted">
             The operator will activate you shortly — nothing else is needed from you.
           </p>
         </div>
       ) : (
         <>
           <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{O.title}</h1>
-          <p className="mb-1 font-mono text-sm font-bold text-accent">{O.price}</p>
+          <p className="mb-1 font-mono text-sm font-bold text-ink">{O.price}</p>
           <p className="mb-4 text-xs text-muted">{O.notSubscription}</p>
-          <div className="card mb-4 border border-gold/25"><p className="text-sm text-ink/90">{O.trustLine}</p></div>
+          <div className="card mb-4"><p className="text-sm text-ink/90">{O.trustLine}</p></div>
           <div className="card mb-4">
             <p className="mb-1 font-bold text-ink">{O.howToPay}</p>
             <p className="mb-1 text-sm text-muted">{O.payMethods}</p>

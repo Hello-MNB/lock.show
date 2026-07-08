@@ -25,13 +25,13 @@ function ProgressSegments({ step }) {
           <span
             key={i}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-              i + 1 < step ? 'bg-accent/45' : i + 1 === step ? 'bg-accent' : 'bg-white/10'
+              i + 1 < step ? 'bg-white/25' : i + 1 === step ? 'bg-accent' : 'bg-white/10'
             }`}
           />
         ))}
       </div>
       <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
-        {T.onboarding.stepOf(step, STEPS)} · <span className="text-gold">{STEP_LABELS[step - 1]}</span>
+        {T.onboarding.stepOf(step, STEPS)} · <span className="text-ink/80">{STEP_LABELS[step - 1]}</span>
       </p>
     </div>
   )
@@ -142,15 +142,14 @@ function StepGoal({ act, setAct, artistId, flash, setError }) {
             type="button"
             onClick={() => pick(g)}
             aria-pressed={current === g}
-            className={`min-h-[64px] rounded-xl border px-3 py-3 text-start text-sm font-semibold transition-all ${
+            className={`flex min-h-[56px] items-center gap-2 rounded-xl border bg-surface2 px-3 py-3 text-start text-sm font-semibold transition-colors ${
               current === g
-                ? 'border-accent bg-accent/10 text-ink shadow-[0_0_0_1px_rgba(190,226,78,0.35)]'
-                : 'border-white/[0.08] bg-surface2 text-ink/85 hover:border-accent/40'
+                ? 'border-accent/70 text-ink'
+                : 'border-line text-ink/85 hover:border-line2'
             }`}
           >
-            <span className={`mb-1 block font-mono text-[9px] uppercase tracking-[0.1em] ${current === g ? 'text-accent' : 'text-faint'}`} aria-hidden>
-              {current === g ? '✓ chosen' : 'goal'}
-            </span>
+            {/* selection = a thin lime ring + a small dot; never a tinted fill */}
+            <span aria-hidden className={`h-1.5 w-1.5 shrink-0 rounded-full ${current === g ? 'bg-accent' : 'bg-white/15'}`} />
             {T.onboarding.goals[g]}
           </button>
         ))}
@@ -193,7 +192,7 @@ function StepIdentity({ artist, save, user }) {
         <input className="field" dir="ltr" value={f.photo_url} onChange={set('photo_url')} placeholder="https://…" />
       </Field>
       {f.photo_url && (
-        <img src={f.photo_url} alt="" className="mt-2 h-40 w-full rounded-xl border border-gold/30 object-cover shadow-[0_0_34px_rgba(242,192,99,0.15)]" />
+        <img src={f.photo_url} alt="" className="mt-2 h-40 w-full rounded-xl border border-line object-cover" />
       )}
     </div>
   )
@@ -233,7 +232,7 @@ function StepLinks({ artist, items, refresh }) {
               <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal" />
               <span dir="ltr" className="truncate text-ink/90">{l.public_url}</span>
             </span>
-            <button className="shrink-0 text-muted transition-colors hover:text-amber" onClick={() => remove(l.id)}>{T.common.remove}</button>
+            <button className="shrink-0 text-muted transition-colors hover:text-ink" onClick={() => remove(l.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
@@ -266,7 +265,7 @@ function StepDraw({ artist, save }) {
         <div className="flex gap-2">
           {[[T.common.yes, true], [T.common.no, false]].map(([t, v]) => (
             <button key={t} onClick={() => pick('sells_tickets', v)}
-              className={`chip min-h-[44px] px-5 py-2 font-mono transition-colors ${f.sells_tickets === v ? 'bg-accent text-[#12160A]' : 'border border-white/15 bg-surface2 text-ink/85 hover:border-accent/40'}`}>{t}</button>
+              className={`chip min-h-[44px] border px-5 py-2 font-mono transition-colors ${f.sells_tickets === v ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{t}</button>
           ))}
         </div>
       </Field>
@@ -283,7 +282,7 @@ function BandPicker({ label, options, value, onPick }) {
       <div className="flex flex-wrap gap-2">
         {options.map((o) => (
           <button key={o} onClick={() => onPick(o)}
-            className={`chip min-h-[44px] px-4 py-2 font-mono transition-colors ${value === o ? 'bg-accent text-[#12160A]' : 'border border-white/15 bg-surface2 text-ink/85 hover:border-accent/40'}`}>{o}</button>
+            className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${value === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
         ))}
       </div>
     </Field>
@@ -333,7 +332,7 @@ function StepExperience({ artist, items, refresh }) {
               {i.title}
               {i.item_date && <span className="ms-2 font-mono text-[10px] text-faint">{i.item_date}</span>}
             </span>
-            <button className="shrink-0 text-muted transition-colors hover:text-amber" onClick={() => remove(i.id)}>{T.common.remove}</button>
+            <button className="shrink-0 text-muted transition-colors hover:text-ink" onClick={() => remove(i.id)}>{T.common.remove}</button>
           </li>
         ))}
       </ul>
@@ -421,10 +420,10 @@ function StepReview({ artist, items, save, nav }) {
       <h2 className="font-display relative mb-2 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.step6Title}</h2>
       <p className="relative mb-4 text-muted">{artist.stage_name || T.onboarding.theArtist} · {artist.genre} · {items.length} {T.onboarding.items}</p>
       {artist.photo_url && (
-        <img src={artist.photo_url} alt="" className="relative mx-auto mb-4 h-32 w-32 rounded-full border-2 border-gold object-cover shadow-[0_0_34px_rgba(242,192,99,0.35)]" />
+        <img src={artist.photo_url} alt="" className="relative mx-auto mb-4 h-32 w-32 rounded-full border border-gold/70 object-cover shadow-[0_0_28px_rgba(242,192,99,0.22)]" />
       )}
       {needConsent ? (
-        <div className="relative rounded-xl border border-accent/40 bg-accent/10 p-4 text-start">
+        <div className="relative rounded-xl border border-line2 bg-surface2 p-4 text-start">
           <p className="mb-1 font-bold text-ink">{T.consent.publishTitle}</p>
           <p className="mb-4 text-sm text-muted">{T.consent.publishBody}</p>
           <div className="flex flex-col gap-2">

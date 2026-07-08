@@ -10,6 +10,14 @@ import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { markPassportDirty, clearPassportDirty, isPassportDirty } from '../../lib/passportState.js'
 import { DEMO } from '../../lib/demo.js'
 
+// Honest receipt destination — only confirmed verified/supporting passport-ok
+// claims actually reach the public Passport; everything else stays private.
+function destinationOf(claim) {
+  const publicBound = claim?.visibility === VISIBILITY.PASSPORT_OK &&
+    ['verified', 'supporting'].includes(claim?.verification_status)
+  return publicBound ? 'your Passport view' : 'your private record'
+}
+
 export default function ClaimReview() {
   const { T } = useLang()
   const { user } = useAuth()
@@ -21,6 +29,12 @@ export default function ClaimReview() {
   const [loadError, setLoadError] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [republishing, setRepublishing] = useState(false)
+  const [receipt, setReceipt] = useState('') // named confirmation receipt (evidence integrity)
+
+  function flashReceipt(msg) {
+    setReceipt(msg)
+    setTimeout(() => setReceipt(''), 3400)
+  }
 
   async function load() {
     setLoadError(false)
@@ -69,6 +83,8 @@ export default function ClaimReview() {
     try {
       await updateClaim(claim.id, { artist_approved: true })
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: true } : c))
+      // The receipt names what was confirmed and where it now appears.
+      flashReceipt(`Added to ${destinationOf(claim)}: “${claim.public_wording || claim.value || human(claim.claim_type)}”`)
     } finally { setToggling(null) }
   }
 
@@ -158,16 +174,19 @@ export default function ClaimReview() {
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h1 className="font-display text-2xl font-bold tracking-[-0.01em] text-ink">{T.claims.title}</h1>
-        <span className="chip bg-[rgba(190,226,78,0.12)] text-[#CBEE72] text-xs">{T.common.aiAssistedBeta}</span>
-        {DEMO && <span className="chip border border-white/15 bg-surface2 text-xs text-muted">{T.demo.sampleData}</span>}
+        <span className="chip border border-line bg-surface2 text-xs text-muted">{T.common.aiAssistedBeta}</span>
+        {DEMO && <span className="chip border border-line bg-surface2 text-xs text-muted">{T.demo.sampleData}</span>}
       </div>
       <p className="mb-4 text-sm text-muted">{T.claims.subtitle}</p>
 
       {/* Unpublished-changes banner — edits are private until re-published to the
           immutable public snapshot (so buyers never see silent mid-view changes). */}
       {artist.published && dirty && (
-        <div className="card mb-4 border border-amber/40 bg-[rgba(227,154,75,0.08)]" role="status">
-          <p className="font-bold text-[#F0B478]">{T.claims.applyTitle}</p>
+        <div className="card mb-4" role="status">
+          <p className="flex items-center gap-2 font-bold text-ink">
+            <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-amber" />
+            {T.claims.applyTitle}
+          </p>
           <p className="mb-3 mt-1 text-xs text-muted">{T.claims.applyBody}</p>
           <button className="btn-primary w-full" onClick={republish} disabled={republishing}>
             {republishing ? <Spinner /> : T.claims.applyCta}
@@ -179,7 +198,7 @@ export default function ClaimReview() {
           artist exactly what's exposed (transparency); editing is via the profile. */}
       {hasDraw && (
         <div className="card mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-gold">{T.claims.drawTitle}</p>
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.claims.drawTitle}</p>
           <div className="space-y-2">
             {artist.lineup_frequency_band && <DrawLine label={T.passport.drawFrequency} value={artist.lineup_frequency_band} T={T} />}
             {artist.sells_tickets != null && <DrawLine label={T.passport.drawSellsTickets} value={artist.sells_tickets ? T.common.yes : T.common.no} T={T} />}
@@ -187,7 +206,7 @@ export default function ClaimReview() {
             {artist.community_size_band && <DrawLine label={T.passport.drawCommunity} value={artist.community_size_band} T={T} />}
           </div>
           <p className="mt-2 text-xs text-muted">{T.claims.drawNote}</p>
-          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-gold hover:underline">{T.claims.drawEditHint}</Link>
+          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-white/20 hover:text-ink">{T.claims.drawEditHint}</Link>
         </div>
       )}
 
@@ -215,7 +234,7 @@ export default function ClaimReview() {
       {/* Passport-ok claims */}
       {passportOk.length > 0 && (
         <div className="mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#CBEE72]">{T.claims.passportOk} ({passportOk.length})</p>
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.claims.passportOk} ({passportOk.length})</p>
           <div className="space-y-2">
             {passportOk.map((c) => (
               <ClaimRow key={c.id} claim={c} onToggle={toggle} toggling={toggling} T={T}
@@ -249,9 +268,17 @@ export default function ClaimReview() {
       )}
 
       {!empty && (
-        <Link to={`/passport/${artist.id}`} className="btn-primary mt-4 block w-full text-center">
+        <Link to={`/passport/${artist.id}`} className="btn-ghost mt-4 block w-full text-center">
           {T.dashboard.viewPublic}
         </Link>
+      )}
+
+      {/* named receipt — says WHAT was confirmed and WHERE it now appears */}
+      {receipt && (
+        <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-[#141B12] px-3.5 py-2.5 text-xs font-semibold text-ink shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+          <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
+          <span className="truncate">{receipt}</span>
+        </div>
       )}
     </PageShell>
   )
@@ -264,7 +291,7 @@ function DrawLine({ label, value, T }) {
         <span className="truncate">{label}</span>
         <BandPill>{value}</BandPill>
       </span>
-      <span className="chip shrink-0 bg-[rgba(190,226,78,0.12)] text-[#CBEE72] text-xs">{T.claims.alwaysVisible}</span>
+      <span className="chip shrink-0 bg-white/[0.05] text-muted text-xs">{T.claims.alwaysVisible}</span>
     </div>
   )
 }
@@ -277,7 +304,7 @@ function VisibilityToggle({ isPassportOk, busy, onClick, T }) {
       disabled={busy}
       className={`chip min-h-[40px] shrink-0 px-3 py-1.5 text-xs font-bold transition ${
         isPassportOk
-          ? 'bg-[rgba(190,226,78,0.12)] text-[#CBEE72] hover:bg-[rgba(190,226,78,0.2)]'
+          ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72] hover:bg-[rgba(190,226,78,0.15)]'
           : 'border border-white/15 bg-white/[0.04] text-muted hover:bg-white/[0.08]'
       }`}
     >
@@ -362,38 +389,40 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
 
   const hasPending = !isConfirmed && !!link
 
-  // ── Proof-unit anatomy: claim (bold) → context (muted) → footer
-  //    [band pill · method label · reviewed date]. The method IS the message.
+  // ── Proof-unit anatomy (evidence integrity): the EXACT claim wording as it
+  //    will appear (bold) → the concrete source (method label + identifiable
+  //    reference, e.g. "numbered event listings #4–#21") → honesty line —
+  //    all BEFORE any confirm button. The method IS the message.
   const methodKey = methodLabelFor({ method_label: claim.method_label, verification_status: claim.verification_status, expires_at: claim.expires_at })
-  const claimTitle = claim.public_wording || human(claim.claim_type)
+  const claimTitle = claim.public_wording || claim.value || human(claim.claim_type)
+  const bandText = claim.public_wording && claim.value && claim.value !== claim.public_wording ? claim.value : null
+  const sourceReference = claim.reason_code ? String(claim.reason_code) : human(claim.source_type)
   const reviewedOn = fmtDate(claim.reviewed_at || claim.updated_at || claim.created_at)
 
   return (
     <div className={`card transition ${busy ? 'opacity-60' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          {/* the claim, bold — what is being said */}
+          {/* (1) the exact claim wording — what will appear, verbatim */}
           <p className="text-[19px] font-bold leading-snug text-ink">{claimTitle}</p>
-          {/* the context, muted — where the claim came from */}
-          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
-            {human(claim.claim_type)}
-            {claim.reason_code && <> · {human(claim.reason_code)}</>}
-          </p>
-          {/* footer row: band + method label + reviewed date */}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {claim.value && <BandPill>{claim.value}</BandPill>}
+          {/* context, muted — the claim's category */}
+          <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{human(claim.claim_type)}</p>
+          {/* (2) footer row: band + method label + concrete source reference + reviewed date */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {bandText && <BandPill>{bandText}</BandPill>}
             <MethodLabel label={T.methodLabel[methodKey] || human(methodKey)} confirmed={isConfirmed || methodKey === 'producer-confirmed'} />
+            {sourceReference && <span className="font-mono text-[10px] text-faint">{sourceReference}</span>}
             {reviewedOn && <span className="font-mono text-[10px] text-faint">{T.radar.reviewedOn(reviewedOn)}</span>}
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {claim.artist_approved && (
-              <span className="chip bg-[rgba(190,226,78,0.12)] text-[#CBEE72] text-xs">✓ {T.claims.approvedChip}</span>
+              <span className="chip bg-[rgba(190,226,78,0.10)] text-[#CBEE72] text-xs">✓ {T.claims.approvedChip}</span>
             )}
             {isFlagged && (
-              <span className="chip bg-[rgba(227,154,75,0.15)] text-[#F0B478] text-xs">⚑ {T.claims.flaggedChip}</span>
+              <span className="chip bg-[rgba(227,154,75,0.10)] text-[#F0B478] text-xs">{T.claims.flaggedChip}</span>
             )}
             {hasPending && (
-              <span className="chip bg-[rgba(70,220,194,0.12)] text-[#82E8D6] text-xs">⏳ {T.producer.pendingChip}</span>
+              <span className="chip bg-[rgba(70,220,194,0.10)] text-[#82E8D6] text-xs">{T.producer.pendingChip}</span>
             )}
           </div>
         </div>
@@ -418,11 +447,14 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
         </p>
       )}
 
-      {/* A8 review actions — single-tap, shown until the artist decides */}
+      {/* A8 review actions — single-tap; the confirm button NAMES what it confirms */}
       {needsReview && !isFlagged && (
         <div className="mt-3 flex flex-wrap gap-2 border-t border-white/[0.08] pt-3">
-          <button className="btn-primary min-w-[110px] flex-1 text-sm" onClick={() => onApprove(claim)} disabled={busy}>
-            {busy ? <Spinner /> : `✓ ${T.claims.approve}`}
+          <button
+            className="flex min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-white/[0.04] px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+            onClick={() => onApprove(claim)} disabled={busy}
+            aria-label={`${T.claims.approve}: ${claimTitle}`}>
+            {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{T.claims.approve}: “{claimTitle}”</span></>}
           </button>
           <button className="btn-ghost text-sm" onClick={() => setCorrecting((v) => !v)} disabled={busy}>{T.claims.correct}</button>
           <button className="btn-ghost text-sm" onClick={() => onFlag(claim)} disabled={busy}>{T.claims.flag}</button>
@@ -444,22 +476,22 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
       )}
 
       {!isConfirmed && (
-        <button className="mt-1 min-h-[40px] text-xs text-muted transition-colors hover:text-gold" onClick={() => setOpen((o) => !o)}>
+        <button className="mt-1 min-h-[40px] text-xs text-muted transition-colors hover:text-ink" onClick={() => setOpen((o) => !o)}>
           {T.producer.requestTitle}
         </button>
       )}
       {open && !isConfirmed && (
         <div className="mt-2 border-t border-white/[0.08] pt-2">
-          {reqError && <p className="mb-2 text-xs text-amber">{reqError}</p>}
+          {reqError && <p className="mb-2 text-xs text-[#F0B478]">{reqError}</p>}
           {link ? (
             <>
               <p className="mb-1 text-xs text-muted">{T.producer.linkReady}</p>
-              <p className="break-all text-xs text-gold" dir="ltr">{link}</p>
+              <p className="break-all font-mono text-xs text-ink/90" dir="ltr">{link}</p>
               <div className="mt-2 flex gap-2">
                 <button className="btn-ghost flex-1 text-xs" onClick={() => { navigator.clipboard?.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>
                   {copied ? T.producer.copied : T.producer.copyLink}
                 </button>
-                <button className="px-2 text-xs text-muted hover:text-amber" onClick={() => setLink('')} aria-label="clear">×</button>
+                <button className="px-2 text-xs text-muted hover:text-ink" onClick={() => setLink('')} aria-label="clear">×</button>
               </div>
             </>
           ) : (
@@ -467,7 +499,7 @@ function ClaimRow({ claim, onToggle, toggling, T, canPublish, onApprove, onCorre
               <p className="mb-2 text-xs text-muted">{T.producer.requestHelp}</p>
               <input className="field text-sm" type="email" dir="ltr" placeholder={T.producer.requestEmail}
                 value={email} onChange={(e) => setEmail(e.target.value)} />
-              <button className="btn-primary mt-2 w-full text-sm" onClick={generate} disabled={reqBusy}>
+              <button className="btn-ghost mt-2 w-full text-sm" onClick={generate} disabled={reqBusy}>
                 {reqBusy ? <Spinner /> : T.producer.requestCta}
               </button>
             </>

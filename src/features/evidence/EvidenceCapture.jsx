@@ -195,7 +195,7 @@ export default function EvidenceCapture() {
           {PATHS.map((p) => (
             <div key={p.key} className="card">
               <div className="mb-2 flex items-center gap-3">
-                <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold/40 font-mono text-sm text-gold">{p.icon}</span>
+                <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line2 font-mono text-sm text-muted">{p.icon}</span>
                 <div className="min-w-0">
                   <p className="font-display text-base font-bold text-ink">{p.title}</p>
                   <p className="text-xs text-muted">{p.desc}</p>
@@ -204,7 +204,7 @@ export default function EvidenceCapture() {
               <div className="flex flex-wrap gap-2">
                 {p.intents.map((k) => (
                   <button key={k} type="button" onClick={() => { setIntent(k); setError('') }}
-                    className="min-h-[44px] rounded-xl border border-white/[0.12] bg-surface2 px-3 py-2 text-sm font-semibold text-ink/90 transition-colors hover:border-accent/50">
+                    className="min-h-[44px] rounded-xl border border-white/[0.12] bg-surface2 px-3 py-2 text-sm font-semibold text-ink/90 transition-colors hover:border-line2">
                     {T.evidence.intents[k]}
                   </button>
                 ))}
@@ -219,7 +219,7 @@ export default function EvidenceCapture() {
         <div className="card mb-4">
           <div className="mb-1 flex items-center justify-between">
             <p className="font-display text-base font-bold text-ink">{T.evidence.intents[intent]}</p>
-            <button type="button" className="min-h-[40px] text-xs text-muted transition-colors hover:text-gold" onClick={() => { setIntent(null); resetForms() }}>
+            <button type="button" className="min-h-[40px] text-xs text-muted transition-colors hover:text-ink" onClick={() => { setIntent(null); resetForms() }}>
               {T.evidence.changeIntent}
             </button>
           </div>
@@ -237,7 +237,7 @@ export default function EvidenceCapture() {
                 <div className="flex flex-wrap gap-2">
                   {BANDS.frequency.map((o) => (
                     <button key={o} onClick={() => setBand(o)}
-                      className={`chip min-h-[44px] px-4 py-2 font-mono transition-colors ${band === o ? 'bg-accent text-[#12160A]' : 'border border-white/15 bg-surface2 text-ink/85 hover:border-accent/40'}`}>{o}</button>
+                      className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${band === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-white/15 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
                   ))}
                 </div>
               </Field>
@@ -318,12 +318,12 @@ export default function EvidenceCapture() {
       {/* submitted evidence */}
       {evidence.length > 0 && (
         <div className="card mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-gold">{T.evidence.collected}</p>
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.collected}</p>
           <ul className="space-y-2">
             {evidence.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface2 px-3 py-2 text-sm">
                 <span className="min-w-0 truncate text-ink/90">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
-                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-[rgba(190,226,78,0.12)] text-[#CBEE72]' : 'bg-white/[0.06] text-muted'}`}>
+                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72]' : 'bg-white/[0.05] text-muted'}`}>
                   {e.status === 'processed' ? T.evidence.processed : T.evidence.pending}
                 </span>
               </li>
@@ -354,7 +354,7 @@ export default function EvidenceCapture() {
       {/* resulting claims */}
       {!processing && claims.length > 0 && (
         <div className="card mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[#CBEE72]">{T.evidence.results}</p>
+          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.results}</p>
           <ul className="space-y-2">
             {claims.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface2 px-3 py-2 text-sm">

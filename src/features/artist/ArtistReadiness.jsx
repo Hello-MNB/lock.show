@@ -104,12 +104,10 @@ export default function ArtistReadiness() {
         ))}
       </div>
 
-      {/* one dominant next step — the coach's move, warm and quiet */}
-      <div className="relative overflow-hidden rounded-2xl border border-accent/25 bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-12 h-32"
-          style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.12), transparent 70%)' }} />
-        <p className="relative mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-gold">{T.readiness.nextStep}</p>
-        <p className="font-display relative text-lg font-bold tracking-[-0.01em] text-ink">{data.nextAction}</p>
+      {/* one dominant next step — the coach's move, quiet and typographic */}
+      <div className="rounded-2xl border border-line bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+        <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{T.readiness.nextStep}</p>
+        <p className="font-display text-lg font-bold tracking-[-0.01em] text-ink">{data.nextAction}</p>
       </div>
     </PageShell>
   )
