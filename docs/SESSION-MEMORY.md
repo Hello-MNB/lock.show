@@ -46,6 +46,11 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 8. Send counsel email (docs/COUNSEL-EMAIL-DRAFT.md).
 9. Later, low urgency: rotate Anthropic + Tavily keys (both pasted in chat).
 
+## Document governance (8 Jul, owner directive)
+- docs/GLOSSARY.md is BINDING for all agents/documents (created after R00 rejected privacy v0.2 for דרכון/מראה/Netlify/no-AI violations).
+- Repo docs/ = SSOT for corrected documents; Drive stale-file actions listed in docs/DRIVE-HYGIENE.md (no junk that confuses future agents).
+- Privacy v0.2: R00 base rejected → copy/regulation agent corrects (glossary + facts: Vercel, Anthropic ACTIVE, GA4 consent-gated) → published as temporary version pending counsel.
+
 ## Standing instructions from Maria
 - LANGUAGE LAW (8 Jul): EN and HE content each fully professional, localized per language, NEVER mixed in one view. LOCALIZATION MATRIX (docs/LOCALIZATION-MATRIX.md) must stay current. Docs managed at the same effectiveness level. Cheap resources allocated, supervised.
 - Answer ALWAYS in English. Task board at end of EVERY chat reply, sorted by priority.
