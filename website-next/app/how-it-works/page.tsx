@@ -354,7 +354,7 @@ export default function HowItWorks() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={APP_URL}
+              href={`${APP_URL}/signup`}
               style={{
                 display: 'inline-block',
                 padding: '14px 28px',

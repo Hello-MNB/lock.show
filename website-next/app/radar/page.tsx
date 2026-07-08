@@ -295,6 +295,7 @@ export default function Radar() {
             {evidenceStates.map((s) => (
               <div
                 key={s.state}
+                className="evidence-state-row"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'minmax(140px, 200px) 1fr',
@@ -333,6 +334,12 @@ export default function Radar() {
             ))}
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 480px) {
+            .evidence-state-row { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </section>
 
       {/* RADAR VS PASSPORT */}
@@ -471,7 +478,7 @@ export default function Radar() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={APP_URL}
+              href={`${APP_URL}/signup`}
               style={{
                 display: 'inline-block',
                 padding: '15px 32px',

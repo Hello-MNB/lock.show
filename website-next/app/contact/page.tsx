@@ -54,14 +54,17 @@ export default function Contact() {
 
       {/* CONTACT GRID */}
       <section style={{ padding: '64px 24px 80px' }}>
-        <div style={{
-          maxWidth: '960px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
-          gap: '48px',
-          alignItems: 'start',
-        }}>
+        <div
+          className="contact-grid"
+          style={{
+            maxWidth: '960px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+            gap: '48px',
+            alignItems: 'start',
+          }}
+        >
 
           {/* FORM COLUMN */}
           <div>
@@ -169,6 +172,12 @@ export default function Contact() {
 
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 640px) {
+            .contact-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </section>
 
       {/* CTA BAND */}
@@ -191,7 +200,7 @@ export default function Contact() {
             Registration is open — go directly to the app.
           </p>
           <a
-            href={APP_URL}
+            href={`${APP_URL}/signup`}
             style={{
               display: 'inline-block',
               padding: '14px 32px',

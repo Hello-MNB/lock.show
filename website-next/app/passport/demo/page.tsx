@@ -361,7 +361,7 @@ export default function PassportDemo() {
             Build your own Passport. Get verified. Share with booking managers.
           </p>
           <a
-            href={APP_URL}
+            href={`${APP_URL}/signup`}
             style={{
               display: 'inline-block',
               padding: '12px 28px',

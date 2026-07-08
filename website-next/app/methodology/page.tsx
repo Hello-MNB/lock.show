@@ -5,8 +5,6 @@ export const metadata: Metadata = {
   description: 'Every claim in a GIGPROOF Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 
-import { APP_URL } from '@/lib/app-url'
-
 const methodLabels = [
   {
     label: 'PRODUCER-CONFIRMED',
@@ -134,6 +132,7 @@ export default function Methodology() {
             {methodLabels.map((m, i) => (
               <div
                 key={i}
+                className="method-label-row"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'minmax(200px, 260px) 1fr',
@@ -185,6 +184,12 @@ export default function Methodology() {
             ))}
           </div>
         </div>
+
+        <style>{`
+          @media (max-width: 640px) {
+            .method-label-row { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
       </section>
 
       {/* CLAIM PIPELINE — dark */}

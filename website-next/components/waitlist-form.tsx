@@ -70,9 +70,9 @@ export default function WaitlistForm() {
       <div
         style={{
           padding: '28px 24px',
-          border: '1px solid rgba(91,63,214,0.25)',
+          border: '1px solid rgba(200,240,77,0.25)',
           borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'rgba(91,63,214,0.05)',
+          backgroundColor: 'rgba(200,240,77,0.05)',
         }}
         role="status"
       >
@@ -92,7 +92,7 @@ export default function WaitlistForm() {
         <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', margin: 0, lineHeight: 1.6 }}>
           {state === 'done'
             ? "We'll only use your email to contact you about GIGPROOF beta access. No spam, no third parties."
-            : "This email is already registered - we'll be in touch about beta access."}
+            : "This email is already registered — we'll be in touch about beta access."}
         </p>
       </div>
     )

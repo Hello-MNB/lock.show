@@ -240,7 +240,7 @@ export default function ArtistsPage() {
           {/* CTAs */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
-              href={APP_URL}
+              href={`${APP_URL}/signup`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -858,7 +858,7 @@ export default function ArtistsPage() {
             }}
           >
             <a
-              href={APP_URL}
+              href={`${APP_URL}/signup`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
