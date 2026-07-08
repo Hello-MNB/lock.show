@@ -7,7 +7,8 @@
 
 | Pri | # | Task | Demo env | Real launch | Notes — what's needed for real |
 |---|---|---|---|---|---|
-| P0-1 | 23 | Legal gate (counsel sign-off on consent texts) | ⬜ | 🔴 OPEN RISK — public signup under DRAFT texts | No migration. **YOU:** send the ready email draft (docs/COUNSEL-EMAIL-DRAFT.md). |
+| P0-1 | 23 | Legal gate (counsel sign-off) | ⬜ | 🟡 drafts exist, unreviewed | No migration. HE drafts for terms/privacy/accessibility now in docs/legal/ ✅. **YOU:** send counsel email + fill placeholders (entity/ח.פ., city, refund policy, accessibility coordinator). |
+| P0-8 | 24 | Cookie-consent banner (GA4 Consent Mode v2) | ✅ | ✅ built, deploys with next live push | No migration. Implemented on app + site, bilingual EN/HE, analytics fire only after consent. |
 | P0-2 | 3 | Pasted link → evidence → real AI labeling | ✅ (stub AI) | 🟡 LIVE but stub AI | No migration. **YOU:** add Anthropic key to Vercel v6-b4 env → Redeploy. Key already verified. |
 | P0-3 | 5 | Consent handshake (invite → artist approves w/ scopes → revoke) | ✅ full | 🟡 UI live, degrades gracefully | **MIGRATION 027 — awaiting YOUR approval.** One approval also unlocks #16 + #17. |
 | P0-4 | 8 | Manual payment (Bit + reference code + activation) | ✅ | ✅ LIVE mechanics | No migration. **YOU:** fixed price (rec ₪179) + Green Invoice signup for receipts. |
@@ -27,7 +28,10 @@
 | P1-6 | 6 | Workspace switcher actually swaps the screen-set | ✅ | 🟡 visible, switch is a no-op | No migration. Routing refactor (pairs naturally with #16/#17). |
 | P1-7 | 9 | Plan enforcement (Passport/Momentum/Roster gating) | 🔴 | 🔴 display-only | Migration later (plan flags → 028). Build after price decision (P0-4). |
 | P1-8 | 14b | 2-proof publish gate on public passport | ⬜ | 🔴 | No migration. Small build; passport itself is live (see DONE #14). |
-| P1-9 | 21b | Hebrew localization pass (app + site) | ⬜ | 🔴 | No migration. Final pass before Hebrew launch — last P1 by design. |
+| P1-9 | 21b | Hebrew localization pass (app + site) | ⬜ | 🔴 | No migration. Final pass before Hebrew launch. Tracked in docs/LOCALIZATION-MATRIX.md (live measurement). |
+| P1-10 | 25 | Legal pages on site (/terms /privacy /accessibility, bilingual, draft-labeled) | ⬜ | 🟡 in build now | No migration. Agent building; footer gets consent-preferences control. |
+| P1-11 | 26 | Resend — transactional auth emails from own domain | ⬜ | 🔴 | No migration. After domain (#22). **YOU:** Resend signup (free ≤3,000/mo). **ME:** wire Supabase SMTP. |
+| P1-12 | 27 | Accessibility pass (ת"י 5568 / WCAG AA) + update statement | ⬜ | 🔴 | No migration. Keyboard/contrast/screen-reader audit → fill 'known limitations' in ACCESSIBILITY-HE. |
 
 ## P2 — GROWTH & POLISH (after launch)
 
@@ -54,5 +58,6 @@
 - Everything else: NO migration — live already or pure code builds.
 
 ## CHANGELOG
+- v2.1 (8 Jul 2026): +P0-8 consent banner (done) · #23 upgraded to drafts-exist · +P1-10/11/12 legal pages, Resend, accessibility · GA4 + Tavily closed.
 - v2.0 (8 Jul 2026): Re-sorted by launch priority (P0/P1/P2/DONE) per Maria's request; split #14→14b and #21→21b to track remaining slices.
 - v1.0 (8 Jul 2026): Initial board — 23 tasks by number.
