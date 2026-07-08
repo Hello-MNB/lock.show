@@ -24,7 +24,7 @@ const content: LegalContent = {
       {
         heading: '1. מי אנחנו',
         paragraphs: [
-          'GIGPROOF ("השירות", "אנחנו") — כלי הפחתת-סיכון טרום-הזמנה לאמרגנים, המסייע להעריך אמן לא-מוכר על בסיס ראיות מתויגות-שיטה. בעל השליטה במאגר: [שם העוסק/החברה, ח.פ., כתובת]. איש קשר לפרטיות: [error4ik@gmail.com / כתובת].',
+          'GIGPROOF ("השירות", "אנחנו") — כלי הפחתת-סיכון טרום-הזמנה לאמרגנים, המסייע להעריך אמן לא-מוכר על בסיס ראיות מתויגות-שיטה. בעל השליטה במאגר: [שם העוסק/החברה, ח.פ., כתובת]. איש קשר לפרטיות: [[אימייל] / כתובת].',
         ],
       },
       {
@@ -40,7 +40,7 @@ const content: LegalContent = {
       {
         heading: '3. למה אנחנו משתמשים במידע (מטרות ובסיס חוקי)',
         paragraphs: [
-          'לתפעול השירות והצגת ה-Passport/Mirror; לאימות ראיות; לחיובים והפקת קבלות; לשיפור ואבטחה; לעמידה בחובות-דין. הבסיס: ביצוע חוזה, הסכמה (אנליטיקס/שיווק), ואינטרס לגיטימי מאוזן.',
+          'לתפעול השירות והצגת הפספורט ותצוגת האמן הפרטית; לאימות ראיות; לחיובים והפקת קבלות; לשיפור ואבטחה; לעמידה בחובות-דין. הבסיס: ביצוע חוזה, הסכמה (אנליטיקס/שיווק), ואינטרס לגיטימי מאוזן.',
         ],
       },
       {
@@ -97,7 +97,7 @@ const content: LegalContent = {
       {
         heading: '1. Who We Are',
         paragraphs: [
-          'GIGPROOF ("the Service", "we") is a pre-booking risk-reduction tool for booking managers, helping them evaluate an unfamiliar artist based on method-labelled evidence. Database controller: [business/company name, registration no., address]. Privacy contact: [error4ik@gmail.com / address].',
+          'GIGPROOF ("the Service", "we") is a pre-booking risk-reduction tool for booking managers, helping them evaluate an unfamiliar artist based on method-labelled evidence. Database controller: [business/company name, registration no., address]. Privacy contact: [[אימייל] / address].',
         ],
       },
       {

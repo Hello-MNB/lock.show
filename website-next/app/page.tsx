@@ -1237,8 +1237,8 @@ export default function HomePage() {
               }}
             >
               GIGPROOF has no algorithm that scores artists. No ranking. No &ldquo;top performers.&rdquo;
-              No percentage telling a booker whether to say yes. We show evidence, labelled by
-              how it was collected — and we let the booker decide.
+              No percentage telling a booking manager whether to say yes. We show evidence, labelled by
+              how it was collected — and we let the booking manager decide.
             </p>
 
             <div

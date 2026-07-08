@@ -30,7 +30,7 @@ const methodLabels = [
     label: 'SELF-REPORTED · UNVERIFIED',
     title: 'Artist stated; not yet confirmed by a third party.',
     body: 'The artist logged the gig but no external party has confirmed it. This appears on the private Artist Radar only. It never reaches the public Passport until a producer confirms or a document is reviewed.',
-    strength: 'Mirror only — never public',
+    strength: 'Private to the artist — never public',
   },
 ]
 

@@ -105,7 +105,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             borderRadius: 'var(--radius-sm)',
           }}>
             <span aria-hidden="true" style={{ fontSize: '0.95rem', flexShrink: 0, lineHeight: 1.4 }}>
-              ⚠️
+              
             </span>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
