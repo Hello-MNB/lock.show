@@ -144,6 +144,17 @@ export const T = {
     getPassport: 'Issue official Passport',
   },
   onboarding: {
+    // ── Minimum viable entry (owner order, 8 Jul): 2 screens, 4 fields.
+    // The Radar collects everything else — these keys carry that promise.
+    entryStepLabels: ['Who you are', 'Strongest link'],
+    entryTitle: 'Your name on the flyer',
+    entryHint: 'Two quick questions and your Radar takes over — it collects everything else with you, at your pace.',
+    entryOptional: 'optional',
+    entryLinkTitle: 'Your strongest link',
+    entryLinkHint: 'One link that shows you best — Instagram or SoundCloud. The Radar scans it and starts building your proof.',
+    entryDeferNote: 'Photo, gigs, numbers, the rest of your links — nothing else is asked now. Your Radar surfaces each one as a quiet next step, when it matters.',
+    entryStart: 'Open my Radar',
+    entryStartScan: 'Scan it — open my Radar',
     goalTitle: 'What are you trying to achieve?',
     goalWhy: 'Your goal decides which evidence we prioritize — it never changes what is true.',
     goalNotSureHint: '"Not sure yet" is a completely valid answer — we\'ll suggest evidence paths anyway.',
@@ -658,6 +669,7 @@ export const T = {
     // ── A9 Artist Radar (the artist's private surface — LF-A1) ──
     artistTitle: 'Artist Radar',
     artistSubtitle: 'Private to you and approved collaborators.',
+    scanKickoff: 'Your Radar is live — strengths appear first; anything that needs you waits quietly below.',
     nextMove: 'Your clearest next move',
     nextActionEyebrow: 'Recommended next action',
     timeHint: (m) => `About ${m} minutes · your input is saved`,
@@ -771,6 +783,14 @@ export const T = {
         streaming: 'Streaming profile',
         community: 'Community size (band)',
         ticketExport: 'Ticket / settlement export',
+        // deferred from the shortened onboarding (owner order, 8 Jul)
+        genre: 'Genre',
+        goal: 'Your goal',
+        regions: 'Regions you play',
+        whatsapp: 'WhatsApp for coordination',
+        freqBand: 'Performance frequency (band)',
+        sellsTickets: 'Sells own tickets',
+        priceBand: 'Price / guarantee (band)',
       },
     },
     rule: {
