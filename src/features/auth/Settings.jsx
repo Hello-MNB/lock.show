@@ -141,7 +141,7 @@ export default function Settings() {
           <div className="space-y-2">
             <p className="text-sm font-bold text-amber">{T.settings.deleteSure}</p>
             <div className="flex gap-2">
-              <button className="min-h-[44px] flex-1 rounded-xl border border-amber bg-amber py-2 text-sm font-bold text-[#231506] transition hover:brightness-110"
+              <button className="min-h-[44px] flex-1 rounded-xl border border-amber bg-amber py-2 text-sm font-bold text-bg transition hover:brightness-110"
                 onClick={handleDeleteAccount} disabled={deleteBusy}>
                 {deleteBusy ? T.common.loading : T.settings.deleteConfirm}
               </button>

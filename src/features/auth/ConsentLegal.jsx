@@ -105,7 +105,7 @@ function ConsentBox({ checked, onChange, title, label, required }) {
     <label className={`card flex cursor-pointer items-start gap-3 transition ${checked ? 'border-accent/50' : 'hover:bg-raise'}`}>
       <input
         type="checkbox"
-        className="mt-1 h-4 w-4 shrink-0 accent-[#BEE24E]"
+        className="mt-1 h-4 w-4 shrink-0 accent-accent"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />

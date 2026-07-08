@@ -20,13 +20,18 @@ export default function BottomNav() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors min-h-[44px] ${
-                isActive ? 'text-accent' : 'text-muted hover:text-ink'
+              `relative flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors min-h-[44px] ${
+                isActive ? 'text-ink' : 'text-muted hover:text-ink'
               }`
             }
           >
-            <NavIcon name={tab.key} />
-            <span>{tab.label}</span>
+            {({ isActive }) => (
+              <>
+                {isActive && <span aria-hidden="true" className="absolute top-0 h-0.5 w-6 rounded-full bg-accent" />}
+                <NavIcon name={tab.key} />
+                <span>{tab.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

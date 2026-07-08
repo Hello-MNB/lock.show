@@ -10,8 +10,8 @@ export default function AuthScene({ children, tagline = 'The evidence behind the
       <div className="relative hidden flex-1 overflow-hidden lg:block" aria-hidden="true">
         <img src="/assets/gigproof-live-hero.webp" alt=""
           className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/45 to-bg" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-bg/30 via-bg/45 to-bg" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-bg/25" />
         <div className="absolute bottom-10 left-10 right-16 max-w-md">
           <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
             Pre-booking proof

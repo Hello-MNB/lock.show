@@ -37,7 +37,7 @@ export default function BookerHome() {
         </div>
 
         {/* ── HERO — one field, one lime action ── */}
-        <div className="relative overflow-hidden rounded-[22px] border border-line bg-surface p-7 shadow-[0_24px_60px_-24px_rgba(0,0,0,.75)]">
+        <div className="relative overflow-hidden rounded-[22px] border border-line bg-surface p-7 shadow-card">
           {/* warm backstage light, purely atmospheric */}
           <div aria-hidden="true"
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(242,192,99,.12)_0%,rgba(242,192,99,0)_55%)]" />

@@ -94,7 +94,7 @@ export default function AgencyRadarUniverse({ artists, claims }) {
                 style={{ left: `${x}%`, top: `${y}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
                 aria-label={`${a.stage_name} — ${st.key}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center overflow-visible rounded-full border-2 bg-surface2 transition-transform hover:scale-105 ${RING[st.key]} ${st.pending > 0 ? 'shadow-[0_0_18px_rgba(190,226,78,0.25)]' : ''}`}>
+                <span className={`relative mx-auto grid h-14 w-14 place-items-center overflow-visible rounded-full border-2 bg-surface2 transition-transform hover:scale-105 ${RING[st.key]} ${st.pending > 0 ? 'shadow-[0_0_18px_rgba(190,226,78,0.1)]' : ''}`}>
                   {a.photo_url
                     ? <img src={a.photo_url} alt="" className="h-full w-full rounded-full object-cover" />
                     : <span className="font-display text-base text-ink">{(a.stage_name || '?').slice(0, 1)}</span>}

@@ -25,15 +25,18 @@ export default function SideNav() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium border transition-colors ${
-                isActive
-                  ? 'bg-accent/[0.07] border-accent/15 text-accent'
-                  : 'border-transparent text-muted hover:text-ink hover:bg-surface'
+              `relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium transition-colors ${
+                isActive ? 'text-ink' : 'text-muted hover:text-ink hover:bg-surface'
               }`
             }
           >
-            <NavIcon name={tab.key} />
-            <span>{tab.label}</span>
+            {({ isActive }) => (
+              <>
+                {isActive && <span aria-hidden="true" className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-accent" />}
+                <NavIcon name={tab.key} />
+                <span>{tab.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -17,7 +17,7 @@ const BandPill = UI.BandPill || function BandPill({ children }) {
   )
 }
 
-const STATUS_STYLE = { new: 'bg-accent/20 text-accent', replied: 'bg-teal/15 text-teal', closed: 'bg-surface2 text-muted' }
+const STATUS_STYLE = { new: 'bg-accent/10 text-accent', replied: 'bg-teal/10 text-teal', closed: 'bg-surface2 text-muted' }
 
 export default function AgencyRequestsInbox() {
   const { T } = useLang()

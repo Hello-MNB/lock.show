@@ -43,7 +43,7 @@ export default function ContextSwitcher() {
       >
         <p className="text-[10px] font-medium text-muted uppercase tracking-wide">{typeLabel}</p>
         {active?.organization?.name && (
-          <p className="text-sm font-medium text-soft truncate mt-0.5">
+          <p className="text-sm font-medium text-ink truncate mt-0.5">
             {active.organization.name}
             {hasMultiple && <span className="text-muted ml-1">▾</span>}
           </p>
@@ -69,7 +69,7 @@ export default function ContextSwitcher() {
                   className={`card w-full text-start flex items-center justify-between ${isActive ? 'border-accent' : ''}`}
                 >
                   <div className="min-w-0">
-                    <p className="text-soft text-sm font-medium truncate">{m.organization?.name}</p>
+                    <p className="text-ink text-sm font-medium truncate">{m.organization?.name}</p>
                     <p className="text-xs text-muted">{orgRoleLabel(m.org_role, T)}</p>
                   </div>
                   {isActive && <span className="text-accent" aria-label="active">✓</span>}

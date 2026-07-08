@@ -33,7 +33,12 @@ export default function ForgotPassword() {
     return (
       <AuthScene>
         <div className="card text-center">
-          <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface2 text-2xl" aria-hidden>✉️</span>
+          <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface2 text-gold" aria-hidden>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+          </span>
           <h2 className="mb-2 text-lg font-bold text-ink">{T.reset.sentTitle}</h2>
           <p className="mb-5 text-sm text-muted">{T.reset.sentBody}</p>
           <Link to="/login" className="text-sm font-semibold text-accent hover:underline">{T.reset.backToLogin}</Link>

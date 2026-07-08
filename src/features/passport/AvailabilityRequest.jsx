@@ -69,9 +69,9 @@ export default function AvailabilityRequest() {
         <p className="mt-2 mb-6 text-sm leading-relaxed text-muted">{T.request.subtitle}</p>
 
         <form onSubmit={submit} noValidate
-          className="rounded-[20px] border border-line bg-surface p-6 shadow-[0_24px_60px_-24px_rgba(0,0,0,.75)]">
+          className="rounded-[20px] border border-line bg-surface p-6 shadow-card">
           {error && (
-            <p role="alert" className="mb-4 rounded-md bg-[rgba(227,154,75,.15)] px-4 py-3 text-sm text-[#F0B478]">
+            <p role="alert" className="mb-4 rounded-md bg-void-bg px-4 py-3 text-sm text-void">
               {error}
             </p>
           )}

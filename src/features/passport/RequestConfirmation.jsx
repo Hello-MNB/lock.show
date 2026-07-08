@@ -60,7 +60,7 @@ export default function RequestConfirmation() {
       <PageShell max="max-w-sm">
         <Wordmark className="mb-10 justify-center" />
 
-        <div className="animate-fade-in rounded-[20px] border border-line bg-surface p-7 text-center shadow-[0_24px_60px_-24px_rgba(0,0,0,.75)]">
+        <div className="animate-fade-in rounded-[20px] border border-line bg-surface p-7 text-center shadow-card">
           {/* lime checkmark — the one warm light */}
           <span aria-hidden="true"
             className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-accent text-2xl font-black text-[#12160A] shadow-[0_10px_26px_-10px_rgba(190,226,78,.6)]">

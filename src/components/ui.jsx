@@ -8,7 +8,7 @@ export function BottomSheet({ open, onClose, title, children }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="absolute inset-0 bg-bg/70" onClick={onClose} />
       <div className="relative w-full sm:max-w-sm bg-surface border-t sm:border border-line2 rounded-t-2xl sm:rounded-2xl p-5 shadow-card"
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
         {title && (
@@ -39,7 +39,7 @@ export function ToastProvider({ children }) {
       <div className="fixed bottom-4 inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} role="status"
-            className="pointer-events-auto flex items-center gap-2.5 rounded bg-[#131A14] border border-line2 px-4 py-2.5 text-sm font-bold text-ink shadow-card animate-fade-in">
+            className="pointer-events-auto flex items-center gap-2.5 rounded bg-surface border border-line2 px-4 py-2.5 text-sm font-bold text-ink shadow-card animate-fade-in">
             <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${t.type === 'warn' ? 'bg-amber' : 'bg-accent'}`} />
             {t.msg}
           </div>

@@ -104,7 +104,7 @@ export default function Members() {
       {activeCount <= 1 && !members.some((m) => m.status === 'invited') && (
         <div className="card mb-4 border border-line text-center">
           <p className="text-sm text-ink mb-3">{T.org.teamOfOne}</p>
-          {isAdmin && <button className="btn-primary w-full" onClick={() => { setInviteErr(''); setInviteOpen(true) }}>{T.org.invite}</button>}
+          {isAdmin && <button className="btn-ghost w-full" onClick={() => { setInviteErr(''); setInviteOpen(true) }}>{T.org.invite}</button>}
         </div>
       )}
 

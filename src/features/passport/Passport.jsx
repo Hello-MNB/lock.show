@@ -40,7 +40,7 @@ export function BandPill({ value }) {
   return (
     <span
       aria-label={`Band: ${value}`}
-      className="inline-flex items-center rounded-full border border-white/25 bg-surface2 px-3 py-[3px] font-mono text-[13px] font-semibold tracking-[-0.01em] text-ink"
+      className="inline-flex items-center rounded-full border border-line2 bg-surface2 px-3 py-[3px] font-mono text-[13px] font-semibold tracking-[-0.01em] text-ink"
     >
       {value}
     </span>
@@ -161,13 +161,13 @@ export default function Passport() {
               className="absolute inset-0 h-full w-full object-cover object-top"
             />
             {/* gradient veil — photo dissolves into the page, one warm light */}
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,11,.25)_0%,rgba(11,12,11,.05)_30%,rgba(11,12,11,.62)_68%,#0B0C0B_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,11,.25)_0%,rgba(11,12,11,.05)_30%,rgba(11,12,11,.62)_68%,rgba(11,12,11,1)_100%)]" />
           </div>
         ) : (
           /* elegant dark hero without a photo — warm gold aura, never a blank */
           <div className="relative h-[240px] w-full overflow-hidden bg-bg2">
             <div className="absolute inset-0 bg-[radial-gradient(90%_120%_at_50%_0%,rgba(242,192,99,.14)_0%,rgba(242,192,99,.04)_45%,rgba(11,12,11,0)_75%)]" />
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(11,12,11,0),#0B0C0B)]" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(11,12,11,0),rgba(11,12,11,1))]" />
           </div>
         )}
 
@@ -250,7 +250,7 @@ export default function Passport() {
         {/* ── ⑤ CONTEXT STRIP — streaming/social/community, explicitly secondary.
                Dashed border = "this is not the evidence" (firewall §streaming) ── */}
         {hasContext && (
-          <section className="mt-10 rounded-[18px] border border-dashed border-white/15 p-5">
+          <section className="mt-10 rounded-[18px] border border-dashed border-line2 p-5">
             <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">
               Context — not a draw metric
             </p>
@@ -266,7 +266,7 @@ export default function Passport() {
                 {links.map((l) => (
                   <a
                     key={l.id} href={l.public_url} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted transition hover:border-white/25 hover:text-ink"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted transition hover:border-line2 hover:text-ink"
                   >
                     <PlatformMark platform={platformOf(l.public_url)} size="h-5 w-5" />
                     {hostOf(l.public_url)} ↗
@@ -310,7 +310,7 @@ export default function Passport() {
       {/* ── the professional action ladder — ONE sheet level (canon P0-6 / B2) ── */}
       <BottomSheet open={sheet} onClose={() => setSheet(false)} title={T.passport.sheetTitle}>
         {receipt ? (
-          <p role="status" className="rounded-md bg-[rgba(190,226,78,.12)] px-4 py-3 text-sm font-semibold text-[#CBEE72]">
+          <p role="status" className="rounded-md bg-good-bg px-4 py-3 text-sm font-semibold text-good">
             ✓ {T.passport.receipt(receipt)}
           </p>
         ) : (
@@ -364,7 +364,7 @@ function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T })
   const reviewed = reviewedAt ? new Date(reviewedAt).toLocaleDateString('en-GB') : null
   const claimIsBand = isBand(claim)
   return (
-    <article className="rounded-[18px] border border-line bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,.75)]">
+    <article className="rounded-[18px] border border-line bg-surface p-5 shadow-card">
       {claimIsBand
         ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
         : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
