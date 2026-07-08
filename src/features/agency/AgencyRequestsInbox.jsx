@@ -5,7 +5,7 @@ import { listRequestsForAgency, updateRequestStatus } from '../../lib/db.js'
 import * as UI from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
-const { PageShell, Wordmark, Loading, EmptyState, ErrorState } = UI
+const { PageShell, Loading, EmptyState, ErrorState } = UI
 
 // Band capsule — mono, bordered, NEVER a bar/gauge (firewall). Prefer the shared
 // ui.jsx BandPill once the foundation ships it; local fallback keeps builds green.
@@ -54,12 +54,12 @@ export default function AgencyRequestsInbox() {
   }
 
   if (loading) return <Loading />
-  if (error) return <PageShell><Wordmark className="mb-6" /><ErrorState title={T.agency.loadError} onRetry={() => { setLoading(true); load() }} /></PageShell>
+  if (error) return <PageShell><ErrorState title={T.agency.loadError} onRetry={() => { setLoading(true); load() }} /></PageShell>
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6">
-        <Wordmark /><Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link>
+      <div className="flex items-center justify-end mb-6">
+        <Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.agency.requests}</h1>
 

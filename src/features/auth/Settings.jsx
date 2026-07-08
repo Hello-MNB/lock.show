@@ -4,7 +4,7 @@ import { useAuth } from './AuthProvider.jsx'
 import { upsertProfile, requestAccountDeletion, hasConsent, recordConsentScope } from '../../lib/db.js'
 import { listIncomingAccessRequests, respondToAccessRequest, revokeArtistAccess } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
-import { PageShell, Wordmark, Field, ErrorNote, LanguageToggle, BottomSheet, Spinner, useToast } from '../../components/ui.jsx'
+import { PageShell, Field, ErrorNote, LanguageToggle, BottomSheet, Spinner, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
 import ContextSwitcher from '../org/ContextSwitcher.jsx'
@@ -214,8 +214,7 @@ export default function Settings() {
 
   return (
     <PageShell max="max-w-md">
-      <div className="mb-7 flex items-center justify-between">
-        <Wordmark />
+      <div className="mb-7 flex items-center justify-end">
         <Link to={role === ROLES.ARTIST ? '/artist/home' : role === ROLES.AGENCY ? '/agency' : '/'}
           className="text-sm text-muted transition hover:text-ink">
           {T.common.back}

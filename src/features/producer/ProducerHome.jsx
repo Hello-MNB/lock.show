@@ -1,6 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider.jsx'
-import { PageShell, Wordmark, LanguageToggle, GpIcon } from '../../components/ui.jsx'
+import { Link } from 'react-router-dom'
+import { PageShell, GpIcon } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 // Producer (מפיק) home. The producer's real action is the no-login magic-link
@@ -8,8 +7,6 @@ import { useLang } from '../../context/LangContext.jsx'
 // role — and links to the received-passports space so it is never orphaned.
 export default function ProducerHome() {
   const { T } = useLang()
-  const { signOut } = useAuth()
-  const nav = useNavigate()
 
   const steps = [
     'An artist asks you to confirm one specific statement — a show, a crowd, a rebooking.',
@@ -19,15 +16,6 @@ export default function ProducerHome() {
 
   return (
     <PageShell max="max-w-md">
-      <div className="mb-8 flex items-center justify-between">
-        <Wordmark />
-        <div className="flex items-center gap-3">
-          <LanguageToggle />
-          <button className="text-sm text-muted transition hover:text-ink"
-            onClick={() => { signOut(); nav('/login') }}>{T.settings.logout}</button>
-        </div>
-      </div>
-
       <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">Producer workspace</p>
       <h1 className="mb-2 text-2xl font-bold text-ink">You confirm — artists prove.</h1>
       <p className="mb-6 text-sm text-muted">

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport } from '../../lib/db.js'
 import { VISIBILITY, SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
-import { PageShell, Wordmark, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
+import { PageShell, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
 import { MethodLabel, BandPill } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
@@ -145,13 +145,11 @@ export default function ClaimReview() {
   if (loading) return <Loading />
   if (loadError) return (
     <PageShell>
-      <Wordmark className="mb-6" />
       <ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} />
     </PageShell>
   )
   if (!artist) return (
     <PageShell>
-      <Wordmark className="mb-6" />
       <EmptyState title={T.dashboard.empty} action={<Link to="/onboarding" className="btn-primary">{T.common.continue}</Link>} />
     </PageShell>
   )
@@ -167,8 +165,7 @@ export default function ClaimReview() {
 
   return (
     <PageShell>
-      <div className="mb-6 flex items-center justify-between">
-        <Wordmark />
+      <div className="mb-6 flex items-center justify-end">
         <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
 

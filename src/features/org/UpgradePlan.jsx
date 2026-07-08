@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getSubscription, requestUpgrade } from '../../lib/orgs.js'
-import { PageShell, Wordmark, Spinner, ErrorNote, Loading, BottomSheet } from '../../components/ui.jsx'
+import { PageShell, Spinner, ErrorNote, Loading, BottomSheet } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 // O5 — Plan comparison + upgrade request (manual pilot, no auto-billing).
@@ -49,8 +49,8 @@ export default function UpgradePlan() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6">
-        <Wordmark /><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link>
+      <div className="flex items-center justify-end mb-6">
+        <Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display text-xl font-bold text-ink mb-1">{T.org.planCompareTitle}</h1>
       <p className="text-xs text-muted mb-1">{T.org.manualNote}</p>

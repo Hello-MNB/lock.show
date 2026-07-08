@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getOrg, updateOrg, deleteOrg, getMembers, transferOwnership } from '../../lib/orgs.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
+import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 const planLabel = (plan, T) => ({ solo: T.org.planSolo, agency: T.org.planAgency, agency_plus: T.org.planAgencyPlus }[plan] || plan)
@@ -62,7 +62,7 @@ export default function OrgSettings() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6"><Wordmark /><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <div className="flex items-center justify-end mb-6"><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{isAgency ? T.org.settingsTitleAgency : T.org.settingsTitleSolo}</h1>
       <ErrorNote>{error}</ErrorNote>
 

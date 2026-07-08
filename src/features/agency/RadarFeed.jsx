@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getRadarInputs } from '../../lib/orgs.js'
 import { computeRadarSignals } from '../../lib/radar.js'
-import { PageShell, Wordmark, Loading, EmptyState, ErrorState, StatusChip, SourceLabel } from '../../components/ui.jsx'
+import { PageShell, Loading, EmptyState, ErrorState, StatusChip, SourceLabel } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 // Build the firewall-safe explanation from the rule's i18n function.
@@ -72,7 +72,7 @@ export default function RadarFeed() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-4"><Wordmark /><Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <div className="flex items-center justify-end mb-4"><Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-1">{T.radar.title}</h1>
       <p className="text-sm text-muted mb-4">{T.radar.subtitle}</p>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, transferOwnership, resendInvite } from '../../lib/orgs.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
+import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 const roleLabel = (r, T) => ({ owner: T.org.roleOwner, admin: T.org.roleAdmin, member: T.org.roleMember }[r] || r)
@@ -84,7 +84,7 @@ export default function Members() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6"><Wordmark /><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <div className="flex items-center justify-end mb-6"><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <div className="flex items-center justify-between mb-1">
         <h1 className="font-display text-xl font-bold text-ink">{T.org.membersTitle}</h1>
         <button onClick={() => setPermsOpen(true)} aria-label={T.org.permsTitle} className="text-muted hover:text-ink text-sm border border-line rounded-full w-7 h-7 min-h-[36px] min-w-[36px] transition">?</button>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement } from '../../lib/db.js'
-import { PageShell, Wordmark, Loading, EmptyState, ErrorState, LanguageToggle, BottomSheet, useToast } from '../../components/ui.jsx'
+import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import RadarUniverse from './RadarUniverse.jsx'
@@ -31,19 +31,6 @@ function pickNextAction(artist, items, claims, T) {
   if (exp.length < 3) return { ...A.experience, to: evidenceRoute }
   if (!artist.lineup_frequency_band) return { ...A.bands, planet: 'proof' } // deferred band → radar fill
   return { ...A.done, to: null }
-}
-
-function DashHeader() {
-  const { T } = useLang()
-  return (
-    <div className="mb-6 flex items-center justify-between">
-      <Wordmark />
-      <div className="flex items-center gap-3">
-        <LanguageToggle />
-        <Link to="/settings" className="text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
-      </div>
-    </div>
-  )
 }
 
 export default function ArtistDashboard() {
@@ -181,11 +168,10 @@ export default function ArtistDashboard() {
   }
 
   if (loading) return <Loading />
-  if (loadError) return <PageShell><DashHeader /><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
+  if (loadError) return <PageShell><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   if (!artist || !artist.stage_name) {
     return (
       <PageShell>
-        <DashHeader />
         <EmptyState title={T.dashboard.empty}
           action={<Link to="/onboarding" className="btn-primary">{T.common.continue}</Link>} />
       </PageShell>
@@ -212,7 +198,6 @@ export default function ArtistDashboard() {
 
   return (
     <PageShell>
-      <DashHeader />
       <h1 className="font-display mb-0.5 text-2xl font-bold tracking-[-0.01em] text-ink">{T.radar.artistTitle}</h1>
       <p className="mb-4 text-xs text-muted">{T.radar.artistSubtitle}</p>
 

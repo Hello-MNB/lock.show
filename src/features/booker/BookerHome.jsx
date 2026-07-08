@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider.jsx'
-import { PageShell, Wordmark, Field, LanguageToggle } from '../../components/ui.jsx'
+import { PageShell, Field } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 // ── Booking manager home — bookers are trust-receivers: they open a Passport
@@ -10,7 +9,6 @@ import { useLang } from '../../context/LangContext.jsx'
 // passport link or id. One dominant action. ─────────────────────────────────
 export default function BookerHome() {
   const { T } = useLang()
-  const { signOut } = useAuth()
   const nav = useNavigate()
   const [v, setV] = useState('')
   const [err, setErr] = useState('')
@@ -25,17 +23,6 @@ export default function BookerHome() {
   return (
     <div className="min-h-full bg-bg">
       <PageShell max="max-w-md">
-        <div className="mb-10 flex items-center justify-between">
-          <Wordmark />
-          <div className="flex items-center gap-3">
-            <LanguageToggle />
-            <button className="text-sm text-muted transition hover:text-ink"
-              onClick={() => { signOut(); nav('/login') }}>
-              {T.settings.logout}
-            </button>
-          </div>
-        </div>
-
         {/* ── HERO — one field, one lime action ── */}
         <div className="relative overflow-hidden rounded-[22px] border border-line bg-surface p-7 shadow-card">
           {/* warm backstage light, purely atmospheric */}

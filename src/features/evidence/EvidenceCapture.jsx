@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence, updateAct } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
+import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -171,8 +171,8 @@ export default function EvidenceCapture() {
   if (!evConsent) {
     return (
       <PageShell>
-        <div className="mb-6 flex items-center justify-between">
-          <Wordmark /><Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+        <div className="mb-6 flex items-center justify-end">
+          <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
         </div>
         <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
         <ErrorNote>{error}</ErrorNote>
@@ -191,8 +191,8 @@ export default function EvidenceCapture() {
 
   return (
     <PageShell>
-      <div className="mb-6 flex items-center justify-between">
-        <Wordmark /><Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+      <div className="mb-6 flex items-center justify-end">
+        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.evidence.subtitle}</p>

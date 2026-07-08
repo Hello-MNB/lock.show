@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, upsertArtist, addProfileItem, addEvidence, processEvidence, hasConsent } from '../../lib/db.js'
 import { SOURCE_STATUS } from '../../lib/constants.js'
-import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
+import { PageShell, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
@@ -155,7 +155,6 @@ export default function Onboarding() {
 
   return (
     <PageShell max="max-w-lg">
-      <div className="mb-4 text-center"><Wordmark className="justify-center" /></div>
       <ProgressSegments step={step} />
       <ErrorNote>{error}</ErrorNote>
 

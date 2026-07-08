@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider.jsx'
 import {
   adminListArtists, adminListRequests, adminListClaims, adminSetPublished,
   adminListPendingEntitlements, adminActivateEntitlement,
@@ -9,8 +8,8 @@ import {
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
 import { createNotification } from '../../lib/notifications.js'
 import {
-  PageShell, Wordmark, Loading, EmptyState, ErrorState, SourceLabel,
-  LanguageToggle, BottomSheet,
+  PageShell, Loading, EmptyState, ErrorState, SourceLabel,
+  BottomSheet,
 } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -42,7 +41,6 @@ function ShowMore({ paged, total }) {
 
 export default function AdminDashboard() {
   const { T } = useLang()
-  const { signOut } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [artists, setArtists] = useState([])
@@ -161,14 +159,6 @@ export default function AdminDashboard() {
 
   return (
     <PageShell max="max-w-2xl">
-      <div className="mb-6 flex items-center justify-between">
-        <Wordmark />
-        <div className="flex items-center gap-3">
-          <LanguageToggle />
-          <button onClick={signOut} className="text-sm text-muted transition hover:text-ink">{T.settings.logout}</button>
-        </div>
-      </div>
-
       <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">Operator console</p>
       <h1 className="mb-1 text-2xl font-bold text-ink">{T.admin.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.admin.subtitle}</p>

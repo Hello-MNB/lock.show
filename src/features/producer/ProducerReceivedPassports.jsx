@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import * as UI from '../../components/ui.jsx'
-import { PageShell, Wordmark, Field, LanguageToggle, GpIcon } from '../../components/ui.jsx'
+import { PageShell, Field, GpIcon } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { useAuth } from '../auth/AuthProvider.jsx'
 
 // Producer landing — passports shared with this producer. There is no
 // received-passports fetch in the data layer yet, so this screen is HONEST
@@ -32,7 +31,6 @@ const BandPill = UI.BandPill ?? LocalBandPill
 
 export default function ProducerReceivedPassports() {
   const { T } = useLang()
-  const { signOut } = useAuth()
   const nav = useNavigate()
   const [v, setV] = useState('')
 
@@ -44,15 +42,6 @@ export default function ProducerReceivedPassports() {
 
   return (
     <PageShell max="max-w-md">
-      <div className="mb-8 flex items-center justify-between">
-        <Wordmark />
-        <div className="flex items-center gap-3">
-          <LanguageToggle />
-          <button className="text-sm text-muted transition hover:text-ink"
-            onClick={() => { signOut(); nav('/login') }}>{T.settings.logout}</button>
-        </div>
-      </div>
-
       <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">Producer workspace</p>
       <h1 className="mb-2 text-2xl font-bold text-ink">Passports shared with you</h1>
       <p className="mb-6 text-sm text-muted">

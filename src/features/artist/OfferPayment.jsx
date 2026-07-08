@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, getEntitlement, createEntitlement } from '../../lib/db.js'
-import { PageShell, Wordmark, Loading, ErrorState, Spinner } from '../../components/ui.jsx'
+import { PageShell, Loading, ErrorState, Spinner } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 // A8 — Founding Passport offer + MANUAL payment (Bit/transfer/invoice, no Stripe).
@@ -61,7 +61,7 @@ export default function OfferPayment() {
 
   if (loading) return <Loading />
   if (error) return (
-    <PageShell><Wordmark className="mb-6" />
+    <PageShell>
       <ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   )
 
@@ -73,8 +73,8 @@ export default function OfferPayment() {
 
   return (
     <PageShell max="max-w-md">
-      <div className="mb-6 flex items-center justify-between">
-        <Wordmark /><Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+      <div className="mb-6 flex items-center justify-end">
+        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
 
       {status === 'active' ? (

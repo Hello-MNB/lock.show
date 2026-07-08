@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getSubscription, addSeats } from '../../lib/orgs.js'
-import { PageShell, Wordmark, Spinner, Loading, useToast } from '../../components/ui.jsx'
+import { PageShell, Spinner, Loading, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 const planLabel = (plan, T) => ({ solo: T.org.planSolo, agency: T.org.planAgency, agency_plus: T.org.planAgencyPlus }[plan] || plan)
@@ -37,7 +37,7 @@ export default function Billing() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6"><Wordmark /><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <div className="flex items-center justify-end mb-6"><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.org.billingTitle}</h1>
 
       <div className="card mb-2 space-y-2 text-sm">

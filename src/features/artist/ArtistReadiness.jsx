@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, listProfileItems, listClaims } from '../../lib/db.js'
-import { PageShell, Wordmark, Loading, StatusChip, EmptyState, ErrorState } from '../../components/ui.jsx'
+import { PageShell, Loading, StatusChip, EmptyState, ErrorState } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { STATUS } from '../../lib/constants.js'
 
@@ -75,19 +75,19 @@ export default function ArtistReadiness() {
 
   if (loading) return <Loading />
   if (loadError) return (
-    <PageShell><Wordmark className="mb-6" />
+    <PageShell>
       <ErrorState title={T.common.error} onRetry={() => { setLoading(true); setLoadError(false); window.location.reload() }} /></PageShell>
   )
   if (!data) return (
-    <PageShell><Wordmark className="mb-6" />
+    <PageShell>
       <EmptyState title={T.readiness.emptyTitle}
         action={<Link to="/onboarding" className="btn-primary">{T.readiness.buildProfile}</Link>} /></PageShell>
   )
 
   return (
     <PageShell>
-      <div className="mb-6 flex items-center justify-between">
-        <Wordmark /><Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+      <div className="mb-6 flex items-center justify-end">
+        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.readiness.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.readiness.subtitle}</p>

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { listAgencyArtists, listClaimsByArtists, listRequestsForAgency, upsertArtist } from '../../lib/db.js'
 import { requestArtistAccess, listOutgoingAccessRequests } from '../../lib/orgs.js'
 import AgencyRadarUniverse from './AgencyRadarUniverse.jsx'
-import { PageShell, Wordmark, Loading, ErrorState, StatusChip, Field, Spinner, LanguageToggle, useToast } from '../../components/ui.jsx'
+import { PageShell, Loading, ErrorState, StatusChip, Field, Spinner, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { STATUS } from '../../lib/constants.js'
@@ -114,7 +114,7 @@ function RequestsSideCard({ requests, T }) {
 
 export default function AgencyDashboard() {
   const { T } = useLang()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { isAgency, activeOrgId, memberships } = useOrg()
   // DEMO ONLY: OrgContext's activeOrgId defaults to the solo/artist org even
   // on this screen (the already-documented "context switcher is a no-op"
@@ -126,7 +126,6 @@ export default function AgencyDashboard() {
   const orgIdForThisScreen = DEMO
     ? (memberships.find((m) => ['agency', 'agency_plus'].includes(m.organization?.plan))?.organization?.id || activeOrgId)
     : activeOrgId
-  const nav = useNavigate()
   const toast = useToast()
   const [hideChecklist, setHideChecklist] = useState(() => { try { return localStorage.getItem('gigproof_hide_checklist') === '1' } catch { return false } })
   const [loading, setLoading] = useState(true)
@@ -214,17 +213,10 @@ export default function AgencyDashboard() {
   }
 
   if (loading) return <Loading />
-  if (error) return <PageShell><Wordmark className="mb-6" /><ErrorState title={T.admin.loadError} onRetry={() => { setLoading(true); load() }} /></PageShell>
+  if (error) return <PageShell><ErrorState title={T.admin.loadError} onRetry={() => { setLoading(true); load() }} /></PageShell>
 
   return (
     <PageShell max="max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
-        <Wordmark />
-        <div className="flex items-center gap-3">
-          <LanguageToggle />
-          <button className="text-sm text-muted hover:text-ink" onClick={() => { signOut(); nav('/login') }}>{T.settings.logout}</button>
-        </div>
-      </div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-xl font-bold text-ink">{T.agency.title}</h1>
         <div className="flex items-center gap-4">
