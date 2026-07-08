@@ -188,4 +188,14 @@ export const demoConfirm = { get claimText() { return L('Produced 10+ recurring 
 // team member into his INSOMNIA TLV production workspace.
 export const demoInviteInfo = { org_name: 'INSOMNIA TLV', get inviter_name() { return L('Shai Perlman', 'שי פרלמן') }, org_role: 'member', invited_email: null }
 
+// P1-1 in-app notifications (migration 002 table) — three realistic PERLMAN
+// events, one per writer: a new booking request, a producer confirmation, and
+// a passport publish. Bodies are pre-authored bilingual TEXT (matching the real
+// schema: `body text not null`, no structured params) — never a score/count.
+export const demoNotifications = [
+  { id: 'dn1', type: 'new_request', get body() { return L('New availability request from Maya Golan · The Block TLV', 'בקשת זמינות חדשה ממאיה גולן · דה בלוק תל אביב') }, link: '/agency/requests', read: false, created_at: '2026-07-08T08:15:00Z' },
+  { id: 'dn2', type: 'confirmation_arrived', get body() { return L('Gagarin TLV confirmed: "Produced 10+ recurring INSOMNIA TLV techno nights"', 'Gagarin TLV אישרו: "הפיק 10+ ערבי טכנו קבועים של INSOMNIA TLV"') }, link: '/artist/claims', read: false, created_at: '2026-07-07T19:40:00Z' },
+  { id: 'dn3', type: 'passport_published', get body() { return L('Your profile was published successfully!', 'הפספורט שלך פורסם בהצלחה!') }, link: '/artist/home', read: true, created_at: '2026-07-05T11:00:00Z' },
+]
+
 export { DEMO_ARTIST_ID }

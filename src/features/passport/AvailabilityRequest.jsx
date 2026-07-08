@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getArtist, createRequest } from '../../lib/db.js'
+import { createNotification } from '../../lib/notifications.js'
 import { PageShell, Wordmark, Field, Spinner, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -46,6 +47,14 @@ export default function AvailabilityRequest() {
     setBusy(true); setError('')
     try {
       await createRequest({ artist_id: id, ...f, event_date: f.event_date || null })
+      // P1-1 — fire-and-forget (not awaited): a notification hiccup must never
+      // block or delay the booker's confirmation screen.
+      createNotification({
+        artistId: id,
+        type: 'new_request',
+        body: T.notifications.newRequest(f.requester_name.trim()),
+        link: '/agency/requests',
+      })
       nav(`/passport/${id}/sent`, {
         state: { requester_name: f.requester_name, artist_name: artist?.stage_name },
       })

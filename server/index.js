@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
+import { T as en } from '../src/lib/i18n/en.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -245,6 +246,35 @@ app.post('/api/passport-signal', async (req, res) => {
 })
 
 // ──────────────────────────────────────────────────────────
+// Notifications (P1-1) — writers. public.notifications RLS (notif_self,
+// migration 002) is `user_id = auth.uid()`, so a cross-user write (operator →
+// artist owner, anon booker → artist owner, producer → artist owner) can NEVER
+// satisfy that check from the anon/authenticated client. Every such writer is
+// therefore mediated here with the service role — same pattern as
+// producer_confirmations. Best-effort: never throws to the caller.
+// ──────────────────────────────────────────────────────────
+async function notifyArtistOwner(artistId, { type, body, link }) {
+  try {
+    if (!admin || !artistId) return
+    const { data: artist } = await admin.from('artists').select('created_by').eq('id', artistId).maybeSingle()
+    if (!artist?.created_by) return
+    await admin.from('notifications').insert({ user_id: artist.created_by, type, body, link: link || null })
+  } catch (e) {
+    console.warn('[notify]', e?.message || e)
+  }
+}
+
+// POST /api/notify { artistId, type, body, link } — generic fire-and-forget
+// notification writer used by the admin console (payment activated) and the
+// public availability-request form (request received). Always 200s so the
+// caller's primary action is never blocked by a notification hiccup.
+app.post('/api/notify', async (req, res) => {
+  const { artistId, type, body, link } = req.body || {}
+  if (admin && artistId && type && body) await notifyArtistOwner(artistId, { type, body, link })
+  res.json({ ok: true })
+})
+
+// ──────────────────────────────────────────────────────────
 // PRODUCER (מפיק) claim confirmation (P1) — service-role mediated, no login.
 // A positive reply upgrades the claim's method_label to 'producer-confirmed'
 // (the strongest label); revoke clears it.
@@ -304,7 +334,7 @@ app.post('/api/confirm/:token', async (req, res) => {
     const { token } = req.params
     const { response, revoke } = req.body || {}
     const { data: pc, error } = await admin
-      .from('producer_confirmations').select('id, claim_id').eq('token', token).maybeSingle()
+      .from('producer_confirmations').select('id, claim_id, artist_id').eq('token', token).maybeSingle()
     if (error) throw error
     if (!pc) return res.status(404).json({ error: 'Invalid or expired link.' })
 
@@ -320,9 +350,23 @@ app.post('/api/confirm/:token', async (req, res) => {
     await admin.from('producer_confirmations').update({
       response, revoked: false, responded_at: new Date().toISOString(),
     }).eq('id', pc.id)
-    // yes/partial → strongest method label; no/wrong_person → clear it.
-    const method = ['yes', 'partial'].includes(response) ? 'producer-confirmed' : null
+    // Trust rule: ONLY an unqualified YES earns 'producer-confirmed'.
+    // A partial confirmation must never present as a full one on the Passport;
+    // no/wrong_person/partial clear the label.
+    const method = response === 'yes' ? 'producer-confirmed' : null
     await admin.from('claims').update({ method_label: method }).eq('id', pc.claim_id)
+
+    // P1-1 — notify the artist owner a producer confirmation arrived (best-effort,
+    // never blocks the response below). Server has no user-language preference to
+    // read, so the body is authored in English (T.notifications.confirmationArrived).
+    const { data: claimRow } = await admin.from('claims').select('value, claim_type').eq('id', pc.claim_id).maybeSingle()
+    const claimText = claimRow?.value || claimRow?.claim_type || 'your claim'
+    notifyArtistOwner(pc.artist_id, {
+      type: 'confirmation_arrived',
+      body: en.notifications.confirmationArrived(claimText),
+      link: '/artist/claims',
+    })
+
     res.json({ ok: true, response })
   } catch (e) {
     console.error('[confirm-post]', e)

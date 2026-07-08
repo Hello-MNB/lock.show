@@ -7,6 +7,7 @@ import {
   adminListConsents, adminExportArtist, adminDeleteArtist, adminListAudit,
 } from '../../lib/db.js'
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
+import { createNotification } from '../../lib/notifications.js'
 import {
   PageShell, Wordmark, Loading, EmptyState, ErrorState, SourceLabel,
   LanguageToggle, BottomSheet,
@@ -95,8 +96,18 @@ export default function AdminDashboard() {
   async function activate(id) {
     setActionError('')
     try {
+      const payment = payments.find((p) => p.id === id)
       await adminActivateEntitlement(id)
       setPayments((prev) => prev.filter((p) => p.id !== id))
+      // P1-1 — fire-and-forget: a notification hiccup must never undo the activation.
+      if (payment?.artist_id) {
+        createNotification({
+          artistId: payment.artist_id,
+          type: 'payment_activated',
+          body: T.notifications.paymentActivated,
+          link: '/artist/home',
+        })
+      }
     } catch {
       setActionError(T.admin.actionError)
     }

@@ -442,7 +442,9 @@ export async function adminListPendingEntitlements() {
   if (DEMO) return [demoEntitlement]
   const { data, error } = await supabase
     .from('entitlements')
-    .select('id, status, created_at, artists(stage_name)')
+    // artist_id is needed by the P1-1 "payment activated" notification writer
+    // (AdminDashboard.activate) — it can't be derived from artists(stage_name).
+    .select('id, artist_id, status, created_at, artists(stage_name)')
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
   if (error) throw error

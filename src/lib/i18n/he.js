@@ -124,7 +124,7 @@ export const T = {
     serverOffline: 'יצירת קישור דורשת את שרת ה-API (npm run dev).',
   },
   offer: {
-    title: 'הנפקת פספורט בוקינג רשמי',
+    title: 'הנפקת פספורט רשמי',
     price: '₪149–249 · תשלום חד-פעמי',
     notSubscription: 'לא מנוי — תשלום אחד.',
     trustLine: 'אתה משלם על העיבוד והפספורט — לא על אמינות. אמינות באה מהראיות.',
@@ -164,7 +164,7 @@ export const T = {
     rider: 'העלה ריידר טכני',
     whatsapp: 'מספר וואטסאפ (לתיאום)',
     whatsappHelp: 'יוצג לאמרגנים שאושרו לאחר שליחת בקשה. ללא קוד מדינה: 05xxxxxxxx',
-    step6Title: 'הפספורט שלך מוכן 🎧',
+    step6Title: 'הפספורט שלך מוכן',
     publish: 'פרסם פספורט',
     backToEdit: 'חזור לעריכה',
     stepOf: (s, total) => `שלב ${s} מתוך ${total}`,
@@ -233,7 +233,7 @@ export const T = {
   },
   passport: {
     // ── מטריצת תרגום: GIGPROOF-Glossary §14b (7 Jul) — מונחי סצנה נעולים:
-    //    פספורט בוקינג רשמי · ראשים מאומתים בקופה · גרנטי · ליינאפ · מסודר פיננסית
+    //    פספורט רשמי · ראשים מאומתים בקופה · גרנטי · ליינאפ · מסודר פיננסית
     chip: 'פרופיל מקצועי מאומת',
     cta: 'בדיקת זמינות',
     firewall: 'GIGPROOF מציג עובדות מקצועיות מאומתות לפי מקור. ללא הבטחות וללא ניבויים.',
@@ -451,6 +451,13 @@ export const T = {
     newRequest: (name) => `בקשת זמינות חדשה מ-${name}`,
     claimProcessed: 'ההוכחות עובדו. בדוק את הסקירה.',
     passportPublished: 'הפספורט שלך פורסם בהצלחה!',
+    confirmationArrived: (claimText) => `מפיק אישר: "${claimText}"`,
+    paymentActivated: 'התשלום הופעל — הפספורט המייסד שלך פעיל.',
+    markAllRead: 'סמן הכל כנקרא',
+    justNow: 'כרגע',
+    minutesAgo: (n) => `לפני ${n} דק׳`,
+    hoursAgo: (n) => `לפני ${n} שע׳`,
+    daysAgo: (n) => `לפני ${n} ימים`,
   },
   nav: {
     radar: 'RADAR',
@@ -562,7 +569,7 @@ export const T = {
     lastOwnerProtected: 'לא ניתן להסיר או לשנות את הבעלים האחרון.',
     teamOfOne: 'אתה לבד בצוות. הזמינו אמרגנים כדי לעבוד יחד.',
     invitedByLine: (inviter, org, role) => `${inviter} הזמין אותך להצטרף ל${org} כ${role}.`,
-    welcomeTeam: (org) => `ברוך הבא לצוות ${org} 👋`,
+    welcomeTeam: (org) => `ברוך הבא לצוות ${org}`,
     inviteExpired: 'ההזמנה פגה או אינה תקפה.',
     upgradePendingPay: 'ממתין לאישור תשלום — נפעיל את הסוכנות בקרוב.',
     dismiss: 'אחר כך',
@@ -579,7 +586,7 @@ export const T = {
     planSoloDesc: 'לאמן עצמאי',
     planAgencyDesc: 'לסוכנויות בוקינג עם רוסטר',
     planAgencyPlusDesc: 'סוכנות עם פיצ\'רים מתקדמים',
-    featurePassport: 'פרסום פספורט בוקינג',
+    featurePassport: 'פרסום פספורט',
     featureEvidence: 'ראיות ועיבוד תביעות AI',
     featureRoster: 'רוסטר אמנים מרובה',
     featureSeats: 'מושבי צוות',

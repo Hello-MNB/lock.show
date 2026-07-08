@@ -352,7 +352,7 @@ export function PlatformMark({ platform, size = 'h-7 w-7' }) {
 }
 
 export function Wordmark({ className = '' }) {
-  // "Live Intelligence" brand mark: lime "G" square (30px, rounded) + wordmark
+  // GIGPROOF wordmark: lime "G" square (30px, rounded) + wordmark
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <span className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-accent font-display text-[15px] font-black text-bg" aria-hidden>
