@@ -1,8 +1,8 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Methodology — How Evidence Is Verified | GIGPROOF',
-  description: 'Every claim in a GIGPROOF Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
+  title: 'Methodology — How Evidence Is Verified | LOCK',
+  description: 'Every claim in a LOCK Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 
 const methodLabels = [
@@ -15,7 +15,7 @@ const methodLabels = [
   {
     label: 'TICKET EXPORT · REVIEWED',
     title: 'Ticket sales data, reviewed by a human.',
-    body: 'The artist or artist representative exported a sales report from the ticketing platform (Eventim, Tikaway, similar). A GIGPROOF operator reviewed the document against the stated claim. The date of review is stamped on the claim.',
+    body: 'The artist or artist representative exported a sales report from the ticketing platform (Eventim, Tikaway, similar). A LOCK operator reviewed the document against the stated claim. The date of review is stamped on the claim.',
     strength: 'Strong',
   },
   {
@@ -41,7 +41,7 @@ const pipelineSteps = [
   {
     phase: 'CONFIRM',
     title: 'A producer verifies.',
-    body: 'GIGPROOF generates a unique, bounded magic link for that gig. The artist sends it to the producer. The producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
+    body: 'LOCK generates a unique, bounded magic link for that gig. The artist sends it to the producer. The producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
   },
   {
     phase: 'METHOD-LABEL',
@@ -66,7 +66,7 @@ const firewallItems = [
   'Every claim shows a date and geographic area. Evidence from 2023 ≠ evidence from 2026.',
   'Self-reported data appears only with an explicit SELF-REPORTED label — never disguised as verified.',
   'Streaming figures appear as secondary context only — never as draw evidence.',
-  'GIGPROOF publishes no score, ranking, percentile, prediction, or guarantee.',
+  'LOCK publishes no score, ranking, percentile, prediction, or guarantee.',
   'A domain with no supported, verified claim is removed from the Passport entirely — never shown as "developing" or "missing".',
 ]
 
@@ -120,7 +120,7 @@ export default function Methodology() {
             The method is the claim.
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'rgba(243,245,239,0.68)', maxWidth: '540px', lineHeight: 1.6, margin: '0 0 20px' }}>
-            Every piece of evidence in a GIGPROOF Passport carries a method label — the source and process by which it was verified.
+            Every piece of evidence in a LOCK Passport carries a method label — the source and process by which it was verified.
             A number without a method is an assertion. A method-labelled claim is evidence.
           </p>
           <p style={{ fontSize: '0.9rem', color: 'rgba(243,245,239,0.5)', maxWidth: '540px', lineHeight: 1.6, margin: 0 }}>
@@ -371,7 +371,7 @@ export default function Methodology() {
             letterSpacing: '-0.02em',
             marginBottom: '24px',
           }}>
-            What GIGPROOF does not do.
+            What LOCK does not do.
           </h2>
           <div style={{
             display: 'grid',

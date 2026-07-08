@@ -1,11 +1,11 @@
-# GIGPROOF — מילון מונחים / CANONICAL GLOSSARY
+# LOCK — מילון מונחים / CANONICAL GLOSSARY
 **v1.0 · 8 Jul 2026 · Owner: Maria (R00) · BINDING for every agent, every document, every surface.**
-Any text produced for GIGPROOF — UI, marketing, legal, docs — MUST use these terms. A document that violates this glossary is REJECTED (R00 precedent: privacy v0.2, 8 Jul 2026).
+Any text produced for LOCK — UI, marketing, legal, docs — MUST use these terms. A document that violates this glossary is REJECTED (R00 precedent: privacy v0.2, 8 Jul 2026).
 
 ## Product concepts
 | Concept | EN (locked) | HE (locked) | FORBIDDEN |
 |---|---|---|---|
-| The product | GIGPROOF (always uppercase) | GIGPROOF | — |
+| The product | LOCK (always uppercase; domain lock.show; formerly GIGPROOF, renamed 8 Jul 2026) | LOCK | **GIGPROOF** (old name — forbidden in new copy) |
 | Public buyer view | Bookability Passport / the Passport | פספורט / הפספורט הציבורי | **דרכון** (any form) · "Booking Passport" · "Artist Passport" in HE text |
 | Artist private view | the artist's private view (the Radar) | האזור הפרטי של האמן (הרדאר) | **Mirror / המראה** (retired: one Passport, shown in views) |
 | Evidence display | method-labeled evidence; bands + binaries with method labels | ראיות מתויגות-שיטה; רצועות + בינאריים עם תוויות-שיטה | any score/percentile/rank/gauge/prediction except in explicit negations |

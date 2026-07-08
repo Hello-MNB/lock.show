@@ -3,14 +3,14 @@ import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
 
-const SITE_URL = 'https://gigproof.co'
+const SITE_URL = 'https://lock.show'
 
 export const metadata: Metadata = {
-  title: 'GIGPROOF — Booking Proof for Independent Artists',
+  title: 'LOCK — Booking Proof for Independent Artists',
   description:
-    'GIGPROOF turns live-performance evidence into a method-labelled Bookability Passport — so booking managers can evaluate before they risk their reputation.',
+    'LOCK turns live-performance evidence into a method-labelled Bookability Passport — so booking managers can evaluate before they risk their reputation.',
   openGraph: {
-    title: 'GIGPROOF — Booking Proof for Independent Artists',
+    title: 'LOCK — Booking Proof for Independent Artists',
     description:
       'Method-labelled performance evidence. Built for booking managers who need to verify before they risk their name.',
     type: 'website',
@@ -25,14 +25,14 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: `${SITE_URL}/`,
-      name: 'GIGPROOF',
+      name: 'LOCK',
       description: 'Pre-booking proof platform for independent artists',
       inLanguage: ['en', 'he'],
     },
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#org`,
-      name: 'GIGPROOF',
+      name: 'LOCK',
       url: `${SITE_URL}/`,
     },
     {
@@ -48,7 +48,7 @@ const jsonLd = {
         },
         {
           '@type': 'Question',
-          name: 'Is GIGPROOF free for booking managers?',
+          name: 'Is LOCK free for booking managers?',
           acceptedAnswer: {
             '@type': 'Answer',
             text: 'Yes. Booking managers (אמרגנים) view Bookability Passports at no cost — always. Artists can build and publish a Passport for free; Momentum is an optional paid plan for artists who want ongoing freshness, incremental scans, and guidance.',
@@ -64,10 +64,10 @@ const jsonLd = {
         },
         {
           '@type': 'Question',
-          name: 'What does GIGPROOF not do?',
+          name: 'What does LOCK not do?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'GIGPROOF does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
+            text: 'LOCK does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
           },
         },
       ],
@@ -424,7 +424,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                GIGPROOF · BOOKABILITY PASSPORT
+                LOCK · BOOKABILITY PASSPORT
               </div>
 
               {/* Artist identity */}
@@ -676,7 +676,7 @@ export default function HomePage() {
               }}
             >
               Booking manager ≠ producer. These are distinct roles with distinct interests —
-              and GIGPROOF keeps them separate at every level.
+              and LOCK keeps them separate at every level.
             </p>
 
             <div
@@ -1094,7 +1094,7 @@ export default function HomePage() {
                 {
                   step: '03',
                   title: 'Operator reviews and labels',
-                  body: 'GIGPROOF reviews your evidence and applies the correct method label. No claim appears on your Passport without a label.',
+                  body: 'LOCK reviews your evidence and applies the correct method label. No claim appears on your Passport without a label.',
                 },
                 {
                   step: '04',
@@ -1238,7 +1238,7 @@ export default function HomePage() {
                 marginBottom: '2.5rem',
               }}
             >
-              GIGPROOF has no algorithm that scores artists. No ranking. No &ldquo;top performers.&rdquo;
+              LOCK has no algorithm that scores artists. No ranking. No &ldquo;top performers.&rdquo;
               No percentage telling a booking manager whether to say yes. We show evidence, labelled by
               how it was collected — and we let the booking manager decide.
             </p>

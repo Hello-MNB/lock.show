@@ -20,10 +20,10 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property GIGPROOF (544738110), stream GIGPROOF App; env can override
+// GA4 — property LOCK (544738110), stream LOCK App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
-const SITE_URL = 'https://gigproof.co'
+const SITE_URL = 'https://lock.show'
 const OG_IMAGE = `${SITE_URL}/og/og-default.png`
 
 // Next.js App Router viewport export
@@ -36,8 +36,8 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'GIGPROOF — Booking Proof for Independent Artists',
-    template: '%s | GIGPROOF',
+    default: 'LOCK — Booking Proof for Independent Artists',
+    template: '%s | LOCK',
   },
   description:
     'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
@@ -48,13 +48,13 @@ export const metadata: Metadata = {
     'artist passport',
     'אמרגן',
     'אמן',
-    'GIGPROOF',
+    'LOCK',
     'verified gig history',
     'music industry verification',
   ],
-  authors: [{ name: 'GIGPROOF', url: SITE_URL }],
-  creator: 'GIGPROOF',
-  publisher: 'GIGPROOF',
+  authors: [{ name: 'LOCK', url: SITE_URL }],
+  creator: 'LOCK',
+  publisher: 'LOCK',
   robots: {
     index: true,
     follow: true,
@@ -69,20 +69,20 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     alternateLocale: 'he_IL',
-    siteName: 'GIGPROOF',
+    siteName: 'LOCK',
     images: [
       {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'GIGPROOF — Booking Proof for Independent Artists',
+        alt: 'LOCK — Booking Proof for Independent Artists',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@gigproof',
+    site: '@lock',
     images: [OG_IMAGE],
   },
   alternates: {
@@ -102,7 +102,7 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'GIGPROOF',
+      name: 'LOCK',
       description:
         'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
@@ -111,7 +111,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'GIGPROOF',
+      name: 'LOCK',
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
@@ -122,7 +122,7 @@ const jsonLd = {
         name: 'Tel Aviv, Israel',
       },
       description:
-        'GIGPROOF provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },
   ],
 }

@@ -5,9 +5,9 @@ import { DoorStamp } from '@/components/door-stamp'
 export const metadata: Metadata = {
   title: 'For Booking Managers — Evaluate Before You Commit',
   description:
-    'GIGPROOF is free for booking managers. An artist sends you a link; you open method-labelled performance evidence — no account, no signup.',
+    'LOCK is free for booking managers. An artist sends you a link; you open method-labelled performance evidence — no account, no signup.',
   openGraph: {
-    title: 'For Booking Managers | GIGPROOF',
+    title: 'For Booking Managers | LOCK',
     description: 'Your reputation is on the line. Evaluate before you commit.',
     type: 'website',
   },
@@ -144,7 +144,7 @@ export default function BookersPage() {
               marginBottom: '2.25rem',
             }}
           >
-            GIGPROOF is free for booking managers. An artist sends you a link;
+            LOCK is free for booking managers. An artist sends you a link;
             you open it in a browser and get clear, method-labelled context —
             no speculation, no signup, no account.
           </p>
@@ -344,7 +344,7 @@ export default function BookersPage() {
         </div>
       </section>
 
-      {/* ── WHAT GIGPROOF DOESN'T PROMISE ────────────────── */}
+      {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
       <section style={{
         background: 'var(--color-night)',
         padding: '4rem max(24px, 4vw)',
@@ -372,7 +372,7 @@ export default function BookersPage() {
               marginBottom: '1rem',
             }}
           >
-            GIGPROOF doesn&apos;t promise anything.
+            LOCK doesn&apos;t promise anything.
           </h2>
           <p
             style={{
@@ -384,7 +384,7 @@ export default function BookersPage() {
             }}
           >
             No score. No ranking. No guarantee that an artist will fill a floor.
-            Evidence with a verification method and a date — that&apos;s what GIGPROOF
+            Evidence with a verification method and a date — that&apos;s what LOCK
             provides. The decision is yours.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -436,7 +436,7 @@ export default function BookersPage() {
               lineHeight: 1.6,
             }}
           >
-            Just open it. GIGPROOF is completely free for booking managers —
+            Just open it. LOCK is completely free for booking managers —
             no signup, no account, no friction.
           </p>
           <Link

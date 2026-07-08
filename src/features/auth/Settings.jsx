@@ -335,7 +335,7 @@ export default function Settings() {
 
       <div className="flex items-center justify-center gap-2 text-[11px] text-faint">
         <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">Controlled beta</span>
-        <span>GIGPROOF v1</span>
+        <span>LOCK v1</span>
       </div>
     </PageShell>
   )

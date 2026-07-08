@@ -15,7 +15,7 @@ const BOUNDED = new Set(['verified', 'supporting', 'self-reported', 'not-assessa
 const RETRYABLE = new Set([408, 409, 429, 500, 502, 503, 529])
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-const SYSTEM = `You label music-booking evidence for GIGPROOF. Return ONLY JSON:
+const SYSTEM = `You label music-booking evidence for LOCK. Return ONLY JSON:
 {"status": one of ["verified","supporting","self-reported","not-assessable"],
  "claim_type": short slug, "value": short human string or null, "reason": short string}.
 FIREWALL: never output a score, percentile, prediction, rank, or an exact head-count.

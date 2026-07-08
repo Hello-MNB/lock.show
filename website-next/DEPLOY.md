@@ -1,9 +1,9 @@
-# GIGPROOF Marketing Site — Deploy Guide
+# LOCK Marketing Site — Deploy Guide
 
-**Project:** `gigproof.co` — Next.js static export  
-**Repo:** `C:\Users\user\GIGPROOF` (GitHub)  
+**Project:** `lock.show` — Next.js static export  
+**Repo:** `C:\Users\user\LOCK` (GitHub)  
 **Root directory for this Vercel project:** `website-next/`  
-**NOT the existing Vercel project** — that is `app.gigproof.co` (Vite, repo root)
+**NOT the existing Vercel project** — that is `app.lock.show` (Vite, repo root)
 
 ---
 
@@ -29,7 +29,7 @@
 ## Step 1: Push to GitHub
 
 ```bash
-cd C:\Users\user\GIGPROOF
+cd C:\Users\user\LOCK
 git add website-next/
 git status   # verify only website-next/ changes
 git commit -m "feat: marketing site v1 — Next.js static export, phases 0-13"
@@ -40,10 +40,10 @@ git push origin main
 
 ---
 
-## Step 2: Create new Vercel project for gigproof.co
+## Step 2: Create new Vercel project for lock.show
 
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import from GitHub → select the GIGPROOF repo
+2. Import from GitHub → select the LOCK repo
 3. **Root Directory** → set to `website-next/` ← CRITICAL
 4. Framework: Next.js (auto-detected)
 5. Build Command: `npm run build` (default — do not override)
@@ -58,11 +58,11 @@ git push origin main
 
 After first deploy succeeds:
 1. Project Settings → Domains
-2. Add `gigproof.co` and `www.gigproof.co`
+2. Add `lock.show` and `www.lock.show`
 3. Set DNS at registrar:
-   - `gigproof.co` → Vercel A record (or CNAME to `cname.vercel-dns.com`)
-   - `www.gigproof.co` → CNAME to `cname.vercel-dns.com`
-4. Set `www.gigproof.co` to redirect → `gigproof.co` (in Vercel domain settings)
+   - `lock.show` → Vercel A record (or CNAME to `cname.vercel-dns.com`)
+   - `www.lock.show` → CNAME to `cname.vercel-dns.com`
+4. Set `www.lock.show` to redirect → `lock.show` (in Vercel domain settings)
 
 ---
 
@@ -71,30 +71,30 @@ After first deploy succeeds:
 After deploy + DNS propagation:
 
 ```
-https://gigproof.co/              → homepage
-https://gigproof.co/passport/demo → FIRST CHECK — buyer-facing demo
-https://gigproof.co/artists
-https://gigproof.co/bookers
-https://gigproof.co/producers
-https://gigproof.co/how-it-works
-https://gigproof.co/methodology
-https://gigproof.co/pricing
-https://gigproof.co/radar
-https://gigproof.co/faq
-https://gigproof.co/contact
-https://gigproof.co/llms.txt     → plain text ✓
-https://gigproof.co/sitemap.xml  → XML ✓
-https://gigproof.co/robots.txt   → plain text ✓
-https://gigproof.co/og/og-default.png → 1200×630 image ✓
+https://lock.show/              → homepage
+https://lock.show/passport/demo → FIRST CHECK — buyer-facing demo
+https://lock.show/artists
+https://lock.show/bookers
+https://lock.show/producers
+https://lock.show/how-it-works
+https://lock.show/methodology
+https://lock.show/pricing
+https://lock.show/radar
+https://lock.show/faq
+https://lock.show/contact
+https://lock.show/llms.txt     → plain text ✓
+https://lock.show/sitemap.xml  → XML ✓
+https://lock.show/robots.txt   → plain text ✓
+https://lock.show/og/og-default.png → 1200×630 image ✓
 ```
 
-WhatsApp test (390px): send `gigproof.co/passport/demo` link — verify OG card renders, page is readable on mobile.
+WhatsApp test (390px): send `lock.show/passport/demo` link — verify OG card renders, page is readable on mobile.
 
 ---
 
 ## Existing Vercel project — DO NOT TOUCH
 
-- Project: `app.gigproof.co`  
+- Project: `app.lock.show`  
 - Config: repo root `vercel.json` → `vite build` → `dist/`  
 - This is the React+Vite app — separate deploy, separate project  
 
@@ -102,7 +102,7 @@ WhatsApp test (390px): send `gigproof.co/passport/demo` link — verify OG card 
 
 ## Post-deploy (Phase 14)
 
-- Submit `gigproof.co/sitemap.xml` to Google Search Console
+- Submit `lock.show/sitemap.xml` to Google Search Console
 - Verify JSON-LD renders in Rich Results Test
 - Check Core Web Vitals in Vercel Analytics
 - Verify HE locale toggle works client-side

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Verify one artist claim via a magic link — no account, no signup, fully bounded. Your confirmation turns a self-reported gig into verified evidence.',
   openGraph: {
-    title: 'For Producers | GIGPROOF',
+    title: 'For Producers | LOCK',
     description: 'You confirm what happened. We make sure that confirmation means something.',
     type: 'website',
   },
@@ -299,7 +299,7 @@ export default function ProducersPage() {
               one claim via this bounded magic link — no account, no ongoing access.
               A <strong style={{ color: 'var(--color-ink)' }}>booking manager (אמרגן)</strong> is
               a different role entirely: they evaluate the full Passport and decide whether to book.
-              These are separate roles with separate tools in GIGPROOF. Never merged.
+              These are separate roles with separate tools in LOCK. Never merged.
             </p>
           </div>
         </div>

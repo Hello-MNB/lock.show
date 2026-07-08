@@ -14,7 +14,7 @@ function DemoAuthProvider({ children }) {
     else localStorage.removeItem('gigproof_demo_role')
     setRole(r)
   }, [])
-  const user = role ? { id: 'demo-user', email: 'demo@gigproof.test' } : null
+  const user = role ? { id: 'demo-user', email: 'demo@lock.test' } : null
   const profile = role ? { id: 'demo-user', role, full_name: 'Demo' } : null
   const value = {
     isConfigured: true, loading: false, session: user ? { user } : null,
@@ -83,8 +83,8 @@ function RealAuthProvider({ children }) {
   }, [loadProfile])
 
   const signInWithOAuth = useCallback(async (provider) => {
-    // Respect the embed base path: '/' standalone (app.gigproof.co) vs '/app/'
-    // when served under the public website (gigproof-website.vercel.app/app).
+    // Respect the embed base path: '/' standalone (app.lock.show) vs '/app/'
+    // when served under the public website (lock.show/app).
     // Landing back on the right base means the redirect hits RoleHome ("/"),
     // which already bounces a role-less user (first-time social signer) to
     // /select — same profile-bootstrap path email signup uses (UserTypeSelect).

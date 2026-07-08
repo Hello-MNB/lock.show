@@ -19,7 +19,7 @@ import { LegalDocument, type LegalContent } from '@/components/legal-document'
 const content: LegalContent = {
   he: {
     metaLabel: 'משפטי · מדיניות פרטיות',
-    title: 'מדיניות פרטיות — GIGPROOF',
+    title: 'מדיניות פרטיות — LOCK',
     versionLine: 'טיוטה לבדיקת עו״ד — אינה ייעוץ משפטי. גרסה 0.2-מתוקנת · 8.7.2026',
     taskNote: 'טיוטה זמנית בבדיקת יועץ משפטי — נוסח לא סופי (משימה #23). כפוף לחוק הגנת הפרטיות התשמ״א-1981 כולל תיקון 13 (בתוקף מ-14.8.2025). לאשר מול היועץ המשפטי לפני פרסום.',
     draftNotice: 'טיוטה בבדיקת יועץ משפטי — נוסח לא סופי',
@@ -412,7 +412,7 @@ const content: LegalContent = {
   },
   en: {
     metaLabel: 'LEGAL · PRIVACY POLICY',
-    title: 'Privacy Policy — GIGPROOF',
+    title: 'Privacy Policy — LOCK',
     versionLine: 'Draft for legal review — not legal advice. v0.2-corrected · 8 Jul 2026',
     taskNote: 'Temporary draft under legal counsel review — not final wording (task #23). Subject to the Privacy Protection Law 5741-1981, including Amendment 13 (in effect from 14 Aug 2025). To be confirmed with legal counsel before publishing.',
     draftNotice: 'Draft under legal review — not final',

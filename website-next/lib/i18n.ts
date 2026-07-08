@@ -1,5 +1,5 @@
 /**
- * GIGPROOF i18n — minimal, dependency-free.
+ * LOCK i18n — minimal, dependency-free.
  *
  * Phase 1: EN + HE scaffolded.
  * Phase 2: RU + DE (requires native-editor pass before shipping).

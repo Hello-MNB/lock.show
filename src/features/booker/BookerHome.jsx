@@ -40,7 +40,7 @@ export default function BookerHome() {
             <Field label={T.booker.inputLabel} error={err}>
               <input className="field" dir="ltr" value={v}
                 onChange={(e) => { setV(e.target.value); if (err) setErr('') }}
-                placeholder="gigproof.co/passport/…"
+                placeholder="lock.show/passport/…"
                 onKeyDown={(e) => e.key === 'Enter' && open()} />
             </Field>
             <button
@@ -60,9 +60,9 @@ export default function BookerHome() {
           </div>
         </div>
 
-        {/* ── SECONDARY — what a GIGPROOF passport is (calm, professional) ── */}
+        {/* ── SECONDARY — what a LOCK passport is (calm, professional) ── */}
         <div className="mt-4 rounded-[22px] border border-line bg-bg2 p-7">
-          <h2 className="font-display text-lg font-bold text-ink">What is a GIGPROOF passport?</h2>
+          <h2 className="font-display text-lg font-bold text-ink">What is a LOCK passport?</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             A standardized evidence page an artist shares before you book them. Every claim
             carries its verification method and review date, and audience draw is shown as a
@@ -81,7 +81,7 @@ export default function BookerHome() {
             ))}
           </ul>
           <p className="mt-5 border-t border-line pt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-faint">
-            GIGPROOF shows evidence only — not a guarantee.
+            LOCK shows evidence only — not a guarantee.
           </p>
         </div>
       </PageShell>

@@ -2,7 +2,7 @@
 // Monochrome (currentColor) inline SVG marks, 24×24 viewBox. Recognizability
 // comes from SHAPE, never color (DESIGN-SPEC.md restraint: "recognizability
 // comes from SHAPE"). Same silhouettes as the approved prototype's PLOGO map
-// (gigproof-desktop.html) so the buyer-facing prototype and this app read as
+// (lock-desktop.html) so the buyer-facing prototype and this app read as
 // one branded system, not two.
 //
 // Usage:

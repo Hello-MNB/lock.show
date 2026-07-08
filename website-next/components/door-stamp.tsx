@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 
 /**
- * Official GIGPROOF stamp mark.
+ * Official LOCK stamp mark.
  * Use as:
  *   - Nav logomark (size ~22, full opacity, current color)
  *   - Hero watermark (size 280-340, opacity 0.05-0.08, absolutely positioned)
@@ -29,7 +29,7 @@ export function DoorStamp({
       {/* Inner frame */}
       <rect x="10" y="10" width="180" height="110" rx="1" stroke="currentColor" strokeWidth="1" />
 
-      {/* GIGPROOF */}
+      {/* LOCK */}
       <text
         x="100" y="40"
         fontFamily="monospace"
@@ -39,7 +39,7 @@ export function DoorStamp({
         fill="currentColor"
         fontWeight="700"
       >
-        GIGPROOF
+        LOCK
       </text>
 
       {/* Top rule */}

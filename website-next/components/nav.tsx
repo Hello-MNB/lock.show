@@ -96,10 +96,10 @@ export function Nav() {
             textDecoration: 'none',
             flexShrink: 0,
           }}
-          aria-label="GIGPROOF home"
+          aria-label="LOCK home"
         >
           <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-          GIGPROOF
+          LOCK
         </Link>
 
         {/* Desktop links */}

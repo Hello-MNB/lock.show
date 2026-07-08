@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'For Artists — Build Verifiable Live-Performance Proof | GIGPROOF',
+  title: 'For Artists — Build Verifiable Live-Performance Proof | LOCK',
   description:
-    'GIGPROOF gives independent artists method-labelled evidence that booking managers can actually trust — not a link, not a bio. Build your Bookability Passport.',
+    'LOCK gives independent artists method-labelled evidence that booking managers can actually trust — not a link, not a bio. Build your Bookability Passport.',
   openGraph: {
-    title: 'For Artists | GIGPROOF',
+    title: 'For Artists | LOCK',
     description:
       'You played a great set. Now prove it — in a way a booking manager can trust.',
     type: 'website',
@@ -235,7 +235,7 @@ export default function ArtistsPage() {
             You managed your own rider. Built your audience from scratch. And
             when it matters most — a booking manager you&apos;ve never met,
             deciding your next six months — all you can send is a link.
-            GIGPROOF changes that.
+            LOCK changes that.
           </p>
 
           {/* CTAs */}

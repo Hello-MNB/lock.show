@@ -7,7 +7,7 @@ import { useLang } from '../../context/LangContext.jsx'
 // Producer landing — passports shared with this producer. There is no
 // received-passports fetch in the data layer yet, so this screen is HONEST
 // about that ("will appear here") and still useful: it explains what a
-// GIGPROOF Passport is and opens any passport link the producer was sent
+// LOCK Passport is and opens any passport link the producer was sent
 // (same resolver pattern as the booker entry). No dead ends.
 
 // Local fallbacks if the shared MethodLabel / BandPill exports are missing.
@@ -69,7 +69,7 @@ export default function ProducerReceivedPassports() {
 
       {/* what a passport is — evidence vocabulary, firewall-safe */}
       <div className="card mb-3">
-        <p className="mb-1 font-bold text-ink">What is a GIGPROOF Passport?</p>
+        <p className="mb-1 font-bold text-ink">What is a LOCK Passport?</p>
         <p className="mb-4 text-sm text-muted">
           One page of an artist’s working reality — every statement carries the method it was checked by, so you can judge the evidence, not the hype.
         </p>

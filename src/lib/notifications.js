@@ -1,5 +1,5 @@
 // ============================================================
-// GIGPROOF — in-app notifications (P1-1). Table exists since migration 002
+// LOCK — in-app notifications (P1-1). Table exists since migration 002
 // (public.notifications: id, user_id, type, body, link, read, created_at) but
 // had ZERO writers and ZERO UI before this file. RLS (notif_self) restricts
 // every row to `user_id = auth.uid()` — so a session can only ever list/mark-

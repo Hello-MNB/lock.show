@@ -1,5 +1,5 @@
 # Consent Banner + GA4 Consent Mode v2 — Spec for Claude Code
-**v0.1 · 8.7.2026 · GIGPROOF (#25)**
+**v0.1 · 8.7.2026 · LOCK (#25)**
 
 ## Why
 Amendment 13 (IL) + any EU visitor require consent before non-essential analytics. GA4 must not fire until the user consents. GA measurement ID: `G-ZX907M2NY8`.

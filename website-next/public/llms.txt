@@ -1,11 +1,11 @@
-# GIGPROOF
+# LOCK
 
 > Pre-booking proof and risk-reduction tool for the live music industry.
 > Helps Israeli booking managers (אמרגנים) evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
 
-## What GIGPROOF is
+## What LOCK is
 
-GIGPROOF is a verification system for independent artists seeking to prove their live performance track record to booking managers. It is NOT a booking marketplace, NOT an EPK generator, NOT a guarantee of any outcome, and NOT a comparison or ranking tool.
+LOCK is a verification system for independent artists seeking to prove their live performance track record to booking managers. It is NOT a booking marketplace, NOT an EPK generator, NOT a guarantee of any outcome, and NOT a comparison or ranking tool.
 
 ## Three actors
 
@@ -24,11 +24,11 @@ These three roles are distinct. Booking manager ≠ producer. They are never mer
 
 Every claim on a Passport carries a method label and reviewed date. Method labels:
 - PRODUCER-CONFIRMED — strongest. A producer verified via magic link.
-- TICKET EXPORT · REVIEWED — document verified by the GIGPROOF team.
+- TICKET EXPORT · REVIEWED — document verified by the LOCK team.
 - PLATFORM DATA · REVIEWED — contextual data, not draw evidence.
 - SELF-REPORTED · UNVERIFIED — internal only, never public.
 
-## What GIGPROOF does not do
+## What LOCK does not do
 
 - No score, rating, ranking, or prediction
 - No exact headcount (audience draw shown as a band: e.g. 70–150)
@@ -61,5 +61,5 @@ English and Hebrew (עברית). Hebrew copy is authored native-first, not trans
 
 ## Domain
 
-https://gigproof.co — marketing site
-https://app.gigproof.co — artist and operator app (not indexed here)
+https://lock.show — marketing site
+https://app.lock.show — artist and operator app (not indexed here)

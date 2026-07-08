@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Pricing — Free to Publish, Plans for More | GIGPROOF',
+  title: 'Pricing — Free to Publish, Plans for More | LOCK',
   description: 'Publishing a Passport is free — always. Momentum keeps an artist\'s proof fresh; Roster gives a management office one readiness view across artists. Pilot pricing on request — no locked numbers yet.',
 }
 
@@ -558,7 +558,7 @@ export default function Pricing() {
             },
             {
               q: 'Will there always be a free tier for booking managers?',
-              a: 'Yes. Booking managers viewing Passports will always be free. This is structural to how GIGPROOF works — the booking manager receiving a Passport link should never face a paywall.',
+              a: 'Yes. Booking managers viewing Passports will always be free. This is structural to how LOCK works — the booking manager receiving a Passport link should never face a paywall.',
             },
             {
               q: 'Why is Momentum priced "on request" instead of listed?',

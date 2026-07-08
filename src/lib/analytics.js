@@ -1,4 +1,4 @@
-// GIGPROOF analytics — stub implementation.
+// LOCK analytics — stub implementation.
 // Replace the flush() body with Amplitude/Mixpanel/PostHog when ready.
 // All calls are no-ops in SSR; safe to call from anywhere.
 

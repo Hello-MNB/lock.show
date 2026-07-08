@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── GIGPROOF "Live Intelligence" — warm cinematic night ─────────────────────
+/* ── LOCK "Live Intelligence" — warm cinematic night ─────────────────────
    Dark canvas, one warm light, lime accent. Tokens live in tailwind.config.js
    (mirrored in src/tokens.ts). Lime ALWAYS carries dark text (#12160A). */
 :root {

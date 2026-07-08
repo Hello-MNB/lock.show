@@ -282,7 +282,7 @@ export default function Passport() {
         <footer className="mt-12 border-t border-line pt-5 pb-2">
           <p className="font-mono text-[9.5px] leading-relaxed tracking-[0.06em] text-faint">{T.passport.disclaimer}</p>
           <Link to="/" className="mt-3 inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
-            GIGPROOF · gigproof.co
+            LOCK · lock.show
           </Link>
         </footer>
       </main>
@@ -294,7 +294,7 @@ export default function Passport() {
       >
         <div className="mx-auto flex max-w-[720px] items-center gap-4">
           <p className="hidden flex-1 text-[11px] leading-snug text-faint sm:block">
-            GIGPROOF shows evidence only — not a guarantee.
+            LOCK shows evidence only — not a guarantee.
           </p>
           <button
             className="btn-primary min-h-[48px] flex-1 shadow-[0_10px_26px_-10px_rgba(190,226,78,.6)] sm:flex-none sm:px-8"
@@ -304,7 +304,7 @@ export default function Passport() {
           </button>
         </div>
         <p className="mt-1.5 text-center text-[10px] text-faint sm:hidden">
-          GIGPROOF shows evidence only — not a guarantee.
+          LOCK shows evidence only — not a guarantee.
         </p>
       </div>
 
@@ -359,7 +359,7 @@ export default function Passport() {
   )
 }
 
-// ── Proof Unit — GIGPROOF's visual signature (spec): claim 19px bold → context
+// ── Proof Unit — LOCK's visual signature (spec): claim 19px bold → context
 // muted → footer [BandPill · MethodLabel · reviewed date mono]. Card, no gauge. ──
 function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T }) {
   const reviewed = reviewedAt ? new Date(reviewedAt).toLocaleDateString('en-GB') : null

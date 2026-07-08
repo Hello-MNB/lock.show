@@ -7,10 +7,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 //
 // MODE `embed` (8 Jul 2026, founder decision — public signup): builds the app
 // under /app/ straight into website-next/public/app, so the PUBLIC website
-// project serves the real app same-origin (gigproof-website.vercel.app/app).
+// project serves the real app same-origin (lock.show/app).
 // PWA is OFF in embed — a service worker under the marketing origin would cache
 // the app with root-scoped fallbacks and serve stale shells. The standalone
-// build (dedicated Vercel project, app.gigproof.co) keeps the PWA.
+// build (dedicated Vercel project, app.lock.show) keeps the PWA.
 export default defineConfig(({ mode }) => {
   const embed = mode === 'embed'
   return {
@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
         manifest: {
-          name: 'GIGPROOF',
-          short_name: 'GIGPROOF',
+          name: 'LOCK',
+          short_name: 'LOCK',
           description: 'Pre-booking proof — evaluate an artist via method-labeled evidence.',
           lang: 'en',
           dir: 'ltr',

@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
       },
     ],
-    sitemap: 'https://gigproof.co/sitemap.xml',
-    host: 'https://gigproof.co',
+    sitemap: 'https://lock.show/sitemap.xml',
+    host: 'https://lock.show',
   }
 }

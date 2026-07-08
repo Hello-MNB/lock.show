@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url; link.download = `gigproof-${a.stage_name || a.id}.json`; link.click()
+      link.href = url; link.download = `lock-${a.stage_name || a.id}.json`; link.click()
       URL.revokeObjectURL(url)
     } catch { setActionError(T.admin.actionError) }
   }

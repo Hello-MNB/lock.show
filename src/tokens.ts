@@ -1,4 +1,4 @@
-// GIGPROOF "Live Intelligence" design tokens — warm cinematic night.
+// LOCK "Live Intelligence" design tokens — warm cinematic night.
 // SSOT mirrored in tailwind.config.js — keep both files in sync.
 // Feature screens compose from these via Tailwind classes + /components/ui
 // primitives; a full redesign = change tailwind.config.js + this mirror +

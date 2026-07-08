@@ -1,6 +1,6 @@
 // ============================================================
 // i18n PURITY LINT — catches language-mixing that parity can't.
-//   1) en.js values must contain ZERO Hebrew chars (brand GIGPROOF is Latin).
+//   1) en.js values must contain ZERO Hebrew chars (brand LOCK is Latin).
 //   2) he.js values must not be PURE English (no-Hebrew value outside the
 //      brand/tech whitelist = residual-English leak).
 //   3) UI components must not hard-code Hebrew literals (everything via i18n).
@@ -13,7 +13,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const HEBREW = /[֐-׿]/
-const HE_ALLOW = new Set(['GIGPROOF', 'RADAR', 'SEC', 'OAuth', 'Stripe', 'slug', 'Phase', 'PWA', 'EN', 'HE', 'EPK', 'DJ', 'CSV', 'PDF', 'XLSX', 'OK'])
+const HE_ALLOW = new Set(['LOCK', 'RADAR', 'SEC', 'OAuth', 'Stripe', 'slug', 'Phase', 'PWA', 'EN', 'HE', 'EPK', 'DJ', 'CSV', 'PDF', 'XLSX', 'OK'])
 
 function walk(dir, out = []) {
   for (const f of readdirSync(dir)) {

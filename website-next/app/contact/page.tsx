@@ -3,8 +3,8 @@ import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
 
 export const metadata: Metadata = {
-  title: 'Contact — Get in Touch | GIGPROOF',
-  description: 'GIGPROOF is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
+  title: 'Contact — Get in Touch | LOCK',
+  description: 'LOCK is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }
 
 const lookingFor = [
@@ -48,7 +48,7 @@ export default function Contact() {
             Questions? Ideas? Collaboration?
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            GIGPROOF is in closed beta. We always want to hear from artists, booking managers, and producers.
+            LOCK is in closed beta. We always want to hear from artists, booking managers, and producers.
           </p>
         </div>
       </section>

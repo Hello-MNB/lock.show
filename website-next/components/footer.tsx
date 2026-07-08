@@ -43,7 +43,7 @@ const FOOTER_LINKS = [
   {
     heading: 'FOR ARTISTS',
     links: [
-      { href: '/artists',     label: 'Why GIGPROOF' },
+      { href: '/artists',     label: 'Why LOCK' },
       { href: '/radar',       label: 'Artist Radar' },
       { href: '/methodology', label: 'Methodology' },
       { href: '/pricing',     label: 'Pricing' },
@@ -96,7 +96,7 @@ export function Footer() {
           <div>
             <Link
               href="/"
-              aria-label="GIGPROOF home"
+              aria-label="LOCK home"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -111,7 +111,7 @@ export function Footer() {
               }}
             >
               <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-              GIGPROOF
+              LOCK
             </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -256,7 +256,7 @@ export function Footer() {
             color: 'rgba(255,255,255,0.25)',
             margin: 0,
           }}>
-            © 2026 GIGPROOF · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL
           </p>
           <Link
             href="/contact"

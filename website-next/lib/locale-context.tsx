@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * GIGPROOF locale context — client-side only.
+ * LOCK locale context — client-side only.
  *
  * Static export (`output: 'export'`) means no server-side locale detection.
  * Strategy:

@@ -18,7 +18,7 @@ export default function AuthScene({ children, tagline = 'The evidence behind the
           </p>
           <p className="font-display text-3xl font-bold leading-tight text-ink">{tagline}</p>
           <p className="mt-3 text-sm text-muted">
-            GIGPROOF shows evidence only — not a guarantee.
+            LOCK shows evidence only — not a guarantee.
           </p>
         </div>
       </div>

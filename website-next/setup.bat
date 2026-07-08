@@ -1,6 +1,6 @@
 @echo off
 echo =========================================
-echo GIGPROOF website-next — first-time setup
+echo LOCK website-next — first-time setup
 echo =========================================
 cd /d "%~dp0"
 echo Installing packages (takes ~60 seconds)...

@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'How It Works — From Gig to Verified Evidence | GIGPROOF',
+  title: 'How It Works — From Gig to Verified Evidence | LOCK',
   description: 'Three players. Three steps. See how artists build method-labelled evidence, producers verify in 30 seconds, and booking managers evaluate without signing up.',
 }
 
@@ -42,7 +42,7 @@ const steps = [
   {
     num: '03',
     title: 'Send a magic link to the producer',
-    body: 'GIGPROOF creates a unique link for the gig. Send via WhatsApp, SMS or email to the producer who ran the show.',
+    body: 'LOCK creates a unique link for the gig. Send via WhatsApp, SMS or email to the producer who ran the show.',
   },
   {
     num: '04',

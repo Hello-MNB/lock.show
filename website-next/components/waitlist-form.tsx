@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 // ── First-party waitlist capture (Phase-1) ───────────────────────────────────
-// Writes straight into the GIGPROOF Supabase (waitlist_signup, migration 026).
+// Writes straight into the LOCK Supabase (waitlist_signup, migration 026).
 // The values below are the PUBLISHABLE client credentials — they ship in every
 // browser bundle by design; the table is write-only for the public (RLS:
 // anon INSERT only, zero read columns). No third-party service touches the data.
@@ -91,7 +91,7 @@ export default function WaitlistForm() {
         </p>
         <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.6 }}>
           {state === 'done'
-            ? "We'll only use your email to contact you about GIGPROOF beta access. No spam, no third parties."
+            ? "We'll only use your email to contact you about LOCK beta access. No spam, no third parties."
             : "This email is already registered — we'll be in touch about beta access."}
         </p>
       </div>

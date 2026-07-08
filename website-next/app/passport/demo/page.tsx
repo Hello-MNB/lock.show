@@ -1,8 +1,8 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sample Passport — Verified Live Performance Evidence | GIGPROOF',
-  description: 'A sample GIGPROOF Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
+  title: 'Sample Passport — Verified Live Performance Evidence | LOCK',
+  description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
 import { APP_URL } from '@/lib/app-url'
@@ -200,7 +200,7 @@ export default function PassportDemo() {
         maxWidth: '480px',
         margin: '0 auto',
       }}>
-        {/* GIGPROOF stamp */}
+        {/* LOCK stamp */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -214,7 +214,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
           }}>
-            GIGPROOF · BOOKABILITY PASSPORT
+            LOCK · BOOKABILITY PASSPORT
           </span>
         </div>
 
@@ -340,7 +340,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             margin: 0,
           }}>
-            GIGPROOF · gigproof.co
+            LOCK · lock.show
           </p>
         </div>
 

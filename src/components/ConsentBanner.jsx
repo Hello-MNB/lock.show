@@ -68,7 +68,7 @@ export default function ConsentBanner() {
         <p className="flex-1 text-sm text-muted">
           {t.message}{' '}
           <a
-            href="https://gigproof-website.vercel.app/privacy"
+            href="https://lock.show/privacy"
             target="_blank"
             rel="noreferrer"
             className="text-ink underline decoration-line2 underline-offset-2 hover:text-accent"

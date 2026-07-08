@@ -75,7 +75,7 @@ export const demoMemberships = [
   { id: 'dm-2', org_role: 'owner', status: 'active', organization: { id: 'demo-org-2', name: 'INSOMNIA TLV', slug: 'insomnia-tlv', plan: 'agency' } },
 ]
 export const demoMembers = [
-  { id: 'dm-self', org_role: 'owner', status: 'active', invited_email: null, person: { id: 'demo-user', email: 'demo@gigproof.test', get display_name() { return L('Shai Perlman', 'שי פרלמן') } } },
+  { id: 'dm-self', org_role: 'owner', status: 'active', invited_email: null, person: { id: 'demo-user', email: 'demo@lock.test', get display_name() { return L('Shai Perlman', 'שי פרלמן') } } },
 ]
 
 // ── RADAR (Step 3) roster inputs — varied so the engine emits several rule types. ──
@@ -170,7 +170,7 @@ export const demoRequests = [
   { id: 'dr2', artist_id: 'demo-artist-2', get requester_name() { return L('Yoav Ben-David', 'יואב בן-דוד') }, get requester_org() { return L('InDNegev Festival', 'פסטיבל אינדנגב') }, event_date: '2026-09-05', get event_type() { return L('Festival', 'פסטיבל') }, get location() { return L('Mitzpe Ramon', 'מצפה רמון') }, capacity_band: '800+', budget_band: '₪20,000+', get message() { return L('Sunset set', 'סט שקיעה') }, status: 'new', created_date: '2026-06-22T00:00:00Z', artists: { get stage_name() { return L('Idan Raz', 'עידן רז') } } },
 ]
 
-export const demoEntitlement = { id: 'dent1', status: 'pending', kind: 'founding_passport', amount_note: 'GP-DEMO · ₪199 · Bit', created_at: '2026-06-25T00:00:00Z', subject_id: 'demo-user', subject_email: 'demo@gigproof.test', artists: { stage_name: 'PERLMAN' } }
+export const demoEntitlement = { id: 'dent1', status: 'pending', kind: 'founding_passport', amount_note: 'GP-DEMO · ₪199 · Bit', created_at: '2026-06-25T00:00:00Z', subject_id: 'demo-user', subject_email: 'demo@lock.test', artists: { stage_name: 'PERLMAN' } }
 
 // The shape the public Passport (/api/passport) returns — getters so the language
 // is resolved at access time (not frozen at module load).

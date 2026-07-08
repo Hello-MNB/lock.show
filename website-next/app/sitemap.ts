@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export const dynamic = 'force-static'
 
-const BASE = 'https://gigproof.co'
+const BASE = 'https://lock.show'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
