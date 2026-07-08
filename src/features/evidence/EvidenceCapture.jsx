@@ -5,7 +5,21 @@ import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordCon
 import { uploadFile } from '../../lib/storage.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
+import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+
+// A pasted link is recognized live, the way the Radar's setup does it: name
+// the platform + show its logo, never just swallow the text silently.
+function LinkPlatformHint({ value }) {
+  const platform = detectPlatform(value)
+  if (!platform) return null
+  return (
+    <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
+      <PlatformLogo name={platform} size={15} className="text-gold" />
+      {platform.charAt(0).toUpperCase() + platform.slice(1)} recognized
+    </p>
+  )
+}
 
 // ── Claim-first evidence capture (canon A7) ──────────────────────────────────
 // The artist starts from WHAT THEY WANT TO PROVE; the system requests the
@@ -244,6 +258,7 @@ export default function EvidenceCapture() {
               <Field label={T.evidence.publicUrl}>
                 <input className="field" dir="ltr" value={bandUrl} onChange={(e) => setBandUrl(e.target.value)} placeholder="https://…" />
               </Field>
+              <LinkPlatformHint value={bandUrl} />
               <button className="btn-ghost w-full" onClick={addBand}>{T.common.add}</button>
             </>
           )}
@@ -284,6 +299,7 @@ export default function EvidenceCapture() {
               <Field label={T.evidence.publicUrl}>
                 <input className="field" dir="ltr" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder="https://…" />
               </Field>
+              <LinkPlatformHint value={textVal} />
               <button className="btn-ghost mb-4 w-full" onClick={() => addLink('public-profile')}>{T.common.add}</button>
               <p className="mb-1 text-sm font-semibold text-ink">{T.evidence.uploadFile}</p>
               <input type="file" accept={EVIDENCE.ACCEPT} onChange={(e) => onFile(e, 'screenshot')} className="text-sm text-muted" />
@@ -297,6 +313,7 @@ export default function EvidenceCapture() {
               <Field label={T.evidence.publicUrl}>
                 <input className="field" dir="ltr" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder="https://…" />
               </Field>
+              <LinkPlatformHint value={textVal} />
               <button className="btn-ghost w-full" onClick={() => addLink('public-profile')}>{T.common.add}</button>
             </>
           )}
@@ -322,7 +339,12 @@ export default function EvidenceCapture() {
           <ul className="space-y-2">
             {evidence.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-surface2 px-3 py-2 text-sm">
-                <span className="min-w-0 truncate text-ink/90">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
+                <span className="flex min-w-0 items-center gap-1.5 truncate text-ink/90">
+                  {detectPlatform(e.public_url || e.source_type) && (
+                    <PlatformLogo name={detectPlatform(e.public_url || e.source_type)} size={14} className="shrink-0 text-muted" />
+                  )}
+                  <span className="min-w-0 truncate">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
+                </span>
                 <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-[rgba(190,226,78,0.10)] text-[#CBEE72]' : 'bg-white/[0.05] text-muted'}`}>
                   {e.status === 'processed' ? T.evidence.processed : T.evidence.pending}
                 </span>

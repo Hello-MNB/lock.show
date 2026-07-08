@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
-import { BottomSheet, Spinner, GpIcon, PlatformMark, platformOf } from '../../components/ui.jsx'
+import { BottomSheet, Spinner, GpIcon } from '../../components/ui.jsx'
+import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
@@ -371,8 +372,12 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
   const ref = sourceRef(n)
   const wording = c ? (c.value || human(c.claim_type)) : n.label
 
-  const icon = n.url
-    ? <PlatformMark platform={platformOf(n.url)} />
+  // Recognized platform first (link URL, or the claim's source_type / label —
+  // covers non-link sources like a ticket export or a WhatsApp field); falls
+  // back to the planet's own icon only when nothing is recognized.
+  const platform = detectPlatform(n.url) || detectPlatform(c?.source_type) || detectPlatform(n.label)
+  const icon = platform
+    ? <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line bg-surface2 text-ink/80"><PlatformLogo name={platform} size={16} /></span>
     : <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/[0.05] text-muted"><GpIcon id={PLANETS.find((p) => p.key === planet)?.icon || 'gp-source'} className="h-4 w-4" /></span>
 
   if (actionable) {

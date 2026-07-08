@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, upsertArtist, addProfileItem, addEvidence, processEvidence, hasConsent } from '../../lib/db.js'
 import { SOURCE_STATUS } from '../../lib/constants.js'
 import { PageShell, Wordmark, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
+import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
 
@@ -150,6 +151,7 @@ export default function Onboarding() {
   if (loading) return <Loading />
 
   const linkGiven = /^https?:\/\//i.test(link.trim())
+  const linkPlatform = linkGiven ? detectPlatform(link.trim()) : null
 
   return (
     <PageShell max="max-w-lg">
@@ -194,6 +196,14 @@ export default function Onboarding() {
               <input className="field" dir="ltr" value={link} inputMode="url"
                 onChange={(e) => setLink(e.target.value)} placeholder="https://…" />
             </Field>
+            {/* instant recognition, same beat as the Radar's setup chip — names
+                the platform + shows its logo while typing, never silent */}
+            {linkPlatform && (
+              <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
+                <PlatformLogo name={linkPlatform} size={15} className="text-gold" />
+                {linkPlatform.charAt(0).toUpperCase() + linkPlatform.slice(1)} recognized
+              </p>
+            )}
             {/* the deferral promise — everything else is the Radar's job */}
             <p className="text-[11px] leading-relaxed text-faint">{T.onboarding.entryDeferNote}</p>
           </div>

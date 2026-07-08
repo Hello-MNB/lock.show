@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { Wordmark, LanguageToggle, BottomSheet, PageShell, PlatformMark, platformOf } from '../../components/ui.jsx'
+import { Wordmark, LanguageToggle, BottomSheet, PageShell } from '../../components/ui.jsx'
+import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
 import { getPublicPassport, recordPassportView, recordProfessionalReaction } from '../../lib/db.js'
@@ -268,7 +269,7 @@ export default function Passport() {
                     key={l.id} href={l.public_url} target="_blank" rel="noreferrer"
                     className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted transition hover:border-white/25 hover:text-ink"
                   >
-                    <PlatformMark platform={platformOf(l.public_url)} size="h-5 w-5" />
+                    <PlatformLogo name={detectPlatform(l.public_url)} size={16} />
                     {hostOf(l.public_url)} ↗
                   </a>
                 ))}
@@ -434,7 +435,7 @@ const prettyType = (t = '') => t.replace(/[-_]/g, ' ')
 const hostOf = (url = '') => {
   // brand name when we know the platform ("open.spotify.com" must read SPOTIFY,
   // not OPEN); otherwise the full hostname — never a bare subdomain
-  const p = platformOf(url)
-  if (p) return p === 'apple' ? 'apple music' : p
+  const p = detectPlatform(url)
+  if (p) return p === 'applemusic' ? 'apple music' : p
   try { return new URL(url).hostname.replace('www.', '') } catch { return url.slice(0, 18) }
 }
