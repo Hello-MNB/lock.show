@@ -1,6 +1,42 @@
+'use client'
+
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
+import { useLocale } from '@/lib/locale-context'
+
+const CONSENT_STORAGE_KEY = 'gigproof_consent'
+
+function ConsentPrefsButton({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        try {
+          localStorage.removeItem(CONSENT_STORAGE_KEY)
+        } catch {
+          // localStorage unavailable — nothing to clear
+        }
+        window.location.reload()
+      }}
+      style={{
+        display: 'block',
+        marginTop: '2px',
+        padding: 0,
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontFamily: 'var(--font-heebo)',
+        fontSize: '0.875rem',
+        color: 'rgba(255,255,255,0.6)',
+        textDecoration: 'underline',
+        textUnderlineOffset: '2px',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
 
 const FOOTER_LINKS = [
   {
@@ -31,6 +67,9 @@ const FOOTER_LINKS = [
 ]
 
 export function Footer() {
+  const { messages } = useLocale()
+  const t = messages.footer
+
   return (
     <footer
       style={{
@@ -129,6 +168,43 @@ export function Footer() {
               </ul>
             </div>
           ))}
+
+          {/* Legal column — locale-aware (footer.* keys) */}
+          <div>
+            <p style={{
+              fontFamily: 'var(--font-space-mono)',
+              fontSize: '0.6rem',
+              letterSpacing: '0.14em',
+              color: 'rgba(255,255,255,0.35)',
+              margin: '0 0 16px',
+            }}>
+              LEGAL
+            </p>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {[
+                { href: '/privacy',       label: t.privacy },
+                { href: '/terms',         label: t.terms },
+                { href: '/accessibility', label: t.accessibility },
+              ].map(({ href, label }) => (
+                <li key={href} style={{ marginBottom: '10px' }}>
+                  <Link
+                    href={href}
+                    style={{
+                      fontFamily: 'var(--font-heebo)',
+                      fontSize: '0.875rem',
+                      color: 'rgba(255,255,255,0.6)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+              <li style={{ marginBottom: '10px' }}>
+                <ConsentPrefsButton label={t.consentPrefs} />
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Entity + firewall notice */}

@@ -77,6 +77,8 @@ export interface Messages {
     copyright: string
     privacy: string
     terms: string
+    accessibility: string
+    consentPrefs: string
     contact: string
   }
   home: {
