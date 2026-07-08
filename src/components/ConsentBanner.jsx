@@ -49,7 +49,7 @@ export default function ConsentBanner() {
   }, [])
 
   if (!visible) return null
-  const t = T.consent
+  const t = T.cookieConsent
 
   const decide = (value) => {
     storeChoice(value)

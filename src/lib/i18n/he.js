@@ -1,5 +1,5 @@
 export const T = {
-  consent: {
+  cookieConsent: {
     ariaLabel: 'הסכמה לקובצי Cookie',
     message:
       'אנחנו משתמשים בקובצי Cookie למדידה כדי להבין איך המוצר משמש אתכם. קובצי Cookie חיוניים פועלים תמיד; מדידה פועלת רק בהסכמתכם.',

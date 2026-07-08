@@ -1,5 +1,5 @@
 export const T = {
-  consent: {
+  cookieConsent: {
     ariaLabel: 'Cookie consent',
     message:
       'We use analytics cookies to understand how the product is used. Essential cookies always work; measurement runs only with your consent.',
