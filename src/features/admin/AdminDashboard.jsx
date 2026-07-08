@@ -203,12 +203,21 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-2">
                 {payments.map((p) => (
-                  <div key={p.id} className="card flex items-center justify-between gap-3 py-3">
-                    <span className="truncate text-sm text-ink">{p.artists?.stage_name || '—'}</span>
-                    <button onClick={() => activate(p.id)}
-                      className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
-                      {T.admin.markActive}
-                    </button>
+                  <div key={p.id} className="card py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="truncate text-sm font-bold text-ink">{p.artists?.stage_name || '—'}</span>
+                      <button onClick={() => activate(p.id)}
+                        className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
+                        {T.admin.markActive}
+                      </button>
+                    </div>
+                    {/* reference + amount, so the owner can match this row against her Bit app */}
+                    <p dir="ltr" className="mt-2 truncate font-mono text-sm font-bold text-ink">
+                      {p.amount_note || T.admin.noAmountNote}
+                    </p>
+                    <p className="font-mono text-xs text-faint">
+                      {p.subject_email || T.admin.noEmailOnFile} · {new Date(p.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                 ))}
               </div>

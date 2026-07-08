@@ -9,6 +9,17 @@ import { useLang } from '../../context/LangContext.jsx'
 // Artist marks "I've paid" → entitlement 'pending' → operator confirms → 'active'.
 // The artist is never stuck: this screen reflects the status, with the date the
 // confirmation was received and a calm "the operator will activate you" note.
+// Bit recipient (the operator). Not a secret — shown to any signed-in artist on
+// this screen. Price stays the existing range copy until the owner locks one.
+const BIT_NUMBER = '054-4555060'
+
+// Deterministic payment-reference code so the artist can add it to the Bit
+// transfer note BEFORE paying, and the operator can match it in her Bit app
+// after: "GP-" + first 4 chars of the artist id, uppercased.
+function paymentRefCode(id) {
+  return id ? `GP-${id.slice(0, 4).toUpperCase()}` : ''
+}
+
 export default function OfferPayment() {
   const { T } = useLang()
   const { user } = useAuth()
@@ -17,6 +28,8 @@ export default function OfferPayment() {
   const [artist, setArtist] = useState(null)
   const [ent, setEnt] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [amount, setAmount] = useState('')
+  const [copied, setCopied] = useState(false)
 
   async function load() {
     setError(false)
@@ -29,12 +42,21 @@ export default function OfferPayment() {
   useEffect(() => { load() }, [user.id])
 
   async function markPaid() {
-    if (busy || !artist) return
+    if (busy || !artist || !amount) return
     setBusy(true)
     try {
-      await createEntitlement(artist.id, user.id)
+      const refCode = paymentRefCode(artist.id)
+      await createEntitlement(artist.id, user.id, `${refCode} · ₪${amount} · Bit`)
       await load()
     } catch { setError(true) } finally { setBusy(false) }
+  }
+
+  async function copyBit() {
+    try {
+      await navigator.clipboard.writeText(BIT_NUMBER)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2200)
+    } catch { /* clipboard blocked — the number is still visible/selectable */ }
   }
 
   if (loading) return <Loading />
@@ -73,9 +95,12 @@ export default function OfferPayment() {
           {paidOn && (
             <p className="relative mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">Payment confirmation received · {paidOn}</p>
           )}
+          {ent?.amount_note && (
+            <p dir="ltr" className="relative mb-2 font-mono text-sm font-bold text-ink">{ent.amount_note}</p>
+          )}
           <p className="relative text-sm text-muted">{O.pendingBody}</p>
           <p className="relative mt-3 border-t border-line pt-3 text-xs text-muted">
-            The operator will activate you shortly — nothing else is needed from you.
+            {O.verifyNote}
           </p>
         </div>
       ) : (
@@ -86,10 +111,28 @@ export default function OfferPayment() {
           <div className="card mb-4"><p className="text-sm text-ink/90">{O.trustLine}</p></div>
           <div className="card mb-4">
             <p className="mb-1 font-bold text-ink">{O.howToPay}</p>
-            <p className="mb-1 text-sm text-muted">{O.payMethods}</p>
+            <p className="mb-3 text-sm text-muted">{O.payMethods}</p>
+
+            <p className="mb-1 text-xs uppercase tracking-[0.08em] text-muted">{O.bitNumberLabel}</p>
+            <div className="mb-3 flex items-center gap-2">
+              <span dir="ltr" className="font-mono text-lg font-bold text-ink">{BIT_NUMBER}</span>
+              <button type="button" onClick={copyBit} className="btn-ghost shrink-0 px-3 py-1.5 text-xs">
+                {copied ? 'Copied ✓' : O.copyBit}
+              </button>
+            </div>
+
+            <p className="mb-1 text-xs uppercase tracking-[0.08em] text-muted">{O.referenceLabel}</p>
+            <p dir="ltr" className="mb-3 font-mono text-lg font-bold text-ink">{paymentRefCode(artist?.id)}</p>
+
             <p className="text-sm text-muted">{O.payInstructions}</p>
           </div>
-          <button className="btn-primary w-full" onClick={markPaid} disabled={busy}>
+          <div className="card mb-4">
+            <label htmlFor="amountSent" className="mb-1 block text-sm font-bold text-ink">{O.amountLabel}</label>
+            <input id="amountSent" className="field" dir="ltr" type="number" inputMode="decimal" min="0" step="1"
+              value={amount} onChange={(e) => setAmount(e.target.value)} required />
+            <p className="mt-2 text-xs text-muted">{O.verifyNote}</p>
+          </div>
+          <button className="btn-primary w-full" onClick={markPaid} disabled={busy || !amount}>
             {busy ? <Spinner /> : O.paidCta}
           </button>
         </>

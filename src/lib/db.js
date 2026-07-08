@@ -420,7 +420,7 @@ export async function getEntitlement(artistId) {
   if (DEMO) return demoEntitlement
   const { data, error } = await supabase
     .from('entitlements')
-    .select('id, status, kind, created_at')
+    .select('id, status, kind, created_at, amount_note')
     .eq('artist_id', artistId)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -429,10 +429,23 @@ export async function getEntitlement(artistId) {
   return data
 }
 
-export async function createEntitlement(artistId, subjectId) {
-  if (DEMO) return demoEntitlement
+// amountNote is optional (back-compat) — set by OfferPayment as
+// "GP-XXXX · ₪<amount> · Bit" so the operator can match the transfer in her Bit app.
+export async function createEntitlement(artistId, subjectId, amountNote) {
+  if (DEMO) {
+    // DEMO has no server round-trip — mutate the shared fixture in place so the
+    // "pending" screen the artist sees next reflects what they just entered.
+    Object.assign(demoEntitlement, {
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      ...(amountNote ? { amount_note: amountNote } : {}),
+    })
+    return demoEntitlement
+  }
+  const insert = { artist_id: artistId, subject_id: subjectId, kind: 'founding_passport', status: 'pending' }
+  if (amountNote) insert.amount_note = amountNote
   const { data, error } = await supabase.from('entitlements')
-    .insert({ artist_id: artistId, subject_id: subjectId, kind: 'founding_passport', status: 'pending' })
+    .insert(insert)
     .select().single()
   if (error) throw error
   return data
@@ -442,11 +455,23 @@ export async function adminListPendingEntitlements() {
   if (DEMO) return [demoEntitlement]
   const { data, error } = await supabase
     .from('entitlements')
-    .select('id, status, created_at, artists(stage_name)')
+    .select('id, status, created_at, amount_note, subject_id, artists(stage_name)')
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data ?? []
+  const rows = data ?? []
+  // Best-effort subject email lookup (public.person, keyed on the same auth.users id).
+  // Not a foreign-key embed on purpose: entitlements.subject_id has no FK to
+  // public.person, so a PostgREST embed would 400. A plain filtered select degrades
+  // to "no email" (RLS may not yet grant operator read on person) without ever
+  // failing the whole payments list.
+  const subjectIds = [...new Set(rows.map((r) => r.subject_id).filter(Boolean))]
+  let emailById = {}
+  if (subjectIds.length) {
+    const { data: people } = await supabase.from('person').select('id, email').in('id', subjectIds)
+    emailById = Object.fromEntries((people ?? []).map((p) => [p.id, p.email]))
+  }
+  return rows.map((r) => ({ ...r, subject_email: emailById[r.subject_id] || null }))
 }
 
 export async function adminActivateEntitlement(id) {
