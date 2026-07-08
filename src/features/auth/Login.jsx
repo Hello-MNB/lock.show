@@ -85,7 +85,7 @@ export default function Login() {
       </form>
       {/* OAuth below the working form — disabled controls never lead the screen */}
       <div className="mt-6 border-t border-line pt-5">
-        <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} />
+        <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} demo={demo} />
       </div>
     </AuthScene>
   )

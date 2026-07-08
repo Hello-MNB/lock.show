@@ -83,9 +83,15 @@ function RealAuthProvider({ children }) {
   }, [loadProfile])
 
   const signInWithOAuth = useCallback(async (provider) => {
+    // Respect the embed base path: '/' standalone (app.gigproof.co) vs '/app/'
+    // when served under the public website (gigproof-website.vercel.app/app).
+    // Landing back on the right base means the redirect hits RoleHome ("/"),
+    // which already bounces a role-less user (first-time social signer) to
+    // /select — same profile-bootstrap path email signup uses (UserTypeSelect).
+    const base = import.meta.env.BASE_URL || '/'
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin + base },
     })
     if (error) throw error
   }, [])

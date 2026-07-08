@@ -68,12 +68,19 @@ function FacebookIcon() {
   )
 }
 
-export function SocialAuthButtons({ onOAuth, disabled = false }) {
+// `demo` (DEMO build persona-picker mode, no real Supabase client): the buttons
+// stay tappable — never inert — but explain via toast instead of attempting a
+// real OAuth call (there is no supabase client to call in DEMO). This wins over
+// `disabled` (the OAUTH_ENABLED-off "coming soon" state) so a demo build never
+// silently no-ops a tap.
+export function SocialAuthButtons({ onOAuth, disabled = false, demo = false }) {
   const { T } = useLang()
+  const { show } = useToast()
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
 
   async function handle(provider) {
+    if (demo) { show(T.login.oauthDemoNotice, 'warn'); return }
     if (disabled) return
     setErr('')
     setBusy(true)
@@ -85,28 +92,29 @@ export function SocialAuthButtons({ onOAuth, disabled = false }) {
     }
   }
 
+  const inert = disabled && !demo
   const btnClass = `w-full flex items-center justify-center gap-3 py-3 px-4 rounded-sm border border-line2 bg-surface2 text-sm font-medium transition-colors ${
-    disabled ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-raise text-ink'
+    inert ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-raise text-ink'
   }`
 
   return (
-    <div className={`space-y-2 ${disabled ? 'pointer-events-none' : ''}`}>
+    <div className={`space-y-2 ${inert ? 'pointer-events-none' : ''}`}>
       {err && <ErrorNote>{err}</ErrorNote>}
-      <button type="button" disabled={busy || disabled}
+      <button type="button" disabled={busy || inert}
         className={btnClass}
-        title={disabled ? T.login.oauthComingSoon : undefined}
+        title={inert ? T.login.oauthComingSoon : undefined}
         onClick={() => handle('google')}>
         <GoogleIcon />
         {T.login.googleCta}
       </button>
-      <button type="button" disabled={busy || disabled}
+      <button type="button" disabled={busy || inert}
         className={btnClass}
-        title={disabled ? T.login.oauthComingSoon : undefined}
+        title={inert ? T.login.oauthComingSoon : undefined}
         onClick={() => handle('facebook')}>
         <FacebookIcon />
         {T.login.facebookCta}
       </button>
-      {disabled && <p className="text-xs text-muted text-center">{T.login.oauthComingSoon}</p>}
+      {inert && <p className="text-xs text-muted text-center">{T.login.oauthComingSoon}</p>}
     </div>
   )
 }

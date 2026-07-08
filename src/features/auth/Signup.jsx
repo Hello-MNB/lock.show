@@ -8,7 +8,7 @@ import AuthScene from './AuthScene.jsx'
 
 export default function Signup() {
   const { T } = useLang()
-  const { signUp, signInWithOAuth } = useAuth()
+  const { signUp, signInWithOAuth, demo } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
   const [fullName, setFullName] = useState('')
@@ -54,9 +54,9 @@ export default function Signup() {
     <AuthScene tagline="Your nights, made provable.">
       <h1 className="mb-1 text-2xl font-bold text-ink">{T.signup.title}</h1>
       <p className="mb-6 text-sm text-muted">{T.signup.heroLine}</p>
-      {OAUTH_ENABLED && (
+      {(OAUTH_ENABLED || demo) && (
         <>
-          <SocialAuthButtons onOAuth={signInWithOAuth} />
+          <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} demo={demo} />
           <OrDivider />
         </>
       )}

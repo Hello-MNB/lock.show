@@ -450,7 +450,7 @@ function PlanetRow({ node: n, planet, S, T, busy, onConfirm, onEvidence, artist,
 // One node = one tiny form. Saving updates the data and the node flips to ✓
 // without ever leaving the panel. (Ticket exports stay in the evidence flow —
 // they carry the third-party consent gate.)
-function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onDone }) {
+function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onClaimsChange, onDone }) {
   const { kind, field, max, placeholder } = node.fill
   const [v, setV] = useState('')
   const [v2, setV2] = useState('')
@@ -543,16 +543,17 @@ function MissingFill({ node, artist, S, onArtistChange, onItemsRefresh, onDone }
               const value = v.trim()
               await addProfileItem({ artist_id: artist.id, item_type: 'link', title: 'link', public_url: value, visibility: 'passport-ok', source_status: 'artist-provided' })
               await onItemsRefresh?.()
-              // Same source also becomes evidence → the AI claim pipeline runs on
-              // it so it can surface as a found/review node next time the radar
-              // reloads, instead of sitting only as a connected-source dot.
+              // Same source also becomes evidence → runs through the AI claim
+              // pipeline right here so the resulting found/review node appears
+              // in this same radar session, not only after a reload.
               try {
                 await addEvidence({
                   artist_id: artist.id, evidence_type: 'link', source_type: 'public-profile',
                   value, public_url: value, claim_intent: 'consistent-frequency', source_owner_consent: true,
                 })
-                processEvidence(artist.id).catch(() => {})
-              } catch { /* best-effort */ }
+                await processEvidence(artist.id)
+                if (onClaimsChange) onClaimsChange(await listClaims(artist.id))
+              } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
             })}>
             {busy ? <Spinner /> : S.fill.save}
           </button>

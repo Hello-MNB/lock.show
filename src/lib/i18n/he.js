@@ -38,6 +38,7 @@ export const T = {
     facebookCta: 'כניסה עם Facebook',
     socialError: 'שגיאה בכניסה עם רשת חברתית',
     oauthComingSoon: 'כניסה עם Google ו-Facebook — בקרוב. בינתיים, כניסה באימייל.',
+    oauthDemoNotice: 'זהו דמו עם נתוני דוגמה — כניסה עם רשת חברתית אינה מחוברת כאן.',
   },
   signup: {
     title: 'בוא נבנה לך פרופיל מקצועי',
@@ -334,6 +335,8 @@ export const T = {
     subtitle: 'הדבק קישור פספורט שקיבלת כדי לצפות בהוכחות ולבדוק זמינות.',
     inputLabel: 'קישור / מזהה פספורט',
     openCta: 'פתח',
+    noLinkYet: 'עדיין אין לך קישור?',
+    sampleCta: 'צפה בפספורט לדוגמה',
   },
   admin: {
     title: 'קונסולת מנהל מערכת',

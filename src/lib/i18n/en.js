@@ -38,6 +38,7 @@ export const T = {
     facebookCta: 'Sign in with Facebook',
     socialError: 'Social sign-in failed.',
     oauthComingSoon: 'Google & Facebook sign-in — coming soon. Use email for now.',
+    oauthDemoNotice: 'This is a sample-data demo — social sign-in isn’t connected here.',
   },
   signup: {
     title: "Let's build your professional profile",
@@ -351,6 +352,8 @@ export const T = {
     subtitle: 'Paste a Passport link you received to view the proof and check availability.',
     inputLabel: 'Passport link / ID',
     openCta: 'Open',
+    noLinkYet: "Don't have a link yet?",
+    sampleCta: 'See a sample Passport',
   },
   admin: {
     title: 'Operator console',
