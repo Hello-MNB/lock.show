@@ -86,17 +86,17 @@ export default function ArtistReadiness() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6">
-        <Wordmark /><Link to="/artist/home" className="text-sm text-muted">{T.common.back}</Link>
+      <div className="mb-6 flex items-center justify-between">
+        <Wordmark /><Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
-      <h1 className="text-xl font-bold text-soft mb-1">{T.readiness.title}</h1>
-      <p className="text-sm text-muted mb-4">{T.readiness.subtitle}</p>
+      <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.readiness.title}</h1>
+      <p className="mb-4 text-sm text-muted">{T.readiness.subtitle}</p>
 
-      <div className="space-y-3 mb-6">
+      <div className="mb-6 space-y-3">
         {data.axes.map((ax) => (
-          <div key={ax.key} className="card flex items-center justify-between">
-            <div>
-              <p className="font-bold text-soft">{ax.label}</p>
+          <div key={ax.key} className="card flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-ink">{ax.label}</p>
               <p className="text-xs text-muted">{ax.next}</p>
             </div>
             <StatusChip status={axisStatus(ax.score)} />
@@ -104,9 +104,12 @@ export default function ArtistReadiness() {
         ))}
       </div>
 
-      <div className="card bg-accent/10 border-accent/30">
-        <p className="text-sm text-muted mb-1">{T.readiness.nextStep}</p>
-        <p className="font-bold text-soft">{data.nextAction}</p>
+      {/* one dominant next step — the coach's move, warm and quiet */}
+      <div className="relative overflow-hidden rounded-2xl border border-accent/25 bg-surface p-5 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.75)]">
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-12 h-32"
+          style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.12), transparent 70%)' }} />
+        <p className="relative mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-gold">{T.readiness.nextStep}</p>
+        <p className="font-display relative text-lg font-bold tracking-[-0.01em] text-ink">{data.nextAction}</p>
       </div>
     </PageShell>
   )

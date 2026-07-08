@@ -39,7 +39,7 @@ export function ToastProvider({ children }) {
       <div className="fixed bottom-4 inset-x-0 z-[60] flex flex-col items-center gap-2 px-4 pointer-events-none">
         {toasts.map((t) => (
           <div key={t.id} role="status"
-            className="pointer-events-auto flex items-center gap-2.5 rounded bg-[#131A14] border border-line2 px-4 py-2.5 text-sm font-bold text-ink shadow-card">
+            className="pointer-events-auto flex items-center gap-2.5 rounded bg-[#131A14] border border-line2 px-4 py-2.5 text-sm font-bold text-ink shadow-card animate-fade-in">
             <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full ${t.type === 'warn' ? 'bg-amber' : 'bg-accent'}`} />
             {t.msg}
           </div>
@@ -144,22 +144,52 @@ export function Loading({ label }) {
   )
 }
 
-// Bounded status pill — the ONLY status vocabulary the firewall permits.
-// UX §15.1: text + a distinct SHAPE icon (filled/half/empty/dash), never
-// color alone — satisfies WCAG 1.4.1 and the firewall (categorical, not a gauge).
-export function StatusChip({ status }) {
+// ── THE 5-STATE DATA-COLLECTION VOCABULARY (master-class mandate §1) ─────────
+// Every state = ONE color + ONE icon + ONE verb, everywhere. Text + a distinct
+// SHAPE icon, never color alone (WCAG 1.4.1) — categorical, never a gauge.
+//   ✦ found          gold  — "we discovered something for you" (gentle glow)
+//   ✓ confirmed      lime  — "locked into your proof"
+//   ◌ developing     teal  — "growing, more to surface"
+//   + needs-you      amber — "one small step, big value" (invitation, never shame)
+//   ○ not-assessable grey  — "not relevant to you" (removed weight, never a gap)
+const STATE_DEF = {
+  found: { icon: '✦', c: 'bg-found-bg text-found glow-found', key: 'found' },
+  confirmed: { icon: '✓', c: 'bg-good-bg text-good', key: 'strong' },
+  developing: { icon: '◌', c: 'bg-dev-bg text-dev', key: 'developing' },
+  'needs-you': { icon: '+', c: 'bg-need-bg text-need', key: 'missing' },
+  'not-assessable': { icon: '○', c: 'bg-na-bg text-na', key: 'notAssessable' },
+}
+
+// Legacy status values (STATUS.* and older chip vocab) → canonical state.
+const STATE_ALIAS = {
+  [STATUS.STRONG]: 'confirmed',
+  [STATUS.DEVELOPING]: 'developing',
+  [STATUS.MISSING]: 'needs-you',
+  [STATUS.NOT_ASSESSABLE]: 'not-assessable',
+  ok: 'confirmed',
+  warn: 'developing',
+  gap: 'needs-you',
+  na: 'not-assessable',
+}
+
+// Canonical state badge. <StateBadge state="found" /> — or pass children to
+// override the verb ("6 gigs found"). Accepts canonical states AND legacy
+// STATUS.* values, so existing call sites can migrate gradually.
+export function StateBadge({ state, children, className = '' }) {
   const { T } = useLang()
-  // "Live Intelligence" status pairs — icon + text on quiet dark tints
-  const map = {
-    [STATUS.STRONG]: { t: T.status.strong, c: 'bg-good-bg text-good', icon: '✓' },       // Established
-    [STATUS.DEVELOPING]: { t: T.status.developing, c: 'bg-dev-bg text-dev', icon: '◐' }, // Developing
-    // warm amber, deliberately NOT error-red: "unknown evidence is never presented
-    // as weak evidence" (canon) — a gap is an invitation, not a failure
-    [STATUS.MISSING]: { t: T.status.missing, c: 'bg-need-bg text-need', icon: '+' },     // Needs you
-    [STATUS.NOT_ASSESSABLE]: { t: T.status.notAssessable, c: 'bg-na-bg text-na', icon: '–' }, // Not assessed
-  }
-  const s = map[status] ?? map[STATUS.NOT_ASSESSABLE]
-  return <span className={`chip ${s.c}`}><span aria-hidden="true">{s.icon}</span> {s.t}</span>
+  const s = STATE_DEF[state] ?? STATE_DEF[STATE_ALIAS[state]] ?? STATE_DEF['not-assessable']
+  return (
+    <span className={`chip ${s.c} ${className}`}>
+      <span aria-hidden="true">{s.icon}</span> {children ?? T.status[s.key]}
+    </span>
+  )
+}
+
+// Bounded status pill — the ONLY status vocabulary the firewall permits.
+// Back-compat wrapper: keeps accepting the STATUS.* prop values used across
+// the app, now rendered through the canonical 5-state vocabulary above.
+export function StatusChip({ status }) {
+  return <StateBadge state={status} />
 }
 
 // ── MethodLabel — the transparency badge (firewall §3). Mono, uppercase,
