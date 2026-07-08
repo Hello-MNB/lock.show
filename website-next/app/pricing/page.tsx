@@ -41,22 +41,23 @@ export default function Pricing() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-stamp)',
+            color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
             PRICING
           </p>
           <h1 style={{
-            fontFamily: 'var(--font-archivo)',
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontWeight: 400,
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
-            letterSpacing: '-0.02em',
+            letterSpacing: '-0.03em',
             margin: '0 0 20px',
           }}>
             Free for booking managers. By arrangement for artists.
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally)', maxWidth: '540px', lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '540px', lineHeight: 1.6, margin: 0 }}>
             We&apos;re in closed beta. Access is direct and by arrangement — no credit card, no subscription page yet.
             Booking managers are always free.
           </p>
@@ -87,7 +88,7 @@ export default function Pricing() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.65rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
                 marginBottom: '12px',
               }}>
@@ -102,9 +103,9 @@ export default function Pricing() {
                 }}>
                   Free
                 </span>
-                <span style={{ color: 'var(--color-tally)', fontSize: '0.9rem' }}>always</span>
+                <span style={{ color: 'var(--color-tally-onlight)', fontSize: '0.9rem' }}>always</span>
               </div>
-              <p style={{ color: 'var(--color-tally)', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
+              <p style={{ color: 'var(--color-tally-onlight)', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
                 No account required. No email signup. Open a Passport link in your browser.
               </p>
             </div>
@@ -117,11 +118,11 @@ export default function Pricing() {
                   <span style={{
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.7rem',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-stamp-onlight)',
                     flexShrink: 0,
                     paddingTop: '2px',
                   }}>✓</span>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--color-tally)', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.5 }}>
                     {item}
                   </p>
                 </div>
@@ -179,7 +180,7 @@ export default function Pricing() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.65rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-stamp)',
+                color: 'var(--color-stamp-onlight)',
                 textTransform: 'uppercase',
                 marginBottom: '12px',
               }}>
@@ -195,7 +196,7 @@ export default function Pricing() {
                   By arrangement
                 </span>
               </div>
-              <p style={{ color: 'var(--color-tally)', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
+              <p style={{ color: 'var(--color-tally-onlight)', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
                 During beta, artist access is by direct arrangement. Manual payment via Bit or bank transfer.
                 Pricing will be published when we exit beta.
               </p>
@@ -209,7 +210,7 @@ export default function Pricing() {
                   <span style={{
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.7rem',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-stamp-onlight)',
                     flexShrink: 0,
                     paddingTop: '2px',
                   }}>✓</span>
@@ -250,7 +251,7 @@ export default function Pricing() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -288,7 +289,7 @@ export default function Pricing() {
                   color: 'var(--color-void)',
                   flexShrink: 0,
                 }}>✗</span>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-tally)', margin: 0, lineHeight: 1.5 }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.5 }}>
                   {item}
                 </p>
               </div>
@@ -304,7 +305,7 @@ export default function Pricing() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '32px',
           }}>
@@ -348,14 +349,14 @@ export default function Pricing() {
                 <span style={{
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.8rem',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-stamp-onlight)',
                   flexShrink: 0,
                 }}>+</span>
               </summary>
               <p style={{
                 padding: '0 0 24px 0',
                 fontSize: '0.925rem',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 lineHeight: 1.7,
                 margin: 0,
                 maxWidth: '600px',

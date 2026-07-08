@@ -61,7 +61,7 @@ function MethodBadge({ label }: { label: string }) {
         fontSize: '0.6rem',
         fontWeight: 700,
         letterSpacing: '0.08em',
-        color: 'var(--color-stamp)',
+        color: 'var(--color-stamp-onlight)',
         background: 'rgba(200,240,77,0.08)',
         border: '1px solid rgba(200,240,77,0.2)',
         borderRadius: '2px',
@@ -395,7 +395,7 @@ export default function ArtistsPage() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.65rem',
               letterSpacing: '0.14em',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}
@@ -451,7 +451,7 @@ export default function ArtistsPage() {
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.6rem',
                   letterSpacing: '0.12em',
-                  color: 'var(--color-tally)',
+                  color: 'var(--color-tally-onlight)',
                   textTransform: 'uppercase',
                   marginBottom: '0.5rem',
                 }}
@@ -472,7 +472,7 @@ export default function ArtistsPage() {
               <p
                 style={{
                   fontSize: '0.9rem',
-                  color: 'var(--color-tally)',
+                  color: 'var(--color-tally-onlight)',
                   lineHeight: 1.65,
                   marginBottom: '1.5rem',
                 }}
@@ -485,7 +485,7 @@ export default function ArtistsPage() {
                 {radarFeatures.map((f) => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally)', lineHeight: 1.4 }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
                       {f}
                     </span>
                   </div>
@@ -522,7 +522,7 @@ export default function ArtistsPage() {
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.6rem',
                   letterSpacing: '0.12em',
-                  color: 'var(--color-tally)',
+                  color: 'var(--color-tally-onlight)',
                   textTransform: 'uppercase',
                   marginBottom: '0.5rem',
                 }}
@@ -543,7 +543,7 @@ export default function ArtistsPage() {
               <p
                 style={{
                   fontSize: '0.9rem',
-                  color: 'var(--color-tally)',
+                  color: 'var(--color-tally-onlight)',
                   lineHeight: 1.65,
                   marginBottom: '1.5rem',
                 }}
@@ -556,7 +556,7 @@ export default function ArtistsPage() {
                 {passportFeatures.map((f) => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally)', lineHeight: 1.4 }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
                       {f}
                     </span>
                   </div>
@@ -579,7 +579,7 @@ export default function ArtistsPage() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.6rem',
                 letterSpacing: '0.1em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
                 marginBottom: '1.25rem',
               }}
@@ -623,7 +623,7 @@ export default function ArtistsPage() {
                       fontFamily: 'var(--font-space-mono)',
                       fontSize: '0.55rem',
                       letterSpacing: '0.1em',
-                      color: 'var(--color-tally)',
+                      color: 'var(--color-tally-onlight)',
                       textTransform: 'uppercase',
                       marginBottom: '0.35rem',
                     }}
@@ -644,7 +644,7 @@ export default function ArtistsPage() {
                   <div
                     style={{
                       fontSize: '0.8rem',
-                      color: 'var(--color-tally)',
+                      color: 'var(--color-tally-onlight)',
                       marginBottom: '0.6rem',
                     }}
                   >
@@ -656,7 +656,7 @@ export default function ArtistsPage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.58rem',
-                        color: 'var(--color-tally)',
+                        color: 'var(--color-tally-onlight)',
                         letterSpacing: '0.06em',
                       }}
                     >

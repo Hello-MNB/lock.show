@@ -51,7 +51,7 @@ const evidenceStates = [
     state: 'SUBMITTED',
     label: 'Awaiting operator review',
     desc: 'You\'ve submitted a document or sent a magic link. The claim is in the queue.',
-    color: '#7A7A3A',
+    color: '#9c9450',
   },
   {
     state: 'PENDING',
@@ -63,7 +63,7 @@ const evidenceStates = [
     state: 'ABSENT',
     label: 'No data for this dimension',
     desc: 'Nothing logged for this area. The Radar surfaces this so you can decide whether to act on it.',
-    color: 'rgba(10,13,11,0.3)',
+    color: 'rgba(255,255,255,0.35)',
   },
 ]
 
@@ -86,22 +86,23 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-stamp)',
+            color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
             ARTIST RADAR · PRIVATE WORKSPACE
           </p>
           <h1 style={{
-            fontFamily: 'var(--font-archivo)',
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontWeight: 400,
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
-            letterSpacing: '-0.02em',
+            letterSpacing: '-0.03em',
             margin: '0 0 20px',
           }}>
             Your professional profile — organized by evidence.
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally)', maxWidth: '540px', lineHeight: 1.6, margin: '0 0 16px' }}>
+          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '540px', lineHeight: 1.6, margin: '0 0 16px' }}>
             The Artist Radar is the private workspace where you build, manage, and verify your professional evidence.
             It is visible only to you. Nothing leaves it without your explicit approval.
           </p>
@@ -109,7 +110,7 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.08em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             margin: 0,
           }}>
             NOT a chart. NOT a score. A navigation surface organized by dimension.
@@ -131,7 +132,7 @@ export default function Radar() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.7rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
                 marginBottom: '20px',
               }}>
@@ -150,7 +151,7 @@ export default function Radar() {
                     <span style={{
                       fontFamily: 'var(--font-space-mono)',
                       fontSize: '0.7rem',
-                      color: 'var(--color-stamp)',
+                      color: 'var(--color-stamp-onlight)',
                       flexShrink: 0,
                       paddingTop: '2px',
                     }}>✓</span>
@@ -167,7 +168,7 @@ export default function Radar() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.7rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
                 marginBottom: '20px',
               }}>
@@ -189,7 +190,7 @@ export default function Radar() {
                       flexShrink: 0,
                       paddingTop: '2px',
                     }}>✗</span>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', margin: 0, lineHeight: 1.55 }}>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.55 }}>
                       {item}
                     </p>
                   </div>
@@ -207,7 +208,7 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -221,7 +222,7 @@ export default function Radar() {
           }}>
             Six dimensions. One engine. Every artist type.
           </h2>
-          <p style={{ color: 'var(--color-tally)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '48px', maxWidth: '560px' }}>
+          <p style={{ color: 'var(--color-tally-onlight)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '48px', maxWidth: '560px' }}>
             The Radar adapts to you — not to a fixed genre or format. Dimensions that don&apos;t apply to your
             artist type are switched off. An absent field is not a gap.
           </p>
@@ -245,7 +246,7 @@ export default function Radar() {
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.65rem',
                   letterSpacing: '0.12em',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-stamp-onlight)',
                   marginBottom: '10px',
                 }}>
                   {d.id}
@@ -257,7 +258,7 @@ export default function Radar() {
                 }}>
                   {d.title}
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-tally)', lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-tally-onlight)', lineHeight: 1.6, margin: 0 }}>
                   {d.body}
                 </p>
               </div>
@@ -349,7 +350,7 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -363,7 +364,7 @@ export default function Radar() {
           }}>
             Same data. Two faces.
           </h2>
-          <p style={{ color: 'var(--color-tally)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '40px', maxWidth: '520px' }}>
+          <p style={{ color: 'var(--color-tally-onlight)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '40px', maxWidth: '520px' }}>
             The Radar and the Passport share the same underlying claims — but show very different things.
           </p>
 
@@ -383,7 +384,7 @@ export default function Radar() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.65rem',
                     letterSpacing: '0.1em',
-                    color: 'var(--color-tally)',
+                    color: 'var(--color-tally-onlight)',
                     textTransform: 'uppercase',
                     borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
@@ -394,7 +395,7 @@ export default function Radar() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.65rem',
                     letterSpacing: '0.1em',
-                    color: 'var(--color-stamp)',
+                    color: 'var(--color-stamp-onlight)',
                     textTransform: 'uppercase',
                     borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
@@ -405,7 +406,7 @@ export default function Radar() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.65rem',
                     letterSpacing: '0.1em',
-                    color: 'var(--color-tally)',
+                    color: 'var(--color-tally-onlight)',
                     textTransform: 'uppercase',
                     borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
@@ -420,7 +421,7 @@ export default function Radar() {
                   >
                     <td style={{
                       padding: '14px 16px',
-                      color: 'var(--color-tally)',
+                      color: 'var(--color-tally-onlight)',
                       fontFamily: 'var(--font-space-mono)',
                       fontSize: '0.7rem',
                       letterSpacing: '0.06em',
@@ -435,7 +436,7 @@ export default function Radar() {
                     }}>{row.radar}</td>
                     <td style={{
                       padding: '14px 16px',
-                      color: 'var(--color-tally)',
+                      color: 'var(--color-tally-onlight)',
                       lineHeight: 1.5,
                       borderBottom: '1px solid rgba(10,13,11,0.06)',
                     }}>{row.passport}</td>
@@ -449,8 +450,8 @@ export default function Radar() {
 
       {/* CTA */}
       <section style={{
-        backgroundColor: 'var(--color-stamp)',
-        color: 'var(--color-ink)',
+        backgroundColor: 'var(--color-ink)',
+        color: 'var(--color-paper)',
         padding: '80px 24px',
         textAlign: 'center',
       }}>
@@ -459,7 +460,7 @@ export default function Radar() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'rgba(10,13,11,0.55)',
+            color: 'var(--color-stamp)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -473,7 +474,7 @@ export default function Radar() {
           }}>
             Build the Radar. Publish the Passport.
           </h2>
-          <p style={{ color: 'rgba(10,13,11,0.65)', marginBottom: '36px', lineHeight: 1.6 }}>
+          <p style={{ color: 'rgba(243,245,239,0.6)', marginBottom: '36px', lineHeight: 1.6 }}>
             Your evidence, organized. Your career, legible.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -482,7 +483,7 @@ export default function Radar() {
               style={{
                 display: 'inline-block',
                 padding: '15px 32px',
-                backgroundColor: '#fff',
+                backgroundColor: 'var(--color-stamp)',
                 color: 'var(--color-ink)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
@@ -500,8 +501,8 @@ export default function Radar() {
                 display: 'inline-block',
                 padding: '15px 32px',
                 backgroundColor: 'transparent',
-                color: 'rgba(10,13,11,0.7)',
-                border: '1px solid rgba(10,13,11,0.25)',
+                color: 'rgba(243,245,239,0.7)',
+                border: '1px solid rgba(243,245,239,0.25)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',

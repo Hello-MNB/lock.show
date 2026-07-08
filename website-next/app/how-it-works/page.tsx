@@ -85,22 +85,23 @@ export default function HowItWorks() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-stamp)',
+            color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
             HOW IT WORKS · THE PROCESS
           </p>
           <h1 style={{
-            fontFamily: 'var(--font-archivo)',
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontWeight: 400,
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
-            letterSpacing: '-0.02em',
+            letterSpacing: '-0.03em',
             margin: '0 0 20px',
           }}>
             From gig to verified evidence.
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally)', maxWidth: '480px', lineHeight: 1.6, margin: 0 }}>
+          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '480px', lineHeight: 1.6, margin: 0 }}>
             Three players. Three steps. Evidence you can trust.
           </p>
         </div>
@@ -113,7 +114,7 @@ export default function HowItWorks() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '40px',
           }}>
@@ -139,7 +140,7 @@ export default function HowItWorks() {
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.7rem',
                   letterSpacing: '0.12em',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-stamp-onlight)',
                   backgroundColor: 'rgba(200,240,77,0.08)',
                   padding: '3px 8px',
                   borderRadius: 'var(--radius-sm)',
@@ -157,12 +158,12 @@ export default function HowItWorks() {
                 <p style={{
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.7rem',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-stamp-onlight)',
                   marginBottom: '12px',
                 }}>
                   {p.heRole}
                 </p>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.6, margin: 0 }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.6, margin: 0 }}>
                   {p.body}
                 </p>
               </div>
@@ -181,7 +182,7 @@ export default function HowItWorks() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.7rem',
               letterSpacing: '0.08em',
-              color: 'var(--color-stamp)',
+              color: 'var(--color-stamp-onlight)',
               margin: 0,
             }}>
               אמרגן ≠ מפיק — Booking manager ≠ producer. They are distinct roles that are never merged in this system.
@@ -197,7 +198,7 @@ export default function HowItWorks() {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
@@ -260,7 +261,7 @@ export default function HowItWorks() {
                   }}>
                     {step.title}
                   </h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.65, margin: 0 }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, margin: 0 }}>
                     {step.body}
                   </p>
                 </div>
@@ -349,7 +350,7 @@ export default function HowItWorks() {
           }}>
             Ready to start?
           </h2>
-          <p style={{ color: 'var(--color-tally)', marginBottom: '32px', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--color-tally-onlight)', marginBottom: '32px', lineHeight: 1.6 }}>
             Build your Passport. Free for artists.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>

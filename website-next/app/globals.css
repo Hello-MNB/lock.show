@@ -13,7 +13,9 @@
   --color-stamp:  #c8f04d;
 
   /* Text */
-  --color-tally:  #929b94;   /* muted / secondary */
+  --color-tally:  #929b94;   /* muted / secondary — dark-bg contexts only */
+  --color-tally-onlight: #5c655e;   /* muted / secondary on paper/light bg — WCAG AA (~5.5:1) */
+  --color-stamp-onlight: #5c6e12;   /* lime text/icon on paper/light bg — WCAG AA (~5.2:1); lime itself is bg/border/CTA-only */
   --color-void:   #B23B2E;   /* error */
 
   /* Typography — Manrope (body + display) · DM Mono (labels) */

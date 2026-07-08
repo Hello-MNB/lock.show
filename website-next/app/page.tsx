@@ -620,7 +620,7 @@ export default function HomePage() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.7rem',
               letterSpacing: '0.1em',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
             }}
           >
             NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — EVIDENCE, LABELLED BY METHOD
@@ -640,7 +640,7 @@ export default function HomePage() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 marginBottom: '0.5rem',
                 textAlign: 'center',
                 textTransform: 'uppercase',
@@ -664,7 +664,7 @@ export default function HomePage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 textAlign: 'center',
                 marginBottom: '3rem',
                 maxWidth: '560px',
@@ -708,7 +708,7 @@ export default function HomePage() {
                 >
                   Build your proof profile
                 </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                   Collect evidence, invite producers to confirm a single claim, and publish
                   a verified Passport that speaks for you before the first call.
                 </p>
@@ -755,7 +755,7 @@ export default function HomePage() {
                 >
                   Evaluate before you risk your name
                 </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                   Read a Bookability Passport in under two minutes. Every claim shows its
                   method and review date — no algorithm, no guesswork, no black box.
                   Viewing is always free.
@@ -803,7 +803,7 @@ export default function HomePage() {
                 >
                   Confirm one claim, no account needed
                 </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                   Receive a bounded magic link, confirm a single claim you know
                   first-hand, and done. Your confirmation is method-labelled on
                   the Passport.
@@ -1055,7 +1055,7 @@ export default function HomePage() {
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.12em',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 marginBottom: '0.5rem',
                 textAlign: 'center',
                 textTransform: 'uppercase',
@@ -1159,7 +1159,7 @@ export default function HomePage() {
                     <p
                       style={{
                         fontSize: '0.95rem',
-                        color: 'var(--color-tally)',
+                        color: 'var(--color-tally-onlight)',
                         lineHeight: 1.65,
                       }}
                     >
@@ -1314,7 +1314,7 @@ export default function HomePage() {
         {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
         <section
           style={{
-            background: 'var(--color-stamp)',
+            background: 'var(--color-ink)',
             padding: 'clamp(3rem, 7vw, 5rem) 1.25rem',
             textAlign: 'center',
           }}
@@ -1326,7 +1326,7 @@ export default function HomePage() {
                 fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.02em',
-                color: 'var(--color-ink)',
+                color: 'var(--color-paper)',
                 marginBottom: '1rem',
                 lineHeight: 1.15,
               }}
@@ -1336,7 +1336,7 @@ export default function HomePage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: 'rgba(10,13,11,0.65)',
+                color: 'rgba(243,245,239,0.6)',
                 marginBottom: '2rem',
                 lineHeight: 1.65,
               }}
@@ -1349,8 +1349,8 @@ export default function HomePage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                background: 'var(--color-ink)',
-                color: 'var(--color-paper)',
+                background: 'var(--color-stamp)',
+                color: 'var(--color-ink)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.9rem',
                 fontWeight: 700,
@@ -1361,7 +1361,7 @@ export default function HomePage() {
               }}
             >
               REQUEST ACCESS
-              <Icon id="arrow" size={16} color="var(--color-paper)" />
+              <Icon id="arrow" size={16} color="var(--color-ink)" />
             </a>
           </div>
         </section>

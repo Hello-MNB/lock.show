@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
+import { DoorStamp } from '@/components/door-stamp'
 
 const FOOTER_LINKS = [
   {
@@ -54,14 +55,25 @@ export function Footer() {
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
           <div>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontWeight: 700,
-              fontSize: '1rem',
-              letterSpacing: '0.06em',
-              color: '#fff',
-              margin: '0 0 6px',
-            }}>GIGPROOF</p>
+            <Link
+              href="/"
+              aria-label="GIGPROOF home"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                fontFamily: 'var(--font-space-mono)',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                letterSpacing: '0.06em',
+                color: '#fff',
+                textDecoration: 'none',
+                marginBottom: '6px',
+              }}
+            >
+              <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
+              GIGPROOF
+            </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.62rem',

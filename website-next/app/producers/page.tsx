@@ -174,7 +174,7 @@ export default function ProducersPage() {
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: '0.5rem',
@@ -237,7 +237,7 @@ export default function ProducersPage() {
                   height: '36px',
                   borderRadius: '8px',
                   background: 'rgba(200,240,77,0.1)',
-                  color: 'var(--color-stamp)',
+                  color: 'var(--color-stamp-onlight)',
                   marginBottom: '0.875rem',
                 }}>
                   <Icon name={item.icon} size={18} />
@@ -256,7 +256,7 @@ export default function ProducersPage() {
                   style={{
                     fontFamily: 'var(--font-heebo), system-ui, sans-serif',
                     fontSize: '0.875rem',
-                    color: 'var(--color-tally)',
+                    color: 'var(--color-tally-onlight)',
                     lineHeight: 1.6,
                   }}
                 >
@@ -279,7 +279,7 @@ export default function ProducersPage() {
               style={{
                 fontFamily: 'var(--font-space-mono), monospace',
                 fontSize: '0.65rem',
-                color: 'var(--color-stamp)',
+                color: 'var(--color-stamp-onlight)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 marginBottom: '0.5rem',
@@ -291,7 +291,7 @@ export default function ProducersPage() {
               style={{
                 fontFamily: 'var(--font-heebo), system-ui, sans-serif',
                 fontSize: '0.875rem',
-                color: 'var(--color-tally)',
+                color: 'var(--color-tally-onlight)',
                 lineHeight: 1.6,
               }}
             >
@@ -319,7 +319,7 @@ export default function ProducersPage() {
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.65rem',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: '0.5rem',
@@ -360,7 +360,7 @@ export default function ProducersPage() {
                   style={{
                     fontFamily: 'var(--font-heebo), system-ui, sans-serif',
                     fontSize: '0.875rem',
-                    color: 'var(--color-tally)',
+                    color: 'var(--color-tally-onlight)',
                     lineHeight: 1.65,
                   }}
                 >
@@ -417,7 +417,7 @@ export default function ProducersPage() {
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
               fontSize: '0.875rem',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               lineHeight: 1.6,
               marginBottom: '1.5rem',
             }}
