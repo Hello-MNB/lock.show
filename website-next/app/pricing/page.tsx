@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Pricing — Free to Publish, Plans for More | LOCK',
+  title: 'Pricing — Free to Publish, Plans for More',
   description: 'Publishing your Passport is always free. Paid plans just keep your proof current and give management offices one view across a roster.',
 }
 

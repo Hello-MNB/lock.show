@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Artist Radar — Your Private Evidence Workspace | LOCK',
+  title: 'Artist Radar — Your Private Evidence Workspace',
   description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
 }
 

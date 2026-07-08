@@ -1,7 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'How It Works — From Gig to Verified Evidence | LOCK',
+  title: 'How It Works — From Gig to Verified Evidence',
   description: 'See exactly how a gig becomes evidence a booking manager can trust — three people, three simple steps, no signup required to view.',
 }
 

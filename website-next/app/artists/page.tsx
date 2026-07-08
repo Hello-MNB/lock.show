@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Prove You Draw a Crowd — Before the Call | LOCK',
+  title: 'Prove You Draw a Crowd — Before the Call',
   description:
     'You played the gig. Now put proof in front of the booking manager before they ever call you — not a link, not a bio, evidence they can check.',
   openGraph: {
