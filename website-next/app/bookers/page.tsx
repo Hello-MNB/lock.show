@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { DoorStamp } from '@/components/door-stamp'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/bookers' },
   title: 'For Booking Managers — Evaluate Before You Commit',
   description:
     'An artist sends you a link. Open it and see exactly how each claim was checked — no account, no signup, free for booking managers, always.',
   openGraph: {
+    url: '/bookers',
     title: 'For Booking Managers | LOCK',
     description: 'Your reputation is on the line. Evaluate before you commit.',
     type: 'website',

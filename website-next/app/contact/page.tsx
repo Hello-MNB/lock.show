@@ -3,6 +3,7 @@ import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/contact' },
   title: 'Contact — Get in Touch',
   description: 'LOCK is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }

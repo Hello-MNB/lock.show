@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/pricing' },
   title: 'Pricing — Free to Publish, Plans for More',
   description: 'Publishing your Passport is always free. Paid plans just keep your proof current and give management offices one view across a roster.',
 }

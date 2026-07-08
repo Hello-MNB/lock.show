@@ -86,13 +86,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     images: [OG_IMAGE],
   },
-  alternates: {
-    // No /he route ships yet (see messages/he.json — used for in-page locale
-    // toggle only, not a separate URL). Declaring an 'he' hreflang alternate
-    // that 404s is an SEO error, so we keep a single-locale canonical until a
-    // Hebrew route exists.
-    canonical: SITE_URL,
-  },
+  // Canonical is declared PER PAGE (relative, resolved via metadataBase) —
+  // a global canonical here made every subpage claim the homepage as its
+  // canonical (audit G8 finding: site-wide duplicate signal). No /he hreflang
+  // until a real Hebrew route exists.
   icons: {
     icon: [{ url: '/favicon.ico' }],
     apple: [{ url: '/app/apple-touch-icon.png' }],

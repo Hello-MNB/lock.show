@@ -6,6 +6,7 @@ import { APP_URL } from '@/lib/app-url'
 const SITE_URL = 'https://lock.show'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/' },
   title: 'LOCK — Proof a Booking Manager Can Actually Check',
   description:
     'Turn your gig history into evidence a booking manager can verify before they risk their name on you. No scores, no rankings — just checked claims.',
@@ -18,23 +19,12 @@ export const metadata: Metadata = {
   },
 }
 
+// Page-level JSON-LD: FAQPage ONLY. WebSite/Organization live in the root
+// layout's graph — duplicating them here with different @ids/urls created a
+// conflicting entity graph (audit G8 finding).
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${SITE_URL}/#website`,
-      url: `${SITE_URL}/`,
-      name: 'LOCK',
-      description: 'Pre-booking proof platform for independent artists',
-      inLanguage: ['en', 'he'],
-    },
-    {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}/#org`,
-      name: 'LOCK',
-      url: `${SITE_URL}/`,
-    },
     {
       '@type': 'FAQPage',
       mainEntity: [

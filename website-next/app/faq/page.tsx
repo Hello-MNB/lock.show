@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/faq' },
   title: 'FAQ — What LOCK Does (and Doesn\'t) Promise',
   description: 'Straight answers on how verification works, what a Passport shows, and why there\'s no score, rank, or guarantee — ever.',
 }

@@ -2,10 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/producers' },
   title: 'For Producers — Verify One Show in 30 Seconds',
   description:
     'An artist sends you a link about one show. Confirm it in 30 seconds — no account, no signup, nothing else asked of you.',
   openGraph: {
+    url: '/producers',
     title: 'For Producers | LOCK',
     description: 'You confirm what happened. We make sure that confirmation means something.',
     type: 'website',
