@@ -195,7 +195,7 @@ export default function BookersPage() {
           borderBottom: '1px solid rgba(10,13,11,0.06)',
         }}
       >
-        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -272,7 +272,7 @@ export default function BookersPage() {
 
       {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -333,7 +333,7 @@ export default function BookersPage() {
                     fontSize: '0.875rem',
                     color: 'var(--color-tally-onlight)',
                     lineHeight: 1.65,
-                    maxWidth: '52rem',
+                    maxWidth: '832px',
                   }}
                 >
                   {f.body}
@@ -351,7 +351,7 @@ export default function BookersPage() {
         borderTop: '1px solid #2a342d',
         borderBottom: '1px solid #2a342d',
       }}>
-        <div style={{ maxWidth: '48rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -416,7 +416,7 @@ export default function BookersPage() {
 
       {/* ── CTA ──────────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '5rem max(24px, 4vw)', textAlign: 'center' }}>
-        <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2
             style={{
               fontFamily: 'var(--font-archivo), system-ui, sans-serif',
@@ -442,8 +442,8 @@ export default function BookersPage() {
           <Link
             href="/passport/demo"
             style={{
-              background: 'var(--color-ink)',
-              color: 'var(--color-paper)',
+              background: 'var(--color-stamp)',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.78rem',
               fontWeight: 700,

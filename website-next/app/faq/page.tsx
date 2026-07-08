@@ -217,7 +217,7 @@ export default function FAQ() {
       {/* STILL HAVE QUESTIONS? */}
       <section style={{
         backgroundColor: 'var(--color-night)',
-        color: '#fff',
+        color: 'var(--color-paper)',
         padding: '64px 24px',
         textAlign: 'center',
       }}>

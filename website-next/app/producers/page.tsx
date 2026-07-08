@@ -169,7 +169,7 @@ export default function ProducersPage() {
 
       {/* ── YOUR ROLE ────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -314,7 +314,7 @@ export default function ProducersPage() {
           borderBottom: '1px solid rgba(10,13,11,0.06)',
         }}
       >
-        <div style={{ maxWidth: '48rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -374,7 +374,7 @@ export default function ProducersPage() {
 
       {/* ── HOW IT FEELS FROM YOUR SIDE ──────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)', textAlign: 'center' }}>
-        <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div
             style={{
               background: 'var(--color-night)',

@@ -449,7 +449,7 @@ export default function Pricing() {
       {/* PORTABILITY */}
       <section style={{
         backgroundColor: 'var(--color-night)',
-        color: '#fff',
+        color: 'var(--color-paper)',
         padding: '72px 24px',
       }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -623,7 +623,7 @@ export default function Pricing() {
       {/* CTA */}
       <section style={{
         backgroundColor: 'var(--color-night)',
-        color: '#fff',
+        color: 'var(--color-paper)',
         padding: '72px 24px',
         textAlign: 'center',
       }}>

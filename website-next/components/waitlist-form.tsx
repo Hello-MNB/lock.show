@@ -161,7 +161,7 @@ export default function WaitlistForm() {
       </button>
 
       {state === 'error' && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--color-void, #B23B2E)', margin: 0 }} role="alert">
+        <p style={{ fontSize: '0.8rem', color: 'var(--color-void)', margin: 0 }} role="alert">
           Something went wrong — your input is still here, please try again.
         </p>
       )}

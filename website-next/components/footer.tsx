@@ -105,7 +105,7 @@ export function Footer() {
                 fontWeight: 700,
                 fontSize: '0.9rem',
                 letterSpacing: '0.06em',
-                color: '#fff',
+                color: 'var(--color-paper)',
                 textDecoration: 'none',
                 marginBottom: '6px',
               }}

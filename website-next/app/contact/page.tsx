@@ -184,7 +184,7 @@ export default function Contact() {
       {/* CTA BAND */}
       <section style={{
         backgroundColor: 'var(--color-night)',
-        color: '#fff',
+        color: 'var(--color-paper)',
         padding: '56px 24px',
         textAlign: 'center',
       }}>

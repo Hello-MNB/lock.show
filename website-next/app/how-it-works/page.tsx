@@ -274,7 +274,7 @@ export default function HowItWorks() {
       {/* FIREWALL PRINCIPLES — dark band */}
       <section style={{
         backgroundColor: 'var(--color-night)',
-        color: '#fff',
+        color: 'var(--color-paper)',
         padding: '80px 24px',
         position: 'relative',
         overflow: 'hidden',

@@ -51,7 +51,7 @@ const evidenceStates = [
     state: 'SUBMITTED',
     label: 'Awaiting operator review',
     desc: 'You\'ve submitted a document or sent a magic link. The claim is in the queue.',
-    color: '#9c9450',
+    color: 'rgba(200,240,77,0.55)',
   },
   {
     state: 'PENDING',
@@ -268,7 +268,7 @@ export default function Radar() {
       </section>
 
       {/* EVIDENCE STATES — dark */}
-      <section style={{ backgroundColor: 'var(--color-night)', color: '#fff', padding: '80px 24px' }}>
+      <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
