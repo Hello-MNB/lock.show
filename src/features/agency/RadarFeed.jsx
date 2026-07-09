@@ -60,12 +60,14 @@ export default function RadarFeed() {
   const filtered = signals.filter((s) => (!fArtist || s.artistName === fArtist) && (!fType || s.ruleId === fType))
 
   function actionRoute(sig) {
-    switch (sig.actionType) {
-      case 'refresh-evidence':
-      case 'request-evidence': return `/evidence/${sig.artistId}`
-      case 'respond': return '/agency/requests'
-      default: return `/passport/${sig.artistId}`
-    }
+    // Every destination here must be AGENCY-reachable. `/evidence/:id` is gated
+    // RequireRole=ARTIST (App.jsx), so routing the evidence actions there bounced
+    // the agency straight back to /agency — a dead-end on the primary "Next" CTA
+    // and the R1/R7/R8 cards. The agency can't edit an artist's evidence or
+    // publish for them; its actionable surface for a roster artist is the
+    // passport (or the requests inbox for a 'respond' signal).
+    if (sig.actionType === 'respond') return '/agency/requests'
+    return `/passport/${sig.artistId}`
   }
 
   if (loading) return <Loading />

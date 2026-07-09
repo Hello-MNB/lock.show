@@ -16,10 +16,20 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true)
+    // PKCE fix: the recovery link now arrives as ?code=… and AuthProvider
+    // exchanges it into a session on boot — which can fire (and consume) the
+    // PASSWORD_RECOVERY event BEFORE this listener mounts, leaving the form
+    // stuck on "verifying…" forever. So also treat an already-established
+    // session as ready: if we're authenticated here, the recovery code was
+    // accepted and the user may set a new password.
+    let alive = true
+    supabase.auth.getSession().then(({ data }) => {
+      if (alive && data.session) setReady(true)
+    }).catch(() => {})
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) setReady(true)
     })
-    return () => sub.subscription.unsubscribe()
+    return () => { alive = false; sub.subscription.unsubscribe() }
   }, [])
 
   async function onSubmit(e) {

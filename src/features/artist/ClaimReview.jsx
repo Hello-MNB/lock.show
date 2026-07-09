@@ -208,7 +208,7 @@ export default function ClaimReview() {
             {artist.community_size_band && <DrawLine label={T.passport.drawCommunity} value={artist.community_size_band} T={T} />}
           </div>
           <p className="mt-2 text-xs text-muted">{T.claims.drawNote}</p>
-          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
+          <Link to="/artist/home" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
         </div>
       )}
 

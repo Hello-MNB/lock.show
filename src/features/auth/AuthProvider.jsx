@@ -75,13 +75,21 @@ function RealAuthProvider({ children }) {
       } catch (e) {
         console.error('[oauth] code exchange failed:', e?.message || e)
       }
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
-      // AWAIT the profile: `loading` must cover the ROLE too, or every hard
-      // reload races RequireRole/RoleHome with role=null and bounces the user
-      // to /select ("Who are you?") — the exact broken-refresh Maria hit.
-      if (data.session?.user) await loadProfile(data.session.user.id)
-      setLoading(false)
+      try {
+        const { data } = await supabase.auth.getSession()
+        setSession(data.session)
+        // AWAIT the profile: `loading` must cover the ROLE too, or every hard
+        // reload races RequireRole/RoleHome with role=null and bounces the user
+        // to /select ("Who are you?") — the exact broken-refresh Maria hit.
+        if (data.session?.user) await loadProfile(data.session.user.id)
+      } catch (e) {
+        // A transient getSession/getProfile failure on boot must NEVER strand
+        // the whole app on the <Loading/> spinner with no recovery. Always fall
+        // through to setLoading(false) so the router can render (login/home).
+        console.error('[auth] boot init failed:', e?.message || e)
+      } finally {
+        setLoading(false)
+      }
     })()
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)

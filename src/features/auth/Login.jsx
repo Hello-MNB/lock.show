@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -10,6 +10,7 @@ export default function Login() {
   const { T } = useLang()
   const { signIn, signInWithOAuth, demo, setDemoRole } = useAuth()
   const nav = useNavigate()
+  const loc = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,11 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn({ email, password })
-      nav('/')
+      // Honor the return path RequireAuth/AcceptInvite stashed in state.from
+      // (deep link or /invite/:token) — otherwise every login dead-drops on "/"
+      // and invited teammates / bounced deep-links never reach where they meant
+      // to go. Falls back to RoleHome for a plain login.
+      nav(loc.state?.from || '/')
     } catch {
       setError(T.login.error)
     } finally {
