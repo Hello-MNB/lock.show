@@ -6,6 +6,7 @@ import { bootstrapOrg } from '../../lib/orgs.js'
 import { PageShell, Wordmark, GpIcon } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { ROLES } from '../../lib/constants.js'
+import { selectRoute } from '../../lib/navigation.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
 
 export default function UserTypeSelect() {
@@ -31,17 +32,20 @@ export default function UserTypeSelect() {
   // NOTE: אמרגן in Israeli music = talent AGENT (supply side). The demand-side
   // event organizer is called מזמין or מפיק אירוע — hence BOOKER label above.
   // Mapping אמרגן → BOOKER was a critical domain inversion (fixed BT-56–58).
+  // Post-pick destinations come from the navigation contract (selectRoute) so
+  // there is ONE source of truth for where each new user lands — verified by
+  // scripts/nav-contract.test.mjs.
   const ROLE_OPTIONS = [
     {
-      key: ROLES.ARTIST, label: T.roleSelect.jobArtist, route: '/onboarding', icon: 'gp-artist',
+      key: ROLES.ARTIST, label: T.roleSelect.jobArtist, route: selectRoute(ROLES.ARTIST), icon: 'gp-artist',
       what: 'Build a Passport of provable evidence — bands and confirmed facts, never a score.',
     },
     {
-      key: ROLES.AGENCY, label: T.roleSelect.jobAgency, route: '/agency', icon: 'gp-manager',
+      key: ROLES.AGENCY, label: T.roleSelect.jobAgency, route: selectRoute(ROLES.AGENCY), icon: 'gp-manager',
       what: 'Keep your whole roster’s proof in one place — ready to send, always current.',
     },
     {
-      key: ROLES.BOOKER, label: T.roleSelect.jobBooker, route: '/discover', icon: 'gp-booking',
+      key: ROLES.BOOKER, label: T.roleSelect.jobBooker, route: selectRoute(ROLES.BOOKER), icon: 'gp-booking',
       what: 'Evaluate an unfamiliar artist on method-labeled evidence before you risk your name.',
     },
   ]

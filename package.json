@@ -12,7 +12,9 @@
     "build:embed": "vite build --mode embed && node scripts/embed-post.mjs",
     "preview": "vite preview",
     "seed": "node scripts/seed.mjs",
-    "lint:i18n": "node scripts/i18n-purity.mjs"
+    "lint:i18n": "node scripts/i18n-purity.mjs",
+    "test:nav": "node scripts/nav-contract.test.mjs",
+    "verify": "npm run test:nav && npm run lint:i18n && npm run build && npm run build:demo"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

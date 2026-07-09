@@ -4,6 +4,13 @@ import { useOrg } from './context/OrgContext.jsx'
 import { Loading } from './components/ui.jsx'
 import { ROLES } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
+import {
+  ROUTES,
+  homePathFor,
+  requireRoleRedirect,
+  requireAgencyRedirect,
+  requireProductionRedirect,
+} from './lib/navigation.js'
 
 import AppShell from './components/layout/AppShell.jsx'
 import SetupNotice from './features/setup/SetupNotice.jsx'
@@ -57,10 +64,9 @@ function RequireRole({ role: need, children }) {
   const { role, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
-  const ok = Array.isArray(need) ? need.includes(role) : role === need
-  if (!ok) return <Navigate to="/" replace />
+  const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
   return children
 }
 
@@ -76,10 +82,10 @@ function RequireAgency({ children }) {
   const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (isProducerWorkspace) return <Navigate to="/production" replace />
-  if (role === ROLES.AGENCY || isAgency) return children
-  return <Navigate to="/" replace />
+  const redirect = requireAgencyRedirect({ user, role, isAgency, isProducerWorkspace })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
+  return children
 }
 
 // Production-workspace gate — the counterpart of RequireAgency, gated on the
@@ -91,12 +97,10 @@ function RequireProduction({ children }) {
   const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (isProducerWorkspace) return children
-  // Not a production workspace but IS an agency-type one — send to the roster
-  // screen instead of a dead-end "/".
-  if (role === ROLES.AGENCY || isAgency) return <Navigate to="/agency" replace />
-  return <Navigate to="/" replace />
+  const redirect = requireProductionRedirect({ user, role, isAgency, isProducerWorkspace })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
+  return children
 }
 
 // Sends a logged-in user to the right home based on role. `role` is the
@@ -106,16 +110,11 @@ function RoleHome() {
   const { user, loading: authLoading } = useAuth()
   const { role, isProducerWorkspace, loading: orgLoading } = useOrg()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace />
-  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
-  if (role === ROLES.OPERATOR) return <Navigate to="/admin" replace />
-  // A production-type workspace (027) lands on its own dashboard instead of
-  // the generic agency/roster screen, even though its functional_role also
-  // normalizes to ROLES.AGENCY — workspace_type is the real routing signal.
-  if (role === ROLES.AGENCY) return <Navigate to={isProducerWorkspace ? '/production' : '/agency'} replace />
-  if (role === ROLES.BOOKER) return <Navigate to="/discover" replace />
-  if (role === ROLES.PRODUCER) return <Navigate to="/producer/received" replace />
-  return <Navigate to="/artist/home" replace />
+  if (!user) return <Navigate to={ROUTES.login} replace />
+  // Single source of truth for role→home routing (src/lib/navigation.js), so a
+  // workspace switch lands on the NEW workspace's home and the contract test can
+  // prove every entity's landing.
+  return <Navigate to={homePathFor({ role, isProducerWorkspace, demo: DEMO })} replace />
 }
 
 export default function App() {
