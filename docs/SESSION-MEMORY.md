@@ -17,6 +17,9 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Deploy routine: main auto-deploys both; app changes need `npm run build:embed` → commit → push. Gate: vite build + build:demo + lint:i18n (3 known radarUniverse.js violations = accepted baseline) + website-next build.
 - Sandbox proxy blocks vercel.app (403) — live site unverifiable from the container.
 
+## Deploy hook (site) — the fix for the stuck-production problem
+- gigproof-website has NO reliable auto-deploy from main (webhook/branch issue). WORKAROUND: a Vercel Deploy Hook (URL in gitignored .env.local as VERCEL_DEPLOY_HOOK_SITE, prj_dUHnMaaTeg1...) triggers a production build on POST. After pushing site code to main, run: curl -X POST "$VERCEL_DEPLOY_HOOK_SITE" — deploys to production + aliases www.lock.show. Durable fix still pending: Settings→Git→Production Branch=main. The app project (app.lock.show) deploys normally.
+
 ## Keys (values in gitignored .env.local + Maria's side; statuses only here)
 - Anthropic: VERIFIED + Maria added to Vercel (8 Jul, via Cowork). Remaining: verify real AI labeling on v6-b4 after redeploy.
 - Spotify: client id+secret VERIFIED (token + search OK). Not wired into app yet.
