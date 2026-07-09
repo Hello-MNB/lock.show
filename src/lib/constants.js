@@ -31,6 +31,11 @@ export const SIGNUP_ROLES = [ROLES.ARTIST, ROLES.BOOKER, ROLES.PRODUCER, ROLES.A
 // `?.` the API server crashes on startup and `concurrently -k` takes the web dev
 // server down with it → blank preview.
 export const OAUTH_ENABLED = import.meta.env?.VITE_OAUTH_ENABLED !== '0'
+// Facebook is NOT enabled in Supabase (only Google is). Showing its button led
+// to a raw "provider is not enabled" error page (Maria, 9 Jul). Per-provider
+// flag, default OFF — flip to '1' only AFTER a Facebook app is created and the
+// provider is enabled in the Supabase dashboard.
+export const OAUTH_FACEBOOK_ENABLED = import.meta.env?.VITE_OAUTH_FACEBOOK === '1'
 
 // Bounded status vocabulary — the ONLY statuses the firewall permits in the UI
 // (חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך). Keys map to i18n status.*.

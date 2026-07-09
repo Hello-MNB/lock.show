@@ -1,7 +1,7 @@
 import { useState, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useLang } from '../context/LangContext.jsx'
-import { STATUS, methodLabelFor } from '../lib/constants.js'
+import { STATUS, methodLabelFor, OAUTH_FACEBOOK_ENABLED } from '../lib/constants.js'
 
 // ── BottomSheet — mobile-first sheet (slides from the bottom in the thumb zone;
 // centered card on desktop). Controlled: <BottomSheet open onClose title>…</BottomSheet>.
@@ -115,13 +115,15 @@ export function SocialAuthButtons({ onOAuth, disabled = false, demo = false }) {
         <GoogleIcon />
         {T.login.googleCta}
       </button>
-      <button type="button" disabled={busy || inert}
-        className={btnClass}
-        title={inert ? T.login.oauthComingSoon : undefined}
-        onClick={() => handle('facebook')}>
-        <FacebookIcon />
-        {T.login.facebookCta}
-      </button>
+      {OAUTH_FACEBOOK_ENABLED && (
+        <button type="button" disabled={busy || inert}
+          className={btnClass}
+          title={inert ? T.login.oauthComingSoon : undefined}
+          onClick={() => handle('facebook')}>
+          <FacebookIcon />
+          {T.login.facebookCta}
+        </button>
+      )}
       {inert && <p className="text-xs text-muted text-center">{T.login.oauthComingSoon}</p>}
     </div>
   )
