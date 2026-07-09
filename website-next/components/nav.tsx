@@ -138,6 +138,21 @@ export function Nav() {
           })}
           <LocaleToggle />
           <a
+            href={`${APP_URL}/login`}
+            style={{
+              fontFamily: 'var(--font-space-mono)',
+              fontSize: '0.65rem',
+              letterSpacing: '0.08em',
+              color: 'var(--color-paper)',
+              textDecoration: 'none',
+              padding: '8px 12px',
+              whiteSpace: 'nowrap',
+              fontWeight: 600,
+            }}
+          >
+            {nav.login}
+          </a>
+          <a
             href={`${APP_URL}/signup`}
             style={{
               fontFamily: 'var(--font-space-mono)',
@@ -223,10 +238,29 @@ export function Nav() {
             <LocaleToggle />
           </div>
           <a
-            href={`${APP_URL}/signup`}
+            href={`${APP_URL}/login`}
             style={{
               display: 'block',
               marginTop: '12px',
+              padding: '14px 20px',
+              border: '1px solid var(--color-mist, rgba(255,255,255,.15))',
+              color: 'var(--color-paper)',
+              fontFamily: 'var(--font-space-mono)',
+              fontSize: '0.7rem',
+              letterSpacing: '0.08em',
+              textDecoration: 'none',
+              borderRadius: 'var(--radius-sm)',
+              textAlign: 'center',
+              fontWeight: 600,
+            }}
+          >
+            {nav.login}
+          </a>
+          <a
+            href={`${APP_URL}/signup`}
+            style={{
+              display: 'block',
+              marginTop: '10px',
               padding: '14px 20px',
               backgroundColor: 'var(--color-stamp)',
               color: 'var(--color-ink)',

@@ -67,6 +67,7 @@ export interface Messages {
     methodology: string
     pricing: string
     getStarted: string
+    login: string
     openMenu: string
     closeMenu: string
   }
