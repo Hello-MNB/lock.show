@@ -19,6 +19,16 @@ export default defineConfig(({ mode }) => {
       react(),
       ...(embed ? [] : [VitePWA({
         registerType: 'autoUpdate',
+        // KILL SWITCH (9 Jul): the standalone app's service worker repeatedly
+        // trapped users (incl. Maria) on STALE cached code after a deploy — the
+        // signup fix, auth fixes, everything shipped but her browser kept serving
+        // the old app, so "after signup I land on /login" persisted no matter what
+        // we fixed. `selfDestroying` ships a worker that UNREGISTERS itself and
+        // purges all caches, un-trapping every already-installed client and
+        // guaranteeing fresh code from the network on every visit. Reliability >
+        // offline-install for a pre-launch tool. Re-enable a real PWA later only
+        // with a tested update flow.
+        selfDestroying: true,
         includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'LOCK',
