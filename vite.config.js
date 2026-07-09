@@ -41,6 +41,14 @@ export default defineConfig(({ mode }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,png,svg,woff2,woff,ttf}'],
           navigateFallback: '/index.html',
+          // Apply new versions IMMEDIATELY — without these, an installed PWA
+          // kept serving the OLD cached app for a full extra visit, trapping
+          // users (incl. Maria, 9 Jul) on stale code after every deploy.
+          // skipWaiting: the new SW activates at once; clientsClaim: it takes
+          // control of already-open tabs; cleanupOutdatedCaches: purge old.
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
         },
         devOptions: { enabled: false },
       })]),
