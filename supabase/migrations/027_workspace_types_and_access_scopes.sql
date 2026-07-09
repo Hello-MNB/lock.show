@@ -202,7 +202,12 @@ alter table public.role_assignment drop constraint if exists role_assignment_fun
 alter table public.role_assignment add constraint role_assignment_functional_role_check
   check (functional_role in (
     'artist','booking_manager','artist_manager','producer','venue_programmer','operator',
-    'booking_agent','roster_coordinator','viewer'
+    'booking_agent','roster_coordinator','viewer',
+    -- legacy values still LIVE in rows and still WRITTEN by the app while
+    -- migration 021 (vocab rename) stays frozen — the CHECK must tolerate
+    -- them or it violates existing rows (seen live 9 Jul: 'agency' x1).
+    -- 021's lockstep will fold them: booker/agency -> booking_manager.
+    'booker','agency'
   ));
 
 -- ============================================================
