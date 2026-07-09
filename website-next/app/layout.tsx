@@ -6,7 +6,7 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164 } from '@/lib/social'
+import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -138,13 +138,22 @@ const jsonLd = {
       // Verified profiles — search + AI answer-engines use sameAs to bind the
       // brand to its official channels (single source: lib/social.ts).
       sameAs: SAME_AS,
-      contactPoint: {
-        '@type': 'ContactPoint',
-        contactType: 'customer support',
-        telephone: WHATSAPP_E164,
-        areaServed: 'IL',
-        availableLanguage: ['he', 'en'],
-      },
+      contactPoint: [
+        {
+          '@type': 'ContactPoint',
+          contactType: 'customer support',
+          telephone: WHATSAPP_E164,
+          areaServed: 'IL',
+          availableLanguage: ['he', 'en'],
+        },
+        ...CONTACT_POINTS.map((c) => ({
+          '@type': 'ContactPoint',
+          contactType: c.contactType,
+          email: c.email,
+          areaServed: 'IL',
+          availableLanguage: ['he', 'en'],
+        })),
+      ],
       description:
         'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },

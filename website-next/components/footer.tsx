@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
 import { DoorStamp } from '@/components/door-stamp'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
+import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -261,6 +261,20 @@ export function Footer() {
                   }}
                 >
                   WhatsApp <span dir="ltr" style={{ color: 'rgba(255,255,255,0.4)' }}>{WHATSAPP_DISPLAY}</span>
+                </a>
+              </li>
+              <li style={{ marginBottom: '10px' }}>
+                <a
+                  href={`mailto:${EMAILS.hello}`}
+                  dir="ltr"
+                  style={{
+                    fontFamily: 'var(--font-heebo)',
+                    fontSize: '0.875rem',
+                    color: 'rgba(255,255,255,0.6)',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {EMAILS.hello}
                 </a>
               </li>
             </ul>

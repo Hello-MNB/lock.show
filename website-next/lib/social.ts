@@ -17,3 +17,28 @@ export const SOCIAL = [
 
 // `sameAs` for structured data: the social profiles + the WhatsApp deep-link.
 export const SAME_AS = [...SOCIAL.map((s) => s.href), WHATSAPP_URL]
+
+// Official role-based inboxes on lock.show. One address per purpose so the right
+// context always uses the right mailbox (legal text → legal@, privacy → privacy@,
+// etc.). Transactional/auth mail sends FROM notifications@ once Resend is wired.
+export const EMAILS = {
+  hello: 'hello@lock.show',
+  privacy: 'privacy@lock.show',
+  notifications: 'notifications@lock.show',
+  partners: 'partners@lock.show',
+  support: 'support@lock.show',
+  legal: 'legal@lock.show',
+  press: 'press@lock.show',
+  sales: 'sales@lock.show',
+  marketing: 'marketing@lock.show',
+  billing: 'billing@lock.show',
+  security: 'security@lock.show',
+} as const
+
+// Structured-data ContactPoints — lets search + AI answer-engines route by intent.
+export const CONTACT_POINTS = [
+  { contactType: 'customer support', email: EMAILS.support },
+  { contactType: 'sales', email: EMAILS.sales },
+  { contactType: 'press', email: EMAILS.press },
+  { contactType: 'privacy', email: EMAILS.privacy },
+]

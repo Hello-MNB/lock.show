@@ -79,7 +79,7 @@ const content: LegalContent = {
       {
         heading: '10. שינויים ויצירת קשר',
         paragraphs: [
-          'נעדכן תנאים אלה ונפרסם תאריך. יצירת קשר: [אימייל].',
+          'נעדכן תנאים אלה ונפרסם תאריך. יצירת קשר: legal@lock.show.',
         ],
       },
     ],
@@ -148,7 +148,7 @@ const content: LegalContent = {
       {
         heading: '10. Changes and Contact',
         paragraphs: [
-          'We may update these terms and will publish the date of the update. Contact: [email].',
+          'We may update these terms and will publish the date of the update. Contact: legal@lock.show.',
         ],
       },
     ],

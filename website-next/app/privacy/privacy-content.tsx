@@ -33,7 +33,7 @@ const content: LegalContent = {
           '**שם משפטי מלא:** [שם העוסק/החברה]',
           '**מספר עוסק/ח.פ.:** [מספר]',
           '**כתובת:** [כתובת מלאה]',
-          '**דוא"ל לפניות פרטיות:** [כתובת דוא"ל ייעודית]',
+          '**דוא"ל לפניות פרטיות:** privacy@lock.show',
         ],
       },
       {
@@ -356,7 +356,7 @@ const content: LegalContent = {
         paragraphs: [
           'הזכות למחיקת חשבון או מידע ניתנת כחלק ממדיניות השירות ובכפוף לדין. ייתכנו מקרים שבהם נידרש לשמור מידע מסוים, למשל לצורכי חשבונאות, אבטחה, הגנה משפטית או מילוי חובה חוקית.',
           'לצורך הגנה על פרטיותך, אנו רשאים לבקש פרטים סבירים לאימות הזהות לפני טיפול בבקשה.',
-          'פניות יישלחו אל: **[כתובת דוא"ל לפרטיות]**.',
+          'פניות יישלחו אל: **privacy@lock.show**.',
         ],
       },
       {
@@ -403,7 +403,7 @@ const content: LegalContent = {
         ],
         bullets: [
           '**שם בעל השליטה:** [שם משפטי]',
-          '**דוא"ל:** [כתובת דוא"ל לפרטיות]',
+          '**דוא"ל:** privacy@lock.show',
           '**כתובת:** [כתובת למשלוח דואר]',
           '**טלפון, אם רלוונטי:** [מספר]',
         ],
@@ -426,7 +426,7 @@ const content: LegalContent = {
           '**Full legal name:** [business/company name]',
           '**Business registration / company number:** [number]',
           '**Address:** [full address]',
-          '**Privacy contact email:** [dedicated email address]',
+          '**Privacy contact email:** privacy@lock.show',
         ],
       },
       {
@@ -749,7 +749,7 @@ const content: LegalContent = {
         paragraphs: [
           'The right to delete an account or information is provided as part of the Service policy and subject to law. There may be cases where we are required to retain certain information, for example for accounting, security, legal defense, or compliance purposes.',
           'To protect your privacy, we may request reasonable details to verify identity before handling a request.',
-          'Requests should be sent to: **[privacy email address]**.',
+          'Requests should be sent to: **privacy@lock.show**.',
         ],
       },
       {
@@ -796,7 +796,7 @@ const content: LegalContent = {
         ],
         bullets: [
           '**Controller name:** [legal name]',
-          '**Email:** [privacy email address]',
+          '**Email:** privacy@lock.show',
           '**Address:** [postal address]',
           '**Phone, if applicable:** [number]',
         ],
