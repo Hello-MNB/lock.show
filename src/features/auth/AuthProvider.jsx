@@ -59,14 +59,30 @@ function RealAuthProvider({ children }) {
       setLoading(false)
       return
     }
-    supabase.auth.getSession().then(async ({ data }) => {
+    ;(async () => {
+      // OAuth callback (Google): the provider returns ?code=… (PKCE). The
+      // automatic URL-detection races the router — routing bounced the user to
+      // /login before the code was exchanged, stripping ?code, so login never
+      // stuck (Maria, 9 Jul). Do the exchange EXPLICITLY here, before any
+      // routing/getSession, then clean the URL. This is the robust SPA pattern.
+      try {
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('code')) {
+          await supabase.auth.exchangeCodeForSession(window.location.href)
+          // strip ?code/?state from the address bar (no reload)
+          window.history.replaceState({}, '', window.location.pathname)
+        }
+      } catch (e) {
+        console.error('[oauth] code exchange failed:', e?.message || e)
+      }
+      const { data } = await supabase.auth.getSession()
       setSession(data.session)
       // AWAIT the profile: `loading` must cover the ROLE too, or every hard
       // reload races RequireRole/RoleHome with role=null and bounces the user
       // to /select ("Who are you?") — the exact broken-refresh Maria hit.
       if (data.session?.user) await loadProfile(data.session.user.id)
       setLoading(false)
-    })
+    })()
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
       if (s?.user) loadProfile(s.user.id)
