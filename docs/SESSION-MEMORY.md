@@ -43,7 +43,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 3. Fixed pilot price (rec ₪179).
 4. RESOLVED — domain LIVE, rebrand deployed. Residual: Supabase URL update (above). Was: DOMAIN PURCHASED 8 Jul: **lock.show** (GoDaddy, +Full Domain Protection, receipt to garmel.maria@gmail.com). Mapping: lock.show=site, app.lock.show=app. RESOLVED 8 Jul: owner ordered full rebrand — product renamed GIGPROOF → LOCK everywhere in user-facing copy (privacy policy's temporary-name clause updated accordingly). Code URL updates applied; DNS attach still pending.
 5. Google OAuth: client CREATED ✅ ('GIGPROOF Supabase', redirect verified). Final step (Maria): paste Client ID+Secret into Supabase Google provider, toggle ON, Save → then ME: VITE_OAUTH_ENABLED=1 (Vercel env + .env.embed) + rebuild.
-6. Green Invoice signup.
+6. Green Invoice: DEFERRED by owner (9 Jul) until first payment intent (S3 signal: payment_reference_created). Launch plan: docs/LAUNCH-PLAN.md.
 8. Send counsel email (docs/COUNSEL-EMAIL-DRAFT.md).
 9. Later, low urgency: rotate Anthropic + Tavily keys (both pasted in chat).
 
