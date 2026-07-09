@@ -27,7 +27,7 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 ## Migrations
 - Live DB at 025/026. 021 FROZEN (vocab, needs app lockstep — bootstrapOrg 'booker' latent bug noted).
 - **027 APPLIED to live DB 9 Jul** ('Success. No rows returned' — screenshot verified). Unlocks real consent handshake + representation/production workspaces; 'producer' enum word stands (owner ran as written). Was: 027 written NOT applied (workspace_type, artist_access scopes/status, can_access_artist fix, SECURITY DEFINER RPCs) — awaiting Maria's approval. Open ruling: 'producer' vs 'production' enum value; consent 4-vs-6.
-- 028 planned bundle: 'discovered' source_type + HE/EN name fields, M1 analytics events, plan capability flags.
+- **028 APPLIED to live DB 9 Jul** (Cowork-run, 'Success. No rows returned'). Live schema now at 028: discovered source+provenance, stage_name_he/name_he, 28-event analytics taxonomy (M1 funnel), organization.plan_flags. Next builds unlocked: M1 event writers, plan enforcement, discovery scanner persistence. Was: 028 planned bundle: 'discovered' source_type + HE/EN name fields, M1 analytics events, plan capability flags.
 
 ## Monetization (APPROVED)
 No booking commission ever. Each entity pays its own plan; artist always owns/pays his evidence-truth layer (portable); office pays roster layer; Billing Sponsor mechanism. Plans: Passport (free) / Momentum (artist) / Roster (manager). Buyer free forever. No prices published until Gate. Payment: Bit 054-4555060, reference GP-XXXX, manual activation.
