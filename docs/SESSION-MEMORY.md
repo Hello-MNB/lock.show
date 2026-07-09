@@ -8,6 +8,11 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Product: LOCK pre-booking proof tool (domain lock.show; formerly GIGPROOF, renamed 8 Jul 2026). Canon firewall in CLAUDE.md (no scores/ranks; bands+binaries+method labels).
 - Demo persona: Shai Perlman — 3 hats: DJ PERLMAN (artist, multi-genre Acts) / artist representative (roster) / INSOMNIA TLV (production company).
 
+## Design System v1.2.0 (owner-provided 9 Jul; SSOT = docs/design-system/DESIGN-SYSTEM-v1.2.0.html)
+- LIGHT-primary "paper canvas" system: paper #f3f5ef canvas · ink #0a0d0b · forest #18221a panels · lime #C8F04D (single dominant action) · mist #dde3d9 · slate #687269 · muted #6c776e. Type: Manrope (body) · Georgia serif (display) · DM Mono (labels). Surfaces: Paper canvas · White card · Forest panel · Media overlay.
+- Owner ruling: apply **SITE FIRST, then app** (review live before app re-theme). Design language "wonderful — preserve and continue"; brand assets in Drive 02_ASSETS folder (already staged+wired in website-next/public: gigproof-live-hero, persona-artist/manager/producer, evidence-review).
+- DONE (Step 1, b3866e2): site aligned to exact DS values (forest/mist/slate + Georgia headlines), accent lime→#C8F04D app+site, DS saved to repo. PENDING: **Step 2 = re-theme app.lock.show (dark → paper canvas) surface-by-surface, AFTER Maria reviews the live site.** App is currently all-dark ("Live Intelligence"); DS wants paper-primary — do not start Step 2 until owner approves the site look.
+
 ## Official channels (owner-provided 9 Jul; single source = website-next/lib/social.ts)
 - Social: IG/FB @lock.show.growth.intelligence, LinkedIn company/lock.show. WhatsApp +972544555060 (= Bit line 054-4555060). Wired: footer CONNECT, JSON-LD sameAs + contactPoints, contact page.
 - Inboxes on lock.show: hello (general/footer), privacy (privacy policy), notifications (transactional/auth FROM — use when Resend wired, P1-11), partners, support (accessibility contact), legal (terms contact), press, sales, marketing, billing, security. Legal-page [email] placeholders now filled per context; STILL placeholder (need owner+counsel): postal address, entity/ח.פ., city, accessibility coordinator NAME + phone + last-updated date.
