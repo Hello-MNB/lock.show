@@ -67,9 +67,13 @@ Bit** model, no Stripe:
 - **Agency:** a Solo→Agency **plan upgrade** the operator approves — **captures no payment record** (settled
   outside the app).
 - No receipts/invoices yet (legal gap before real money).
-**Decision required from the owner:** one pricing truth across site + app (who pays, who's free, the number).
-Until locked, the DS/site must not state a contradictory price. _This is an owner decision, not Codex's or
-Claude's to invent._
+**✅ OWNER RULING (10 Jul 2026) — the ONE pricing truth for all copy, site + app:**
+1. **Artists are FREE during the pilot** — building proof (Radar, Passport) costs nothing.
+2. **No locked price is shown anywhere.** The optional one-time "Founding Passport" issuance (the
+   willingness-to-pay measurement) keeps its RANGE copy (₪149–249), never a fixed number.
+3. The **booking-manager/agency side is the future paying side** — measured, not enforced; no public plan
+   pricing.
+Codex: scrub any site copy that contradicts this (e.g. "free for artists" next to fixed paid plans).
 
 ## 6. Firewall (unchanged, absolute)
 No score/rank/percentile/gauge; bands + binaries + method labels; audience as bands never raw counts; one
