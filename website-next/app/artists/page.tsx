@@ -60,7 +60,7 @@ function MethodBadge({ label }: { label: string }) {
     <span
       style={{
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.6rem',
+        fontSize: '0.75rem',
         fontWeight: 700,
         letterSpacing: '0.08em',
         color: 'var(--color-stamp-onlight)',
@@ -192,7 +192,7 @@ export default function ArtistsPage() {
             <span
               style={{
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.65rem',
+                fontSize: '0.75rem',
                 letterSpacing: '0.14em',
                 color: 'var(--color-stamp)',
                 textTransform: 'uppercase',
@@ -250,8 +250,8 @@ export default function ArtistsPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
-                borderRadius: 'var(--radius-sm)',
+                padding: '0.95rem 1.75rem',
+                borderRadius: '10px',
                 textDecoration: 'none',
               }}
             >
@@ -270,8 +270,8 @@ export default function ArtistsPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
-                borderRadius: 'var(--radius-sm)',
+                padding: '0.95rem 1.75rem',
+                borderRadius: '10px',
                 textDecoration: 'none',
               }}
             >
@@ -285,7 +285,7 @@ export default function ArtistsPage() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
               letterSpacing: '0.08em',
-              color: 'rgba(243,245,239,0.6)',
+              color: 'rgba(243,245,239,0.7)',
               marginTop: '1.5rem',
             }}
           >
@@ -307,7 +307,7 @@ export default function ArtistsPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           borderTop: '1px solid #dde3d9',
           borderBottom: '1px solid #dde3d9',
         }}
@@ -316,7 +316,7 @@ export default function ArtistsPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
               color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
@@ -354,13 +354,13 @@ export default function ArtistsPage() {
                 key={i}
                 style={{
                   background: '#ffffff',
-                  padding: 'clamp(1.5rem, 3vw, 2.25rem)',
+                  padding: 'clamp(1.25rem, 3vw, 2rem)',
                 }}
               >
                 <div
                   style={{
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.7rem',
+                    fontSize: '0.75rem',
                     letterSpacing: '0.12em',
                     color: 'var(--color-tally-onlight)',
                     textTransform: 'uppercase',
@@ -372,7 +372,7 @@ export default function ArtistsPage() {
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo)',
-                    fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                    fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                     fontWeight: 700,
                     color: 'var(--color-ink)',
                     marginBottom: '0.75rem',
@@ -400,14 +400,14 @@ export default function ArtistsPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         }}
       >
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
               color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
@@ -433,15 +433,15 @@ export default function ArtistsPage() {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '1.5rem',
+              gap: 'clamp(1rem, 2vw, 1.5rem)',
             }}
           >
             {/* Artist Radar */}
             <div
               style={{
                 border: '1px solid rgba(10,13,11,0.1)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'clamp(1.75rem, 3vw, 2.5rem)',
+                borderRadius: '16px',
+                padding: 'clamp(1.25rem, 3vw, 2rem)',
                 background: 'var(--color-paper)',
               }}
             >
@@ -449,7 +449,7 @@ export default function ArtistsPage() {
                 style={{
                   width: '44px',
                   height: '44px',
-                  borderRadius: 'var(--radius-sm)',
+                  borderRadius: '10px',
                   background: 'rgba(10,13,11,0.05)',
                   border: '1px solid rgba(10,13,11,0.08)',
                   display: 'flex',
@@ -463,7 +463,7 @@ export default function ArtistsPage() {
               <div
                 style={{
                   fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.6rem',
+                  fontSize: '0.75rem',
                   letterSpacing: '0.12em',
                   color: 'var(--color-tally-onlight)',
                   textTransform: 'uppercase',
@@ -511,8 +511,8 @@ export default function ArtistsPage() {
             <div
               style={{
                 border: '1px solid rgba(10,13,11,0.1)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'clamp(1.75rem, 3vw, 2.5rem)',
+                borderRadius: '16px',
+                padding: 'clamp(1.25rem, 3vw, 2rem)',
                 background: 'var(--color-paper)',
               }}
             >
@@ -520,7 +520,7 @@ export default function ArtistsPage() {
                 style={{
                   width: '44px',
                   height: '44px',
-                  borderRadius: 'var(--radius-sm)',
+                  borderRadius: '10px',
                   background: 'rgba(10,13,11,0.05)',
                   border: '1px solid rgba(10,13,11,0.08)',
                   display: 'flex',
@@ -534,7 +534,7 @@ export default function ArtistsPage() {
               <div
                 style={{
                   fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.6rem',
+                  fontSize: '0.75rem',
                   letterSpacing: '0.12em',
                   color: 'var(--color-tally-onlight)',
                   textTransform: 'uppercase',
@@ -585,14 +585,14 @@ export default function ArtistsPage() {
             style={{
               marginTop: '2.5rem',
               border: '1px solid rgba(10,13,11,0.08)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'clamp(1.5rem, 3vw, 2rem)',
+              borderRadius: '16px',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
             }}
           >
             <p
               style={{
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.6rem',
+                fontSize: '0.75rem',
                 letterSpacing: '0.1em',
                 color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
@@ -648,7 +648,7 @@ export default function ArtistsPage() {
                   <div
                     style={{
                       fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.55rem',
+                      fontSize: '0.75rem',
                       letterSpacing: '0.1em',
                       color: 'var(--color-tally-onlight)',
                       textTransform: 'uppercase',
@@ -682,7 +682,7 @@ export default function ArtistsPage() {
                     <span
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.58rem',
+                        fontSize: '0.75rem',
                         color: 'var(--color-tally-onlight)',
                         letterSpacing: '0.06em',
                       }}
@@ -701,7 +701,7 @@ export default function ArtistsPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           borderTop: '1px solid #dde3d9',
           borderBottom: '1px solid #dde3d9',
         }}
@@ -710,7 +710,7 @@ export default function ArtistsPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
               color: 'var(--color-stamp-onlight)',
               textTransform: 'uppercase',
@@ -760,7 +760,7 @@ export default function ArtistsPage() {
                       color: 'var(--color-ink)',
                       background: 'var(--color-stamp)',
                       border: '1px solid rgba(10,13,11,0.1)',
-                      borderRadius: 'var(--radius-sm)',
+                      borderRadius: '10px',
                       width: '44px',
                       height: '44px',
                       display: 'flex',
@@ -838,7 +838,7 @@ export default function ArtistsPage() {
             ),
             url('/lockshow-hero-live.webp') center/cover no-repeat
           `,
-          padding: 'clamp(4rem, 9vw, 7rem) max(24px, 4vw)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           textAlign: 'center',
         }}
       >
@@ -846,7 +846,7 @@ export default function ArtistsPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
@@ -906,7 +906,7 @@ export default function ArtistsPage() {
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 padding: '0.95rem 2rem',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 textDecoration: 'none',
               }}
             >
@@ -926,7 +926,7 @@ export default function ArtistsPage() {
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 padding: '0.95rem 2rem',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 textDecoration: 'none',
               }}
             >

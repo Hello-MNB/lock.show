@@ -137,9 +137,9 @@ export default function ProducersPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
+                padding: '0.95rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 display: 'inline-block',
               }}
             >
@@ -154,9 +154,9 @@ export default function ProducersPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
+                padding: '0.95rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 display: 'inline-block',
               }}
             >
@@ -167,7 +167,7 @@ export default function ProducersPage() {
       </section>
 
       {/* ── THE FAVOR ────────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
@@ -226,7 +226,7 @@ export default function ProducersPage() {
             ].map((item, i) => (
               <div
                 key={i}
-                style={{ background: 'var(--color-paper)', padding: '1.75rem' }}
+                style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
               >
                 <span style={{
                   display: 'flex',
@@ -234,7 +234,7 @@ export default function ProducersPage() {
                   justifyContent: 'center',
                   width: '36px',
                   height: '36px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   background: 'rgba(200,240,77,0.1)',
                   color: 'var(--color-stamp-onlight)',
                   marginBottom: '0.875rem',
@@ -270,8 +270,8 @@ export default function ProducersPage() {
             style={{
               border: '1px solid rgba(200,240,77,0.2)',
               background: 'rgba(200,240,77,0.04)',
-              padding: '1.5rem',
-              borderRadius: 'var(--radius-sm)',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
+              borderRadius: '16px',
             }}
           >
             <p
@@ -306,9 +306,9 @@ export default function ProducersPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: '4rem max(24px, 4vw)',
-          borderTop: '1px solid rgba(10,13,11,0.06)',
-          borderBottom: '1px solid rgba(10,13,11,0.06)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
+          borderTop: '1px solid var(--color-mist)',
+          borderBottom: '1px solid var(--color-mist)',
         }}
       >
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
@@ -340,7 +340,7 @@ export default function ProducersPage() {
                 key={i}
                 style={{
                   padding: '1.5rem 0',
-                  borderBottom: '1px solid rgba(10,13,11,0.06)',
+                  borderBottom: '1px solid var(--color-mist)',
                 }}
               >
                 <h3
@@ -370,13 +370,13 @@ export default function ProducersPage() {
       </section>
 
       {/* ── TWENTY SECONDS, START TO FINISH ──────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div
             style={{
               background: 'var(--color-night)',
-              padding: '2.5rem',
-              borderRadius: 'var(--radius-sm)',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
+              borderRadius: '16px',
               marginBottom: '2rem',
               textAlign: 'left',
             }}
@@ -431,9 +431,9 @@ export default function ProducersPage() {
               fontSize: '0.78rem',
               fontWeight: 700,
               letterSpacing: '0.08em',
-              padding: '0.9rem 1.75rem',
+              padding: '0.95rem 1.75rem',
               textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '10px',
               display: 'inline-block',
             }}
           >

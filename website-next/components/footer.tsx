@@ -24,13 +24,13 @@ function ConsentPrefsButton({ label }: { label: string }) {
       style={{
         display: 'block',
         marginTop: '2px',
-        padding: 0,
+        padding: '0.4rem 0',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
         fontFamily: 'var(--font-heebo)',
         fontSize: '0.875rem',
-        color: 'rgba(255,255,255,0.6)',
+        color: 'rgba(243,245,239,0.7)',
         textDecoration: 'underline',
         textUnderlineOffset: '2px',
       }}
@@ -77,7 +77,7 @@ export function Footer() {
       style={{
         backgroundColor: 'var(--color-night)',
         color: 'rgba(255,255,255,0.7)',
-        padding: '56px 24px 32px',
+        padding: '56px max(24px, 4vw) 32px',
       }}
       aria-label="Site footer"
     >
@@ -116,9 +116,9 @@ export function Footer() {
             </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.62rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.1em',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(243,245,239,0.55)',
               margin: 0,
             }}>
               VERIFIED PROOF · METHOD-LABELED · TEL AVIV
@@ -128,14 +128,14 @@ export function Footer() {
             href={`${APP_URL}/signup`}
             style={{
               display: 'inline-block',
-              padding: '12px 24px',
+              padding: '15px 24px',
               backgroundColor: 'var(--color-stamp)',
               color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.68rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '10px',
               fontWeight: 700,
               flexShrink: 0,
             }}
@@ -155,23 +155,25 @@ export function Footer() {
             <div key={heading}>
               <p style={{
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.6rem',
+                fontSize: '0.75rem',
                 letterSpacing: '0.14em',
-                color: 'rgba(255,255,255,0.35)',
+                color: 'rgba(243,245,239,0.55)',
                 margin: '0 0 16px',
               }}>
                 {heading}
               </p>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {links.map(({ href, label }) => (
-                  <li key={href} style={{ marginBottom: '10px' }}>
+                  <li key={href} style={{ marginBottom: '4px' }}>
                     <Link
                       href={href}
                       style={{
                         fontFamily: 'var(--font-heebo)',
                         fontSize: '0.875rem',
-                        color: 'rgba(255,255,255,0.6)',
+                        color: 'rgba(243,245,239,0.7)',
                         textDecoration: 'none',
+                        display: 'inline-block',
+                        padding: '0.4rem 0',
                       }}
                     >
                       {label}
@@ -186,9 +188,9 @@ export function Footer() {
           <div>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.6rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(243,245,239,0.55)',
               margin: '0 0 16px',
             }}>
               LEGAL
@@ -199,21 +201,23 @@ export function Footer() {
                 { href: '/terms',         label: t.terms },
                 { href: '/accessibility', label: t.accessibility },
               ].map(({ href, label }) => (
-                <li key={href} style={{ marginBottom: '10px' }}>
+                <li key={href} style={{ marginBottom: '4px' }}>
                   <Link
                     href={href}
                     style={{
                       fontFamily: 'var(--font-heebo)',
                       fontSize: '0.875rem',
-                      color: 'rgba(255,255,255,0.6)',
+                      color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
+                      display: 'inline-block',
+                      padding: '0.4rem 0',
                     }}
                   >
                     {label}
                   </Link>
                 </li>
               ))}
-              <li style={{ marginBottom: '10px' }}>
+              <li style={{ marginBottom: '4px' }}>
                 <ConsentPrefsButton label={t.consentPrefs} />
               </li>
             </ul>
@@ -223,16 +227,16 @@ export function Footer() {
           <div>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.6rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'rgba(243,245,239,0.55)',
               margin: '0 0 16px',
             }}>
               CONNECT
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {SOCIAL.map(({ key, label, href }) => (
-                <li key={key} style={{ marginBottom: '10px' }}>
+                <li key={key} style={{ marginBottom: '4px' }}>
                   <a
                     href={href}
                     target="_blank"
@@ -240,15 +244,17 @@ export function Footer() {
                     style={{
                       fontFamily: 'var(--font-heebo)',
                       fontSize: '0.875rem',
-                      color: 'rgba(255,255,255,0.6)',
+                      color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
+                      display: 'inline-block',
+                      padding: '0.4rem 0',
                     }}
                   >
                     {label}
                   </a>
                 </li>
               ))}
-              <li style={{ marginBottom: '10px' }}>
+              <li style={{ marginBottom: '4px' }}>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
@@ -256,22 +262,26 @@ export function Footer() {
                   style={{
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.875rem',
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
+                    display: 'inline-block',
+                    padding: '0.4rem 0',
                   }}
                 >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(255,255,255,0.4)' }}>{WHATSAPP_DISPLAY}</span>
+                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
                 </a>
               </li>
-              <li style={{ marginBottom: '10px' }}>
+              <li style={{ marginBottom: '4px' }}>
                 <a
                   href={`mailto:${EMAILS.hello}`}
                   dir="ltr"
                   style={{
                     fontFamily: 'var(--font-heebo)',
                     fontSize: '0.875rem',
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
+                    display: 'inline-block',
+                    padding: '0.4rem 0',
                   }}
                 >
                   {EMAILS.hello}
@@ -285,15 +295,15 @@ export function Footer() {
         <div style={{
           padding: '20px',
           backgroundColor: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.06)',
-          borderRadius: 'var(--radius-sm)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '12px',
           marginBottom: '32px',
         }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
+            fontSize: '0.75rem',
             letterSpacing: '0.08em',
-            color: 'rgba(255,255,255,0.3)',
+            color: 'rgba(243,245,239,0.55)',
             margin: 0,
             lineHeight: 1.8,
           }}>
@@ -313,9 +323,9 @@ export function Footer() {
         }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
+            fontSize: '0.75rem',
             letterSpacing: '0.08em',
-            color: 'rgba(255,255,255,0.25)',
+            color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
             © 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL
@@ -324,10 +334,12 @@ export function Footer() {
             href="/contact"
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.6rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
-              color: 'rgba(255,255,255,0.3)',
+              color: 'rgba(243,245,239,0.7)',
               textDecoration: 'none',
+              display: 'inline-block',
+              padding: '0.5rem 0',
             }}
           >
             CONTACT

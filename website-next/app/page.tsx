@@ -112,13 +112,13 @@ function RoleTag({ children }: { children: React.ReactNode }) {
       style={{
         display: 'inline-block',
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.65rem',
+        fontSize: '0.75rem',
         fontWeight: 700,
         letterSpacing: '0.1em',
         color: 'var(--color-ink)',
         background: 'rgba(200,240,77,0.14)',
         border: '1px solid rgba(200,240,77,0.4)',
-        borderRadius: 'var(--radius-sm)',
+        borderRadius: '10px',
         padding: '0.15rem 0.5rem',
         marginBottom: '0.75rem',
       }}
@@ -133,7 +133,7 @@ function MethodBadge({ label }: { label: string }) {
     <span
       style={{
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.6rem',
+        fontSize: '0.75rem',
         fontWeight: 700,
         letterSpacing: '0.08em',
         color: 'var(--color-stamp)',
@@ -251,7 +251,7 @@ export default function HomePage() {
                 <span
                   style={{
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     letterSpacing: '0.14em',
                     color: 'var(--color-stamp)',
                     textTransform: 'uppercase',
@@ -288,7 +288,7 @@ export default function HomePage() {
               {/* Sub */}
               <p
                 style={{
-                  fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
+                  fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                   lineHeight: 1.7,
                   color: 'rgba(243,245,239,0.68)',
                   maxWidth: '480px',
@@ -320,8 +320,8 @@ export default function HomePage() {
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    padding: '0.85rem 1.75rem',
-                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.95rem 1.75rem',
+                    borderRadius: '10px',
                     textDecoration: 'none',
                   }}
                 >
@@ -340,8 +340,8 @@ export default function HomePage() {
                     fontSize: '0.8rem',
                     fontWeight: 700,
                     letterSpacing: '0.08em',
-                    padding: '0.85rem 1.75rem',
-                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.95rem 1.75rem',
+                    borderRadius: '10px',
                     border: '1px solid rgba(243,245,239,0.25)',
                     textDecoration: 'none',
                   }}
@@ -375,9 +375,9 @@ export default function HomePage() {
                     <span
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.65rem',
+                        fontSize: '0.75rem',
                         letterSpacing: '0.04em',
-                        color: 'rgba(243,245,239,0.45)',
+                        color: 'rgba(243,245,239,0.6)',
                       }}
                     >
                       {text}
@@ -393,7 +393,7 @@ export default function HomePage() {
               style={{
                 background: 'rgba(10,13,11,0.62)',
                 border: '1px solid rgba(243,245,239,0.14)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '16px',
                 padding: '1.5rem',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
@@ -600,14 +600,14 @@ export default function HomePage() {
           style={{
             background: 'var(--color-paper)',
             borderBottom: '1px solid rgba(10,13,11,0.1)',
-            padding: '0.85rem 1.25rem',
+            padding: '0.85rem max(24px, 4vw)',
             textAlign: 'center',
           }}
         >
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.1em',
               color: 'var(--color-tally-onlight)',
             }}
@@ -620,7 +620,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-paper)',
-            padding: 'clamp(3rem, 7vw, 5rem) 1.25rem',
+            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           }}
         >
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -670,7 +670,7 @@ export default function HomePage() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                gap: '1.5rem',
+                gap: 'clamp(1rem, 2vw, 1.5rem)',
               }}
             >
               {[
@@ -704,7 +704,7 @@ export default function HomePage() {
                   style={{
                     background: 'var(--color-paper)',
                     border: '1px solid rgba(10,13,11,0.1)',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: '16px',
                     overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
@@ -718,7 +718,7 @@ export default function HomePage() {
                       background: `linear-gradient(180deg, rgba(10,13,11,0) 55%, rgba(10,13,11,0.35) 100%), url('${image}') center 30%/cover no-repeat`,
                     }}
                   />
-                  <div style={{ padding: '1.5rem 1.75rem 1.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ padding: 'clamp(1.25rem, 3vw, 2rem)', display: 'flex', flexDirection: 'column', flex: 1 }}>
                     <div>
                       <RoleTag>{tag}</RoleTag>
                     </div>
@@ -734,7 +734,7 @@ export default function HomePage() {
                     >
                       {title}
                     </h3>
-                    <p style={{ fontSize: '0.95rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                    <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                       {body}
                     </p>
                     <Link
@@ -744,11 +744,13 @@ export default function HomePage() {
                         alignItems: 'center',
                         gap: '6px',
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.72rem',
+                        fontSize: '0.75rem',
                         fontWeight: 700,
                         letterSpacing: '0.08em',
                         color: 'var(--color-ink)',
                         textDecoration: 'none',
+                        padding: '0.6rem 0',
+                        marginBottom: '-0.6rem',
                         marginTop: 'auto',
                       }}
                     >
@@ -766,7 +768,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-night)',
-            padding: 'clamp(2.5rem, 5vw, 3.75rem) max(24px, 4vw)',
+            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             borderTop: '1px solid #2a342d',
             borderBottom: '1px solid #2a342d',
           }}
@@ -776,7 +778,7 @@ export default function HomePage() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '3rem',
+                gap: 'clamp(1.5rem, 4vw, 3rem)',
                 alignItems: 'center',
               }}
             >
@@ -829,6 +831,7 @@ export default function HomePage() {
                     letterSpacing: '0.08em',
                     color: 'var(--color-paper)',
                     textDecoration: 'none',
+                    padding: '0.6rem 0',
                   }}
                 >
                   READ THE METHODOLOGY
@@ -841,14 +844,14 @@ export default function HomePage() {
                 style={{
                   background: 'rgba(243,245,239,0.04)',
                   border: '1px solid rgba(243,245,239,0.1)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '2rem',
+                  borderRadius: '16px',
+                  padding: 'clamp(1.25rem, 3vw, 2rem)',
                 }}
               >
                 <p
                   style={{
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     letterSpacing: '0.1em',
                     color: 'rgba(243,245,239,0.3)',
                     marginBottom: '1.5rem',
@@ -885,7 +888,7 @@ export default function HomePage() {
                     <span
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.65rem',
+                        fontSize: '0.75rem',
                         color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
@@ -922,7 +925,7 @@ export default function HomePage() {
                     <span
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.65rem',
+                        fontSize: '0.75rem',
                         color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
@@ -958,7 +961,7 @@ export default function HomePage() {
                     <span
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.65rem',
+                        fontSize: '0.75rem',
                         color: 'rgba(243,245,239,0.35)',
                         letterSpacing: '0.06em',
                       }}
@@ -978,7 +981,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-paper)',
-            padding: 'clamp(3rem, 7vw, 5rem) 1.25rem',
+            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           }}
         >
           <div style={{ maxWidth: '760px', margin: '0 auto' }}>
@@ -1047,12 +1050,12 @@ export default function HomePage() {
                     <div
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.72rem',
+                        fontSize: '0.75rem',
                         fontWeight: 700,
                         color: 'var(--color-ink)',
                         background: 'rgba(10,13,11,0.06)',
                         border: '1px solid rgba(10,13,11,0.1)',
-                        borderRadius: 'var(--radius-sm)',
+                        borderRadius: '10px',
                         width: '2.5rem',
                         height: '2.5rem',
                         display: 'flex',
@@ -1090,7 +1093,7 @@ export default function HomePage() {
                     </h3>
                     <p
                       style={{
-                        fontSize: '0.95rem',
+                        fontSize: '1rem',
                         color: 'var(--color-tally-onlight)',
                         lineHeight: 1.65,
                       }}
@@ -1115,6 +1118,7 @@ export default function HomePage() {
                   letterSpacing: '0.08em',
                   color: 'var(--color-ink)',
                   textDecoration: 'none',
+                  padding: '0.6rem 0',
                 }}
               >
                 SEE THE FULL WALKTHROUGH
@@ -1128,10 +1132,10 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-ink)',
-            padding: 'clamp(3rem, 7vw, 5rem) max(24px, 4vw)',
+            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
-            borderTop: '1px solid #1a221c',
-            borderBottom: '1px solid #1a221c',
+            borderTop: '1px solid rgba(243,245,239,0.1)',
+            borderBottom: '1px solid rgba(243,245,239,0.1)',
           }}
         >
           <div style={{ maxWidth: '680px', margin: '0 auto' }}>
@@ -1179,7 +1183,7 @@ export default function HomePage() {
                 gap: '1px',
                 background: 'rgba(243,245,239,0.1)',
                 border: '1px solid rgba(243,245,239,0.1)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '16px',
                 overflow: 'hidden',
                 marginBottom: '2.5rem',
               }}
@@ -1191,10 +1195,10 @@ export default function HomePage() {
                     padding: '1rem',
                     background: 'var(--color-ink)',
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.7rem',
+                    fontSize: '0.75rem',
                     fontWeight: 700,
                     letterSpacing: '0.1em',
-                    color: 'rgba(243,245,239,0.45)',
+                    color: 'rgba(243,245,239,0.6)',
                     textAlign: 'center',
                   }}
                 >
@@ -1214,8 +1218,8 @@ export default function HomePage() {
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
                   border: '1px solid rgba(243,245,239,0.3)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '0.85rem 1.75rem',
+                  borderRadius: '10px',
+                  padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                 }}
               >
@@ -1231,8 +1235,8 @@ export default function HomePage() {
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
                   border: '1px solid rgba(243,245,239,0.3)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '0.85rem 1.75rem',
+                  borderRadius: '10px',
+                  padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                 }}
               >
@@ -1246,7 +1250,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-ink)',
-            padding: 'clamp(3rem, 7vw, 5rem) 1.25rem',
+            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
           }}
         >
@@ -1287,7 +1291,7 @@ export default function HomePage() {
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 padding: '1rem 2.5rem',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 textDecoration: 'none',
               }}
             >

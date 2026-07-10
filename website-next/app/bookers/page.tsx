@@ -158,9 +158,9 @@ export default function BookersPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
+                padding: '0.95rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 display: 'inline-block',
               }}
             >
@@ -175,9 +175,9 @@ export default function BookersPage() {
                 fontSize: '0.78rem',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
+                padding: '0.95rem 1.75rem',
                 textDecoration: 'none',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: '10px',
                 display: 'inline-block',
               }}
             >
@@ -189,7 +189,7 @@ export default function BookersPage() {
               fontFamily: 'var(--font-space-mono), monospace',
               fontSize: '0.75rem',
               letterSpacing: '0.08em',
-              color: 'rgba(243,245,239,0.55)',
+              color: 'rgba(243,245,239,0.7)',
               marginTop: '1.5rem',
             }}
           >
@@ -202,8 +202,8 @@ export default function BookersPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: '4rem max(24px, 4vw)',
-          borderBottom: '1px solid rgba(10,13,11,0.06)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
+          borderBottom: '1px solid var(--color-mist)',
         }}
       >
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
@@ -241,7 +241,7 @@ export default function BookersPage() {
             {risks.map((r) => (
               <div
                 key={r.num}
-                style={{ background: 'var(--color-paper)', padding: '1.75rem' }}
+                style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
               >
                 <span
                   style={{
@@ -286,13 +286,13 @@ export default function BookersPage() {
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: '4rem max(24px, 4vw) 0',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) 0',
         }}
       >
         <figure style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <div
             style={{
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '16px',
               overflow: 'hidden',
               border: '1px solid rgba(10,13,11,0.08)',
             }}
@@ -326,7 +326,7 @@ export default function BookersPage() {
       </section>
 
       {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
@@ -356,7 +356,7 @@ export default function BookersPage() {
                 key={i}
                 style={{
                   padding: '1.75rem 0',
-                  borderBottom: '1px solid rgba(10,13,11,0.06)',
+                  borderBottom: '1px solid var(--color-mist)',
                 }}
               >
                 <span
@@ -402,7 +402,7 @@ export default function BookersPage() {
       {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
       <section style={{
         background: 'var(--color-night)',
-        padding: '4rem max(24px, 4vw)',
+        padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderTop: '1px solid #2a342d',
         borderBottom: '1px solid #2a342d',
       }}>
@@ -455,10 +455,10 @@ export default function BookersPage() {
                 style={{
                   fontFamily: 'var(--font-space-mono), monospace',
                   fontSize: '0.75rem',
-                  color: 'rgba(243,245,239,0.6)',
+                  color: 'rgba(243,245,239,0.7)',
                   border: '1px solid rgba(243,245,239,0.12)',
                   padding: '0.25rem 0.6rem',
-                  borderRadius: 'var(--radius-sm)',
+                  borderRadius: '10px',
                   letterSpacing: '0.06em',
                 }}
               >
@@ -470,7 +470,7 @@ export default function BookersPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: '5rem max(24px, 4vw)', textAlign: 'center' }}>
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2
             style={{
@@ -503,9 +503,9 @@ export default function BookersPage() {
               fontSize: '0.78rem',
               fontWeight: 700,
               letterSpacing: '0.08em',
-              padding: '0.9rem 1.75rem',
+              padding: '0.95rem 1.75rem',
               textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '10px',
               display: 'inline-block',
             }}
           >

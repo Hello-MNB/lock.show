@@ -28,13 +28,13 @@ function LocaleToggle() {
       aria-label={locale === 'en' ? 'Switch to Hebrew' : 'Switch to English'}
       style={{
         fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.65rem',
+        fontSize: '0.75rem',
         letterSpacing: '0.06em',
         color: 'var(--color-tally)',
         background: 'none',
         border: '1px solid rgba(255,255,255,0.15)',
-        borderRadius: 'var(--radius-sm)',
-        padding: '5px 9px',
+        borderRadius: '10px',
+        padding: '15px 12px',
         cursor: 'pointer',
         flexShrink: 0,
       }}
@@ -141,11 +141,11 @@ export function Nav() {
             href={`${APP_URL}/login`}
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
               color: 'var(--color-paper)',
               textDecoration: 'none',
-              padding: '8px 12px',
+              padding: '15px 12px',
               whiteSpace: 'nowrap',
               fontWeight: 600,
             }}
@@ -156,13 +156,13 @@ export function Nav() {
             href={`${APP_URL}/signup`}
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
               color: 'var(--color-ink)',
               textDecoration: 'none',
               backgroundColor: 'var(--color-stamp)',
-              padding: '8px 16px',
-              borderRadius: 'var(--radius-sm)',
+              padding: '15px 18px',
+              borderRadius: '10px',
               whiteSpace: 'nowrap',
               fontWeight: 700,
             }}
@@ -242,14 +242,14 @@ export function Nav() {
             style={{
               display: 'block',
               marginTop: '12px',
-              padding: '14px 20px',
+              padding: '15px 20px',
               border: '1px solid var(--color-mist, rgba(255,255,255,.15))',
               color: 'var(--color-paper)',
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '10px',
               textAlign: 'center',
               fontWeight: 600,
             }}
@@ -261,14 +261,14 @@ export function Nav() {
             style={{
               display: 'block',
               marginTop: '10px',
-              padding: '14px 20px',
+              padding: '15px 20px',
               backgroundColor: 'var(--color-stamp)',
               color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.08em',
               textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
+              borderRadius: '10px',
               textAlign: 'center',
               fontWeight: 700,
             }}
