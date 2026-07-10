@@ -49,8 +49,8 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 
 | # | Ask | Direction | Status |
 |---|---|---|---|
-| 1 | A13 tokens-to-code map | Codex → Claude | 🔴 open — blocks app re-ground |
-| 2 | Per-surface token values | Codex → Claude | 🔴 open |
+| 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
+| 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
 | 3 | Method-label canon fix + draw band/binary spec + Producer≠Production + booker HE term + pricing values | Codex → Claude | 🟡 open (work order delivered) |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
 | 5 | v1.4.2 audit (what Codex misread / still owes) | Claude → Codex | ✅ delivered (`CODEX-DS-v1.4.2-AUDIT.md`) |
