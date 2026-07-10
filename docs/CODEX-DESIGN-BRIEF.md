@@ -84,6 +84,10 @@ magic link) · **Operator** (admin). Two products inside: **Radar** (private dev
 - This brief (§1–§7) — especially **§2 the firewall** and **§3 Hebrew-first**.
 - Our engineering audits (optional, for grounding): `docs/UX-JOURNEY-AUDIT-2026-07-10.md` and
   `docs/design-system/DS-v1.2.0-DIGEST-AND-ALIGNMENT.md`.
+- The **current prototypes** (so Codex works from real references, not guesses) — see
+  `docs/prototypes/REGISTRY.md`: **Radar v4** and **Passport v3** are the approved direction for those two
+  surfaces. Always give Codex the `00_CURRENT` prototype for a surface, never a stale one.
+- The **token completion map**: `docs/CODEX-TOKEN-COMPLETION-MAP.md` (exactly which tokens to add, per surface).
 
 > One line to lead with: _"Elevate our existing GIGPROOF Design System v1.2.0 into **LOCK v1.3** — same
 > quality bar, now rebranded, Hebrew-RTL first-class, WCAG-AA proven, with a tokens-to-code map — and bring

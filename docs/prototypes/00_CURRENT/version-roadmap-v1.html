@@ -1,0 +1,298 @@
+<title>LOCK — Version Roadmap</title>
+<style>
+  :root{
+    --paper:#f3f5ef; --card:#ffffff; --ink:#0a0d0b; --forest:#18221a;
+    --lime:#C8F04D; --mist:#dde3d9; --slate:#687269; --muted:#6c776e;
+    --amber:#c8892a; --line:#dde3d9; --band:#eef1ea;
+    --shadow:0 1px 2px rgba(24,34,26,.05),0 8px 24px -16px rgba(24,34,26,.25);
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono","DM Mono",Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --paper:#0e140d; --card:#18221a; --ink:#eef2ea; --forest:#0b100c;
+      --lime:#C8F04D; --mist:#2b362c; --slate:#9aa79b; --muted:#8a968b;
+      --amber:#e0aa4e; --line:#2b362c; --band:#141c14;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f3f5ef; --card:#ffffff; --ink:#0a0d0b; --forest:#18221a;
+    --mist:#dde3d9; --slate:#687269; --muted:#6c776e; --amber:#c8892a;
+    --line:#dde3d9; --band:#eef1ea; --shadow:0 1px 2px rgba(24,34,26,.05),0 8px 24px -16px rgba(24,34,26,.25);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0e140d; --card:#18221a; --ink:#eef2ea; --forest:#0b100c;
+    --mist:#2b362c; --slate:#9aa79b; --muted:#8a968b; --amber:#e0aa4e;
+    --line:#2b362c; --band:#141c14; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -18px rgba(0,0,0,.7);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 56px}
+
+  header.head{margin-bottom:22px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--lime);font-weight:600;margin:0 0 8px}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(1.8rem,4.5vw,2.6rem);
+    letter-spacing:-.01em;line-height:1.05;margin:0 0 6px;text-wrap:balance}
+  .sub{color:var(--slate);font-size:15px;max-width:60ch;margin:0}
+
+  .now{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:18px 0 6px;
+    padding:13px 16px;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;box-shadow:var(--shadow)}
+  .now b{color:var(--ink)}
+  .now .txt{font-size:13.5px;color:var(--muted)}
+  .now .pin{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink);background:var(--lime);
+    padding:4px 9px;border-radius:999px;white-space:nowrap}
+
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:16px 2px 12px;
+    font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:1px}
+  .s-live{background:var(--slate)}
+  .s-now{background:var(--lime);box-shadow:0 0 0 3px color-mix(in srgb,var(--lime) 28%,transparent)}
+  .s-plan{background:transparent;border:1.5px solid var(--slate)}
+  .s-own{background:var(--amber)}
+
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow);background:var(--card)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1000px}
+  thead th{position:sticky;top:0;z-index:3;background:var(--forest);color:#f3f5ef;
+    text-align:left;vertical-align:bottom;padding:14px 14px;font-family:var(--sans)}
+  thead th .vh{font-family:var(--serif);font-size:16px;font-weight:700;letter-spacing:-.01em;display:block}
+  thead th .vt{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+    color:#aeb9ac;display:block;margin-top:3px}
+  thead th.userhead{z-index:5;left:0;border-top-left-radius:16px}
+  thead th.col-now{background:linear-gradient(180deg,#20301f,#18221a);
+    box-shadow:inset 0 3px 0 var(--lime)}
+  thead th.col-now .vt{color:var(--lime)}
+
+  th.user{position:sticky;left:0;z-index:2;background:var(--band);
+    text-align:left;vertical-align:top;padding:16px 14px;min-width:140px;max-width:150px;
+    border-right:1px solid var(--line)}
+  th.user .uname{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink);
+    display:block;line-height:1.15}
+  th.user .urole{font-size:11.5px;color:var(--slate);display:block;margin-top:3px;font-weight:400}
+
+  td{vertical-align:top;padding:13px 14px;border-top:1px solid var(--line);
+    min-width:186px;width:19%}
+  td.col-now{background:color-mix(in srgb,var(--lime) 7%,var(--card))}
+  tbody tr:nth-child(even) th.user{background:var(--band)}
+  tbody tr:hover td{background:color-mix(in srgb,var(--slate) 6%,var(--card))}
+  tbody tr:hover td.col-now{background:color-mix(in srgb,var(--lime) 11%,var(--card))}
+
+  ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  ul.items li{display:flex;gap:9px;font-size:13px;line-height:1.38;color:var(--ink)}
+  ul.items li .dot{margin-top:5px}
+  .dash{color:var(--slate);font-size:13px;opacity:.6}
+
+  footer{margin-top:26px;display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:720px){footer{grid-template-columns:1fr 1fr}}
+  .fcard{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;box-shadow:var(--shadow)}
+  .fcard h3{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--slate);margin:0 0 10px;font-weight:600}
+  .fcard ol,.fcard ul{margin:0;padding-left:18px}
+  .fcard li{font-size:13.5px;color:var(--ink);margin-bottom:6px;line-height:1.4}
+  .fcard li b{color:var(--ink)}
+  .fnote{font-size:12px;color:var(--muted);margin:14px 2px 0;font-family:var(--mono);
+    letter-spacing:.02em}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <p class="eyebrow">LOCK · Release Roadmap</p>
+    <h1>What changes, release to release — by user</h1>
+    <p class="sub">One row per user. Columns move left→right in time. This is the thread: where each user has been, what ships now, and where we're headed — so nothing gets lost between versions.</p>
+  </header>
+
+  <div class="now">
+    <span class="pin">You are here</span>
+    <span class="txt"><b>R1 · rel-2026.07.10</b> is prepared, gate green, migrations 030 + 031 applied today. Next: deploy → I browser-verify → you say “promote.” Method: small risk-tiered batches, each one tagged & reversible.</span>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot s-live"></i>Live — already shipped</span>
+    <span><i class="dot s-now"></i>This release (R1)</span>
+    <span><i class="dot s-plan"></i>Planned (R2 / R3 / Launch)</span>
+    <span><i class="dot s-own"></i>Needs owner / decision</span>
+  </div>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="userhead user">User</th>
+          <th><span class="vh">Live now</span><span class="vt">≤ rel-07.09 · shipped</span></th>
+          <th class="col-now"><span class="vh">R1 · rel-07.10</span><span class="vt">Now · ready to deploy</span></th>
+          <th><span class="vh">R2 · Measurement</span><span class="vt">Next</span></th>
+          <th><span class="vh">R3 · Depth</span><span class="vt">After</span></th>
+          <th><span class="vh">Launch · Gate</span><span class="vt">Before real money</span></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr>
+          <th class="user"><span class="uname">Artist</span><span class="urole">אמן — builds the proof</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Signup (first + last name), onboarding</li>
+            <li><i class="dot s-live"></i>Radar home · evidence → AI claims · review · publish</li>
+            <li><i class="dot s-live"></i>Controls WhatsApp sharing</li>
+          </ul></td>
+          <td class="col-now"><ul class="items">
+            <li><i class="dot s-now"></i><b>🔒 Firewall fix</b> — unreviewed claims no longer go public</li>
+            <li><i class="dot s-now"></i>Own Passport preview now shows both buyer views</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Funnel events: evidence added, claim confirmed, radar opened</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Create a 2nd Act (multi-Act finally usable)</li>
+            <li><i class="dot s-plan"></i>Reply to a booking request</li>
+            <li><i class="dot s-plan"></i>Ask a producer to confirm, from evidence</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Radar re-theme to paper · Hebrew polish</li>
+            <li><i class="dot s-plan"></i>Real AI model on deploy (not the mock)</li>
+          </ul></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Booker</span><span class="urole">booking manager — receives proof</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Open a Passport from a link (/discover)</li>
+          </ul></td>
+          <td class="col-now"><ul class="items">
+            <li><i class="dot s-now"></i><b>Own nav tab</b> (Passports) — no more dead-end</li>
+            <li><i class="dot s-plan"></i>Sample-passport link fix (quick R1 add)</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Open discovery (post-validation)</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Producer</span><span class="urole">מפיק מאשר — confirms one claim</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Magic-link confirm ceremony</li>
+            <li><i class="dot s-live"></i>“Passports shared with you” + paste a link</li>
+          </ul></td>
+          <td class="col-now"><span class="dash">—</span></td>
+          <td><span class="dash">—</span></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Confirming notifies the artist + logs it</li>
+            <li><i class="dot s-plan"></i>Real received-passports list · “link expired” state</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Agency</span><span class="urole">אמרגן / representative — the payer</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Roster · Radar feed · Requests inbox</li>
+            <li><i class="dot s-live"></i>Consent access-request cards</li>
+          </ul></td>
+          <td class="col-now"><ul class="items">
+            <li><i class="dot s-now"></i><b>🔓 Radar works again</b> (migration 030)</li>
+            <li><i class="dot s-now"></i>Passport <b>Representation view</b> to evaluate artists</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Workspace-switch event</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Roster from consented grants (not just owned)</li>
+            <li><i class="dot s-own"></i>Remove legacy “own artist” mode (firewall)</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Production co.</span><span class="urole">INSOMNIA-type — team & events</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Team · Events · Requests tabs</li>
+          </ul></td>
+          <td class="col-now"><ul class="items">
+            <li><i class="dot s-now"></i><b>🔓 Events load</b> for external artists (migration 030)</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Requests inbox with real data (new read path)</li>
+          </ul></td>
+          <td><span class="dash">—</span></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Operator</span><span class="urole">you — admin console</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Artists · claims · consents · audit</li>
+            <li><i class="dot s-live"></i>Payments queue · agency upgrades · export/erase</li>
+          </ul></td>
+          <td class="col-now"><span class="dash">—</span></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i><b>GATE events</b>: payment activated · professional reaction</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Record who activated a payment (audit trail)</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-own"></i><b>Receipts / invoices</b> (חשבונית — legal)</li>
+            <li><i class="dot s-own"></i>Agency-side payment record · revenue ledger</li>
+          </ul></td>
+        </tr>
+
+        <tr>
+          <th class="user"><span class="uname">Everyone</span><span class="urole">platform / cross-cutting</span></th>
+          <td><ul class="items">
+            <li><i class="dot s-live"></i>Navigation contract (34 journeys) · auth fixes</li>
+            <li><i class="dot s-live"></i>Analytics (6 events) · Design System on the site</li>
+            <li><i class="dot s-live"></i>lock.show live · migrations ≤ 029</li>
+          </ul></td>
+          <td class="col-now"><ul class="items">
+            <li><i class="dot s-now"></i><b>Two-persona Passport</b> (Booking · Representation)</li>
+            <li><i class="dot s-now"></i>Migrations 030 + 031 applied · gate green</li>
+            <li><i class="dot s-now"></i>Hebrew auth-screen fix (2nd session, to merge)</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>Remaining 13 funnel events wired</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>“Add workspace” actually creates one</li>
+          </ul></td>
+          <td><ul class="items">
+            <li><i class="dot s-plan"></i>App re-theme to paper (DS Step 2)</li>
+            <li><i class="dot s-own"></i>Counsel sign-off · Hebrew launch pass</li>
+          </ul></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <p class="fnote">24 flow-gaps mapped across all users (2 P0 · 10 P1 · 12 P2) — full detail in docs/FLOW-GAP-AUDIT-2026-07-10.md. This board is the summary.</p>
+
+  <footer>
+    <div class="fcard">
+      <h3>How we release (so we don't lose the thread)</h3>
+      <ol>
+        <li><b>Small batches, not big-bang.</b> Each column above is one release.</li>
+        <li><b>Every release passes the gate</b> (nav 34/34 + build) → is <b>tagged</b> → is <b>reversible</b> in minutes.</li>
+        <li><b>Migrations go in alone</b>, verified before code rides on them.</li>
+        <li>Claude does audit → code → verify → browser-test → deploy. You decide <b>promote</b>.</li>
+      </ol>
+    </div>
+    <div class="fcard">
+      <h3>Decisions waiting on you</h3>
+      <ul>
+        <li><b>Promote R1?</b> deploy the current release once you're ready.</li>
+        <li><b>Radar direction</b> — calm list / re-themed universe / radar dial / blend.</li>
+        <li><b>Pilot price</b> (recommendation ₪179) · Hebrew word for “Act.”</li>
+        <li><b>3rd branch</b> (separate MVP app) — what is it for? hold until you say.</li>
+      </ul>
+    </div>
+  </footer>
+</div>

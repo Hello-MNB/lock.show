@@ -1,0 +1,40 @@
+{
+  "system": "LOCK Prototypes",
+  "updated": "2026-07-10",
+  "current": {
+    "radar": {
+      "version": "v4",
+      "file": "00_CURRENT/radar-v4.html",
+      "artifactUrl": "https://claude.ai/code/artifact/9664a4b9-c11d-4e81-ba34-96ac80d542c7",
+      "surface": "artist-home"
+    },
+    "passport": {
+      "version": "v3",
+      "file": "00_CURRENT/passport-v3.html",
+      "artifactUrl": "https://claude.ai/code/artifact/04bb4782-df3a-4205-bb49-99b46cca5e75",
+      "surface": "public-buyer-view",
+      "shippedIn": "rel-2026.07.10"
+    },
+    "version-roadmap": {
+      "version": "v1",
+      "file": "00_CURRENT/version-roadmap-v1.html",
+      "artifactUrl": "https://claude.ai/code/artifact/a65d12d9-a66d-442c-9077-306eb05fddd6",
+      "surface": "planning"
+    },
+    "flow-map": {
+      "version": "v1",
+      "file": "00_CURRENT/flow-map-v1.html",
+      "artifactUrl": null,
+      "surface": "architecture"
+    },
+    "release-guide": {
+      "version": "v1",
+      "file": "00_CURRENT/release-guide-v1.html",
+      "artifactUrl": null,
+      "surface": "process"
+    }
+  },
+  "archived": [
+    { "name": "gigproof-desktop", "version": "v0-final", "file": "04_VERSIONS/gigproof-desktop-v0-final.html", "supersededBy": "radar-v4 + passport-v3" }
+  ]
+}
