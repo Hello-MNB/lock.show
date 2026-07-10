@@ -126,13 +126,16 @@ async function buildSafePayload(artistId) {
     .order('created_at', { ascending: false })
   if (iErr) throw iErr
 
-  // Claims: passport-ok + verified/supporting only. No internal_confidence/model_version/extraction_method.
+  // Claims: passport-ok + verified/supporting + ARTIST-APPROVED only (031 gate —
+  // this admin client bypasses RLS, so the approval gate must be explicit here or
+  // unreviewed claims leak into the public payload). No internal_confidence/model_version/extraction_method.
   const { data: claims, error: cErr } = await admin
     .from('claims')
     .select('id, claim_type, value, source_type, verification_status, reason_code, method_label, expires_at')
     .eq('artist_id', artistId)
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .in('verification_status', PUBLISHABLE_STATUSES)
+    .eq('artist_approved', true)
     .order('created_at', { ascending: false })
   if (cErr) throw cErr
 

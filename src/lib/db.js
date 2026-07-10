@@ -408,7 +408,10 @@ export async function getPublicPassport(id) {
     .eq('artist_id', id)
   if (session) {
     itemsQ = itemsQ.eq('visibility', VISIBILITY.PASSPORT_OK)
-    claimsQ = claimsQ.eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES)
+    // artist_approved: the publish gate (031). An authenticated viewer's RLS shows
+    // ALL their claims, so we must exclude unreviewed ones explicitly — same rule
+    // the anon path gets from claims_public_read.
+    claimsQ = claimsQ.eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true)
   }
   const [itemsRes, claimsRes] = await Promise.all([
     itemsQ.order('item_date', { ascending: false, nullsFirst: false }),
@@ -430,7 +433,7 @@ async function buildPassportSnapshot(artistId) {
       .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
     supabase.from('claims')
       .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES),
+      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
   ])
   return { artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
 }

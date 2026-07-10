@@ -1,13 +1,15 @@
 # LOCK — MASTER TASK STATUS BOARD (PRIORITY-SORTED)
 **Version:** 2.4 · **Date:** 10 July 2026 · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
 
-> **10 Jul ship (branch `claude/b4-gigproof-discovery-e7749o`):** Entity-flow AUDIT done.
-> (1) **Booker nav gap FIXED** — bookers landed on `/discover` but had only an Account tab;
-> added a Passports tab (nav contract 34/34). (2) **Public Passport split into TWO buyer
-> personas** — Booking view + Representation view (separate files, shared firewall-safe
-> derivation in `passportKit.deriveSections`; toggle + `?view=rep` deep link). Personas
-> labelled by intent, NOT "Producer" (which is the confirmer entity). Docs:
-> `PASSPORT-ARCHITECTURE.md`. Next: build the Radar v4 into `ArtistDashboard`.
+> **10 Jul ship (branch `claude/b4-gigproof-discovery-e7749o`) — rel-2026.07.10 PREPARED:**
+> (1) **🔒 P0 FIREWALL BREACH CLOSED** — unreviewed AI claims could reach the public Passport
+> (`artist_approved` gate never enforced on any read path); fixed on all 4 surfaces —
+> **migration 031** + `db.js` + `server/index.js`. (2) **Booker nav gap FIXED** (Passports tab;
+> nav 34/34). (3) **Public Passport split into TWO buyer personas** (Booking + Representation,
+> separate files, shared firewall-safe derivation; `?view=rep` deep link). (4) **Full entity
+> flow-gap AUDIT** — `docs/FLOW-GAP-AUDIT-2026-07-10.md` (24 gaps: 2 P0 [1 fixed], 10 P1, 12 P2).
+> (5) **Release package** — `docs/releases/rel-2026.07.10.md` (changelog + migration + deploy +
+> QA checklists). **OWNER: run migrations 030 + 031 in Supabase.** Docs: `PASSPORT-ARCHITECTURE.md`.
 **Sort:** by launch priority. **P0** = blocks real launch · **P1** = needed for a strong launch · **P2** = growth/polish after launch · **DONE** = live and verified.
 **"Migration needed?"** = does going real require a live-DB schema change? Demo data never migrates; migrations are one-time schema upgrades.
 
