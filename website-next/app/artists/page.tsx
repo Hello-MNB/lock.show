@@ -3,14 +3,14 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/artists' },
-  title: 'Prove You Draw a Crowd — Before the Call',
+  title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
   description:
-    'You played the gig. Now put proof in front of the booking manager before they ever call you — not a link, not a bio, evidence they can check.',
+    'The nights you already played can open the rooms you want next. LOCK turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
   openGraph: {
     url: '/artists',
     title: 'For Artists | LOCK',
     description:
-      'You played a great set. Now prove it — in a way a booking manager can trust.',
+      'Your talent is real. LOCK makes it visible — one link that carries your best nights into rooms you haven\'t played yet.',
     type: 'website',
   },
 }
@@ -77,54 +77,54 @@ function MethodBadge({ label }: { label: string }) {
 
 const painPoints = [
   {
-    title: 'The manager loved your mix. Then nothing.',
-    body: "You have no way to prove you draw a crowd. A Spotify link shows you exist — it says nothing about what happens when you're in the room.",
+    title: 'The manager loved your mix. Then — silence.',
+    body: 'A link shows you exist. It says nothing about what happens when you\'re actually in the room — the part you\'re best at.',
   },
   {
-    title: "You've played 40 gigs. Nobody outside your network knows.",
-    body: 'Your live record lives in WhatsApp threads and memory. It\'s invisible to every booking manager who hasn\'t personally seen you play.',
+    title: 'Forty real nights, invisible to every room you haven\'t played.',
+    body: 'Your live history lives in WhatsApp threads and other people\'s memories. It deserves better than that. So do you.',
   },
   {
-    title: 'An EPK is a sales pitch. They know it too.',
-    body: "Experienced booking managers have seen enough polished bios to stop trusting them. They need something with a third party's name on it.",
+    title: 'They\'ve stopped believing EPKs. You can\'t blame them.',
+    body: 'A polished bio is your word for it. The rooms you want next need someone else\'s word too — and you\'ve already earned it.',
   },
 ]
 
 const steps = [
   {
     num: '01',
-    title: 'Log your evidence',
-    body: 'Add your gig history, platform data, and professional context. Everything stays private in your Artist Radar until you\'re ready.',
+    title: 'Log it.',
+    body: 'Your gigs, your numbers, your story — private in your Radar until you say otherwise.',
   },
   {
     num: '02',
-    title: 'Send the producer a link',
-    body: 'One WhatsApp message. They confirm a single claim they know first-hand — no account, no ongoing access.',
+    title: 'Invite.',
+    body: 'One WhatsApp message to the producer who ran your night. They confirm it in a tap.',
   },
   {
     num: '03',
-    title: 'Operator reviews and labels',
-    body: 'We review the evidence and apply the exact method label. No claim appears on your Passport without one.',
+    title: 'We check.',
+    body: 'Every claim gets looked at and labelled before it goes anywhere near your Passport.',
   },
   {
     num: '04',
-    title: 'Publish your Passport',
-    body: 'One link. Send it before the call. The booking manager sees exactly what was verified — and how.',
+    title: 'Share.',
+    body: 'One link, sent before the call. Your best nights, standing on their own.',
   },
 ]
 
 const radarFeatures = [
-  'Every gig you\'ve logged, and whether it\'s been verified yet',
-  'Clear flags on what evidence is still missing',
-  'One-click links to invite a producer to confirm a show',
-  'Nothing public without your OK',
+  'Every night you\'ve played, gathered in one place',
+  'A clear picture of what to build next — no guesswork',
+  'One-tap links to bring a producer in to confirm a show',
+  'Private by default. Nothing moves without your OK',
 ]
 
 const passportFeatures = [
-  'Only claims that have been checked — and labelled with how',
-  'Audience size shown as a range, e.g. 200–350 — never one exact number',
-  'Every claim dated, so a manager knows how current it is',
-  'Free for booking managers to view, always',
+  'Only what\'s been checked — with how it was checked, in plain sight',
+  'Your crowd shown as an honest range, e.g. 200–350 — never a made-up exact number',
+  'Every night dated, so it reads fresh, not recycled',
+  'Always free for booking managers to open — no wall between you and the yes',
 ]
 
 export default function ArtistsPage() {
@@ -142,7 +142,7 @@ export default function ArtistsPage() {
               rgba(10,13,11,0.86) 55%,
               rgba(10,13,11,0.97) 100%
             ),
-            url('/gigproof-persona-artist-v1.webp') center/cover no-repeat
+            url('/lockshow-persona-artist-v1.webp') center/cover no-repeat
           `,
           color: 'var(--color-paper)',
           position: 'relative',
@@ -214,27 +214,26 @@ export default function ArtistsPage() {
               marginBottom: '1.5rem',
             }}
           >
-            You played a great set.
+            Your sets fill rooms.
             <br />
             <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              Nobody booked you.
+              Now fill the calendar.
             </em>
           </h1>
 
           {/* Sub */}
           <p
             style={{
-              fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
+              fontSize: 'clamp(1rem, 1.8vw, 1.05rem)',
               lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.62)',
+              color: 'rgba(243,245,239,0.72)',
               maxWidth: '520px',
               marginBottom: '2.25rem',
             }}
           >
-            You managed your own rider. Built your audience from scratch. And
-            when it matters most — a booking manager you&apos;ve never met,
-            deciding your next six months — all you can send is a link.
-            LOCK changes that.
+            The nights you&apos;ve already played can open the rooms you
+            haven&apos;t. LOCK turns your real gig history into one link a
+            booking manager can trust — and it starts tonight.
           </p>
 
           {/* CTAs */}
@@ -279,6 +278,19 @@ export default function ArtistsPage() {
               SEE A SAMPLE
             </Link>
           </div>
+
+          {/* Trust cue */}
+          <p
+            style={{
+              fontFamily: 'var(--font-space-mono)',
+              fontSize: '0.75rem',
+              letterSpacing: '0.08em',
+              color: 'rgba(243,245,239,0.6)',
+              marginTop: '1.5rem',
+            }}
+          >
+            FREE FOR ISRAELI ARTISTS DURING THE PILOT · NO SCORES, EVER
+          </p>
         </div>
 
         <style>{`
@@ -311,7 +323,7 @@ export default function ArtistsPage() {
               marginBottom: '1rem',
             }}
           >
-            THE PROBLEM
+            SOUND FAMILIAR?
           </p>
           <h2
             style={{
@@ -325,7 +337,8 @@ export default function ArtistsPage() {
               maxWidth: '600px',
             }}
           >
-            Every artist hits the same wall.
+            It was never your sound.
+            It&apos;s that the right rooms can&apos;t see you yet.
           </h2>
 
           <div
@@ -413,7 +426,7 @@ export default function ArtistsPage() {
               marginBottom: 'clamp(2rem, 5vw, 3.5rem)',
             }}
           >
-            Your proof. Your control.
+            Your story, in your hands.
           </h2>
 
           <div
@@ -472,21 +485,21 @@ export default function ArtistsPage() {
               </h3>
               <p
                 style={{
-                  fontSize: '0.9rem',
+                  fontSize: '1rem',
                   color: 'var(--color-tally-onlight)',
                   lineHeight: 1.65,
                   marginBottom: '1.5rem',
                 }}
               >
-                Your private workspace. See what evidence you have, what&apos;s
-                missing, and exactly what to do next. Nobody sees it unless you
-                choose to publish.
+                Your backstage. Every night you&apos;ve played in one place,
+                and a clear next move — start with one link, and build from
+                there. Nobody sees it until you decide they should.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 {radarFeatures.map((f) => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
+                    <span style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', lineHeight: 1.5 }}>
                       {f}
                     </span>
                   </div>
@@ -543,21 +556,22 @@ export default function ArtistsPage() {
               </h3>
               <p
                 style={{
-                  fontSize: '0.9rem',
+                  fontSize: '1rem',
                   color: 'var(--color-tally-onlight)',
                   lineHeight: 1.65,
                   marginBottom: '1.5rem',
                 }}
               >
-                The view a booking manager sees — verified claims only, each
-                with a method label and review date. Nothing appears without
-                your approval. No scores. No rankings.
+                Your front of house. The one link you send before the call —
+                your strongest nights, checked and dated, speaking for you in
+                rooms you haven&apos;t entered yet. No scores. No rankings.
+                Ever.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 {passportFeatures.map((f) => (
                   <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                     <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
+                    <span style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', lineHeight: 1.5 }}>
                       {f}
                     </span>
                   </div>
@@ -582,10 +596,22 @@ export default function ArtistsPage() {
                 letterSpacing: '0.1em',
                 color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
-                marginBottom: '1.25rem',
+                marginBottom: '0.5rem',
               }}
             >
-              Sample claim from a Passport — fictional artist
+              Straight from a Passport — fictional artist
+            </p>
+            <p
+              style={{
+                fontSize: '1rem',
+                color: 'var(--color-tally-onlight)',
+                lineHeight: 1.6,
+                marginBottom: '1.25rem',
+                maxWidth: '560px',
+              }}
+            >
+              This is your night, the way a booking manager sees it: what
+              happened, who vouched, and when. No spin required.
             </p>
             <div
               style={{
@@ -671,7 +697,7 @@ export default function ArtistsPage() {
         </div>
       </section>
 
-      {/* ── HOW VERIFICATION WORKS — paper surface (DS: dark shortens) ── */}
+      {/* ── HOW IT WORKS — paper surface (DS: dark shortens) ── */}
       <section
         style={{
           background: 'var(--color-paper)',
@@ -691,7 +717,7 @@ export default function ArtistsPage() {
               marginBottom: '1rem',
             }}
           >
-            HOW VERIFICATION WORKS
+            HOW IT WORKS
           </p>
           <h2
             style={{
@@ -704,7 +730,7 @@ export default function ArtistsPage() {
               marginBottom: 'clamp(2.5rem, 5vw, 4rem)',
             }}
           >
-            From your first gig log to a booking manager&apos;s trust.
+            Four moves. One link. Rooms open.
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -786,25 +812,32 @@ export default function ArtistsPage() {
 
           <p
             style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.78rem',
-              letterSpacing: '0.06em',
+              fontSize: '1rem',
               color: 'var(--color-tally-onlight)',
               marginTop: '2.5rem',
               lineHeight: 1.6,
             }}
           >
-            The producer (מפיק) confirms one claim through a link — no account,
-            no ongoing access. A booking manager (אמרגן) is a different role
-            entirely: they read the finished Passport and decide.
+            Two different people, by the way: the producer (מפיק) who ran your
+            night confirms it — the booking manager (אמרגן) simply reads the
+            result.
           </p>
         </div>
       </section>
 
-      {/* ── CLOSING CTA ───────────────────────────────────────────────── */}
+      {/* ── CLOSING CTA — live-crowd atmosphere under a dark veil ───────── */}
+      {/* TODO: swap in a lockshow-atmosphere-* scene here when Codex's 4 new
+          atmosphere assets land in /public. */}
       <section
         style={{
-          background: 'var(--color-ink)',
+          background: `
+            linear-gradient(180deg,
+              rgba(10,13,11,0.92) 0%,
+              rgba(10,13,11,0.82) 45%,
+              rgba(10,13,11,0.94) 100%
+            ),
+            url('/lockshow-hero-live.webp') center/cover no-repeat
+          `,
           padding: 'clamp(4rem, 9vw, 7rem) max(24px, 4vw)',
           textAlign: 'center',
         }}
@@ -833,23 +866,24 @@ export default function ArtistsPage() {
               marginBottom: '1.75rem',
             }}
           >
-            Build the career
+            The next room
             <br />
             <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              behind the spotlight.
+              is already waiting.
             </em>
           </h2>
           <p
             style={{
               fontSize: '1rem',
-              color: 'rgba(243,245,239,0.52)',
+              color: 'rgba(243,245,239,0.72)',
               lineHeight: 1.7,
               maxWidth: '400px',
               margin: '0 auto 2.5rem',
             }}
           >
-            Early access is limited. Israeli artists only.
-            Free to build and publish. Momentum plan for those who want more — booking managers stay free, always.
+            Early access, Israeli artists first. Free to build, free to
+            publish during the pilot — and always free for booking managers
+            to open. Start with one link tonight.
           </p>
           <div
             style={{
