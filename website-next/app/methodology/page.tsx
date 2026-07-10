@@ -86,7 +86,7 @@ export default function Methodology() {
               rgba(10,13,11,0.88) 65%,
               rgba(10,13,11,0.98) 100%
             ),
-            url('/gigproof-evidence-review.webp') center 25% / cover no-repeat
+            url('/lockshow-evidence-review.webp') center 25% / cover no-repeat
           `,
           color: 'var(--color-paper)',
           position: 'relative',
