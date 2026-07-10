@@ -123,9 +123,9 @@ export default function WaitlistForm() {
         </label>
         <select id="f-role" name="role" style={{ ...inputStyle, appearance: 'none' }}>
           <option value="">— Select —</option>
-          <option value="artist">Artist / אמן</option>
-          <option value="booking_manager">Booking Manager / אמרגן</option>
-          <option value="producer">Producer / מפיק</option>
+          <option value="artist">Artist</option>
+          <option value="booking_manager">Booking Manager</option>
+          <option value="producer">Producer</option>
           <option value="other">Other</option>
         </select>
       </div>

@@ -308,8 +308,8 @@ export function Footer() {
             lineHeight: 1.8,
           }}>
             BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.
-            {' '}NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE.
             {' '}EVERY CLAIM SHOWS HOW IT WAS CHECKED. AUDIENCE SIZE ALWAYS SHOWN AS A RANGE.
+            {' '}THE DECISION ALWAYS STAYS WITH THE PERSON BOOKING.
           </p>
         </div>
 

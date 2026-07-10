@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   title: 'LOCK — Build the Proof That Books You',
   description:
-    'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and labelled. No scores, no rankings.',
+    'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
   openGraph: {
     title: 'LOCK — Build the Proof That Books You',
     description:
@@ -359,7 +359,7 @@ export default function HomePage() {
                 }}
               >
                 {[
-                  { icon: 'approved', text: 'No scores, no rankings' },
+                  { icon: 'approved', text: 'Real nights, checked' },
                   { icon: 'lock',     text: 'You control what’s public' },
                   { icon: 'approved', text: 'Free for artists in the pilot' },
                 ].map(({ icon, text }) => (
@@ -612,7 +612,7 @@ export default function HomePage() {
               color: 'var(--color-tally-onlight)',
             }}
           >
-            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — JUST WHAT HAPPENED, CHECKED
+            WHAT HAPPENED, WHO CHECKED IT, WHEN — NOTHING ELSE.
           </p>
         </section>
 
@@ -695,7 +695,7 @@ export default function HomePage() {
                   image: '/lockshow-persona-producer-v1.webp',
                   tag: 'PRODUCER',
                   title: 'You were there. Say so.',
-                  body: 'One tap confirms a night you ran — thirty seconds, no account, and an artist you believe in gets further.',
+                  body: 'One tap confirms a night you ran — twenty seconds, no account, and an artist you believe in gets further.',
                   href: '/producers',
                   cta: 'FOR PRODUCERS',
                 },
@@ -1024,7 +1024,7 @@ export default function HomePage() {
                 {
                   step: '02',
                   title: 'Get them confirmed',
-                  body: 'A producer who was there taps one link. Thirty seconds, no account.',
+                  body: 'A producer who was there taps one link. Twenty seconds, no account.',
                 },
                 {
                   step: '03',
@@ -1178,38 +1178,24 @@ export default function HomePage() {
               We show what happened and how it was checked — the decision stays yours.
             </p>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                gap: '1px',
-                background: 'rgba(243,245,239,0.1)',
-                border: '1px solid rgba(243,245,239,0.1)',
-                borderRadius: '16px',
-                overflow: 'hidden',
-                marginBottom: '2.5rem',
-              }}
-            >
-              {['NO SCORE', 'NO RANKING', 'NO PREDICTION', 'NO GUARANTEE'].map((item) => (
-                <div
-                  key={item}
-                  style={{
-                    padding: '1rem',
-                    background: 'var(--color-ink)',
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
-                    color: 'rgba(243,245,239,0.6)',
-                    textAlign: 'center',
-                  }}
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link
+                href="/passport/demo"
+                style={{
+                  display: 'inline-block',
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  background: 'var(--color-stamp)',
+                  color: 'var(--color-ink)',
+                  borderRadius: '10px',
+                  padding: '0.95rem 1.75rem',
+                  textDecoration: 'none',
+                }}
+              >
+                SEE A SAMPLE PASSPORT
+              </Link>
               <Link
                 href="/methodology"
                 style={{
@@ -1226,23 +1212,6 @@ export default function HomePage() {
                 }}
               >
                 READ THE METHODOLOGY
-              </Link>
-              <Link
-                href="/passport/demo"
-                style={{
-                  display: 'inline-block',
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  color: 'var(--color-paper)',
-                  border: '1px solid rgba(243,245,239,0.3)',
-                  borderRadius: '10px',
-                  padding: '0.95rem 1.75rem',
-                  textDecoration: 'none',
-                }}
-              >
-                SEE A SAMPLE PASSPORT
               </Link>
             </div>
           </div>

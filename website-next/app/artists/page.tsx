@@ -289,7 +289,7 @@ export default function ArtistsPage() {
               marginTop: '1.5rem',
             }}
           >
-            FREE FOR ISRAELI ARTISTS DURING THE PILOT · NO SCORES, EVER
+            FREE FOR ISRAELI ARTISTS DURING THE PILOT · REAL NIGHTS, CHECKED
           </p>
         </div>
 
@@ -569,8 +569,8 @@ export default function ArtistsPage() {
               >
                 Your front of house. The one link you send before the call —
                 your strongest nights, checked and dated, speaking for you in
-                rooms you haven&apos;t entered yet. No scores. No rankings.
-                Ever.
+                rooms you haven&apos;t entered yet. Your story, exactly as it
+                happened.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 {passportFeatures.map((f) => (

@@ -446,11 +446,10 @@ export default function BookersPage() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {[
-              'NO SCORES',
-              'NO RANKINGS',
-              'NO PREDICTIONS',
-              'NO GUARANTEES',
-              'CHECKED EVIDENCE ONLY',
+              'WHAT HAPPENED',
+              'HOW IT WAS CHECKED',
+              'WHEN IT HAPPENED',
+              'YOUR DECISION, ALWAYS',
             ].map((chip) => (
               <span
                 key={chip}
