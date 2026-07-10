@@ -7,13 +7,13 @@ const SITE_URL = 'https://lock.show'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
-  title: 'LOCK — Proof a Booking Manager Can Actually Check',
+  title: 'LOCK — Build the Proof That Books You',
   description:
-    'Turn your gig history into evidence a booking manager can verify before they risk their name on you. No scores, no rankings — just checked claims.',
+    'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and labelled. No scores, no rankings.',
   openGraph: {
-    title: 'LOCK — Proof a Booking Manager Can Actually Check',
+    title: 'LOCK — Build the Proof That Books You',
     description:
-      'Every claim shows how it was checked and when. Built for booking managers who need to verify before they risk their name.',
+      'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
     url: `${SITE_URL}/`,
   },
@@ -41,7 +41,7 @@ const jsonLd = {
           name: 'Is LOCK free for booking managers?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes. Booking managers (אמרגנים) view Bookability Passports at no cost — always. Artists can build and publish a Passport for free; Momentum is an optional paid plan for artists who want ongoing freshness, incremental scans, and guidance.',
+            text: 'Yes. Booking managers (אמרגנים) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
           },
         },
         {
@@ -169,7 +169,7 @@ export default function HomePage() {
                 rgba(10,13,11,0.4)  62%,
                 rgba(10,13,11,0.62) 100%
               ),
-              url('/gigproof-live-hero.webp') center 35%/cover no-repeat
+              url('/lockshow-hero-live.webp') center 35%/cover no-repeat
             `,
             color: 'var(--color-paper)',
             minHeight: 'min(92svh, 880px)',
@@ -295,8 +295,8 @@ export default function HomePage() {
                   marginBottom: '2.25rem',
                 }}
               >
-                Every claim on your Passport shows how it was checked and when —
-                so a booking manager can decide before they risk their name on you.
+                The rooms you filled, the nights that sold out — LOCK turns them
+                into a Passport a booking manager can trust before the first call.
               </p>
 
               {/* CTAs */}
@@ -359,9 +359,9 @@ export default function HomePage() {
                 }}
               >
                 {[
-                  { icon: 'approved', text: 'No scores or rankings' },
-                  { icon: 'lock',     text: 'Artist-controlled' },
-                  { icon: 'approved', text: 'Evidence with method labels' },
+                  { icon: 'approved', text: 'No scores, no rankings' },
+                  { icon: 'lock',     text: 'You control what’s public' },
+                  { icon: 'approved', text: 'Free for artists in the pilot' },
                 ].map(({ icon, text }) => (
                   <div
                     key={text}
@@ -612,7 +612,7 @@ export default function HomePage() {
               color: 'var(--color-tally-onlight)',
             }}
           >
-            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — EVIDENCE, LABELLED BY METHOD
+            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — JUST WHAT HAPPENED, CHECKED
           </p>
         </section>
 
@@ -635,7 +635,7 @@ export default function HomePage() {
                 textTransform: 'uppercase',
               }}
             >
-              Three Distinct Roles
+              Who It’s For
             </p>
             <h2
               style={{
@@ -648,7 +648,7 @@ export default function HomePage() {
                 textAlign: 'center',
               }}
             >
-              One platform, three different jobs
+              Three people make a night happen
             </h2>
             <p
               style={{
@@ -662,8 +662,8 @@ export default function HomePage() {
                 lineHeight: 1.6,
               }}
             >
-              A booking manager decides whether to book you. A producer ran the show
-              you played. LOCK keeps those roles separate — so no one confirms their own claim.
+              The artist on stage, the booking manager on the line, the producer
+              who ran the room — LOCK gives each of you your own door in.
             </p>
 
             <div
@@ -673,148 +673,91 @@ export default function HomePage() {
                 gap: '1.5rem',
               }}
             >
-              {/* ARTIST */}
-              <div
-                style={{
-                  background: 'var(--color-paper)',
-                  border: '1px solid rgba(10,13,11,0.1)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '2rem',
-                }}
-              >
-                <div style={{ marginBottom: '0.6rem', color: 'var(--color-ink)', opacity: 0.7 }}>
-                  <Icon id="artist" size={22} color="var(--color-ink)" />
+              {[
+                {
+                  image: '/lockshow-persona-artist-v1.webp',
+                  tag: 'אמן · ARTIST',
+                  title: 'Your nights already tell the story',
+                  body: 'Turn the gigs you played into a Passport that opens the next room. Free during the pilot.',
+                  href: '/artists',
+                  cta: 'FOR ARTISTS',
+                },
+                {
+                  image: '/lockshow-persona-manager-v1.webp',
+                  tag: 'אמרגן · BOOKING MANAGER',
+                  title: 'Say yes with a clear head',
+                  body: 'Read an artist’s real history in two minutes — before your name goes on the line. Always free.',
+                  href: '/bookers',
+                  cta: 'FOR BOOKING MANAGERS',
+                },
+                {
+                  image: '/lockshow-persona-producer-v1.webp',
+                  tag: 'מפיק · PRODUCER',
+                  title: 'You were there. Say so.',
+                  body: 'One tap confirms a night you ran — thirty seconds, no account, and an artist you believe in gets further.',
+                  href: '/producers',
+                  cta: 'FOR PRODUCERS',
+                },
+              ].map(({ image, tag, title, body, href, cta }) => (
+                <div
+                  key={href}
+                  style={{
+                    background: 'var(--color-paper)',
+                    border: '1px solid rgba(10,13,11,0.1)',
+                    borderRadius: 'var(--radius-sm)',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  {/* Persona thumb */}
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      height: '150px',
+                      background: `linear-gradient(180deg, rgba(10,13,11,0) 55%, rgba(10,13,11,0.35) 100%), url('${image}') center 30%/cover no-repeat`,
+                    }}
+                  />
+                  <div style={{ padding: '1.5rem 1.75rem 1.75rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <div>
+                      <RoleTag>{tag}</RoleTag>
+                    </div>
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-archivo)',
+                        fontSize: '1.2rem',
+                        fontWeight: 900,
+                        color: 'var(--color-ink)',
+                        marginBottom: '0.75rem',
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {title}
+                    </h3>
+                    <p style={{ fontSize: '0.95rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                      {body}
+                    </p>
+                    <Link
+                      href={href}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontFamily: 'var(--font-space-mono)',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                        color: 'var(--color-ink)',
+                        textDecoration: 'none',
+                        marginTop: 'auto',
+                      }}
+                    >
+                      {cta}
+                      <Icon id="arrow" size={14} color="var(--color-ink)" />
+                    </Link>
+                  </div>
                 </div>
-                <RoleTag>אמן · ARTIST</RoleTag>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-archivo)',
-                    fontSize: '1.2rem',
-                    fontWeight: 900,
-                    color: 'var(--color-ink)',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Build your proof profile
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-                  Collect evidence, invite producers to confirm a single claim, and publish
-                  a verified Passport that speaks for you before the first call.
-                </p>
-                <Link
-                  href="/artists"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    color: 'var(--color-ink)',
-                    textDecoration: 'none',
-                  }}
-                >
-                  FOR ARTISTS
-                  <Icon id="arrow" size={14} color="var(--color-ink)" />
-                </Link>
-              </div>
-
-              {/* BOOKING MANAGER */}
-              <div
-                style={{
-                  background: 'var(--color-paper)',
-                  border: '1px solid rgba(10,13,11,0.1)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '2rem',
-                }}
-              >
-                <div style={{ marginBottom: '0.6rem' }}>
-                  <Icon id="manager" size={22} color="var(--color-ink)" />
-                </div>
-                <RoleTag>אמרגן · BOOKING MANAGER</RoleTag>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-archivo)',
-                    fontSize: '1.2rem',
-                    fontWeight: 900,
-                    color: 'var(--color-ink)',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Evaluate before you risk your name
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-                  Read a Bookability Passport in under two minutes. Every claim shows its
-                  method and review date — no algorithm, no guesswork, no black box.
-                  Viewing is always free.
-                </p>
-                <Link
-                  href="/bookers"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    color: 'var(--color-ink)',
-                    textDecoration: 'none',
-                  }}
-                >
-                  FOR BOOKING MANAGERS
-                  <Icon id="arrow" size={14} color="var(--color-ink)" />
-                </Link>
-              </div>
-
-              {/* PRODUCER */}
-              <div
-                style={{
-                  background: 'var(--color-paper)',
-                  border: '1px solid rgba(10,13,11,0.1)',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '2rem',
-                }}
-              >
-                <div style={{ marginBottom: '0.6rem' }}>
-                  <Icon id="producer" size={22} color="var(--color-ink)" />
-                </div>
-                <RoleTag>מפיק · PRODUCER</RoleTag>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-archivo)',
-                    fontSize: '1.2rem',
-                    fontWeight: 900,
-                    color: 'var(--color-ink)',
-                    marginBottom: '0.75rem',
-                  }}
-                >
-                  Confirm one claim, no account needed
-                </h3>
-                <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-                  Receive a bounded magic link, confirm a single claim you know
-                  first-hand, and done. Your confirmation is method-labelled on
-                  the Passport.
-                </p>
-                <Link
-                  href="/producers"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    color: 'var(--color-ink)',
-                    textDecoration: 'none',
-                  }}
-                >
-                  FOR PRODUCERS
-                  <Icon id="arrow" size={14} color="var(--color-ink)" />
-                </Link>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -823,7 +766,7 @@ export default function HomePage() {
         <section
           style={{
             background: 'var(--color-night)',
-            padding: 'clamp(3rem, 7vw, 5rem) max(24px, 4vw)',
+            padding: 'clamp(2.5rem, 5vw, 3.75rem) max(24px, 4vw)',
             borderTop: '1px solid #2a342d',
             borderBottom: '1px solid #2a342d',
           }}
@@ -872,10 +815,7 @@ export default function HomePage() {
                     marginBottom: '1.5rem',
                   }}
                 >
-                  No bare numbers. No unexplained claims. Every line on a Passport says
-                  who checked it and when — a producer, a ticket export, an operator, or the
-                  artist themselves — so a booking manager can judge how much to trust it,
-                  not just what it says.
+                  Who checked it, and when — the method label is always in view.
                 </p>
                 <Link
                   href="/methodology"
@@ -915,7 +855,7 @@ export default function HomePage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Sample Proof Units — Fictional Artist
+                  Sample Claims — Fictional Artist
                 </p>
 
                 {/* BandPill proof unit */}
@@ -1033,6 +973,8 @@ export default function HomePage() {
         </section>
 
         {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
+        {/* TODO(assets): when lockshow-atmosphere-* scenes land from Codex's
+            Drive, add one as a full-width atmosphere band above this section. */}
         <section
           style={{
             background: 'var(--color-paper)',
@@ -1064,30 +1006,30 @@ export default function HomePage() {
                 textAlign: 'center',
               }}
             >
-              From evidence to verified Passport
+              Add. Confirm. Check. Share.
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {[
                 {
                   step: '01',
-                  title: 'Log your evidence',
-                  body: 'Add gig history, platform data, and professional context. Everything stays private in your Artist Radar until you choose to publish.',
+                  title: 'Add your nights',
+                  body: 'Gigs, crowds, rooms. Everything stays private until you say otherwise.',
                 },
                 {
                   step: '02',
-                  title: 'Invite a producer to confirm',
-                  body: 'Send a bounded magic link to a producer who was there. They confirm one claim — no account, no friction.',
+                  title: 'Get them confirmed',
+                  body: 'A producer who was there taps one link. Thirty seconds, no account.',
                 },
                 {
                   step: '03',
-                  title: 'Operator reviews and labels',
-                  body: 'LOCK reviews your evidence and applies the correct method label. No claim appears on your Passport without a label.',
+                  title: 'We check everything',
+                  body: 'Nothing reaches your Passport until it has been reviewed and labelled.',
                 },
                 {
                   step: '04',
-                  title: 'Publish your Bookability Passport',
-                  body: 'Your Passport shows verified strengths only. Share the link with a booking manager — they see exactly what was verified and how.',
+                  title: 'Share your Passport',
+                  body: 'One link that speaks for you before the first phone call.',
                 },
               ].map(({ step, title, body }, i, arr) => (
                 <div
@@ -1226,9 +1168,8 @@ export default function HomePage() {
                 marginBottom: '2.5rem',
               }}
             >
-              LOCK has no algorithm that scores artists. No ranking. No &ldquo;top performers.&rdquo;
-              No percentage telling a booking manager whether to say yes. We show evidence, labelled by
-              how it was collected — and we let the booking manager decide.
+              No algorithm scores artists here. No number whispers yes or no.
+              We show what happened and how it was checked — the decision stays yours.
             </p>
 
             <div
@@ -1321,7 +1262,7 @@ export default function HomePage() {
                 lineHeight: 1.15,
               }}
             >
-              Ready to build your proof profile?
+              The next room is waiting.
             </h2>
             <p
               style={{
@@ -1331,7 +1272,7 @@ export default function HomePage() {
                 lineHeight: 1.65,
               }}
             >
-              Closed beta — Israeli artists only. Early access is limited.
+              Closed beta — Israeli artists only, free while we build this together.
             </p>
             <a
               href={`${APP_URL}/signup`}
