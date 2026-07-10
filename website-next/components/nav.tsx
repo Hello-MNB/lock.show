@@ -167,7 +167,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted} →
+            {nav.getStarted}
           </a>
         </div>
 
@@ -273,7 +273,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted} →
+            {nav.getStarted}
           </a>
         </div>
       )}
