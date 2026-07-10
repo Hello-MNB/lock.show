@@ -3,41 +3,41 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/producers' },
-  title: 'For Producers — Verify One Show in 30 Seconds',
+  title: 'For Producers — 20 Seconds, No Account',
   description:
-    'An artist sends you a link about one show. Confirm it in 30 seconds — no account, no signup, nothing else asked of you.',
+    'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',
   openGraph: {
     url: '/producers',
     title: 'For Producers | LOCK',
-    description: 'You confirm what happened. We make sure that confirmation means something.',
+    description: 'You were there that night. Twenty seconds of your word turns one good show into something an artist can build on.',
     type: 'website',
   },
 }
 
 const steps = [
-  '1. Artist sends you a WhatsApp / SMS / email link',
-  '2. Click the link — opens in your browser',
-  '3. See the gig record (one show, date, venue, estimate)',
-  '4. Confirm, flag, or decline',
-  '5. Done. No account, no follow-up.',
+  'A WhatsApp lands: “hey — got 20 seconds?”',
+  'You tap the link. It opens right in your browser.',
+  'One show. The date, the venue, the crowd you remember.',
+  'You confirm — or correct what’s off. Your call.',
+  'Back to your production. We never chase you again.',
 ]
 
 const whyItMatters = [
   {
-    title: 'Self-reported data vs producer-confirmed',
-    body: 'An audience estimate from the artist themselves is useful context. The same data confirmed by the producer who ran the show is evidence. Your confirmation creates that distinction.',
+    title: 'You turn a story into a fact',
+    body: 'The artist can say the room was full. When the producer who ran the night says it, someone about to risk their name on a booking can actually believe it. That is the whole difference — and it takes you one tap.',
   },
   {
-    title: 'Your confirmation is always labelled, clearly',
-    body: 'Every claim on the Passport shows how it was checked. When you confirm, it reads "✓ Confirmed by producer · [Your name, Venue]". The booking manager sees exactly what it is.',
+    title: 'Your name, quoted exactly as given',
+    body: 'Your confirmation appears as what it is — “Confirmed by the producer who ran the show,” with your name and venue. It is never inflated, never anonymous, never turned into a number.',
   },
   {
-    title: 'You can decline or flag',
-    body: "If the numbers are off, you can say so. If you can't accurately assess draw from your side, you can decline. Honest disagreement is built into the system — forced confirmation is not the model.",
+    title: 'Disagreeing is part of the deal',
+    body: 'If the estimate feels generous, say so. If you honestly can’t judge the draw from where you stood, skip it. Your yes only means something because you were free to say no.',
   },
   {
-    title: 'Nothing goes public without artist approval',
-    body: 'After you confirm, the artist still approves before anything crosses into the public Passport. Your confirmation is an input — the artist controls publication.',
+    title: 'Nothing goes public without the artist',
+    body: 'You confirm; the artist decides what gets shown. And if you ever change your mind, you can withdraw your confirmation — your word stays yours.',
   },
 ]
 
@@ -74,7 +74,7 @@ export default function ProducersPage() {
         style={{
                     overflow: 'hidden',
           minHeight: 'min(92svh, 880px)',
-          background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/gigproof-persona-producer-v1.webp') center/cover no-repeat`,
+          background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-producer-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
           position: 'relative',
           display: 'flex',
@@ -87,9 +87,9 @@ export default function ProducersPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.14em',
-              color: 'rgba(243,245,239,0.4)',
+              color: 'rgba(243,245,239,0.72)',
               textTransform: 'uppercase',
               marginBottom: '1.75rem',
             }}
@@ -107,25 +107,25 @@ export default function ProducersPage() {
               marginBottom: '1.5rem',
             }}
           >
-            You confirm what happened.
+            You know what happened that night.
             <br />
             <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              We make sure it counts.
+              Twenty seconds to say so.
             </em>
           </h1>
           <p
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
+              fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
               lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.62)',
+              color: 'rgba(243,245,239,0.78)',
               maxWidth: '520px',
               marginBottom: '2.25rem',
             }}
           >
-            An artist you worked with sent you a magic link. They&apos;re asking you to confirm
-            one thing about one show. No account, no signup — just open the link and confirm
-            or correct the record.
+            An artist you booked is asking a small favor between professionals: open one link,
+            glance at one show, tap confirm — or correct it. No account, no app, nothing else
+            ever asked of you.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
             <Link
@@ -143,7 +143,7 @@ export default function ProducersPage() {
                 display: 'inline-block',
               }}
             >
-              SEE WHAT THE PASSPORT LOOKS LIKE →
+              SEE WHAT YOUR WORD BUILDS →
             </Link>
             <Link
               href="/how-it-works"
@@ -166,20 +166,20 @@ export default function ProducersPage() {
         </div>
       </section>
 
-      {/* ── YOUR ROLE ────────────────────────────────────── */}
+      {/* ── THE FAVOR ────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               color: 'var(--color-tally-onlight)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: '0.5rem',
             }}
           >
-            YOUR ROLE
+            THE FAVOR
           </p>
           <h2
             style={{
@@ -189,7 +189,7 @@ export default function ProducersPage() {
               marginBottom: '2rem',
             }}
           >
-            One confirmation. Bounded.
+            One show. One tap. Done.
           </h2>
 
           <div
@@ -205,23 +205,23 @@ export default function ProducersPage() {
             {[
               {
                 icon: 'link',
-                title: 'You receive a magic link',
-                body: "An artist sends you a link specific to one show. Click it — no account creation, no app download.",
+                title: 'A link lands in your WhatsApp',
+                body: 'From an artist you actually booked, about a night you actually ran. It opens in your browser — no account, no download, no password.',
               },
               {
                 icon: 'clip',
-                title: 'You see one gig record',
-                body: "Date, venue, and the artist's audience estimate. You review it against what you actually observed.",
+                title: 'One show, the way you remember it',
+                body: 'The date, the venue, roughly how full the room was. You were standing in it — one look is all it takes.',
               },
               {
                 icon: 'check',
-                title: 'You confirm, correct, or decline',
-                body: "If the data looks right, confirm. If something's off, you can flag it. If you can't assess, you say so.",
+                title: 'Say what you saw',
+                body: 'Looks right? Confirm. Numbers feel off? Correct them. Honestly can’t tell? Skip it. Every answer is a fair one.',
               },
               {
                 icon: 'lock',
-                title: "That's the full scope",
-                body: "Your access is bounded to that one claim. No ongoing role, no account, no further obligation.",
+                title: 'And that really is it',
+                body: 'No follow-ups, no ongoing role, no inbox to manage. Change your mind later? You can withdraw your confirmation any time.',
               },
             ].map((item, i) => (
               <div
@@ -244,7 +244,7 @@ export default function ProducersPage() {
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
                     color: 'var(--color-ink)',
                     marginBottom: '0.5rem',
                   }}
@@ -254,7 +254,7 @@ export default function ProducersPage() {
                 <p
                   style={{
                     fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-                    fontSize: '0.875rem',
+                    fontSize: '1rem',
                     color: 'var(--color-tally-onlight)',
                     lineHeight: 1.6,
                   }}
@@ -277,34 +277,32 @@ export default function ProducersPage() {
             <p
               style={{
                 fontFamily: 'var(--font-space-mono), monospace',
-                fontSize: '0.65rem',
+                fontSize: '0.75rem',
                 color: 'var(--color-stamp-onlight)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 marginBottom: '0.5rem',
               }}
             >
-              אמרגן ≠ מפיק
+              מפיק ≠ אמרגן
             </p>
             <p
               style={{
                 fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-                fontSize: '0.875rem',
+                fontSize: '1rem',
                 color: 'var(--color-tally-onlight)',
                 lineHeight: 1.6,
               }}
             >
-              A <strong style={{ color: 'var(--color-ink)' }}>producer (מפיק)</strong> confirms
-              one claim via this bounded magic link — no account, no ongoing access.
-              A <strong style={{ color: 'var(--color-ink)' }}>booking manager (אמרגן)</strong> is
-              a different role entirely: they evaluate the full Passport and decide whether to book.
-              These are separate roles with separate tools in LOCK. Never merged.
+              You&apos;re the <strong style={{ color: 'var(--color-ink)' }}>producer (מפיק)</strong> who
+              ran that night and can vouch for it — the <strong style={{ color: 'var(--color-ink)' }}>booking
+              manager (אמרגן)</strong> is the one deciding on the next one, and LOCK never mixes the two.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── WHY IT MATTERS ───────────────────────────────── */}
+      {/* ── WHY YOUR WORD MATTERS ────────────────────────── */}
       <section
         style={{
           background: 'var(--color-paper)',
@@ -317,14 +315,14 @@ export default function ProducersPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.65rem',
+              fontSize: '0.75rem',
               color: 'var(--color-tally-onlight)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginBottom: '0.5rem',
             }}
           >
-            WHY PRODUCER CONFIRMATION MATTERS
+            WHY YOUR WORD MATTERS
           </p>
           <h2
             style={{
@@ -334,7 +332,7 @@ export default function ProducersPage() {
               marginBottom: '1.5rem',
             }}
           >
-            Your word carries weight.
+            In this scene, your name carries weight.
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {whyItMatters.map((item, i) => (
@@ -348,7 +346,7 @@ export default function ProducersPage() {
                 <h3
                   style={{
                     fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                    fontSize: '0.95rem',
+                    fontSize: '1rem',
                     color: 'var(--color-ink)',
                     marginBottom: '0.4rem',
                   }}
@@ -358,7 +356,7 @@ export default function ProducersPage() {
                 <p
                   style={{
                     fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-                    fontSize: '0.875rem',
+                    fontSize: '1rem',
                     color: 'var(--color-tally-onlight)',
                     lineHeight: 1.65,
                   }}
@@ -371,7 +369,7 @@ export default function ProducersPage() {
         </div>
       </section>
 
-      {/* ── HOW IT FEELS FROM YOUR SIDE ──────────────────── */}
+      {/* ── TWENTY SECONDS, START TO FINISH ──────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: '4rem max(24px, 4vw)', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div
@@ -386,14 +384,14 @@ export default function ProducersPage() {
             <p
               style={{
                 fontFamily: 'var(--font-space-mono), monospace',
-                fontSize: '0.65rem',
+                fontSize: '0.75rem',
                 color: 'var(--color-stamp)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 marginBottom: '1rem',
               }}
             >
-              HOW IT FEELS FROM YOUR SIDE
+              TWENTY SECONDS, START TO FINISH
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {steps.map((step) => (
@@ -401,8 +399,8 @@ export default function ProducersPage() {
                   key={step}
                   style={{
                     fontFamily: 'var(--font-space-mono), monospace',
-                    fontSize: '0.75rem',
-                    color: 'rgba(243,245,239,0.6)',
+                    fontSize: '0.85rem',
+                    color: 'rgba(243,245,239,0.78)',
                     letterSpacing: '0.02em',
                     lineHeight: 1.5,
                   }}
@@ -415,13 +413,14 @@ export default function ProducersPage() {
           <p
             style={{
               fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '0.875rem',
+              fontSize: '1rem',
               color: 'var(--color-tally-onlight)',
               lineHeight: 1.6,
               marginBottom: '1.5rem',
             }}
           >
-            Want to understand how your confirmation appears in the final Passport?
+            Curious where those twenty seconds end up? Your name sits right on the show
+            you confirmed — nowhere else.
           </p>
           <Link
             href="/passport/demo"
