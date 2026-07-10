@@ -531,6 +531,7 @@ export const T = {
   nav: {
     radar: 'RADAR',
     passport: 'פספורט',
+    discover: 'פספורטים',
     roster: 'רוסטר',
     requests: 'בקשות',
     received: 'התקבלו',

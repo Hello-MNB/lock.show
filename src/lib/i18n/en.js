@@ -549,6 +549,7 @@ export const T = {
   nav: {
     radar: 'Radar',
     passport: 'Passport',
+    discover: 'Passports',
     roster: 'Roster',
     requests: 'Requests',
     received: 'Received',
