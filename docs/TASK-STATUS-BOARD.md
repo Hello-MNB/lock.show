@@ -1,5 +1,13 @@
 # LOCK — MASTER TASK STATUS BOARD (PRIORITY-SORTED)
-**Version:** 2.3 · **Date:** 9 July 2026 (afternoon) · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
+**Version:** 2.4 · **Date:** 10 July 2026 · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
+
+> **10 Jul ship (branch `claude/b4-gigproof-discovery-e7749o`):** Entity-flow AUDIT done.
+> (1) **Booker nav gap FIXED** — bookers landed on `/discover` but had only an Account tab;
+> added a Passports tab (nav contract 34/34). (2) **Public Passport split into TWO buyer
+> personas** — Booking view + Representation view (separate files, shared firewall-safe
+> derivation in `passportKit.deriveSections`; toggle + `?view=rep` deep link). Personas
+> labelled by intent, NOT "Producer" (which is the confirmer entity). Docs:
+> `PASSPORT-ARCHITECTURE.md`. Next: build the Radar v4 into `ArtistDashboard`.
 **Sort:** by launch priority. **P0** = blocks real launch · **P1** = needed for a strong launch · **P2** = growth/polish after launch · **DONE** = live and verified.
 **"Migration needed?"** = does going real require a live-DB schema change? Demo data never migrates; migrations are one-time schema upgrades.
 
