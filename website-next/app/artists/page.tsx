@@ -293,13 +293,14 @@ export default function ArtistsPage() {
         `}</style>
       </section>
 
-      {/* ── PAIN SECTION ──────────────────────────────────────────────── */}
+      {/* ── PAIN SECTION — paper surface (DS surface contract: paper does the
+             work; dark regions shorten — this was a full dark band) ── */}
       <section
         style={{
-          background: 'var(--color-night)',
+          background: 'var(--color-paper)',
           padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
-          borderTop: '1px solid #2a342d',
-          borderBottom: '1px solid #2a342d',
+          borderTop: '1px solid #dde3d9',
+          borderBottom: '1px solid #dde3d9',
         }}
       >
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
@@ -308,7 +309,7 @@ export default function ArtistsPage() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.65rem',
               letterSpacing: '0.14em',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}
@@ -322,7 +323,7 @@ export default function ArtistsPage() {
               fontWeight: 400,
               letterSpacing: '-0.04em',
               lineHeight: 1.08,
-              color: 'var(--color-paper)',
+              color: 'var(--color-ink)',
               marginBottom: 'clamp(2rem, 5vw, 3.5rem)',
               maxWidth: '600px',
             }}
@@ -335,23 +336,23 @@ export default function ArtistsPage() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
               gap: '1px',
-              background: 'rgba(255,255,255,0.06)',
+              background: 'var(--color-mist)',
             }}
           >
             {painPoints.map((p, i) => (
               <div
                 key={i}
                 style={{
-                  background: 'var(--color-night)',
+                  background: '#ffffff',
                   padding: 'clamp(1.5rem, 3vw, 2.25rem)',
                 }}
               >
                 <div
                   style={{
                     fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.55rem',
+                    fontSize: '0.7rem',
                     letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.2)',
+                    color: 'var(--color-tally-onlight)',
                     textTransform: 'uppercase',
                     marginBottom: '1rem',
                   }}
@@ -363,7 +364,7 @@ export default function ArtistsPage() {
                     fontFamily: 'var(--font-archivo)',
                     fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
                     fontWeight: 700,
-                    color: 'var(--color-paper)',
+                    color: 'var(--color-ink)',
                     marginBottom: '0.75rem',
                     lineHeight: 1.3,
                   }}
@@ -372,8 +373,8 @@ export default function ArtistsPage() {
                 </h3>
                 <p
                   style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(243,245,239,0.55)',
+                    fontSize: '1rem',
+                    color: 'var(--color-tally-onlight)',
                     lineHeight: 1.65,
                   }}
                 >
@@ -673,13 +674,13 @@ export default function ArtistsPage() {
         </div>
       </section>
 
-      {/* ── HOW VERIFICATION WORKS ────────────────────────────────────── */}
+      {/* ── HOW VERIFICATION WORKS — paper surface (DS: dark shortens) ── */}
       <section
         style={{
-          background: 'var(--color-night)',
+          background: 'var(--color-paper)',
           padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
-          borderTop: '1px solid #2a342d',
-          borderBottom: '1px solid #2a342d',
+          borderTop: '1px solid #dde3d9',
+          borderBottom: '1px solid #dde3d9',
         }}
       >
         <div style={{ maxWidth: '640px', margin: '0 auto' }}>
@@ -688,7 +689,7 @@ export default function ArtistsPage() {
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.65rem',
               letterSpacing: '0.14em',
-              color: 'var(--color-stamp)',
+              color: 'var(--color-stamp-onlight)',
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}
@@ -702,7 +703,7 @@ export default function ArtistsPage() {
               fontWeight: 400,
               letterSpacing: '-0.04em',
               lineHeight: 1.08,
-              color: 'var(--color-paper)',
+              color: 'var(--color-ink)',
               marginBottom: 'clamp(2.5rem, 5vw, 4rem)',
             }}
           >
@@ -731,11 +732,11 @@ export default function ArtistsPage() {
                   <div
                     style={{
                       fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.65rem',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
-                      color: 'var(--color-stamp)',
-                      background: 'rgba(200,240,77,0.08)',
-                      border: '1px solid rgba(200,240,77,0.2)',
+                      color: 'var(--color-ink)',
+                      background: 'var(--color-stamp)',
+                      border: '1px solid rgba(10,13,11,0.1)',
                       borderRadius: 'var(--radius-sm)',
                       width: '44px',
                       height: '44px',
@@ -752,7 +753,7 @@ export default function ArtistsPage() {
                       style={{
                         flex: 1,
                         width: '1px',
-                        background: 'rgba(200,240,77,0.15)',
+                        background: 'var(--color-mist)',
                         marginTop: '0.5rem',
                       }}
                     />
@@ -766,7 +767,7 @@ export default function ArtistsPage() {
                       fontFamily: 'var(--font-archivo)',
                       fontSize: '1rem',
                       fontWeight: 700,
-                      color: 'var(--color-paper)',
+                      color: 'var(--color-ink)',
                       marginBottom: '0.4rem',
                     }}
                   >
@@ -774,8 +775,8 @@ export default function ArtistsPage() {
                   </h3>
                   <p
                     style={{
-                      fontSize: '0.9rem',
-                      color: 'rgba(243,245,239,0.55)',
+                      fontSize: '1rem',
+                      color: 'var(--color-tally-onlight)',
                       lineHeight: 1.65,
                     }}
                   >
@@ -789,9 +790,9 @@ export default function ArtistsPage() {
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.62rem',
+              fontSize: '0.78rem',
               letterSpacing: '0.06em',
-              color: 'rgba(243,245,239,0.25)',
+              color: 'var(--color-tally-onlight)',
               marginTop: '2.5rem',
               lineHeight: 1.6,
             }}
