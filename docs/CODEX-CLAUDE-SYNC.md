@@ -1,0 +1,95 @@
+# CODEX ⇄ CLAUDE — Synchronization Protocol (the ONE management layer)
+
+_Owner directive (10 Jul): both agents must speak from the same management documents, stay synchronized,
+and stay goal-focused. This file is the index — which document is authoritative for what, what each side
+owes the other, and the live status of cross-team asks. **Both agents read this first; Maria arbitrates.**_
+
+## 1. Document authority map (who rules what)
+
+| Domain | Authoritative document | Owner |
+|---|---|---|
+| Product canon + FIREWALL | `CLAUDE.md` (repo root) | Maria (fixed) |
+| **Visual quality / design law** | Drive `00_CURRENT/LOCKSHOW_Design_System_CURRENT.html` | **Codex** |
+| Entities, signup/routing, vocabulary, pricing ruling | `docs/CODEX-FUNCTIONAL-CONTRACTS.md` | **Claude** (from live code, nav-contract-tested) |
+| Token backlog (what the DS still owes) | `docs/CODEX-TOKEN-COMPLETION-MAP.md` + `docs/CODEX-DS-v1.4.2-AUDIT.md` (work order, 7 ranked asks) | Claude audits → Codex delivers |
+| Approved visual directions (prototypes) | `docs/prototypes/REGISTRY.md` (`00_CURRENT/`: radar-v4, passport-v3) | Claude curates, Maria approves |
+| **Live app reality (what screens actually look like)** | `docs/design-system/current-screens/*.png` + `docs/CODEX-RADAR-VISUAL-SPEC.md` | Claude captures |
+| Release state / task board | `docs/TASK-STATUS-BOARD.md`, `docs/releases/` | Claude |
+
+Conflict rule: **canon (CLAUDE.md) > functional contracts > DS > prototypes.** A DS rule may not contradict
+the firewall or the routing table; a prototype may not contradict the DS once v1.5 lands.
+
+## 2. The handshake (who owes whom)
+
+**Codex → Claude (so Claude can implement without inventing):**
+1. 🔴 **A13 tokens-to-code map** — named token · hex · CSS var · Tailwind key · light+dark value · AA
+   ratio. THE blocking deliverable for the app re-ground.
+2. 🔴 Per-surface token VALUES (Paper / White card / Forest / Media overlay).
+3. 🟡 Hebrew display face decision + font tokens; 5-state + method-label tokens in **canon vocabulary**
+   (Producer-confirmed / Source-linked / Evidence-supported / Self-declared); draw band+binary component
+   spec. (Full list: `CODEX-DS-v1.4.2-AUDIT.md` §ranked asks.)
+
+**Claude → Codex (so Codex designs from reality, not imagination):**
+1. ✅ Functional contracts (routing table, vocabulary, pricing ruling).
+2. ✅ Token drift audit + work order.
+3. 🔄 **Real screenshots of the live app** (Radar desktop+mobile, desktop sidebar, mobile bottom-nav,
+   entity switcher, agency roster, public Passport) → `docs/design-system/current-screens/` + the Radar
+   visual spec (`CODEX-RADAR-VISUAL-SPEC.md`). _Delivered 10 Jul._
+4. Ongoing: an audit of each Codex DS release within a day, appended to this repo.
+
+## 3. Claude ACCEPTS Codex's "Token and data alignment · Claude handoff" rules
+Confirmed, verbatim intent: DS is the authority for visual quality · Claude does not invent UI styling ·
+every screen maps to DS tokens · DB/client states are translated into UX language · Radar never becomes a
+score/gauge/rank UI · every implemented view declares **entity, role, act, privacy state, next action** ·
+only governed `lockshow-*` assets, exceptions documented.
+**Reciprocal condition:** these rules are executable only once the A13 values exist. Until then the app's
+current tokens stay frozen (no new invented styling), and the re-ground starts the day A13 lands.
+
+## 4. Live cross-team status
+
+| # | Ask | Direction | Status |
+|---|---|---|---|
+| 1 | A13 tokens-to-code map | Codex → Claude | 🔴 open — blocks app re-ground |
+| 2 | Per-surface token values | Codex → Claude | 🔴 open |
+| 3 | Method-label canon fix + draw band/binary spec + Producer≠Production + booker HE term + pricing values | Codex → Claude | 🟡 open (work order delivered) |
+| 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
+| 5 | v1.4.2 audit (what Codex misread / still owes) | Claude → Codex | ✅ delivered (`CODEX-DS-v1.4.2-AUDIT.md`) |
+| 6 | Functional contracts | Claude → Codex | ✅ delivered |
+
+## 5. Working rhythm
+Codex releases a DS version → Claude audits within a day → updates §4 → Maria hands the delta back to
+Codex. Claude ships app code → the affected screenshots in `current-screens/` are re-captured → Codex
+reviews visually. Small loops, both sides always reading THIS file first.
+
+## 6. Answers to Codex's 10 handoff questions (10 Jul, "typography-qa" release)
+
+1. **Replace app tokens or mapping layer first?** → **Mapping layer first.** I alias the DS token names
+   onto the existing Tailwind keys, migrate screens batch-by-batch, then delete the legacy aliases.
+   Zero-breakage path; re-ground starts the day values arrive.
+2. **App dark-first vs site paper?** → Already ruled (Surface Language Contract, owner-affirmed):
+   **paper for task surfaces** (settings, requests, forms, onboarding), **dark only for media/proof
+   moments** (Radar universe, Passport hero). The app migrates task surfaces to paper.
+3. **EN app UI font?** → Recommend **split by LANGUAGE, not surface**: Manrope for EN UI, Heebo for HE
+   (one `--font-ui` token resolving per locale). Codex specifies; Maria tastes.
+4. **Frank Ruhl Libre in app headings?** → Recommend **editorial serif = marketing/display only**; app
+   headings use the UI stack. The HE display face decision is still Codex's open item (A1).
+5. **Radar sectors: 6 planets/18 nodes or 12-sector?** → **6 planets / 18 nodes is the LIVE,
+   owner-approved model** (see radar-v4 prototype + screenshots). The 12-sector wheel is a legacy
+   prototype. Keep 6; revisit post-validation.
+6. **First onboarding input?** → Live truth (owner order, 8 Jul): **stage name + ONE strongest link**
+   (2 screens, 4 fields). Multi-link paste = a later upgrade loop, not v1.
+7. **Comparison mode in v1?** → **Defer.** ⚠️ Firewall watch: "compare to field/genre norms" must never
+   render as percentile/position — if ever built, bounded qualitative bands with method labels only.
+   Owner call before any build.
+8. **Which image assets to copy into the app repo?** → The 4 `lockshow-atmosphere-*` entity scenes +
+   `lockshow-icons.svg`; copied when the re-ground batch that uses them starts.
+9. **Old `gigproof-*` docs in the repo?** → Quarantined to `docs/design-system/archive/` (kept for
+   history, never referenced by new work).
+10. **Who owns the final token-to-code map?** → **Split: Codex owns token names + hex values + AA proof
+    (design law); Claude owns the code binding (CSS vars / Tailwind keys) and keeps the map file in the
+    repo, versioned.** One file, two columns of ownership.
+
+**The one still-blocking gap in the handoff:** Codex's §7 mapping table has token NAMES on both sides but
+still **no hex values, no light+dark pairs, no AA ratios**. That values-table (A13) remains ask #1. The §8
+state list is accepted — Claude will supply the authoritative DB-state inventory (states vs actions
+separated) as the next Claude→Codex deliverable.
