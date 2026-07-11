@@ -13,8 +13,9 @@ const NAV_LINK_KEYS = [
   { href: '/artists',      key: 'artists'      },
   { href: '/bookers',      key: 'bookers'      },
   { href: '/producers',    key: 'producers'    },
-  { href: '/how-it-works', key: 'howItWorks'   },
-  { href: '/methodology',  key: 'methodology'  },
+  // How-it-works + Methodology demoted from the top nav (owner IA ruling 10 Jul:
+  // each audience page tells its own story; the reference pages stay reachable
+  // from the footer + deep links — never a 404).
   { href: '/pricing',      key: 'pricing'      },
 ] as const
 
