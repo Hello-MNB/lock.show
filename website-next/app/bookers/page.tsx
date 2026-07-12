@@ -56,6 +56,12 @@ const passportFeatures = [
     title: 'One link, two minutes, zero friction.',
     body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK is free for booking managers, always.',
   },
+  {
+    // S5 (rel-07.13) — the private/corporate register, warm and jargon-free (Codex final wording, DS v1.6.8)
+    label: 'NOT IN THE INDUSTRY?',
+    title: 'Private and company events too.',
+    body: 'Planning a wedding, company night or private event? Use a LOCK Passport to understand the artist’s style, fit and trust signals before you reach out — no industry vocabulary required.',
+  },
 ]
 
 export default function BookersPage() {

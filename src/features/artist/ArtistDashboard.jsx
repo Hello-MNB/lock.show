@@ -5,6 +5,7 @@ import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, listC
 import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import RadarUniverse from './RadarUniverse.jsx'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
@@ -62,6 +63,7 @@ export default function ArtistDashboard() {
   const [focusPlanet, setFocusPlanet] = useState(null)
   const [focusSignal, setFocusSignal] = useState(0)
   const arrivalShown = useRef(false)
+  const radarLogged = useRef(false) // RADAR_OPENED once per visit (pilot signal A10)
 
   async function load() {
     setLoadError(false)
@@ -74,6 +76,7 @@ export default function ArtistDashboard() {
         setClaims(await listClaims(a.id))
         setEnt(await getEntitlement(a.id))
         setDirty(isPassportDirty(a.id))
+        if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal
       }
     } catch {
       setLoadError(true)
@@ -143,6 +146,7 @@ export default function ArtistDashboard() {
       await publishPassport(artist.id) // server writes the immutable snapshot
       setArtist({ ...artist, published: true })
       clearPassportDirty(artist.id); setDirty(false)
+      logEvent(EVENTS.PASSPORT_PUBLISHED, { artist_id: artist.id }) // pilot signal — the North-Star chain's publish step
     } catch (e) {
       setPubError(T.dashboard.publishError)
     } finally {

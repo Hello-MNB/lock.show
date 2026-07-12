@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence, updateAct } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -108,6 +109,7 @@ export default function EvidenceCapture() {
   // every artifact carries the claim intent + source-authority confirmation
   async function submitEvidence(item) {
     await addEvidence({ artist_id: artistId, claim_intent: intent, source_owner_consent: true, ...item })
+    logEvent(EVENTS.EVIDENCE_UPLOADED, { artist_id: artistId, evidence_type: item.evidence_type }) // pilot signal (A10)
     resetForms(); await load(); flash(T.evidence.addedOk)
   }
 
@@ -161,6 +163,7 @@ export default function EvidenceCapture() {
     setProcessing(true); setError('')
     try {
       await processEvidence(artistId) // server (real AI) if present, else client-side canon stub
+      logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId }) // pilot signal (A10)
       await load()
     } catch (err) { setError(err.message || T.common.error) } finally { setProcessing(false) }
   }

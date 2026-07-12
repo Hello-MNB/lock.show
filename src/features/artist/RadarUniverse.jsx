@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, switchAct, createAct } from '../../lib/db.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { uploadFile } from '../../lib/storage.js'
 import { BottomSheet, Spinner, GpIcon } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -169,6 +170,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       }
       setActiveActId(id)
       localStorage.setItem('gigproof_active_act', id)
+      logEvent(EVENTS.ACT_SWITCHED, { act_id: id }) // pilot signal (A10)
       setActSheet(false)
       setSelected(null)
       flash(S.actSwitch.switchedToast((actRow || acts.find((a) => a.id === id) || {}).stage_name || artist.stage_name))
@@ -192,6 +194,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     setActBusy(true)
     try {
       const row = await createAct(activeActId || artist.id, { stage_name: name })
+      logEvent(EVENTS.ACT_CREATED, { act_id: row.id }) // pilot signal (A10)
       setActs((prev) => [...prev, row])
       setNewActName('')
       setActBusy(false)          // pickAct manages its own busy state

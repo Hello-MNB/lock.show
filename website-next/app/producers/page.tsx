@@ -40,6 +40,11 @@ const whyItMatters = [
     title: 'Nothing goes public without the artist',
     body: 'You confirm; the artist decides what gets shown. And if you ever change your mind, you can withdraw your confirmation — your word stays yours.',
   },
+  {
+    // S6 (rel-07.13) — Source Confirmer ≠ production company (Codex final wording, DS v1.6.8)
+    title: 'This is not a workspace — on purpose',
+    body: 'Invited to confirm one artist claim? This is a one-tap Source Confirmer link — no account, no dashboard and no production-company workspace. You confirm one show and get back to your night.',
+  },
 ]
 
 const ICON_PATHS: Record<string, string> = {

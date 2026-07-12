@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
 import { getMyMemberships, getActiveOrgId, setActiveOrg as persistActiveOrg } from '../lib/orgs.js'
 import { ROLES } from '../lib/constants.js'
+import { logEvent, EVENTS } from '../lib/analytics.js'
 
 // Active-organization context. The org is the tenant; this exposes which org the
 // person is acting in, their org_role, and the plan (drives agency-feature unlock).
@@ -65,6 +66,7 @@ export function OrgProvider({ children }) {
     setActiveOrgIdState(orgId)
     try { localStorage.setItem(ACTIVE_ORG_KEY, orgId) } catch { /* storage unavailable — in-memory only */ }
     try { await persistActiveOrg(orgId) } catch { /* non-blocking */ }
+    logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
     nav('/')
   }, [nav])
 

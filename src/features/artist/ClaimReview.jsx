@@ -85,6 +85,7 @@ export default function ClaimReview() {
     setToggling(claim.id)
     try {
       await updateClaim(claim.id, { artist_approved: true })
+      logEvent(EVENTS.CLAIM_CONFIRMED, { claim_id: claim.id }) // pilot signal (A10)
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: true } : c))
       setBloomId(claim.id)
       setTimeout(() => setBloomId((cur) => (cur === claim.id ? null : cur)), 420)
@@ -384,7 +385,10 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
         body: JSON.stringify({ claimId: claim.id, producerContact: email || null }),
       })
       const json = await res.json().catch(() => ({}))
-      if (res.ok && json.path) setLink(`${window.location.origin}${json.path}`)
+      if (res.ok && json.path) {
+        setLink(`${window.location.origin}${json.path}`)
+        logEvent(EVENTS.PRODUCER_CONFIRMATION_SENT, { claim_id: claim.id }) // pilot signal (A10)
+      }
       else setReqError(json.error || T.producer.serverOffline)
     } catch { setReqError(T.producer.serverOffline) } finally { setReqBusy(false) }
   }
