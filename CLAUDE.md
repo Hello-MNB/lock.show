@@ -21,8 +21,8 @@ STACK: React + Vite + Tailwind + Supabase (ref qexfndiyallwqhhzeerd) + Vercel + 
 AI claim-pipeline is FULLY AUTOMATED (no concierge/by-hand step; best model; deep scan once at
 onboarding ≈ $1, cheap incremental after). Provider fallback: if Opus unavailable, degrade to a
 cheaper tier with narrower extraction. Migrations 001–018 exist locally — diff before creating
-019+; do not recreate existing tables. Canonical codebase: C:\Users\user\GIGPROOF (local),
-synced to Drive app\.
+019+; do not recreate existing tables. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
+local clone C:\Users\user\lock.show; Drive B4-lock.show = collaboration/design only.
 
 SOURCE OF TRUTH: ★ START HERE + CLAUDE.md + the CURRENT canon doc set (see README-INDEX for the
 named list). Build only from these — never from older/HTML/score docs.
