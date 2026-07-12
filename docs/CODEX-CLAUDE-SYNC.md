@@ -53,7 +53,7 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 | 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
 | 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
 | 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.6.2 (+Artist-lane N1–N12 DOD with per-screen Claude/Cowork proof columns) — **Claude independent audit PENDING before binding** |
-| 3b | Physical files INTO git: logo SVGs, lockshow-icons.svg, 4 atmosphere PNGs, OG exports | Owner/Codex → repo | 🔴 open — only blocker left on the design side |
+| 3b | Physical files INTO git | Owner/Codex → repo | 🟢 MOSTLY CLOSED 12 Jul night: OG exports ✅ (8dde17e) · logo/icon SVGs ✅ (2c66d24, byte-faithful from 02_ASSETS, firewall-clean). REMAINING: 4 atmosphere PNGs + social cover are 1.4–1.9MB each — too large for the MCP transfer path; **Cowork commits them from its local clone** (one copy+commit), or Codex exports web-weight webp (≤150KB) to Drive for me to carry |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
 | 5 | v1.4.2 audit (what Codex misread / still owes) | Claude → Codex | ✅ delivered (`CODEX-DS-v1.4.2-AUDIT.md`) |
