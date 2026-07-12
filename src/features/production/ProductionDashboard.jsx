@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { getMembers, listOrgGigs, groupGigsIntoEvents, listOrgConfirmRequests } from '../../lib/orgs.js'
+import { getMembers, listOrgGigs, groupGigsIntoEvents, listProductionRequests } from '../../lib/orgs.js'
 import { PageShell, Loading, ErrorState, BandPill } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
@@ -157,12 +157,15 @@ function EventsSection({ orgId, T }) {
   )
 }
 
-function RequestsSection({ orgId, T }) {
-  const [requests, setRequests] = useState(undefined) // undefined = loading, null = needs-state gap, [] = real empty
+// A7 (rel-07.13, 032-backed): the inbox of availability requests THIS workspace
+// sent, with reply status — real data via list_production_requests (SECURITY
+// DEFINER, membership-gated). null = 032 not applied → honest gap state.
+function RequestsSection({ T }) {
+  const [requests, setRequests] = useState(undefined) // undefined = loading, null = 032 missing, [] = real empty
   async function load() {
-    setRequests(await listOrgConfirmRequests(orgId))
+    try { setRequests(await listProductionRequests()) } catch { setRequests(null) }
   }
-  useEffect(() => { load() }, [orgId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (requests === undefined) return <Loading />
 
@@ -184,17 +187,22 @@ function RequestsSection({ orgId, T }) {
     )
   }
 
+  const statusLabel = (s) =>
+    s === 'replied' ? T.production.reqStatusReplied : s === 'closed' ? T.production.reqStatusClosed : T.production.reqStatusNew
   return (
     <div className="space-y-2">
       {requests.map((r) => (
-        <div key={r.id} className="card">
+        <div key={r.request_id} className="card">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">{r.artist_stage_name || T.agency.noName}</p>
-              <p className="mt-0.5 text-sm text-ink">“{r.claim_text}”</p>
+              <p className="truncate text-sm font-semibold text-ink">{r.artist_stage_name || '—'}</p>
+              <p className="mt-0.5 truncate text-xs text-muted">
+                {[r.event_type, r.location, r.event_date].filter(Boolean).join(' · ')}
+              </p>
+              {r.message && <p className="mt-1 line-clamp-2 text-sm text-ink">“{r.message}”</p>}
             </div>
-            <span className={`shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] ${r.response ? 'text-accent' : 'text-amber'}`}>
-              {r.response ? T.production.requestResponded : T.production.requestPending}
+            <span className={`shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] ${r.status === 'replied' ? 'text-accent' : r.status === 'closed' ? 'text-faint' : 'text-amber'}`}>
+              {statusLabel(r.status)}
             </span>
           </div>
         </div>

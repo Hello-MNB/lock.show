@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { listAgencyArtists, listClaimsByArtists, listRequestsForAgency, upsertArtist } from '../../lib/db.js'
-import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess } from '../../lib/orgs.js'
+import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess, listRosterGrants } from '../../lib/orgs.js'
 import AgencyRadarUniverse from './AgencyRadarUniverse.jsx'
 import { PageShell, Loading, ErrorState, StatusChip, Field, Spinner, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -171,6 +171,7 @@ export default function AgencyDashboard() {
   const [rosterClaims, setRosterClaims] = useState([])
   const [requests, setRequests] = useState([])
   const [accessRequests, setAccessRequests] = useState([])
+  const [grants, setGrants] = useState(null) // A6 (032): ACTIVE consented grants — null until 032 applied
   const [adding, setAdding] = useState(false)
   const [addMode, setAddMode] = useState('invite') // 'invite' (canon-correct, default) | 'own' (legacy placeholder)
   const [f, setF] = useState({ stage_name: '', genre: '' })
@@ -190,6 +191,7 @@ export default function AgencyDashboard() {
       try { setRosterClaims(await listClaimsByArtists(roster.map((a) => a.id))) } catch { setRosterClaims([]) }
       try { setRequests(await listRequestsForAgency(user.id)) } catch { setRequests(null) }
       try { setAccessRequests(orgIdForThisScreen ? await listOutgoingAccessRequests(orgIdForThisScreen) : []) } catch { setAccessRequests([]) }
+      try { setGrants(await listRosterGrants()) } catch { setGrants(null) } // A6 — consented roster (032)
     } catch {
       setError(true)
     } finally {
@@ -269,6 +271,31 @@ export default function AgencyDashboard() {
             requested (pending/active/revoked). Separate from the owned roster
             below: this is ACCESS, not ownership. ── */}
       <AccessRequestsCard requests={accessRequests} T={T} onRevoked={load} />
+
+      {/* ── A6 (032-backed): the CONSENTED roster — ACTIVE ArtistAccess grants.
+            A grant, never ownership (ENTITY-GLOSSARY §2c boundary). Renders only
+            when 032 is applied AND at least one grant is active. ── */}
+      {Array.isArray(grants) && grants.length > 0 && (
+        <div className="card mb-4 border border-line">
+          <p className="mb-0.5 font-bold text-ink text-sm">{T.agency.consentedTitle}</p>
+          <p className="mb-2 text-xs text-muted">{T.agency.consentedHint}</p>
+          <div className="space-y-1.5">
+            {grants.map((g) => (
+              <div key={g.grant_id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-ink">{g.artist_stage_name || '—'}</p>
+                  {g.artist_city && <p className="truncate text-[11px] text-muted">{g.artist_city}</p>}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  {(g.scope || []).map((s) => (
+                    <span key={s} className="chip bg-na-bg text-[9px] uppercase tracking-[0.06em] text-muted">{s}</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* first-run checklist — dismissible, non-shaming */}
       {!hideChecklist && (

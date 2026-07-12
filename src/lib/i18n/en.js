@@ -352,6 +352,8 @@ export const T = {
   },
   agency: {
     title: 'My agency',
+    consentedTitle: 'Consented roster',
+    consentedHint: 'Artists who granted this office scoped access — a grant, never ownership.',
     addArtist: 'Add artist',
     empty: 'Add your first artist',
     requests: 'Availability requests',
@@ -1024,13 +1026,17 @@ export const T = {
       '300-600': '300–600',
       '600+': '600+',
     },
-    requestsTitle: 'Confirm requests',
+    requestsTitle: 'Requests',
     requestsGapTitle: 'Not wired yet',
-    requestsGapBody: 'Confirm requests routed to this workspace aren’t available yet — the schema has no read path for a production org to list confirmation requests addressed to it (needs a dedicated policy/RPC). Nothing is invented here; this is an honest gap, not an empty inbox.',
-    requestsEmptyTitle: 'No confirm requests yet',
-    requestsEmptyBody: 'When an artist asks this workspace to confirm a claim about one of its events, it will appear here.',
+    requestsGapBody: 'Requests routed to this workspace aren’t available yet — migration 032 has not been applied to this database. Nothing is invented here; this is an honest gap, not an empty inbox.',
+    requestsEmptyTitle: 'No requests yet',
+    requestsEmptyBody: 'Availability requests this workspace sends to artists will appear here, with their reply status.',
     requestPending: 'Awaiting reply',
     requestResponded: 'Responded',
+    // A7 (032-backed) availability-request card labels
+    reqStatusNew: 'Sent — awaiting reply',
+    reqStatusReplied: 'Replied',
+    reqStatusClosed: 'Closed',
   },
 }
 
