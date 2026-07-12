@@ -27,6 +27,8 @@ b{color:var(--ink)}
 <h2>1 · The entity model (how LOCK is structured)</h2>
 <div class="card"><b>Person → Workspace → Role.</b> One person, one login, many workspaces (switcher top-right). Workspaces: <b>Artist</b> (one person, multiple Acts) · <b>Manager office / אמרגן</b> (solo OR team — seats+invites; job = artist roster) · <b>Production / מפיק אירועים</b> (solo OR team — seats+invites; job = events+lineups) · <b>Booker</b> (event organizer receiving a Passport link) · <b>Operator</b> (internal console). The <b>producer-confirmer (מפיק מאשר)</b> is not a workspace: an accountless person tapping one magic link. Subscriptions attach to the workspace. <span class="small">Verified in code (migration 027, org membership + seats shared by both office types).</span></div>
 
+<h2>1b · Who owns what (UX/UI · journeys · switching)</h2>
+<div class="card small"><b>Codex</b> = design law (DS: UX patterns, wireframes, voice). <b>Claude</b> = implementation + code-proof (navigation contract: 34 tested journeys; workspace switching implemented & contract-tested). <b>Cowork</b> = real-browser QA (C1 — not yet performed). <b>Maria</b> = sole approver. Honest note: no single end-to-end UX owner — split model with Claude as integrator. Known spec-vs-reality hole: users can SWITCH workspaces but cannot CREATE a second one from the UI ("Add workspace" is a no-op — flow-gap P, now scheduled).</div>
 <h2>2 · What is LIVE — with the evidence</h2>
 <div class="card scroll"><table>
 <tr><th>Track</th><th>Version</th><th>What it contains</th><th>Technically verified</th><th>Owner approved</th></tr>
@@ -46,7 +48,7 @@ b{color:var(--ink)}
 <tr><td>Manager office</td><td class="plan">Next-best-action ON the roster home · roster-from-consented-grants (needs migration 032 applied)</td></tr>
 <tr><td>Production</td><td class="plan">Requests inbox with real data (needs migration 032)</td></tr>
 <tr><td>Operator</td><td class="plan">activated_by audit trail on payment activation</td></tr>
-<tr><td>All / app-wide</td><td class="plan">A13 mapping layer — DS v1.5.2 tokens bound into the app (after my v1.5.2 audit) · embed rebuilt in the same release</td></tr>
+<tr><td>All / app-wide</td><td class="plan">A13 mapping layer — DS v1.5.2 tokens bound into the app (after my v1.5.2 audit) · <b>"Add workspace" made real</b> (create a second workspace from the switcher — closes flow-gap P) · embed rebuilt in the same release</td></tr>
 <tr><td>Site</td><td class="plan">Arrow unification · footer regrouping · waitlist type floor</td></tr>
 </table></div>
 

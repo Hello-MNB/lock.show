@@ -95,3 +95,9 @@ reviews visually. Small loops, both sides always reading THIS file first.
 still **no hex values, no light+dark pairs, no AA ratios**. That values-table (A13) remains ask #1. The §8
 state list is accepted — Claude will supply the authoritative DB-state inventory (states vs actions
 separated) as the next Claude→Codex deliverable.
+
+## 7. Responsibility map (owner question, 12 Jul — recorded verbatim intent)
+UX/UI + journey DESIGN = Codex (DS). Journey/switching IMPLEMENTATION + code-proof = Claude (nav contract).
+Real-browser QA = Cowork (C1, pending). Approval = Maria only. No single end-to-end UX owner — split model,
+Claude integrates. Open spec-vs-reality hole owned by Claude for rel-07.13: "Add workspace" no-op
+(switching exists, creating a 2nd workspace from the UI does not — flow-gap P).
