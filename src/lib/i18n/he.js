@@ -694,6 +694,7 @@ export const T = {
     title: 'RADAR · מודיעין רוסטר וביקוש',
     subtitle: 'סיגנלים מבוססי-ראיות — מה דורש טיפול ברוסטר ובביקוש הנכנס.',
     scanKickoff: 'הרדאר שלך פועל — חוזקות מופיעות קודם; מה שצריך אותך מחכה בשקט למטה.',
+    genrePrimaryNote: "בז'אנר שלך, ההוכחה הזאת נושאת את המשקל הגדול ביותר להזמנה.",
     // North-Star chain next-actions (rel-07.13 N3) — the rest of nextActions
     // falls back to EN per-key until the native-authoring pass.
     nextActions: {

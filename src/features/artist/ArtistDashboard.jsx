@@ -6,6 +6,7 @@ import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } fro
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { isPrimaryPlanet } from '../../lib/genreWeights.js'
 import RadarUniverse from './RadarUniverse.jsx'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
@@ -17,6 +18,16 @@ import RadarUniverse from './RadarUniverse.jsx'
 // evidence-shaped work → evidence capture, deferred identity fields (photo) →
 // the radar's own Identity planet fill (the shortened onboarding no longer
 // collects them — a wizard restart is never the answer).
+// Genre guidance (M4, ARTIST-PROGRESSION-SPEC): when the chosen next-action
+// targets one of the artist's genre-PRIMARY planets, attach the one-line
+// "matters most in your genre" note. Guidance wording only — never a weight,
+// number, or comparison (firewall; DS v1.6.11 genre law).
+function withGenreNote(action, act, artist, T) {
+  if (!action?.planet) return action
+  if (!isPrimaryPlanet(action.planet, act, artist)) return action
+  return { ...action, why: `${action.why ? action.why + ' ' : ''}${T.radar.genrePrimaryNote}` }
+}
+
 function pickNextAction(artist, items, claims, T) {
   const A = T.radar.nextActions
   const links = items.filter((i) => i.item_type === 'link')
@@ -186,7 +197,7 @@ export default function ArtistDashboard() {
     )
   }
 
-  const nextAction = pickNextAction(artist, items, claims, T)
+  const nextAction = withGenreNote(pickNextAction(artist, items, claims, T), act, artist, T)
 
   // IA correction: claim review is NOT a destination — it opens as a panel
   // inside the Radar. Deferred-field actions (photo, bands) open their planet

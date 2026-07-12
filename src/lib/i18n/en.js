@@ -737,6 +737,7 @@ export const T = {
       community: 'Community',
       readiness: 'Booking readiness',
     },
+    genrePrimaryNote: 'In your genre, this proof carries the most booking weight.',
     nextActions: {
       reviewClaims: {
         title: 'Confirm your new claims',
