@@ -25,18 +25,18 @@ b{color:var(--ink)}
 <p class="sub">Rule of this document: a ✅ appears ONLY with the evidence named beside it. Anything not verified says so. "Planned" is clearly planned. Rebuilt clean on 12 Jul after an owner truth-audit.</p>
 
 <h2>1 · The entity model (how LOCK is structured)</h2>
-<div class="card"><b>Person → Workspace → Role.</b> One person, one login, many workspaces (switcher top-right). Workspaces: <b>Artist</b> (one person, multiple Acts) · <b>Manager office / אמרגן</b> (solo OR team — seats+invites; job = artist roster) · <b>Production / מפיק אירועים</b> (solo OR team — seats+invites; job = events+lineups) · <b>Booker</b> (event organizer receiving a Passport link) · <b>Operator</b> (internal console). The <b>producer-confirmer (מפיק מאשר)</b> is not a workspace: an accountless person tapping one magic link. Subscriptions attach to the workspace. <span class="small">Verified in code (migration 027, org membership + seats shared by both office types).</span></div>
+<div class="card"><b>Person → Workspace → Role.</b> One person, one login, many workspaces (switcher top-right). Workspaces: <b>Artist</b> (one person, multiple Acts) · <b>Manager office / אמרגן</b> (solo OR team — seats+invites; job = artist roster) · <b>Production / מפיק אירועים</b> (solo OR team — seats+invites; job = events+lineups) · <b>Booker</b> (event organizer receiving a Passport link) · <b>Operator</b> (internal console). The <b>producer-confirmer (מפיק מאשר)</b> is not a workspace: an accountless person tapping one magic link. Subscriptions attach to the workspace. <b>Switching precision (verified in code):</b> workspace-derived switching currently covers Artist + Manager/Production contexts only (ORG_DERIVED_ROLES); Booker/Operator have fixed screen-sets and the producer-confirmer never logs in — uniform switching for all contexts is TARGET, not implemented. <span class="small">Verified: migration 027 + OrgContext.jsx.</span></div>
 
 <h2>1b · Who owns what (UX/UI · journeys · switching)</h2>
 <div class="card small"><b>Codex</b> = design law (DS: UX patterns, wireframes, voice). <b>Claude</b> = implementation + code-proof (navigation contract: 34 tested journeys; workspace switching implemented & contract-tested). <b>Cowork</b> = real-browser QA (C1 — not yet performed). <b>Maria</b> = sole approver. Honest note: no single end-to-end UX owner — split model with Claude as integrator. Known spec-vs-reality hole: users can SWITCH workspaces but cannot CREATE a second one from the UI ("Add workspace" is a no-op — flow-gap P, now scheduled).</div>
 <h2>2 · What is LIVE — with the evidence</h2>
 <div class="card scroll"><table>
 <tr><th>Track</th><th>Version</th><th>What it contains</th><th>Technically verified</th><th>Owner approved</th></tr>
-<tr><td>APP<br>app.lock.show</td><td>rel-app-2026.07.10<br>+ firewall hotfix</td><td>Two-persona Passport · booker nav · sample passport · GATE analytics (reaction+payment) · producer-reply notifications · Hebrew auth screens · approval-gate firewall</td><td class="ok">✅ production bundle fingerprints (5 markers found in served JS)</td><td class="pend">🟠 NOT approved — awaiting your pass</td></tr>
-<tr><td>SITE<br>lock.show</td><td>rel-site-2026.07.11-2</td><td><b>10 marketing pages rewritten</b> (home, 3 entity pages, pricing, how-it-works, methodology, faq, contact, radar). NOT touched: legal pages (terms/privacy/accessibility), demo page, waitlist-form sizes</td><td class="ok">✅ live-page fingerprints + 0 Hebrew glyphs (unicode scan)</td><td class="pend">🟡 partial — your corrections shipped; no formal sign-off</td></tr>
+<tr><td>APP<br>app.lock.show</td><td>rel-app-2026.07.10<br>@a874ab5 + eafcd4e</td><td>Two-persona Passport · booker nav · sample passport · GATE analytics (reaction+payment) · producer-reply notifications · Hebrew auth screens · approval-gate firewall</td><td class="ok">✅ production bundle fingerprints (5 markers found in served JS)</td><td class="pend">🟠 NOT approved — awaiting your pass</td></tr>
+<tr><td>SITE<br>lock.show</td><td>rel-site-2026.07.11-2<br>@917ef57</td><td><b>10 marketing pages rewritten</b> (home, 3 entity pages, pricing, how-it-works, methodology, faq, contact, radar). NOT touched: legal pages (terms/privacy/accessibility), demo page, waitlist-form sizes</td><td class="ok">✅ live-page fingerprints + 0 Hebrew glyphs (unicode scan)</td><td class="pend">🟡 partial — your corrections shipped; no formal sign-off</td></tr>
 <tr><td>EMBED<br>lock.show/app</td><td>mirrors rel-app-07.10</td><td>Same app, static mirror (no server features)</td><td class="ok">✅ bundle hash matches current app code</td><td class="pend">🟠</td></tr>
 <tr><td>DB</td><td>head = 031 (021 frozen)</td><td>Workspace types, analytics, WhatsApp, RLS fix, firewall gate</td><td class="ok">✅ applied by owner, flows confirmed working after</td><td class="ok">✅ (owner-applied)</td></tr>
-<tr><td>DESIGN SYSTEM</td><td>v1.5.2 (Codex)</td><td>Tokens incl. motion/radius/spacing, Radar state table, band/binary spec, HE display token</td><td class="pend">🟠 <b>honest status: reported by Codex, NOT yet independently audited by Claude</b> (my audits covered v1.4.2 only)</td><td>owner-directed</td></tr>
+<tr><td>DESIGN SYSTEM</td><td>v1.5.5 (Codex)</td><td>v1.5.2 build-blocker tokens + v1.5.5 account/workspace transition contract (#entity-hierarchy)</td><td class="pend">🟠 Codex verified locally; <b>Claude independent audit PENDING before binding</b> (audits cover ≤v1.4.2)</td><td>owner-directed</td></tr>
 <tr><td>INFRA</td><td>—</td><td>OAuth consent published · previews OFF · smart build-skip · registries in repo</td><td class="ok">✅ headless OAuth trace + Cowork dashboard confirmations</td><td>— operational</td></tr>
 </table>
 <p class="small">NOT yet verified by anyone: a real Google login click-through (config verified to Google's page only) · real email-confirm delivery (Cowork QA item C1/C2) · DS v1.5.2 content (my audit pending).</p></div>
@@ -48,15 +48,15 @@ b{color:var(--ink)}
 <tr><td>Manager office</td><td class="plan">Next-best-action ON the roster home · roster-from-consented-grants (needs migration 032 applied)</td></tr>
 <tr><td>Production</td><td class="plan">Requests inbox with real data (needs migration 032)</td></tr>
 <tr><td>Operator</td><td class="plan">activated_by audit trail on payment activation</td></tr>
-<tr><td>All / app-wide</td><td class="plan">A13 mapping layer — DS v1.5.2 tokens bound into the app (after my v1.5.2 audit) · <b>"Add workspace" made real</b> (create a second workspace from the switcher — closes flow-gap P) · embed rebuilt in the same release</td></tr>
+<tr><td>All / app-wide</td><td class="plan">A13 mapping layer — DS v1.5.5 tokens bound into the app (after my v1.5.5 audit) · <b>"Add workspace" made real</b> (create a second workspace from the switcher — closes flow-gap P) · embed rebuilt in the same release</td></tr>
 <tr><td>Site</td><td class="plan">Arrow unification · footer regrouping · waitlist type floor</td></tr>
 </table></div>
 
 <h2>4 · Gates before 07.13 can promote</h2>
 <div class="card">
 1. <b>Cowork QA (C1–C2):</b> real-browser flows — Google login click-through, email signup incl. confirmation delivery, artist journey, booker link, workspace switch.<br>
-2. <b>Migration 032</b> — I author, Cowork applies, regression-checked.<br>
-3. <b>My DS v1.5.2 audit</b> — before binding its tokens (no more green-on-trust).<br>
+2. <b>Migration 032</b> — I author, Cowork applies, regression-checked. <span class="small">(Codex governance alarm RESOLVED: origin/main contains 030+031 — its local clone was stale; rule: git pull before reading.)</span><br>
+3. <b>My DS v1.5.5 audit</b> — before binding its tokens (no more green-on-trust).<br>
 4. <b>Your approval pass on rel-07.10–11</b> (section 2's 🟠 column).<br>
 <span class="small">Then: launch planning (pilot: 2–3 artists + 1 אמרגן; the Gate = one reacts AND one pays — measurement for both is already live).</span></div>
 

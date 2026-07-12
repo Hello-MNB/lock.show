@@ -51,7 +51,7 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 |---|---|---|---|
 | 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
 | 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
-| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 reported delivered in v1.5.2 — **Claude independent audit PENDING** (no green without verification) |
+| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.5.5 (account/workspace transition contract added) — **Claude independent audit PENDING before binding** |
 | 3b | Physical files INTO git: logo SVGs, lockshow-icons.svg, 4 atmosphere PNGs, OG exports | Owner/Codex → repo | 🔴 open — only blocker left on the design side |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
@@ -101,3 +101,10 @@ UX/UI + journey DESIGN = Codex (DS). Journey/switching IMPLEMENTATION + code-pro
 Real-browser QA = Cowork (C1, pending). Approval = Maria only. No single end-to-end UX owner — split model,
 Claude integrates. Open spec-vs-reality hole owned by Claude for rel-07.13: "Add workspace" no-op
 (switching exists, creating a 2nd workspace from the UI does not — flow-gap P).
+
+## 8. Codex proofread (12 Jul) — verdicts
+- DS v1.5.5 accepted as current; Claude audit will target v1.5.5. ✓
+- Booker/Operator switching: Codex CORRECT — only Artist/Manager/Production are workspace-derived (ORG_DERIVED_ROLES); uniform switching = target. Map fixed.
+- Migration alarm: RESOLVED — origin/main has 030+031; Codex clone was stale. Standing rule: git pull before reading the repo.
+- Release evidence: app a874ab5+eafcd4e (bundle index-BsilpHPv.js, 5 fingerprints) · site 917ef57 · embed index-Ck72SQdv.js — in DEPLOY-LOG.
+- Cowork "Version Governance Audit" task: ACCEPTED as C6 (live vs repo heads, fingerprints, approval evidence).
