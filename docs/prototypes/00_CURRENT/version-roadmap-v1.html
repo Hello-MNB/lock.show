@@ -105,13 +105,13 @@
 <div class="wrap">
   <header class="head">
     <p class="eyebrow">LOCK · Release Roadmap</p>
-    <h1>What changes, release to release — by user</h1>
-    <p class="sub">One row per user. Columns move left→right in time. This is the thread: where each user has been, what ships now, and where we're headed — so nothing gets lost between versions.</p>
+    <h1>What changes, release to release — by workspace</h1>
+    <p class="sub">One row per workspace (see the entity model below). Columns move left→right in time. This is the thread: where each user has been, what ships now, and where we're headed — so nothing gets lost between versions.</p>
   </header>
 
   <div class="now">
     <span class="pin">You are here</span>
-    <span class="txt"><b>11 releases live</b> (app rel-07.10 · firewall hotfix · site: rewrite, values-first, polish, full-bleed, embed-skew fix, nav IA). <b>INFRA ✅:</b> Google OAuth chain verified · migrations 027–031 applied · connections registry in-repo · trunk-based branching codified. <b>SITE 100% REWRITTEN</b> — inner-pages release LIVE (pricing 4-entities · radar positive-values · EN purity sitewide). <b>Next:</b> Facebook (owner+Cowork) · flow-agent fleet (awaits Google click-test) → A13 mapping layer → <b>launch planning</b>.</span>
+    <span class="txt"><b>STATUS 12 Jul:</b> site 100% rewritten (11 pages) · app rel-07.10 live · infra clean (OAuth published · previews off · smart build-skip) · DS v1.5.2 delivered · versioning manifest live (docs/VERSIONS.md). <b>NEXT VERSION — rel-07.13 (corrective):</b> APP: A13 mapping layer · +New Act · producer-confirm wiring · agency home next-action · activated_by · funnel events · embed parity. SITE: arrow/footer/waitlist polish. GATES: Cowork flow-QA (C1–C2) · migration 032 apply · owner ledger approval.</span>
   </div>
 
   <div class="legend">
@@ -147,8 +147,8 @@
         <tr>
           <th class="userhead user">User</th>
           <th><span class="vh">Live now</span><span class="vt">≤ rel-07.09 · shipped</span></th>
-          <th class="col-now"><span class="vh">R1 · rel-07.10</span><span class="vt">Now · ready to deploy</span></th>
-          <th><span class="vh">R2 · Measurement</span><span class="vt">Next</span></th>
+          <th class="col-now"><span class="vh">rel-07.10–11</span><span class="vt">SHIPPED · live-verified</span></th>
+          <th><span class="vh">NEXT · rel-07.13</span><span class="vt">corrective release · in build</span></th>
           <th><span class="vh">R3 · Depth</span><span class="vt">After</span></th>
           <th><span class="vh">Launch · Gate</span><span class="vt">Before real money</span></th>
         </tr>
@@ -167,7 +167,7 @@
             <li><i class="dot s-now"></i>Own Passport preview now shows both buyer views</li>
           </ul></td>
           <td><ul class="items">
-            <li><i class="dot s-plan"></i>Funnel events: evidence added, claim confirmed, radar opened</li>
+            <li><i class="dot s-plan"></i><b>+ New Act</b> (multi-Act usable) · producer-confirm wired to real magic-link · remaining funnel events</li>
           </ul></td>
           <td><ul class="items">
             <li><i class="dot s-plan"></i>Create a 2nd Act (multi-Act finally usable)</li>
@@ -222,7 +222,7 @@
             <li><i class="dot s-now"></i>Passport <b>Representation view</b> to evaluate artists</li>
           </ul></td>
           <td><ul class="items">
-            <li><i class="dot s-plan"></i>Workspace-switch event</li>
+            <li><i class="dot s-plan"></i><b>Next-action ON the roster home</b> · roster-from-grants (after migration 032)</li>
           </ul></td>
           <td><ul class="items">
             <li><i class="dot s-plan"></i>Roster from consented grants (not just owned)</li>
@@ -254,7 +254,7 @@
           </ul></td>
           <td class="col-now"><span class="dash">—</span></td>
           <td><ul class="items">
-            <li><i class="dot s-plan"></i><b>GATE events</b>: payment activated · professional reaction</li>
+            <li><i class="dot s-plan"></i>activated_by audit trail (GATE events already LIVE in rel-07.10)</li>
           </ul></td>
           <td><ul class="items">
             <li><i class="dot s-plan"></i>Record who activated a payment (audit trail)</li>
@@ -278,7 +278,7 @@
             <li><i class="dot s-own"></i>Hebrew auth-screen fix (2nd session branch — include in R1?)</li>
           </ul></td>
           <td><ul class="items">
-            <li><i class="dot s-plan"></i>Remaining 13 funnel events wired</li>
+            <li><i class="dot s-plan"></i><b>A13 mapping layer</b> — DS v1.5.2 tokens into the app · embed parity in same release · site polish (arrows, footer grouping)</li>
           </ul></td>
           <td><ul class="items">
             <li><i class="dot s-plan"></i>“Add workspace” actually creates one</li>

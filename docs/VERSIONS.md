@@ -32,3 +32,12 @@ Every app/site release row also records **which DS version it implements** (desi
 4. ✅ FIXED — releases now record the DS version they implement.
 5. ✅ FIXED — DB schema head is part of the manifest.
 6. 🟡 KNOWN — git tags local-only (integration 403); SHAs are the anchors until owner pushes tags.
+
+## NEXT VERSION TARGETS (rel-*.2026.07.13 — corrective release, in build)
+| Track | Targets | Gate |
+|---|---|---|
+| App | A13 mapping layer (DS v1.5.2) · +New Act · producer-confirm wiring · agency home next-action · activated_by · remaining funnel events | verify gate + Cowork flow-QA (C1) |
+| Site | arrow unification · footer regrouping · waitlist type floor | build + sweeps |
+| Embed | rebuilt with the app release (parity rule) | bundle hash |
+| DB | migration 032 (roster-grants RPC + production-requests RPC) — Claude authors, Cowork applies | SQL apply + regression check |
+| Approval | owner ledger pass on rel-07.10–11 before 07.13 promotes | owner |
