@@ -177,6 +177,18 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
+## 21. RADAR PROGRESSION + SOURCE ARCHITECTURE (13 Jul, owner order) — MEGA-BATCHES
+Owner: bigger task batches per agent (progress was too incremental). New governed docs:
+`docs/ARTIST-PROGRESSION-SPEC.md` (8 milestones M1–M8, value-per-stage, firewall-safe milestone
+grammar) + `docs/RADAR-SOURCE-ARCHITECTURE.md` (18-segment architecture VERIFIED against live
+code; 4 source display types adopted; internal weight model; F1-first registry build order).
+DB head = 033 (owner-applied; outreach funnel recording live at DB level). DS = v1.6.12
+(existing-page conversion deltas received — implementation in my site batch).
+**CODEX MEGA-BATCH:** ① milestone-path UI element (8 milestones, states ✓/current/upcoming, mobile+desktop placement per spec §3) ② genre-emphasis planet treatment ("matters most in your genre" — guidance, never dimming/shaming) ③ source-node iconography: the 4 display types + `logo_asset` names for every F1 platform (Spotify…Go-out list) ④ S9 existing-page deltas already delivered — I implement ⑤ Q4 on preview.
+**GPT MEGA-BATCH:** fill/audit the F1 Atomic Field Registry rows from the Drive research (schema from me) + docs classification + mirror hygiene.
+**COWORK MEGA-BATCH:** unchanged queue (preview→Q3/Q4→counters incl. waitlist funnel) + verify F1 registry consistency once landed.
+**CFRO:** sanity-check the internal weight model against the value ladder (no action before preview).
+
 ## 20. OWNER RADAR SPEC (12 Jul night) + beta-signup pivot — the current batch definitions
 **Radar (N3) owner spec:** the Radar shows the artist WHO they are · relative to their GENRE ·
 WHERE to focus · the VALUE of each planet — **planets have different weights per genre**. Firewall
