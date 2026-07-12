@@ -28,6 +28,7 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 
 ## STANDING RULES (owner directives)
 - **ALWAYS update the Version Roadmap artifact** (https://claude.ai/code/artifact/a65d12d9-a66d-442c-9077-306eb05fddd6, source docs/prototypes/00_CURRENT/version-roadmap-v1.html + scratchpad) after ANY planning-relevant change — releases, decisions, blockers. Professional planning must never be lost (owner, 10 Jul).
+- **DEPLOY LAW (owner, 12 Jul): full deploy ONLY after everything is ready and tested** — one release train, complete Q1–Q8 on preview, then one atomic go-live. No partial deploys. The Version Map artifact is TABBED (owner preference) — keep the tab structure on every update.
 - **APP version rows in the roadmap are ALWAYS per-entity** (owner, 12 Jul): sub-row per persona with columns — what improves · exact screens/routes touched · technology/integration needed · account/subscription dependency · next step of that item. Site may stay summary-level. NO-DRIFT anchor: the map mirrors docs/releases/rel-*-PLAN.md §2; on divergence the plan doc wins and the map is fixed same day. Small details are never skipped.
 - Continue developing → ship fixes → deploy without asking each time (owner, 9 Jul). Answer in ENGLISH. End every reply with the priority board + pending-from-owner list.
 - CODEX⇄CLAUDE sync: both agents work from docs/CODEX-CLAUDE-SYNC.md (authority map + handshake). Codex owns visual law; Claude owns functional contracts; canon > contracts > DS > prototypes.

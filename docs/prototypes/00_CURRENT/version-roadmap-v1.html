@@ -5,11 +5,11 @@
 :root[data-theme="light"]{--paper:#f3f5ef;--card:#fff;--ink:#0a0d0b;--mist:#dde3d9;--slate:#687269;--line:#dde3d9}
 :root[data-theme="dark"]{--paper:#0e140d;--card:#18221a;--ink:#eef2ea;--mist:#2b362c;--slate:#9aa79b;--line:#2b362c}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5}
-.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 56px}
-h1{font-family:var(--serif);font-size:clamp(1.7rem,4vw,2.4rem);margin:0 0 4px}
-h2{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);margin:26px 0 10px}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 56px}
+h1{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.2rem);margin:0 0 4px}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);margin:22px 0 10px}
 .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a9a1e;font-weight:700;margin:0 0 6px}
-.sub{color:var(--slate);font-size:14px;max-width:70ch;margin:4px 0 0}
+.sub{color:var(--slate);font-size:14px;max-width:72ch;margin:4px 0 0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:12px}
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--slate);padding:8px 10px;border-bottom:2px solid var(--line)}
@@ -18,46 +18,64 @@ td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .ok{color:#476c3c;font-weight:700}.pend{color:var(--amber);font-weight:700}.plan{color:var(--slate)}
 .small{font-size:12px;color:var(--slate)}
 b{color:var(--ink)}
+.deploylaw{border-left:4px solid var(--lime);padding:8px 12px;background:var(--card);border-radius:0 10px 10px 0;font-size:13px;margin:14px 0 4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;background:var(--paper);padding:12px 0 10px;z-index:5;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tab{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);background:var(--card);color:var(--slate);border-radius:999px;padding:8px 14px;cursor:pointer}
+.tab.active{background:var(--lime);color:#0a0d0b;border-color:var(--lime);font-weight:800}
+.panel{display:none}.panel.active{display:block}
+@media(max-width:640px){.tab{padding:7px 10px;font-size:10.5px}}
 </style>
 <div class="wrap">
-<p class="eyebrow">LOCK · Version Map · rebuilt from verified facts only · 12 Jul 2026</p>
+<p class="eyebrow">LOCK · Version Map · verified facts only · 12 Jul 2026</p>
 <h1>What is true right now — and what comes next</h1>
-<p class="sub">Rule of this document: a ✅ appears ONLY with the evidence named beside it. Anything not verified says so. "Planned" is clearly planned. Rebuilt clean on 12 Jul after an owner truth-audit.</p>
+<p class="sub">A ✅ appears ONLY with the evidence named beside it. Anything not verified says so. "Planned" is clearly planned.</p>
+<div class="deploylaw"><b>DEPLOY LAW (owner, 12 Jul):</b> full deploy ONLY after everything is ready and tested — one release train, proven on preview with the complete Q1–Q8 protocol, then one atomic go-live. No partial deploys, ever.</div>
 
-<h2>1 · The entity model (how LOCK is structured) — vocabulary ratified 12 Jul (DS v1.5.8)</h2>
-<div class="card"><b>Person → Workspace → Role.</b> Person = the login, never the public artist identity. Workspace = operating context (data, billing, seats); role = permission inside it, not identity. Customer workspaces: <b>Artist</b> (private growth/Radar context; holds <b>Acts</b> — each Act has its own evidence + Passport) · <b>Manager office / אמרגן · משרד אמרגנות</b> (ARTIST-SIDE representation; solo OR team; roster; membership ≠ ArtistAccess) · <b>Production workspace / משרד הפקה</b> (solo OR team; events+lineups). Non-workspace contexts: <b>Booker</b> = recipient/buyer context reading a Passport link — ⭐ can be a PRIVATE individual (a wedding couple IS a מזמין הופעות); public Passport review needs NO login (verified in routes) · <b>Source Confirmer / מאשר-מקור</b> = accountless one-claim magic-link task — no signup, no dashboard, never built as a workspace · <b>Operator</b> = internal console. <b>THE 12-Jul CORRECTION (owner finding + Codex v1.5.8, both verified in code): the buyer is NOT an אמרגן.</b> אמרגן = artist-side agent/office only. The demand side is segmented: professional buyer (מזמין הופעות — booking language OK) · private event client (לקוח פרטי — simple language, NO workspace) · corporate client · event planner · production team. <b>Switching precision:</b> workspace-derived switching covers Artist + Manager/Production only; uniform switching is TARGET. <span class="small">Verified: migration 027 + OrgContext.jsx + BT-56–58 ruling in constants.js · canonical tables: docs/ENTITY-GLOSSARY.md + docs/GLOSSARY.md v1.1 = DS v1.5.8 #entity-hierarchy. Inversion purged from app strings, site, llms.txt, CLAUDE.md (12 Jul, builds green). HE final taste = Maria.</span></div>
+<div class="tabs" id="tabs">
+<button class="tab active" data-t="p1">Entities · Owners</button>
+<button class="tab" data-t="p2">LIVE now</button>
+<button class="tab" data-t="p3">Next version · Scope</button>
+<button class="tab" data-t="p4">Gates · Tasks</button>
+<button class="tab" data-t="p5">Backlog</button>
+</div>
 
-<h2>1b · Who owns what — RATIFIED in DS v1.6.1 (one language for every agent)</h2>
-<div class="card small"><b>Codex</b> = brand/DS/UX/UI law — evidence: updated DS + changelog + source map. <b>Claude</b> = development in the repo — evidence: code diffs, tests, screenshots, deploy fingerprints. <b>Cowork</b> = technical/API/flow QA (logs, real-browser proof, QA report) <b>+ Drive/GPT operations</b> (file hygiene, version notes, project-GPT archive). <b>Maria</b> = release approval — owner pass only. Conflict rule unchanged: canon (CLAUDE.md) &gt; functional contracts &gt; DS &gt; prototypes. Known spec-vs-reality hole: "Add workspace" no-op (flow-gap P — scheduled in 07.13 table below).</div>
-<h2>2 · What is LIVE — with the evidence</h2>
+<section class="panel active" id="p1">
+<h2>The entity model — vocabulary ratified 12 Jul (DS v1.5.8 → v1.6.1)</h2>
+<div class="card"><b>Person → Workspace → Role.</b> Person = the login, never the public artist identity. Workspace = operating context (data, billing, seats); role = permission inside it, not identity. Customer workspaces: <b>Artist</b> (private growth/Radar context; holds <b>Acts</b> — each Act has its own evidence + Passport) · <b>Manager office / אמרגן · משרד אמרגנות</b> (ARTIST-SIDE representation; solo OR team; roster; membership ≠ ArtistAccess) · <b>Production workspace / משרד הפקה</b> (solo OR team; events+lineups). Non-workspace contexts: <b>Booker</b> = recipient/buyer context reading a Passport link — ⭐ can be a PRIVATE individual (a wedding couple IS a מזמין הופעות); public Passport review needs NO login (verified in routes) · <b>Source Confirmer / מאשר-מקור</b> = accountless one-claim magic-link task — no signup, no dashboard, never built as a workspace · <b>Operator</b> = internal console. <b>THE 12-Jul CORRECTION (owner finding + Codex, both verified in code): the buyer is NOT an אמרגן.</b> אמרגן = artist-side agent/office only. The demand side is segmented: professional buyer (מזמין הופעות — booking language OK) · private event client (לקוח פרטי — simple language, NO workspace) · corporate client · event planner · production team. <b>Switching precision:</b> workspace-derived switching covers Artist + Manager/Production only; uniform switching is TARGET. <span class="small">Verified: migration 027 + OrgContext.jsx + BT-56–58 ruling in constants.js · canonical tables: docs/ENTITY-GLOSSARY.md + docs/GLOSSARY.md v1.1 = DS #entity-hierarchy. Inversion purged from app strings, site, llms.txt, CLAUDE.md (12 Jul, builds green). HE final taste = Maria.</span></div>
+<h2>Who owns what — RATIFIED in DS v1.6.1 (one language for every agent)</h2>
+<div class="card small"><b>Codex</b> = brand/DS/UX/UI law — evidence: updated DS + changelog + source map. <b>Claude</b> = development in the repo — evidence: code diffs, tests, screenshots, deploy fingerprints. <b>Cowork</b> = technical/API/flow QA (logs, real-browser proof, QA report) <b>+ Drive/GPT operations</b> (file hygiene, version notes, project-GPT archive). <b>Maria</b> = release approval — owner pass only. Conflict rule: canon (CLAUDE.md) &gt; functional contracts &gt; DS &gt; prototypes. Handoff law: every cross-agent task = full text + source-of-truth reference + reasoning (SYNC §13).</div>
+</section>
+
+<section class="panel" id="p2">
+<h2>What is LIVE — with the evidence</h2>
 <div class="card scroll"><table>
 <tr><th>Track</th><th>Version</th><th>What it contains</th><th>Technically verified</th><th>Owner approved</th></tr>
-<tr><td>APP<br>app.lock.show</td><td>rel-app-2026.07.10<br>@a874ab5 + eafcd4e</td><td>Two-persona Passport · booker nav · sample passport · GATE analytics (reaction+payment) · producer-reply notifications · Hebrew auth screens · approval-gate firewall — <b>per-entity breakdown with exact screens: section 2b below</b></td><td class="ok">✅ production bundle fingerprints (5 markers found in served JS)</td><td class="pend">🟠 NOT approved — awaiting your pass</td></tr>
-<tr><td>SITE<br>lock.show</td><td>rel-site-2026.07.11-2<br>@917ef57</td><td><b>10 marketing pages rewritten</b> (home, 3 entity pages, pricing, how-it-works, methodology, faq, contact, radar). NOT touched: legal pages (terms/privacy/accessibility), demo page, waitlist-form sizes</td><td class="ok">✅ live-page fingerprints + 0 Hebrew glyphs (unicode scan)</td><td class="pend">🟡 partial — your corrections shipped; no formal sign-off</td></tr>
+<tr><td>APP<br>app.lock.show</td><td>rel-app-2026.07.10<br>@a874ab5 + eafcd4e</td><td>Two-persona Passport · booker nav · sample passport · GATE analytics (reaction+payment) · producer-reply notifications · Hebrew auth screens · approval-gate firewall — <b>per-entity breakdown below</b></td><td class="ok">✅ production bundle fingerprints (5 markers found in served JS)</td><td class="pend">🟠 NOT approved — awaiting your pass</td></tr>
+<tr><td>SITE<br>lock.show</td><td>rel-site-2026.07.11-2<br>@917ef57</td><td><b>10 marketing pages rewritten</b> (home, 3 entity pages, pricing, how-it-works, methodology, faq, contact, radar). NOT touched: legal pages, demo page, waitlist-form sizes</td><td class="ok">✅ live-page fingerprints + 0 Hebrew glyphs (unicode scan)</td><td class="pend">🟡 partial — your corrections shipped; no formal sign-off</td></tr>
 <tr><td>EMBED<br>lock.show/app</td><td>mirrors rel-app-07.10</td><td>Same app, static mirror (no server features)</td><td class="ok">✅ bundle hash matches current app code</td><td class="pend">🟠</td></tr>
 <tr><td>DB</td><td>head = 031 (021 frozen)</td><td>Workspace types, analytics, WhatsApp, RLS fix, firewall gate</td><td class="ok">✅ applied by owner, flows confirmed working after</td><td class="ok">✅ (owner-applied)</td></tr>
-<tr><td>DESIGN SYSTEM</td><td>v1.6.1 (Codex)</td><td>v1.5.x tokens/contracts + v1.5.8 demand-side segmentation + v1.6.0 platform/entity matrix & per-entity DOD + v1.6.1 ownership/governance map, stale labels removed (Codex ranks: site 88 · app desktop 84 · mobile 80 · imagery 76 · OG 68)</td><td class="pend">🟠 Codex verified locally; <b>Claude independent audit PENDING before binding</b> (audits cover ≤v1.4.2)</td><td>owner-directed</td></tr>
+<tr><td>DESIGN SYSTEM</td><td>v1.6.1 (Codex)</td><td>v1.5.x tokens/contracts + v1.5.8 demand-side segmentation + v1.6.0 platform/entity matrix &amp; per-entity DOD + v1.6.1 ownership map (Codex ranks: site 88 · app desktop 84 · mobile 80 · imagery 76 · OG 68)</td><td class="pend">🟠 Codex verified locally; <b>Claude independent audit PENDING before binding</b></td><td>owner-directed</td></tr>
 <tr><td>INFRA</td><td>—</td><td>OAuth consent published · previews OFF · smart build-skip · registries in repo</td><td class="ok">✅ headless OAuth trace + Cowork dashboard confirmations</td><td>— operational</td></tr>
 </table>
-<p class="small">NOT yet verified by anyone: a real Google login click-through (config verified to Google's page only) · real email-confirm delivery (Cowork QA item C1/C2) · DS v1.6.0 content (my audit pending).</p></div>
-
-<h2>2b · APP rel-2026.07.10 LIVE — what each entity got, on which screens (owner rule 12 Jul: app updates are always mapped per persona · per screen)</h2>
+<p class="small">NOT yet verified by anyone: a real Google login click-through · real email-confirm delivery (Cowork Q3) · DS v1.6.1 content (my audit pending).</p></div>
+<h2>APP rel-2026.07.10 LIVE — what each entity got, on which screens</h2>
 <div class="card scroll"><table>
 <tr><th>Entity</th><th>What improved</th><th>Exact screens / routes</th><th>Technology behind it</th></tr>
 <tr><td>Artist</td><td>Hebrew auth screens · producer-reply notification now lands on the right screen · firewall: only artist-approved claims ever go public</td><td>/login · /signup · /forgot · /reset · notification bell → /artist/requests · public /passport/:id</td><td>migration 031 RLS (owner-applied) + same filter on all 4 read paths</td></tr>
-<tr><td>Booker (buyer)</td><td>Passports tab appeared in nav · public Passport rebuilt as Booking view (bands + binaries + method labels, sticky CTA)</td><td>bottom-nav/side-nav · /discover · /passport/:id</td><td>none new — viewing needs NO account (verified: route outside auth guards)</td></tr>
+<tr><td>Booker (buyer)</td><td>Passports tab in nav · public Passport rebuilt as Booking view (bands + binaries + method labels, sticky CTA)</td><td>bottom-nav/side-nav · /discover · /passport/:id</td><td>none new — viewing needs NO account (verified: route outside auth guards)</td></tr>
 <tr><td>Representative persona</td><td>second Passport view ordered for artist-side reps, own CTA</td><td>/passport/:id?view=rep</td><td>shared firewall-safe kit (one data transform for both views)</td></tr>
 <tr><td>Manager office</td><td>crash guard: pre-027 recursion error no longer white-screens org screens</td><td>context switcher · all /agency screens</td><td>error-code detection in orgs.js</td></tr>
 <tr><td>Production</td><td>— no change this release</td><td>—</td><td>—</td></tr>
 <tr><td>Source Confirmer</td><td>confirming now notifies the artist + is counted (method-safe text only)</td><td>magic-link confirm page (accountless)</td><td>server /api/confirm (app project serverless)</td></tr>
 <tr><td>Operator</td><td>payment activation is now measured (half of the Gate)</td><td>/admin</td><td>analytics_event insert</td></tr>
 </table></div>
+</section>
 
-<h2>2c · LOCKED SCOPE — the next versions (contract: docs/releases/SCOPE-rel-2026.07.13.md — anything not listed is OUT; additions need Maria's word)</h2>
+<section class="panel" id="p3">
+<h2>LOCKED SCOPE — contract: docs/releases/SCOPE-rel-2026.07.13.md (anything not listed is OUT; additions need Maria's word)</h2>
 <div class="card small"><b>SITE rel-site-07.13 — 7 items, closed list:</b> S1 terminology wave live · S2 arrow unification · S3 footer regrouping · S4 waitlist type floor · S5 one private/corporate line on /bookers (warm register) · S6 one Source-Confirmer clarifying line on /producers · S7 OG exports IF Codex delivers in time (never blocks). <b>OUT:</b> Hebrew site, About page, private-client page, new pages, pricing changes.<br><br>
 <b>APP rel-app-07.13 — 10 items, closed list:</b> A1 terminology+voice wave (built) · A2 "Add workspace" real · A3 +New Act · A4 producer-confirm magic link · A5 roster next-best-action · A6 roster from grants (032) · A7 production inbox real data (032) · A8 activated_by · A9 DS v1.6.1 token binding + screenshots to Codex · A10 funnel events + embed rebuild. <b>OUT:</b> DB/enum renames (033+, after backups), reply-channel, open discovery, comparison, Radar v5, receipts, HE-completion pass. <b>Blockers:</b> your canon-lock trio (A1) · Cowork 032 (A6/A7) · my DS audit (A9).</div>
-
-<h2>3 · NEXT version — rel-*.2026.07.13 APP, per entity · per screen · per dependency (mirrors docs/releases/rel-2026.07.13-PLAN.md §2 — if they ever differ, the plan doc wins and this map is fixed same day. NO DRIFT.)</h2>
+<h2>APP next version — per entity · per screen · per dependency (mirrors rel-2026.07.13-PLAN.md §2 — on divergence the plan doc wins, map fixed same day. NO DRIFT.)</h2>
 <div class="card scroll"><table>
 <tr><th>Entity</th><th>What improves</th><th>Exact screens / routes touched</th><th>Technology / integration needed</th><th>Account / subscription dependency</th><th>Next step of THIS item</th></tr>
 <tr><td rowspan="3">Artist</td><td class="plan">+ New Act — create a second Act; evidence stays per-Act</td><td>context switcher · /artist/home header</td><td>none new (multi-Act already in DB, verified per-Act)</td><td>free in pilot</td><td class="plan">build after DS audit</td></tr>
@@ -73,31 +91,44 @@ b{color:var(--ink)}
 <tr><td rowspan="3">ALL entities</td><td class="plan">A13/DS v1.6.1 token binding — mobile-first re-ground, batch by batch · then REAL app screenshots back to Codex (P0)</td><td>every screen (start: task surfaces → paper)</td><td>DS v1.6.1 values (delivered)</td><td>—</td><td class="pend">GATED on my DS audit (in motion)</td></tr>
 <tr><td class="plan">"Add workspace" made REAL (closes flow-gap P; only artist/management/production)</td><td>context switcher → new create-workspace screen</td><td>existing org-bootstrap RPC</td><td>the workspace carries the subscription</td><td class="plan">build</td></tr>
 <tr><td class="plan">Embed rebuilt same release (parity rule)</td><td>lock.show/app (all screens mirror)</td><td>build:embed</td><td>Vercel Hobby quota (smart-skip ≈2 deploys total)</td><td class="plan">automatic in train</td></tr>
-<tr><td>Site (kept summary-level per your OK)</td><td class="plan">Arrow unification · footer regrouping · waitlist type floor · private/corporate one-liner on /bookers · Source-Confirmer clarifying line on /producers</td><td>global components · /bookers · /producers</td><td>none</td><td>—</td><td class="plan">build in train</td></tr>
+<tr><td>Site (summary-level per your OK)</td><td class="plan">Arrow unification · footer regrouping · waitlist type floor · private/corporate one-liner on /bookers · Source-Confirmer clarifying line on /producers</td><td>global components · /bookers · /producers</td><td>none</td><td>—</td><td class="plan">build in train</td></tr>
 </table>
-<p class="small">Technology + subscription verification per item above; full account/limit truth lives in docs/ACCOUNTS-LIMITS-REGISTRY.md + docs/CONNECTIONS-REGISTRY.md (Vercel Hobby 100/day previews-off · Supabase Free head=031 · Resend pending · Google OAuth published · Anthropic key active, rotation pending).</p></div>
+<p class="small">Technology + subscription verification per item above; full account/limit truth: docs/ACCOUNTS-LIMITS-REGISTRY.md + docs/CONNECTIONS-REGISTRY.md (Vercel Hobby 100/day previews-off · Supabase Free head=031 · Resend pending · Google OAuth published · Anthropic key active, rotation pending).</p></div>
+</section>
 
-<h2>4 · Gates before 07.13 can promote</h2>
+<section class="panel" id="p4">
+<h2>Gates before 07.13 can promote</h2>
 <div class="card">
-1. <b>Cowork QA (C1–C2):</b> real-browser flows — Google login click-through, email signup incl. confirmation delivery, artist journey, booker link, workspace switch.<br>
-2. <b>Migration 032</b> — I author, Cowork applies, regression-checked. <span class="small">(Codex governance alarm RESOLVED: origin/main contains 030+031 — its local clone was stale; rule: git pull before reading.)</span><br>
-3. <b>My DS v1.6.1 audit</b> — before binding its tokens (no more green-on-trust).<br>
-3b. <b>QA/QC protocol Q1–Q8 (rel-2026.07.13-PLAN §4) — BINDING: a published version is NOT valid until the protocol passes</b> (pre-deploy verify → live fingerprints → real-browser flows → 360px mobile pass → firewall scan → terminology scan → governance update → owner approval).<br>
-4. <b>Your approval pass on rel-07.10–11</b> (section 2's 🟠 column) <b>+ your Hebrew-wording nod on the terminology wave</b> (מזמין הופעות etc. — your voice).<br>
-5. <b>Your 2 open Hebrew rulings (canon-lock for the release train):</b> ① Source Confirmer = מאשר-מקור as the only UI term (canon already locks it — recommendation: confirm) · ② Act = מופע or פרויקט. Then the train runs: one branch → ONE preview deploy (Cowork one-time hook) → Q1–Q8 on preview → atomic merge to main → Q1–Q8 on live → tag. Migration 032 (additive) safe now; structural 033+ waits for <b>Supabase Pro backups ON</b> (your $25/mo call).<br>
-<span class="small">Then: launch planning (pilot: 2–3 artists + 1 אמרגן; the Gate = one reacts AND one pays — measurement for both is already live).</span></div>
-
-<h2>4b · Cross-team task ledger (from DS v1.6.1 gap table — entered 12 Jul, statuses per repo truth)</h2>
+1. <b>Cowork QA (Q3–Q5):</b> real-browser flows — Google login click-through, email signup incl. confirmation delivery, artist journey, booker link, workspace switch — on PREVIEW first.<br>
+2. <b>Migration 032</b> — I author, Cowork applies, regression-checked.<br>
+3. <b>My DS v1.6.1 audit</b> — before binding its tokens (no green-on-trust).<br>
+4. <b>QA/QC protocol Q1–Q8 — BINDING: a published version is NOT valid until the protocol passes.</b> Full deploy only after everything is ready and tested (owner deploy law, header).<br>
+5. <b>Your approval pass on rel-07.10–11 + Hebrew-wording nod on the terminology wave.</b><br>
+6. <b>Your 2 open Hebrew rulings:</b> ① Source Confirmer = מאשר-מקור as the only UI term (canon already locks it — recommendation: confirm) · ② Act = מופע or פרויקט. Then the train: one branch → ONE preview deploy → Q1–Q8 on preview → atomic merge → Q1–Q8 on live → tag. 032 (additive) safe now; structural 033+ waits for <b>Supabase Pro backups</b> (your $25/mo call).<br>
+<span class="small">Then: launch planning (pilot: 2–3 artists + 1 professional buyer; the Gate = one reacts AND one pays — measurement live).</span></div>
+<h2>Cross-team task ledger (from DS v1.6.1 gap table — statuses per repo truth)</h2>
 <div class="card scroll"><table>
 <tr><th>Task</th><th>Owner</th><th>Priority</th><th>True status</th></tr>
 <tr><td>App Hebrew/i18n terminology cleanup</td><td>Claude</td><td>P0</td><td class="ok">✅ BUILT on branch (a3fc01d+f98bb41) — deploy-pending: your Hebrew nod + train</td></tr>
 <tr><td>Real app screenshots after DS token binding → Codex</td><td>Claude</td><td>P0</td><td class="plan">after binding batch (train)</td></tr>
-<tr><td>Signup / workspace / Passport / API live QA (Q3–Q5 lanes)</td><td>Cowork</td><td>P0</td><td class="pend">🟡 briefed — needs one-time preview hook first</td></tr>
+<tr><td>Signup / workspace / Passport / API live QA (Q3–Q5)</td><td>Cowork</td><td>P0</td><td class="pend">🟡 briefed — needs one-time preview hook first</td></tr>
 <tr><td>Private-client, buyer, production image assets</td><td>Codex</td><td>P1</td><td class="pend">🔴 production briefs exist in DS; files not yet made</td></tr>
-<tr><td>OG/social export files</td><td>Codex exports → Claude commits into repo + wires metadata (ruling: SYNC §14)</td><td>P1</td><td class="pend">🔴 open</td></tr>
+<tr><td>OG/social export files</td><td>Codex exports → Claude commits + wires metadata (SYNC §14)</td><td>P1</td><td class="pend">🔴 open</td></tr>
 <tr><td>Drive evidence organization + project-GPT archive update</td><td>Cowork / GPT-Drive</td><td>P1</td><td class="pend">🟡 assigned</td></tr>
 </table></div>
+</section>
 
-<h2>5 · Backlog (later — honestly not scheduled)</h2>
-<div class="card small">Artist reply-channel (needs your product decision) · agency "own artist" legacy mode removal · open booker discovery (post-validation) · Hebrew site version · About page (needs your facts) · comparison mode (deferred, firewall watch) · Radar v5 emotional layer (radar-v4 prototype approved, build after mapping layer) · receipts/invoices + agency payment trail (legal, before real money).</div>
+<section class="panel" id="p5">
+<h2>Backlog (later — honestly not scheduled)</h2>
+<div class="card small">Artist reply-channel (needs your product decision) · agency "own artist" legacy mode removal · open booker discovery (post-validation) · Hebrew site version · About page (needs your facts) · private-client site page (post-validation) · comparison mode (deferred, firewall watch) · Radar v5 emotional layer (radar-v4 prototype approved, build after mapping layer) · receipts/invoices + agency payment trail (legal, before real money) · structural migrations 033+ (workspace_type rename, enums — after Supabase Pro backups).</div>
+</section>
 </div>
+<script>
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});
+  b.classList.add('active');
+  document.getElementById(b.dataset.t).classList.add('active');
+});
+</script>
