@@ -41,6 +41,13 @@ as numbers anywhere in any UI, artist- or buyer-facing.
 3. F2–F6 families by exclusion/addition from F1.
 4. Radar source-ring UI consumes the registry (display types §2) — after F1 exists.
 
+## 4b · Precision correction (GPT verification, 13 Jul — adopted)
+Genre-family resolution is **format-led and deterministic at the first level** (bounded
+`act.format` values), **with a bounded temporary genre-text heuristic** (`/festival|psytrance|
+trance|rave/i`) refining the DJ-family split and the default. The earlier "no free-text
+guessing" wording is retracted. The heuristic is explicitly accepted until a controlled
+`scene_family` field ships with the registry-backed migration (034 candidate).
+
 ## 5 · What this does NOT change
 No score/rank/percentile ever · streaming stays secondary · public discovery alone is never proof ·
 onboarding stays 2 screens (sources appear progressively via next-actions, not as an intake form).

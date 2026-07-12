@@ -3,9 +3,11 @@
 // guidance and planet emphasis. FIREWALL: never rendered as a number, score,
 // rank, percentage, genre leaderboard, public badge, or buyer-facing weakness.
 //
-// Family resolution is DETERMINISTIC from act.format (bounded CHECK in the act
-// table: dj-set/live-set/duo/band/open-format/vocalist/other) with a genre-text
-// hint only as a tiebreaker — free-text genre never hard-fails the mapping.
+// Family resolution is format-LED and deterministic at the first level (bounded
+// act.format CHECK: dj-set/live-set/duo/band/open-format/vocalist/other), with a
+// BOUNDED TEMPORARY genre-text heuristic (FESTIVAL_HINT below) refining the
+// DJ-family split and the default — explicitly accepted (registry README §7)
+// until a controlled `scene_family` field ships with migration 034.
 // Planet keys match radarUniverse.js: identity · music · live · audience · prokit · proof.
 
 export const GENRE_FAMILIES = {
