@@ -29,6 +29,15 @@ export const colors = {
   // Hairlines
   line: 'rgba(255,255,255,.08)',
   line2: 'rgba(255,255,255,.15)',
+
+  // DS mapping layer (A9, rel-07.13) — paper task-surface family, audit-verified
+  // v1.6.5 values (AA: paper/forest 14.91). Additive; mirrors tailwind.config.js ds-*.
+  dsPaper: '#F3F5EF',
+  dsCard: '#FFFFFF',
+  dsForest: '#18221A',
+  dsInk: '#0A0D0B',
+  dsMist: '#DDE3D9',
+  dsSlate: '#687269',
 } as const
 
 // The 5-state data-collection vocabulary (master-class §1) — fg on tinted bg,

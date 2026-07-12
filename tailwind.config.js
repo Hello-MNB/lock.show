@@ -50,6 +50,19 @@ export default {
         na: '#9AA29B',
         'na-bg': 'rgba(255,255,255,.05)',
 
+        // ── DS MAPPING LAYER (A9, rel-07.13) — audit-verified v1.6.5 values ──
+        // The PAPER task-surface family for the batch-by-batch migration
+        // (Surface Language Contract: paper for task surfaces, dark for
+        // media/proof moments). ADDITIVE ONLY: the legacy `paper/forest/card`
+        // aliases below stay dark until each screen batch migrates to ds-*.
+        // AA proof (DS v1.6.5): ds-paper/ds-forest = 14.91 · app bg/ink = 17.21.
+        'ds-paper': '#F3F5EF',   // DS color.paper — page canvas (task surfaces)
+        'ds-card': '#FFFFFF',    // DS white card
+        'ds-forest': '#18221A',  // DS color.forest — panels + display text on paper
+        'ds-ink': '#0A0D0B',     // DS ink on paper
+        'ds-mist': '#DDE3D9',    // DS hairlines on paper
+        'ds-slate': '#687269',   // DS secondary text on paper
+
         // ── LEGACY ALIASES (CODEX v1.2.0 light-theme names) ─────────────────
         // Remapped onto the dark palette so unrefactored screens still render
         // coherently dark. New/refactored code must use the tokens above.
