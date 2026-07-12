@@ -10,16 +10,16 @@ export const metadata: Metadata = {
 }
 
 const lookingFor = [
-  'Independent artists who want to prove their live draw',
+  'Independent artists who want their live draw taken seriously',
   'Booking managers evaluating unfamiliar talent',
-  'Producers willing to verify shows via magic link',
+  'Producers happy to confirm the shows they ran — one click, no account',
   'Honest feedback — what works, what doesn\'t',
 ]
 
 const contactDetails = [
   { label: 'Location', value: 'Tel Aviv, Israel' },
   { label: 'Stage', value: 'Closed Beta 2026' },
-  { label: 'Languages', value: 'עברית · English' },
+  { label: 'Languages', value: 'Hebrew · English' },
 ]
 
 export default function Contact() {
@@ -28,16 +28,17 @@ export default function Contact() {
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
-            CONTACT · צור קשר
+            CONTACT · GET IN TOUCH
           </p>
           <h1 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
@@ -52,6 +53,7 @@ export default function Contact() {
           <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
             LOCK is in closed beta. We always want to hear from artists, booking managers, and producers.
           </p>
+          </div>
         </div>
       </section>
 
@@ -60,7 +62,7 @@ export default function Contact() {
         <div
           className="contact-grid"
           style={{
-            maxWidth: '960px',
+            maxWidth: '1120px',
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
@@ -73,7 +75,7 @@ export default function Contact() {
           <div>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.7rem',
+              fontSize: '0.75rem',
               letterSpacing: '0.12em',
               color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
@@ -89,17 +91,17 @@ export default function Contact() {
           </div>
 
           {/* INFO COLUMN */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="m-divide" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* Contact details */}
-            <div style={{
+            <div className="m-flat" style={{
               padding: '28px 24px',
               border: '1px solid rgba(10,13,11,0.08)',
               borderRadius: 'var(--radius-sm)',
             }}>
               <p style={{
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.65rem',
+                fontSize: '0.75rem',
                 letterSpacing: '0.12em',
                 color: 'var(--color-tally-onlight)',
                 textTransform: 'uppercase',
@@ -121,14 +123,14 @@ export default function Contact() {
                   >
                     <span style={{
                       fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.65rem',
+                      fontSize: '0.75rem',
                       letterSpacing: '0.08em',
                       color: 'var(--color-tally-onlight)',
                       textTransform: 'uppercase',
                     }}>
                       {d.label}
                     </span>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--color-ink)' }}>
+                    <span style={{ fontSize: '1rem', color: 'var(--color-ink)' }}>
                       {d.value}
                     </span>
                   </div>
@@ -153,10 +155,10 @@ export default function Contact() {
                     marginBottom: '14px',
                   }}
                 >
-                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.7rem', letterSpacing: '0.08em' }}>
+                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
                     WHATSAPP
                   </span>
-                  <span dir="ltr" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
+                  <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
                 </a>
                 <div style={{ display: 'flex', gap: '18px' }}>
                   {SOCIAL.map(({ key, label, href }) => (
@@ -167,7 +169,7 @@ export default function Contact() {
                       rel="noopener noreferrer"
                       style={{
                         fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.7rem',
+                        fontSize: '0.75rem',
                         letterSpacing: '0.06em',
                         color: 'var(--color-tally-onlight)',
                         textDecoration: 'none',
@@ -181,7 +183,7 @@ export default function Contact() {
             </div>
 
             {/* What we're looking for */}
-            <div style={{
+            <div className="m-flat" style={{
               padding: '28px 24px',
               border: '1px solid rgba(200,240,77,0.2)',
               borderRadius: 'var(--radius-sm)',
@@ -189,7 +191,7 @@ export default function Contact() {
             }}>
               <p style={{
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.65rem',
+                fontSize: '0.75rem',
                 letterSpacing: '0.12em',
                 color: 'var(--color-stamp-onlight)',
                 textTransform: 'uppercase',
@@ -209,7 +211,7 @@ export default function Contact() {
                     }}>
                       ✓
                     </span>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.5 }}>
+                    <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.5 }}>
                       {item}
                     </p>
                   </div>
@@ -243,16 +245,17 @@ export default function Contact() {
           }}>
             Ready to start without waiting?
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '28px', fontSize: '0.9rem', lineHeight: 1.6 }}>
-            Registration is open — go directly to the app.
+          <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '28px', fontSize: '1rem', lineHeight: 1.6 }}>
+            Registration is open — free for artists during the pilot.
           </p>
           <a
             href={`${APP_URL}/signup`}
             style={{
               display: 'inline-block',
               padding: '14px 32px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
+              backgroundColor: 'transparent',
+              color: 'var(--color-paper)',
+              border: '1px solid rgba(243,245,239,0.35)',
               fontFamily: 'var(--font-space-mono)',
               fontWeight: 700,
               fontSize: '0.75rem',
@@ -261,7 +264,7 @@ export default function Contact() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT — FREE →
+            BUILD YOUR PASSPORT →
           </a>
         </div>
       </section>

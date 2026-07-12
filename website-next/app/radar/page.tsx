@@ -17,7 +17,7 @@ const dimensions = [
   {
     id: 'LIVE DRAW',
     title: 'Live Draw',
-    body: 'Audience evidence from real events — producer-confirmed or document-reviewed. Always expressed as a band. Never exact. Never fabricated.',
+    body: 'Audience evidence from real events — confirmed by the producer who ran the night, or backed by documents. Always shown as an honest range.',
   },
   {
     id: 'COMMUNITY',
@@ -27,7 +27,7 @@ const dimensions = [
   {
     id: 'PERFORMANCE',
     title: 'Live Performance',
-    body: 'Your track record — years active, venue types, geographic reach, notable events. Verified gigs, not self-description.',
+    body: 'Your track record — years active, venue types, geographic reach, notable events. Real gigs that stand up to a second look.',
   },
   {
     id: 'READINESS',
@@ -44,36 +44,36 @@ const dimensions = [
 const evidenceStates = [
   {
     state: 'CONFIRMED',
-    label: 'Producer-confirmed or operator-reviewed',
-    desc: 'The strongest state. A third party has verified the claim via magic link or document review.',
+    label: 'Producer-confirmed or document-backed',
+    desc: 'The strongest state. Someone who was there — or the paperwork itself — has backed the claim up.',
     color: 'var(--color-stamp)',
   },
   {
     state: 'SUBMITTED',
-    label: 'Awaiting operator review',
-    desc: 'You\'ve submitted a document or sent a magic link. The claim is in the queue.',
-    color: 'rgba(200,240,77,0.55)',
+    label: 'In review',
+    desc: 'You\'ve submitted a document or sent a confirmation link. The claim is in the queue.',
+    color: 'rgba(200,240,77,0.75)',
   },
   {
     state: 'PENDING',
-    label: 'Logged, not yet verified',
-    desc: 'You\'ve added the gig. No producer link sent yet. The next action is clear.',
+    label: 'Logged, not yet confirmed',
+    desc: 'You\'ve added the gig. No producer link sent yet. The next step is clear.',
     color: 'var(--color-tally)',
   },
   {
     state: 'ABSENT',
-    label: 'No data for this dimension',
-    desc: 'Nothing logged for this area. The Radar surfaces this so you can decide whether to act on it.',
-    color: 'rgba(255,255,255,0.35)',
+    label: 'Nothing here yet',
+    desc: 'Nothing logged for this area. The Radar surfaces this so you can decide whether it\'s worth your time.',
+    color: 'rgba(255,255,255,0.6)',
   },
 ]
 
 const radarVsPassport = [
-  { dimension: 'Audience', radar: 'Radar — exact estimate you logged', passport: 'Passport — band range only (e.g. 70–150)' },
-  { dimension: 'Verification status', radar: 'Radar — all states, including pending', passport: 'Passport — confirmed states, or self-reported if explicitly labelled' },
-  { dimension: 'Gaps', radar: 'Radar — what\'s missing, next action', passport: 'Passport — gaps are omitted entirely' },
-  { dimension: 'Score / ranking', radar: 'Radar — never exists', passport: 'Passport — never exists' },
-  { dimension: 'Who sees it', radar: 'Radar — artist only (private)', passport: 'Passport — anyone with the link' },
+  { dimension: 'Audience', radar: 'Radar — the exact estimate you logged', passport: 'Passport — band range only (e.g. 70–150)' },
+  { dimension: 'Verification status', radar: 'Radar — all states, including pending', passport: 'Passport — confirmed claims, or self-reported when explicitly labelled' },
+  { dimension: 'Gaps', radar: 'Radar — what\'s missing, and your next step', passport: 'Passport — gaps simply don\'t appear' },
+  { dimension: 'Scores & rankings', radar: 'Radar — none, by design', passport: 'Passport — none, by design' },
+  { dimension: 'Who sees it', radar: 'Radar — you alone (private)', passport: 'Passport — anyone with the link' },
 ]
 
 export default function Radar() {
@@ -82,10 +82,11 @@ export default function Radar() {
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',

@@ -21,7 +21,9 @@ _Owner question (11 Jul): "do we unify folders into MAIN?" — YES. This file is
 2. Every app release also rebuilds the embed (`npm run build:embed`) — the two app surfaces must never skew.
 3. Every deploy is verified LIVE by fingerprint before it's called done; every release gets a DEPLOY-LOG row.
 4. Migrations ship alone, applied + verified before code that depends on them. 021 stays frozen.
-5. Roadmap artifact updated on every planning-relevant change (owner standing rule).
+5. **Roadmap artifact updated AS PART OF EVERY RELEASE** — it is a release-checklist step (like the
+   DEPLOY-LOG row), not an afterthought. A release without a roadmap update is an incomplete release
+   (owner standing rule, reinforced 11 Jul: precise infra+version management prevents gaps and errors).
 
 ## Current branch cleanup (11 Jul state)
 | Branch | State | Action |

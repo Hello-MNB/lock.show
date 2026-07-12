@@ -215,6 +215,7 @@ export default function FAQ() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       </section>
 
@@ -234,7 +235,7 @@ export default function FAQ() {
           }}>
             Still have questions?
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '32px', lineHeight: 1.6 }}>
+          <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '32px', lineHeight: 1.6 }}>
             Reach out directly — we&apos;re in closed beta and talk to everyone.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
