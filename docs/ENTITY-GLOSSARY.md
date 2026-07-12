@@ -1,10 +1,17 @@
 # ENTITY GLOSSARY — the ONE vocabulary authority
 
 _Owner finding (12 Jul): "יש ערבוב בין ישויות — המונחים אינם מקצועיים ולכן יש אי הבנה."
-Verified in code: CORRECT. Codex ran the same audit in parallel → DS v1.5.6 `#entity-hierarchy`.
-This file = Codex's v1.5.6 table + Claude's code-reality columns, reconciled. Every UI string,
-site page, doc, and DS component must use these terms. Code identifiers (DB values, role enums)
-are FROZEN — renaming them is a data migration, scheduled separately._
+Verified in code: CORRECT. Codex ran the same audit in parallel → DS v1.5.6, then **v1.5.8
+(demand-side correction — now governing)**. This file = Codex's DS table + Claude's code-reality
+columns, reconciled. Every UI string, site page, doc, and DS component must use these terms.
+Code identifiers (DB values, role enums) are FROZEN — renaming them is a data migration,
+scheduled separately._
+
+**⚠️ v1.5.8 correction (supersedes this file's first edition):** the buyer is NOT an אמרגן.
+אמרגן = artist-side agent/office (matches code ruling BT-56–58, `constants.js:9-10`,
+`UserTypeSelect.jsx:32-34`: "Mapping אמרגן → BOOKER was a critical domain inversion"). The
+demand side is segmented — see §2b. The first edition of this file repeated the inversion in
+the Booker row; corrected below.
 
 ## 1 · The verified mess (evidence, 12 Jul)
 
@@ -46,8 +53,22 @@ workspace, not identity.
 | **ArtistAccess** | Scoped artist-granted access | הרשאת גישה מהאמן | 027 access grants | separate axis from org/team membership |
 | **Production workspace** | Event-production operating context (solo OR team) | משרד הפקה (מפיק אירועים) | workspace_type `'producer'` ⚠️ legacy value | separate from Source Confirmer; never bare "producer" |
 | **Source Confirmer** | Accountless one-claim confirmation task via bounded magic link | מפיק מאשר | role `producer` (fallback only, not in signup) | NO signup, NO dashboard, NO workspace shell — never build as a workspace |
-| **Booker** | Recipient/buyer CONTEXT (usually reading a Passport link) | אמרגן מקבל / מזמין | role `booker` → `discover` screen-set | Passport review needs no viewer workspace by default |
+| **Booker** | Recipient/buyer CONTEXT (usually reading a Passport link) — NEVER אמרגן | מזמין הופעות (segmented — see §2b) | role `booker` → `discover` screen-set | Passport review needs no viewer workspace by default |
 | **Operator** | Internal system console | תפעול | role `operator` | not a customer workspace, no public signup |
+
+## 2b · The demand side is SEGMENTED (DS v1.5.8 — never collapse into "show-business pros")
+
+| Buyer context | HE (Maria to lock final taste) | Language register | Workspace? |
+|---|---|---|---|
+| Professional entertainment buyer (venue/club/festival/promoter/talent buyer) | מזמין הופעות / מנהל בוקינג / פרומוטר | booking/talent language OK | optional (booker screen-set) |
+| Private event client (wedding couple, family event, private party) | לקוח פרטי / מזמין אירוע | simple, non-industry: style, fit, trust, availability | NO — Passport review/contact flow only |
+| Corporate client (company/HR/office manager) | לקוח עסקי | reliability, fit, invoice/logistics | NO by default |
+| Event planner (plans for a client) | מתכנן אירועים | coordination, style/fit, availability, vendors | optional |
+| Event production (executes event/logistics/lineup) | מפיק אירוע / צוות הפקה / חברת הפקה | professional | YES — Production workspace (solo OR team) |
+
+Six questions before touching any copy/route/component (DS v1.5.8 rule): artist-side representation?
+professional buyer? private/non-industry client? event production? source confirmation only? does the
+context need a workspace at all — or only a recipient/Passport-review flow?
 
 **One flag back to Codex (Claude, 12 Jul):** the canon method label on live Passports is
 **PRODUCER-CONFIRMED** (CLAUDE.md + A13 + shipped chips), and a *different* method is
@@ -59,8 +80,9 @@ re-worded to "source-confirmed".
 
 ## 3 · Concrete fixes this unlocks (string-level, zero data risk — rel-07.13)
 
-1. `he.js:99` booker signup label — remove "מפיק אירוע"; align to recipient/אמרגן vocabulary.
-2. `he.js:564` `workspaceBooker: 'מרחב אמרגן'` — disambiguate from the Manager office.
+1. `he.js:99` booker signup label — demand-side wording without bare "מפיק" collision.
+2. `he.js:564` `workspaceBooker: 'מרחב אמרגן'` — buyer workspace must NOT be called אמרגן (inversion).
+2b. All artist-facing HE strings that call the Passport viewer "אמרגן" (he.js 111/161/213/464/505/508) → מזמין vocabulary; agency-team strings (589–669) keep אמרגן — there it is CORRECT (supply side).
 3. `en.js:99` vs `en.js:101` — booker/agency signup labels both claim "manager"; separate per §2.
 4. `en.js:579` / `he.js:562` `workspaceProducer` — Production workspace wording, not bare "producer".
 5. Site `/producers` — one clarifying line: this page is the Source Confirmer flow (magic link,

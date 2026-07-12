@@ -41,7 +41,7 @@ const jsonLd = {
           name: 'Is LOCK free for booking managers?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes. Booking managers (אמרגנים) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
+            text: 'Yes. Booking managers view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
           },
         },
         {

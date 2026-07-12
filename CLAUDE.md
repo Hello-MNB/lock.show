@@ -1,8 +1,9 @@
 WHAT THE APP IS
 
 Pre-booking proof / risk-reduction tool. Helps artists build provable professional identity,
-and helps Israeli booking managers (אמרגנים) evaluate an unfamiliar artist via standardized,
-method-labeled evidence before they risk their name. Talent ≠ bookability. NOT an EPK, NOT a
+and helps Israeli demand-side buyers — booking managers, promoters, event producers, planners,
+private/corporate clients (מזמיני הופעות; NOT אמרגן, which = artist-side agent/office) — evaluate
+an unfamiliar artist via standardized, method-labeled evidence before they risk their name. Talent ≠ bookability. NOT an EPK, NOT a
 booking CRM, NOT a guarantee.
 
 Firewall (absolute): NO score / percentile / rank / "bookability %" / prediction / gauge. Draw

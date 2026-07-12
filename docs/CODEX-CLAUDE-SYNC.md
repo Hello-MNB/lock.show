@@ -52,7 +52,7 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 |---|---|---|---|
 | 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
 | 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
-| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.5.6 (entity-terms audit: Source Confirmer ≠ workspace) — **Claude independent audit PENDING before binding** |
+| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.5.8 (demand-side segmentation; buyer ≠ אמרגן) — **Claude independent audit PENDING before binding** |
 | 3b | Physical files INTO git: logo SVGs, lockshow-icons.svg, 4 atmosphere PNGs, OG exports | Owner/Codex → repo | 🔴 open — only blocker left on the design side |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
@@ -116,3 +116,11 @@ Claude integrates. Open spec-vs-reality hole owned by Claude for rel-07.13: "Add
 - **One flag back to Codex:** "Source Confirmer" (person) vs canon method label "Source-linked" (different method) — proximity risk. Ruling to ratify in DS: Source Confirmer = mechanism name only; chip vocabulary stays exactly canon (Producer-confirmed / Source-linked / Evidence-supported / Self-declared), never "source-confirmed".
 - HE canonical column = Maria's decision (proposal in glossary §2).
 - String-level fixes (6, zero data risk) folded into rel-07.13; enum/DB renames = migration 033+ governed, not now.
+
+## 10. DS v1.5.8 demand-side correction (12 Jul, Codex handoff) — PROCESSED, verdicts
+- **Codex CORRECT, and the code already agreed:** BT-56–58 ruling in `constants.js:9-10` / `UserTypeSelect.jsx:32-34` — אמרגן = supply-side talent agent; mapping אמרגן→BOOKER was "a critical domain inversion". The inversion had survived in: `docs/GLOSSARY.md` v1.0 line "Buyer = אמרגן" (now v1.1, corrected), old CLAUDE.md gloss (corrected), 8 he.js buyer strings (fixed → מזמין vocabulary), 7 en.js agency-team strings that called agents "Booking manager" (fixed → "booking agent"), site faq "(amargan)" + two (אמרגנים) glosses + llms.txt + messages/en.json (Hebrew-in-EN purity violation) + messages/he.json scaffold. ALL fixed 12 Jul, both builds green.
+- Demand-side segmentation table adopted (glossary §2b): pro buyer / private client / corporate / planner / production — register per audience; private clients get NO workspace, only Passport review/contact.
+- Bonus catch from the sweep: 3 live UI strings + 1 comment used forbidden דרכונים → fixed (repo now 0 hits).
+- Claude's earlier ENTITY-GLOSSARY first edition repeated the inversion in its Booker row — self-corrected, marked superseded.
+- Agency-side strings that correctly use אמרגן (roster team) KEPT.
+- HE final taste (מזמין הופעות vs מנהל בוקינג etc. per context) = Maria.

@@ -17,6 +17,14 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Social: IG/FB @lock.show.growth.intelligence, LinkedIn company/lock.show. WhatsApp +972544555060 (= Bit line 054-4555060). Wired: footer CONNECT, JSON-LD sameAs + contactPoints, contact page.
 - Inboxes on lock.show: hello (general/footer), privacy (privacy policy), notifications (transactional/auth FROM — use when Resend wired, P1-11), partners, support (accessibility contact), legal (terms contact), press, sales, marketing, billing, security. Legal-page [email] placeholders now filled per context; STILL placeholder (need owner+counsel): postal address, entity/ח.פ., city, accessibility coordinator NAME + phone + last-updated date.
 
+## ENTITY MODEL (ratified 12 Jul — DS v1.5.8 + docs/ENTITY-GLOSSARY.md + docs/GLOSSARY.md v1.1; MEMORIZE)
+- Person (login) → Workspace (context: data/billing/seats) → Role (permission, not identity). Customer workspaces: **artist** (holds Acts; per-Act evidence+Passport) · **management-agency = Manager office / משרד אמרגנות** (solo OR team) · **event-production** (solo OR team; code value workspace_type='producer' is legacy naming).
+- **אמרגן = ARTIST-SIDE agent/office ONLY (the agency entity). The buyer is NEVER an אמרגן** — code ruling BT-56–58 (`constants.js:9-10`); v1.0 glossary + old CLAUDE.md line had this inverted; corrected 12 Jul everywhere (8 he.js strings, 7 en.js agency strings→"booking agent", site glosses, llms.txt, messages/*.json, CLAUDE.md).
+- **Demand side is SEGMENTED, never collapsed:** pro entertainment buyer (מזמין הופעות/מנהל בוקינג/פרומוטר — booking language OK) · private event client (לקוח פרטי — simple non-industry language) · corporate client · event planner · production team. Private clients need NO workspace — only Passport review/contact flow.
+- **Source Confirmer (מאשר-מקור / מפיק מאשר)** = accountless bounded magic-link task for ONE claim. NOT a role, NOT a workspace, no dashboard, never in signup. Not every source is a producer. Method-label chips stay canon: PRODUCER-CONFIRMED · Source-linked · Evidence-supported · Self-declared (never "source-confirmed").
+- **Booker** (code role `booker`) = recipient/buyer context (discover screen-set); needs no workspace by default. HE: מזמין הופעות.
+- Six questions before ANY entity copy/route/component (DS v1.5.8): artist-side rep? pro buyer? private client? production? source-confirmation only? workspace needed at all?
+
 ## STANDING RULES (owner directives)
 - **ALWAYS update the Version Roadmap artifact** (https://claude.ai/code/artifact/a65d12d9-a66d-442c-9077-306eb05fddd6, source docs/prototypes/00_CURRENT/version-roadmap-v1.html + scratchpad) after ANY planning-relevant change — releases, decisions, blockers. Professional planning must never be lost (owner, 10 Jul).
 - Continue developing → ship fixes → deploy without asking each time (owner, 9 Jul). Answer in ENGLISH. End every reply with the priority board + pending-from-owner list.

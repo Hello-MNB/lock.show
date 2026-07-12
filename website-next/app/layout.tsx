@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     'live performance verification',
     'booking manager',
     'artist passport',
+    'מזמין הופעות',
     'אמרגן',
     'אמן',
     'LOCK',
@@ -165,7 +166,7 @@ const jsonLd = {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (אמרגנים) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
+        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
       provider: { '@id': `${SITE_URL}/#organization` },
       areaServed: {
         '@type': 'Country',

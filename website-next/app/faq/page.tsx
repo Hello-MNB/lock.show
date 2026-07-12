@@ -36,8 +36,8 @@ const faqs = [
         a: 'Any live performer — solo musician, DJ, band, comedian, spoken-word artist. LOCK is artist-type-agnostic. The system adapts to the artist\'s context rather than assuming a specific genre or format.',
       },
       {
-        q: 'Who is a "booking manager" (amargan)?',
-        a: 'A booking manager (amargan) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. LOCK is free for booking managers — no account required to view a Passport.',
+        q: 'Who is a "booking manager"?',
+        a: 'A booking manager is the person who evaluates artists for events and takes reputational risk if a booking goes wrong — a venue or club booker, festival programmer, promoter, or talent buyer. They receive Passport links, open them in a browser, and decide. This is not the same as an amargan (artist-side agent or management office) — LOCK keeps the two sides distinct. LOCK is free for booking managers — no account required to view a Passport.',
       },
       {
         q: 'Who is a "producer" (mefik)?',
