@@ -27,6 +27,8 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Six questions before ANY entity copy/route/component (DS v1.5.8): artist-side rep? pro buyer? private client? production? source-confirmation only? workspace needed at all?
 
 ## STANDING RULES (owner directives)
+- **LINK RULE (owner, 12 Jul): every reply that mentions a document includes a clickable link to it** (GitHub URL on the working branch for repo docs; Drive URL for Drive docs; artifact URL for artifacts).
+- **SIGNATURE RULE (owner, 12 Jul): every reply ends signed "CLAUDE CODE" + areas of responsibility** (development in the repo · code-proof · release mechanics · repo docs-of-record).
 - **ALWAYS update the Version Roadmap artifact** (https://claude.ai/code/artifact/a65d12d9-a66d-442c-9077-306eb05fddd6, source docs/prototypes/00_CURRENT/version-roadmap-v1.html + scratchpad) after ANY planning-relevant change — releases, decisions, blockers. Professional planning must never be lost (owner, 10 Jul).
 - **⭐ NORTH STAR rel-07.13 (owner, 12 Jul): ALL ARTIST SCREENS, perfect interactive flow each** — 12-screen set N1–N12 + flow DOD in SCOPE-rel-2026.07.13 §APP; artist lane first, other entities after; entity architecture verified growth-ready (structural renames 033+ scheduled, not blocking).
 - **DEPLOY LAW (owner, 12 Jul): full deploy ONLY after everything is ready and tested** — one release train, complete Q1–Q8 on preview, then one atomic go-live. No partial deploys. The Version Map artifact is TABBED (owner preference) — keep the tab structure on every update.

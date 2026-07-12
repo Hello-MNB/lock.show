@@ -41,8 +41,8 @@ next-action · its funnel event · a Playwright walkthrough screenshot.
 | # | Artist screen | Route | Flow gap to close |
 |---|---|---|---|
 | N1 | Signup + role select | /signup | wave-A labels; Google click-tested (owner) |
-| N2 | Onboarding (stage name + 1 link) | /onboarding | states + mobile polish |
-| N3 | Artist home + Radar (private) | /artist/home | ONE smart next-action widget; radar interactivity |
+| N2 | Onboarding (stage name + 1 link) | /onboarding | states + mobile polish. **AI chain verified live 12 Jul:** the one link auto-enters the AI pipeline (real Anthropic labeling, firewall-bounded, stub fallback) so the Radar scanning moment shows a REAL node. Deep multi-source scan (canon ≈$1) NOT built yet — Tavily counsel-gated; incremental auto-rescan = backlog |
+| N3 | Artist home + Radar (private) — **owner: CRITICAL screen** | /artist/home | Radar is already interactive in code (planet panel, in-radar batch review, filters, confirm+undo, multi-Act — verified 12 Jul). N3 completes: ONE smart next-action widget · DS v1.6.2 binding · 360px ergonomics · radar-v4 momentum visual (approved prototype) |
 | N4 | Evidence capture | /evidence | states; per-Act correctness (non-default Act bug noted 9 Jul) |
 | N5 | Claim review (approve→Passport) | claim review flow | approval-gate clarity; method labels |
 | N6 | Readiness | /artist/readiness | new voice ✓; interactive next-step |

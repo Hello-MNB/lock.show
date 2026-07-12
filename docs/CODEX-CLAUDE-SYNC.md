@@ -52,7 +52,7 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 |---|---|---|---|
 | 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
 | 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
-| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.6.1 (+ownership/governance map, stale labels removed) — **Claude independent audit PENDING before binding** |
+| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.6.2 (+Artist-lane N1–N12 DOD with per-screen Claude/Cowork proof columns) — **Claude independent audit PENDING before binding** |
 | 3b | Physical files INTO git: logo SVGs, lockshow-icons.svg, 4 atmosphere PNGs, OG exports | Owner/Codex → repo | 🔴 open — only blocker left on the design side |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
@@ -177,7 +177,11 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
-## 15c. GPT Drive-consolidation execution (12 Jul) — Claude verification: CORRECT
+## 15d. Owner verification round (12 Jul evening) — Radar + AI-scan truths (code-verified)
+- **Codex v1.6.2 ACCEPTED** — Artist-lane DOD now IN the DS (right move: Claude builds from governed DS, not roadmap prose). My independent audit now targets v1.6.2; binding still gated on it.
+- **Radar (N3) verified in code** (`RadarUniverse.jsx`, 860 lines, Playwright-smoked): ALREADY interactive — planet panel, in-radar "Needs you" batch review, status+world filters, confirm with named receipt + UNDO, bloom animation, multi-Act sheet. Gaps to "critical/comfortable/effective": DS v1.6.2 token binding · 360px ergonomics pass · next-action integration · radar-v4 momentum visual (approved prototype) — all inside N3.
+- **AI scan pipeline verified END-TO-END (the friendly path exists):** 2-screen onboarding (stage name + ONE link) → link auto-mirrored into evidence (`Onboarding.jsx:123-141`) → fire-and-forget `processEvidence` → server AnthropicClaimProcessor (real API; own retry/backoff; firewall-sanitized to 4 bounded statuses; deterministic stub fallback per canon) → Radar's "scanning" moment lands with a REAL found node.
+- **Honest AI gaps (recorded, not hidden):** (a) the canon "deep scan once ≈$1" (multi-source expansion from the one link) is NOT built — Tavily discovery is key-verified but counsel-gated; (b) no automatic incremental re-scan — labeling runs per evidence batch, user/onboarding-triggered. Deep-scan = post-counsel build; incremental trigger = backlog candidate.
 Verified live via Drive API: root clean (only ★ MASTER CANON + the 2 disclosed Google-native GIGPROOF
 docs) · `_ARCHIVE/2026-07-12 — CONSOLIDATION/TOP LEVEL LEGACY` holds 22 files, ALL correctly prefixed
 "⛔ SUPERSEDED 2026-07-12" (10 re-dated + 12 newly moved — every claimed filename present) · no deletions.
