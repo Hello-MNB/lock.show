@@ -177,6 +177,20 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
+## 17. DS v1.6.6 app-imagery boundary (12 Jul night, Codex) — ACCEPTED + mapping layer started
+- Codex's boundary RATIFIED: Claude builds flows/state/analytics/rendering pipelines — never invents
+  imagery; app content images = user media or named DS assets; new image need → stop and ask Codex.
+  This matches how the OG bank was done (import + render, zero design invention). DS now v1.6.6.
+- **A9 step 1 SHIPPED to branch (commit b5f19b7):** discovery — the app's dark tokens are ALREADY
+  byte-identical to the audit-verified DS values (bg #0B0C0B · surface #14181A · accent #C8F04D ·
+  found #F2C063). Added the missing PAPER task-surface family additively (`ds-paper/card/forest/ink/
+  mist/slate`, AA 14.91) in tailwind.config.js + tokens.ts — zero screens changed (zero-breakage
+  aliasing per §6 Q1). Batch migration of task surfaces to paper = next A9 steps.
+- Cowork's pricing-fork flag CONFIRMED from the repo side: "pricing changes" is in the site scope's
+  OUT list — the new professional-tracks/economy direction needs Maria's A-or-B (recommendation:
+  Option A — own train rel-07.14, after tracks are decided; firewall watch: "money never buys a
+  better story" is canon).
+
 ## 16. DS v1.6.3 INDEPENDENT AUDIT (12 Jul night, Claude) — verdict: **BIND WITH FIXES**
 Read in full from Drive (263,236 bytes, nothing truncated). PASS: version governance (v1.6.3 current) ·
 Artist-lane N1–N12 with per-screen proof columns · color tokens have hex + light/dark + AA ratios
