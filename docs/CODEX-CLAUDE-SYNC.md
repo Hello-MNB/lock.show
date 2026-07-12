@@ -52,7 +52,7 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 |---|---|---|---|
 | 1 | A13 tokens-to-code map | Codex → Claude | ✅ DELIVERED 10 Jul (`docs/design-system/A13-TOKEN-VALUES.md`) — mapping layer UNBLOCKED |
 | 2 | Per-surface token values | Codex → Claude | ✅ delivered inside A13 (app dark-first ratified; marketing paper) |
-| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.6.0 (platform/entity matrix + per-entity DOD + missing-material briefs) — **Claude independent audit PENDING before binding** |
+| 3 | Build-blocker specs (band/binary, Radar states, motion/radius/spacing, HE token, OG contract) | Codex → Claude | 🟠 now v1.6.1 (+ownership/governance map, stale labels removed) — **Claude independent audit PENDING before binding** |
 | 3b | Physical files INTO git: logo SVGs, lockshow-icons.svg, 4 atmosphere PNGs, OG exports | Owner/Codex → repo | 🔴 open — only blocker left on the design side |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
@@ -155,3 +155,18 @@ releases (`docs/GLOSSARY.md`, `docs/ENTITY-GLOSSARY.md`, `docs/VERSIONS.md`,
 project archive updated with every canon change). Codex = design law, needs full briefs. Claude =
 implementation/code-proof + keeps repo docs current. Maria = arbiter; relays between Drive and repo
 where an agent can't reach.
+
+## 14. DS v1.6.1 ownership map (12 Jul) — RATIFIED, one language for all agents
+Codex's v1.6.1 workstream table ACCEPTED — it matches §13 exactly: Codex = brand/DS/UX/UI law
+(evidence: DS + changelog + source map) · Claude = development in the repo (evidence: diffs,
+tests, screenshots, deploy fingerprints) · Cowork = technical/API/flow QA (evidence: logs,
+browser proof, QA report) + Drive/GPT operations (file hygiene, version notes) · Maria = release
+approval, owner pass only. Status corrections on its remaining-gaps table (against repo truth):
+- "App Hebrew/i18n terminology cleanup P0" → **already BUILT** on the branch (commits a3fc01d +
+  f98bb41), awaiting Maria's Hebrew nod + the release train — it is a deploy-pending item, not
+  an open build item.
+- "Real app screenshots after token binding P0" → accepted, = existing Claude obligation (§4 3c),
+  runs after the A13/v1.6.1 binding batch.
+- "OG/social export path" ruling per §6 Q10 split: **Codex produces the export files, Claude
+  commits them into the repo** (website-next/public) and wires metadata.
+All other rows accepted as assigned. These tasks are now on the roadmap task tables (v20).
