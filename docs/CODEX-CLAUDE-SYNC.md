@@ -171,6 +171,20 @@ approval, owner pass only. Status corrections on its remaining-gaps table (again
   commits them into the repo** (website-next/public) and wires metadata.
 All other rows accepted as assigned. These tasks are now on the roadmap task tables (v20).
 
+## 15b. NORTH STAR rel-07.13 (owner, 12 Jul) — read by ALL agents
+**ALL ARTIST SCREENS, perfect interactive flow each** (12-screen set + flow DOD: SCOPE-rel-2026.07.13 §APP).
+Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states specs are the priority
+briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
+growth; structural debts (033+ renames) scheduled, not blocking.
+
+## 15c. GPT Drive-consolidation execution (12 Jul) — Claude verification: CORRECT
+Verified live via Drive API: root clean (only ★ MASTER CANON + the 2 disclosed Google-native GIGPROOF
+docs) · `_ARCHIVE/2026-07-12 — CONSOLIDATION/TOP LEVEL LEGACY` holds 22 files, ALL correctly prefixed
+"⛔ SUPERSEDED 2026-07-12" (10 re-dated + 12 newly moved — every claimed filename present) · no deletions.
+ONE slip: GPT's Drive comments cite DS v1.6.0 as design authority — current is **v1.6.1** (comment-only,
+low risk; next GPT pass should cite "the version in VERSION.json" instead of a number).
+Open per GPT's own DOD: the 2 native Docs need a classify-or-archive decision (Cowork Docs audit).
+
 ## 15. ONE PLACE OF TRUTH + daily sync (owner directive, 12 Jul)
 **Architecture (ratified):** the GitHub repo is the ONE truth for code/docs/versions/vocabulary.
 Claude reads it natively; Cowork + Codex scan the local clone (LAW: `git pull` before every scan);

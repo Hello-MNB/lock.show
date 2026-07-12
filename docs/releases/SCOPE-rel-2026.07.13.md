@@ -29,6 +29,37 @@ Q1–Q8 pass on preview then live · owner pass.
 
 ## APP — rel-app-2026.07.13 · SCOPE
 
+**⭐ NORTH STAR (owner, 12 Jul): ALL ARTIST SCREENS — a perfect, interactive flow on every screen.**
+The artist lane is the primary lane; every other entity item ships in the same train but builds
+AFTER the artist screen-set reaches the flow DOD below.
+
+**Artist screen-set (12 screens) + FLOW DOD per screen** — a screen is DONE only when it has:
+clear entry+exit · ONE primary action · all four states designed (loading / empty / error /
+success) · 360px mobile-first · DS v1.6.1 tokens · supported-not-inspected voice · a visible
+next-action · its funnel event · a Playwright walkthrough screenshot.
+
+| # | Artist screen | Route | Flow gap to close |
+|---|---|---|---|
+| N1 | Signup + role select | /signup | wave-A labels; Google click-tested (owner) |
+| N2 | Onboarding (stage name + 1 link) | /onboarding | states + mobile polish |
+| N3 | Artist home + Radar (private) | /artist/home | ONE smart next-action widget; radar interactivity |
+| N4 | Evidence capture | /evidence | states; per-Act correctness (non-default Act bug noted 9 Jul) |
+| N5 | Claim review (approve→Passport) | claim review flow | approval-gate clarity; method labels |
+| N6 | Readiness | /artist/readiness | new voice ✓; interactive next-step |
+| N7 | Passport self + publish | /artist/passport | publish sheet; share; two-persona preview |
+| N8 | Producer-confirm request | /artist/passport → request sheet | wire to REAL magic link (was A4) |
+| N9 | Requests inbox | /artist/requests | producer-reply landing ✓; states |
+| N10 | Payment / offer | /artist/offer | Bit reference flow; entitlement visibility |
+| N11 | Settings (incl. WhatsApp share) | settings | wave-A strings ✓; states |
+| N12 | Context switcher: + New Act · Add workspace | switcher | A2+A3 land here |
+
+**Entity-architecture readiness (owner, 12 Jul: "לוודא שהארכיטקטורה נכונה כדי שנוכל להתפתח"):**
+verified correct for growth — Person→Workspace→Role (027) · per-Act evidence proven in DB ·
+ArtistAccess separate from membership · approval-gate firewall on all 4 read paths · booker/
+confirmer need no workspace. Known structural debts, scheduled NOT blocking: workspace_type
+value `'producer'`→`'production'` + role-enum renames (migration 033+, after backups) · uniform
+switching (target) · "Add workspace" UI (N12, this train).
+
 **Goal (one sentence):** every entity can actually operate its context (create workspace, work
 its home screen, run its core flow) in DS-true, vocabulary-true, mobile-first screens.
 
