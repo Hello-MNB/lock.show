@@ -82,9 +82,10 @@ after Supabase Pro backups) · artist reply-channel · open booker discovery · 
 Radar v5 emotional layer · receipts/invoices · Hebrew-completion pass (141 keys) · any new
 entity screen not listed.
 
-**Dependencies:** Maria — canon-lock trio (מאשר-מקור · Act HE · wave-A nod) BLOCKS A1 deploy ·
-Cowork — one-time preview hook, apply 032 (blocks A6/A7), Q3–Q5 lanes · Codex — nothing blocks
-the app scope; imagery/OG are site-S7 only.
+**Dependencies:** Maria — ✅ **canon-lock APPROVED 12 Jul** (מאשר-מקור ratified · wave-A cleared ·
+Act proceeds with the already-live term אקט; formal taste-ratification pending, non-blocking) —
+**A1 is CLEARED for the train** · Cowork — one-time preview hook, apply 032 (blocks A6/A7), Q3–Q5
+lanes · Codex — nothing blocks the app scope; imagery/OG are site-S7 only.
 
 **DOD:** `npm run verify` green (nav 34 · i18n purity · build · demo) · migration 032 applied +
 regression · Q1–Q8 on preview then live (incl. 360px mobile pass on Radar/roster/Passport/

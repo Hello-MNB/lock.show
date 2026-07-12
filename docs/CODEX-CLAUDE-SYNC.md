@@ -177,6 +177,13 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
+## 15e. OWNER CANON-LOCK APPROVED (12 Jul evening, "מאשרת") + Codex handoff verdicts
+- ✅ מאשר-מקור ratified as the ONLY Source-Confirmer UI term (מפיק מאשר = docs-only alias).
+- ✅ Terminology wave (buyer ≠ אמרגן) APPROVED → A1/S1 cleared for the train (deploy law still: rides the train, no partial deploy).
+- Act HE: discovered ALREADY LIVE as **אקט** (he.js:710-715) — N12 proceeds with אקט; formal taste-ratification on the pending list, non-blocking.
+- **`/agencies` 404 (Codex finding): verified NOT a break** — zero references in site code/nav/sitemap/llms.txt; the route never existed. Ruling: no agencies page in the pilot (Gate ICP = artist/buyer/producer); Manager-office audience is answered on /pricing. Post-validation backlog candidate. Codex was right to flag rather than assume.
+- Codex handoff table accepted; its "visual production next, not more DS theory" recommendation ENDORSED (second time) — imagery + OG bank is Codex's lane now.
+
 ## 15d. Owner verification round (12 Jul evening) — Radar + AI-scan truths (code-verified)
 - **Codex v1.6.2 ACCEPTED** — Artist-lane DOD now IN the DS (right move: Claude builds from governed DS, not roadmap prose). My independent audit now targets v1.6.2; binding still gated on it.
 - **Radar (N3) verified in code** (`RadarUniverse.jsx`, 860 lines, Playwright-smoked): ALREADY interactive — planet panel, in-radar "Needs you" batch review, status+world filters, confirm with named receipt + UNDO, bloom animation, multi-Act sheet. Gaps to "critical/comfortable/effective": DS v1.6.2 token binding · 360px ergonomics pass · next-action integration · radar-v4 momentum visual (approved prototype) — all inside N3.

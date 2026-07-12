@@ -88,12 +88,14 @@ context need a workspace at all — or only a recipient/Passport-review flow?
 Growth rule: only Artist, Manager office, Production are workspaces that can grow solo→team.
 Buyer-facing copy rule (private register): warm and direct — "מזמינים אמן להופעה?" — never venue jargon.
 
-## 2d · OPEN HEBREW RULINGS (Maria — the ONLY canon items still open)
-1. **Source Confirmer HE:** canon GLOSSARY already locks **מאשר-מקור** (v1.0, 8 Jul) — Cowork's localizer
-   independently recommends the same. Ruling needed: confirm מאשר-מקור as the ONLY UI term and retire
-   "מפיק מאשר" from copy (kept only as historical alias), OR keep מפיק מאשר. Recommendation: מאשר-מקור.
-2. **Act HE:** still ⏳ (v1.0 rule: never invent one). Options on the table: מופע (can read as a single gig)
-   vs פרויקט (broader). One-word ruling needed before Act appears in Hebrew UI.
+## 2d · HEBREW RULINGS — status after owner approval (12 Jul evening, "מאשרת")
+1. **Source Confirmer HE: ✅ RATIFIED — מאשר-מקור is the ONLY UI term.** "מפיק מאשר" retired from copy
+   (kept as historical alias in docs only). Owner approved 12 Jul.
+2. **Terminology wave (buyer ≠ אמרגן strings): ✅ APPROVED** — wave A cleared to ship with the train.
+3. **Act HE — de-facto live term discovered: the shipped app ALREADY says אקט** (`he.js:710-715`:
+   'האקטים שלך' · 'החלף אקט' · 'אקט חדש מתחיל ריק'). No invention needed — N12 proceeds with אקט.
+   Formal owner taste-ratification of אקט (vs switching to מופע/פרויקט) stays on the pending list;
+   NOT a train blocker.
 
 **One flag back to Codex (Claude, 12 Jul):** the canon method label on live Passports is
 **PRODUCER-CONFIRMED** (CLAUDE.md + A13 + shipped chips), and a *different* method is

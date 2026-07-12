@@ -30,7 +30,7 @@ into show-business professionals:
 | Event production (workspace) | production office / team | מפיק אירוע / צוות הפקה / חברת הפקה | solo OR team; executes event/logistics/lineup |
 | Representative | artist representative | נציג אמן | — |
 | Internal | operator | אופרטור | not a customer workspace, no public signup |
-| Source Confirmer | source confirmer (capability, not a role — magic link, no account) | מאשר-מקור (מפיק מאשר = the producer instance) | no signup, no dashboard, no workspace shell; not every source is a producer |
+| Source Confirmer | source confirmer (capability, not a role — magic link, no account) | **מאשר-מקור — RATIFIED as the only UI term (owner, 12 Jul)**; "מפיק מאשר" = historical alias, docs only | no signup, no dashboard, no workspace shell; not every source is a producer |
 
 **Forbidden blur:** buyer ≡ אמרגן (v1.0 error) · booker signup labeled מפיק · private clients addressed
 in industry jargon · Source Confirmer built/described as a workspace.
@@ -53,7 +53,7 @@ in industry jargon · Source Confirmer built/described as a workspace.
 | ARTIFACT-SUPPORTED | נתמך בראיה/מסמך/מקור | נתמך בראיות |
 | generic "verified" | — | **מאומת** (never generic; current repo has 10 occurrences → HE-pass fix list) |
 | Draw hero (public) | כוח בוקינג | עוצמת מכירה (INTERNAL ONLY — never in UI) |
-| Act | ⏳ NO locked HE term — R00 ruling pending; never invent one |
+| Act | de-facto live term = **אקט** (already shipped in app UI, he.js:710-715); formal R00 taste-ratification pending — never invent a THIRD term |
 
 ## Voice law
 Professional restraint; evidence-grade; show-business warmth without hype. NO emoji in UI/legal copy. No exclamation-mark salesiness. "check, don't trust". EN and HE each fully professional — never mixed in one view (LANGUAGE LAW, see LOCALIZATION-MATRIX.md).
