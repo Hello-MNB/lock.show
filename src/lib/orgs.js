@@ -302,6 +302,33 @@ export async function revokeArtistAccess(id) {
   return { ok: true }
 }
 
+// ── Migration-032 RPCs (rel-07.13 A6+A7) — roster-from-grants + production inbox ──
+// Both return null (not []) when 032 is not applied yet, so screens can render
+// their honest needs-state gap instead of a fake empty state. 42883 = undefined
+// function (SQL), PGRST202 = missing RPC (PostgREST).
+const RPC_MISSING = (e) => e && (e.code === '42883' || e.code === 'PGRST202' || /function .* does not exist/i.test(e.message || ''))
+
+// Manager office: ACTIVE consented grants → roster rows (grant ≠ ownership).
+export async function listRosterGrants() {
+  if (DEMO) return demoRadarRecords.map((r) => ({
+    grant_id: `demo-grant-${r.artist.id}`, artist_id: r.artist.id,
+    artist_stage_name: r.artist.stage_name || r.artist.name, artist_city: null,
+    scope: ['view'], territory: null, status: 'active',
+    consent_at: '2026-07-01T00:00:00Z', expires_at: null, created_at: '2026-07-01T00:00:00Z',
+  }))
+  const { data, error } = await supabase.rpc('list_roster_grants')
+  if (error) { if (RPC_MISSING(error)) return null; throw error }
+  return data ?? []
+}
+
+// Production workspace: availability requests this org sent, with status.
+export async function listProductionRequests() {
+  if (DEMO) return []
+  const { data, error } = await supabase.rpc('list_production_requests')
+  if (error) { if (RPC_MISSING(error)) return null; throw error }
+  return data ?? []
+}
+
 // ── RADAR inputs (O5 agencies): per-roster-artist record for the §20 rules engine. ──
 export async function getRadarInputs(orgId) {
   if (DEMO) return demoRadarRecords
