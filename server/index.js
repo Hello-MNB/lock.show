@@ -64,7 +64,49 @@ app.use(cors({
     return cb(null, false) // not allowlisted → no CORS headers; the browser blocks it
   },
 }))
-app.use(express.json({ limit: '2mb' }))
+// Rate limiting (G14-1) — tiny in-memory sliding window, per IP, no new deps.
+// Applied to ALL routes (public + authed). 429 {error:'rate_limited'} beyond
+// RATE_LIMIT_PER_MIN requests in the trailing 60s.
+const rateBuckets = new Map() // ip → timestamps (ms) inside the trailing window
+function clientIp(req) {
+  // Vercel / any proxy puts the caller first in x-forwarded-for; fall back to socket.
+  const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+  return fwd || req.socket?.remoteAddress || 'unknown'
+}
+app.use((req, res, next) => {
+  const now = Date.now()
+  const ip = clientIp(req)
+  let hits = rateBuckets.get(ip)
+  if (!hits) { hits = []; rateBuckets.set(ip, hits) }
+  while (hits.length && now - hits[0] > 60_000) hits.shift() // slide the window
+  if (hits.length >= RATE_LIMIT_PER_MIN) return res.status(429).json({ error: 'rate_limited' })
+  hits.push(now)
+  // Memory bound: on pathological IP churn, sweep idle buckets.
+  if (rateBuckets.size > 10_000) {
+    for (const [k, v] of rateBuckets) {
+      if (!v.length || now - v[v.length - 1] > 60_000) rateBuckets.delete(k)
+    }
+  }
+  next()
+})
+
+// Schema guards (G14-2): JSON bodies capped at 100kb (every route here takes a
+// tiny JSON payload — evidence FILES go client→Supabase Storage, never through
+// this server), and no string field may exceed MAX_FIELD_CHARS.
+app.use(express.json({ limit: '100kb' }))
+function hasOverlongString(v, depth = 0) {
+  if (depth > 4 || v == null) return false
+  if (typeof v === 'string') return v.length > MAX_FIELD_CHARS
+  if (Array.isArray(v)) return v.some((x) => hasOverlongString(x, depth + 1))
+  if (typeof v === 'object') return Object.values(v).some((x) => hasOverlongString(x, depth + 1))
+  return false
+}
+app.use((req, res, next) => {
+  if (req.body && hasOverlongString(req.body)) {
+    return res.status(400).json({ error: 'field_too_long', max_chars: MAX_FIELD_CHARS })
+  }
+  next()
+})
 
 // ──────────────────────────────────────────────────────────
 // AUTH (G11-2). Every route that mutates or reads private data requires a
@@ -117,9 +159,32 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'configured' : 'mock', model: MODEL })
 })
 
+// AI-spend caps (G14-3) — per-user daily counter, in-memory. Key = userId + UTC
+// day; stale (non-today) keys are swept on write so the map never grows past
+// one day's active users.
+const dailyItemCount = new Map() // `${userId}:${YYYY-MM-DD}` → AI items processed today
+const dayKey = (userId) => `${userId}:${new Date().toISOString().slice(0, 10)}`
+function bumpDailyCount(userId, n) {
+  const key = dayKey(userId)
+  dailyItemCount.set(key, (dailyItemCount.get(key) || 0) + n)
+  const today = key.slice(-10)
+  for (const k of dailyItemCount.keys()) if (!k.endsWith(today)) dailyItemCount.delete(k)
+}
+
+// Dedup basis (G14-4): evidence_artifacts has no stored hash column, but its
+// content IS derivable — value + public_url + file_url are the exact inputs the
+// AI labels. sha256 over them identifies "same evidence content" for an artist.
+// Rows with none of the three (nothing to label from) get no hash → never deduped.
+function evidenceHash(ev) {
+  const basis = [ev.value, ev.public_url, ev.file_url].filter(Boolean).join('\n')
+  return basis ? createHash('sha256').update(basis).digest('hex') : null
+}
+
 // ──────────────────────────────────────────────────────────
 // POST /api/process-evidence { artistId }
 // Reads submitted evidence, labels each via AiClaimProcessor, writes Claims.
+// G14 caps: MAX_ITEMS_PER_JOB per call · MAX_ITEMS_PER_USER_DAY per user ·
+// content-hash dedup against this artist's already-processed evidence.
 // ──────────────────────────────────────────────────────────
 app.post('/api/process-evidence', requireAuth, async (req, res) => {
   try {
@@ -140,8 +205,44 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       .in('status', ['submitted', 'error'])
     if (evErr) throw evErr
 
-    const claims = []
+    // Dedup (G14-4): skip pending items whose content hash was already processed
+    // for THIS artist (cross-batch: compare against processed rows in the DB;
+    // in-batch: the same Set catches duplicates inside this request).
+    const { data: doneRows, error: doneErr } = await admin
+      .from('evidence_artifacts')
+      .select('value, public_url, file_url')
+      .eq('artist_id', artistId)
+      .eq('status', 'processed')
+    if (doneErr) throw doneErr
+    const seen = new Set((doneRows ?? []).map(evidenceHash).filter(Boolean))
+    const candidates = []
+    const duplicates = []
     for (const ev of evidence ?? []) {
+      const h = evidenceHash(ev)
+      if (h && seen.has(h)) { duplicates.push(ev); continue }
+      if (h) seen.add(h)
+      candidates.push(ev)
+    }
+
+    // Per-request cap (G14-3a): reject the batch outright rather than silently
+    // truncating — the caller sees exactly why nothing was processed.
+    if (candidates.length > MAX_ITEMS_PER_JOB) {
+      return res.status(400).json({ error: 'too_many_items', max: MAX_ITEMS_PER_JOB, pending: candidates.length })
+    }
+    // Per-user daily cap (G14-3b).
+    const usedToday = dailyItemCount.get(dayKey(req.userId)) || 0
+    if (usedToday + candidates.length > MAX_ITEMS_PER_USER_DAY) {
+      return res.status(429).json({ error: 'daily_limit_reached', max: MAX_ITEMS_PER_USER_DAY, used: usedToday })
+    }
+
+    // Duplicates never reach the AI: mark them processed WITHOUT a new claim —
+    // the identical content already produced this artist's claim earlier.
+    for (const dup of duplicates) {
+      await admin.from('evidence_artifacts').update({ status: 'processed' }).eq('id', dup.id)
+    }
+
+    const claims = []
+    for (const ev of candidates) {
       // TRUTHFUL PROVENANCE (G12): labelWithMethod reports the ACTUAL execution
       // path — 'anthropic' only when the API call succeeded, 'deterministic_fallback'
       // when the stub ran after a terminal API failure, 'mock' when no key is set.
@@ -176,6 +277,9 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
         .update({ status: aiFailed ? 'error' : 'processed' }).eq('id', ev.id)
     }
 
+    // Count this batch against the caller's daily AI budget (G14-3b).
+    if (claims.length) bumpDailyCount(req.userId, claims.length)
+
     // Response reports the REAL per-item methods (each claim row carries its
     // extraction_method) plus a truthful summary — never key-presence.
     const methods = claims.reduce((acc, c) => {
@@ -184,7 +288,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       return acc
     }, {})
     const ai = !ANTHROPIC_KEY ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
-    res.json({ processed: claims.length, ai, methods, claims })
+    res.json({ processed: claims.length, deduped: duplicates.length, ai, methods, claims })
   } catch (e) {
     console.error('[process-evidence]', e)
     res.status(500).json({ error: 'server_error' })
@@ -405,6 +509,16 @@ app.post('/api/request-confirmation', requireAuth, async (req, res) => {
   }
 })
 
+// Token expiry (G15-1): producer_confirmations.created_at + CONFIRM_TOKEN_TTL_DAYS.
+// 410 keeps the client's existing dead-link ceremony (ProducerConfirm maps
+// status 410 / "expir" to its 'expired' state). NOTE (G15-3, audited): no route
+// in this file ever logs the raw token — catch blocks log error objects only,
+// and the minted token appears solely in the JSON response to its owner.
+function confirmTokenExpired(createdAt) {
+  if (!createdAt) return false // pre-005 rows without created_at can't be aged — let them through
+  return Date.now() - new Date(createdAt).getTime() > CONFIRM_TOKEN_TTL_DAYS * 86_400_000
+}
+
 // GET /api/confirm/:token — producer opens the link; sees the claim + artist (safe fields only).
 app.get('/api/confirm/:token', async (req, res) => {
   try {
@@ -412,10 +526,11 @@ app.get('/api/confirm/:token', async (req, res) => {
     const { token } = req.params
     const { data: pc, error } = await admin
       .from('producer_confirmations')
-      .select('id, response, revoked, responded_at, claim_id, artist_id')
+      .select('id, response, revoked, responded_at, claim_id, artist_id, created_at')
       .eq('token', token).maybeSingle()
     if (error) throw error
     if (!pc) return res.status(404).json({ error: 'Invalid or expired link.' })
+    if (confirmTokenExpired(pc.created_at)) return res.status(410).json({ error: 'link_expired' })
     const { data: claim } = await admin.from('claims').select('value, claim_type').eq('id', pc.claim_id).maybeSingle()
     const { data: artist } = await admin.from('artists').select('stage_name').eq('id', pc.artist_id).maybeSingle()
     res.json({
@@ -436,9 +551,26 @@ app.post('/api/confirm/:token', async (req, res) => {
     const { token } = req.params
     const { response, revoke } = req.body || {}
     const { data: pc, error } = await admin
-      .from('producer_confirmations').select('id, claim_id, artist_id').eq('token', token).maybeSingle()
+      .from('producer_confirmations')
+      .select('id, claim_id, artist_id, response, revoked, responded_at, created_at')
+      .eq('token', token).maybeSingle()
     if (error) throw error
     if (!pc) return res.status(404).json({ error: 'Invalid or expired link.' })
+    if (confirmTokenExpired(pc.created_at)) return res.status(410).json({ error: 'link_expired' })
+
+    // Single-use rule (G15-2). Verified pre-change behaviour: this route
+    // OVERWROTE a recorded response on every POST. Now, once a response is on
+    // record (and not revoked), a repeated response POST is idempotent — it
+    // returns the recorded state and writes nothing. Two lifecycle moves stay
+    // deliberately allowed because they are product features, not replays:
+    // · revoke of a live yes/partial (the ceremony's own Revoke button)
+    // · a fresh response AFTER a revoke (re-confirmation path)
+    if (!revoke && pc.responded_at && !pc.revoked) {
+      return res.json({ ok: true, response: pc.response, already_recorded: true })
+    }
+    if (revoke && pc.revoked) {
+      return res.json({ ok: true, revoked: true, already_recorded: true })
+    }
 
     if (revoke) {
       await admin.from('producer_confirmations').update({ revoked: true }).eq('id', pc.id)
