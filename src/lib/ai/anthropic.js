@@ -64,6 +64,20 @@ export class AnthropicClaimProcessor {
     }
   }
 
+  // Truthful-provenance variant (G12): same behavior as label(), but reports
+  // the ACTUAL execution path — 'anthropic' ONLY when the API call succeeded,
+  // 'deterministic_fallback' when the stub ran after a terminal API failure.
+  // aiFailed lets the caller mark the item retryable instead of silently done.
+  async labelWithMethod(ev) {
+    try {
+      const json = await this.#callWithRetry(ev)
+      return { label: this.#sanitize(json, ev), method: 'anthropic', aiFailed: false }
+    } catch (err) {
+      console.error('[anthropic] label failed, using deterministic fallback:', err?.message || err)
+      return { label: await this.#fallback.label(ev), method: 'deterministic_fallback', aiFailed: true }
+    }
+  }
+
   async #callWithRetry(ev) {
     const { default: Anthropic } = await import('@anthropic-ai/sdk')
     const client = new Anthropic({ apiKey: this.#apiKey, maxRetries: 0 }) // we own the retry loop

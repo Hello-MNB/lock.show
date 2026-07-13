@@ -40,21 +40,77 @@ const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : nu
 const processor = createClaimProcessor(ANTHROPIC_KEY, MODEL)
 
 const app = express()
-app.use(cors())
+
+// CORS allowlist (G11-1). Origins come from ALLOWED_ORIGINS (comma-separated env);
+// default = production + local dev. Requests without an Origin header (curl,
+// server-to-server, same-origin) pass through — CORS only gates browsers.
+const ALLOWED_ORIGINS = (realValue(process.env.ALLOWED_ORIGINS)
+  ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+  : ['https://app.lock.show', 'https://lock.show', 'http://localhost:5173'])
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true)
+    return cb(null, false) // not allowlisted → no CORS headers; the browser blocks it
+  },
+}))
 app.use(express.json({ limit: '2mb' }))
+
+// ──────────────────────────────────────────────────────────
+// AUTH (G11-2). Every route that mutates or reads private data requires a
+// Supabase user JWT: Authorization: Bearer <access_token>, verified against
+// Supabase Auth via the service client. Attaches req.userId.
+// Public-by-design routes (health, public passport GET, passport-signal,
+// tokened producer /confirm links) skip this.
+// ──────────────────────────────────────────────────────────
+async function requireAuth(req, res, next) {
+  try {
+    const m = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '')
+    if (!m || !admin) return res.status(401).json({ error: 'auth_required' })
+    const { data, error } = await admin.auth.getUser(m[1])
+    if (error || !data?.user?.id) return res.status(401).json({ error: 'auth_required' })
+    req.userId = data.user.id
+    next()
+  } catch (e) {
+    console.error('[auth]', e)
+    res.status(401).json({ error: 'auth_required' })
+  }
+}
+
+// Ownership gate (G11-3): artists.created_by must equal the authenticated user.
+// Writes the failure response itself; caller just returns false.
+async function requireArtistOwner(req, res, artistId) {
+  if (!artistId) {
+    res.status(400).json({ error: 'artistId required' })
+    return false
+  }
+  const { data: artist, error } = await admin
+    .from('artists').select('id, created_by').eq('id', artistId).maybeSingle()
+  if (error) throw error
+  if (!artist) {
+    res.status(404).json({ error: 'Artist not found.' })
+    return false
+  }
+  if (artist.created_by !== req.userId) {
+    res.status(403).json({ error: 'forbidden' })
+    return false
+  }
+  return true
+}
 
 // ──────────────────────────────────────────────────────────
 // GET /api/health
 // ──────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'live' : 'mock', model: MODEL })
+  // 'configured' = a key is present; it does NOT claim any call succeeded
+  // (truthful-provenance rule: liveness is only reported per processed item).
+  res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'configured' : 'mock', model: MODEL })
 })
 
 // ──────────────────────────────────────────────────────────
 // POST /api/process-evidence { artistId }
 // Reads submitted evidence, labels each via AiClaimProcessor, writes Claims.
 // ──────────────────────────────────────────────────────────
-app.post('/api/process-evidence', async (req, res) => {
+app.post('/api/process-evidence', requireAuth, async (req, res) => {
   try {
     if (!admin) {
       return res.status(400).json({
@@ -63,17 +119,30 @@ app.post('/api/process-evidence', async (req, res) => {
     }
     const { artistId } = req.body || {}
     if (!artistId) return res.status(400).json({ error: 'artistId required' })
+    if (!(await requireArtistOwner(req, res, artistId))) return
 
+    // 'error' items (a previous terminal AI failure — see below) are retryable here.
     const { data: evidence, error: evErr } = await admin
       .from('evidence_artifacts')
       .select('*')
       .eq('artist_id', artistId)
-      .eq('status', 'submitted')
+      .in('status', ['submitted', 'error'])
     if (evErr) throw evErr
 
     const claims = []
     for (const ev of evidence ?? []) {
-      const labelled = await processor.label(ev)
+      // TRUTHFUL PROVENANCE (G12): labelWithMethod reports the ACTUAL execution
+      // path — 'anthropic' only when the API call succeeded, 'deterministic_fallback'
+      // when the stub ran after a terminal API failure, 'mock' when no key is set.
+      const { label: labelled, method, aiFailed } = await processor.labelWithMethod(ev)
+
+      // Retry of a previously failed item: replace its fallback-labelled claim
+      // (never touches 'anthropic'/'mock' claims) so a retry doesn't duplicate.
+      if (ev.status === 'error') {
+        await admin.from('claims').delete()
+          .eq('evidence_id', ev.id).eq('extraction_method', 'deterministic_fallback')
+      }
+
       const claim = {
         artist_id: artistId,
         evidence_id: ev.id,
@@ -84,18 +153,30 @@ app.post('/api/process-evidence', async (req, res) => {
         verified_by: 'system',
         verified_at: new Date().toISOString(),
         visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
-        extraction_method: ANTHROPIC_KEY ? 'anthropic' : 'mock',
-        model_version: ANTHROPIC_KEY ? MODEL : 'mock-v1',
+        extraction_method: method,
+        model_version: method === 'anthropic' ? MODEL : 'mock-v1',
         reason_code: labelled.reason || null,
       }
       const { data: inserted } = await admin.from('claims').insert(claim).select().single()
       claims.push(inserted)
-      await admin.from('evidence_artifacts').update({ status: 'processed' }).eq('id', ev.id)
+      // Terminal AI failure → schema status 'error' (visible + retryable),
+      // not a silent 'processed' that masquerades the stub label as done.
+      await admin.from('evidence_artifacts')
+        .update({ status: aiFailed ? 'error' : 'processed' }).eq('id', ev.id)
     }
-    res.json({ processed: claims.length, ai: ANTHROPIC_KEY ? 'live' : 'mock', claims })
+
+    // Response reports the REAL per-item methods (each claim row carries its
+    // extraction_method) plus a truthful summary — never key-presence.
+    const methods = claims.reduce((acc, c) => {
+      const m = c?.extraction_method || 'unknown'
+      acc[m] = (acc[m] || 0) + 1
+      return acc
+    }, {})
+    const ai = !ANTHROPIC_KEY ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
+    res.json({ processed: claims.length, ai, methods, claims })
   } catch (e) {
     console.error('[process-evidence]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -158,7 +239,7 @@ async function buildSafePayload(artistId) {
 // The public Passport reads the snapshot, so later visibility edits don't
 // silently change what a buyer already saw until the artist re-publishes.
 // ──────────────────────────────────────────────────────────
-app.post('/api/publish/:artistId', async (req, res) => {
+app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
   try {
     if (!admin) {
       return res.status(400).json({
@@ -166,6 +247,7 @@ app.post('/api/publish/:artistId', async (req, res) => {
       })
     }
     const { artistId } = req.params
+    if (!(await requireArtistOwner(req, res, artistId))) return
     const payload = await buildSafePayload(artistId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 
@@ -180,7 +262,7 @@ app.post('/api/publish/:artistId', async (req, res) => {
     res.json({ ok: true, published: true })
   } catch (e) {
     console.error('[publish]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -219,7 +301,7 @@ app.get('/api/passport/:artistId', async (req, res) => {
     res.json(payload)
   } catch (e) {
     console.error('[passport]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -244,7 +326,7 @@ app.post('/api/passport-signal', async (req, res) => {
     res.json({ ok: true })
   } catch (e) {
     console.error('[passport-signal]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -269,9 +351,13 @@ async function notifyArtistOwner(artistId, { type, body, link }) {
 
 // POST /api/notify { artistId, type, body, link } — generic fire-and-forget
 // notification writer used by the admin console (payment activated) and the
-// public availability-request form (request received). Always 200s so the
-// caller's primary action is never blocked by a notification hiccup.
-app.post('/api/notify', async (req, res) => {
+// availability-request form (request received). Always 200s (once authenticated)
+// so the caller's primary action is never blocked by a notification hiccup.
+// G11: requires a logged-in user — an anonymous caller could otherwise write
+// arbitrary notifications into any artist owner's bell via the service role.
+// Ownership is deliberately NOT required: this writer is cross-user by design
+// (operator/booker → artist owner).
+app.post('/api/notify', requireAuth, async (req, res) => {
   const { artistId, type, body, link } = req.body || {}
   if (admin && artistId && type && body) await notifyArtistOwner(artistId, { type, body, link })
   res.json({ ok: true })
@@ -285,7 +371,7 @@ app.post('/api/notify', async (req, res) => {
 
 // POST /api/request-confirmation { claimId, producerContact }
 // Artist generates a tokened magic link to send a producer (manual, like wa.me).
-app.post('/api/request-confirmation', async (req, res) => {
+app.post('/api/request-confirmation', requireAuth, async (req, res) => {
   try {
     if (!admin) return res.status(400).json({ error: 'Supabase not configured.' })
     const { claimId, producerContact } = req.body || {}
@@ -294,6 +380,8 @@ app.post('/api/request-confirmation', async (req, res) => {
       .from('claims').select('id, artist_id').eq('id', claimId).maybeSingle()
     if (cErr) throw cErr
     if (!claim) return res.status(404).json({ error: 'Claim not found.' })
+    // G11: claim → artist → owner; only the artist's owner may mint a token.
+    if (!(await requireArtistOwner(req, res, claim.artist_id))) return
     const token = randomUUID()
     const { error: iErr } = await admin.from('producer_confirmations').insert({
       token, claim_id: claim.id, artist_id: claim.artist_id, producer_contact: producerContact || null,
@@ -302,7 +390,7 @@ app.post('/api/request-confirmation', async (req, res) => {
     res.json({ token, path: `/confirm/${token}` })
   } catch (e) {
     console.error('[request-confirmation]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -326,7 +414,7 @@ app.get('/api/confirm/:token', async (req, res) => {
     })
   } catch (e) {
     console.error('[confirm-get]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -392,7 +480,7 @@ app.post('/api/confirm/:token', async (req, res) => {
     res.json({ ok: true, response })
   } catch (e) {
     console.error('[confirm-post]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -400,7 +488,7 @@ app.post('/api/confirm/:token', async (req, res) => {
 // as a serverless function (VERCEL=1 is set automatically there), so skip listen.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ANTHROPIC_KEY ? 'live' : 'mock'}, supabase: ${admin ? 'on' : 'off'})`)
+    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ANTHROPIC_KEY ? 'configured' : 'mock'}, supabase: ${admin ? 'on' : 'off'})`)
   })
 }
 
