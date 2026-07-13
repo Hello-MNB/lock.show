@@ -65,8 +65,9 @@ value `'producer'`→`'production'` + role-enum renames (a FUTURE structural mig
 number only when authored, after Supabase Pro backups; 033 is already taken by
 waitlist_outreach_roles) · uniform switching (target) · "Add workspace" UI (N12, this train).
 
-**Migration status (refreshed 13 Jul):** 032 APPLIED+VERIFIED · 033 APPLIED · 034 DRAFTED, not
-applied · 035 DRAFTED, not applied (035 blocks G3 add-workspace going live). Future structural
+**Migration status (refreshed 13 Jul, per SYNC §28):** 032 APPLIED+VERIFIED · 033 APPLIED ·
+034 DRAFTED, not applied (additive-only event-CHECK widening; Cowork guides Maria to apply) ·
+035 APPLIED ✓ (Cowork-verified — G3 add-workspace live-block cleared). Future structural
 renames get migration numbers only when actually authored — never pre-reserved.
 
 **Goal (one sentence):** every entity can actually operate its context (create workspace, work
@@ -94,11 +95,11 @@ entity screen not listed.
 **Dependencies:** Maria — ✅ **canon-lock APPROVED 12 Jul** (מאשר-מקור ratified · wave-A cleared ·
 Act proceeds with the already-live term אקט; formal taste-ratification pending, non-blocking) —
 **A1 is CLEARED for the train** · Cowork — one-time preview hook, 032 ✅ APPLIED+VERIFIED
-(A6/A7 unblocked), apply 034+035 (drafted, not applied — 035 blocks G3 live), Q3–Q5
-lanes · Codex — nothing blocks the app scope; imagery/OG are site-S7 only.
+(A6/A7 unblocked), 035 ✅ APPLIED (Cowork-verified — G3 unblocked), apply 034 (drafted,
+additive-only, guide Maria), Q3–Q5 lanes · Codex — nothing blocks the app scope; imagery/OG are site-S7 only.
 
-**DOD:** `npm run verify` green (nav 34 · i18n purity · build · demo) · migration 032 ✅
-applied+verified (035 must apply before G3 add-workspace goes live) · Q1–Q8 on preview then live
+**DOD:** `npm run verify` green (nav 34 · i18n purity · build · demo) · migrations 032 + 035 ✅
+applied+verified (034 additive, pending Cowork-guided apply) · Q1–Q8 on preview then live
 (incl. 360px mobile pass on Radar/roster/Passport/recipient) · embed hash parity · owner pass.
 
 ## TRACEABILITY MATRIX (V2, added 13 Jul) — every scope row → gap register / pre-register closure / N/A
@@ -128,9 +129,9 @@ honestly traced are marked UNTRACED — they are verification debt, not silently
 | N9 requests inbox | Producer-reply landing closed pre-register (✓ in row) · states: UNTRACED — needs Claude verification |
 | N10 plan/entitlement visibility | G8 — CODE-COMPLETE (7bc1bc6) · posture governed by G17 free-pilot ruling (OWNER-ACCEPTED) |
 | N11 settings | Wave-A strings closed pre-register (✓ in row) · states: UNTRACED — needs Claude verification |
-| N12 context switcher | Add workspace = G3 — CODE-COMPLETE (7bc1bc6; live-blocked on migration 035) · + New Act = A3, closed pre-register (a41389e) |
+| N12 context switcher | Add workspace = G3 — CODE-COMPLETE (7bc1bc6; migration 035 applied ✓) · + New Act = A3, closed pre-register (a41389e) |
 | A1 terminology + voice wave | Closed pre-register — built on branch; canon-lock APPROVED 12 Jul |
-| A2 add workspace real | G3 — CODE-COMPLETE (7bc1bc6; live-blocked on migration 035 apply) |
+| A2 add workspace real | G3 — CODE-COMPLETE (7bc1bc6; migration 035 applied ✓, Cowork-verified) |
 | A3 + New Act | Closed pre-register — createAct db layer + Radar act-sheet inline create (a41389e) |
 | A4 producer-confirm magic link | Closed pre-register — verified pre-existing with evidence (a41389e) · hardening = G15 (BUILDING) |
 | A5 roster next-best-action | G4 — CODE-COMPLETE (7bc1bc6) |

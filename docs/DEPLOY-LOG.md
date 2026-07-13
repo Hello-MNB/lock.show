@@ -1,5 +1,9 @@
 # DEPLOY LOG — every LOCK release, newest first
 
+> **SHA = authoritative rollback anchor; tags = convenience aliases, pending remote-tag
+> verification.** (Added 13 Jul — tags are local-only until remote tag push is verified;
+> always roll back by SHA.)
+
 The chronological record of what shipped to production. One row per release. See
 `docs/RELEASE-PROCESS.md` for how releases are made. "Verified" = fingerprints checked live,
 not just pushed. Surfaces: **app** = app.lock.show · **site** = lock.show.

@@ -8,7 +8,8 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Product: LOCK pre-booking proof tool (domain lock.show; formerly GIGPROOF, renamed 8 Jul 2026). Canon firewall in CLAUDE.md (no scores/ranks; bands+binaries+method labels).
 - Demo persona: Shai Perlman — 3 hats: DJ PERLMAN (artist, multi-genre Acts) / artist representative (roster) / INSOMNIA TLV (production company).
 
-## Design System v1.2.0 (owner-provided 9 Jul; SSOT = docs/design-system/DESIGN-SYSTEM-v1.2.0.html)
+## Design System (note updated 13 Jul: CURRENT DS authority = **Codex's Drive DS v1.6.20**; the v1.2.0 below remains the HISTORICAL site base only)
+### v1.2.0 history (owner-provided 9 Jul; SSOT = docs/design-system/DESIGN-SYSTEM-v1.2.0.html)
 - LIGHT-primary "paper canvas" system: paper #f3f5ef canvas · ink #0a0d0b · forest #18221a panels · lime #C8F04D (single dominant action) · mist #dde3d9 · slate #687269 · muted #6c776e. Type: Manrope (body) · Georgia serif (display) · DM Mono (labels). Surfaces: Paper canvas · White card · Forest panel · Media overlay.
 - Owner ruling: apply **SITE FIRST, then app** (review live before app re-theme). Design language "wonderful — preserve and continue"; brand assets in Drive 02_ASSETS folder (already staged+wired in website-next/public: gigproof-live-hero, persona-artist/manager/producer, evidence-review).
 - DONE (Step 1, b3866e2): site aligned to exact DS values (forest/mist/slate + Georgia headlines), accent lime→#C8F04D app+site, DS saved to repo. PENDING: **Step 2 = re-theme app.lock.show (dark → paper canvas) surface-by-surface, AFTER Maria reviews the live site.** App is currently all-dark ("Live Intelligence"); DS wants paper-primary — do not start Step 2 until owner approves the site look.
@@ -23,7 +24,7 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - **Demand side is SEGMENTED, never collapsed:** pro entertainment buyer (מזמין הופעות/מנהל בוקינג/פרומוטר — booking language OK) · private event client (לקוח פרטי — simple non-industry language) · corporate client · event planner · production team. Private clients need NO workspace — only Passport review/contact flow.
 - **Source Confirmer (מאשר-מקור / מפיק מאשר)** = accountless bounded magic-link task for ONE claim. NOT a role, NOT a workspace, no dashboard, never in signup. Not every source is a producer. Method-label chips stay canon: PRODUCER-CONFIRMED · Source-linked · Evidence-supported · Self-declared (never "source-confirmed").
 - **Booker** (code role `booker`) = recipient/buyer context (discover screen-set); needs no workspace by default. HE: מזמין הופעות. ⭐ May be a PRIVATE individual (wedding couple) — buyer copy at that register is warm/direct, never venue jargon. Public Passport review needs NO login (`/passport/:id` outside auth guards).
-- **OPEN HE RULINGS (Maria, blocking canon-lock for the release train):** (1) confirm מאשר-מקור as the only Source-Confirmer UI term (canon already locks it; retire "מפיק מאשר" from copy) · (2) Act HE — מופע vs פרויקט (never invent). See ENTITY-GLOSSARY §2d.
+- **HE RULINGS — ✅ RESOLVED 12 Jul (canon-lock APPROVED; ref: SCOPE-rel-2026.07.13 §APP Dependencies):** (1) מאשר-מקור ratified as the only Source-Confirmer UI term · (2) Act proceeds with the already-live term אקט (formal taste-ratification pending, non-blocking) · wave-A wording cleared. No HE ruling blocks the train. (Was: open rulings blocking canon-lock — see ENTITY-GLOSSARY §2d for history.)
 - Six questions before ANY entity copy/route/component (DS v1.5.8): artist-side rep? pro buyer? private client? production? source-confirmation only? workspace needed at all?
 
 ## STANDING RULES (owner directives)

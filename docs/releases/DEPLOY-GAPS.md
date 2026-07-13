@@ -10,7 +10,7 @@ Truth as of 13 Jul 2026 (branch `claude/b4-gigproof-discovery-e7749o`):
 |---|---|---|
 | G1 | CODE-COMPLETE | 92e4abd |
 | G2 | CODE-COMPLETE | 92e4abd |
-| G3 | CODE-COMPLETE | 7bc1bc6 — live-blocked on migration 035 apply |
+| G3 | CODE-COMPLETE | 7bc1bc6 — migration 035 APPLIED ✓ (Cowork-verified, SYNC §28); former live-block cleared |
 | G4 | CODE-COMPLETE | 7bc1bc6 |
 | G5 | CODE-COMPLETE | 00b75e6 |
 | G6 | CODE-COMPLETE | 1c92208 |
