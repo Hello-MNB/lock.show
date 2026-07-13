@@ -788,7 +788,6 @@ export const T = {
         title: 'Refresh your proof',
         why: 'Your newest evidence is over 90 days old — buyers opening your Passport may see yesterday’s picture. One fresh item from a recent show keeps it current.',
         time: 5,
-        planet: 'proof',
       },
       done: {
         title: 'You are set for now',

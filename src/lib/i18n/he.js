@@ -717,7 +717,6 @@ export const T = {
         title: 'רענן את ההוכחות שלך',
         why: 'הראיה החדשה ביותר שלך בת יותר מ-90 יום — מזמינים שפותחים את הפספורט עלולים לראות תמונה של אתמול. פריט טרי אחד מהופעה אחרונה שומר אותו עדכני.',
         time: 5,
-        planet: 'proof',
       },
     },
     // Partial HE for the artist universe — the rest falls back to EN per-key

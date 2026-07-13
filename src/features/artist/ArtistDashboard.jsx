@@ -54,7 +54,7 @@ function pickNextAction(artist, items, claims, T, openRequests = 0) {
   // STATE — a waiting buyer beats everything; stale proof beats another share.
   if (openRequests > 0) return { ...A.replyRequest, to: '/artist/requests' }
   const newest = items.reduce((t, i) => Math.max(t, Date.parse(i.created_at) || 0), 0)
-  if (newest && Date.now() - newest > FRESHNESS_DAYS * 864e5) return { ...A.refreshProof, to: evidenceRoute }
+  if (newest && Date.now() - newest > FRESHNESS_DAYS * 864e5) return { ...A.refreshProof, planet: 'proof', to: evidenceRoute }
   return { ...A.share, to: '/artist/passport' }
 }
 
