@@ -177,6 +177,24 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
+## 23. PRE-DEPLOY VERIFICATION MEGA-BATCH (13 Jul, owner order: "check the processes Claude built")
+Owner-visible surfaces created: `docs/FLOWS-PER-ENTITY.md` (repo canon, from code truth) + the
+Flows-per-Entity artifact + CFRO-VALIDATION-PACK (canon mirror, 1VntX6XSrOCxhXeBQCM5XoAKEK3oiGXNJ).
+Each AI CHECKS Claude Code's work — not its own (independent verification, release rule applies):
+- **COWORK (on preview):** execute Q1–Q8 against the 6 entity flows in FLOWS-PER-ENTITY.md
+  literally — every numbered step, real browser; verify the 9 pilot analytics events actually
+  write rows (analytics_event) incl. waitlist role/source/?src attribution; the 2 firewall
+  watch-items; RPC gap-states (roster grants / production requests) on an empty org.
+- **CODEX (its published Q4 list):** + one addition — cross-check the Flows artifact vs its DS
+  user journeys; flag any screen the flow map claims that the DS doesn't cover (or vice versa).
+- **GPT (next sentinel run):** drift-check FLOWS-PER-ENTITY.md + SCOPE-rel-2026.07.13 + canon
+  pack against each other; flag contradictions; classify the flow doc into the canon set.
+- **CFRO (CLAUDE CHAT):** validation pack v1 delivered to the canon mirror — 5 checks
+  (signal points per lane, pricing posture, unit-economics sanity, v2.3-hypothesis→signal map,
+  firewall-as-business-asset), verdict format defined; acts on the preview URL.
+- **MARIA (Q8):** owner pass = walk Artist flow + Buyer flow on the preview like a stranger.
+Nothing above releases a task on the checker's word — evidence comes back through Maria or me.
+
 ## 22. F1 REGISTRY IMPORTED (13 Jul) — verdicts, one 🚩FLAG, next steps
 - **GPT's delivery: EXCELLENT and verified** — 483 rows imported byte-exact (sha256 23069dba…,
   size 134,773 = Drive metadata; stats match its report exactly: 376 unique fields, 18/18
