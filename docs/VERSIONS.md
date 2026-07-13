@@ -21,7 +21,7 @@ Every app/site release row also records **which DS version it implements** (desi
 ### Candidate (the rel-2026.07.13 train — NOT yet deployed)
 | Track | Version | Where | State |
 |---|---|---|---|
-| App + Site (one train) | rel-app-2026.07.13 + rel-site-2026.07.13 | branch `claude/b4-gigproof-discovery-e7749o` head **7bc1bc6** | **candidate — not yet deployed**; freezes at PREVIEW-READY per the gap register (docs/releases/DEPLOY-GAPS.md) |
+| App + Site (one train) | rel-app-2026.07.13 + rel-site-2026.07.13 | branch `claude/b4-gigproof-discovery-e7749o` — **RC0 frozen at 2a2c955** (state: PREVIEW-DEPLOYABLE; per SYNC §32 re-freeze happens per fix wave) | **candidate — not yet deployed**; ladder: PREVIEW-DEPLOYABLE → QA-READY → Q8-READY → PRODUCTION-READY (docs/releases/DEPLOY-GAPS.md) |
 
 ### Live production (last deployed state per docs/DEPLOY-LOG.md)
 | Track | Version | SHA | DS implemented | Live-verified |
@@ -34,7 +34,7 @@ Every app/site release row also records **which DS version it implements** (desi
 | Track | Version | Where | State |
 |---|---|---|---|
 | DS | **v1.6.20 (Codex)** — CURRENT authority | Drive 00_CURRENT | owner-directed; v1.2.0 remains the historical site base |
-| DB | applied: 032 (verified) · 033 · **035 ✓ (Cowork-verified, SYNC §28 — G3 unblocked)**; 034 DRAFTED, not applied (additive-only); 021 FROZEN | Supabase qexfndiyallwqhhzeerd | structural renames: no number until authored, after Supabase Pro backups |
+| DB | applied: 032 (verified) · 033 · **034 ✓ in effect (DB CHECK = app CANON = 29 events, Cowork-verified SYNC §29; repo file regenerated as-applied)** · **035 ✓ (Cowork-verified, SYNC §28 — G3 unblocked)**; 021 FROZEN | Supabase qexfndiyallwqhhzeerd | structural renames: no number until authored, after Supabase Pro backups |
 | Infra | previews OFF (one-time preview hook for this train) · smart build-skip · OAuth published | 6f5ce8e | operational |
 
 ### Known governance notes
