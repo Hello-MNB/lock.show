@@ -36,3 +36,13 @@ by key presence; service-role without per-object auth — real). Dispositions:
 Cost contract additions (GPT): monthly AI hard budget + alert threshold + retry cap counted (≤4
 calls/item today) + manual-labor line — folded into LAUNCH-DOD §4 at next edit; CFRO defines the
 budget numbers with Maria.
+
+### Wave-2 ownership (GPT reconciliation — one owner + one verifier each)
+G11 Claude→Cowork · G12 Claude→Cowork+GPT · G13 Claude→Cowork · G14 Claude→Cowork ·
+G15 Claude→Cowork · G16 Claude+Cowork→GPT · G17 ✅ CLOSED (DOD §3 corrected this commit; CFRO confirmed) ·
+G18 Claude→Cowork · G19 Cowork→Claude · G20 SPLIT: legal=Maria+counsel / accessibility=Codex+Cowork /
+browsers=Cowork / perf=Claude+Codex · G21 Cowork→Claude · G22 Cowork→Claude.
+GOVERNING RULE (GPT, adopted): no preview URL is distributed for WRITE-path testing until
+G11 + G12 + G16 are closed. G16 also guarantees QA-data exclusion from pilot-signal counts (Cowork).
+AI budget (CFRO v2.8, pending Maria's approval): $50/mo HARD cap · $25 alert · ~15 items/user/day ·
+retry ≤4 · dedup-by-hash — Claude enforces in code under G14 once approved.

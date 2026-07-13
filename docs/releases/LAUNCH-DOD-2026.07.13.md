@@ -27,8 +27,9 @@ under Hebrew on the main routes; RTL correct incl. numbers/dates/links. RU/DE = 
 - Anthropic API: AI claim extraction per evidence item (the live AI). Deep multi-source scan =
   planned only, per canon.
 - Vercel: hosting site + app. Previews on demand during QA, then production-only (Cowork).
-- Bit (054-4555060): manual payments with GP-XXXX reference + manual activation. Green Invoice
-  via tech partner = pending (gates first real payment, NOT this launch).
+- Payments: LOCK launches as a FREE PILOT (G17 ruling). No payment CTA, price, Bit acceptance or
+  manual entitlement activation is part of this launch; the payment infrastructure stays DORMANT.
+  Bit + Green Invoice activate only after the Gate, on explicit owner word.
 - Email (Resend): NOT wired yet — signups work without it; transactional email = next version.
 - Google services (GA4/GTM): PARKED to post-launch marketing by owner decision.
 ## 4) COSTS (monthly, honest)
