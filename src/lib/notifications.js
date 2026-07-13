@@ -3,12 +3,14 @@
 // (public.notifications: id, user_id, type, body, link, read, created_at) but
 // had ZERO writers and ZERO UI before this file. RLS (notif_self) restricts
 // every row to `user_id = auth.uid()` — so a session can only ever list/mark-
-// read ITS OWN notifications. Writing a notification FOR SOMEONE ELSE (operator
-// activates a payment → notify the artist owner; an anon booker submits a
-// request → notify the artist owner; a producer confirms a claim → notify the
-// artist owner) can never satisfy that RLS check from the anon/authenticated
-// client, so createNotification() always goes through the server's service-role
-// POST /api/notify route (same pattern already used by producer_confirmations).
+// read ITS OWN notifications. Writing a notification FOR SOMEONE ELSE can never
+// satisfy that RLS check from the anon/authenticated client, so
+// createNotification() goes through the server's service-role POST /api/notify
+// route. G11: that route now requires a JWT whose user OWNS the target artist
+// OR profiles.role='operator', with a CLOSED type enum
+// ('request_received'|'confirmation_received'|'system'). The anonymous-booker
+// path does NOT use this writer anymore — POST /api/availability-request
+// creates the request + the artist notification server-side in one call.
 //
 // FIREWALL: `body` is plain bounded text authored at write time via the
 // T.notifications.* template functions (src/lib/i18n/*.js) — never a raw

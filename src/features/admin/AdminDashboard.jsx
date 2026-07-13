@@ -106,7 +106,7 @@ export default function AdminDashboard() {
       if (payment?.artist_id) {
         createNotification({
           artistId: payment.artist_id,
-          type: 'payment_activated',
+          type: 'system', // G11 — /api/notify accepts a closed type enum; operator notices ride 'system'
           body: T.notifications.paymentActivated,
           link: '/artist/home',
         })

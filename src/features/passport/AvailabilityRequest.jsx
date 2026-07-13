@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getArtist, createRequest } from '../../lib/db.js'
-import { createNotification } from '../../lib/notifications.js'
+import { DEMO } from '../../lib/demo.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { PageShell, Wordmark, Field, Spinner, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -47,17 +47,38 @@ export default function AvailabilityRequest() {
     }
     setBusy(true); setError('')
     try {
-      await createRequest({ artist_id: id, ...f, event_date: f.event_date || null })
+      // G11 — PUBLIC server route first: it creates the request AND the artist's
+      // notification server-side with the service role (the direct /api/notify
+      // path is now owner/operator-only, so an anonymous booker could no longer
+      // ring the artist's bell without this). Rate-limited + schema-validated.
+      const payload = { artistId: id, ...f, event_date: f.event_date || null }
+      let sent = false
+      let refusal = null
+      try {
+        if (DEMO) throw new Error('demo') // demo fixtures only — never a live server call
+        const res = await fetch('/api/availability-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const ct = res.headers.get('content-type') || ''
+        if (ct.includes('application/json')) {
+          const body = await res.json().catch(() => null)
+          if (res.ok && body?.ok) sent = true
+          else refusal = body?.error || 'server_error' // a live server REFUSED — surface, don't bypass
+        }
+        // non-JSON = static host answered for /api (offline embed) → fallback below
+      } catch { /* server unreachable — fallback below */ }
+      if (refusal) throw new Error(T.common.error)
+      if (!sent) {
+        // Offline-embed fallback: the direct insert still records the request
+        // under RLS. Honesty note: without the server no cross-user notification
+        // can be written (notifications RLS is user_id = auth.uid()) — the artist
+        // sees the request in their Requests inbox, without a bell.
+        await createRequest({ artist_id: id, ...f, event_date: f.event_date || null })
+      }
       // GATE signal — a booking manager reacted to a real Passport.
       logEvent(EVENTS.REQUEST_SENT, { artist_id: id })
-      // P1-1 — fire-and-forget (not awaited): a notification hiccup must never
-      // block or delay the booker's confirmation screen.
-      createNotification({
-        artistId: id,
-        type: 'new_request',
-        body: T.notifications.newRequest(f.requester_name.trim()),
-        link: '/artist/requests', // the artist's inbox — an ARTIST role is bounced off /agency/* (flow-gap R4)
-      })
       nav(`/passport/${id}/sent`, {
         state: { requester_name: f.requester_name, artist_name: artist?.stage_name },
       })

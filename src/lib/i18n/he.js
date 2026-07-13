@@ -810,7 +810,7 @@ export const T = {
       },
       refreshProof: {
         title: 'רענן את ההוכחות שלך',
-        why: 'הראיה החדשה ביותר שלך בת יותר מ-90 יום — מזמינים שפותחים את הפספורט עלולים לראות תמונה של אתמול. פריט טרי אחד מהופעה אחרונה שומר אותו עדכני.',
+        why: 'הראיה החדשה ביותר שלך בת יותר מ-90 יום. ראיה טרייה מהופעה אחרונה שומרת את הדרכון עדכני.',
         time: 5,
       },
     },
@@ -821,16 +821,16 @@ export const T = {
       m3: 'הרדאר חי',
       m4: 'ממוקד',
       m5: 'מגובה',
-      m6: 'מפורסם',
-      m7: 'בשוק',
-      m8: 'נענית',
+      m6: 'הדרכון בחוץ',
+      m7: 'נראה בשוק',
+      m8: 'תגובה ראשונה',
       done: 'הושלם',
       current: 'אתה כאן',
       next: 'בהמשך',
       aria: (t, s) => `אבן דרך: ${t} — ${s}`,
     },
     // G2 genre-emphasis guidance — wording only, never a weight or number.
-    genreFocus: (names) => `מזמינים בז'אנר שלך מסתכלים קודם על: ${names}.`,
+    genreFocus: (names) => `בז'אנר שלך, מקום טוב להתחיל בו: ${names}.`,
     // Partial HE for the artist universe — the rest falls back to EN per-key
     // (build-in-English rule) until the native-authoring pass.
     universe: {
@@ -907,6 +907,7 @@ export const T = {
     errFileType: 'סוג קובץ לא נתמך. PDF, תמונה, CSV או XLSX בלבד.',
     errFileSize: 'הקובץ גדול מדי (עד 10MB).',
     fileHint: 'PDF · תמונה · CSV · XLSX — עד 10MB',
+    serverRefused: 'השרת דחה את העיבוד (הגעת למגבלה או שהתקציב נוצל). שום דבר לא תויג — הראיות שלך שמורות; נסה שוב מאוחר יותר.',
     collected: 'ראיות שנאספו',
     processed: 'עובד',
     pending: 'ממתין',

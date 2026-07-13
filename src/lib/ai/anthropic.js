@@ -91,7 +91,16 @@ export class AnthropicClaimProcessor {
           messages: [{ role: 'user', content: userPrompt(ev) }],
         })
         const text = msg.content.map((c) => c.text || '').join('')
-        return safeParse(text)
+        const parsed = safeParse(text)
+        // G12: unusable model output is a FAILURE, not a success — throw so the
+        // retry loop (and ultimately the deterministic fallback with
+        // aiFailed:true) runs. Returning null here would let labelWithMethod
+        // stamp stub-shaped output as method:'anthropic', aiFailed:false — a
+        // provenance lie. No `status` on the error → treated as retryable.
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('anthropic returned unparseable/unusable output')
+        }
+        return parsed
       } catch (err) {
         lastErr = err
         const status = err?.status

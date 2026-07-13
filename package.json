@@ -15,9 +15,10 @@
     "lint:i18n": "node scripts/i18n-purity.mjs",
     "test:nav": "node scripts/nav-contract.test.mjs",
     "test:isolation": "node scripts/test-act-isolation.mjs",
+    "test:canon": "node scripts/test-canon-drift.mjs",
     "validate:registry": "node scripts/validate-registry.mjs",
     "validate:deltas": "node scripts/validate-deltas.mjs",
-    "verify": "npm run test:nav && npm run test:isolation && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && npm run build && npm run build:demo"
+    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && npm run build && npm run build:demo"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

@@ -907,7 +907,7 @@ export const T = {
       aria: (t, s) => `Milestone: ${t} — ${s}`,
     },
     // G2 genre-emphasis guidance — wording only, never a weight or number.
-    genreFocus: (names) => `Buyers in your genre look first at: ${names}.`,
+    genreFocus: (names) => `A useful place to focus in your genre: ${names}.`,
     universe: {
       planets: {
         identity: 'Identity & Story',
@@ -1067,6 +1067,7 @@ export const T = {
     errFileType: 'Unsupported file type. PDF, image, CSV or XLSX only.',
     errFileSize: 'File too large (max 10MB).',
     fileHint: 'PDF · image · CSV · XLSX — up to 10MB',
+    serverRefused: 'Processing was declined by the server (limit or budget reached). Nothing was labeled — your evidence is safe; try again later.',
     collected: 'Collected evidence',
     processed: 'Processed',
     pending: 'Pending',

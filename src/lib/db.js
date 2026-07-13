@@ -327,16 +327,49 @@ export async function authHeaders() {
   } catch { return {} }
 }
 
+// Server errors that mean "the server DECIDED not to process" (auth, abuse
+// controls, budget, schema). Masking any of these with the client stub would
+// both defeat the control AND mislabel the result (G12+G14) — they must
+// surface as an error state, never as stub claims.
+const SERVER_REFUSAL_CODES = new Set([
+  'auth_required', 'forbidden', 'rate_limited', 'too_many_items',
+  'daily_limit_reached', 'monthly_budget_reached', 'field_too_long',
+])
+
 export async function processEvidence(artistId) {
   if (DEMO) return { processed: demoClaims.length, ai: 'demo', claims: demoClaims }
+  let res = null
   try {
-    const res = await fetch('/api/process-evidence', {
+    res = await fetch('/api/process-evidence', {
       method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ artistId }),
     })
+  } catch { res = null } // network-unreachable — the ONLY non-DEMO stub case
+  if (res) {
     const ct = res.headers.get('content-type') || ''
-    if (res.ok && ct.includes('application/json')) return await res.json()
-  } catch { /* no server (static deploy) — fall through to the client-side stub */ }
+    const body = ct.includes('application/json') ? await res.json().catch(() => null) : null
+    if (res.ok && body) return body
+    // G12+G14 fallback policy: a 401/403/429 or an explicit refusal code is a
+    // server DECISION — surface it (EvidenceCapture shows T.evidence.serverRefused),
+    // never run the client stub over it.
+    if (body && ([401, 403, 429].includes(res.status) || SERVER_REFUSAL_CODES.has(body.error))) {
+      const err = new Error(body.error || `server refused (${res.status})`)
+      err.code = 'server_refused'
+      err.status = res.status
+      throw err
+    }
+    // Anything else with a JSON body (500 server_error, misconfig) is still a
+    // live-but-broken server — do not mislabel via the stub either.
+    if (body) {
+      const err = new Error(body.error || `server error (${res.status})`)
+      err.code = 'server_refused'
+      err.status = res.status
+      throw err
+    }
+    // Non-JSON response = a static host answered for /api (no server exists):
+    // that is the offline/embed deploy — fall through to the client stub.
+  }
+  // Client stub ONLY for: no server response, or a static deploy without /api.
   return processEvidenceClientSide(artistId)
 }
 
@@ -362,6 +395,19 @@ export async function deleteClaim(id) {
   if (DEMO) return
   const { error } = await supabase.from('claims').delete().eq('id', id)
   if (error) throw error
+}
+
+// ── Milestone M7 input (Codex M7) — has THIS artist ever had a share link
+// created, per the localStorage analytics ring buffer (analytics.js KEY —
+// 'gigproof_events'). Works offline and on the static embed. HONESTY NOTE:
+// device-local only — a share made on another device won't be seen here; the
+// server-side share_link_created query is P1.
+export function hasShareEvent(artistId) {
+  if (DEMO) return true
+  try {
+    const events = JSON.parse(localStorage.getItem('gigproof_events') || '[]')
+    return events.some((e) => e?.name === 'share_link_created' && e?.props?.artist_id === artistId)
+  } catch { return false }
 }
 
 // ── Measurement (024) — a VIEW is not a REACTION; never merge them ──────────

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement } from '../../lib/db.js'
+import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent } from '../../lib/db.js'
 import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
@@ -62,7 +62,7 @@ function pickNextAction(artist, items, claims, T, openRequests = 0) {
 // FIREWALL: a journey of named waypoints ONLY — never "5/8", never a %, never
 // a progress bar toward a score. Done = filled dot · current = ringed dot ·
 // ahead = hollow dot; each with its label and an accessible state.
-function MilestoneStrip({ artist, items, claims, reqCount, T }) {
+function MilestoneStrip({ artist, items, claims, reqCount, shared, T }) {
   const M = T.radar.milestones
   const links = items.filter((i) => i.item_type === 'link')
   const exp = items.filter((i) => i.item_type !== 'link')
@@ -75,7 +75,12 @@ function MilestoneStrip({ artist, items, claims, reqCount, T }) {
     !!artist.photo_url && links.length > 0 && exp.length >= 3, // M4 Focused — photo + link + track record
     supported.length > 0,                                      // M5 Backed — evidence supports a claim
     !!artist.published,                                        // M6 Published — public Passport exists
-    answered,                                                  // M7 In the market — reached with M8 (share is unknowable)
+    // M7 In the market — published AND actually put in front of the market: a
+    // share link was created (device-local ring buffer via hasShareEvent — the
+    // server-side share query is P1) OR any buyer request already arrived
+    // (a request proves market exposure even if the share happened elsewhere).
+    // Reachable WITHOUT M8 (Codex M7/M8 fix).
+    !!artist.published && (shared || answered),
     answered,                                                  // M8 Answered — a buyer request arrived
   ]
   const titles = [M.m1, M.m2, M.m3, M.m4, M.m5, M.m6, M.m7, M.m8]
@@ -115,6 +120,7 @@ export default function ArtistDashboard() {
   const [ent, setEnt] = useState(null)
   const [openReqs, setOpenReqs] = useState(0) // 'new' availability requests — post-M8 ladder
   const [reqCount, setReqCount] = useState(0) // ANY request ever — the M7/M8 journey waypoint
+  const [shared, setShared] = useState(false) // M7 input — a share link was created (device-local; server query = P1)
   const [publishing, setPublishing] = useState(false)
   const [pubError, setPubError] = useState('')
   const [loadError, setLoadError] = useState(false)
@@ -148,6 +154,7 @@ export default function ArtistDashboard() {
           setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
           setOpenReqs(reqs.filter((r) => r.status === 'new').length)
         } catch { setReqCount(0); setOpenReqs(0) } // post-M8 ladder input — tolerate absence
+        setShared(hasShareEvent(a.id)) // M7 — localStorage ring buffer (works offline); server-side share query = P1
         setDirty(isPassportDirty(a.id))
         if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal
       }
@@ -174,6 +181,7 @@ export default function ArtistDashboard() {
       clearTimeout(copiedTimer.current)
       copiedTimer.current = setTimeout(() => setLinkCopied(false), 2000)
       logEvent(EVENTS.SHARE_LINK_CREATED, { artist_id: artist.id }) // pilot signal — share step of the North-Star chain
+      setShared(true) // M7 lights immediately — the ring buffer now holds the event
     } catch { /* clipboard blocked — the link stays visible/selectable below */ }
   }
 
@@ -321,7 +329,7 @@ export default function ArtistDashboard() {
       {/* ── G1 milestone JOURNEY — named waypoints only (firewall: no count,
             no %, no bar). G2: one genre-guidance line beneath it — wording
             only, never a weight or number. ── */}
-      <MilestoneStrip artist={artist} items={items} claims={claims} reqCount={reqCount} T={T} />
+      <MilestoneStrip artist={artist} items={items} claims={claims} reqCount={reqCount} shared={shared} T={T} />
       {genreFocusNames && (
         <p className="mb-3 text-[11px] leading-relaxed text-muted">{T.radar.genreFocus(genreFocusNames)}</p>
       )}

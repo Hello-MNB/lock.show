@@ -162,10 +162,15 @@ export default function EvidenceCapture() {
   async function process() {
     setProcessing(true); setError('')
     try {
-      await processEvidence(artistId) // server (real AI) if present, else client-side canon stub
+      await processEvidence(artistId) // server (real AI) if present; client stub ONLY when no server exists
       logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId }) // pilot signal (A10)
       await load()
-    } catch (err) { setError(err.message || T.common.error) } finally { setProcessing(false) }
+    } catch (err) {
+      // G12+G14: a server refusal (auth / rate limit / budget) surfaces as its
+      // own honest state — never masked by stub output (db.js throws code
+      // 'server_refused'; evidence stays 'submitted' and retryable).
+      setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
+    } finally { setProcessing(false) }
   }
 
   if (loading) return <Loading />
