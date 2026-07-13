@@ -177,6 +177,32 @@ Artist lane FIRST; other entities after. Codex: artist-screen DS DODs + states s
 briefs. Cowork: Q3/Q4 QA weights the artist journey end-to-end. Entity architecture verified ready for
 growth; structural debts (033+ renames) scheduled, not blocking.
 
+## 25. GPT SPEC PACK DELIVERED + ADMIN PANEL SPEC + 🚩 LOCALIZATION PARITY (13 Jul)
+- **GPT's 7-spec pack: DELIVERED** — team-readable Google Doc verified in Canon Mirror
+  (1trfj1Vsod…); machine-readable ZIP (sha256 ae528e56…, 14 files) blocked by the known
+  connector boundary — SAME transport pattern as F2–F6: Maria downloads GPT's ZIP → uploads to
+  the mirror WHEN I start the P1 import (not needed before preview; the Doc + report carry the
+  content). Import + reconciliation = my P1 task; Post-Gig data model = PROPOSAL ONLY, I review
+  against existing migrations before any DDL.
+- **GPT proactive-audit corrections ACCEPTED:** ① 90-day act-global freshness = bounded shortcut;
+  P1 replaces it with FIELD-LEVEL freshness from registry freshness_rule ② artist-home progression
+  state gets a BOUNDED read model (RPC/view), never raw analytics in the client ③ request
+  recurrence states (awaiting-buyer, price, deadline, follow-up, closed-reason, gig-debrief) = P1
+  with the Growth Loop.
+- **🚩 LOCALIZATION PARITY FLAG — OPEN (owner rule: raised, not released).** Verified real
+  (e.g. BookerHome:20 hardcoded English error). EN-first authoring + HE fallback ≠ HE completion.
+  Owners per GPT: Claude Code = literal extraction to i18n keys on all P0 routes + parity gate;
+  Codex = native-quality HE review; Cowork = real-browser EN/HE + RTL proof; GPT = inventory (49
+  rows delivered). **My build batch now includes the P0-route literal extraction BEFORE
+  PREVIEW-READY** (Source Confirmer ceremony, Booker home, public Passport errors, availability
+  request, artist requests, agency + admin fragments). Closure = GPT's 6 conditions.
+- **CLAUDE.md amendment: GPT's controlled text SUPERSEDES my draft** (it adds fallback-disclosure
+  language). Sitting with Maria — her file, her paste.
+- **ADMIN PANEL SPEC written (docs/ADMIN-PANEL-SPEC.md)** — owner order: the business view for
+  Maria + Eran. Live ops queues documented; P0.5 Business Overview (funnel, outreach attribution,
+  Gate tile, publish freshness, acts, health) via ONE bounded admin read model; P1 = GPT's ten
+  operator queues landing WITH their automations. Access per ADVISOR-ACCESS-eran runbook.
+
 ## 24. GPT CONTINUOUS-VALUE AUDIT (13 Jul) — verdicts + rulings, P0 corrections executed
 GPT's product audit (Growth Loop / per-entity pains / AI agents). **Every factual claim
 code-verified TRUE:** post-M8 ended in fixed Share (ArtistDashboard:49) · BookerHome = paste-a-
