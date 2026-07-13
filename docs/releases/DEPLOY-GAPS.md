@@ -2,6 +2,35 @@
 Owner order 13 Jul: finish these, then deploy. Each row = one gap, its DOD, its owner.
 Everything else in the locked scope is BUILT and gate-green.
 
+## GAP LIFECYCLE REGISTER (V1 — machine-readable states; SUPERSEDES the per-row Status column below)
+States: OPEN → BUILDING → CODE-COMPLETE → VERIFICATION-PENDING → VERIFIED → OWNER-ACCEPTED.
+Truth as of 13 Jul 2026 (branch `claude/b4-gigproof-discovery-e7749o`):
+
+| Gap | State | Closure SHA / evidence |
+|---|---|---|
+| G1 | CODE-COMPLETE | 92e4abd |
+| G2 | CODE-COMPLETE | 92e4abd |
+| G3 | CODE-COMPLETE | 7bc1bc6 — live-blocked on migration 035 apply |
+| G4 | CODE-COMPLETE | 7bc1bc6 |
+| G5 | CODE-COMPLETE | 00b75e6 |
+| G6 | CODE-COMPLETE | 1c92208 |
+| G7 | CODE-COMPLETE | 7bc1bc6 |
+| G8 | CODE-COMPLETE | 7bc1bc6 |
+| G9 | OPEN | QA-stage (rides with the train; embed parity proof) |
+| G10 | OPEN | QA-stage (attaches to the candidate SHA at PREVIEW-READY) |
+| G11 | CODE-COMPLETE | 395d8ba |
+| G12 | CODE-COMPLETE | 395d8ba |
+| G13 | BUILDING | — |
+| G14 | BUILDING | — |
+| G15 | BUILDING | — |
+| G16 | OPEN | — |
+| G17 | OWNER-ACCEPTED | free-pilot ruling (DOD §3 corrected; CFRO confirmed) |
+| G18 | OPEN | — |
+| G19 | OPEN | — |
+| G20 | OPEN | split into G20a–G20d (see Wave-2 table) |
+| G21 | OPEN | — |
+| G22 | OPEN | — |
+
 | # | Gap (critical screen/item) | What "done" means (DOD) | Owner | Status |
 |---|---|---|---|---|
 | G1 | **Radar milestone path (M1–M8)** — the artist sees WHERE he is on the journey | Path renders on artist home per Codex v1.6.13 (✓ done / ● current / ○ next; never %/level); mobile 360px + desktop; EN+HE | Claude | 🟠 building now |
@@ -30,7 +59,10 @@ by key presence; service-role without per-object auth — real). Dispositions:
 | G17 | Payment posture RULING (Claude, per canon): **FREE PILOT** — no payment CTA, no Bit acceptance at launch, N10 display-only, payments admin dormant; Bit+Green Invoice activate post-Gate by owner word | RULED — DOD §3 corrected accordingly | P0 decision ✅ closed |
 | G18 | Account recovery: password reset + signup email tested on real path; request-notification pilot workaround = documented Admin monitoring SLA | ADOPTED | P0 recovery / P1 alerts |
 | G19 | Backup/restore + incident basics: pre-launch DB export, restore procedure, failed-processing visible, owner severity contact | ADOPTED | P0 basics / P1 monitoring |
-| G20 | Legal/privacy/accessibility + browser matrix (iOS Safari, Android Chrome, keyboard/SR path) + perf budget | ADOPTED — owner+counsel items surfaced on her board | P0/P1 mixed |
+| G20a | Legal/privacy (terms, privacy, accessibility statement — Maria+counsel) | ADOPTED — pass: counsel signs off the published legal pages with all placeholders (entity/ח.פ., city, coordinator) filled | P0 |
+| G20b | Accessibility (Codex+Cowork) | ADOPTED — pass: keyboard-only + screen-reader path completes the P0 flows (signup → Passport → request) with no trap | P0/P1 |
+| G20c | Browser/device matrix (Cowork) | ADOPTED — pass: P0 flows pass on iOS Safari + Android Chrome (real devices) at 360px | P0 |
+| G20d | Performance budgets (Claude+Codex) | ADOPTED — pass: defined per-route budgets exist and the P0 routes meet them on the preview SHA (mobile) | P1 |
 | G21 | Rollback REHEARSAL as its own must-pass row (Cowork addition, post-404 lesson) | ADOPTED | P0 |
 | G22 | QA probes: manager access-request handshake UI + production outbound-booking path (exist in code/doc — prove on preview) | ADOPTED as QA rows | P0 QA |
 Cost contract additions (GPT): monthly AI hard budget + alert threshold + retry cap counted (≤4

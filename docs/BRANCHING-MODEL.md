@@ -1,3 +1,9 @@
+> ⛔ **SUPERSEDED FOR THIS TRAIN (rel-2026.07.13, banner added 13 Jul 2026).** Current law =
+> ONE full release train: canon-lock → candidate SHA → isolated preview → Q1–Q7 → owner Q8 →
+> atomic merge → live smoke → tag + rollback anchor. Small frequent trunk releases (the model
+> below) resume post-launch. Rule of record until then: **main = live truth; the release branch
+> (`claude/b4-gigproof-discovery-e7749o`) = candidate truth until promoted.**
+
 # LOCK — Branching & Release Architecture (for autonomous multi-agent work)
 
 _Owner question (11 Jul): "do we unify folders into MAIN?" — YES. This file is the binding model._

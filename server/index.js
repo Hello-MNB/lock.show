@@ -8,7 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { T as en } from '../src/lib/i18n/en.js'
@@ -34,6 +34,17 @@ const ANTHROPIC_KEY = realValue(process.env.ANTHROPIC_API_KEY)
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8'
 
 const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : null
+
+// ──────────────────────────────────────────────────────────
+// ABUSE CONTROLS (G14) — env-tunable, safe defaults. All in-memory (per
+// serverless instance / local process): a restart resets counters, which is
+// an accepted pilot-stage bound, not a persistence guarantee.
+// ──────────────────────────────────────────────────────────
+const RATE_LIMIT_PER_MIN = Number(process.env.RATE_LIMIT_PER_MIN) || 30 // per IP, sliding 60s
+const MAX_ITEMS_PER_JOB = Number(process.env.MAX_ITEMS_PER_JOB) || 15 // per process-evidence call
+const MAX_ITEMS_PER_USER_DAY = Number(process.env.MAX_ITEMS_PER_USER_DAY) || 15 // AI items/user/day
+const CONFIRM_TOKEN_TTL_DAYS = Number(process.env.CONFIRM_TOKEN_TTL_DAYS) || 14 // G15 expiry
+const MAX_FIELD_CHARS = 2000 // longest accepted string field in any JSON body
 
 // Single processor instance: StubClaimProcessor (no key) or AnthropicClaimProcessor (key set).
 // Callers never reference the concrete class — only the AiClaimProcessor interface.

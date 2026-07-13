@@ -1,3 +1,9 @@
+> ⛔ **SUPERSEDED FOR THIS TRAIN (rel-2026.07.13, banner added 13 Jul 2026).** Current law =
+> ONE full release train: canon-lock → candidate SHA → isolated preview → Q1–Q7 → owner Q8 →
+> atomic merge → live smoke → tag + rollback anchor. The "small frequent releases" model below
+> RESUMES POST-LAUNCH. Rule of record until then: **main = live truth; the release branch =
+> candidate truth until promoted.** (Train law: docs/releases/rel-2026.07.13-PLAN.md §4b.)
+
 # RELEASE PROCESS — how a version ships, and how we never lose the thread
 
 **For Maria (plain language).** This is the professional way we deploy LOCK and keep it traceable.

@@ -1,8 +1,9 @@
 # LOCK — VERSION MANIFEST (what is live RIGHT NOW, per track)
 
 _The single answer to "what version is each surface on?" Updated as part of EVERY release
-(release-checklist step, same as DEPLOY-LOG). Owner audit 12 Jul: marketing-site updates are a
-FIRST-CLASS versioned track, not a footnote._
+(release-checklist step, same as DEPLOY-LOG). Rewritten 13 Jul 2026 from current truth
+(GOVERNANCE WAVE 3, V12). Owner audit 12 Jul: marketing-site updates are a FIRST-CLASS
+versioned track, not a footnote._
 
 ## Naming scheme (codified 12 Jul)
 | Track | Scheme | Example |
@@ -10,34 +11,42 @@ FIRST-CLASS versioned track, not a footnote._
 | App (app.lock.show) | `rel-app-YYYY.MM.DD[-n]` | rel-app-2026.07.10 |
 | **Marketing site (lock.show)** | `rel-site-YYYY.MM.DD[-n]` | rel-site-2026.07.11-2 |
 | Embed (lock.show/app) | mirrors an app release | embed@rel-app-2026.07.10 |
-| Design System (Codex) | semver `vX.Y.Z` | v1.5.2 |
-| Database schema | migration head `NNN` | 031 |
+| Design System (Codex) | semver `vX.Y.Z` | v1.6.20 |
+| Database schema | migration head `NNN` | 033 |
 
 Every app/site release row also records **which DS version it implements** (design↔code traceability).
 
-## CURRENT STATE (12 Jul 2026)
-| Track | Version | main SHA | DS implemented | Live-verified | Owner-approved |
-|---|---|---|---|---|---|
-| App | rel-app-2026.07.10 (+hotfix) | a874ab5/eafcd4e | pre-DS (dark legacy; A13 mapping next) | ✅ bundle fingerprints | 🟠 pending |
-| **Site** | rel-site-2026.07.11-2 + cleanUrls hotfix | 6183e81 | v1.4.2 voice/surface law at ship time (token re-ground → DS v1.6.2 target) | ✅ **12 Jul evening: RESTORED + fully re-verified** — 10/10 inner pages 200, pricing fingerprint, app/embed unchanged (incident + resolution: DEPLOY-LOG) | 🟡 partial |
-| Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash | 🟠 pending |
-| DS | v1.6.0 (Codex, 12 Jul) | Drive 00_CURRENT | platform/entity matrix + per-entity DOD + demand-side terms (buyer ≠ אמרגן) | Codex QA ✓ · Claude independent audit PENDING | ✅ owner-directed |
-| DB | migration 031 (021 FROZEN) | applied 10 Jul | — | ✅ owner-applied | ✅ |
-| Infra | previews OFF · smart build-skip · OAuth published | 6f5ce8e | — | ✅ | — operational |
+## CURRENT STATE (13 Jul 2026)
 
-## Versioning-audit findings (12 Jul, this audit)
-1. ✅ FIXED — no unified manifest existed → this file.
-2. ✅ FIXED — naming was app-centric/ad-hoc → per-track scheme above.
-3. ✅ FIXED — site releases now a first-class versioned track (owner's addition).
-4. ✅ FIXED — releases now record the DS version they implement.
-5. ✅ FIXED — DB schema head is part of the manifest.
-6. 🟡 KNOWN — git tags local-only (integration 403); SHAs are the anchors until owner pushes tags.
+### Candidate (the rel-2026.07.13 train — NOT yet deployed)
+| Track | Version | Where | State |
+|---|---|---|---|
+| App + Site (one train) | rel-app-2026.07.13 + rel-site-2026.07.13 | branch `claude/b4-gigproof-discovery-e7749o` head **7bc1bc6** | **candidate — not yet deployed**; freezes at PREVIEW-READY per the gap register (docs/releases/DEPLOY-GAPS.md) |
 
-## NEXT VERSION TARGETS (rel-*.2026.07.13 — corrective release, in build)
-| Track | Targets | Gate |
-|---|---|---|
-| App | terminology wave (BUILT on branch) · A13 mapping layer (DS v1.6.0, after Claude audit) · +New Act · producer-confirm wiring · agency home next-action · activated_by · remaining funnel events · "Add workspace" real | verify gate + QA/QC protocol Q1–Q8 (rel-2026.07.13-PLAN §4) |
-| Site | arrow unification · footer regrouping · waitlist type floor | build + sweeps |
-| Embed | rebuilt with the app release (parity rule) | bundle hash |
-| DB | migration 032 (roster-grants RPC + production-requests RPC) — Claude authors, Cowork applies | SQL apply + regression check |
-| Approval | owner ledger pass on rel-07.10–11 before 07.13 promotes | owner |
+### Live production (last deployed state per docs/DEPLOY-LOG.md)
+| Track | Version | SHA | DS implemented | Live-verified |
+|---|---|---|---|---|
+| App | rel-2026.07.10 (incl. firewall hotfix eafcd4e) | **a874ab5** — last app production deploy (10 Jul) | pre-DS dark legacy (A13 mapping = this train) | ✅ bundle fingerprints (DEPLOY-LOG) |
+| Site | rel-site-2026.07.11-inner + cleanUrls hotfix | **6183e81** — last site production deploy (12 Jul, merge of d06ac25) | v1.4.2 voice/surface law at ship time | ✅ 10/10 inner pages 200 + fingerprints (12 Jul re-verify) |
+| Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash |
+
+### Reference tracks
+| Track | Version | Where | State |
+|---|---|---|---|
+| DS | **v1.6.20 (Codex)** — CURRENT authority | Drive 00_CURRENT | owner-directed; v1.2.0 remains the historical site base |
+| DB | migration head **033 APPLIED** (034 + 035 DRAFTED, not applied; 021 FROZEN; 035 blocks G3 add-workspace live) | Supabase qexfndiyallwqhhzeerd | 032 applied+verified · 033 applied |
+| Infra | previews OFF (one-time preview hook for this train) · smart build-skip · OAuth published | 6f5ce8e | operational |
+
+### Known governance notes
+- Git tags are LOCAL-ONLY (integration 403) — **SHA = the authoritative rollback anchor**; tags =
+  convenience aliases pending remote-tag verification (see DEPLOY-LOG top note).
+- Gap lifecycle truth (what is CODE-COMPLETE vs OPEN on the candidate): the register in
+  docs/releases/DEPLOY-GAPS.md, not this file.
+
+## NEXT PROMOTION (rel-*.2026.07.13 — one atomic train)
+| Step | Gate |
+|---|---|
+| Candidate SHA frozen at PREVIEW-READY | all P0 gaps CODE-COMPLETE + `npm run verify` green |
+| Isolated preview → Q1–Q7 (Stage 1: candidate qualification) | rel-2026.07.13-PLAN §4 |
+| Atomic merge → live smoke → Maria Q8 (Stage 2: production acceptance) | owner word, recorded |
+| Tag + rollback anchor recorded | DEPLOY-LOG row + this file refreshed |
