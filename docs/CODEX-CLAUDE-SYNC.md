@@ -525,3 +525,14 @@ integrity; each member re-runs their role audit per standing rules.
   severity → fix. Its M7/M8 + Hebrew-polish findings: ACCEPTED into the fix wave (M7 will derive
   from persisted share_link_created once queryable; interim = share-state honesty).
 - CFRO signal-integrity audit: PASS recorded (zero monetization signals lost).
+
+## 30. OWNER ORDER (13 Jul): PSYCHOLOGY-DOD PER ENTITY PER SCREEN
+Binding: a DOD exists for EVERY entity and EVERY screen, grounded in that entity's PSYCHOLOGY —
+what matters to them, what show business we operate in (nightlife/events Israel: speed, status,
+trust, vibe; artists = pride+fear of being judged; buyers = risk to their name; managers = roster
+momentum; production = zero-surprise lineups), and how each screen must LOOK and FEEL for that
+person. Requirements: high-level interactive screens · MINIMUM CLICKS per task (count them in the
+DOD — target <=3 for core actions) · full responsive adaptation. OWNER: Codex authors the
+per-entity psychology-DOD pack (its DS lane, extends v1.6.20 role-DOD); Claude binds each DOD to
+its screen in the traceability matrix and enforces at proof-pack; Cowork measures actual click
+counts per task on preview; CFRO checks the psychology maps to the money-moment per entity.
