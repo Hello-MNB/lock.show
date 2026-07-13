@@ -6,7 +6,7 @@ import { ROLES } from './constants.js'
 import {
   DEMO, demoOrg, demoSubscription, demoMemberships, demoMembers, demoRadarRecords, demoUpgradeRequests, demoInviteInfo,
   demoAccessRequests, demoRequestArtistAccess, demoRespondToAccessRequest, demoRevokeArtistAccess,
-  demoOrgGigs, demoOrgConfirmRequests,
+  demoOrgGigs, demoOrgConfirmRequests, demoCreateWorkspace,
 } from './demo.js'
 
 // Maps role_assignment.functional_role (the DB vocabulary — includes rep/

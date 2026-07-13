@@ -86,6 +86,10 @@ export const EVENTS = {
   ACT_CREATED: 'act_created',
   ACT_SWITCHED: 'act_switched',
   WORKSPACE_SWITCHED: 'workspace_switched',
+  // G7 — share ladder: created when the artist copies their share link;
+  // opened once per visit on a public Passport reached via a ?s=1 link.
+  SHARE_LINK_CREATED: 'share_link_created',
+  SHARE_LINK_OPENED: 'share_link_opened',
   // ── the GATE (react + pay) ──
   PASSPORT_VIEWED: 'passport_view',
   REQUEST_SENT: 'availability_request_created',
