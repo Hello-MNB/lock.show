@@ -536,3 +536,5 @@ DOD — target <=3 for core actions) · full responsive adaptation. OWNER: Codex
 per-entity psychology-DOD pack (its DS lane, extends v1.6.20 role-DOD); Claude binds each DOD to
 its screen in the traceability matrix and enforces at proof-pack; Cowork measures actual click
 counts per task on preview; CFRO checks the psychology maps to the money-moment per entity.
+
+## 31. OWNER ORDER (13 Jul): FULL USER-FLOW CHECK + DESIGN SPRINT. Every user flow tested end-to-end (all 7 entities, forward+back, both languages — Cowork executes on demo/preview, polish agent pre-clears in code). DESIGN SPRINT: Codex leads — psychology-DODs (§30) + full-page evidence → per-screen redesign deltas in ONE sprint pack (mobile-first, minimum-clicks, one-CTA law); Claude implements the deltas as sprint batches with screenshot proof after each; Maria tastes on the demo link/preview. Sprint scope = artist lane first, then manager/production/buyer surfaces.
