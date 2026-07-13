@@ -538,3 +538,15 @@ its screen in the traceability matrix and enforces at proof-pack; Cowork measure
 counts per task on preview; CFRO checks the psychology maps to the money-moment per entity.
 
 ## 31. OWNER ORDER (13 Jul): FULL USER-FLOW CHECK + DESIGN SPRINT. Every user flow tested end-to-end (all 7 entities, forward+back, both languages — Cowork executes on demo/preview, polish agent pre-clears in code). DESIGN SPRINT: Codex leads — psychology-DODs (§30) + full-page evidence → per-screen redesign deltas in ONE sprint pack (mobile-first, minimum-clicks, one-CTA law); Claude implements the deltas as sprint batches with screenshot proof after each; Maria tastes on the demo link/preview. Sprint scope = artist lane first, then manager/production/buyer surfaces.
+
+## 32. RELEASE-CANDIDATE DISCIPLINE (GPT corrections ADOPTED, 13 Jul) + RC0 FREEZE
+State names binding: PREVIEW-DEPLOYABLE → QA-READY (G16 active, write-tests may begin) →
+Q8-READY (all lanes green on ONE frozen SHA) → PRODUCTION-READY (Maria approved THAT SHA).
+Sequence: private preview FIRST → G16 tagging/exclusion/cleanup ACTIVE + SHA/env recorded →
+only then the URL+test account go to Maria/testers for write flows. Every fix wave = new RC
+(RC0→RC1→…); regression on affected paths + GPT delta audit per RC; Q8 runs ONLY on the final
+deploy SHA. Cowork binds every proof to its tested SHA. Codex repeats Q4 on materially changed
+screens. CFRO validates on the FINAL candidate. GPT-SKILLS transported to Canon Mirror
+(1h3wb5YqJGSZCYxIiwYuEdQy8o256P1TN) — import to docs/team/ rides RC1 (flagged, not dropped).
+Codex one-pager + Growth Op seed-pack: delivered, pending my canon verification (my #6).
+THIS COMMIT = RC0 FREEZE.
