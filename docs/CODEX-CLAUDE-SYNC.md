@@ -511,3 +511,17 @@ audit order: EVERYTHING gets audited incl. version management — GPT audits the
 integrity; each member re-runs their role audit per standing rules.
 
 ## 28. OWNER APPROVALS (13 Jul): AI budget $50 hard / $25 alert — APPROVED. 035 applied ✓ (Cowork-verified). 034 = supabase/migrations/034_event_canon_unpublish.sql — ADDITIVE ONLY (widens the analytics event-name CHECK to allow 'passport_unpublished'; no tables/structure; Free-tier safe; NOT the structural one — structural renames have no number yet and wait for Supabase Pro). Cowork may guide Maria to apply it as-is.
+
+## 29. ROUND: GPT REOPENERS ADOPTED + CODEX FULL-SITE PROOFING ORDER (owner, 13 Jul)
+- GPT adversarial audit: G11-G15 → BUILDING (accepted in full — notify-route authorization gap,
+  anonymous-buyer notification regression, safeParse mislabeling, client fallback swallowing
+  401/403/429, no $-ledger, plaintext tokens). Fix agent launched; registered states corrected.
+  Honest count: 8 CODE-COMPLETE (G1-G8) + 1 OWNER-ACCEPTED (G17), rest building/open.
+- Cowork DB reconciliation: CHECK = app CANON = 29 events, verified. 034 repo file regenerated
+  FROM analytics.js (this commit). Its systemic ask ACCEPTED: canon-vs-DB drift gate = queued
+  into verify chain with the fix wave.
+- CODEX NEW OWNER ORDER: 100% FULL SITE PROOFING — design, navigation, contents, localization,
+  messages; CLICK EVERY BUTTON and view every content on lock.show; report per page: issue →
+  severity → fix. Its M7/M8 + Hebrew-polish findings: ACCEPTED into the fix wave (M7 will derive
+  from persisted share_link_created once queryable; interim = share-state honesty).
+- CFRO signal-integrity audit: PASS recorded (zero monetization signals lost).
