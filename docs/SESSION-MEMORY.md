@@ -118,3 +118,4 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 - Pending-from-her items repeated at end of every answer until resolved.
 - After compaction: FIRST refresh memory (this file + board + keys registry).
 - Docs-first; no invented data (META-FIELD LAW); QA PASS before any live deploy; cheap agents with clear handoffs; professional restraint in design (Live Intelligence style, ≥85% neutral).
+- **EXPANDED PROACTIVE-AUDIT RULE (owner, 13 Jul): every status+tasks report also requests audits of: specification quality, screen planning, USER FLOW forward AND backward (can the user always return?), new-user registration, existing-user login, etc.**
