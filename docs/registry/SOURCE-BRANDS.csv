@@ -1,0 +1,32 @@
+source_brand,logo_asset,asset_file,dark_variant,light_variant,fallback,usage_rule
+Eventer,codex:eventer,website-next/public/brand/source-logos/codex-eventer.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Eventer · ticketing,Display source identity only; never proof strength
+Tickchak,codex:tickchak,website-next/public/brand/source-logos/codex-tickchak.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Tickchak · ticketing,Display source identity only; never proof strength (spelling normalized from map's 'Tichak' — flagged to Codex)
+Ticketmaster Israel,codex:ticketmaster-il,website-next/public/brand/source-logos/codex-ticketmaster-il.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Ticketmaster IL · ticketing,Display source identity only; never proof strength
+Go-out,codex:go-out,website-next/public/brand/source-logos/codex-go-out.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Go-out · ticketing,Display source identity only; never proof strength
+Generic ticket export,generic:ticket-export,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Ticket export,Generic ticketing/export display; no platform logo
+Spotify,codex:spotify,website-next/public/brand/source-logos/codex-spotify.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Spotify · music,Listening/source context only; no popularity score
+Apple Music,codex:apple-music,website-next/public/brand/source-logos/codex-apple-music.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Apple Music · music,Listening/source context only; no popularity score
+SoundCloud,codex:soundcloud,website-next/public/brand/source-logos/codex-soundcloud.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,SoundCloud · music,Listening/source context only; no popularity score
+Bandcamp,codex:bandcamp,website-next/public/brand/source-logos/codex-bandcamp.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Bandcamp · music,Listening/source context only; no popularity score
+YouTube,codex:youtube,website-next/public/brand/source-logos/codex-youtube.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,YouTube · video,Video/source context only; validate claim relation separately
+Vimeo,codex:vimeo,website-next/public/brand/source-logos/codex-vimeo.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Vimeo · video,Video/source context only; validate claim relation separately
+Instagram,codex:instagram,website-next/public/brand/source-logos/codex-instagram.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Instagram · social,Social/community context only; never follower rank
+TikTok,codex:tiktok,website-next/public/brand/source-logos/codex-tiktok.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,TikTok · social,Social/community context only; never follower rank
+Facebook,codex:facebook,website-next/public/brand/source-logos/codex-facebook.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Facebook · social,Social/community context only; never follower rank
+Resident Advisor,codex:resident-advisor,website-next/public/brand/source-logos/codex-resident-advisor.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Resident Advisor · event context,Event-context source identity only
+Linktree,codex:linktree,website-next/public/brand/source-logos/codex-linktree.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Linktree · links,Link aggregator only; inspect linked sources separately
+Official website,generic:official-website,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Official website · source,Generic official-site source; no third-party logo
+Venue website,generic:venue-site,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Venue website · source,Generic venue source; no platform logo
+Festival website,generic:festival-site,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Festival website · source,Generic festival source; no platform logo
+Press source,generic:press,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Press · source,Generic press/source context; inspect claim relation
+PDF document,generic:document-pdf,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,PDF · document,Document display only; may require review
+CSV export,generic:document-csv,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,CSV · export,Document/export display only; validate source channel
+Screenshot,generic:document-screenshot,,LOCK_SOURCE_ICON,LOCK_SOURCE_ICON,Screenshot · document,Document display only; may require review
+Venue entity,generic:entity-venue,,LOCK_ENTITY_CHIP,LOCK_ENTITY_CHIP,Venue · source,Entity context only; show role and permission boundary
+Festival entity,generic:entity-festival,,LOCK_ENTITY_CHIP,LOCK_ENTITY_CHIP,Festival · source,Entity context only; show role and permission boundary
+Production office,generic:entity-production,,LOCK_ENTITY_CHIP,LOCK_ENTITY_CHIP,Production · source,Entity context only; show role and permission boundary
+Manager or agency,generic:entity-manager,,LOCK_ENTITY_CHIP,LOCK_ENTITY_CHIP,Manager · source,Entity context only; show role and permission boundary
+WhatsApp,codex:whatsapp,website-next/public/brand/source-logos/codex-whatsapp.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,WhatsApp · declared,Private/declared channel only unless separately evidenced
+Telegram,codex:telegram,website-next/public/brand/source-logos/codex-telegram.svg,TBD_APPROVED_ASSET,TBD_APPROVED_ASSET,Telegram · declared,Private/declared channel only unless separately evidenced
+Manual declared,generic:declared-manual,,LOCK_DECLARED_CHIP,LOCK_DECLARED_CHIP,Declared by artist,Self-declared only until supported
+No logo,generic:none,,NONE,NONE,Source,Explicit no-logo state

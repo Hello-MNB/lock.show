@@ -192,13 +192,27 @@ growth; structural debts (033+ renames) scheduled, not blocking.
   task) · derived-source semantics = OPTION A ruled (keep 4 display types; system-derived records
   are internal artifacts — document it in README before 034) · F2–F6 as controlled deltas =
   ACCEPTED · connector-feasibility file = ACCEPTED, post-launch.
-- 🚩 **FLAG (owner rule: raised, NOT released): logo_asset ID FORMAT MISMATCH.** Codex v1.6.14
-  announces canonical IDs like `codex:platform:eventer` (3-part); the registry + original seeds
-  use `codex:spotify` / `generic:ticket-export` (2-part), and 272 rows await final IDs. If Codex
-  fills 272 IDs in one format while 211 rows hold another, the registry forks. RESOLUTION OWNER:
-  Codex — deliver the machine-readable map (source_brand → logo_asset + asset_file + variants +
-  fallback + usage_rule, per GPT's 7-column spec) and DECLARE the single governing format; Claude
-  Code then reconciles all 483 rows mechanically in one commit. Flag stays on the board until then.
+- ✅ **FLAG RESOLVED (13 Jul): logo_asset ID FORMAT MISMATCH — closed with evidence.** Codex
+  v1.6.15 ruled the **2-part `namespace:slug` format governs** and delivered the machine-readable
+  map (29 brands, 7 columns, Drive id 1oPuKYNADdxHgc7bNbXi4CzAOSw5qMHVO). Reconciled mechanically
+  via `scripts/reconcile-logos.mjs`: **134 pending rows → governed Codex IDs** (account variants
+  share the parent logo: Spotify for Artists→codex:spotify etc.) · **138 unmapped rows →
+  `generic:none`** (explicit no-logo state, text badge per Codex law) · governed IDs untouched.
+  `npm run validate:registry` → ✓ REGISTRY VALID, 483 rows · 376 unique fields. Map stored
+  verbatim as `docs/registry/SOURCE-BRANDS.csv` (the repo dictionary GPT proposed).
+  **Two follow-ups for Codex:** ① its map spells 'Tichak' — registry uses the correct 'Tickchak';
+  normalized on import, fix the map at source. ② 138 brands are outside the 29-brand map (mostly
+  entity/document/declared sources now on generic:none) — extend the map only where a real
+  platform logo exists; generic:none is a valid permanent state for the rest.
+- 🚩 **FLAG (raised, NOT released): F2–F6 TRANSPORT.** GPT prepared the F2–F6 delta package
+  (337 records) but its Canon-Mirror upload FAILED — the connector rejected the sandbox path, so
+  the file exists only as a sandbox link Maria can download. Required relay (owner action):
+  ① Maria downloads GPT's artifact ② uploads it to Drive "05 — CANON MIRROR"
+  (1S257_hWg9QQxFwE1UFp0i7LnnguJ-ZlV) ③ Claude Code imports byte-verified, converts, and QCs.
+  GPT's technical recommendations accepted for the import: generalize the validator for
+  F2–F6 schemas · referential-integrity checks vs F1 field_ids · keep musical-score vs
+  grading-score vocabulary distinct (firewall) · stable segment keys · mechanical family
+  generation · **F4 first**. Flag stays on the board until the file lands in the mirror.
 
 ## 21. RADAR PROGRESSION + SOURCE ARCHITECTURE (13 Jul, owner order) — MEGA-BATCHES
 Owner: bigger task batches per agent (progress was too incremental). New governed docs:
