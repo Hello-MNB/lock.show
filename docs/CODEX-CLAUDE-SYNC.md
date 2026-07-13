@@ -204,15 +204,23 @@ growth; structural debts (033+ renames) scheduled, not blocking.
   normalized on import, fix the map at source. ② 138 brands are outside the 29-brand map (mostly
   entity/document/declared sources now on generic:none) — extend the map only where a real
   platform logo exists; generic:none is a valid permanent state for the rest.
-- 🚩 **FLAG (raised, NOT released): F2–F6 TRANSPORT.** GPT prepared the F2–F6 delta package
-  (337 records) but its Canon-Mirror upload FAILED — the connector rejected the sandbox path, so
-  the file exists only as a sandbox link Maria can download. Required relay (owner action):
-  ① Maria downloads GPT's artifact ② uploads it to Drive "05 — CANON MIRROR"
-  (1S257_hWg9QQxFwE1UFp0i7LnnguJ-ZlV) ③ Claude Code imports byte-verified, converts, and QCs.
-  GPT's technical recommendations accepted for the import: generalize the validator for
-  F2–F6 schemas · referential-integrity checks vs F1 field_ids · keep musical-score vs
-  grading-score vocabulary distinct (firewall) · stable segment keys · mechanical family
-  generation · **F4 first**. Flag stays on the board until the file lands in the mirror.
+- ✅ **FLAG RESOLVED (13 Jul, same day): F2–F6 TRANSPORT — owner relayed the file directly.**
+  Maria uploaded GPT's package to this session; imported byte-faithful as
+  `docs/registry/F2-F6-DELTAS.csv` (337 records, sha256 76f6668b…, 149,586 bytes). **Import QC —
+  GPT's own QC held 100%:** 0 referential-integrity failures (all 66 overrides target real F1
+  ids; all 76 additions collision-free, snake_case; all 100 activation rules resolve), enums
+  closed, distributions match its report exactly (90/66/76/100/5 by record type; F2:55 F3:56
+  F4:63 F5:70 F6:88). New gate `npm run validate:deltas` INSIDE `npm run verify` implements all
+  four GPT recommendations: delta-schema validation · referential integrity vs F1 · musical-score
+  allowlist (`score_or_chart_reading_capability`, `score_and_parts_delivery` = sheet-music
+  notation, NOT grading — grading vocabulary stays forbidden) · stable-segment-key ruling
+  documented in registry README §F2–F6. **One stale governance row superseded:** the delta file's
+  `blocked_by_open_flag` row (don't resolve logo IDs) predates Codex v1.6.15 — the logo flag is
+  resolved, so generation applies SOURCE-BRANDS.csv. GPT: no rework needed; noted for F-next.
+  **Remaining step (queued, P1, not preview-blocking):** mechanical family-registry generation
+  in GPT's recorded order F4 → F2 → F5 → F3 → F6; only `canonical` + `ready_for_claude` records
+  auto-apply — the 142 proposal-status records get a review pass first. Canon-Mirror lineage
+  copy still owed (GPT or Cowork drops the same file in "05 — CANON MIRROR" for Drive-side truth).
 
 ## 21. RADAR PROGRESSION + SOURCE ARCHITECTURE (13 Jul, owner order) — MEGA-BATCHES
 Owner: bigger task batches per agent (progress was too incremental). New governed docs:

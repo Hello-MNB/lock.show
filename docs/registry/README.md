@@ -34,3 +34,20 @@ GPT fills rows (from the completed Drive research) → commits BLOCKED for GPT (
 GPT delivers rows as CSV text in the canon-mirror folder → Claude Code imports verbatim + runs
 the firewall QC list (GPT's ⑤) → Cowork consistency pass → registry becomes the seed for
 migration 034 (bilingual reference tables).
+
+## F2–F6 family deltas (binding contract)
+`F2-F6-DELTAS.csv` (337 records, sha256 76f6668b…, GPT 13 Jul via owner relay) composes over F1 —
+it NEVER mutates it. 23 columns; five record types: `segment_baseline` (family-level segment
+defaults), `field_override` (must target an existing F1 field_id), `field_addition` (must NOT
+collide with F1; snake_case), `activation_rule` (targets F1 or added ids), `governance`
+(cross-cutting rulings). Families: F2 Vocal · F3 Instrumental · F4 Band/Ensemble · F5 Live
+Electronic/Hybrid · F6 Creator/Composer/Producer. Segment joins use **segment IDs / stable keys,
+never display strings** (governance ruling — taxonomy vs repo labels differ). Firewall note:
+`score_or_chart_reading_capability` and `score_and_parts_delivery` are MUSICAL scores (sheet-music
+notation) — allowlisted in the validator; grading-score vocabulary stays forbidden. Gate:
+`npm run validate:deltas` (inside `npm run verify`). Family registries are GENERATED mechanically
+from F1 + deltas in the recorded order **F4 → F2 → F5 → F3 → F6** (per-status handling: only
+`canonical` + `ready_for_claude` records auto-apply; `reasoned_proposal` /
+`proposed_for_registry_review` / `ready_for_review` records need a review pass first). The
+delta file's `blocked_by_open_flag` governance row (logo IDs) is SUPERSEDED — written before
+Codex v1.6.15 resolved the format flag; generation applies SOURCE-BRANDS.csv.
