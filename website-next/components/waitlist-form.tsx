@@ -10,13 +10,15 @@ import { useState } from 'react'
 const SUPABASE_URL = 'https://qexfndiyallwqhhzeerd.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_rEoMmflkjGIoAEUFBab_IA_c6k4tgOu'
 
+// S4 (rel-07.13) type floor: every text in this form is >= 1rem (16px) at all
+// widths — readability minimum + prevents iOS Safari auto-zoom on focus.
 const inputStyle: React.CSSProperties = {
   padding: '12px 14px',
   border: '1px solid rgba(10,13,11,0.15)',
   borderRadius: 'var(--radius-sm)',
   backgroundColor: 'var(--color-paper)',
   fontFamily: 'var(--font-heebo)',
-  fontSize: '0.95rem',
+  fontSize: '1rem',
   color: 'var(--color-ink)',
   outline: 'none',
   width: '100%',
@@ -25,7 +27,7 @@ const inputStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-space-mono)',
-  fontSize: '0.65rem',
+  fontSize: '1rem',
   letterSpacing: '0.1em',
   color: 'var(--color-tally-onlight)',
   textTransform: 'uppercase',
@@ -97,7 +99,7 @@ export default function WaitlistForm({
         <p
           style={{
             fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.75rem',
+            fontSize: '1rem',
             fontWeight: 700,
             letterSpacing: '0.08em',
             color: 'var(--color-stamp-onlight)',
@@ -107,7 +109,7 @@ export default function WaitlistForm({
         >
           {state === 'done' ? "✓ You're on the list" : "✓ You're already on the list"}
         </p>
-        <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.6 }}>
           {state === 'done'
             ? "We'll only use your email to contact you about LOCK beta access. No spam, no third parties."
             : "This email is already registered — we'll be in touch about beta access."}
@@ -169,7 +171,7 @@ export default function WaitlistForm({
           backgroundColor: 'var(--color-stamp)',
           color: 'var(--color-ink)',
           fontFamily: 'var(--font-space-mono)',
-          fontSize: '0.75rem',
+          fontSize: '1rem',
           fontWeight: 700,
           letterSpacing: '0.08em',
           border: 'none',
@@ -183,11 +185,11 @@ export default function WaitlistForm({
       </button>
 
       {helper && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--color-tally-onlight)', margin: 0 }}>{helper}</p>
+        <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', margin: 0 }}>{helper}</p>
       )}
 
       {state === 'error' && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--color-void)', margin: 0 }} role="alert">
+        <p style={{ fontSize: '1rem', color: 'var(--color-void)', margin: 0 }} role="alert">
           Something went wrong — your input is still here, please try again.
         </p>
       )}
@@ -195,7 +197,7 @@ export default function WaitlistForm({
       <p
         style={{
           fontFamily: 'var(--font-space-mono)',
-          fontSize: '0.65rem',
+          fontSize: '1rem',
           letterSpacing: '0.06em',
           color: 'var(--color-tally-onlight)',
           margin: 0,

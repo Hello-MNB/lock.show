@@ -40,30 +40,26 @@ function ConsentPrefsButton({ label }: { label: string }) {
   )
 }
 
+// S3 (rel-07.13): DS v1.6.12 footer grouping — Product / Audiences / Legal / Connect.
+// Existing routes only; Legal + Connect columns render separately below.
 const FOOTER_LINKS = [
   {
-    heading: 'FOR ARTISTS',
+    heading: 'PRODUCT',
     links: [
-      { href: '/artists',     label: 'Why LOCK' },
-      { href: '/radar',       label: 'Artist Radar' },
-      { href: '/methodology', label: 'Methodology' },
+      { href: '/radar',         label: 'Artist Radar' },
+      { href: '/passport/demo', label: 'Sample Passport' },
+      { href: '/how-it-works',  label: 'How It Works' },
+      { href: '/methodology',   label: 'Methodology' },
+      { href: '/faq',           label: 'FAQ' },
       // Pricing unpublished (owner, 12 Jul night — S8 beta focus; restore by re-adding)
     ],
   },
   {
-    heading: 'FOR BOOKERS',
+    heading: 'AUDIENCES',
     links: [
-      { href: '/bookers',       label: 'For Booking Managers' },
-      { href: '/producers',     label: 'For Producers' },
-      { href: '/passport/demo', label: 'Sample Passport' },
-      { href: '/how-it-works',  label: 'How It Works' },
-    ],
-  },
-  {
-    heading: 'LEARN MORE',
-    links: [
-      { href: '/faq',         label: 'FAQ' },
-      { href: '/contact',     label: 'Contact' },
+      { href: '/artists',   label: 'For Artists' },
+      { href: '/bookers',   label: 'For Booking Managers' },
+      { href: '/producers', label: 'For Producers' },
     ],
   },
 ]
@@ -235,6 +231,21 @@ export function Footer() {
               CONNECT
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <li style={{ marginBottom: '4px' }}>
+                <Link
+                  href="/contact"
+                  style={{
+                    fontFamily: 'var(--font-heebo)',
+                    fontSize: '0.875rem',
+                    color: 'rgba(243,245,239,0.7)',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    padding: '0.4rem 0',
+                  }}
+                >
+                  Contact
+                </Link>
+              </li>
               {SOCIAL.map(({ key, label, href }) => (
                 <li key={key} style={{ marginBottom: '4px' }}>
                   <a
