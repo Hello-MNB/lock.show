@@ -719,6 +719,23 @@ export const T = {
         time: 5,
       },
     },
+    // G1 milestone JOURNEY — waypoints with names only (firewall: no count, no %).
+    milestones: {
+      m1: 'הגעת',
+      m2: 'אור ראשון',
+      m3: 'הרדאר חי',
+      m4: 'ממוקד',
+      m5: 'מגובה',
+      m6: 'מפורסם',
+      m7: 'בשוק',
+      m8: 'נענית',
+      done: 'הושלם',
+      current: 'אתה כאן',
+      next: 'בהמשך',
+      aria: (t, s) => `אבן דרך: ${t} — ${s}`,
+    },
+    // G2 genre-emphasis guidance — wording only, never a weight or number.
+    genreFocus: (names) => `מזמינים בז'אנר שלך מסתכלים קודם על: ${names}.`,
     // Partial HE for the artist universe — the rest falls back to EN per-key
     // (build-in-English rule) until the native-authoring pass.
     universe: {

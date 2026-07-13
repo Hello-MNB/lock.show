@@ -795,6 +795,24 @@ export const T = {
         time: 0,
       },
     },
+    // G1 milestone JOURNEY — named waypoints ONLY (firewall: never a count,
+    // never "x of 8", never a %, never a bar toward a score).
+    milestones: {
+      m1: 'Arrived',
+      m2: 'First light',
+      m3: 'Radar alive',
+      m4: 'Focused',
+      m5: 'Backed',
+      m6: 'Published',
+      m7: 'In the market',
+      m8: 'Answered',
+      done: 'done',
+      current: 'you are here',
+      next: 'ahead',
+      aria: (t, s) => `Milestone: ${t} — ${s}`,
+    },
+    // G2 genre-emphasis guidance — wording only, never a weight or number.
+    genreFocus: (names) => `Buyers in your genre look first at: ${names}.`,
     universe: {
       planets: {
         identity: 'Identity & Story',

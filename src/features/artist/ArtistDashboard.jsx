@@ -6,7 +6,7 @@ import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } fro
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { isPrimaryPlanet } from '../../lib/genreWeights.js'
+import { isPrimaryPlanet, planetEmphasisOrder } from '../../lib/genreWeights.js'
 import RadarUniverse from './RadarUniverse.jsx'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
@@ -58,6 +58,49 @@ function pickNextAction(artist, items, claims, T, openRequests = 0) {
   return { ...A.share, to: '/artist/passport' }
 }
 
+// ── G1 milestone JOURNEY (M1–M8) ─────────────────────────────────────────────
+// FIREWALL: a journey of named waypoints ONLY — never "5/8", never a %, never
+// a progress bar toward a score. Done = filled dot · current = ringed dot ·
+// ahead = hollow dot; each with its label and an accessible state.
+function MilestoneStrip({ artist, items, claims, reqCount, T }) {
+  const M = T.radar.milestones
+  const links = items.filter((i) => i.item_type === 'link')
+  const exp = items.filter((i) => i.item_type !== 'link')
+  const supported = claims.filter((c) => ['verified', 'supporting'].includes(c.verification_status))
+  const answered = reqCount > 0 // a real buyer request exists — the journey's far edge
+  const done = [
+    true,                                                      // M1 Arrived — you are here at all
+    items.length > 0,                                          // M2 First light — first evidence item
+    claims.length > 0,                                         // M3 Radar alive — claim pipeline spoke
+    !!artist.photo_url && links.length > 0 && exp.length >= 3, // M4 Focused — photo + link + track record
+    supported.length > 0,                                      // M5 Backed — evidence supports a claim
+    !!artist.published,                                        // M6 Published — public Passport exists
+    answered,                                                  // M7 In the market — reached with M8 (share is unknowable)
+    answered,                                                  // M8 Answered — a buyer request arrived
+  ]
+  const titles = [M.m1, M.m2, M.m3, M.m4, M.m5, M.m6, M.m7, M.m8]
+  const current = done.findIndex((d) => !d) // first not-yet-reached waypoint
+  return (
+    <ol className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      {titles.map((title, i) => {
+        const state = done[i] ? 'done' : i === current ? 'current' : 'next'
+        return (
+          <li key={title} aria-label={M.aria(title, M[state])} className="flex items-center gap-1.5">
+            <span aria-hidden className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+              state === 'done' ? 'bg-accent'
+                : state === 'current' ? 'bg-ink ring-2 ring-accent/40'
+                : 'border border-line2'}`} />
+            <span className={`font-mono text-[10px] uppercase tracking-[0.08em] ${
+              state === 'done' ? 'text-muted'
+                : state === 'current' ? 'font-semibold text-ink'
+                : 'text-faint'}`}>{title}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
 export default function ArtistDashboard() {
   const { T } = useLang()
   const { user } = useAuth()
@@ -71,6 +114,7 @@ export default function ArtistDashboard() {
   const [claims, setClaims] = useState([])
   const [ent, setEnt] = useState(null)
   const [openReqs, setOpenReqs] = useState(0) // 'new' availability requests — post-M8 ladder
+  const [reqCount, setReqCount] = useState(0) // ANY request ever — the M7/M8 journey waypoint
   const [publishing, setPublishing] = useState(false)
   const [pubError, setPubError] = useState('')
   const [loadError, setLoadError] = useState(false)
@@ -96,7 +140,11 @@ export default function ArtistDashboard() {
         setItems(await listProfileItems(a.id))
         setClaims(await listClaims(a.id))
         setEnt(await getEntitlement(a.id))
-        try { setOpenReqs((await listRequestsForArtist(a.id)).filter((r) => r.status === 'new').length) } catch { setOpenReqs(0) } // post-M8 ladder input — tolerate absence
+        try {
+          const reqs = await listRequestsForArtist(a.id)
+          setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
+          setOpenReqs(reqs.filter((r) => r.status === 'new').length)
+        } catch { setReqCount(0); setOpenReqs(0) } // post-M8 ladder input — tolerate absence
         setDirty(isPassportDirty(a.id))
         if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal
       }
@@ -211,6 +259,14 @@ export default function ArtistDashboard() {
 
   const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs), act, artist, T)
 
+  // G2 — genre emphasis guidance: the first two planets buyers weigh in this
+  // artist's genre family. Names only, joined for one wording-only line.
+  const genreFocusNames = planetEmphasisOrder(act, artist)
+    .slice(0, 2)
+    .map((k) => T.radar.universe.planets[k])
+    .filter(Boolean)
+    .join(' · ')
+
   // IA correction: claim review is NOT a destination — it opens as a panel
   // inside the Radar. Deferred-field actions (photo, bands) open their planet
   // panel in place. Evidence capture keeps its route for compatibility but is
@@ -240,6 +296,14 @@ export default function ArtistDashboard() {
         onArtistChange={saveArtist} onActChange={saveAct} onItemsRefresh={refreshItems}
         reviewSignal={reviewSignal} focusPlanet={focusPlanet} focusSignal={focusSignal}
         nextAction={nextAction} onNextAction={runNextAction} />
+
+      {/* ── G1 milestone JOURNEY — named waypoints only (firewall: no count,
+            no %, no bar). G2: one genre-guidance line beneath it — wording
+            only, never a weight or number. ── */}
+      <MilestoneStrip artist={artist} items={items} claims={claims} reqCount={reqCount} T={T} />
+      {genreFocusNames && (
+        <p className="mb-3 text-[11px] leading-relaxed text-muted">{T.radar.genreFocus(genreFocusNames)}</p>
+      )}
 
       {/* ── ONE dominant next step — the coach's single clearest move. Mobile
             only: on the full-stage (md+) this same card floats over the
