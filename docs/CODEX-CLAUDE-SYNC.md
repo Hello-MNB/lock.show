@@ -550,3 +550,5 @@ screens. CFRO validates on the FINAL candidate. GPT-SKILLS transported to Canon 
 (1h3wb5YqJGSZCYxIiwYuEdQy8o256P1TN) — import to docs/team/ rides RC1 (flagged, not dropped).
 Codex one-pager + Growth Op seed-pack: delivered, pending my canon verification (my #6).
 THIS COMMIT = RC0 FREEZE.
+
+## 33. PARALLEL-EXECUTION GOVERNANCE (GPT audit ADOPTED, 13 Jul): Track D (admin cockpit) = post-launch branch, NEVER RC1 (locked scope rules) · Track E split fix-vs-enhancement (only DOD items enter RC1) · reserved-file manifest per agent (package.json, App.jsx, i18n files, migrations, release docs = single-owner per wave) · PARALLEL-WORK-LOCK.md per wave · migration numbers reserved by Claude only · G16 closure needs child-row cleanup graph (qa_run_id + dedicated QA account + FK-safe cleanup + Gate-read exclusion proof) — plan amended by reference · accurate phrasing: "G1-G12 implementation wave complete; G13/G15 real-DB pending; G16 authored, closure pending". CORRECTION to Growth Op: share_link_created/opened ARE wired (G7, commit 7bc1bc6) — its flag was stale; funnel step not blind on RC0.
