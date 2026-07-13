@@ -12,10 +12,11 @@ import { DEMO } from '../../lib/demo.js'
 
 // Honest receipt destination — only confirmed verified/supporting passport-ok
 // claims actually reach the public Passport; everything else stays private.
-function destinationOf(claim) {
+// Localized via the radar.universe dictionary — never a hardcoded string.
+function destinationOf(claim, T) {
   const publicBound = claim?.visibility === VISIBILITY.PASSPORT_OK &&
     ['verified', 'supporting'].includes(claim?.verification_status)
-  return publicBound ? 'your Passport view' : 'your private record'
+  return publicBound ? T.radar.universe.destPassport : T.radar.universe.destPrivate
 }
 
 export default function ClaimReview() {
@@ -90,7 +91,7 @@ export default function ClaimReview() {
       setBloomId(claim.id)
       setTimeout(() => setBloomId((cur) => (cur === claim.id ? null : cur)), 420)
       // The receipt names what was confirmed and where it now appears.
-      flashReceipt(`Added to ${destinationOf(claim)}: “${claim.public_wording || claim.value || human(claim.claim_type)}”`)
+      flashReceipt(T.claims.confirmReceipt(destinationOf(claim, T), claim.public_wording || claim.value || human(claim.claim_type)))
     } finally { setToggling(null) }
   }
 
@@ -457,7 +458,7 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
       {needsReview && !isFlagged && (
         <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
           <button
-            className="flex min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
+            className="flex min-h-[44px] min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
             onClick={() => onApprove(claim)} disabled={busy}
             aria-label={`${T.claims.approve}: ${claimTitle}`}>
             {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{T.claims.approve}: “{claimTitle}”</span></>}

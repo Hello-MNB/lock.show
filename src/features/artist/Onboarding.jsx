@@ -202,7 +202,7 @@ export default function Onboarding() {
             {linkPlatform && (
               <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
                 <PlatformLogo name={linkPlatform} size={15} className="text-gold" />
-                {linkPlatform.charAt(0).toUpperCase() + linkPlatform.slice(1)} recognized
+                {T.evidence.platformRecognized(linkPlatform.charAt(0).toUpperCase() + linkPlatform.slice(1))}
               </p>
             )}
             {/* the deferral promise — everything else is the Radar's job */}

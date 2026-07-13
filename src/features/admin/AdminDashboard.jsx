@@ -211,7 +211,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between gap-3">
                       <span className="truncate text-sm font-bold text-ink">{p.artists?.stage_name || '—'}</span>
                       <button onClick={() => activate(p.id)}
-                        className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
+                        className="btn-primary min-h-[44px] shrink-0 px-4 py-1.5 text-xs">
                         {T.admin.markActive}
                       </button>
                     </div>
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                   <div key={u.organization_id} className="card flex items-center justify-between gap-3 py-3">
                     <span className="truncate text-sm text-ink">{u.organization?.name || u.organization_id}</span>
                     <button onClick={() => approve(u.organization_id)}
-                      className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
+                      className="btn-primary min-h-[44px] shrink-0 px-4 py-1.5 text-xs">
                       {T.admin.approveUpgrade}
                     </button>
                   </div>

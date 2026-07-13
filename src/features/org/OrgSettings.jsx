@@ -103,7 +103,10 @@ export default function OrgSettings() {
                 <p className="text-sm text-amber mb-2">{T.org.deleteConfirm}</p>
                 <input className="field mb-2" placeholder={T.org.deleteReason} value={reason} onChange={(e) => setReason(e.target.value)} />
                 <div className="flex gap-2">
-                  <button className="btn-primary flex-1" onClick={doDelete} disabled={busy || !reason.trim()}>{T.org.deleteOrg}</button>
+                  {/* destructive confirm — amber, never the lime primary (that
+                      stays reserved for Save above; matches Settings' pattern) */}
+                  <button className="min-h-[44px] flex-1 rounded-xl border border-amber bg-amber py-2 text-sm font-bold text-bg transition hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
+                    onClick={doDelete} disabled={busy || !reason.trim()}>{T.org.deleteOrg}</button>
                   <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>{T.common.cancel}</button>
                 </div>
               </div>

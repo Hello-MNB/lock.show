@@ -52,10 +52,11 @@ function sourceRef(node) {
 
 // Honest receipt destination: only verified/supporting + passport-ok claims
 // actually reach the public Passport; everything else stays private.
-function destinationOf(claim) {
+// Localized via the radar.universe dictionary (S) — never a hardcoded string.
+function destinationOf(claim, S) {
   const publicBound = claim?.visibility === VISIBILITY.PASSPORT_OK &&
     ['verified', 'supporting'].includes(claim?.verification_status)
-  return publicBound ? 'your Passport view' : 'your private record'
+  return publicBound ? S.destPassport : S.destPrivate
 }
 
 // ── Platform ring (META-FIELD LAW) — small nodes orbiting the universe, ONE
@@ -257,7 +258,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const FILTERS = [
     { key: 'all', label: S.filters.all },
     { key: 'needsYou', label: S.filters.needsYou, dot: foundClaims.length > 0 },
-    { key: 'ready', label: 'Ready' },
+    { key: 'ready', label: S.filters.ready },
   ]
   const matchesFilter = (n) =>
     (filter === 'all' ? true :
@@ -312,7 +313,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       const ids = new Set(list.map((n) => n.claim.id))
       onClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
       triggerBloom(list.map((n) => n.id))
-      flash(`${list.length} claims confirmed — each added to ${destinationOf(list[0].claim)}`)
+      flash(S.bulkConfirmed(list.length, destinationOf(list[0].claim, S)))
     } finally { setBulkBusy(false) }
   }
 
@@ -372,7 +373,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             onTagClick={() => setSelected('identity')} />
           <h3 className="font-display mt-5 text-xl font-bold text-ink">{S.blossomTitle}</h3>
           <p className="mx-auto mt-1.5 max-w-[300px] text-xs leading-relaxed text-muted">{S.blossomBody}</p>
-          <button className="btn-primary mt-4 px-4 py-2.5 text-xs" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
+          <button className="btn-primary mt-4 min-h-[44px] px-4 py-2.5 text-xs" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
         </div>
       ) : (
         /* ── THE UNIVERSE — always mounted, never reflows. Full-stage (md+):
@@ -488,7 +489,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           <span className="flex min-w-0 items-center gap-2">
             <span aria-hidden className="mt-px h-2 w-2 shrink-0 rounded-full bg-accent" />
             <span className="min-w-0">
-              <span className="block font-semibold">Added to {destinationOf(undo.claim)}:</span>
+              <span className="block font-semibold">{S.addedTo(destinationOf(undo.claim, S))}</span>
               <span className="block truncate text-muted">“{undo.claim.value || human(undo.claim.claim_type)}”</span>
             </span>
           </span>
@@ -511,9 +512,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         {sel && (
           <div className="max-h-[65vh] overflow-y-auto pe-0.5">
             {batchable.length >= 2 && (
-              <button className="btn-primary mb-3 w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
-                aria-label={`Confirm all ${batchable.length} found claims shown below`}>
-                {bulkBusy ? <Spinner /> : `Confirm all ${batchable.length} below`}
+              <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
+                aria-label={S.confirmAllCta(batchable.length)}>
+                {bulkBusy ? <Spinner /> : S.confirmAllCta(batchable.length)}
               </button>
             )}
             <div className="space-y-2">
@@ -537,9 +538,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       <BottomSheet open={review && !selected} onClose={() => setReview(false)} title={S.filters.needsYou}>
         <div className="max-h-[65vh] overflow-y-auto pe-0.5">
           {foundClaims.length >= 2 && (
-            <button className="btn-primary mb-3 w-full py-2.5 text-xs" onClick={() => confirmMany(foundClaims.map((x) => x.node))} disabled={bulkBusy}
-              aria-label={`Confirm all ${foundClaims.length} found claims shown below`}>
-              {bulkBusy ? <Spinner /> : `Confirm all ${foundClaims.length} below`}
+            <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(foundClaims.map((x) => x.node))} disabled={bulkBusy}
+              aria-label={S.confirmAllCta(foundClaims.length)}>
+              {bulkBusy ? <Spinner /> : S.confirmAllCta(foundClaims.length)}
             </button>
           )}
           <div className="space-y-2">
@@ -551,7 +552,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 onSaved={() => flash(S.fill.savedInPlace)} />
             ))}
             {needsNodes.length === 0 && (
-              <p className="py-6 text-center text-xs text-muted">Nothing needs you right now.</p>
+              <p className="py-6 text-center text-xs text-muted">{S.nothingNeedsYou}</p>
             )}
           </div>
         </div>
@@ -642,10 +643,10 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
           <span className={`chip shrink-0 text-[10px] ${chip.c}`}>{chip.icon}</span>
         </div>
         <button
-          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
+          className="mt-2.5 flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
           onClick={onConfirm} disabled={busy}
-          aria-label={`Confirm: ${wording}`}>
-          {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">Confirm: “{wording}”</span></>}
+          aria-label={S.confirmNamed(wording)}>
+          {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{S.confirmNamed(wording)}</span></>}
         </button>
       </div>
     )
@@ -714,7 +715,7 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
   async function run(fn) {
     setBusy(true); setErr('')
     try { await fn(); onDone() }
-    catch (e) { setErr(e.message || 'error') }
+    catch (e) { setErr(e.message || T.common.error) }
     finally { setBusy(false) }
   }
 

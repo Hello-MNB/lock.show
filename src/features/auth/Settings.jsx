@@ -195,7 +195,7 @@ export default function Settings() {
   }, [isArtist, user.id])
 
   async function saveWhatsApp() {
-    if (!artistId) { setError(T.settings.waNeedProfile || 'Create your artist profile first.'); return }
+    if (!artistId) { setError(T.settings.waNeedProfile); return }
     setWaSaving(true); setError(''); setWaSaved(false)
     try {
       await saveArtistWhatsApp(artistId, { number: waNumber, share: waShare })
@@ -319,8 +319,10 @@ export default function Settings() {
           <Link to="/org/members" className="btn-ghost">{T.org.membersTitle}</Link>
           {!isAgency && <Link to="/org/upgrade" className="btn-ghost">{T.org.upgradeTitle}</Link>}
           {isOwner && <Link to="/org/billing" className="btn-ghost">{T.org.billingTitle}</Link>}
+          {/* navigation, not this screen's action — secondary style so the
+              profile Save stays the one lime CTA (DS: one dominant per screen) */}
           {isAgency && (
-            <Link to={isProducerWorkspace ? '/production' : '/agency'} className="btn-primary mt-1">
+            <Link to={isProducerWorkspace ? '/production' : '/agency'} className="btn-ghost mt-1">
               {isProducerWorkspace ? T.production.title : T.agency.title}
             </Link>
           )}
@@ -346,9 +348,9 @@ export default function Settings() {
         <SectionHead className="mb-1">{T.settings.consents}</SectionHead>
         <p className="mb-3 text-xs text-muted">{T.settings.consentsHint}</p>
         <div className="space-y-1.5 text-xs text-muted">
-          <p><span className="text-accent" aria-hidden>✓</span> Privacy Policy (v2) — {T.settings.accepted}</p>
-          <p><span className="text-accent" aria-hidden>✓</span> Data Processing (v2) — {T.settings.accepted}</p>
-          <p><span className="text-accent" aria-hidden>✓</span> Evidence Storage (v2) — {T.settings.accepted}</p>
+          <p><span className="text-accent" aria-hidden>✓</span> {T.settings.consentPrivacy} — {T.settings.accepted}</p>
+          <p><span className="text-accent" aria-hidden>✓</span> {T.settings.consentProcessing} — {T.settings.accepted}</p>
+          <p><span className="text-accent" aria-hidden>✓</span> {T.settings.consentEvidence} — {T.settings.accepted}</p>
         </div>
 
         {/* 4th purpose — optional, its own toggle, separate from the required pair */}
@@ -402,7 +404,7 @@ export default function Settings() {
       </div>
 
       <div className="flex items-center justify-center gap-2 text-[11px] text-faint">
-        <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">Controlled beta</span>
+        <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{T.settings.betaBadge}</span>
         <span>LOCK v1</span>
       </div>
     </PageShell>

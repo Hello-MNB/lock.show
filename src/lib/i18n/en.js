@@ -582,6 +582,8 @@ export const T = {
     limitationLabel: 'What this supports / does not establish',
     notApprovedHint: 'Confirm the claim first — nothing goes public without your approval.',
     selfReportedNoPassport: 'Self-reported claims stay in your private view — they never appear on the public Passport. Strengthen with a source or a producer confirmation.',
+    // Named confirmation receipt — says WHAT was confirmed and WHERE it landed.
+    confirmReceipt: (dest, w) => `Added to ${dest}: “${w}”`,
   },
   settings: {
     title: 'Settings',
@@ -608,6 +610,11 @@ export const T = {
     waShareLabel: 'Let booking managers reach me on WhatsApp',
     waShareHint: 'Shown on the confirmation screen after someone sends you an availability request. Off by default.',
     waNeedProfile: 'Create your artist profile first, then add your WhatsApp here.',
+    // Consent-record names (settings list) + the footer beta badge.
+    consentPrivacy: 'Privacy Policy (v2)',
+    consentProcessing: 'Data Processing (v2)',
+    consentEvidence: 'Evidence Storage (v2)',
+    betaBadge: 'Controlled beta',
     email: 'Email',
     accepted: 'Accepted',
     consentsContact: 'For full management contact: privacy@lock.show (DRAFT)',
@@ -917,7 +924,7 @@ export const T = {
         prokit: 'Professional Kit',
         proof: 'Career Proof',
       },
-      filters: { needsYou: 'Needs you', found: '✦ Found', missing: '+ Missing', confirmed: '✓ Confirmed', all: 'All' },
+      filters: { needsYou: 'Needs you', found: '✦ Found', missing: '+ Missing', confirmed: '✓ Confirmed', all: 'All', ready: 'Ready' },
       allWorlds: 'All worlds',
       worldsHint: 'Your content worlds — tap to see that world only',
       complete: 'complete',
@@ -956,6 +963,15 @@ export const T = {
         newActDemo: 'Creating an act is not available in the demo',
       },
       backToUniverse: '← Universe',
+      // Named receipts + batch confirm — the confirm moment always says WHAT
+      // was confirmed and WHERE it now lives (never an abstract "saved").
+      destPassport: 'your Passport view',
+      destPrivate: 'your private record',
+      addedTo: (dest) => `Added to ${dest}:`,
+      bulkConfirmed: (n, dest) => `${n} claims confirmed — each added to ${dest}`,
+      confirmAllCta: (n) => `Confirm all ${n} below`,
+      confirmNamed: (w) => `Confirm: “${w}”`,
+      nothingNeedsYou: 'Nothing needs you right now.',
       whatItProves: 'What it proves',
       whatItDoesNotProve: 'What it does NOT prove',
       confirmCta: 'Confirm signal',
@@ -1072,6 +1088,17 @@ export const T = {
     processed: 'Processed',
     pending: 'Pending',
     results: 'Labelling results',
+    // The three capture-path cards (claim-first entry, canon A7).
+    paths: {
+      upload: { title: 'Upload proof', desc: 'Ticket exports, settlements, posters — the strongest evidence.' },
+      connect: { title: 'Connect a source', desc: 'Public links and producer references that can be checked.' },
+      declare: { title: 'Declare a band', desc: 'Your own numbers — shown only as a bounded band, never a raw count.' },
+    },
+    // AI-labeling in-progress state (skeleton card) — honest, approval-gated.
+    processingTitle: 'AI is labeling your evidence',
+    processingNote: 'Nothing publishes without you — every claim waits for your confirmation.',
+    // Live platform recognition while a link is typed/pasted.
+    platformRecognized: (name) => `${name} recognized`,
   },
   status: {
     // The 5-state vocabulary — ONE verb per state, everywhere (master-class §1)

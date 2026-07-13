@@ -565,6 +565,8 @@ export const T = {
     verifiedLabel: 'הוכחה מאומתת — ניתן לפרסם',
     selfReportedLabel: 'דיווח עצמי — הצג בזהירות',
     notAssessableLabel: 'לא-ניתן-להעריך',
+    // Named confirmation receipt — says WHAT was confirmed and WHERE it landed.
+    confirmReceipt: (dest, w) => `נוסף אל ${dest}: “${w}”`,
   },
   settings: {
     title: 'הגדרות',
@@ -591,6 +593,11 @@ export const T = {
     waShareLabel: 'אפשר למזמיני הופעות ליצור איתי קשר בוואטסאפ',
     waShareHint: 'יוצג במסך האישור לאחר שמישהו שולח בקשת זמינות. כבוי כברירת מחדל.',
     waNeedProfile: 'צור/צרי קודם פרופיל אמן, ואז הוסף/הוסיפי כאן את הוואטסאפ.',
+    // Consent-record names (settings list) + the footer beta badge.
+    consentPrivacy: 'מדיניות פרטיות (v2)',
+    consentProcessing: 'עיבוד נתונים (v2)',
+    consentEvidence: 'אחסון ראיות (v2)',
+    betaBadge: 'בטא מבוקרת',
     email: 'אימייל',
     accepted: 'מאושר',
     consentsContact: 'לניהול מלא צור קשר: privacy@lock.show (DRAFT)',
@@ -834,6 +841,15 @@ export const T = {
     // Partial HE for the artist universe — the rest falls back to EN per-key
     // (build-in-English rule) until the native-authoring pass.
     universe: {
+      filters: { ready: 'מוכן' },
+      // Named receipts + batch confirm — the confirm moment names WHAT and WHERE.
+      destPassport: 'תצוגת הפספורט שלך',
+      destPrivate: 'הרשומה הפרטית שלך',
+      addedTo: (dest) => `נוסף אל ${dest}:`,
+      bulkConfirmed: (n, dest) => `${n} הוכחות אושרו — כל אחת נוספה אל ${dest}`,
+      confirmAllCta: (n) => `אשר את כל ${n} שלמטה`,
+      confirmNamed: (w) => `אשר: “${w}”`,
+      nothingNeedsYou: 'אין כרגע שום דבר שדורש אותך.',
       src: {
         genre: "ז'אנר",
         goal: 'המטרה שלך',
@@ -912,6 +928,17 @@ export const T = {
     processed: 'עובד',
     pending: 'ממתין',
     results: 'תוצאות התיוג',
+    // The three capture-path cards (claim-first entry, canon A7).
+    paths: {
+      upload: { title: 'העלאת הוכחה', desc: 'ייצוא כרטיסים, דוחות סגירה, פוסטרים — הראיות החזקות ביותר.' },
+      connect: { title: 'חיבור מקור', desc: 'קישורים ציבוריים והפניות מפיקים שניתן לבדוק.' },
+      declare: { title: 'הצהרת בנד', desc: 'המספרים שלך — מוצגים רק כבנד תחום, לעולם לא ספירה גולמית.' },
+    },
+    // AI-labeling in-progress state (skeleton card) — honest, approval-gated.
+    processingTitle: 'ה-AI מתייג את הראיות שלך',
+    processingNote: 'שום דבר לא מתפרסם בלעדיך — כל הוכחה ממתינה לאישור שלך.',
+    // Live platform recognition while a link is typed/pasted.
+    platformRecognized: (name) => `זוהה ${name}`,
   },
   status: {
     strong: 'חזק',
