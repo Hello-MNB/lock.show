@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport } from '../../lib/db.js'
+import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport, authHeaders } from '../../lib/db.js'
 import { VISIBILITY, SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
 import { PageShell, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
 import { MethodLabel, BandPill } from './proofBits.jsx'
@@ -381,7 +381,7 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
     setReqBusy(true)
     try {
       const res = await fetch('/api/request-confirmation', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({ claimId: claim.id, producerContact: email || null }),
       })
       const json = await res.json().catch(() => ({}))

@@ -15,6 +15,7 @@
 // score/percentage/count.
 // ============================================================
 import { supabase } from './supabase.js'
+import { authHeaders } from './db.js'
 import { DEMO, demoNotifications } from './demo.js'
 
 // ── Read ─────────────────────────────────────────────────
@@ -58,7 +59,7 @@ export async function createNotification({ artistId, type, body, link = null }) 
   try {
     await fetch('/api/notify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ artistId, type, body, link }),
     })
   } catch { /* best-effort — no server on a static deploy is a silent no-op */ }

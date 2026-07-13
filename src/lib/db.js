@@ -316,11 +316,22 @@ async function processEvidenceClientSide(artistId) {
   return { processed: claims.length, ai: 'client-stub', claims }
 }
 
+// G11 client side — protected API routes need the caller's Supabase JWT.
+// Returns {} when there is no session (server then answers 401 and callers
+// fall back / surface it per their own contract).
+export async function authHeaders() {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const t = data?.session?.access_token
+    return t ? { Authorization: `Bearer ${t}` } : {}
+  } catch { return {} }
+}
+
 export async function processEvidence(artistId) {
   if (DEMO) return { processed: demoClaims.length, ai: 'demo', claims: demoClaims }
   try {
     const res = await fetch('/api/process-evidence', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ artistId }),
     })
     const ct = res.headers.get('content-type') || ''
