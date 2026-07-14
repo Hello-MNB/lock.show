@@ -27,7 +27,7 @@ Every app/site release row also records **which DS version it implements** (desi
 | Track | Version | SHA | DS implemented | Live-verified |
 |---|---|---|---|---|
 | App | rel-2026.07.10 (incl. firewall hotfix eafcd4e) | **a874ab5** — last app production deploy (10 Jul) | pre-DS dark legacy (A13 mapping = this train) | ✅ bundle fingerprints (DEPLOY-LOG) |
-| Site | **rel-site-2026.07.14 (11-page rebuild + flat hero + entity messaging + free-pilot page)** | **3e1b8a7** — 14 Jul: full rebuild + wave-6 + Codex SEO/AEO/GEO layer merged; live via alias-promote of the READY build (Vercel dedupes identical SHA). Rollback anchor: 5890621| Codex rebuild brief + owner no-frames ruling (wave-6 palette pending) | ✅ Production-QA round 1 GREEN (14/14 routes 200 incl. /managers+/production; new copy live; old hero absent; no price language; OAuth-fixed embed bundle index-Dhjy-W_p.js served at /app/signup+login; robots/sitemap OK; 0 console errors) |
+| Site | **rel-site-2026.07.14 (11-page rebuild + flat hero + entity messaging + free-pilot page)** | **9a08069** — 14 Jul: Codex mobile-first rhythm upgrade (nav/footer/marketing.css) published to production via alias-promote of Codex's READY build. Rollback anchor: 3e1b8a7| Codex rebuild brief + owner no-frames ruling (wave-6 palette pending) | ✅ Production-QA round 1 GREEN (14/14 routes 200 incl. /managers+/production; new copy live; old hero absent; no price language; OAuth-fixed embed bundle index-Dhjy-W_p.js served at /app/signup+login; robots/sitemap OK; 0 console errors) |
 | Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash |
 
 ### Reference tracks

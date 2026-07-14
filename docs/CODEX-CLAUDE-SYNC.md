@@ -963,3 +963,11 @@ alias-promote: assign www.lock.show + lock.show to the existing READY build (dpl
 LESSON: to publish a SHA that already built as preview, promote/alias it — don't re-POST the same
 SHA. Rollback anchor: 5890621. Codex = site owner going forward (needs Maria's Vercel membership
 for its own publishes; until then Claude promotes).
+
+## 60. CODEX SITE UPGRADE LIVE @ 9a08069 (14 Jul, owner "publish what Codex did, don't duplicate")
+Published Codex's exact branch build (codex/live-site-redesign-20260714 @ 9a080698, mobile-first
+rhythm upgrade: nav/footer/marketing.css) to production — NO rebuild/merge into claude branch per
+owner. Method: alias-promote Codex's READY preview build (dpl_9yqH…) to www.lock.show + lock.show.
+Verified live: www.lock.show 200, title "LOCK — Private Radar and public Passport…", hero present.
+Rollback anchor: 3e1b8a7. Codex is site owner; when Maria adds it to Vercel it self-publishes;
+until then Claude alias-promotes its READY builds. PR #3 open (codex branch).
