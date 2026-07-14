@@ -61,6 +61,24 @@ html {
   box-sizing: border-box;
 }
 
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(900px 520px at 85% -10%, rgba(200, 240, 77, 0.06), transparent 62%),
+    radial-gradient(760px 480px at 6% 24%, rgba(215, 168, 74, 0.045), transparent 64%),
+    var(--color-night);
+  color: var(--color-ink);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
 /* ─── Interaction layer — ONE duration/easing site-wide ───────────────── */
 /* Applies to every link/button uniformly via `filter`/`transform`, which no
    inline style in this codebase sets — so it layers cleanly over any

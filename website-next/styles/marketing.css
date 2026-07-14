@@ -52,10 +52,11 @@
 
 /* ── Section rhythm ─────────────────────────────────── */
 .mk-section {
-  padding: 96px max(24px, 4vw);
+  position: relative;
+  padding: clamp(72px, 9vw, 112px) max(22px, 4vw);
 }
 .mk-container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   width: 100%;
 }
@@ -69,7 +70,7 @@
 .mk-hero {
   position: relative;
   overflow: hidden;
-  padding: clamp(72px, 10vh, 120px) max(24px, 4vw) 96px;
+  padding: clamp(84px, 12vh, 132px) max(22px, 4vw) clamp(88px, 10vw, 120px);
 }
 .mk-hero-grid {
   display: grid;
@@ -91,7 +92,7 @@
   z-index: 1; /* copy above the bleeding image */
 }
 .mk-hero-copy {
-  max-width: 560px;
+  max-width: 620px;
 }
 .mk-hero-bleed {
   /* Desktop: occupies the right ~60% of the hero, edge to edge (top /
@@ -137,6 +138,7 @@
 /* ── Cards ──────────────────────────────────────────── */
 .mk-card {
   border-radius: 24px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 22px 60px -42px rgba(10, 13, 11, 0.48);
 }
 
 /* ── 5-card entity grid (home lanes · pricing entities) ──
@@ -177,22 +179,28 @@
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
+  box-shadow: 0 12px 32px -22px rgba(10, 13, 11, 0.6);
 }
 .mk-btn--primary {
-  background: var(--color-stamp);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0) 46%),
+    var(--color-stamp);
   color: var(--color-ink);
+  border: 1px solid rgba(200, 240, 77, 0.78);
 }
 .mk-btn--outline-dark {
   /* secondary on dark backgrounds */
   color: var(--color-paper);
   border: 1px solid rgba(243, 245, 239, 0.28);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .mk-btn--outline-light {
   /* secondary on paper backgrounds */
   color: var(--color-ink);
   border: 1px solid rgba(10, 13, 11, 0.22);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.56);
 }
 
 /* ── Flow (LOCK loop / step flows) ──────────────────── */
@@ -269,7 +277,9 @@ a.mk-v-card:active,
 
 /* ── SignalCard — dark, compact, lime live-signal accent ── */
 .mk-signal-card {
-  background: var(--color-smoke);
+  background:
+    radial-gradient(260px 180px at 84% 0%, rgba(200, 240, 77, 0.075), transparent 64%),
+    var(--color-smoke);
   border: 1px solid rgba(200, 240, 77, 0.14);
   padding: clamp(1.25rem, 2.5vw, 1.6rem);
   display: flex;
@@ -291,7 +301,8 @@ a.mk-v-card:active,
 
 /* ── PaperDecisionCard — light, routing / decision surface ── */
 .mk-decision-card {
-  background: #ffffff;
+  background:
+    linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.88) 100%);
   border: 1px solid rgba(10, 13, 11, 0.1);
   padding: clamp(1.5rem, 3vw, 2rem);
   display: flex;
@@ -320,7 +331,7 @@ a.mk-v-card:active,
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 240px;
   display: flex;
   align-items: flex-end;
   color: var(--color-paper);
@@ -547,7 +558,8 @@ a.mk-v-card:active,
   gap: 0.6rem;
   padding: 1.1rem 0.75rem 0.9rem;
   border-radius: 16px;
-  background: rgba(243, 245, 239, 0.04);
+  background:
+    linear-gradient(180deg, rgba(243,245,239,0.07), rgba(243,245,239,0.025));
   border: 1px solid rgba(243, 245, 239, 0.1);
   border-top: 2px solid var(--src-cat, rgba(243, 245, 239, 0.2));
   transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
@@ -677,10 +689,10 @@ a.mk-v-card:active,
 
 @media (max-width: 640px) {
   .mk-section {
-    padding: 56px 20px;
+    padding: 60px 20px;
   }
   .mk-hero {
-    padding: 48px 20px 64px;
+    padding: 58px 20px 72px;
   }
   /* Flat hero at phone widths: band bleeds to the 20px side padding and
      the 64px bottom padding of the hero section. */
@@ -698,5 +710,71 @@ a.mk-v-card:active,
   .mk-cta-row {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* Codex live redesign layer - 2026-07-14.
+   Purpose: make every page feel like one premium, mobile-first LOCK site:
+   consistent rhythm, stronger contrast, richer atmosphere, better touch
+   targets, less wireframe whitespace. */
+.mk-container > .mk-grid-5,
+.mk-container > .m-divide,
+.mk-container > .mk-flow {
+  position: relative;
+}
+
+.mk-container > .mk-grid-5::before,
+.mk-container > .mk-flow::before {
+  content: '';
+  position: absolute;
+  inset: -18px;
+  pointer-events: none;
+  border-radius: 34px;
+  background:
+    radial-gradient(420px 180px at 18% 0%, rgba(200,240,77,0.05), transparent 70%),
+    radial-gradient(360px 180px at 92% 100%, rgba(215,168,74,0.05), transparent 70%);
+  z-index: -1;
+}
+
+a.mk-v-card,
+.mk-v-card--interactive,
+.mk-card,
+.mk-signal-card,
+.mk-decision-card {
+  will-change: transform;
+}
+
+.mk-v-card:hover,
+.mk-card:hover {
+  border-color: rgba(200, 240, 77, 0.28) !important;
+}
+
+@media (min-width: 960px) {
+  .mk-hero::after {
+    content: '';
+    position: absolute;
+    left: max(22px, 4vw);
+    right: max(22px, 4vw);
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(243,245,239,0.16), transparent);
+  }
+}
+
+@media (max-width: 640px) {
+  .mk-hero-copy h1 {
+    font-size: clamp(2.35rem, 14vw, 3.55rem) !important;
+    line-height: 0.98 !important;
+  }
+  .mk-hero-copy p {
+    font-size: 1rem !important;
+  }
+  .mk-card,
+  .mk-signal-card,
+  .mk-decision-card {
+    border-radius: 22px !important;
+  }
+  .mk-foot-cols {
+    margin-bottom: 28px !important;
   }
 }

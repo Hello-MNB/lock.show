@@ -25,7 +25,7 @@ import { APP_URL } from '@/lib/app-url'
 function LocaleToggle() {
   const { locale, setLocale } = useLocale()
   const next: Locale = locale === 'en' ? 'he' : 'en'
-  const label = locale === 'en' ? 'עב' : 'EN'
+  const label = locale === 'en' ? 'HE' : 'EN'
   return (
     <button
       onClick={() => setLocale(next)}
