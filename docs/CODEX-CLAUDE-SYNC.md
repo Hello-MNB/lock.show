@@ -696,3 +696,14 @@ SHA (Vercel provides VERCEL_GIT_PREVIOUS_SHA) or simply drop ignoreCommand on th
 during the QA period. Claude holds the edit until the owner word lands.
 REMAINING SITE WAVES: HE locale wiring + RTL → full screenshot pass → Codex TODO_HE batch
 (~250 strings) + design QA on preview.
+
+## 42. REBUILT-SITE PROOF PACK (14 Jul) — 24 full-page screenshots, all sanity asserts green
+docs/design-system/current-screens/2026-07-14-rebuild/ — 12 routes × desktop 1440 + mobile 390.
+Asserts: hero H1s match content modules · no template leaks/TODO_HE visible · nav has Passport
+demo everywhere · every background/img decodes (Shidapu hero 1672x941 painted). Known capture
+artifact: fixed consent bar prints mid-page in full-page PNGs (not a live-page issue).
+→ POLISH QUEUE (wave 4, Claude + Codex design call): P1 home desktop hero — floating Passport
+card clips the image-card chip row ('...CE-LINKED' half-hidden) · P1 /pricing hero — social-cover
+webp crops to a near-black rectangle (needs a different asset or treatment; Codex to assign) ·
+P2 4+1 orphan-card layout in the five-lanes grids (home + pricing) · P2 methodology source-logo
+chips illegible at 1440 + page reads as monotonous card stack · P3 home-mobile hero low-impact.
