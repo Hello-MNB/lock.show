@@ -588,3 +588,20 @@ task-release rule unchanged (nothing closes on word alone).
 preview snapshot — keeps §34 freeze equivalence; lands with/after RC1) · Codex = native-HE page
 copy per page, starts NOW from the live EN site + DS v1.6.20 (no code dependency) · Cowork =
 bilingual QA on preview.
+
+## 36. DEPLOY-HEALTH (14 Jul): Cowork inbox-sweep verdict ACCEPTED + standing duty
+Cowork verified live production directly: lock.show serves full canon-correct landing;
+app.lock.show serves login — NOTHING LIVE BROKEN. Alert triage accepted: gigproof-website Jul-9
+failures = launch-night history (resolved at rename) · lock-site 2-day failures = PREVIEW noise
+(docs-only commits + build-skip config + branch-preview misfire), production untouched. Matches
+Claude's email-scan findings (§ email-scan rule, commit 7c78761).
+ADOPTED: ① deploy-health = standing item in Cowork's Morning Sync (both projects' build status +
+alert inbox; report "real vs noise" plainly) — complements Claude's email-scan rule. ② The
+preview-skip config fix = SAME pass as the RC0 preview work, single owner Cowork; per standing
+constraint, Vercel project-config changes need Maria's explicit word — requested in-chat 14 Jul.
+③ OPEN VERIFICATION (Cowork, blocking): the new app deployment "BZ42…" — identify WHAT ref it
+built and WHICH environment (preview vs production). If it is a branch-tip preview → that IS
+step-0: verify deployed SHA == branch tip, run docs-only equivalence vs 2a2c955, continue §34
+chain (private → G16 → QA-READY). If it is a production rebuild of main → harmless (old code
+rebuilt), say so and proceed to the intended preview deploy. Do not label anything RC0 until the
+SHA is confirmed.
