@@ -13,6 +13,7 @@ Rule: do not paste secret values into chat or commit them to git. Store secret v
 | Vercel project | LOCK Site | `prj_dUHnMaaTeg1ZeyyvEP93kVjOigCZ` | Known |
 | Vercel project | LOCK App | `prj_ANv5iiMz4a8CUYA3gyzn7kvIUfho` | Known |
 | Supabase project | LOCK | `qexfndiyallwqhhzeerd` | Known |
+| Supabase org/app hints | Owner-provided IDs | `mvcauvcknuqhencafgaa` / `a3ff2237-4e0a-41de-982f-079176f54599` | Known; not a management token |
 | GitHub repo | LOCK | `Hello-MNB/lock.show` | Known |
 | Codex branch | Website redesign | `codex/live-site-redesign-20260714` | Pushed |
 
@@ -20,7 +21,7 @@ Rule: do not paste secret values into chat or commit them to git. Store secret v
 
 | Priority | Token / value name | Where to create it | Where to store it | Why Codex needs it | Current status |
 |---:|---|---|---|---|---|
-| P0 | `VERCEL_TOKEN` | Vercel → Account Settings → Tokens | Local shell env or gitignored `.env.local` | List deployments, create preview deployments, inspect logs, promote when approved | Missing |
+| P0 | `VERCEL_TOKEN` | Vercel → Account Settings → Tokens | Local shell env or gitignored `.env.local` | List deployments, create preview deployments, inspect logs, promote when approved | Received in chat and verified 2026-07-14; rotate after handoff |
 | P0 | GitHub OAuth / `gh auth login` | GitHub device login / browser OAuth | GitHub CLI credential store | Open PRs, inspect PR status, merge if authorized | Not logged in |
 | P1 | `SUPABASE_ACCESS_TOKEN` | Supabase → Account → Access Tokens | Local shell env or gitignored `.env.local` | Project-level verification and management through Supabase API | Existing local value returned 401; refresh needed |
 | P1 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase project `qexfndiyallwqhhzeerd` → Settings → API | Server/Vercel env only; local gitignored env only if needed for admin scripts | Admin/user/test-data scripts and server-only operations | Existing local value returned 401; refresh needed |
@@ -63,4 +64,3 @@ if ($env:SUPABASE_ACCESS_TOKEN) { "SUPABASE_ACCESS_TOKEN present" } else { "SUPA
 ## Deployment safety rule
 
 Codex should deploy preview first, then run Q4 design / UX / SEO / AEO / GEO verification. Production promotion requires Maria approval after preview proof.
-
