@@ -64,13 +64,13 @@ const en: ProductionContent = {
   meta: {
     title: 'For Production Offices — Build Lineups With Clearer Artist Context | LOCK',
     description:
-      'LOCK helps a production office read fit, availability, sources and trust signals around artists — so you build lineups with fewer guesses and less scatter across chats. Join the production beta.',
+      'LOCK gives production teams a clearer read on fit, availability and source-backed context before the lineup becomes a promise. Join the production beta.',
   },
   hero: {
     // Entity-model audit: freelancer / crew / company — one Production family.
     eyebrow: 'For production — freelancer, crew or company',
-    h1: 'Build lineups with clearer artist context.',
-    body: 'LOCK helps a production office read fit, availability, sources and trust signals around artists — so you build lineups with fewer guesses and less scatter across chats.',
+    h1: 'Build the lineup without booking in the dark.',
+    body: 'LOCK gives production teams a clearer read on fit, availability and source-backed context before the lineup becomes a promise.',
     primaryCta: { label: 'Join production beta', href: SIGNUP },
     secondaryCta: { label: 'Register production interest', href: '/contact' },
     trustLine: 'Method-labelled context. No scores, no rankings.',
@@ -86,20 +86,20 @@ const en: ProductionContent = {
   },
   before: {
     eyebrow: 'Before commitment',
-    title: 'Artist context before commitment.',
-    body: 'Every lineup slot is a promise to your audience and your name.',
+    title: 'Know what you are putting on stage before you commit.',
+    body: 'Every slot is a promise to the audience, the client and the name on the production.',
     cards: [
       {
         title: 'Fit for the room.',
-        body: 'Genre, set style and the kind of night the artist actually plays — before you commit the slot.',
+        body: 'Genre, set style and the kind of night the artist actually creates — before the slot is locked.',
       },
       {
         title: 'Reliability you can read.',
-        body: 'Confirmed past shows and source-backed history, shown as plain statements — never a grade.',
+        body: 'Past shows, source-backed history and availability cues shown plainly — never as a score.',
       },
       {
         title: 'Source-backed claims, not popularity guesses.',
-        body: 'Every claim on a Passport carries its method and review date.',
+        body: 'Every claim carries how it was sourced, so your team knows what it can lean on.',
       },
     ],
     note: 'Read an artist’s method-labeled Passport before you lock the slot.',
@@ -108,7 +108,7 @@ const en: ProductionContent = {
     eyebrow: 'Requests inbox',
     title: 'Requests and replies in one place.',
     body: 'Availability requests your office sends, and the artists’ replies, live in one inbox.',
-    note: 'No more WhatsApp archaeology before an event.',
+    note: 'No more digging through old messages while the production clock is already running.',
     panelLabel: 'Requests · This month',
     statusLabels: { sent: 'Sent', answered: 'Answered', closed: 'Closed' },
     rows: [
@@ -119,7 +119,7 @@ const en: ProductionContent = {
   },
   workspace: {
     eyebrow: 'Lineup workspace',
-    title: 'Team, events and artists — one workspace.',
+    title: 'One place for the lineup, the requests and the artist context.',
     body: 'Everyone on the production works from the same lineup, the same requests and the same artist context.',
     note: 'Events first — the workspace opens on the lineup, not on team admin.',
     // Entity-model audit 2026-07-14 — EN verbatim.
@@ -144,8 +144,8 @@ const en: ProductionContent = {
     ],
   },
   finalCta: {
-    title: 'Build the next lineup with context you can read.',
-    body: 'The production workspace is in closed beta.',
+    title: 'Protect the next lineup with context your team can actually use.',
+    body: 'The production workspace is in closed beta for teams who want fewer blind spots before commitment.',
     primaryCta: { label: 'Join production beta', href: SIGNUP },
     secondaryLink: { label: 'See Passport example', href: '/passport/demo' },
   },

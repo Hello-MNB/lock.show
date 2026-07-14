@@ -70,8 +70,8 @@ const en: BookersContent = {
   },
   hero: {
     eyebrow: 'For bookers & private clients',
-    h1: 'Understand the artist before you say yes.',
-    body: 'One Passport link shows who the artist is, what they bring and what stands behind it — for clubs, festivals, wedding couples, company events and private clients alike.',
+    h1: 'Feel the artist before you say yes.',
+    body: 'One Passport link helps you feel who the artist is, what kind of night they create, and what stands behind it — whether you are booking a club, festival, wedding or company event.',
     primaryCta: { label: 'View sample Passport', href: '/passport/demo' },
     secondaryCta: { label: 'How buyers use LOCK', href: '/how-it-works' },
     trustLine: 'No account. No signup. Free for booking people — always.',
@@ -93,34 +93,34 @@ const en: BookersContent = {
   },
   fears: {
     eyebrow: 'Three buyer fears',
-    title: 'The night you are protecting.',
+    title: 'The moment you are protecting.',
     cards: [
       {
-        title: 'The dead dancefloor.',
-        body: 'When a room stays empty, nobody blames the artist they’ve never heard of. They remember who chose the name.',
+        title: 'The room that never lifts.',
+        body: 'When the room never lifts, people remember who chose the name. A Passport helps you choose with more context.',
       },
       {
         title: 'The hype folder.',
         body: 'EPKs, follower counts, “sold out” stories — plenty of noise, and none of it answers what actually happens in the room.',
       },
       {
-        title: 'No time to play detective.',
+        title: 'No time to become a detective.',
         body: 'New names land every week. You can’t give each one an evening of digging — and you shouldn’t have to.',
       },
     ],
   },
   answers: {
     eyebrow: 'What the Passport answers',
-    title: 'One link. Clear context, labelled by method.',
+    title: 'One link. A clearer feeling for fit.',
     items: [
       {
         label: 'Draw as a band, not a boast',
-        title: 'A range the evidence can actually carry.',
+        title: 'A safer read, not an inflated boast.',
         body: 'Audience draw appears as a band — never an exact figure someone typed into a bio. A quieter claim, and that’s exactly why you can lean on it.',
       },
       {
         label: 'How it was checked',
-        title: 'You always know what a claim is worth.',
+        title: 'You know what you are looking at.',
         body: 'Source-linked, evidence-supported, or the artist’s own word — clearly marked as such. Every detail carries its method label, and you weigh it yourself.',
       },
       {
@@ -150,7 +150,7 @@ const en: BookersContent = {
     },
   },
   finalCta: {
-    title: 'The next link you get deserves two minutes.',
+    title: 'Before you say yes, give yourself two calmer minutes.',
     body: 'Open a Passport in any browser — no account, no signup, no catch. The decision stays yours.',
     primaryCta: { label: 'View sample Passport', href: '/passport/demo' },
     secondaryLink: { label: 'Ask about an artist', href: '/contact' },

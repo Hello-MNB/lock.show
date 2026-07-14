@@ -54,8 +54,8 @@ const en: ArtistsContent = {
     // Entity-model audit 2026-07-14: solo / band / collective — an Act can be
     // a person or a group; each Act carries its own Passport.
     eyebrow: 'For artists — solo, band or collective',
-    h1: 'Stop rebuilding your story from scattered links.',
-    body: 'LOCK helps you turn shows, links, media and source context into a Passport you can proudly send before booking. Your Act can be a solo project, a band or a collective — each Act carries its own Passport.',
+    h1: 'Stop sending scattered links. Send a world people can believe in.',
+    body: 'LOCK helps you collect the proof, atmosphere and context already around you — then shape it into a Passport you can proudly send before booking.',
     primaryCta: { label: 'Start free in the pilot', href: SIGNUP },
     secondaryCta: { label: 'See sample Passport', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',
@@ -63,7 +63,7 @@ const en: ArtistsContent = {
       'Artist career workspace — an artist shaping their own story in a calm private space',
     badge: {
       methodLabel: 'Artist controls publication',
-      explanation: 'Nothing goes public until you approve it — your Radar stays private.',
+      explanation: 'Your private Radar helps you grow. Your public Passport shows only what you choose.',
     },
     microStep: 'Start with one link',
     radarCard: {
@@ -77,32 +77,32 @@ const en: ArtistsContent = {
   },
   tension: {
     eyebrow: 'You know this feeling',
-    title: 'Your story deserves better than scattered links.',
+    title: 'Your career deserves to be understood before the first call.',
     cards: [
       {
-        title: 'The manager loved your mix. Then — silence.',
-        body: 'A link shows you exist. It says nothing about what happens when you’re actually in the room.',
+        title: 'They liked the mix. Then came the silence.',
+        body: 'A link proves you exist. It does not show what happens when you take over a room.',
       },
       {
-        title: 'Forty real nights, invisible to every room you haven’t played.',
-        body: 'Your live history lives in WhatsApp threads and other people’s memories.',
+        title: 'Real nights should not disappear after the lights go on.',
+        body: 'Your live history is scattered across flyers, clips, WhatsApp threads and people who were there.',
       },
       {
-        title: 'They’ve stopped believing EPKs. You can’t blame them.',
-        body: 'A polished bio is your word for it. The rooms you want next need someone else’s word too.',
+        title: 'People stopped believing polished EPKs. You can feel it.',
+        body: 'A polished bio is your word for it. The next room wants context it can trust.',
       },
     ],
   },
   products: {
     eyebrow: 'What you get',
-    title: 'A private Radar. A public Passport. You decide what moves between them.',
+    title: 'A private Radar for growth. A public Passport for the next yes.',
     radar: {
       label: 'Private',
       title: 'Your private Radar',
-      body: 'Everything you add stays yours — organized, dated and labelled, visible only to you.',
+      body: 'See what already supports your career, what is missing, and what would make the next booking conversation stronger.',
       features: [
-        'Every night you’ve played, gathered in one place',
-        'A clear picture of what to build next — no guesswork',
+        'Every night you have played, gathered in one place',
+        'Genre-aware next steps, without turning your career into a score',
         'One-tap links to bring a source in to confirm a detail',
         'Private by default. Nothing moves without your OK',
       ],
@@ -110,9 +110,9 @@ const en: ArtistsContent = {
     passport: {
       label: 'Public',
       title: 'Your public Passport',
-      body: 'Only what you approved — method-labelled, dated, and readable in two minutes before the call.',
+      body: 'Only what you approve becomes public — readable in two minutes before the call.',
       features: [
-        'Only what you chose to publish — with how it was checked, in plain sight',
+        'Only what you chose to publish, with the method visible',
         'Every detail carries its source and date, so it reads fresh',
         'One link that works for clubs, events and private clients alike',
         'Always free for booking people to open',
@@ -126,7 +126,7 @@ const en: ArtistsContent = {
     steps: [
       {
         verb: 'Log it.',
-        body: 'Your gigs, your numbers, your story — private in your Radar until you say otherwise.',
+        body: 'Your gigs, clips, links and story stay private in your Radar until you decide otherwise.',
         icon: 'add',
       },
       {
@@ -147,8 +147,8 @@ const en: ArtistsContent = {
     ],
   },
   finalCta: {
-    title: 'Your sets fill rooms. Now fill the calendar.',
-    body: 'Free during the pilot — and your Passport is always yours.',
+    title: 'Your nights already happened. Let them work for the next one.',
+    body: 'Free during the pilot. Private while you build. Yours when you share.',
     primaryCta: { label: 'Build my first Passport', href: SIGNUP },
     secondaryLink: { label: 'See sample Passport', href: '/passport/demo' },
   },

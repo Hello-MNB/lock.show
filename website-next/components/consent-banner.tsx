@@ -53,15 +53,32 @@ function loadGA(gaId: string) {
   window.gtag('config', gaId, { anonymize_ip: true })
 }
 
-export function ConsentBanner({ gaId }: { gaId: string }) {
+function loadGTM(gtmId: string) {
+  if (document.getElementById('gtm-src')) return
+  window.gtag('consent', 'update', { analytics_storage: 'granted' })
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({ event: 'lock_consent_granted' })
+  const s = document.createElement('script')
+  s.id = 'gtm-src'
+  s.async = true
+  s.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`
+  document.head.appendChild(s)
+}
+
+function loadMeasurement({ gaId, gtmId }: { gaId: string; gtmId?: string }) {
+  if (gtmId) loadGTM(gtmId)
+  else loadGA(gaId)
+}
+
+export function ConsentBanner({ gaId, gtmId }: { gaId: string; gtmId?: string }) {
   const { messages, dir } = useLocale()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const choice = readChoice()
-    if (choice === 'granted') loadGA(gaId)
+    if (choice === 'granted') loadMeasurement({ gaId, gtmId })
     else if (choice === null) setVisible(true)
-  }, [gaId])
+  }, [gaId, gtmId])
 
   if (!visible) return null
   const t = messages.consent
@@ -69,7 +86,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
   const decide = (value: Choice) => {
     storeChoice(value)
     setVisible(false)
-    if (value === 'granted') loadGA(gaId)
+    if (value === 'granted') loadMeasurement({ gaId, gtmId })
   }
 
   return (

@@ -42,17 +42,17 @@ const en: HomeContent = {
   meta: {
     title: 'LOCK — Turn the artist world around you into one booking-ready Passport',
     description:
-      'LOCK helps artists organize links, shows, sources and context into a private Radar and a public Passport. No scores. No rankings. Artist controls what goes public.',
+      'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and proof — into one Passport a booking person can feel confident opening. No scores. No rankings. Artist controls what goes public.',
   },
   hero: {
     eyebrow: 'Pre-booking context',
     h1: 'Turn the artist world around you into one booking-ready Passport.',
-    body: 'LOCK helps artists organize links, shows, sources and context into a private Radar and a public Passport.',
+    body: 'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and proof — into one Passport a booking person can feel confident opening.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryCta: { label: 'See Passport demo', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',
     imageAlt:
-      'Artist career workspace — an artist reviewing their live history in a calm private space',
+      'Artist career workspace — an artist shaping the next step from a calm private space',
     chips: ['Radar', 'Passport', 'Source-linked', 'Free pilot'],
     radarCard: {
       label: 'Radar · Private',
@@ -68,39 +68,39 @@ const en: HomeContent = {
   },
   why: {
     eyebrow: 'Why it exists',
-    title: 'Booking still runs on scattered context.',
+    title: 'The talent is real. The context is scattered.',
     cards: [
       {
-        title: 'Artists repeat themselves.',
-        body: 'The same story, rebuilt for every request — bio here, links there, screenshots somewhere else.',
+        title: 'Artists keep explaining themselves from scratch.',
+        body: 'Every new opportunity asks for the same story again — a bio here, links there, screenshots somewhere else.',
       },
       {
-        title: 'Buyers guess from scattered links.',
-        body: 'A yes deserves more context than an Instagram grid and a half-updated EPK.',
+        title: 'Buyers want to say yes without gambling.',
+        body: 'A booking decision deserves more than an Instagram grid, a few clips and a half-updated EPK.',
       },
       {
-        title: 'Managers and production chase context in WhatsApp.',
-        body: 'Threads, voice notes and memories hold history that should be one clear page.',
+        title: 'Teams lose the story inside messages.',
+        body: 'WhatsApp threads, voice notes and memories hold history that should be clear before the call.',
       },
     ],
   },
   loop: {
     eyebrow: 'The LOCK loop',
-    title: 'From first signal to shared Passport.',
+    title: 'From scattered signals to one page people can trust.',
     steps: [
       {
         verb: 'Add signal',
-        body: 'Shows, rooms, crowds, links and sources — everything lands private in your Radar.',
+        body: 'Shows, rooms, crowds, links and sources land in one private place first.',
         icon: 'add',
       },
       {
         verb: 'Radar organizes',
-        body: 'LOCK sorts what you added and labels where every piece came from.',
+        body: 'LOCK turns the mess into a clear map of what exists and what can be strengthened.',
         icon: 'radar',
       },
       {
         verb: 'Source can confirm',
-        body: 'Someone who was there gets one short link and confirms a single detail — no account.',
+        body: 'Someone who was there can confirm one detail in seconds — no account, no drama.',
         icon: 'source',
       },
       {
@@ -110,56 +110,56 @@ const en: HomeContent = {
       },
       {
         verb: 'Passport is shared',
-        body: 'One link that speaks for you before the first phone call.',
+        body: 'One link that makes the next conversation warmer, clearer and easier to trust.',
         icon: 'passport',
       },
     ],
   },
   lanes: {
     eyebrow: 'Choose your lane',
-    title: 'One product. Five doors in.',
-    body: 'Artist, manager, production, buyer, source confirmer — each lane sees only what it needs.',
+    title: 'One product. Different stakes for every person.',
+    body: 'Each lane gets a different kind of confidence — without exposing what should stay private.',
     cards: [
       {
         icon: 'artist',
         audienceLabel: 'Artist',
-        title: 'Your nights already tell the story',
-        body: 'Turn the gigs you played into a Passport that opens the next room. Free during the pilot.',
+        title: 'Your nights already carry the story',
+        body: 'Turn the gigs, rooms and reactions you already earned into a Passport that can open the next room.',
         cta: { label: 'For artists', href: '/artists' },
       },
       {
         icon: 'manager',
         audienceLabel: 'Manager',
-        title: 'Make every roster pitch easier to trust',
-        body: 'One place to see where every act on your roster stands — and the next action for each.',
+        title: 'Give every artist on your roster a clearer next move',
+        body: 'See what each act can safely show, what still needs context, and where to focus before the pitch.',
         cta: { label: 'For managers', href: '/managers' },
       },
       {
         icon: 'production',
         audienceLabel: 'Production',
-        title: 'Build lineups with clearer artist context',
-        body: 'Fit, reliability and source context — before the commitment, not after.',
+        title: 'Book the lineup with fewer blind spots',
+        body: 'See fit, reliability and source context before commitment — not after the room is already on the line.',
         cta: { label: 'For production', href: '/production' },
       },
       {
         icon: 'buyer',
         audienceLabel: 'Buyer',
-        title: 'Say yes with a clear head',
-        body: 'Read an artist’s real history in two minutes — before your name goes on the line. Always free.',
+        title: 'Say yes with a calmer stomach',
+        body: 'Open the artist’s public Passport in two minutes — before your name, room or event is on the line.',
         cta: { label: 'For bookers', href: '/bookers' },
       },
       {
         icon: 'source',
         audienceLabel: 'Source confirmer',
-        title: 'You were there. Say so.',
-        body: 'One tap confirms a night you ran — twenty seconds, no account, and an artist you believe in gets further.',
+        title: 'You were there. Your word can help.',
+        body: 'One tap confirms one real detail. Twenty seconds, no account — and an artist you believe in gets further.',
         cta: { label: 'Source confirmation', href: '/producers' },
       },
     ],
   },
   finalCta: {
-    title: 'Turn what already happened into the next booking.',
-    body: 'We are validating value with artists, buyers, managers and production offices — free during the pilot.',
+    title: 'Turn what already happened into the next room that says yes.',
+    body: 'We are opening the pilot with artists, buyers, representation teams and production offices who want booking to feel clearer, warmer and less random.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryLink: { label: 'How it works', href: '/how-it-works' },
   },

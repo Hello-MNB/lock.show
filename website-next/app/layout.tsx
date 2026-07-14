@@ -23,6 +23,7 @@ const dmMono = DM_Mono({
 
 // GA4 — property LOCK (544738110), stream LOCK App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
 
 const SITE_URL = 'https://lock.show'
 const OG_IMAGE = `${SITE_URL}/og/og-default.png`
@@ -218,7 +219,7 @@ export default function RootLayout({
           <Nav />
           {children}
           <Footer />
-          <ConsentBanner gaId={GA_ID} />
+          <ConsentBanner gaId={GA_ID} gtmId={GTM_ID} />
         </LocaleProvider>
         {/* GA4 Consent Mode v2 — defaults DENIED; gtag.js loads only after the
             visitor grants consent in the banner (docs/legal/CONSENT-BANNER-SPEC.md) */}

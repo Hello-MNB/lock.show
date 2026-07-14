@@ -65,12 +65,12 @@ const en: ManagersContent = {
   meta: {
     title: 'For Managers, Booking Agents & Artist-Side Teams — Make Every Roster Pitch Easier to Trust | LOCK',
     description:
-      'LOCK helps your office see which act is ready to pitch, what would strengthen the next one, and how to send a Passport a buyer can read fast. Grant, not ownership. Join the manager beta.',
+      'LOCK helps your team turn scattered artist context into a clear Passport buyers can trust before the first serious call. Grant, not ownership. Join the manager beta.',
   },
   hero: {
     eyebrow: 'For managers, booking agents and artist-side teams',
-    h1: 'Make every roster pitch easier to trust.',
-    body: 'LOCK helps your office see which act is ready to pitch, what would strengthen the next one, and how to send a Passport a buyer can read fast.',
+    h1: 'Make every artist on your roster easier to believe in.',
+    body: 'LOCK helps your team turn scattered artist context into a clear Passport buyers can trust before the first serious call.',
     primaryCta: { label: 'Join manager beta', href: SIGNUP },
     secondaryCta: { label: 'Register roster interest', href: '/contact' },
     trustLine: 'No scores. No rankings. Artists keep ownership of their identity.',
@@ -86,27 +86,27 @@ const en: ManagersContent = {
     },
   },
   pain: {
-    eyebrow: 'Roster pain',
-    title: 'The roster is strong. The pitching is scattered.',
+    eyebrow: 'The pressure behind every pitch',
+    title: 'Your roster has momentum. The story around it is still scattered.',
     cards: [
       {
         title: 'Scattered links.',
-        body: 'Every pitch starts with hunting — a bio in one folder, clips in another chat, numbers in someone’s memory.',
+        body: 'Every pitch starts with hunting — a bio in one folder, clips in another chat, the real proof in someone’s memory.',
       },
       {
         title: 'Uneven readiness.',
-        body: 'Some acts could be sent today; others are missing one detail. From the outside it’s hard to see which is which.',
+        body: 'Some acts are one detail away from a stronger pitch. Some are ready now. The office needs to see the difference fast.',
       },
       {
         title: 'Buyer follow-up gaps.',
-        body: 'Reactions land in five different threads. By the time you follow up, the moment has moved on.',
+        body: 'A buyer reacts, asks a question, forwards the link — and the moment gets lost inside five different threads.',
       },
     ],
   },
   cockpit: {
     eyebrow: 'Roster cockpit',
-    title: 'Roster readiness without ranking.',
-    body: 'See which proof each artist on your roster still needs — as next actions, never as a grade.',
+    title: 'Roster clarity without ranking artists.',
+    body: 'See what would make each artist easier to pitch next — as one clear action, never as a grade.',
     note: 'You always know which act is ready to pitch and what would make the next one ready.',
     actionLabel: 'Next action',
     readyLabel: 'Ready to pitch',
@@ -134,7 +134,7 @@ const en: ManagersContent = {
   access: {
     eyebrow: 'ArtistAccess',
     title: 'ArtistAccess — a consented grant, not ownership.',
-    body: 'Artists grant your office scoped access to their Passport. The identity stays theirs; the pitch power becomes yours.',
+    body: 'Artists grant your office scoped access to their Passport. The identity stays theirs; your team gets a cleaner way to open doors.',
     diagram: [
       {
         title: 'Artist owns identity',
@@ -186,8 +186,8 @@ const en: ManagersContent = {
     ],
   },
   finalCta: {
-    title: 'Bring your roster into the pilot.',
-    body: 'The manager workspace is in closed beta.',
+    title: 'Give your roster a cleaner way into the next room.',
+    body: 'The manager workspace is in closed beta for teams who want every pitch to feel sharper, calmer and easier to trust.',
     primaryCta: { label: 'Join manager beta', href: SIGNUP },
     secondaryLink: { label: 'See how artists use LOCK', href: '/artists' },
   },

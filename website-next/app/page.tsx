@@ -11,6 +11,7 @@ import { FinalCta } from '@/components/marketing/final-cta'
 import { FlowRow, FlowStep } from '@/components/marketing/flow-step'
 import { Hero } from '@/components/marketing/hero'
 import { Icon } from '@/components/marketing/icons'
+import { MediaTile } from '@/components/marketing/cards'
 import { Section, SectionHeading } from '@/components/marketing/section'
 import { homeContent } from '@/content/home'
 import { buildPageMetadata } from '@/lib/seo'
@@ -300,6 +301,43 @@ export default function HomePage() {
                 </div>
               )
             })}
+          </div>
+        </Section>
+
+        <Section tone="ink">
+          <SectionHeading
+            tone="ink"
+            eyebrow="The rooms behind the product"
+            title="LOCK is built for the moments before a name goes on the line."
+            body="An artist trying to be understood. A manager protecting a roster. A production team building a night. A buyer deciding who to trust."
+          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 'clamp(1rem, 2vw, 1.25rem)',
+            }}
+          >
+            <MediaTile
+              image={{ src: '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp', alt: 'Artist shaping their booking story' }}
+              caption={<><strong>Artist</strong><span>Make the next room understand what already happened.</span></>}
+              href="/artists"
+            />
+            <MediaTile
+              image={{ src: '/brand/lockshow-atmosphere-agency-roster-room-v1.webp', alt: 'Representation team reviewing roster context' }}
+              caption={<><strong>Representation</strong><span>Turn roster potential into cleaner, calmer pitches.</span></>}
+              href="/managers"
+            />
+            <MediaTile
+              image={{ src: '/brand/lockshow-atmosphere-production-warehouse-v1.webp', alt: 'Production team preparing a live event' }}
+              caption={<><strong>Production</strong><span>Protect the lineup before the room is committed.</span></>}
+              href="/production"
+            />
+            <MediaTile
+              image={{ src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp', alt: 'Buyer checking context before booking an artist' }}
+              caption={<><strong>Buyer</strong><span>Feel the fit before saying yes.</span></>}
+              href="/bookers"
+            />
           </div>
         </Section>
 
