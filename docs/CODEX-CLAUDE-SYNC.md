@@ -828,3 +828,14 @@ EQUIVALENCE: app product code at tip == RC1 439c38c (git diff empty over src/ser
 scripts/package.json) — an app preview from the tip IS the RC1 candidate; recorded per §34 rule.
 Next push triggers both previews; URLs will be read from the API and distributed per rules
 (site = visual, shareable to Maria/Codex; app = VISUAL-ONLY until G16, no write QA).
+
+## 49. 🎉 PREVIEWS LIVE (14 Jul) — first successful preview builds of the train; URLs bound per §34
+Deployed ref b806e33 (branch tip), both READY, both PRIVATE (Vercel SSO wall on all previews —
+302-verified; satisfies the private-preview law; Maria views logged-in to Vercel; share-links for
+non-account reviewers via dashboard Share when needed):
+• SITE (the full 11-page rebuild + flat hero): https://lock-site-5nm1q397z-error4ik.vercel.app
+• APP: https://lock-7uhzpu2hv-error4ik.vercel.app — product code byte-identical to RC1 439c38c
+  (§48 equivalence) ⇒ this IS the RC1 candidate preview. VISUAL-ONLY until G16 activates: no
+  write-flows, no test accounts distributed (GPT release ruling; unchanged).
+Next: Maria browses the site preview (real thing, beats screenshots) → taste verdict → wave 6.
+QA chain: G16 tagged cycle (Claude now holds Supabase API for it) → QA-READY on RC1+.
