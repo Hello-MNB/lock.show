@@ -443,9 +443,17 @@ export const T = {
     openInbox: 'פתח את תיבת הבקשות',
     addedToRoster: (name) => `${name} נוסף לרוסטר שלך`,
     updatedOn: (d) => `עודכן ${d}`,
-    // ── G4 · A5 — פעולה מסחרית אחת לכל שורת רוסטר בהסכמה ──
+    // ── G4 · A5 — פעולה מסחרית אחת לכל שורת רוסטר (קשורה לאמן) ──
     nextReplyRequest: 'השב לבקשה',
     nextOpenRadar: 'פתח את הרדאר',
+    nextPublishPassport: 'פרסם פספורט',
+    nextRefreshProof: 'רענן הוכחות',
+    nextSharePassport: 'שתף פספורט',
+    nextRequestVideo: 'בקש וידאו',
+    nextViewPassport: 'צפה בפספורט',
+    // תיבת הבקשות בקישור עמוק מפעולת רוסטר — תצוגת טיפול לאמן אחד
+    filteredForArtist: (name) => name ? `מציג בקשות עבור ${name}` : 'מציג בקשות של אמן אחד',
+    showAllRequests: 'הצג את כל הבקשות',
   },
   booker: {
     title: 'פתח פספורט אמן',

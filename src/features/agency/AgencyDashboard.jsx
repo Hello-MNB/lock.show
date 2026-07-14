@@ -110,6 +110,25 @@ const fmtDate = (d) => {
   return Number.isNaN(t.getTime()) ? null : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+// G4 (A5): the ONE next-best-action chip — commercial action TEXT bound to a
+// specific artist's route (rosterNextAction.js derives it from real state).
+// FIREWALL: never a count/%/score on the chip.
+function NextActionChip({ action, T }) {
+  return (
+    <Link
+      to={action.to}
+      className={`chip min-h-[28px] border px-2 py-0.5 text-[10px] font-semibold transition ${
+        action.urgent ? 'border-accent/60 text-accent hover:border-accent' : 'border-line text-ink hover:border-line2'}`}
+    >
+      {T.agency[action.key]} ›
+    </Link>
+  )
+}
+
+// Open 'new' availability requests for ONE artist — ladder input, never rendered.
+const openRequestsFor = (requests, artistId) =>
+  (requests || []).filter((r) => r.status === 'new' && r.artist_id === artistId).length
+
 // ── Incoming-requests side card — the ops-room "what's knocking" panel.
 // The count is an INBOX count (like unread mail), never a grade.
 function RequestsSideCard({ requests, T }) {
@@ -173,6 +192,7 @@ export default function AgencyDashboard() {
   const [requests, setRequests] = useState([])
   const [accessRequests, setAccessRequests] = useState([])
   const [grants, setGrants] = useState(null) // A6 (032): ACTIVE consented grants — null until 032 applied
+  const [grantState, setGrantState] = useState({}) // G4: per-granted-artist bounded state (publish/evidence/requests)
   const [adding, setAdding] = useState(false)
   const [addMode, setAddMode] = useState('invite') // 'invite' (canon-correct, default) | 'own' (legacy placeholder)
   const [f, setF] = useState({ stage_name: '', genre: '' })
@@ -192,7 +212,17 @@ export default function AgencyDashboard() {
       try { setRosterClaims(await listClaimsByArtists(roster.map((a) => a.id))) } catch { setRosterClaims([]) }
       try { setRequests(await listRequestsForAgency(user.id)) } catch { setRequests(null) }
       try { setAccessRequests(orgIdForThisScreen ? await listOutgoingAccessRequests(orgIdForThisScreen) : []) } catch { setAccessRequests([]) }
-      try { setGrants(await listRosterGrants()) } catch { setGrants(null) } // A6 — consented roster (032)
+      try {
+        const g = await listRosterGrants() // A6 — consented roster (032)
+        setGrants(g)
+        // G4: the grant row carries no publish/evidence state — fetch the bounded
+        // extra read-model here (feature-local; degrades to unknown on failure).
+        if (Array.isArray(g) && g.length > 0) {
+          try { setGrantState(await fetchGrantArtistState(g.map((x) => x.artist_id))) } catch { setGrantState({}) }
+        } else {
+          setGrantState({})
+        }
+      } catch { setGrants(null) }
     } catch {
       setError(true)
     } finally {
@@ -276,19 +306,28 @@ export default function AgencyDashboard() {
       {/* ── A6 (032-backed): the CONSENTED roster — ACTIVE ArtistAccess grants.
             A grant, never ownership (ENTITY-GLOSSARY §2c boundary). Renders only
             when 032 is applied AND at least one grant is active.
-            G4 (A5): ONE commercial next action per artist row, derived ONLY from
-            state this screen has actually loaded — a 'new' availability request
-            for that artist (requests list) → reply; otherwise the roster radar
-            is the one honestly-known next move. The 032 grant row carries no
-            publish/evidence fields, so richer actions (request video / refresh
-            proof) are NOT derivable here and are deliberately not invented. ── */}
+            G4 (A5): ONE commercial next action per artist row, derived from that
+            artist's REAL state — open request → reply · unpublished → publish ·
+            stale evidence (>90d) → refresh · else share / request video. The 032
+            grant row carries no publish/evidence fields, so fetchGrantArtistState
+            loads that bounded read-model feature-side; unknown state degrades to
+            the always-allowed view floor, never a guess. Scope-gated: only
+            actions this grant's scope allows. Destination always carries the
+            artist id — never a bare /agency/radar. ── */}
       {Array.isArray(grants) && grants.length > 0 && (
         <div className="card mb-4 border border-line">
           <p className="mb-0.5 font-bold text-ink text-sm">{T.agency.consentedTitle}</p>
           <p className="mb-2 text-xs text-muted">{T.agency.consentedHint}</p>
           <div className="space-y-1.5">
             {grants.map((g) => {
-              const hasNewRequest = (requests || []).some((r) => r.status === 'new' && r.artist_id === g.artist_id)
+              const st = grantState[g.artist_id] || {}
+              const action = pickRosterAction({
+                artistId: g.artist_id,
+                published: st.published ?? null,
+                items: st.items ?? null,
+                openRequests: Math.max(openRequestsFor(requests, g.artist_id), st.openRequests || 0),
+                scope: g.scope || ['view'],
+              })
               return (
                 <div key={g.grant_id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2">
                   <div className="min-w-0">
@@ -301,14 +340,8 @@ export default function AgencyDashboard() {
                         <span key={s} className="chip bg-na-bg text-[9px] uppercase tracking-[0.06em] text-muted">{s}</span>
                       ))}
                     </div>
-                    {/* the ONE next action — real state only, never a guess */}
-                    <Link
-                      to={hasNewRequest ? '/agency/requests' : '/agency/radar'}
-                      className={`chip min-h-[28px] border px-2 py-0.5 text-[10px] font-semibold transition ${
-                        hasNewRequest ? 'border-accent/60 text-accent hover:border-accent' : 'border-line text-ink hover:border-line2'}`}
-                    >
-                      {hasNewRequest ? T.agency.nextReplyRequest : T.agency.nextOpenRadar} ›
-                    </Link>
+                    {/* the ONE next action — real state only, bound to THIS artist */}
+                    <NextActionChip action={action} T={T} />
                   </div>
                 </div>
               )
@@ -349,10 +382,20 @@ export default function AgencyDashboard() {
               <div className="space-y-3 mb-4">
                 {artists.map((a) => {
                   const fresh = fmtDate(a.updated_at || a.created_at)
+                  // G4 (A5): ONE commercial next action from THIS artist's real
+                  // state (listAgencyArtists now carries bounded profile_items).
+                  // Owned row → no grant, nothing scope-gated (scope: null).
+                  const action = pickRosterAction({
+                    artistId: a.id,
+                    published: !!a.published,
+                    items: a.profile_items ?? null,
+                    openRequests: openRequestsFor(requests, a.id),
+                    scope: null,
+                  })
                   return (
-                    <Link key={a.id} to={`/passport/${a.id}`}
+                    <div key={a.id}
                       className={`card flex items-center justify-between gap-3 transition hover:border-accent ${a.id === justAddedId ? 'border-accent ring-1 ring-accent animate-fade-in' : ''}`}>
-                      <div className="flex min-w-0 items-center gap-3">
+                      <Link to={`/passport/${a.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                         {a.photo_url ? <img src={a.photo_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
                           : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface2 font-display text-lg text-ink">{(a.stage_name || '?').slice(0, 1)}</div>}
                         <div className="min-w-0">
@@ -360,9 +403,12 @@ export default function AgencyDashboard() {
                           <p className="truncate text-xs text-muted">{a.genre || '—'} · {a.published ? T.agency.publishedTag : T.agency.draftTag}</p>
                           {fresh && <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-faint">{T.agency.updatedOn(fresh)}</p>}
                         </div>
+                      </Link>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <StatusChip status={rosterStatus(a)} />
+                        <NextActionChip action={action} T={T} />
                       </div>
-                      <StatusChip status={rosterStatus(a)} />
-                    </Link>
+                    </div>
                   )
                 })}
               </div>

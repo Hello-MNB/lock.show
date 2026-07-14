@@ -446,9 +446,17 @@ export const T = {
     openInbox: 'Open inbox',
     addedToRoster: (name) => `${name} added to your roster`,
     updatedOn: (d) => `Updated ${d}`,
-    // ── G4 · A5 — ONE next commercial action per consented-roster row ──
+    // ── G4 · A5 — ONE next commercial action per roster row (artist-bound) ──
     nextReplyRequest: 'Reply to request',
     nextOpenRadar: 'Open radar',
+    nextPublishPassport: 'Publish passport',
+    nextRefreshProof: 'Refresh proof',
+    nextSharePassport: 'Share passport',
+    nextRequestVideo: 'Request video',
+    nextViewPassport: 'View passport',
+    // inbox deep-linked from a roster action — artist-bound triage view
+    filteredForArtist: (name) => name ? `Showing requests for ${name}` : 'Showing one artist’s requests',
+    showAllRequests: 'Show all requests',
   },
   booker: {
     title: 'Open an artist Passport',
