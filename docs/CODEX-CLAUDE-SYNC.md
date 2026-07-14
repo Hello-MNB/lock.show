@@ -898,3 +898,26 @@ orbit · Methodology trust-lab. 18 shots: docs/design-system/current-screens/202
 GATES to SITE-TRAIN-2 production: ① Maria taste ② Codex mobile-screenshot approval (its DOD) →
 one named deploy + Production-QA round. HE RTL wave runs in parallel. Not in scope: HE RTL, OG
 images, broader interior card swaps.
+
+## 55. TEST USERS SEEDED + ARCHITECTURE CONSENSUS (14 Jul)
+TEST USERS (service_role key from Maria, gitignored → 🚩 ROTATION pending; node blocked by proxy so
+used GoTrue admin API via curl): all 5 @gigproof.test now exist, password Gigproof!2026, email-
+confirmed: artist@ (rich data) · agency@ (rich data) · booker@ (role set) · producer@ (role set) ·
+operator@ (role set). In Version Map "🔑 Test Users" tab.
+DELETION (owner "delete all except @gigproof.test") — HELD for owner sign-off per CTO standard
+(never auto-delete). Non-test accounts: garmel.maria@ + error4ik@ = MARIA's real (NEVER delete) ·
+gigproof.e2e.1782660887628@ = E2E bot (safe delete) · shydaviddjnattaly@ = looks like a REAL
+person/tester (confirm before delete — may hold real data). Only delete on explicit per-email word.
+ARCHITECTURE CONSENSUS (GPT audit + Codex audit + my 2 agents ALL AGREE — strong signal):
+CANONICAL RULING (recommend Maria approve): THREE customer workspace families = Artist ·
+Representation · Production. Buyer + Source-Confirmer = non-workspace contexts by default.
+Operator = internal. All other ecosystem roles = scoped role assignments/access grants, NOT
+workspaces. Role+authority (Act/territory/category/action/dates) assigned INSIDE workspaces, NOT
+as permanent profiles.role. P0 architecture fixes agreed by both audits: A1 role-derivation from
+any membership + restrict workspace creation (fixes D2 buyer dead-end) · A4/D3 retire /producer +
+/producer/received (accountless /confirm/:token only) · A5 remove/flag /artist/offer (free-pilot
+contradiction) · A3 Production signup path (marketed, unreachable) · A6/D1 Artist/Act Identity
+Editor (write-once today) · SPA rewrites deploy+verify · deep-route reload smoke test. Consolidations:
+readiness→Radar · agency/radar→Roster · production event-first · settings+org/*→Settings Hub ·
+Representation = 1 workspace, role-adapted modules (Manager vs Booking-Agent = roles not screens).
+Consolidated per-entity PLAN artifact building (entity-optimization-plan.html).
