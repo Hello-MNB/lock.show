@@ -781,3 +781,33 @@ sites) · browser-only dashboard edge cases · Drive/GPT ops · break-it QA. DB 
 Claude once the Supabase token lands (migration numbers already Claude-reserved, §33). RELEASE
 LADDER UNCHANGED (Q8 before production). Secrets rule unchanged: tokens go in environment
 settings / .env.local, NEVER chat.
+
+## 47. CODEX VISUAL-ARCHITECTURE CORRECTION — ADOPTED AS WAVE 6 (14 Jul; Drive doc fetched+read in full)
+North star: "Backstage intelligence for the artist economy" — not SaaS/docs/proof-police. Owner's
+no-frames ruling (§45) and this correction agree; flat-hero agent in flight = Pattern A first cut.
+ADOPTED SPEC (from CODEX_SITE_VISUAL_ARCHITECTURE_CORRECTION_20260714.md):
+• TOKENS: --color-amber-stage #D7A84A · --color-ember #9A5A2E · --color-smoke #202820 ·
+  --color-mist #DDE4D7 · --color-source-blue #6EA6A3 · gradients stage/radar/paper-fade/nightlife
+  · shadow-cinematic-card · glow-signal-soft (lime 10-18%) · glow-stage-warm (amber 10-16%).
+  LAW: lime = action/live signal ONLY; amber/ember = atmosphere.
+• IMAGE PATTERNS: A cinematic bleed (Home/Artists/Passport demo; no border, mask/gradient, max
+  ONE floating badge) · B editorial strip (3-4 unequal media frames, mono captions) · C product/
+  decision card (Methodology/Free Pilot/Contact).
+• HEROES: CinematicHero / ProductCompositionHero / TrustLabHero — never one framed hero everywhere.
+• FREE PILOT: ProductComposition hero — central lime "Free pilot" tile + 5 entity chips orbiting +
+  line "No payment · No scores · Artist controls publication"; NO photo. Dark featured artist
+  card; amber micro-accent on buyer card; 3+2 grid.
+• METHODOLOGY = TRUST LAB: source-ecosystem band (bigger dark logo cards + source type), category
+  colors platform=source-blue/document=amber/person=lime/artist-declared=smoke; FirewallCard for
+  "what never becomes public"; method-label cards = icon+label+plain sentence+example.
+• CARDS: SignalCard/PaperDecisionCard/EditorialCard/MediaTile/FirewallCard — vary by purpose.
+• CHIPS: action=lime · source=source-blue/dark outline · method=amber/lime · neutral=smoke/mist.
+• PER-PAGE ACCENT rhythm table (home lime+amber · artists lime+stage-amber · managers lime+
+  source-blue · production amber+smoke · bookers amber+paper · source-conf lime+source-blue ·
+  methodology source-blue+amber · free-pilot lime+mist+amber).
+• P0 also: cookie banner must never block review screenshots · HE = RTL LAYOUT-aware (hero text
+  right/image left, CTA right, longer lines, no tiny mono uppercase in Hebrew).
+• CODEX VISUAL DOD captured — it approves visual direction only when its 8 conditions hold.
+SEQUENCE: flat-hero lands → Maria taste-test → WAVE 6 agents (6a tokens+FreePilot composition+
+TrustLab · 6b card/chip variants+per-page accents · 6c cookie-banner screenshot fix) → re-shoot
+all → Codex visual DOD check → HE RTL wave uses the same layout-aware rules.
