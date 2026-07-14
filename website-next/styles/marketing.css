@@ -1217,3 +1217,693 @@ a.mk-v-card,
     transform-origin: top center;
   }
 }
+
+/* ==========================================================================
+   LOCK SITE QUALITY PASS v2026-07-14-CODEX
+   Goal: every component reads as one brand, not a pile of page templates.
+   Rules:
+   - Lime is only action/live signal.
+   - Paper sections stay warm and editorial, never flat white.
+   - Dark sections carry show-business atmosphere.
+   - Mobile first: first screen has promise + one action, not a giant scroll.
+   ========================================================================== */
+:root {
+  --mk-surface-paper: #f4f6f0;
+  --mk-surface-card: #ffffff;
+  --mk-surface-cream: #ecefe7;
+  --mk-border-paper: rgba(10, 13, 11, 0.12);
+  --mk-border-dark: rgba(243, 245, 239, 0.13);
+  --mk-text-soft-dark: rgba(243, 245, 239, 0.72);
+  --mk-text-muted-dark: rgba(243, 245, 239, 0.58);
+  --mk-shadow-soft:
+    0 1px 1px rgba(10, 13, 11, 0.08),
+    0 18px 50px -34px rgba(10, 13, 11, 0.55);
+  --mk-shadow-lift:
+    0 2px 4px rgba(10, 13, 11, 0.1),
+    0 26px 72px -36px rgba(10, 13, 11, 0.55);
+  --mk-ring-action: 0 0 0 1px rgba(200, 240, 77, 0.3), 0 18px 42px -24px rgba(200, 240, 77, 0.6);
+}
+
+.mk-section {
+  isolation: isolate;
+}
+
+.mk-section--paper {
+  background:
+    radial-gradient(820px 340px at 8% -8%, rgba(200, 240, 77, 0.08), transparent 72%),
+    radial-gradient(760px 320px at 105% 105%, rgba(215, 168, 74, 0.07), transparent 74%),
+    linear-gradient(180deg, var(--mk-surface-paper), #eef1ea) !important;
+}
+
+.mk-section--forest,
+.mk-section--ink {
+  background:
+    radial-gradient(760px 360px at 88% -6%, var(--accent-warm), transparent 72%),
+    radial-gradient(620px 320px at 10% 110%, rgba(200, 240, 77, 0.08), transparent 74%),
+    linear-gradient(170deg, var(--color-ink) 0%, var(--color-forest) 58%, #11170f 100%) !important;
+}
+
+.mk-section-heading {
+  margin-bottom: clamp(2.35rem, 5vw, 3.75rem);
+}
+
+.mk-section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+}
+
+.mk-section-heading--center .mk-section-eyebrow {
+  margin-inline: auto;
+}
+
+.mk-section-eyebrow::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 14px currentColor;
+}
+
+.mk-section-title {
+  max-width: 780px;
+}
+
+.mk-section-heading--center .mk-section-title {
+  margin-inline: auto !important;
+}
+
+.mk-section-body {
+  font-size: clamp(1rem, 1.45vw, 1.08rem) !important;
+}
+
+/* Brand navigation: visible, premium, and consistent with the footer. */
+nav[aria-label='Main navigation'] {
+  box-shadow: 0 1px 0 rgba(243, 245, 239, 0.06), 0 16px 42px -30px rgba(0, 0, 0, 0.85);
+}
+
+nav[aria-label='Main navigation'] a[aria-label='LOCK home'] img,
+.mk-footer-brand img {
+  filter: drop-shadow(0 0 14px rgba(200, 240, 77, 0.34));
+}
+
+.nav-desktop a:not(.mk-btn):hover {
+  color: var(--color-paper) !important;
+}
+
+/* Hero: consistent cinematic stage, tighter mobile, stronger contrast. */
+.mk-hero {
+  min-height: clamp(620px, 72vh, 720px);
+}
+
+.mk-hero-copy {
+  max-width: min(620px, 100%);
+}
+
+.mk-hero-copy h1 {
+  max-width: 13ch;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.22);
+}
+
+.mk-hero-copy p {
+  color: var(--mk-text-soft-dark) !important;
+}
+
+.mk-hero-bleed {
+  opacity: 0.88;
+}
+
+.mk-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(10, 13, 11, 0.72) 0%, rgba(10, 13, 11, 0.38) 46%, rgba(10, 13, 11, 0.08) 100%),
+    radial-gradient(520px 280px at 20% 28%, rgba(200, 240, 77, 0.09), transparent 70%);
+}
+
+.mk-hero > * {
+  z-index: 2;
+}
+
+/* Unified button family: same radius, same weight, clear hierarchy. */
+.mk-btn,
+a.mk-btn,
+button.mk-btn {
+  border-radius: var(--mk-radius-control) !important;
+  min-height: 48px;
+  padding-inline: 1.25rem;
+  box-shadow: none;
+  transform: translateZ(0);
+}
+
+.mk-btn--primary {
+  box-shadow: var(--mk-ring-action) !important;
+}
+
+.mk-btn--primary:hover {
+  transform: translateY(-2px);
+}
+
+.mk-btn--outline-dark,
+.mk-btn--outline-light {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.mk-btn--outline-dark {
+  background: rgba(243, 245, 239, 0.035) !important;
+  border-color: rgba(243, 245, 239, 0.26) !important;
+}
+
+.mk-btn--outline-light {
+  background: rgba(10, 13, 11, 0.035) !important;
+  border-color: rgba(10, 13, 11, 0.2) !important;
+}
+
+/* Cards: one system, purposeful variations, better contrast. */
+.mk-card,
+.mk-v-card,
+.mk-editorial-card,
+.mk-firewall-card,
+.mk-decision-card,
+.mk-signal-card {
+  border-radius: var(--mk-radius-card) !important;
+  box-shadow: var(--mk-shadow-soft);
+}
+
+.mk-card {
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+  border-color: var(--mk-border-paper) !important;
+}
+
+.mk-card:hover,
+.mk-v-card:hover,
+.mk-entity-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--mk-shadow-lift);
+}
+
+.mk-card h3,
+.mk-entity-card h3 {
+  text-wrap: balance;
+}
+
+.mk-entity-card--forest {
+  background:
+    radial-gradient(280px 180px at 100% 0%, rgba(200, 240, 77, 0.12), transparent 72%),
+    linear-gradient(180deg, #172118, #10160f) !important;
+  border-color: rgba(200, 240, 77, 0.18) !important;
+}
+
+.mk-entity-card--paper {
+  background:
+    radial-gradient(280px 180px at 100% 0%, rgba(200, 240, 77, 0.08), transparent 72%),
+    #ffffff !important;
+}
+
+.mk-editorial-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.74), rgba(255,255,255,0.42));
+  border-left-width: 3px;
+  padding: clamp(1.25rem, 2.2vw, 1.7rem);
+}
+
+.mk-signal-card,
+.mk-decision-card {
+  background:
+    radial-gradient(320px 200px at 100% 0%, rgba(200, 240, 77, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(243,245,239,0.055), rgba(243,245,239,0.025));
+  border-color: rgba(243,245,239,0.12) !important;
+}
+
+/* Image and emotional bands: less frame-in-frame, more stage atmosphere. */
+.mk-media-tile,
+.mk-entity-moment__media {
+  box-shadow:
+    0 0 0 1px rgba(243, 245, 239, 0.11),
+    0 34px 90px -52px rgba(0,0,0,0.85);
+}
+
+.mk-media-tile__img,
+.mk-entity-moment__image {
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.mk-media-tile__cap {
+  padding-top: 5rem;
+}
+
+.mk-entity-moment {
+  border-block: 1px solid rgba(243, 245, 239, 0.08);
+}
+
+.mk-entity-moment__copy {
+  background: rgba(243, 245, 239, 0.035);
+  border: 1px solid rgba(243, 245, 239, 0.09);
+  border-radius: var(--mk-radius-panel);
+  padding: clamp(1.35rem, 3vw, 2.2rem);
+}
+
+.mk-entity-moment li {
+  background: rgba(10, 13, 11, 0.28);
+  border: 1px solid rgba(243, 245, 239, 0.08);
+  border-radius: 16px;
+  padding: 0.75rem 0.85rem;
+}
+
+/* Footer: make it a branded closing system, not a link dump. */
+.mk-footer {
+  background:
+    radial-gradient(780px 360px at 88% 0%, rgba(200, 240, 77, 0.09), transparent 70%),
+    radial-gradient(720px 360px at 10% 110%, rgba(215, 168, 74, 0.075), transparent 72%),
+    linear-gradient(180deg, #121a14 0%, #0a0d0b 100%) !important;
+}
+
+.mk-footer-brand {
+  width: fit-content;
+}
+
+.mk-footer .mk-foot-cols {
+  padding: clamp(1rem, 2vw, 1.3rem);
+  border: 1px solid rgba(243,245,239,0.08);
+  border-radius: var(--mk-radius-panel);
+  background: rgba(243,245,239,0.026);
+}
+
+.mk-footer a:hover,
+.mk-footer button:hover {
+  color: var(--color-paper) !important;
+}
+
+/* Legal and long-form pages: readable, not neglected. */
+main:has(h1:first-child),
+main h1 {
+  text-wrap: balance;
+}
+
+/* Mobile quality bar. */
+@media (max-width: 640px) {
+  :root {
+    --mk-section-pad-mobile: 58px;
+  }
+
+  .mk-hero {
+    min-height: auto !important;
+    padding: 50px 20px 52px !important;
+  }
+
+  .mk-hero--flat {
+    min-height: clamp(610px, 82vh, 700px) !important;
+  }
+
+  .mk-hero::before {
+    background:
+      linear-gradient(180deg, rgba(10,13,11,0.88) 0%, rgba(10,13,11,0.72) 44%, rgba(10,13,11,0.18) 100%),
+      radial-gradient(360px 220px at 22% 18%, rgba(200, 240, 77, 0.08), transparent 72%);
+  }
+
+  .mk-hero-copy h1 {
+    max-width: 12ch;
+  }
+
+  .mk-hero-bleed {
+    height: clamp(300px, 39vh, 360px) !important;
+    opacity: 0.5;
+  }
+
+  .mk-section-heading {
+    margin-bottom: 2rem;
+  }
+
+  .mk-section-heading--center {
+    text-align: start !important;
+  }
+
+  .mk-section-heading--center .mk-section-eyebrow,
+  .mk-section-heading--center .mk-section-title {
+    margin-inline: 0 !important;
+  }
+
+  .mk-section-title {
+    font-size: clamp(1.85rem, 8.5vw, 2.35rem) !important;
+  }
+
+  .mk-section-body {
+    margin-inline: 0 !important;
+  }
+
+  .mk-card,
+  .mk-v-card,
+  .mk-editorial-card,
+  .mk-firewall-card,
+  .mk-decision-card,
+  .mk-signal-card {
+    box-shadow: none;
+  }
+
+  .mk-entity-moment__copy {
+    padding: 1.1rem;
+    border-radius: 24px;
+  }
+
+  .mk-entity-moment li {
+    padding: 0.7rem 0.75rem;
+  }
+
+  .mk-footer {
+    padding-top: 56px !important;
+  }
+
+  .mk-footer .mk-foot-cols {
+    padding: 0 1rem;
+    border-radius: 24px;
+  }
+}
+
+/* LOCK SITE REBUILD PASS v2026-07-14-CODEX-B
+   Purpose: make every page feel like one designed product, not a collection
+   of wireframe blocks. These overrides intentionally sit last in the cascade. */
+
+:root {
+  --mk-hero-desktop-final: clamp(640px, 70vh, 720px);
+  --mk-hero-mobile-final: auto;
+  --mk-page-gutter: max(20px, 4vw);
+}
+
+body {
+  font-family: var(--font-manrope), var(--font-heebo), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  background: var(--color-night);
+}
+
+html[lang='he'],
+[dir='rtl'],
+[lang='he'] body {
+  font-family: var(--font-heebo), var(--font-manrope), system-ui, sans-serif !important;
+}
+
+/* Navigation: premium utility bar, not a default SaaS header. */
+nav[aria-label='Main navigation'] {
+  background:
+    linear-gradient(180deg, rgba(10,13,11,0.94), rgba(10,13,11,0.82)) !important;
+}
+
+nav[aria-label='Main navigation'] a[aria-label='LOCK home'] {
+  letter-spacing: 0.02em !important;
+}
+
+nav[aria-label='Main navigation'] a[aria-label='LOCK home'] img {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.nav-desktop a:not(.mk-btn) {
+  transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+/* Hero: one professional stage height, with a real emotional image field. */
+.mk-hero,
+.mk-hero--flat,
+.mk-product-hero {
+  min-height: var(--mk-hero-desktop-final) !important;
+  padding-block: clamp(76px, 9vh, 104px) clamp(72px, 8vh, 96px) !important;
+}
+
+.mk-hero-inner {
+  max-width: var(--mk-page-max);
+  width: 100%;
+  margin-inline: auto;
+}
+
+.mk-hero-copy {
+  max-width: 610px !important;
+}
+
+.mk-hero-copy h1 {
+  font-size: clamp(2.45rem, 4.6vw, 3.95rem) !important;
+  line-height: 0.96 !important;
+  letter-spacing: -0.055em !important;
+  max-width: 13.5ch !important;
+  text-wrap: balance;
+}
+
+.mk-hero-copy p {
+  max-width: 540px !important;
+  font-size: clamp(1rem, 1.55vw, 1.17rem) !important;
+}
+
+.mk-hero-bleed {
+  width: min(64%, 1040px) !important;
+  opacity: 0.98 !important;
+  filter: saturate(1.12) contrast(1.07) brightness(0.92);
+}
+
+.mk-hero::before {
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(10,13,11,0.9) 0%, rgba(10,13,11,0.68) 36%, rgba(10,13,11,0.22) 70%, rgba(10,13,11,0.08) 100%),
+    radial-gradient(540px 320px at 20% 28%, rgba(200,240,77,0.12), transparent 72%),
+    radial-gradient(680px 420px at 84% 8%, rgba(215,168,74,0.11), transparent 72%) !important;
+}
+
+/* The hero used to carry extra chips/badges into an over-tall first screen.
+   Keep trust visible, but make below-content compact and non-dominant. */
+.mk-hero-copy > div[style*='margin-top: 1.5rem'] {
+  margin-top: 1rem !important;
+  max-width: 560px;
+}
+
+/* Sections: clear purpose, stronger rhythm, no samey white-card grid. */
+.mk-section {
+  padding-block: clamp(76px, 7.2vw, 104px) !important;
+}
+
+.mk-section--paper {
+  background:
+    radial-gradient(720px 360px at 84% 0%, rgba(200,240,77,0.08), transparent 72%),
+    linear-gradient(180deg, #f5f7f0 0%, #eef1ea 100%) !important;
+}
+
+.mk-section--forest,
+.mk-section--ink {
+  background:
+    radial-gradient(740px 420px at 10% 0%, rgba(200,240,77,0.08), transparent 70%),
+    radial-gradient(720px 420px at 90% 110%, rgba(215,168,74,0.09), transparent 72%),
+    linear-gradient(180deg, #111a13 0%, #0a0d0b 100%) !important;
+}
+
+.mk-section-heading {
+  margin-bottom: clamp(2rem, 4vw, 3.35rem) !important;
+}
+
+.mk-section-eyebrow {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.15em !important;
+}
+
+.mk-section-title {
+  font-size: clamp(2.05rem, 4.2vw, 3.5rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.045em !important;
+}
+
+/* Cards and containers: one craft language, with a clearer visual hierarchy. */
+.mk-card,
+.mk-v-card,
+.mk-entity-card,
+.mk-editorial-card,
+.mk-firewall-card,
+.mk-decision-card,
+.mk-signal-card {
+  border-radius: 28px !important;
+}
+
+.mk-card,
+.mk-entity-card--paper {
+  background:
+    radial-gradient(360px 220px at 100% 0%, rgba(200,240,77,0.065), transparent 74%),
+    linear-gradient(180deg, #ffffff 0%, #f8faf4 100%) !important;
+}
+
+.mk-card p,
+.mk-entity-card p {
+  color: rgba(10,13,11,0.66) !important;
+}
+
+.mk-card[style*='var(--color-forest)'],
+.mk-card[style*='rgba(243,245,239,0.04)'],
+.mk-entity-card--forest {
+  background:
+    radial-gradient(360px 240px at 100% 0%, rgba(200,240,77,0.14), transparent 74%),
+    linear-gradient(180deg, #172118 0%, #0d130e 100%) !important;
+  border-color: rgba(200,240,77,0.18) !important;
+  color: var(--color-paper) !important;
+}
+
+.mk-card[style*='var(--color-forest)'] h3,
+.mk-card[style*='rgba(243,245,239,0.04)'] h3,
+.mk-entity-card--forest h3 {
+  color: var(--color-paper) !important;
+}
+
+.mk-entity-card--forest p,
+.mk-card[style*='var(--color-forest)'] p,
+.mk-card[style*='rgba(243,245,239,0.04)'] p {
+  color: rgba(243,245,239,0.74) !important;
+}
+
+.mk-card[style*='var(--color-forest)'] span,
+.mk-card[style*='rgba(243,245,239,0.04)'] span,
+.mk-entity-card--forest span {
+  color: inherit;
+}
+
+.mk-grid-5 {
+  gap: clamp(1rem, 2.1vw, 1.65rem) !important;
+}
+
+/* Image tiles: no dead/downward portraits as the leading promise. */
+.mk-media-tile {
+  min-height: 360px !important;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mk-media-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 26%, rgba(10,13,11,0.32) 58%, rgba(10,13,11,0.9) 100%),
+    radial-gradient(360px 220px at 72% 16%, rgba(200,240,77,0.12), transparent 72%);
+  z-index: 1;
+}
+
+.mk-media-tile__cap {
+  position: relative;
+  z-index: 2;
+}
+
+.mk-entity-moment__grid {
+  gap: clamp(1.4rem, 4vw, 4rem);
+}
+
+.mk-entity-moment__media {
+  min-height: clamp(360px, 42vw, 560px);
+}
+
+.mk-entity-moment__copy h2 {
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+/* Buttons: one family only. */
+.mk-btn,
+a.mk-btn,
+button.mk-btn,
+nav[aria-label='Main navigation'] a[href*='signup'],
+nav[aria-label='Main navigation'] a[href*='login'],
+nav[aria-label='Main navigation'] button {
+  border-radius: 999px !important;
+}
+
+.mk-btn:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-stamp);
+  outline-offset: 3px;
+}
+
+/* Legal/static pages should still feel like LOCK, not unstyled documents. */
+main > section:first-child:has(h1),
+main > div:first-child:has(h1) {
+  border-top: 1px solid rgba(243,245,239,0.06);
+}
+
+@media (max-width: 900px) {
+  .mk-hero,
+  .mk-hero--flat,
+  .mk-product-hero {
+    min-height: clamp(650px, 82vh, 740px) !important;
+    padding: 46px 20px 46px !important;
+  }
+
+  .mk-hero--flat {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .mk-hero-copy h1 {
+    font-size: clamp(2.25rem, 11.4vw, 3.45rem) !important;
+    max-width: 12.5ch !important;
+  }
+
+  .mk-hero-copy p {
+    font-size: 1rem !important;
+    line-height: 1.62 !important;
+  }
+
+  .mk-hero-copy > div[style*='margin-top: 1.5rem'] {
+    display: none !important;
+  }
+
+  .mk-hero-bleed {
+    position: absolute !important;
+    top: 34% !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    opacity: 0.54 !important;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 24%, black 100%) !important;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 24%, black 100%) !important;
+  }
+
+  .mk-hero::before {
+    background:
+      linear-gradient(180deg, rgba(10,13,11,0.94) 0%, rgba(10,13,11,0.82) 44%, rgba(10,13,11,0.36) 100%),
+      radial-gradient(360px 220px at 24% 16%, rgba(200,240,77,0.1), transparent 72%) !important;
+  }
+
+  .mk-section {
+    padding: 60px 20px !important;
+  }
+
+  .mk-section-title {
+    font-size: clamp(2rem, 10vw, 2.75rem) !important;
+  }
+
+  .mk-media-tile {
+    min-height: 300px !important;
+  }
+
+  .mk-entity-moment__media {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mk-hero-copy h1 {
+    font-size: clamp(2.15rem, 10.7vw, 3.1rem) !important;
+  }
+
+  .mk-cta-row {
+    width: 100%;
+  }
+
+  .mk-hero .mk-btn,
+  .mk-hero a.mk-btn,
+  .mk-product-hero .mk-btn,
+  .mk-product-hero a.mk-btn {
+    width: 100%;
+  }
+}

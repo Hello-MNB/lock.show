@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { Manrope, DM_Mono } from 'next/font/google'
+import { Manrope, Heebo, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
@@ -10,6 +10,12 @@ import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
 
 const manrope = Manrope({
   subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
+const heebo = Heebo({
+  subsets: ['hebrew', 'latin'],
   variable: '--font-heebo',
   display: 'swap',
 })
@@ -210,9 +216,9 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} ${dmMono.variable} antialiased`}
+        className={`${manrope.variable} ${heebo.variable} ${dmMono.variable} antialiased`}
         style={{
-          fontFamily: 'var(--font-heebo), Manrope, system-ui, sans-serif',
+          fontFamily: 'var(--font-manrope), var(--font-heebo), system-ui, sans-serif',
           backgroundColor: 'var(--color-night)',
           color: 'var(--color-paper)',
         }}

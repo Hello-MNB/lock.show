@@ -18,7 +18,7 @@ import { buildPageMetadata } from '@/lib/seo'
 
 const t = artistsContent.en
 
-const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
+const HERO_IMAGE = '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp'
 
 export const metadata = buildPageMetadata('artists')
 
@@ -97,7 +97,7 @@ export default function ArtistsPage() {
         primaryCta={t.hero.primaryCta}
         secondaryCta={t.hero.secondaryCta}
         trustLine={t.hero.trustLine}
-        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
+        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt, position: 'center 42%' }}
         floatingBottom={<RadarOverlayCard />}
         below={
           <div

@@ -18,7 +18,7 @@ import { buildPageMetadata } from '@/lib/seo'
 const t = howItWorksContent.en
 
 const SITE_URL = 'https://lock.show'
-const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
+const HERO_IMAGE = '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp'
 
 export const metadata = buildPageMetadata('howItWorks')
 

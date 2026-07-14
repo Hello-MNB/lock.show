@@ -26,7 +26,7 @@ export function EntityCard({
   const dark = variant === 'forest'
   return (
     <article
-      className="mk-card"
+      className={`mk-card mk-entity-card mk-entity-card--${variant}`}
       style={{
         background: dark ? 'var(--color-forest)' : '#ffffff',
         border: dark ? '1px solid rgba(243,245,239,0.1)' : '1px solid rgba(10,13,11,0.1)',

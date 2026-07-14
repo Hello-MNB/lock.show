@@ -19,7 +19,7 @@ import { buildPageMetadata } from '@/lib/seo'
 const t = homeContent.en
 
 const SITE_URL = 'https://lock.show'
-const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
+const HERO_IMAGE = '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp'
 
 export const metadata = buildPageMetadata('home')
 
@@ -319,7 +319,7 @@ export default function HomePage() {
             }}
           >
             <MediaTile
-              image={{ src: '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp', alt: 'Artist shaping their booking story' }}
+              image={{ src: '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp', alt: 'Artist performing inside an energetic night room', position: 'center 42%' }}
               caption={<><strong>Artist</strong><span>Make the next room understand what already happened.</span></>}
               href="/artists"
             />

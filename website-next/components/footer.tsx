@@ -14,7 +14,6 @@ import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
-import { DoorStamp } from '@/components/door-stamp'
 import { chromeContent } from '@/content/chrome'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
 
@@ -90,6 +89,7 @@ export function Footer() {
 
   return (
     <footer
+      className="mk-footer"
       style={{
         backgroundColor: 'var(--color-night)',
         color: 'rgba(255,255,255,0.7)',
@@ -112,6 +112,7 @@ export function Footer() {
         }}>
           <div>
             <Link
+              className="mk-footer-brand"
               href="/"
               aria-label="LOCK home"
               style={{
@@ -129,7 +130,13 @@ export function Footer() {
                 minWidth: '44px',
               }}
             >
-              <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
+              <img
+                src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+                alt=""
+                width={36}
+                height={36}
+                style={{ display: 'block', width: 36, height: 36 }}
+              />
               LOCK
             </Link>
             <p style={{

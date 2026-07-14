@@ -24,7 +24,7 @@ export function Section({
   children: ReactNode
 }) {
   return (
-    <section className="mk-section" style={{ ...TONES[tone], ...style }}>
+    <section className={`mk-section mk-section--${tone}`} style={{ ...TONES[tone], ...style }}>
       <div className={narrow ? 'mk-container--narrow' : 'mk-container'}>{children}</div>
     </section>
   )
@@ -46,9 +46,10 @@ export function SectionHeading({
   const onDark = tone !== 'paper'
   const textAlign = align === 'center' ? 'center' : ('start' as const)
   return (
-    <header style={{ textAlign, marginBottom: 'clamp(2.25rem, 5vw, 3.5rem)' }}>
+    <header className={`mk-section-heading mk-section-heading--${align}`} style={{ textAlign }}>
       {eyebrow ? (
         <p
+          className="mk-section-eyebrow"
           style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -62,6 +63,7 @@ export function SectionHeading({
         </p>
       ) : null}
       <h2
+        className="mk-section-title"
         style={{
           fontFamily: 'Georgia, "Times New Roman", serif',
           fontWeight: 400,
@@ -76,6 +78,7 @@ export function SectionHeading({
       </h2>
       {body ? (
         <p
+          className="mk-section-body"
           style={{
             fontSize: '1rem',
             lineHeight: 1.65,

@@ -22,7 +22,7 @@ export function FinalCta({
   const primaryStyle = 'mk-btn mk-btn--primary'
   return (
     <section
-      className="mk-section"
+      className="mk-section mk-final-cta"
       style={{
         background:
           'radial-gradient(640px 360px at 50% 120%, rgba(200,240,77,0.1), transparent 65%), var(--color-ink)',
