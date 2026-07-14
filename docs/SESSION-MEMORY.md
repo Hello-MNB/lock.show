@@ -154,11 +154,11 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 | P-3 | Real images (artist photo, atmosphere, source logos) | ✅ done |
 | P-4 | Gamification — journey/completeness, celebrations (firewall: never a quality score) | ✅ done |
 | P-5 | Click-through flows tested (Artist, Buyer, switcher) | ✅ verified |
-| P-6 | USE Codex's DS tokens (LOCKSHOW_Design_System_CURRENT) — flag missing tokens | 🟠 IN PROGRESS |
-| P-7 | Mobile-first + desktop→mobile responsive adaptation | 🔴 next |
-| P-8 | Professional IA — OBVIOUS nav · menu · account/user-settings · entity switcher (eye must not scatter) | 🔴 next |
-| P-9 | Radar = attractive + interactive; agents study its MEANING/options/comparisons/functionality → improve | 🔴 next |
-| P-10 | Sweep ALL entities' screens → propose display/process improvements | 🔴 next |
+| P-6 | USE Codex DS tokens + flag missing | ✅ done — FLAGGED missing: gold/amber-stage/source-blue/near-black/panel + spacing/radius/type scales absent from DS; --ink role collision. Codex to formalize |
+| P-7 | Mobile-first + responsive | ✅ done — bottom-nav on ≤640px, verified 390+1360 |
+| P-8 | Professional IA (nav/switcher/account distinct) | ✅ done — labeled WORKSPACE switcher, Navigation rail, top-right Account |
+| P-9 | Radar attractive+interactive (meaning-grounded) | ✅ done — radar sweep, parallax, hover preview, planet drill-in sheets, lenses dim/highlight |
+| P-10 | All-entity sweep | ✅ shell IA + tokens applied to all 6; deeper per-entity process polish = next iteration |
 ### STANDING RULES (never forget)
 NO-NEW-DOCS (update only, ask first) · ARTIFACT-SCOPE (only the 3 LOCK artifacts, never other projects) ·
 deletion = owner-only · firewall absolute · free-pilot · Q8-before-prod · named deploy trains ·
