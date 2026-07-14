@@ -38,11 +38,27 @@ export function familyFor(act, artist) {
   }
 }
 
+// G2 guard — emphasis exists ONLY when the artist actually declared a signal
+// (act.format, or genre text on the act/artist). No/unknown genre → NO primary
+// planets: every planet renders equal (never a guessed emphasis from the
+// dj-club default). familyFor's default stays for pure SORTING fallbacks.
+export function hasGenreSignal(act, artist) {
+  return !!(act?.format || String(act?.genre || artist?.genre || '').trim())
+}
+
+// The genre-PRIMARY planet keys for radar emphasis + guidance wording.
+// Empty array when there is no genre/format signal (all planets equal).
+export function primaryPlanets(act, artist) {
+  if (!hasGenreSignal(act, artist)) return []
+  const fam = GENRE_FAMILIES[familyFor(act, artist)]
+  return fam ? [...fam.primary] : []
+}
+
 // Is this planet a PRIMARY focus for the artist's family? (drives the
 // "matters most in your genre" guidance line — wording lives in i18n.)
+// False for every planet when no genre/format signal exists (G2 guard).
 export function isPrimaryPlanet(planetKey, act, artist) {
-  const fam = GENRE_FAMILIES[familyFor(act, artist)]
-  return !!fam && fam.primary.includes(planetKey)
+  return primaryPlanets(act, artist).includes(planetKey)
 }
 
 // Emphasis order for planet rendering / next-action candidate sorting:

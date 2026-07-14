@@ -6,7 +6,7 @@ import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } fro
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { isPrimaryPlanet, planetEmphasisOrder } from '../../lib/genreWeights.js'
+import { isPrimaryPlanet, primaryPlanets } from '../../lib/genreWeights.js'
 import RadarUniverse from './RadarUniverse.jsx'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
@@ -290,7 +290,9 @@ export default function ArtistDashboard() {
 
   // G2 — genre emphasis guidance: the first two planets buyers weigh in this
   // artist's genre family. Names only, joined for one wording-only line.
-  const genreFocusNames = planetEmphasisOrder(act, artist)
+  // primaryPlanets is EMPTY when no genre/format signal exists — then no line
+  // renders, consistent with the radar showing no planet emphasis (G2 guard).
+  const genreFocusNames = primaryPlanets(act, artist)
     .slice(0, 2)
     .map((k) => T.radar.universe.planets[k])
     .filter(Boolean)

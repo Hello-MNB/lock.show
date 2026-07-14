@@ -9,6 +9,7 @@ import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
 import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount } from '../../lib/radarUniverse.js'
+import { primaryPlanets } from '../../lib/genreWeights.js'
 
 // ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
 // The Radar IS evidence collection (IA correction): claim review / batch
@@ -215,6 +216,14 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const effAct = actOverride?.act || act
 
   const uni = useMemo(() => buildUniverse({ artist: effArtist, act: effAct, items: effItems, claims: effClaims, T }), [effArtist, effAct, effItems, effClaims, T])
+
+  // ── G2 genre emphasis (genreWeights) — ADDITIVE highlight ONLY. Primary
+  // planets for the ACTIVE Act's genre family gain a quiet concentric ring, a
+  // slight size lift and a method-safe wording label. Non-primary planets stay
+  // FULL-OPACITY and fully interactive (DEPLOY-GAPS testability rule — no
+  // dimming, no reordering). No genre/format signal → empty set → all equal.
+  // FIREWALL: never a weight, number, rank or % — a ring + words, nothing else.
+  const genrePrimary = useMemo(() => new Set(primaryPlanets(effAct, effArtist)), [effAct, effArtist])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
@@ -398,13 +407,24 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             const dimmed = !info.nodes.some(matchesFilter) && (filter !== 'all' || world)
             const complete = info.state === 'established' && info.foundCount === 0 &&
               !info.nodes.some((n) => n.state === NODE.MISSING)
+            // G2 — genre-PRIMARY planet: additive ring + slight size + label.
+            // Never touches other planets' opacity, order or interactivity.
+            const primary = genrePrimary.has(p.key)
             return (
               <button key={p.key}
                 onClick={() => setSelected(p.key)}
                 style={{ left: `${x}%`, top: `${y}%` }}
+                data-genre-primary={primary || undefined}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
-                aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${complete ? ` · ${S.complete}` : ''}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 md:h-16 md:w-16 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}${complete ? ` · ${S.complete}` : ''}`}>
+                <span className={`relative mx-auto grid place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${
+                  primary ? 'h-[60px] w-[60px] md:h-[68px] md:w-[68px]' : 'h-14 w-14 md:h-16 md:w-16'
+                } ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                  {/* G2 genre-primary emphasis — a quiet SECOND concentric ring
+                      (shape, not color-only) in the gold register; additive only */}
+                  {primary && (
+                    <span aria-hidden className="absolute -inset-1.5 rounded-full border border-gold/40 shadow-[0_0_14px_rgba(242,192,99,0.10)]" />
+                  )}
                   <GpIcon id={p.icon} className="h-6 w-6 text-ink/90 md:h-7 md:w-7" />
                   {/* found — a small gold dot, not a badge shouting */}
                   {info.foundCount > 0 && (
@@ -418,6 +438,12 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight md:text-[9px]">
                   {S.planets[p.key]}
                 </span>
+                {/* G2 — method-safe wording label; words only, never a weight */}
+                {primary && (
+                  <span className="mt-0.5 block w-20 font-mono text-[7px] uppercase tracking-[0.08em] text-gold/75 leading-tight md:text-[8px]">
+                    {S.genrePrimary}
+                  </span>
+                )}
               </button>
             )
           })}

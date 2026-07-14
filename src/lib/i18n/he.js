@@ -842,6 +842,9 @@ export const T = {
     // (build-in-English rule) until the native-authoring pass.
     universe: {
       filters: { ready: 'מוכן' },
+      // G2 genre-primary planet label — method-safe wording only (firewall:
+      // never a weight, number, rank or %). Also read to screen readers.
+      genrePrimary: "מרכזי בז'אנר שלך",
       // Named receipts + batch confirm — the confirm moment names WHAT and WHERE.
       destPassport: 'תצוגת הפספורט שלך',
       destPrivate: 'הרשומה הפרטית שלך',
