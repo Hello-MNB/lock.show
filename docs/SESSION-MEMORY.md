@@ -138,3 +138,9 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
   artifacts without explicit owner approval. UPDATE existing versions ONLY (the 3 canonical artifacts
   in place; edit existing repo docs — SYNC/VERSIONS/existing audits). If a new doc seems needed, ASK
   FIRST and wait for yes. No exceptions.**
+- **ARTIFACT-SCOPE RULE (owner, 14 Jul — BINDING, after I wrongly overwrote non-LOCK artifacts V9/MNB):
+  Claude Code touches ONLY the 3 LOCK management artifacts (Interactive Prototype 1c9b0030 · Version
+  Map a65d12d9 · Entities/Flows f702abc5). NEVER rename, overwrite, or modify ANY other artifact —
+  especially other projects (V9 מגדל בקרה, MNB, etc.). Deletion is ALWAYS the owner's action; Claude
+  only LISTS candidates, never alters them. Overwrote content is recoverable via each artifact's
+  version history (⋯ → restore prior version).**
