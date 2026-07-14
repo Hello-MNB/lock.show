@@ -18,6 +18,17 @@
   /* Accent — LIME, the single dominant action (DS #c8f04d) */
   --color-stamp:  #c8f04d;
 
+  /* ── WAVE-6 secondary palette (SYNC §47 / Codex visual-architecture
+     correction). LAW: lime = action / live-signal ONLY; the warm and source
+     accents below are for ATMOSPHERE, never for CTAs. ── */
+  --color-amber-stage:  #D7A84A;   /* warm show-business accent */
+  --color-ember:        #9A5A2E;   /* deep warmth / live-room glow */
+  --color-smoke:        #202820;   /* secondary card surface (gray-green) */
+  --color-source-blue:  #6EA6A3;   /* source / platform accents only */
+  /* Readable on-paper variants (WCAG AA on the #f3f5ef canvas) */
+  --color-amber-onlight:       #8a5e10;   /* amber text/icon on paper (~5.1:1) */
+  --color-source-blue-onlight: #2f5b58;   /* source-blue text/icon on paper (~5.3:1) */
+
   /* Text */
   --color-tally:  #929b94;   /* muted / secondary — dark-bg contexts only */
   --color-tally-onlight: #5c655e;   /* muted / secondary on paper/light bg — WCAG AA (~5.5:1) */

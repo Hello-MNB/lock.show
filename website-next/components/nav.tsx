@@ -14,7 +14,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
 import { DoorStamp } from '@/components/door-stamp'
@@ -57,7 +57,23 @@ export function Nav() {
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`)
 
+  // Close the mobile sheet on Escape; lock body scroll while it is open.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
   return (
+    <>
     <nav
       role="navigation"
       aria-label="Main navigation"
@@ -200,98 +216,139 @@ export function Nav() {
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div
-          id="mobile-menu"
-          style={{
-            backgroundColor: 'rgba(10,13,11,0.97)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            padding: '16px 24px 24px',
-          }}
-          className="nav-mobile-menu"
-        >
-          {t.links.map(({ href, label }) => {
-            const active = isActive(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontFamily: 'var(--font-heebo)',
-                  fontSize: '1rem',
-                  fontWeight: active ? 700 : 400,
-                  color: active ? 'var(--color-stamp)' : 'var(--color-paper)',
-                  textDecoration: 'none',
-                  padding: '14px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                {label}
-              </Link>
-            )
-          })}
-          <div style={{ paddingTop: '16px', paddingBottom: '4px' }}>
-            <LocaleToggle />
-          </div>
-          <a
-            href={`${APP_URL}/login`}
-            style={{
-              display: 'block',
-              marginTop: '12px',
-              padding: '15px 20px',
-              border: '1px solid var(--color-mist, rgba(255,255,255,.15))',
-              color: 'var(--color-paper)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 600,
-            }}
-          >
-            {t.login}
-          </a>
-          {/* Mobile CTA — same outline variant as desktop (the hero lime can
-              remain visible below the dropdown menu on tall screens). */}
-          <a
-            href={`${APP_URL}/signup`}
-            style={{
-              display: 'block',
-              marginTop: '10px',
-              padding: '15px 20px',
-              backgroundColor: 'transparent',
-              border: '1px solid rgba(243,245,239,0.28)',
-              color: 'var(--color-paper)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 700,
-            }}
-          >
-            {t.cta}
-          </a>
-        </div>
-      )}
-
       <style>{`
         @media (max-width: 900px) {
           .nav-desktop { display: none !important; }
           .nav-mobile-btn { display: flex !important; }
         }
-        @media (min-width: 901px) {
-          .nav-mobile-menu { display: none !important; }
-        }
       `}</style>
     </nav>
+
+      {/* Mobile SHEET — rendered OUTSIDE <nav> so the nav's backdrop-filter
+          does not become the fixed sheet's containing block (that clipped it
+          to the 64px header). Slide-in from the right, dark surface, 52px tap
+          rows, sticky primary CTA at bottom (Codex build scope §2). */}
+      {open && (
+        <>
+          <div
+            className="mk-sheet-backdrop"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.closeMenu}
+            className="mk-sheet"
+          >
+            {/* Sheet header — wordmark + close */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontFamily: 'var(--font-space-mono)',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  letterSpacing: '0.06em',
+                  color: 'var(--color-paper)',
+                }}
+              >
+                <DoorStamp size={32} style={{ color: 'var(--color-stamp)' }} />
+                LOCK
+              </span>
+              <button
+                aria-label={t.closeMenu}
+                onClick={() => setOpen(false)}
+                style={{
+                  background: 'none',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: '10px',
+                  color: 'var(--color-paper)',
+                  width: '44px',
+                  height: '44px',
+                  cursor: 'pointer',
+                  fontSize: '1.2rem',
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable rows */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+              {t.links.map(({ href, label }) => {
+                const active = isActive(href)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className="mk-sheet__row"
+                  >
+                    <span>{label}</span>
+                    <span aria-hidden="true" style={{ opacity: 0.4 }}>→</span>
+                  </Link>
+                )
+              })}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '20px' }}>
+                <LocaleToggle />
+                <a
+                  href={`${APP_URL}/login`}
+                  style={{
+                    flex: 1,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '48px',
+                    border: '1px solid rgba(243,245,239,0.28)',
+                    color: 'var(--color-paper)',
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                  }}
+                >
+                  {t.login}
+                </a>
+              </div>
+            </div>
+
+            {/* Sticky primary CTA at bottom of the sheet — lime is allowed here
+                (the sheet covers the hero, so it owns this viewport). */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(10,13,11,0.6)',
+              }}
+            >
+              <a
+                href={`${APP_URL}/signup`}
+                className="mk-btn mk-btn--primary"
+                style={{ width: '100%' }}
+              >
+                {t.cta}
+              </a>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   )
 }

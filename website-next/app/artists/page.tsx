@@ -97,7 +97,7 @@ function RadarOverlayCard() {
 
 export default function ArtistsPage() {
   return (
-    <main>
+    <main data-accent="artists">
       {/* ── HERO (brief §5.2): supported, not evaluated ── */}
       <Hero
         eyebrow={t.hero.eyebrow}

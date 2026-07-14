@@ -99,8 +99,11 @@ export function Hero(props: HeroProps) {
     <section
       className="mk-hero mk-hero--flat"
       style={{
+        // Per-page accent rhythm (SYNC §47): a warm (amber/source) glow top-
+        // right + a cool (lime/mist) glow bottom-left, both read from the
+        // page's [data-accent] channel, over the nightlife base.
         background:
-          'radial-gradient(720px 480px at 85% 0%, rgba(200,240,77,0.08), transparent 60%), linear-gradient(160deg, var(--color-ink) 0%, var(--color-forest) 100%)',
+          'radial-gradient(720px 480px at 85% 0%, var(--accent-warm), transparent 60%), radial-gradient(560px 420px at 8% 100%, var(--accent-cool), transparent 62%), linear-gradient(160deg, var(--color-ink) 0%, var(--color-forest) 100%)',
         color: 'var(--color-paper)',
       }}
     >

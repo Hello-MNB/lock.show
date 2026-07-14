@@ -148,7 +148,7 @@ function EventOverlayCard() {
 
 export default function ProductionPage() {
   return (
-    <main>
+    <main data-accent="production">
       {/* ── HERO (brief §5.5): warehouse image + event-lineup overlay ── */}
       <Hero
         eyebrow={t.hero.eyebrow}

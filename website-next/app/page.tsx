@@ -245,7 +245,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <main>
+      <main data-accent="home">
         {/* ── HERO (brief §5.1) ── */}
         <Hero
           eyebrow={t.hero.eyebrow}

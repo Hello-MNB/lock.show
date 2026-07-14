@@ -14,8 +14,8 @@
 import type { Metadata } from 'next'
 
 import { FinalCta } from '@/components/marketing/final-cta'
+import { FirewallCard } from '@/components/marketing/cards'
 import { Section, SectionHeading } from '@/components/marketing/section'
-import { TrustBadge } from '@/components/marketing/trust-badge'
 import { methodologyContent, type SourceKind } from '@/content/methodology'
 
 const t = methodologyContent.en
@@ -34,14 +34,31 @@ export const metadata: Metadata = {
   },
 }
 
-// Source logos (brief §5.9 asset list) — /public/brand/source-logos/*.svg
-const SOURCE_LOGOS = [
-  { src: '/brand/source-logos/codex-eventer.svg', alt: 'Eventer' },
-  { src: '/brand/source-logos/codex-tickchak.svg', alt: 'Tickchak' },
-  { src: '/brand/source-logos/codex-go-out.svg', alt: 'GO-OUT' },
-  { src: '/brand/source-logos/codex-instagram.svg', alt: 'Instagram' },
-  { src: '/brand/source-logos/codex-soundcloud.svg', alt: 'SoundCloud' },
-  { src: '/brand/source-logos/generic-ticket-export.svg', alt: 'Ticket export' },
+// Source logos (brief §5.9 asset list) — /public/brand/source-logos/*.svg.
+// Each logo carries its source CATEGORY, coloured per SYNC §47:
+// platform=source-blue · document=amber · person=lime · artist-declared=smoke.
+type SourceCategory = 'platform' | 'document' | 'person' | 'declared'
+
+const CATEGORY_COLOR: Record<SourceCategory, string> = {
+  platform: 'var(--color-source-blue)',
+  document: 'var(--color-amber-stage)',
+  person: 'var(--color-stamp)',
+  declared: 'rgba(221,227,215,0.7)',
+}
+const CATEGORY_LABEL: Record<SourceCategory, string> = {
+  platform: 'Platform',
+  document: 'Document',
+  person: 'Person',
+  declared: 'Artist-declared',
+}
+
+const SOURCE_LOGOS: { src: string; alt: string; category: SourceCategory }[] = [
+  { src: '/brand/source-logos/codex-eventer.svg', alt: 'Eventer', category: 'document' },
+  { src: '/brand/source-logos/codex-tickchak.svg', alt: 'Tickchak', category: 'document' },
+  { src: '/brand/source-logos/codex-go-out.svg', alt: 'GO-OUT', category: 'document' },
+  { src: '/brand/source-logos/codex-instagram.svg', alt: 'Instagram', category: 'platform' },
+  { src: '/brand/source-logos/codex-soundcloud.svg', alt: 'SoundCloud', category: 'platform' },
+  { src: '/brand/source-logos/generic-ticket-export.svg', alt: 'Ticket export', category: 'document' },
 ]
 
 // ── Local icon glyphs for the §5.9 icon row (shared icons.tsx lacks these) ──
@@ -76,14 +93,16 @@ function SourceKindGlyph({ kind }: { kind: SourceKind }) {
 
 export default function MethodologyPage() {
   return (
-    <main>
+    <main data-accent="methodology">
       {/* ── HERO — calm text header + governed chips, no image, nothing
              that could read as a chart ── */}
       <section
         className="mk-hero"
         style={{
+          // Trust-lab accent: source-blue + amber (SYNC §47), read from the
+          // page's [data-accent="methodology"] channel.
           background:
-            'radial-gradient(720px 480px at 85% 0%, rgba(200,240,77,0.07), transparent 60%), linear-gradient(160deg, var(--color-ink) 0%, var(--color-forest) 100%)',
+            'radial-gradient(720px 480px at 85% 0%, var(--accent-cool), transparent 60%), radial-gradient(560px 420px at 12% 100%, var(--accent-warm), transparent 62%), linear-gradient(160deg, var(--color-ink) 0%, var(--color-forest) 100%)',
           color: 'var(--color-paper)',
           paddingBottom: '72px',
         }}
@@ -309,47 +328,23 @@ export default function MethodologyPage() {
           >
             {t.sourceTypes.logosLabel}
           </p>
-          {/* Legibility fix: the full 240x72 badge rendered at 22px was
-              illegible at 1440. Each badge shares the same geometry — a
-              56x56 icon tile at (8,8) inside a 72px-tall canvas — so we crop
-              the icon tile to a 44px square (scale 44/56: img 56.57px tall,
-              offset -6.29px, tile radius 11.8px) and set a readable text
-              label next to it. Grayscale keeps the strip quiet, not brand-
-              loud; the flex row wraps gracefully on mobile. */}
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 'clamp(0.75rem, 2vw, 1.25rem)',
-            }}
-          >
+          {/* Source-ecosystem band (build scope §8) — bigger dark logo cards,
+              each carrying its source CATEGORY with a category colour on the
+              top rule + type label. A credibility ecosystem, not a chart.
+              The badge SVGs share one geometry (56x56 icon tile at 8,8 inside a
+              72px canvas); we crop that tile to a 52px square (scale 52/56:
+              img 66.86px tall, offset -7.43px, radius ~13px). */}
+          <div className="mk-source-belt">
             {SOURCE_LOGOS.map((logo) => (
-              <span
+              <div
                 key={logo.src}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.7rem',
-                  background: 'rgba(243,245,239,0.06)',
-                  border: '1px solid rgba(243,245,239,0.12)',
-                  borderRadius: '16px',
-                  padding: '0.55rem 1.1rem 0.55rem 0.55rem',
-                }}
+                className="mk-source-logo-card"
+                style={{ ['--src-cat' as string]: CATEGORY_COLOR[logo.category] }}
               >
                 <span
+                  className="mk-source-logo-card__tile"
                   aria-hidden="true"
-                  style={{
-                    position: 'relative',
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '11.8px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    filter: 'grayscale(1)',
-                    opacity: 0.88,
-                  }}
+                  style={{ filter: 'grayscale(1)', opacity: 0.9 }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- small local SVG logos */}
                   <img
@@ -357,29 +352,18 @@ export default function MethodologyPage() {
                     alt=""
                     style={{
                       position: 'absolute',
-                      top: '-6.29px',
-                      left: '-6.29px', // physical: the tile sits at the SVG's left edge in both locales
-                      height: '56.57px',
+                      top: '-7.43px',
+                      left: '-7.43px',
+                      height: '66.86px',
                       width: 'auto',
                       maxWidth: 'none',
                       display: 'block',
                     }}
                   />
                 </span>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(243,245,239,0.78)',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {logo.alt}
-                </span>
-              </span>
+                <span className="mk-source-logo-card__name">{logo.alt}</span>
+                <span className="mk-source-logo-card__type">{CATEGORY_LABEL[logo.category]}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -441,19 +425,21 @@ export default function MethodologyPage() {
         </div>
       </Section>
 
-      {/* ── 4 · FIREWALL RULES — labelled statements via TrustBadge ── */}
-      <Section tone="ink" narrow>
+      {/* ── 4 · FIREWALL RULES — protection semantics via FirewallCard
+             (build scope §8: "what never becomes public" reads as a firewall,
+             warm-guard outline, shield glyph — not neutral badges) ── */}
+      <Section tone="ink">
         <SectionHeading tone="ink" eyebrow={t.firewall.eyebrow} title={t.firewall.title} />
         <div
+          className="m-divide"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '0.9rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 'clamp(0.85rem, 2vw, 1.25rem)',
           }}
         >
           {t.firewall.rules.map((rule) => (
-            <TrustBadge key={rule.title} methodLabel={rule.title} explanation={rule.body} tone="dark" />
+            <FirewallCard key={rule.title} title={rule.title} body={rule.body} />
           ))}
         </div>
       </Section>

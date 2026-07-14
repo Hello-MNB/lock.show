@@ -8,21 +8,13 @@ import type { Metadata } from 'next'
 
 import { EntityCard } from '@/components/marketing/entity-card'
 import { FinalCta } from '@/components/marketing/final-cta'
-import { Hero } from '@/components/marketing/hero'
+import { ProductCompositionHero } from '@/components/marketing/product-composition-hero'
 import { Section, SectionHeading } from '@/components/marketing/section'
 import { pricingContent } from '@/content/pricing'
 
 const t = pricingContent.en
 
 const SITE_URL = 'https://lock.show'
-// INTERIM hero asset — Codex to assign the final pricing-hero asset (SYNC §42).
-// The social cover (1600x533) cropped to a near-black rectangle inside the
-// tall hero card, so we temporarily reuse the workspace atmosphere shot with
-// a distinct lime/forest duotone tint (see HERO_OVERLAY) so the pricing hero
-// does not clone Home's neutral dark treatment.
-const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
-const HERO_OVERLAY =
-  'linear-gradient(165deg, rgba(200,240,77,0.24) 0%, rgba(24,34,26,0.6) 48%, rgba(10,13,11,0.92) 100%)'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/pricing' },
@@ -38,17 +30,26 @@ export const metadata: Metadata = {
 
 export default function FreePilotPage() {
   return (
-    <main>
-      {/* ── HERO — H1 "Free pilot. No plans yet." (brief §5.7) ── */}
-      <Hero
+    <main data-accent="free-pilot">
+      {/* ── HERO — product composition, NO photo (Codex build scope §7).
+             Central lime "Free pilot" tile + 5 orbiting entity chips. ── */}
+      <ProductCompositionHero
         eyebrow={t.hero.eyebrow}
         title={t.hero.h1}
         body={t.hero.body}
         primaryCta={t.hero.primaryCta}
         secondaryCta={t.hero.secondaryCta}
         trustLine={t.hero.trustLine}
-        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt, overlay: HERO_OVERLAY }}
-        chips={t.hero.chips}
+        coreEyebrow="No plans yet"
+        coreTitle="Free pilot"
+        chips={[
+          { label: 'Artist', icon: 'artist' },
+          { label: 'Buyer', icon: 'buyer' },
+          { label: 'Representation', icon: 'manager' },
+          { label: 'Production', icon: 'production' },
+          { label: 'Source confirmation', icon: 'source' },
+        ]}
+        note="No payment · No scores · Artist controls publication"
       />
 
       {/* ── 5 ENTITY CARDS — Artist / Buyer / Manager / Production / Source

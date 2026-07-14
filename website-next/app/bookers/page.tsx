@@ -136,7 +136,7 @@ function PassportPreviewCard() {
 
 export default function BookersPage() {
   return (
-    <main>
+    <main data-accent="bookers">
       {/* ── HERO (brief §5.6) ── */}
       <Hero
         eyebrow={t.hero.eyebrow}

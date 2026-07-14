@@ -268,7 +268,7 @@ function PhoneMockup() {
 
 export default function ProducersPage() {
   return (
-    <main>
+    <main data-accent="source">
       {/* ── HERO (brief §5.4): warehouse webp as heavily-darkened subtle
              background + phone confirmation mockup ── */}
       <section

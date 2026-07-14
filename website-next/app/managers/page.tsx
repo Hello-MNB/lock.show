@@ -102,7 +102,7 @@ function RosterOverlayCard() {
 
 export default function ManagersPage() {
   return (
-    <main>
+    <main data-accent="managers">
       {/* ── HERO (brief §5.3): roster-room image + roster cards ── */}
       <Hero
         eyebrow={t.hero.eyebrow}

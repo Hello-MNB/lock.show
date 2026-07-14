@@ -9,6 +9,7 @@
 // content/chrome.ts ({ en, he }); micro-copy is the brief's exact wording.
 // Columns stack on narrow screens via the existing auto-fit grid pattern.
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
@@ -70,6 +71,18 @@ function ConsentPrefsButton({ label }: { label: string }) {
 export function Footer() {
   const { locale } = useLocale()
   const t = chromeContent[locale].footer
+
+  // Desktop (≥721px): every column is expanded (the accordion is a mobile-only
+  // affordance). matchMedia guarantees the links render regardless of the
+  // <details> open-state quirks across Chromium versions.
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 721px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   return (
     <footer
@@ -145,20 +158,16 @@ export function Footer() {
         </div>
 
         {/* Link columns — exactly 4: Product · Trust · Company · Legal.
-            auto-fit grid collapses to stacked columns on mobile (existing
-            responsive pattern, brief §3 mobile rhythm: footer accordion/stack). */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '32px',
-          marginBottom: '40px',
-        }}>
+            Mobile: each column is an <details> ACCORDION (Codex build scope §3).
+            Desktop (≥721px): CSS forces every accordion open into a 4-col grid
+            with non-interactive headings. */}
+        <div className="mk-foot-cols" style={{ marginBottom: '40px' }}>
           {t.columns.map(({ heading, links }, i) => {
             const isLegal = i === t.columns.length - 1
             return (
-              <div key={heading}>
-                <p style={columnHeadingStyle}>{heading}</p>
-                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <details key={heading} className="mk-foot-acc" open={isDesktop || i === 0}>
+                <summary style={columnHeadingStyle as React.CSSProperties}>{heading}</summary>
+                <ul style={{ listStyle: 'none', margin: 0, padding: '0 0 12px' }}>
                   {links.map(({ href, label }) => (
                     <li key={href} style={{ marginBottom: '4px' }}>
                       <Link href={href} style={footerLinkStyle}>
@@ -172,7 +181,7 @@ export function Footer() {
                     </li>
                   ) : null}
                 </ul>
-              </div>
+              </details>
             )
           })}
         </div>
