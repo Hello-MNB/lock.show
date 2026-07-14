@@ -304,3 +304,25 @@ Six planets on a fixed orbit (angles −90/−30/30/90/150/210 in code, `radarUn
 5. **Platform ring copy rewritten to plain language** with per-source meaning on hover ("Your Spotify · your streaming catalogue").
 6. **Copy de-jargoned:** "Tap any planet to see what it means and confirm what's yours. No score, no rank — only bands and how-we-know-it labels" (was terser/colder); found-banner and platform caption reworded to warm, plain English.
 _Firewall re-verified across all six: no score/rank/%/gauge introduced; state stays the four bounded words + four node marks + method labels._
+
+## PART 6 · NAVIGATION & BRANDING CONSOLIDATION (owner-annotated Radar callouts 1–6; P-15)
+_Owner directive: the identity chrome was SCATTERED — five competing identity elements. "Workspace-switching should live under the top-right user; simple + accessible; NEVER more than 1–2 steps." Plus: improve branding/design. Implemented in prototype ③; verified Playwright 1360+390 (0 console/page errors, no h-scroll)._
+
+### 6.1 · Identity chrome: 5 elements → 2
+Before (scatter): (1) LOCK wordmark, (2) top-left WORKSPACE switcher, (3) top-right account, (4) bottom-left rail persona card, (5) "NAME · CAREER WORKSPACE" screen eyebrow.
+After: **TWO** — brand lockup (top-left) + **one unified hub** (top-right = account + workspace switch).
+- **Removed:** top-left `#wsBtn`/`.ws`/`.brand-sep`, the rail `.ctx` persona card, and the person-name from the atmos caption (now the workspace context only, e.g. "Career workspace"). Rail label simplified to "Navigation"; center crumb simplified to the section name only.
+
+### 6.2 · The unified top-right hub (the ≤2-step switch)
+Click avatar (**step 1**) → one menu: identity header ("{Workspace} workspace") · **Switch workspace** group (all 6 workspaces, ✓ on current) · account actions (Edit profile · Account settings · Restart demo · Sign out). Click any workspace row = **step 2** → switched. Never deeper than 1–2.
+- **Renders in EVERY mode** (fix): Buyer/Confirmer previously escaped only via the top-left switcher; the hub now shows in public/confirm modes too (identity + switch list + Exit preview) so no persona is trapped.
+- **A11y:** `#acctBtn` aria-haspopup/aria-expanded/aria-controls; rows `role=menuitemradio` + `aria-checked` inside `role=group`; Escape closes + returns focus; roving arrow-key nav.
+- **Mobile:** avatar-only hub pinned right (`.chrome-right{margin-left:auto}` — the center crumb is hidden ≤640px, so it can no longer act as the spacer); menu fits in-viewport (measured L=58…R=378 at 390px). Source-Confirmer switch-row icon swapped check→shield to avoid echoing the current-workspace ✓.
+
+### 6.3 · Branding/visual polish
+Emblem+wordmark lockup (padlock/keyhole mark); forest-tinted chrome + darker forest rail (bar floats above rail); wired the type/spacing/radius token scales at the named spots; unified mono-label tracking and restricted mono to wordmark/eyebrows/method chips (crumb demoted to calm sans); `.acct-btn` radius matched to the switch-row idiom (killed the lone pill); lighter floating menu elevation; neutral hovers with lime reserved for action/confirmed only.
+
+### 6.4 · Proposed DS tokens — PENDING CODEX CONFIRMATION (flagged inline `/* proposed — confirm with Codex DS */`)
+`--forest-2 #1C2A20` · `--chrome-bg #0C1510` · `--rail-bg #0A120D` · `--gold-soft` · `--gold-line` · `--blue-soft` · `--shadow-1` · `--shadow-2` · `--divider`. All are tints/opacities of colours already in use — no new hue. Codex to confirm/rename against the canonical DS (only 8 tokens confirmed today).
+
+_Firewall: structure/colour/type only — no score/rank/%/gauge introduced; gold/amber stay provenance, lime never encodes magnitude._
