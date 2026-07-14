@@ -144,3 +144,24 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
   especially other projects (V9 מגדל בקרה, MNB, etc.). Deletion is ALWAYS the owner's action; Claude
   only LISTS candidates, never alters them. Overwrote content is recoverable via each artifact's
   version history (⋯ → restore prior version).**
+
+## 📋 LIVE REQUIREMENTS REGISTER (owner-tracked; update status every round so nothing slips)
+### PROTOTYPE / UX (the interactive prototype artifact 1c9b0030)
+| # | Requirement | Status |
+|---|---|---|
+| P-1 | No editor/meta annotations — feels like the real system | ✅ done |
+| P-2 | Full-screen, no page scroll (one-to-one real app) | ✅ done |
+| P-3 | Real images (artist photo, atmosphere, source logos) | ✅ done |
+| P-4 | Gamification — journey/completeness, celebrations (firewall: never a quality score) | ✅ done |
+| P-5 | Click-through flows tested (Artist, Buyer, switcher) | ✅ verified |
+| P-6 | USE Codex's DS tokens (LOCKSHOW_Design_System_CURRENT) — flag missing tokens | 🟠 IN PROGRESS |
+| P-7 | Mobile-first + desktop→mobile responsive adaptation | 🔴 next |
+| P-8 | Professional IA — OBVIOUS nav · menu · account/user-settings · entity switcher (eye must not scatter) | 🔴 next |
+| P-9 | Radar = attractive + interactive; agents study its MEANING/options/comparisons/functionality → improve | 🔴 next |
+| P-10 | Sweep ALL entities' screens → propose display/process improvements | 🔴 next |
+### STANDING RULES (never forget)
+NO-NEW-DOCS (update only, ask first) · ARTIFACT-SCOPE (only the 3 LOCK artifacts, never other projects) ·
+deletion = owner-only · firewall absolute · free-pilot · Q8-before-prod · named deploy trains ·
+end every reply with the 3 artifact links + board.
+### OPEN FROM OWNER (her timing)
+GPT RC1 relay · Google retest · Q8 · Supabase Pro · Eran · G20 legal · restore V9/MNB artifacts.
