@@ -88,9 +88,9 @@ export function Nav() {
       }}
     >
       <div style={{
-        maxWidth: '1100px',
+        maxWidth: '1240px',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '0 max(20px, 4vw)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -122,7 +122,7 @@ export function Nav() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '22px',
+            gap: 'clamp(14px, 1.65vw, 24px)',
           }}
           className="nav-desktop"
         >

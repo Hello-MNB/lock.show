@@ -54,6 +54,7 @@
 .mk-section {
   position: relative;
   padding: clamp(72px, 9vw, 112px) max(22px, 4vw);
+  overflow: hidden;
 }
 .mk-container {
   max-width: 1240px;
@@ -70,7 +71,7 @@
 .mk-hero {
   position: relative;
   overflow: hidden;
-  padding: clamp(84px, 12vh, 132px) max(22px, 4vw) clamp(88px, 10vw, 120px);
+  padding: clamp(92px, 13vh, 148px) max(22px, 4vw) clamp(96px, 10vw, 128px);
 }
 .mk-hero-grid {
   display: grid;
@@ -85,14 +86,14 @@
 .mk-hero--flat {
   display: flex;
   align-items: center;
-  min-height: clamp(540px, 72vh, 700px);
+  min-height: clamp(600px, 78vh, 760px);
 }
 .mk-hero-inner {
   position: relative;
   z-index: 1; /* copy above the bleeding image */
 }
 .mk-hero-copy {
-  max-width: 620px;
+  max-width: 660px;
 }
 .mk-hero-bleed {
   /* Desktop: occupies the right ~60% of the hero, edge to edge (top /
@@ -101,7 +102,8 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(60%, 940px);
+  width: min(62%, 980px);
+  opacity: 0.92;
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
@@ -138,7 +140,9 @@
 /* ── Cards ──────────────────────────────────────────── */
 .mk-card {
   border-radius: 24px;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset, 0 22px 60px -42px rgba(10, 13, 11, 0.48);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.62) inset,
+    0 24px 70px -46px rgba(10, 13, 11, 0.58);
 }
 
 /* ── 5-card entity grid (home lanes · pricing entities) ──
@@ -171,7 +175,7 @@
   gap: 8px;
   min-height: 52px;
   padding: 0 1.75rem;
-  border-radius: 12px;
+  border-radius: 999px;
   font-family: var(--font-space-mono), 'DM Mono', monospace;
   font-size: 0.8rem;
   font-weight: 700;
@@ -187,6 +191,9 @@
     var(--color-stamp);
   color: var(--color-ink);
   border: 1px solid rgba(200, 240, 77, 0.78);
+  box-shadow:
+    0 0 0 1px rgba(200,240,77,0.18),
+    0 18px 42px -22px rgba(200,240,77,0.72);
 }
 .mk-btn--outline-dark {
   /* secondary on dark backgrounds */
@@ -717,6 +724,46 @@ a.mk-v-card:active,
    Purpose: make every page feel like one premium, mobile-first LOCK site:
    consistent rhythm, stronger contrast, richer atmosphere, better touch
    targets, less wireframe whitespace. */
+.mk-section[style*="--color-paper"],
+.mk-section[style*="var(--color-paper)"] {
+  background-image:
+    radial-gradient(680px 280px at 12% -10%, rgba(200,240,77,0.075), transparent 68%),
+    radial-gradient(620px 300px at 95% 108%, rgba(215,168,74,0.06), transparent 72%);
+}
+
+.mk-section[style*="--color-forest"],
+.mk-section[style*="var(--color-forest)"],
+.mk-section[style*="--color-ink"],
+.mk-section[style*="var(--color-ink)"] {
+  background-image:
+    radial-gradient(720px 360px at 86% -8%, var(--accent-warm), transparent 70%),
+    radial-gradient(560px 260px at 6% 102%, rgba(200,240,77,0.07), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0));
+}
+
+.mk-section + .mk-section {
+  border-top: 1px solid rgba(10, 13, 11, 0.08);
+}
+
+.mk-section[style*="--color-forest"] + .mk-section,
+.mk-section[style*="--color-ink"] + .mk-section {
+  border-top-color: rgba(243,245,239,0.08);
+}
+
+.mk-section h2,
+.mk-hero h1 {
+  text-wrap: balance;
+}
+
+.mk-section p,
+.mk-hero p {
+  text-wrap: pretty;
+}
+
+.mk-section :is(h3, p) {
+  max-width: 64ch;
+}
+
 .mk-container > .mk-grid-5,
 .mk-container > .m-divide,
 .mk-container > .mk-flow {
@@ -749,6 +796,58 @@ a.mk-v-card,
   border-color: rgba(200, 240, 77, 0.28) !important;
 }
 
+.mk-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(10, 13, 11, 0.11) !important;
+}
+
+.mk-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.18), transparent 32%),
+    radial-gradient(360px 160px at 88% 0%, rgba(200,240,77,0.05), transparent 72%);
+  opacity: 0.72;
+}
+
+.mk-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mk-editorial-card {
+  min-height: 100%;
+}
+
+.mk-signal-card,
+.mk-decision-card {
+  min-height: 190px;
+}
+
+.mk-source-logo-card {
+  min-height: 132px;
+  justify-content: center;
+}
+
+.mk-source-logo-card__tile {
+  box-shadow:
+    0 0 0 1px rgba(243,245,239,0.16),
+    0 16px 34px -24px rgba(0,0,0,0.85);
+}
+
+.mk-media-tile {
+  min-height: clamp(280px, 30vw, 420px);
+}
+
+.mk-media-tile__cap {
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(10,13,11,0.58) 38%, rgba(10,13,11,0.88) 100%);
+}
+
 @media (min-width: 960px) {
   .mk-hero::after {
     content: '';
@@ -759,9 +858,21 @@ a.mk-v-card,
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(243,245,239,0.16), transparent);
   }
+
+  .mk-hero-copy {
+    padding-block: 1.5rem;
+  }
 }
 
 @media (max-width: 640px) {
+  .mk-section {
+    padding-top: 64px !important;
+    padding-bottom: 64px !important;
+  }
+  .mk-container,
+  .mk-container--narrow {
+    width: min(100%, 100vw - 40px);
+  }
   .mk-hero-copy h1 {
     font-size: clamp(2.35rem, 14vw, 3.55rem) !important;
     line-height: 0.98 !important;
@@ -776,5 +887,17 @@ a.mk-v-card,
   }
   .mk-foot-cols {
     margin-bottom: 28px !important;
+  }
+  .mk-grid-5 {
+    grid-template-columns: 1fr !important;
+  }
+  .mk-card,
+  .mk-signal-card,
+  .mk-decision-card,
+  .mk-media-tile {
+    min-height: unset;
+  }
+  .mk-source-belt {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

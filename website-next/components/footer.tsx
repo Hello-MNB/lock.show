@@ -89,11 +89,11 @@ export function Footer() {
       style={{
         backgroundColor: 'var(--color-night)',
         color: 'rgba(255,255,255,0.7)',
-        padding: '56px max(24px, 4vw) 32px',
+        padding: 'clamp(64px, 7vw, 92px) max(20px, 4vw) 36px',
       }}
       aria-label="Site footer"
     >
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1240px', margin: '0 auto' }}>
 
         {/* Top row: wordmark + CTA */}
         <div style={{
@@ -102,8 +102,8 @@ export function Footer() {
           alignItems: 'flex-start',
           flexWrap: 'wrap',
           gap: '24px',
-          marginBottom: '48px',
-          paddingBottom: '32px',
+          marginBottom: 'clamp(36px, 5vw, 56px)',
+          paddingBottom: 'clamp(28px, 4vw, 40px)',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
         }}>
           <div>
