@@ -326,3 +326,48 @@ Emblem+wordmark lockup (padlock/keyhole mark); forest-tinted chrome + darker for
 `--forest-2 #1C2A20` · `--chrome-bg #0C1510` · `--rail-bg #0A120D` · `--gold-soft` · `--gold-line` · `--blue-soft` · `--shadow-1` · `--shadow-2` · `--divider`. All are tints/opacities of colours already in use — no new hue. Codex to confirm/rename against the canonical DS (only 8 tokens confirmed today).
 
 _Firewall: structure/colour/type only — no score/rank/%/gauge introduced; gold/amber stay provenance, lime never encodes magnitude._
+
+## PART 7 · UX/UI REDESIGN BATCH — owner directive 14 Jul (annotated prototype; "document everything, per responsible party, no shortcuts, I don't repeat myself")
+_Binding source of truth for the prototype redesign. Every item tracked with an ID, a responsible party, and status. Owner is studying the other entities in parallel; this is the autonomous work order._
+
+### 7.0 · BRAND PALETTE — the answer to "what are the brand colours / where did the orange come from / is a token missing?"
+**Confirmed brand palette (Codex DS core — the ONLY canonical colours):**
+- `--ink #090D0A` (near-black) · `--forest #17221A` · **`--lime #C8F04D` = the ONE action/brand accent** · `--paper #F3F5EF` · `--mist #DDE3D9` · `--slate #687269`.
+- **The brand is: dark/forest canvas + a single lime accent.** There is NO orange in the confirmed brand.
+- **The "orange" = `--gold #F2C063` (+ `--amber-stage #D7A84A`).** These are labelled "DS ext" — i.e. Claude/Codex ADDITIONS for method/provenance chips and scan states, **NOT confirmed brand colours.** Owner is right to question them. → **DECISION (owner/Codex): remove the gold/amber and express provenance with lime (confirmed) + neutrals only, OR formally adopt gold into the DS.** Recommendation: REMOVE — keep the palette lime-on-dark; "confirmed vs not-yet" reads as lime vs neutral, no third hue.
+- **MISSING FROM DS (gaps — Codex to confirm/author, do NOT invent silently):** the full dark-app semantic scale (`surface/surface2/raise`, `text/muted/faint`), status set (`good/need/na`), `teal`, elevation shadows, `forest-2/chrome-bg/rail-bg`, and the in/out ruling on `gold/amber-stage/source-blue`. Until confirmed these stay flagged `/* proposed — confirm with Codex DS */`.
+- **Token architecture (owner ask U10):** the prototype must be self-contained (artifact), so tokens live in ONE `:root` layer that is the single control point for global restyle; component styles reference tokens only (no hardcoded colours). The real app mirrors this in a separate CSS/token file.
+
+### 7.1 · Requests — per responsible party
+**CLAUDE CODE (prototype now → app later):**
+| ID | Request | Screen | Status |
+|---|---|---|---|
+| U1 | **Remove the language (EN/HE) switcher from EVERY screen** — "not the place." | onboarding + all | 🔴 |
+| U2 | Improve font readability + **contrast**; fix black-on-black text inputs; token the text-field area. | onboarding + global | 🔴 |
+| U3 | Onboarding **step 1**: improve design + hierarchy. (Steps 2 & 3 = OK, leave.) | onboarding | 🔴 |
+| U4 | **Every screen fits ONE viewport height — NO scroll.** | all | 🔴 |
+| U5 | Everything interactive/smart · gamification · **minimum clicks to the final result.** | all | 🔴 |
+| U6 | **ONE navigation in desktop** (top bar OR left rail — pick the friendlier). Currently BOTH → the title shows twice (topbar "Radar" + page "CAREER WORKSPACE / Artist Radar"). | shell | 🔴 |
+| U7 | **Logo is wrong — always base it on DS assets.** (Not an invented emblem.) | shell | 🔴 |
+| U8 | **No technical content on the app — only UX/UI + microcopy.** Remove technical visibility everywhere. | all | 🔴 |
+| U13 | Radar is **too long + not clear**; components don't contribute/aren't effective → trim to only what earns its place. | radar | 🔴 |
+| U14 | **Remove the scan banner** "We scanned your public footprint. We found 8 things…" — the discovery phase is DONE; it no longer contributes. | radar | 🔴 |
+| U15 | Remove **"★ Buyers in your genre look here first · Live · Audience · Kit"** — it's technical, not marketing. (HERO has a subtitle slot that can carry real marketing microcopy instead.) | radar | 🔴 |
+| U16 | Radar gamification must drive the **NEXT BEST STEP**, not send the user to "another area" (that repeats content = a failed radar). Model: *Recommended next action → "Add proof of your draw" → "Supports how professionals understand your live demand — not just your online reach" → Continue →*. | radar | 🔴 |
+| U17 | Radar must **fit SHOW BUSINESS** at a design level — currently too technical/unfitting → upgrade the craft. | radar | 🔴 |
+| U18 | Fix dark-on-dark **container contrast** + the stray orange per DS. | radar + global | 🔴 |
+| U19 | Confirmation sheets are **unclear because they lack PERSONAL content** — the artist can't tell what "truth" he's confirming. Add the real personal detail being confirmed. | confirmation | 🔴 |
+| U20 | Confirmation **design is poor/technical** — rebuild as professional components (atmosphere, branding, readability, style), not technical text. | confirmation | 🔴 |
+| U21 | **Add a line under the Passport** explaining its purpose + why it matters. | passport | 🔴 |
+| U22 | **Multiple Passport views (2+ "faces")** — the artist sees his value PER ENTITY (how a manager / booker / production / buyer reads it); add a top line per view explaining what that viewer cares about. | passport | 🔴 |
+| U23 | Remove technical badges (**"✓ Buyer view public", "✓ Verified professional profile", "✓ 2 published"**) → design a different, non-technical method (search DS; if absent → gaps). | passport | 🔴 |
+| U24 | Passport is **dark-on-dark, not sales-y** → upgrade the whole surface; unified DS. | passport | 🔴 |
+| U25 | Passport = the artist's **universe** but reads as a **technical list** → give it human hierarchy, design, and **logos**. | passport | 🔴 |
+| U26 | **Account: is a dedicated screen even needed?** There's Account in the top menu AND a screen. Decide: keep with a real spec, or fold its content (it overlaps Radar) and drop the screen. | account | 🔴 |
+| U27 | **Multi-genre:** an artist has several musical styles. Onboarding may overlap, but provide a **FILTER** to view his standing in a different musical scene. Clear professional UX/UI. | radar/filter | 🔴 |
+| U11 | **Always use the defined canon terms** (glossary) across all copy. | all | 🔴 (standing) |
+| U12 | Document all requests; execute with a **professional design team**; don't revisit. | meta | ✅ documented / 🔴 executing |
+
+**CODEX (DS / brand):** U7 supply the correct DS logo asset · U9 confirm brand palette + the gold/amber/source-blue in-or-out ruling · U10 confirm the token layer mirrors DS · U23 provide/confirm a DS pattern for "verified/published/public" that isn't a technical checkmark badge · fill the MISSING-FROM-DS gaps in §7.0.
+
+**OWNER decisions needed:** U6 (which single nav — Claude recommends, owner confirms) · U9 (gold in/out — recommend OUT) · U26 (Account screen keep/fold — recommend FOLD into the top-right hub).
