@@ -4,7 +4,7 @@ holds the key. Aligned with CFRO v3.0 verified prices; CFRO owns budget updates.
 
 | Connection | Plan today | Free ceiling (the boundary) | PAID TRIGGER (exact moment) | Cost then | Key holder |
 |---|---|---|---|---|---|
-| Vercel (lock-site + lock-app) | Hobby FREE | ~100 deployments/day · 6,000 build-min/mo · 100GB bandwidth · ⚠️ ToS: NON-COMMERCIAL only | **First revenue** (ToS) or sustained launch traffic → Pro | $20/user/mo | Maria (billing) · Claude (API) |
+| Vercel (lock-site + lock-app) | **PRO $20/mo ✅ (purchased 14 Jul)** | no daily deploy cap · higher build/bandwidth · protected previews · commercial-OK (ToS satisfied) | already Pro | **$20/mo ACTIVE** | Maria (billing) |
 | Supabase (LOCK db) | Free | 500MB DB · 50K MAU auth · **NO backups/PITR** · pauses at 7d inactivity | **BEFORE structural migrations + BEFORE public launch** (G19 backups) — already a pending owner item | $25/mo Pro | Maria (billing) · Claude (API token) |
 | Anthropic API (claim extraction) | Pay-per-use | n/a — governed by OUR code caps | already active; hard cap enforced in code (G14): **$50/mo stop · $25 alert** · 15 items/user/day · dedup | usage ≤$50/mo | Maria (key) · Claude (ledger) |
 | Resend (auth emails) | not wired (P1-11) | 3,000 emails/mo · 100/day | pilot outgrows 100/day signup emails | $20/mo | Maria signup → Claude wires |
@@ -25,3 +25,5 @@ holds the key. Aligned with CFRO v3.0 verified prices; CFRO owns budget updates.
    both range-aware fail-open) keep preview burn near zero on docs pushes.
 3. Measured today before the fix: 50+ deployments/day (26 app + 24 site) vs 100/day ceiling —
    the trigger for this law.
+
+## MONTHLY SPEND — ACTUAL (14 Jul): Vercel Pro $20 ACTIVE + domain ~$3/mo + Anthropic usage (≤$50 cap). Still free: Supabase (→Pro $25 pre-launch), Resend, GA4, GitHub. Committed ≈ $20/mo + usage.
