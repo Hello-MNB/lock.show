@@ -38,6 +38,7 @@ b{color:var(--ink)}
 <button class="tab" data-t="p4">Gates · Tasks</button>
 <button class="tab" data-t="p5">Backlog</button>
 <button class="tab" data-t="p6">🔴 LIVE STATUS + QA</button>
+<button class="tab" data-t="p7">🔑 Test Users</button>
 </div>
 
 <section class="panel active" id="p1">
@@ -141,6 +142,19 @@ b{color:var(--ink)}
 <div class="card"><b>GOOGLE LOGIN</b> · fix LIVE on www.lock.show/app/signup (verified: deployed embed bundle index-Dhjy-W_p.js carries origin-pinned redirectTo + exchangeCodeForSession). Final interactive proof = Maria's one Google test.</div>
 <div class="card"><b>QA CADENCE</b> · Production-QA agent runs EVERY production round (standing rule). Live screenshots: docs/design-system/current-screens/2026-07-14-LIVE/. Security-denial suite (25 assertions) in npm run verify. Firewall/canon gates green.</div>
 <div class="card"><b>INFRA</b> · Claude Code holds Vercel + Supabase API ownership. Deploy-train law: production = named trains only (site-train-2 = wave-6+HE target 16 Jul · app-train = post-Q8 16-17 Jul). Cost boundaries mapped (docs/COSTS-BOUNDARIES-2026.07.14.md): all free today; next paid = Supabase Pro $25 pre-launch.</div>
+</section>
+<section class="panel" id="p7">
+<h2>🔑 TEST USERS — one login per app entity type (14 Jul 2026)</h2>
+<div class="card small">Shared QA password for ALL: <b>Gigproof!2026</b> · login at <b>www.lock.show/app/login</b>. Throwaway test password (already in repo scripts/seed.mjs) — <b>rotate before real launch; do not share this map externally.</b> Source of record: scripts/seed.mjs + seed-demo-*.mjs.</div>
+<div class="card scroll"><table>
+<tr><th>App entity type</th><th>Login email</th><th>Password</th><th>Name</th><th>Status</th></tr>
+<tr><td><b>Artist</b></td><td>artist@gigproof.test</td><td>Gigproof!2026</td><td>נועה לוי (rich demo data)</td><td class="ok">✅ live (Cowork-confirmed)</td></tr>
+<tr><td><b>Representation</b> (agency/manager)</td><td>agency@gigproof.test</td><td>Gigproof!2026</td><td>אורן מזרחי</td><td class="ok">✅ live (Cowork-confirmed)</td></tr>
+<tr><td><b>Buyer</b> (booker)</td><td>booker@gigproof.test</td><td>Gigproof!2026</td><td>תמר אברהם</td><td class="pend">🟠 in seed — verify/create</td></tr>
+<tr><td><b>Production</b></td><td>producer@gigproof.test</td><td>Gigproof!2026</td><td>דנה כהן</td><td class="pend">🟠 in seed — verify/create</td></tr>
+<tr><td><b>Operator</b> (internal)</td><td>operator@gigproof.test</td><td>Gigproof!2026</td><td>מאיה אופרטור</td><td class="pend">🟠 in seed — verify/create</td></tr>
+</table></div>
+<div class="card small"><b>Source Confirmer</b> = NO account by design (accountless magic-link). <b>NOTE:</b> live app is still the OLD version (a874ab5) until the app train deploys post-Q8 — these logins show the current live app now, and the new app after. To GUARANTEE all 5 exist + reset all to this password (clean backup) + delete the ~10 E2E bot accounts: needs Supabase service_role key in env (one script run). Maria's real accounts (error4ik@, garmel.maria@) are NEVER deleted.</div>
 </section>
 </div>
 <script>
