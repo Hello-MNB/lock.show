@@ -172,3 +172,31 @@ Headline: **the Gate-critical surfaces (Radar collect, Public Passport, Confirm)
 
 ---
 _File: `docs/architecture/ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT.md`_
+
+## PART 3b · DISCOVERY STEP + LOCALE-AWARE INTELLIGENCE SPEC (owner directive 14 Jul — "רשום")
+THE FLOW STEP (must exist in onboarding, prototype P-12 + real app target):
+1. BASIC ONBOARDING — artist gives minimal input: act/artist name + 1 main link (+ optional genre/city).
+2. **DISCOVERY AGENT ACTIVATES** (after basics, with consent `thirdparty-evidence`) — searches the
+   artist's WHOLE public universe: accounts + info across platforms/sources.
+3. FINDINGS → ✦found nodes on the Radar → artist CONFIRMS (he approves, does not build from scratch).
+4. Confirmed → method-labeled (Source-linked / Producer-confirmed); LOCK then helps (Passport, bookings).
+
+LOCALE-AWARE (owner's core addition — NOT hardcoded HE/EN):
+- Discovery adapts to the artist's COUNTRY and the LANGUAGES SPOKEN THERE. Detect country from the
+  artist's locale/input (or ask once).
+- Query generation + name transliterations run in that market's languages. E.g. Israel = Hebrew +
+  English + Russian; Germany = German + English; France = French + English; etc. Default = English +
+  the country's primary language(s).
+- Platform set is locale-aware too: Israel → Eventer · Tickchak · Go-Out · local promoters, plus
+  global (Spotify · Instagram · Resident Advisor · SoundCloud · Bandcamp · YouTube). Other markets →
+  their local ticketing/listing platforms + the global set.
+- Claude generates 8–12 queries per the detected locale (transliterations, genre, city, venue,
+  platform) → Tavily search+extract → opus extraction with same_person_confidence + source + date +
+  proves/doesn't-prove → dedup → ✦found → confirm. Incremental re-scans on-demand / ≤monthly.
+STATUS (honest per CLAUDE.md): TARGET ARCHITECTURE — per-evidence AI extraction is BUILT; the deep
+multi-source auto-discovery + locale-awareness is NOT built (zero external-integration code today).
+Cost target ≈$1/scan (Tavily + opus). Gated on counsel sign-off + real Anthropic key + operator
+hand-QA before user-facing. Needs migration (source_type='discovered', person.full_name_<locale>,
+artist.country/languages) + POST /api/discovery-scan/:actId + Cron worker. Prototype MAY show the
+intended experience (vision), method-labels stay honest (found vs confirmed). Source spec:
+DISCOVERY-ENGINE-SPEC (Drive/scratchpad) — persist to repo when the build is scheduled.

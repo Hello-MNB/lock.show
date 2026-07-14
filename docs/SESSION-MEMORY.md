@@ -184,7 +184,7 @@ B-4 payment screen off (free pilot) — ✅ done (PAYMENTS_ENABLED flag) ·
 B-5 refresh-logout bug — ✅ fixed (SPA rewrite), LIVE ·
 B-6 Google login fix — ✅ live on www.lock.show/app/signup — ⏳ AWAITS OWNER's Google test ·
 B-7 app RC1 → G16 → QA → Q8 → deploy — ⏳ AWAITS OWNER Q8 (target 16-17 Jul) ·
-B-8 AI/scan intelligence layer (built vs target) — ✅ documented, honest.
+B-8 AI/scan intelligence layer (built vs target) — ✅ documented, honest · B-9 DISCOVERY STEP + LOCALE-AWARE spec (post-onboarding agent finds artist universe in the country's languages, not just HE/EN; artist confirms) — ✅ documented (ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT PART 3b); TARGET build gated on counsel+key.
 ### C · INFRA / DEPLOY / COST
 C-1 Vercel Pro $20/mo — ✅ active, costs updated · C-2 Supabase Pro $25 — ⏳ owner (pre-launch backups) ·
 C-3 site LIVE (rebuild+wave6+entity-msg+Codex SEO+Codex rhythm 9a08069) — ✅ · C-4 deploy-train law + Production-QA per round — ✅ ·
