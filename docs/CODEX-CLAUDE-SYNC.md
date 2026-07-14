@@ -552,3 +552,25 @@ Codex one-pager + Growth Op seed-pack: delivered, pending my canon verification 
 THIS COMMIT = RC0 FREEZE.
 
 ## 33. PARALLEL-EXECUTION GOVERNANCE (GPT audit ADOPTED, 13 Jul): Track D (admin cockpit) = post-launch branch, NEVER RC1 (locked scope rules) · Track E split fix-vs-enhancement (only DOD items enter RC1) · reserved-file manifest per agent (package.json, App.jsx, i18n files, migrations, release docs = single-owner per wave) · PARALLEL-WORK-LOCK.md per wave · migration numbers reserved by Claude only · G16 closure needs child-row cleanup graph (qa_run_id + dedicated QA account + FK-safe cleanup + Gate-read exclusion proof) — plan amended by reference · accurate phrasing: "G1-G12 implementation wave complete; G13/G15 real-DB pending; G16 authored, closure pending". CORRECTION to Growth Op: share_link_created/opened ARE wired (G7, commit 7bc1bc6) — its flag was stale; funnel step not blind on RC0.
+
+## 34. RC0 ANCHOR RECORD (14 Jul — ends the "which SHA do I deploy?" ambiguity; Cowork-requested)
+FACT CHECK of Cowork's morning read: `2a2c955` IS pushed — it is an ancestor of the remote tip,
+verified 14 Jul: `git ls-remote` → branch tip **f7464f2**; `git merge-base --is-ancestor 2a2c955
+origin/claude/b4-gigproof-discovery-e7749o` → TRUE. Cowork's inference ("no 2a2c955 build ⇒ not
+pushed") has a false premise: **Vercel builds branch TIPS at push events, never ancestor commits
+individually** — there will never be a deployment labeled 2a2c955 now that the tip has moved past
+it. The `a965ad5` preview Cowork saw = an old stop-hook snapshot build; previews are OFF for this
+project (VERSIONS.md infra row), so newer pushes did not auto-build. Nothing is missing.
+**DEPLOY RULE FOR COWORK (binding):** deploy the CURRENT BRANCH TIP from the Vercel dashboard
+(Create Deployment / Redeploy from `claude/b4-gigproof-discovery-e7749o`). Before deploying, run
+the equivalence check: `git diff --name-only 2a2c955..<tip>` must touch ONLY `docs/**`. As of this
+section every commit after the freeze is docs-only (7c78761 · 093e8a6 · 5a9a47c · f7464f2 · this
+one) ⇒ the tip's PRODUCT CODE is byte-identical to RC0. Record in the proof: tested-SHA=2a2c955 ·
+deployed-ref=<tip SHA from Vercel's deployment screen> · equivalence=docs-only diff (RC0-MANIFEST
+§2). This satisfies GPT's bind-to-SHA rule — GPT re-derives the same diff independently.
+**STANDING RULE (all future RCs):** every RC freeze records ① frozen SHA ② remote tip at anchor
+time ③ the docs-only equivalence check ④ the preview URL once deployed (Cowork appends it HERE).
+If any post-freeze commit touches non-docs paths → the freeze is void, re-freeze at the new SHA.
+Git tags remain LOCAL-ONLY (remote tag push 403) — SHA is the anchor, not the tag.
+Production hooks (VERCEL_DEPLOY_HOOK_APP/SITE) are NOT preview tools — they build MAIN to
+PRODUCTION; do not fire them for this step.
