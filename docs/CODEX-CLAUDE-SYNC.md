@@ -761,3 +761,23 @@ image, content over or beside it, minimal chrome), fewer rounded boxes per viewp
 wireframe); propose the corrected hero language in its next DS delta.
 → CLAUDE: interim flattened hero variant NOW for owner taste-test (hero.tsx + marketing.css only,
 backward-compatible), re-shot for her review before rolling across pages.
+
+## 46. OWNER RULING (14 Jul): CLAUDE CODE TAKES INFRASTRUCTURE OWNERSHIP — ASSETS MANAGED WITHOUT COWORK
+Maria: "אני מאשרת לך לנהל את הנכסים ללא COWORK. תתחבר לכל התשתיות כדי שתוכל לקחת OWNERSHIP."
+EXECUTED IMMEDIATELY under this authorization (repo-side, was held pending config approval —
+this ruling grants it): ① website-next/vercel.json — ignoreCommand REMOVED (site builds every
+push during QA; ends the canceled/'Stale' preview failures + the failure emails) ② root
+vercel.json (app) — ignoreCommand replaced with range-aware fail-open version (compares
+VERCEL_GIT_PREVIOUS_SHA..HEAD, not just the last commit; builds when in doubt).
+CONNECTIVITY VERIFIED TODAY: api.vercel.com reachable ✓ · api.supabase.com reachable ✓ — both
+need only tokens. → MARIA (one-time, ~4 minutes, via the ENVIRONMENT settings of the Claude
+Code session — env-vars section — NOT chat): ① VERCEL_TOKEN (vercel.com → Account Settings →
+Tokens → create) → unlocks: previews on demand, deployment lists/logs (no more stale-fetch
+debates), Deployment Protection, promote — full deploy ownership. ② SUPABASE_ACCESS_TOKEN
+(supabase.com/dashboard/account/tokens) → unlocks: migrations/queries/DB proofs (G13/G15/G16
+cycle) without relaying SQL through Cowork/Maria.
+ORG DELTA: Cowork lane narrows to = outside-in LIVE verification (sandbox can't reach live
+sites) · browser-only dashboard edge cases · Drive/GPT ops · break-it QA. DB migrations move to
+Claude once the Supabase token lands (migration numbers already Claude-reserved, §33). RELEASE
+LADDER UNCHANGED (Q8 before production). Secrets rule unchanged: tokens go in environment
+settings / .env.local, NEVER chat.
