@@ -70,9 +70,9 @@ const en: ChromeContent = {
   nav: {
     links: [
       { href: '/artists',       label: 'Artists' },
-      { href: '/managers',      label: 'Managers' },
-      { href: '/production',    label: 'Production' },
-      { href: '/bookers',       label: 'Bookers' },
+      { href: '/managers',      label: 'Representation' },
+      { href: '/production',    label: 'Production teams' },
+      { href: '/bookers',       label: 'Bookers & clients' },
       { href: '/how-it-works',  label: 'How it works' },
       { href: '/passport/demo', label: 'Passport demo' },
     ],
@@ -89,9 +89,9 @@ const en: ChromeContent = {
         heading: 'PRODUCT',
         links: [
           { href: '/artists',       label: 'Artists' },
-          { href: '/managers',      label: 'Managers' },
-          { href: '/production',    label: 'Production' },
-          { href: '/bookers',       label: 'Bookers' },
+          { href: '/managers',      label: 'Representation' },
+          { href: '/production',    label: 'Production teams' },
+          { href: '/bookers',       label: 'Bookers & clients' },
           { href: '/passport/demo', label: 'Passport demo' },
           { href: '/radar',         label: 'Radar' },
         ],

@@ -40,19 +40,19 @@ const SIGNUP = `${APP_URL}/signup`
 
 const en: HomeContent = {
   meta: {
-    title: 'LOCK — Turn the artist world around you into one booking-ready Passport',
+    title: 'LOCK — Build a Passport that helps the next room understand you',
     description:
-      'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and context — into one Passport a booking person can feel confident opening. No scores. No rankings. Artist controls what goes public.',
+      'LOCK helps artists start with one link, gather real show context in a private Radar, and publish one Passport when they are ready. No scores. No rankings.',
   },
   hero: {
-    eyebrow: 'Pre-booking context',
-    h1: 'Turn the artist world around you into one booking-ready Passport.',
-    body: 'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and context — into one Passport a booking person can feel confident opening.',
+    eyebrow: 'Artist-first booking context',
+    h1: 'Build a Passport that helps the next room understand you.',
+    body: 'Start with one link. LOCK gathers the shows, rooms, clips, people and source context around your act into a private Radar — then helps you publish one Passport when you are ready.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryCta: { label: 'See Passport demo', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',
     imageAlt:
-      'Artist career workspace — an artist shaping the next step from a calm private space',
+      'Electronic artist in a night-show atmosphere preparing material for the next booking conversation',
     chips: ['Radar', 'Passport', 'Source-linked', 'Free pilot'],
     radarCard: {
       label: 'Radar · Private',
@@ -68,34 +68,34 @@ const en: HomeContent = {
   },
   why: {
     eyebrow: 'Why it exists',
-    title: 'The talent is real. The context is scattered.',
+    title: 'You are not hard to explain. Your context is scattered.',
     cards: [
       {
-        title: 'Artists keep explaining themselves from scratch.',
-        body: 'Every new opportunity asks for the same story again — a bio here, links there, screenshots somewhere else.',
+        title: 'Artists repeat the same story.',
+        body: 'Every opportunity asks for the same proof again — a bio here, links there, screenshots somewhere else.',
       },
       {
-        title: 'Buyers want to say yes without gambling.',
-        body: 'A booking decision deserves more than an Instagram grid, a few clips and a half-updated EPK.',
+        title: 'Booking people need context, not a score.',
+        body: 'A booking decision deserves a warm, clear picture of the act — not a rank, a score or a cold spreadsheet.',
       },
       {
-        title: 'Teams lose the story inside messages.',
-        body: 'WhatsApp threads, voice notes and memories hold history that should be clear before the call.',
+        title: 'Teams need one clean version.',
+        body: 'Representation and production teams need the same story visible before calls, not buried in WhatsApp threads.',
       },
     ],
   },
   loop: {
     eyebrow: 'The LOCK loop',
-    title: 'From scattered signals to one page people can trust.',
+    title: 'From one link to a Passport you control.',
     steps: [
       {
-        verb: 'Add signal',
-        body: 'Shows, rooms, crowds, links and sources land in one private place first.',
+        verb: 'Add one signal',
+        body: 'A link, show, room, clip or source lands in one private place first.',
         icon: 'add',
       },
       {
         verb: 'Radar organizes',
-        body: 'LOCK turns the mess into a clear map of what exists and what can be strengthened.',
+        body: 'LOCK turns scattered material into a clear map of what exists, what is strong and what needs one more detail.',
         icon: 'radar',
       },
       {
@@ -117,8 +117,8 @@ const en: HomeContent = {
   },
   lanes: {
     eyebrow: 'Choose your lane',
-    title: 'One product. Different stakes for every person.',
-    body: 'Each lane gets a different kind of confidence — without exposing what should stay private.',
+    title: 'One product. A different job for every person around the booking.',
+    body: 'The artist stays in control. Everyone else gets only the context they need to make the next decision clearer.',
     cards: [
       {
         icon: 'artist',
@@ -129,24 +129,24 @@ const en: HomeContent = {
       },
       {
         icon: 'manager',
-        audienceLabel: 'Manager',
-        title: 'Give every artist on your roster a clearer next move',
+        audienceLabel: 'Representation',
+        title: 'Give every act on your roster a clearer next move',
         body: 'See what each act can safely show, what still needs context, and where to focus before the pitch.',
-        cta: { label: 'For managers', href: '/managers' },
+        cta: { label: 'For representation', href: '/managers' },
       },
       {
         icon: 'production',
-        audienceLabel: 'Production',
-        title: 'Book the lineup with fewer blind spots',
-        body: 'See fit, reliability and source context before commitment — not after the room is already on the line.',
-        cta: { label: 'For production', href: '/production' },
+        audienceLabel: 'Production team',
+        title: 'Build the lineup with fewer blind spots',
+        body: 'For a freelance production lead, crew or company: see artist context before the room, date and audience are already on the line.',
+        cta: { label: 'For production teams', href: '/production' },
       },
       {
         icon: 'buyer',
-        audienceLabel: 'Buyer',
-        title: 'Say yes with a calmer stomach',
-        body: 'Open the artist’s public Passport in two minutes — before your name, room or event is on the line.',
-        cta: { label: 'For bookers', href: '/bookers' },
+        audienceLabel: 'Booker / private client',
+        title: 'Say yes with clearer context',
+        body: 'Open the artist’s public Passport in two minutes — whether you book professionally or you are planning one private event.',
+        cta: { label: 'For bookers & clients', href: '/bookers' },
       },
       {
         icon: 'source',
@@ -158,8 +158,8 @@ const en: HomeContent = {
     ],
   },
   finalCta: {
-    title: 'Turn what already happened into the next room that says yes.',
-    body: 'We are opening the pilot with artists, buyers, representation teams and production offices who want booking to feel clearer, warmer and less random.',
+    title: 'Build the page you can proudly send before the next booking call.',
+    body: 'We are opening the pilot with artists, bookers, private clients, representation teams and production teams who want booking to feel clearer, warmer and less random.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryLink: { label: 'How it works', href: '/how-it-works' },
   },

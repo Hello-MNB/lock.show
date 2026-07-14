@@ -139,8 +139,8 @@ export function Hero(props: HeroProps) {
 
           <h1
             style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontWeight: 400,
+              fontFamily: 'var(--font-display), Georgia, "Times New Roman", serif',
+              fontWeight: 520,
               fontSize: 'clamp(2.2rem, 4.6vw, 3.6rem)',
               lineHeight: 1.02,
               letterSpacing: '-0.04em',

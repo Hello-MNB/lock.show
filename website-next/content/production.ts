@@ -62,13 +62,13 @@ const SIGNUP = `${APP_URL}/signup`
 
 const en: ProductionContent = {
   meta: {
-    title: 'For Production Offices — Build Lineups With Clearer Artist Context | LOCK',
+    title: 'For Production Teams — Build Lineups With Clearer Artist Context | LOCK',
     description:
       'LOCK gives production teams a clearer read on fit, availability and source-backed context before the lineup becomes a promise. Join the production beta.',
   },
   hero: {
     // Entity-model audit: freelancer / crew / company — one Production family.
-    eyebrow: 'For production — freelancer, crew or company',
+    eyebrow: 'For production teams — freelancer, crew or company',
     h1: 'Build the lineup without booking in the dark.',
     body: 'LOCK gives production teams a clearer read on fit, availability and source-backed context before the lineup becomes a promise.',
     primaryCta: { label: 'Join production beta', href: SIGNUP },

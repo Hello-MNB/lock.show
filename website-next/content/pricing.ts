@@ -28,12 +28,12 @@ const en: PricingContent = {
   meta: {
     title: 'Free Pilot — LOCK is free while we validate',
     description:
-      'Free pilot. No plans yet. We are validating value with artists, buyers, managers and production offices — no prices, no payment, no commitment.',
+      'Free pilot. No plans yet. We are validating value with artists, bookers, private clients, representation and production teams — no prices, no payment, no commitment.',
   },
   hero: {
     eyebrow: 'Free pilot',
     h1: 'Free pilot. No plans yet.',
-    body: 'We are validating value with artists, buyers, managers and production offices. No payment, no plans, no commitment — the goal is to learn what really helps before anything grows.',
+    body: 'We are validating value with artists, bookers, private clients, representation and production teams. No payment, no plans, no commitment — the goal is to learn what really helps before anything grows.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryCta: { label: 'See how it works', href: '/how-it-works' },
     trustLine: 'No prices. No paid plans. No scores — ever.',
@@ -55,24 +55,24 @@ const en: PricingContent = {
       },
       {
         icon: 'buyer',
-        audienceLabel: 'Buyer',
+        audienceLabel: 'Booker / private client',
         title: 'Open a Passport — no account',
         body: 'Understand quickly whether an artist fits your event. Works for professionals and private clients alike.',
-        cta: { label: 'For bookers', href: '/bookers' },
+        cta: { label: 'For bookers & clients', href: '/bookers' },
       },
       {
         icon: 'manager',
-        audienceLabel: 'Manager',
+        audienceLabel: 'Representation',
         title: 'Send your roster clearer',
         body: 'See how Passport and Radar can help every act on your roster arrive with context instead of scattered links.',
-        cta: { label: 'For managers', href: '/managers' },
+        cta: { label: 'For representation', href: '/managers' },
       },
       {
         icon: 'production',
-        audienceLabel: 'Production',
+        audienceLabel: 'Production team',
         title: 'One place for artist context',
         body: 'Requests, answers and source context on the artists you are considering — living in one place, not in threads.',
-        cta: { label: 'For production', href: '/production' },
+        cta: { label: 'For production teams', href: '/production' },
       },
       {
         icon: 'source',

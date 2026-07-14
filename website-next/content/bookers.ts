@@ -64,7 +64,7 @@ export interface BookersContent {
 
 const en: BookersContent = {
   meta: {
-    title: 'Understand the artist before you say yes | LOCK for bookers & buyers',
+    title: 'Understand the artist before you say yes | LOCK for bookers & private clients',
     description:
       'One Passport link shows who the artist is, what they bring and what stands behind it — for clubs, events, weddings and company nights. No account, no signup, no scores.',
   },
@@ -92,7 +92,7 @@ const en: BookersContent = {
     he: 'לא צריך להיות איש תעשייה כדי להשתמש בפספורט. אם אתם מתכננים חתונה, אירוע חברה, ערב מועדון או שיבוץ לפסטיבל — LOCK עוזרת להבין התאמה לפני השיחה הראשונה.',
   },
   fears: {
-    eyebrow: 'Three buyer fears',
+    eyebrow: 'What you are protecting',
     title: 'The moment you are protecting.',
     cards: [
       {

@@ -330,12 +330,12 @@ export default function HomePage() {
             />
             <MediaTile
               image={{ src: '/brand/lockshow-atmosphere-production-warehouse-v1.webp', alt: 'Production team preparing a live event' }}
-              caption={<><strong>Production</strong><span>Protect the lineup before the room is committed.</span></>}
+              caption={<><strong>Production team</strong><span>Protect the lineup before the room is committed.</span></>}
               href="/production"
             />
             <MediaTile
-              image={{ src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp', alt: 'Buyer checking context before booking an artist' }}
-              caption={<><strong>Buyer</strong><span>Feel the fit before saying yes.</span></>}
+              image={{ src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp', alt: 'Booker or private client checking context before booking an artist' }}
+              caption={<><strong>Booker / client</strong><span>Feel the fit before saying yes.</span></>}
               href="/bookers"
             />
           </div>

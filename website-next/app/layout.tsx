@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { Manrope, Heebo, DM_Mono } from 'next/font/google'
+import { Manrope, Heebo, DM_Mono, Fraunces } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
@@ -24,6 +24,12 @@ const dmMono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-space-mono',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -216,7 +222,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} ${heebo.variable} ${dmMono.variable} antialiased`}
+        className={`${manrope.variable} ${heebo.variable} ${dmMono.variable} ${fraunces.variable} antialiased`}
         style={{
           fontFamily: 'var(--font-manrope), var(--font-heebo), system-ui, sans-serif',
           backgroundColor: 'var(--color-night)',

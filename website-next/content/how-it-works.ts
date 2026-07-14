@@ -81,8 +81,8 @@ const en: HowItWorksContent = {
         icon: 'passport',
       },
       {
-        verb: 'Buyer reacts',
-        body: 'They open it in a browser, get short context — and if they like what they see, a better conversation starts.',
+        verb: 'Booker reacts',
+        body: 'A professional booker or private client opens it in a browser, gets short context — and if the fit feels right, a better conversation starts.',
         icon: 'buyer',
       },
     ],
@@ -103,14 +103,14 @@ const en: HowItWorksContent = {
       },
       {
         icon: 'buyer',
-        label: 'Buyer',
+        label: 'Booker / private client',
         body: 'They open a Passport in a browser and get short context before moving forward — no signup, no wall.',
       },
     ],
   },
   finalCta: {
     title: 'One link in. A Passport you control out.',
-    body: 'Free during the pilot — for artists, buyers, managers and production offices.',
+    body: 'Free during the pilot — for artists, bookers, private clients, representation and production teams.',
     primaryCta: { label: 'Start free', href: SIGNUP },
     secondaryLink: { label: 'See sample Passport', href: '/passport/demo' },
   },

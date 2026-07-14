@@ -52,12 +52,12 @@ const en: ContactContent = {
   meta: {
     title: 'Contact — Want to see if LOCK fits your role?',
     description:
-      'We are working with artists, manager offices, production offices and buyers in a free pilot. Tell us who you are and what you are trying to solve — we come back with the next step.',
+      'We are working with artists, representation teams, production teams, bookers and private clients in a free pilot. Tell us who you are and what you are trying to solve — we come back with the next step.',
   },
   hero: {
     eyebrow: 'Contact',
     h1: 'Want to see if LOCK fits your role?',
-    body: 'We are working now with artists, manager offices, production offices and buyers in a free pilot. Tell us who you are and what you are trying to solve, and we will come back with the next step.',
+    body: 'We are working now with artists, representation teams, production teams, bookers and private clients in a free pilot. Tell us who you are and what you are trying to solve, and we will come back with the next step.',
   },
   form: {
     heading: 'Send a message',

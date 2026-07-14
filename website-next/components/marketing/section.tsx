@@ -35,7 +35,7 @@ export function SectionHeading({
   title,
   body,
   tone = 'paper',
-  align = 'center',
+  align = 'start',
 }: {
   eyebrow?: string
   title: string
@@ -65,8 +65,8 @@ export function SectionHeading({
       <h2
         className="mk-section-title"
         style={{
-          fontFamily: 'Georgia, "Times New Roman", serif',
-          fontWeight: 400,
+          fontFamily: 'var(--font-display), Georgia, "Times New Roman", serif',
+          fontWeight: 520,
           fontSize: 'clamp(1.7rem, 3.6vw, 2.6rem)',
           letterSpacing: '-0.03em',
           lineHeight: 1.08,

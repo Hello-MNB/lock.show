@@ -34,9 +34,9 @@ export default function FreePilotPage() {
         coreTitle="Free pilot"
         chips={[
           { label: 'Artist', icon: 'artist' },
-          { label: 'Buyer', icon: 'buyer' },
+          { label: 'Booker / client', icon: 'buyer' },
           { label: 'Representation', icon: 'manager' },
-          { label: 'Production', icon: 'production' },
+          { label: 'Production team', icon: 'production' },
           { label: 'Source confirmation', icon: 'source' },
         ]}
         note="No payment ֲ· No scores ֲ· Artist controls publication"

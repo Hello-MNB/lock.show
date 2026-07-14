@@ -2,7 +2,7 @@
 // HE verbatim from the Codex HE copy pack (03_MANAGERS_HE_COPY_20260714),
 // broadened to the Representation family per the Codex entity-model ruling
 // (CODEX_ENTITY_MODEL_AND_SITE_MESSAGING_AUDIT_20260714): the nav label stays
-// "Managers", but the page speaks to managers, booking agents and artist-side
+// "Representation", and the page speaks to managers, booking agents and artist-side
 // teams — individual rep, small team and agency are the same Representation
 // family at different scale (see `representation` section, audit verbatim).
 // Audience: the artist-side אמרגן / משרד אמרגנות — that term is CORRECT here
@@ -63,15 +63,15 @@ const SIGNUP = `${APP_URL}/signup`
 
 const en: ManagersContent = {
   meta: {
-    title: 'For Managers, Booking Agents & Artist-Side Teams — Make Every Roster Pitch Easier to Trust | LOCK',
+    title: 'For Representation, Booking Agents & Artist-Side Teams — Make Every Roster Pitch Easier to Trust | LOCK',
     description:
-      'LOCK helps your team turn scattered artist context into a clear Passport buyers can trust before the first serious call. Grant, not ownership. Join the manager beta.',
+      'LOCK helps artist-side representation turn scattered artist context into a clear Passport bookers and clients can trust before the first serious call. Grant, not ownership. Join the representation beta.',
   },
   hero: {
-    eyebrow: 'For managers, booking agents and artist-side teams',
+    eyebrow: 'For representation, booking agents and artist-side teams',
     h1: 'Make every artist on your roster easier to believe in.',
-    body: 'LOCK helps your team turn scattered artist context into a clear Passport buyers can trust before the first serious call.',
-    primaryCta: { label: 'Join manager beta', href: SIGNUP },
+    body: 'LOCK helps artist-side representation turn scattered artist context into a clear Passport bookers and clients can trust before the first serious call.',
+    primaryCta: { label: 'Join representation beta', href: SIGNUP },
     secondaryCta: { label: 'Register roster interest', href: '/contact' },
     trustLine: 'No scores. No rankings. Artists keep ownership of their identity.',
     imageAlt:
@@ -98,8 +98,8 @@ const en: ManagersContent = {
         body: 'Some acts are one detail away from a stronger pitch. Some are ready now. The office needs to see the difference fast.',
       },
       {
-        title: 'Buyer follow-up gaps.',
-        body: 'A buyer reacts, asks a question, forwards the link — and the moment gets lost inside five different threads.',
+        title: 'Booker follow-up gaps.',
+        body: 'A booker or private client reacts, asks a question, forwards the link — and the moment gets lost inside five different threads.',
       },
     ],
   },
@@ -147,7 +147,7 @@ const en: ManagersContent = {
         icon: 'manager',
       },
       {
-        title: 'Buyer sees Passport',
+        title: 'Booker sees Passport',
         body: 'One clean, method-labelled page with a trust card — never a grade.',
         icon: 'buyer',
       },
