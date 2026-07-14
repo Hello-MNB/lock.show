@@ -59,8 +59,11 @@ export function Hero({
   primaryCta: Cta
   secondaryCta?: Cta
   trustLine?: string
-  image: { src: string; alt: string; position?: string }
-  /** Small product chips overlaid on the image card (e.g. Radar · Passport). */
+  /** `overlay` optionally replaces the default dark scrim gradient (must be a full CSS gradient). */
+  image: { src: string; alt: string; position?: string; overlay?: string }
+  /** Small product chips overlaid on the image card (e.g. Radar · Passport).
+   *  Anchored to the bottom edge by default; when `floatingBottom` is set the
+   *  chips move to the top edge so the floating card never covers them. */
   chips?: string[]
   /** Optional floating product card, top edge of the image card. */
   floatingTop?: ReactNode
@@ -167,39 +170,29 @@ export function Hero({
               role="img"
               aria-label={image.alt}
               style={{
-                background: `linear-gradient(200deg, rgba(10,13,11,0.06) 30%, rgba(10,13,11,0.62) 82%, rgba(10,13,11,0.85) 100%), url('${image.src}') ${image.position ?? 'center'} / cover no-repeat`,
+                background: `${
+                  image.overlay ??
+                  'linear-gradient(200deg, rgba(10,13,11,0.06) 30%, rgba(10,13,11,0.62) 82%, rgba(10,13,11,0.85) 100%)'
+                }, url('${image.src}') ${image.position ?? 'center'} / cover no-repeat`,
               }}
             >
               {chips && chips.length > 0 ? (
+                // A bottom floating card would clip bottom-anchored chips
+                // (home/bookers polish defect) — anchor them to the top edge
+                // instead whenever floatingBottom is present. The --clear-top
+                // modifier reserves room for the top-right floating card at
+                // desktop widths only (CSS hides that card ≤960px).
                 <div
-                  style={{
-                    position: 'absolute',
-                    insetInlineStart: '1.1rem',
-                    bottom: '1.1rem',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.45rem',
-                    maxWidth: 'calc(100% - 2.2rem)',
-                  }}
+                  className={[
+                    'mk-hero-chips',
+                    floatingBottom ? 'mk-hero-chips--top' : '',
+                    floatingBottom && floatingTop ? 'mk-hero-chips--clear-top' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   {chips.map((chip) => (
-                    <span
-                      key={chip}
-                      style={{
-                        fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.66rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.09em',
-                        textTransform: 'uppercase',
-                        color: 'var(--color-paper)',
-                        background: 'rgba(10,13,11,0.55)',
-                        border: '1px solid rgba(243,245,239,0.22)',
-                        borderRadius: '999px',
-                        padding: '0.32rem 0.7rem',
-                        backdropFilter: 'blur(8px)',
-                        WebkitBackdropFilter: 'blur(8px)',
-                      }}
-                    >
+                    <span key={chip} className="mk-hero-chip">
                       {chip}
                     </span>
                   ))}

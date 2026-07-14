@@ -727,3 +727,26 @@ Creative correction ADOPTED as wave-4 north star: emotional, image-led, interact
 Radar for the artist + public Passport for booking context." Wave-4 polish agent launched (home
 hero card-clip fix · methodology logo legibility · 4+1 orphan grid). Pricing-hero asset choice =
 CODEX assignment (its §42 batch item).
+
+## 44. WAVE-4 POLISH CLOSED + DIRECT-PUBLISH CAPABILITY ANSWER + SITE-OWNERSHIP RULING REQUEST (14 Jul)
+W4 verified (agent re-shot v2 PNGs, Claude accepted): home hero chips fully readable (fix also
+cured latent /bookers overlap) · pricing hero = duotone interim (Codex assigns final asset) ·
+5-card grids now intentional 3+2 · methodology logos legible 44px+labels · home-mobile hero
+impact raised. v2 shots in current-screens/2026-07-14-rebuild/*-v2.png.
+DIRECT-PUBLISH (owner question "לעבוד ישירות ולפרסם ללא Cowork — אפשרי?"): YES —
+① TODAY already: production deploy hooks in .env.local (POST → builds main→production; proven
+9-10 Jul autonomous releases). ② VERIFIED TODAY: api.vercel.com is REACHABLE from Claude's
+environment (403 was Vercel's missing-token error, not the proxy). With a VERCEL_TOKEN from
+Maria (vercel.com → Account Settings → Tokens → create, scope: the two projects; paste into
+.env.local as VERCEL_TOKEN=, never in chat) Claude can VIA API without any browser: create
+branch/preview deployments, read build logs + deployment lists (ends stale-fetch debates),
+manage Deployment Protection (private previews), promote to production. Cowork's browser lane
+then = live-site verification from outside + dashboard-only edge cases + DB ops. RELEASE LADDER
+UNCHANGED: capability ≠ permission — Q8 before production promotion stands (VERSIONS ladder).
+SITE MANAGEMENT TO CODEX? (owner question) Claude's recommendation: NO transfer — keep the
+split that produced today's 11-page rebuild-in-a-day: CODEX = design law, copy, HE, briefs,
+design QA (authority unchanged, its briefs are binding specs) · CLAUDE = code, build gates,
+verify chain, publish (with token: previews minutes after every Codex brief). Codex's runtime
+has no repo-push or Vercel lane (constitution: Drive-only delivery) — transferring "management"
+would ADD a handoff, not remove one. The bottleneck was publish access; the token removes it.
+Owner decides.

@@ -309,13 +309,20 @@ export default function MethodologyPage() {
           >
             {t.sourceTypes.logosLabel}
           </p>
+          {/* Legibility fix: the full 240x72 badge rendered at 22px was
+              illegible at 1440. Each badge shares the same geometry — a
+              56x56 icon tile at (8,8) inside a 72px-tall canvas — so we crop
+              the icon tile to a 44px square (scale 44/56: img 56.57px tall,
+              offset -6.29px, tile radius 11.8px) and set a readable text
+              label next to it. Grayscale keeps the strip quiet, not brand-
+              loud; the flex row wraps gracefully on mobile. */}
           <div
             style={{
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: 'clamp(1rem, 2.5vw, 2rem)',
+              gap: 'clamp(0.75rem, 2vw, 1.25rem)',
             }}
           >
             {SOURCE_LOGOS.map((logo) => (
@@ -324,20 +331,54 @@ export default function MethodologyPage() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: '0.7rem',
                   background: 'rgba(243,245,239,0.06)',
                   border: '1px solid rgba(243,245,239,0.12)',
-                  borderRadius: '14px',
-                  padding: '0.6rem 1rem',
+                  borderRadius: '16px',
+                  padding: '0.55rem 1.1rem 0.55rem 0.55rem',
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- small local SVG logos */}
-                <img
-                  src={logo.src}
-                  alt={logo.alt}
-                  height={22}
-                  style={{ height: '22px', width: 'auto', display: 'block' }}
-                />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: 'relative',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '11.8px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    filter: 'grayscale(1)',
+                    opacity: 0.88,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- small local SVG logos */}
+                  <img
+                    src={logo.src}
+                    alt=""
+                    style={{
+                      position: 'absolute',
+                      top: '-6.29px',
+                      left: '-6.29px', // physical: the tile sits at the SVG's left edge in both locales
+                      height: '56.57px',
+                      width: 'auto',
+                      maxWidth: 'none',
+                      display: 'block',
+                    }}
+                  />
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: 'rgba(243,245,239,0.78)',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {logo.alt}
+                </span>
               </span>
             ))}
           </div>

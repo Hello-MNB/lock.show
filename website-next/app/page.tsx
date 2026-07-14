@@ -333,14 +333,9 @@ export default function HomePage() {
         {/* ── CHOOSE YOUR LANE — 5 entity cards (brief §5.1) ── */}
         <Section tone="paper">
           <SectionHeading eyebrow={t.lanes.eyebrow} title={t.lanes.title} body={t.lanes.body} />
-          <div
-            className="m-divide"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: 'clamp(1rem, 2vw, 1.5rem)',
-            }}
-          >
+          {/* 5 cards: mk-grid-5 lays them out 3 + 2 at desktop widths so the
+              last row is intentional (no lone orphan card). */}
+          <div className="m-divide mk-grid-5">
             {t.lanes.cards.map((card, i) => (
               <EntityCard
                 key={card.cta.href}

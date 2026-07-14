@@ -15,7 +15,14 @@ import { pricingContent } from '@/content/pricing'
 const t = pricingContent.en
 
 const SITE_URL = 'https://lock.show'
-const HERO_IMAGE = '/brand/lockshow-social-cover-growth-intelligence-v1.webp'
+// INTERIM hero asset — Codex to assign the final pricing-hero asset (SYNC §42).
+// The social cover (1600x533) cropped to a near-black rectangle inside the
+// tall hero card, so we temporarily reuse the workspace atmosphere shot with
+// a distinct lime/forest duotone tint (see HERO_OVERLAY) so the pricing hero
+// does not clone Home's neutral dark treatment.
+const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
+const HERO_OVERLAY =
+  'linear-gradient(165deg, rgba(200,240,77,0.24) 0%, rgba(24,34,26,0.6) 48%, rgba(10,13,11,0.92) 100%)'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/pricing' },
@@ -40,7 +47,7 @@ export default function FreePilotPage() {
         primaryCta={t.hero.primaryCta}
         secondaryCta={t.hero.secondaryCta}
         trustLine={t.hero.trustLine}
-        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
+        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt, overlay: HERO_OVERLAY }}
         chips={t.hero.chips}
       />
 
@@ -52,14 +59,9 @@ export default function FreePilotPage() {
           title={t.entities.title}
           body={t.entities.body}
         />
-        <div
-          className="m-divide"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 'clamp(1rem, 2vw, 1.5rem)',
-          }}
-        >
+        {/* 5 cards: mk-grid-5 lays them out 3 + 2 at desktop widths so the
+            last row is intentional (no lone orphan card). */}
+        <div className="m-divide mk-grid-5">
           {t.entities.cards.map((card, i) => (
             <EntityCard
               key={card.cta.href}
