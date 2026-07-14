@@ -150,6 +150,52 @@ export default function BookersPage() {
         floatingBottom={<PassportPreviewCard />}
       />
 
+      {/* ── AUDIENCE BAND (entity-model audit 2026-07-14): private clients —
+          wedding couples, company events — visible at the top of the page,
+          EN+HE verbatim, rendered directly under the hero. */}
+      <section
+        style={{
+          background: 'var(--color-paper)',
+          padding: 'clamp(1.5rem, 3vw, 2.25rem) max(24px, 4vw)',
+          borderBottom: '1px solid rgba(10,13,11,0.08)',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '880px',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.7rem',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
+              lineHeight: 1.5,
+              letterSpacing: '-0.01em',
+              color: 'var(--color-ink)',
+              margin: 0,
+            }}
+          >
+            {t.audience.en}
+          </p>
+          <p
+            dir="rtl"
+            lang="he"
+            style={{
+              fontSize: '1rem',
+              lineHeight: 1.7,
+              color: 'var(--color-tally-onlight)',
+              margin: 0,
+            }}
+          >
+            {t.audience.he}
+          </p>
+        </div>
+      </section>
+
       {/* ── SECTION 1 — THREE BUYER FEARS (brief §5.6) ── */}
       <Section tone="paper">
         <SectionHeading eyebrow={t.fears.eyebrow} title={t.fears.title} />

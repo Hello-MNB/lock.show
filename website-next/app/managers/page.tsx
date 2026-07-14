@@ -376,6 +376,17 @@ export default function ManagersPage() {
         </div>
       </Section>
 
+      {/* ── 3b · REPRESENTATION FAMILY (entity-model audit 2026-07-14):
+             individual rep · booking agent · small team · agency — one
+             Representation workspace; roles separate from the organization ── */}
+      <Section tone="forest" narrow>
+        <SectionHeading
+          tone="forest"
+          title={t.representation.title}
+          body={t.representation.body}
+        />
+      </Section>
+
       {/* ── 4 · ONE REACTION INBOX (brief §5.3) — method-safe text only,
              never a count/%/score ── */}
       <Section tone="ink" narrow>

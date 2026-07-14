@@ -31,6 +31,14 @@ export interface BookersContent {
       viewCta: Cta
     }
   }
+  /**
+   * Hero-level audience band — entity-model audit 2026-07-14 "Bookers /
+   * Buyers page, add above fold or first section", EN+HE verbatim: private
+   * clients (wedding couples, company events) are visible at the top of the
+   * page, not only in the dedicated private-clients section below.
+   * Bilingual by design — both languages render directly under the hero.
+   */
+  audience: { en: string; he: string }
   /** Section 1 — three buyer fears (brief §5.6). */
   fears: SectionHeadingContent & { cards: CardContent[] }
   /** Section 2 — what the Passport answers (method-labelled rows). */
@@ -63,7 +71,7 @@ const en: BookersContent = {
   hero: {
     eyebrow: 'For bookers & private clients',
     h1: 'Understand the artist before you say yes.',
-    body: 'One Passport link shows who the artist is, what they bring and what stands behind it — for clubs, events, weddings, private and company nights alike.',
+    body: 'One Passport link shows who the artist is, what they bring and what stands behind it — for clubs, festivals, wedding couples, company events and private clients alike.',
     primaryCta: { label: 'View sample Passport', href: '/passport/demo' },
     secondaryCta: { label: 'How buyers use LOCK', href: '/how-it-works' },
     trustLine: 'No account. No signup. Free for booking people — always.',
@@ -77,6 +85,11 @@ const en: BookersContent = {
       methodChip: 'SOURCE-LINKED',
       viewCta: { label: 'Open sample', href: '/passport/demo' },
     },
+  },
+  // Entity-model audit 2026-07-14 — EN+HE verbatim, rendered under the hero.
+  audience: {
+    en: 'You do not have to be “in the industry” to use a Passport. If you are planning a wedding, company event, club night or festival slot, LOCK helps you understand artist fit before the first call.',
+    he: 'לא צריך להיות איש תעשייה כדי להשתמש בפספורט. אם אתם מתכננים חתונה, אירוע חברה, ערב מועדון או שיבוץ לפסטיבל — LOCK עוזרת להבין התאמה לפני השיחה הראשונה.',
   },
   fears: {
     eyebrow: 'Three buyer fears',
@@ -167,6 +180,11 @@ const he: BookersContent = {
       methodChip: 'SOURCE-LINKED',
       viewCta: { label: 'לראות פספורט לדוגמה', href: '/passport/demo' },
     },
+  },
+  // Entity-model audit 2026-07-14 — EN+HE verbatim, rendered under the hero.
+  audience: {
+    en: 'You do not have to be “in the industry” to use a Passport. If you are planning a wedding, company event, club night or festival slot, LOCK helps you understand artist fit before the first call.',
+    he: 'לא צריך להיות איש תעשייה כדי להשתמש בפספורט. אם אתם מתכננים חתונה, אירוע חברה, ערב מועדון או שיבוץ לפסטיבל — LOCK עוזרת להבין התאמה לפני השיחה הראשונה.',
   },
   fears: {
     eyebrow: TODO_HE,

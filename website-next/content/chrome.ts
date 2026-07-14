@@ -6,9 +6,11 @@
 //   1. Brief §4 verbatim — header CTA "להצטרף לפיילוט", footer micro-copy.
 //   2. Governed terms already in the repo — messages/he.json (אמנים, מזמיני
 //      הופעות, איך זה עובד, מתודולוגיה, כניסה, תפריט, legal labels),
-//      content/managers.ts ("למנהלי אמנים ומשרדי אמרגנות" → מנהלי אמנים),
 //      content/production.ts ("למשרדי הפקה" → משרדי הפקה),
 //      content/artists.ts ("רדאר"), he.json ctaDemo ("פספורט לדוגמה").
+//      Managers nav HE = משרדי אמרגנות per the Codex entity-model ruling
+//      (CODEX_ENTITY_MODEL_AND_SITE_MESSAGING_AUDIT_20260714, recommended
+//      Hebrew nav) — replaces the earlier מנהלי אמנים derivation.
 //   3. TODO_HE — never an improvised translation.
 //
 // The producers page (/producers, source-confirmation education) is NOT in
@@ -129,7 +131,7 @@ const he: ChromeContent = {
   nav: {
     links: [
       { href: '/artists',       label: 'אמנים' },
-      { href: '/managers',      label: 'מנהלי אמנים' },
+      { href: '/managers',      label: 'משרדי אמרגנות' },
       { href: '/production',    label: 'משרדי הפקה' },
       { href: '/bookers',       label: 'מזמיני הופעות' },
       { href: '/how-it-works',  label: 'איך זה עובד' },
@@ -149,7 +151,7 @@ const he: ChromeContent = {
         heading: 'PRODUCT',
         links: [
           { href: '/artists',       label: 'אמנים' },
-          { href: '/managers',      label: 'מנהלי אמנים' },
+          { href: '/managers',      label: 'משרדי אמרגנות' },
           { href: '/production',    label: 'משרדי הפקה' },
           { href: '/bookers',       label: 'מזמיני הופעות' },
           { href: '/passport/demo', label: 'פספורט לדוגמה' },

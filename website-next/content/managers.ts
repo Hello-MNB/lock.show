@@ -1,5 +1,10 @@
 // Managers page content — EN from the Codex rebuild brief §5.3 (2026-07-14),
-// HE verbatim from the Codex HE copy pack (03_MANAGERS_HE_COPY_20260714).
+// HE verbatim from the Codex HE copy pack (03_MANAGERS_HE_COPY_20260714),
+// broadened to the Representation family per the Codex entity-model ruling
+// (CODEX_ENTITY_MODEL_AND_SITE_MESSAGING_AUDIT_20260714): the nav label stays
+// "Managers", but the page speaks to managers, booking agents and artist-side
+// teams — individual rep, small team and agency are the same Representation
+// family at different scale (see `representation` section, audit verbatim).
 // Audience: the artist-side אמרגן / משרד אמרגנות — that term is CORRECT here
 // (and ONLY here). Never the buyer (מזמין הופעות).
 // Psychology: roster leverage — next actions, never a grade.
@@ -39,6 +44,13 @@ export interface ManagersContent {
     diagram: { title: string; body: string; icon: IconId }[]
     trustCard: { methodLabel: string; explanation: string }
   }
+  /**
+   * Representation-family section — entity-model audit 2026-07-14 "Required
+   * site copy additions / Managers page", EN+HE verbatim: one representation
+   * workspace for an individual rep, a booking agent, a small team or a full
+   * agency; roles are separate from the organization.
+   */
+  representation: { title: string; body: string }
   /** §5.3 section 4 — one reaction inbox. */
   inbox: SectionHeadingContent & {
     panelLabel: string
@@ -51,12 +63,12 @@ const SIGNUP = `${APP_URL}/signup`
 
 const en: ManagersContent = {
   meta: {
-    title: 'For Artist Managers — Make Every Roster Pitch Easier to Trust | LOCK',
+    title: 'For Managers, Booking Agents & Artist-Side Teams — Make Every Roster Pitch Easier to Trust | LOCK',
     description:
       'LOCK helps your office see which act is ready to pitch, what would strengthen the next one, and how to send a Passport a buyer can read fast. Grant, not ownership. Join the manager beta.',
   },
   hero: {
-    eyebrow: 'For artist managers & agencies',
+    eyebrow: 'For managers, booking agents and artist-side teams',
     h1: 'Make every roster pitch easier to trust.',
     body: 'LOCK helps your office see which act is ready to pitch, what would strengthen the next one, and how to send a Passport a buyer can read fast.',
     primaryCta: { label: 'Join manager beta', href: SIGNUP },
@@ -145,6 +157,11 @@ const en: ManagersContent = {
       explanation: 'Every grant is visible, revocable and honest.',
     },
   },
+  // Entity-model audit 2026-07-14 — EN verbatim.
+  representation: {
+    title: 'One representation workspace, whether you are one trusted person or a full agency.',
+    body: 'LOCK separates the organization from the roles inside it: manager, booking agent, coordinator, territory contact or admin. One person can hold several roles; a larger office can split them safely.',
+  },
   inbox: {
     eyebrow: 'One inbox',
     title: 'One inbox for Passport reactions.',
@@ -183,7 +200,9 @@ const he: ManagersContent = {
       'LOCK עוזרת למשרד אמרגנות להבין איזה אמן מוכן לפנייה, מה חסר כדי לחזק את הבא, ואיך לשלוח פספורט שמזמין הופעות יכול להבין מהר.',
   },
   hero: {
-    eyebrow: 'למנהלי אמנים ומשרדי אמרגנות',
+    // Representation family — the three terms are the audit's "Recommended HE"
+    // list verbatim (מנהלי אמנים · נציגי אמן · משרדי אמרגנות), joined as a list.
+    eyebrow: 'למנהלי אמנים, נציגי אמן ומשרדי אמרגנות',
     h1: 'רוסטר חזק צריך יותר מלינקים. הוא צריך הקשר שאפשר לשלוח.',
     body: 'LOCK עוזרת למשרד אמרגנות להבין איזה אמן מוכן לפנייה, מה חסר כדי לחזק את הבא, ואיך לשלוח פספורט שמזמין הופעות יכול להבין מהר.',
     primaryCta: { label: 'להצטרף לבטא למשרדי אמרגנות', href: SIGNUP },
@@ -234,6 +253,11 @@ const he: ManagersContent = {
       methodLabel: 'הרשאה בהסכמה, לא בעלות',
       explanation: 'כל הרשאה גלויה, ניתנת לביטול וברורה לשני הצדדים.',
     },
+  },
+  // Entity-model audit 2026-07-14 — HE verbatim.
+  representation: {
+    title: 'מרחב ייצוג אחד — בין אם זה אדם אחד שמלווה אמן ובין אם זה משרד אמרגנות מלא.',
+    body: 'LOCK מפרידה בין הארגון לבין התפקידים שבתוכו: מנהל אמן, בוקינג, רכז רוסטר, איש קשר טריטוריאלי או אדמין. באדם אחד יכולים להיות כמה תפקידים; במשרד גדול אפשר לחלק אותם בצורה מסודרת.',
   },
   inbox: {
     eyebrow: TODO_HE,
