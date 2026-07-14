@@ -21,7 +21,9 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property LOCK (544738110), stream LOCK App; env can override
+// GA4 — property LOCK (544738110), target naming: LOCK Web Journey / LOCK Web.
+// Measurement plan v7: one production property/stream, segmented by surface.
+// Env can override for staging or future container routing.
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
 

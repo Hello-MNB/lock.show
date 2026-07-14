@@ -398,6 +398,99 @@ a.mk-v-card:active,
   color: rgba(243,245,239,0.78);
 }
 
+/* ── EntityMoment — the human/emotional proof band per audience ── */
+.mk-entity-moment {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(64px, 7vw, 92px) max(22px, 4vw);
+  background:
+    radial-gradient(640px 360px at 12% 0%, var(--accent-cool), transparent 72%),
+    radial-gradient(720px 380px at 94% 96%, var(--accent-warm), transparent 74%),
+    linear-gradient(165deg, #0a0d0b 0%, #132017 58%, #0a0d0b 100%);
+  color: var(--color-paper);
+  border-top: 1px solid rgba(243,245,239,0.08);
+  border-bottom: 1px solid rgba(243,245,239,0.08);
+}
+.mk-entity-moment__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.4rem, 4vw, 4rem);
+  align-items: center;
+}
+.mk-entity-moment__media {
+  position: relative;
+  min-height: clamp(270px, 32vw, 460px);
+  border-radius: 34px;
+  overflow: hidden;
+  background: rgba(243,245,239,0.04);
+  box-shadow:
+    0 0 0 1px rgba(243,245,239,0.12),
+    0 34px 90px -46px rgba(0,0,0,0.9);
+}
+.mk-entity-moment__media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10,13,11,0.02), rgba(10,13,11,0.54)),
+    radial-gradient(360px 220px at 16% 88%, rgba(200,240,77,0.17), transparent 72%);
+}
+.mk-entity-moment__image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  transform: scale(1.02);
+  filter: saturate(1.05) contrast(1.05);
+}
+.mk-entity-moment__copy {
+  max-width: 680px;
+}
+.mk-entity-moment__eyebrow {
+  font-family: var(--font-space-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-stamp);
+  margin: 0 0 0.9rem;
+}
+.mk-entity-moment h2 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(1.85rem, 4vw, 3.05rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  color: var(--color-paper);
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+.mk-entity-moment__copy > p:not(.mk-entity-moment__eyebrow) {
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  line-height: 1.7;
+  color: rgba(243,245,239,0.72);
+  margin: 0 0 1.4rem;
+}
+.mk-entity-moment ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.72rem;
+}
+.mk-entity-moment li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  color: rgba(243,245,239,0.78);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+.mk-entity-moment li svg {
+  margin-top: 0.2rem;
+  color: var(--color-stamp);
+}
+
 /* ── FirewallCard — protection semantics (dark, outlined, warm-guard) ── */
 .mk-firewall-card {
   background:
@@ -762,6 +855,27 @@ a.mk-v-card:active,
   .mk-btn {
     min-height: 44px;
     width: 100%;
+  }
+  .mk-entity-moment {
+    padding: 56px 20px 60px;
+  }
+  .mk-entity-moment__grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  .mk-entity-moment__media {
+    min-height: 250px;
+    border-radius: 26px;
+    order: -1;
+  }
+  .mk-entity-moment h2 {
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+  }
+  .mk-entity-moment__copy > p:not(.mk-entity-moment__eyebrow) {
+    font-size: 0.98rem;
+  }
+  .mk-entity-moment li {
+    font-size: 0.92rem;
   }
   .mk-cta-row {
     flex-direction: column;

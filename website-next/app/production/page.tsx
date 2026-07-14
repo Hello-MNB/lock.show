@@ -8,6 +8,7 @@
 // for now ג€” locale wiring is a later wave and stays mechanical.
 
 
+import { EntityMoment } from '@/components/marketing/cards'
 import { FinalCta } from '@/components/marketing/final-cta'
 import { Hero } from '@/components/marketing/hero'
 import { Icon } from '@/components/marketing/icons'
@@ -148,6 +149,22 @@ export default function ProductionPage() {
         trustLine={t.hero.trustLine}
         image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
         floatingBottom={<EventOverlayCard />}
+      />
+
+      <EntityMoment
+        eyebrow="Production reality"
+        title="Before the lineup is public, someone has to trust the context."
+        body="A production decision is not just a name on a sheet. It is timing, fit, reliability, client pressure, audience promise and the confidence that the room can hold."
+        image={{
+          src: '/brand/lockshow-atmosphere-production-warehouse-v1.webp',
+          alt: 'Production team preparing a live event before doors open',
+          position: 'center',
+        }}
+        points={[
+          'Fit and availability are visible before commitment.',
+          'Requests stop getting buried in old message threads.',
+          'Source context supports the lineup without ranking artists.',
+        ]}
       />
 
       {/* ג”€ג”€ 1 ֲ· BEFORE COMMITMENT (brief ֲ§5.5): fit ֲ· reliability ֲ·

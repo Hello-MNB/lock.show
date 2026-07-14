@@ -55,7 +55,7 @@ const en: ArtistsContent = {
     // a person or a group; each Act carries its own Passport.
     eyebrow: 'For artists — solo, band or collective',
     h1: 'Stop sending scattered links. Send a world people can believe in.',
-    body: 'LOCK helps you collect the proof, atmosphere and context already around you — then shape it into a Passport you can proudly send before booking.',
+    body: 'LOCK helps you collect the atmosphere, links and context already around you — then shape them into a Passport you can proudly send before booking.',
     primaryCta: { label: 'Start free in the pilot', href: SIGNUP },
     secondaryCta: { label: 'See sample Passport', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',

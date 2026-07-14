@@ -91,7 +91,7 @@ const en: ManagersContent = {
     cards: [
       {
         title: 'Scattered links.',
-        body: 'Every pitch starts with hunting — a bio in one folder, clips in another chat, the real proof in someone’s memory.',
+        body: 'Every pitch starts with hunting — a bio in one folder, clips in another chat, the real context in someone’s memory.',
       },
       {
         title: 'Uneven readiness.',

@@ -6,6 +6,7 @@
 
 import { Fragment } from 'react'
 
+import { EntityMoment } from '@/components/marketing/cards'
 import { FinalCta } from '@/components/marketing/final-cta'
 import { FlowRow, FlowStep } from '@/components/marketing/flow-step'
 import { Hero } from '@/components/marketing/hero'
@@ -132,6 +133,22 @@ export default function ArtistsPage() {
             </span>
           </div>
         }
+      />
+
+      <EntityMoment
+        eyebrow="Artist reality"
+        title="The Passport should feel like your world, not a form you filled."
+        body="The artist is the product in this market. The page has to carry sound, room, people, taste, memory and the feeling that the next door can open."
+        image={{
+          src: '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp',
+          alt: 'DJ performing in a dark club atmosphere',
+          position: 'center 42%',
+        }}
+        points={[
+          'The Radar stays private and supportive.',
+          'The Passport shows only the story the artist approves.',
+          'The next action feels like career help, not evaluation.',
+        ]}
       />
 
       {/* ג”€ג”€ MINI-FLOW STRIP: One link ג†’ Radar ג†’ Passport ג†’ Share ג”€ג”€ */}

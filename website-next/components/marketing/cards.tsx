@@ -169,6 +169,50 @@ export function MediaTile({
   )
 }
 
+/** EntityMoment — emotional image + message band for entity pages.
+ *  Purpose: replace dry explanatory card stacks with one human "I see myself"
+ *  moment per audience. The image is atmosphere, not evidence. */
+export function EntityMoment({
+  eyebrow,
+  title,
+  body,
+  image,
+  points,
+}: {
+  eyebrow: string
+  title: string
+  body: string
+  image: { src: string; alt: string; position?: string }
+  points: string[]
+}) {
+  return (
+    <section className="mk-entity-moment" aria-label={eyebrow}>
+      <div className="mk-container mk-entity-moment__grid">
+        <div className="mk-entity-moment__media" role="img" aria-label={image.alt}>
+          <span
+            className="mk-entity-moment__image"
+            aria-hidden="true"
+            style={{ backgroundImage: `url('${image.src}')`, backgroundPosition: image.position ?? 'center' }}
+          />
+        </div>
+        <div className="mk-entity-moment__copy">
+          <p className="mk-entity-moment__eyebrow">{eyebrow}</p>
+          <h2>{title}</h2>
+          <p>{body}</p>
+          <ul>
+            {points.map((point) => (
+              <li key={point}>
+                <Icon id="confirm" size={14} />
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /** FirewallCard — protection semantics (dark, warm-guard outline). */
 export function FirewallCard({ title, body }: { title: string; body: string }) {
   return (

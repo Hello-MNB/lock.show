@@ -27,7 +27,7 @@ const dimensions = [
   {
     id: 'READINESS',
     title: 'Readiness',
-    body: 'Practical booking factors — rider, tech spec, travel availability, agent or self-managed. Makes evaluation faster for booking managers.',
+    body: 'Practical booking factors — rider, tech spec, travel availability, agent or self-managed. Helps booking people understand fit faster, without judging the artist.',
   },
   {
     id: 'FEE CONTEXT',

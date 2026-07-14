@@ -42,12 +42,12 @@ const en: HomeContent = {
   meta: {
     title: 'LOCK — Turn the artist world around you into one booking-ready Passport',
     description:
-      'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and proof — into one Passport a booking person can feel confident opening. No scores. No rankings. Artist controls what goes public.',
+      'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and context — into one Passport a booking person can feel confident opening. No scores. No rankings. Artist controls what goes public.',
   },
   hero: {
     eyebrow: 'Pre-booking context',
     h1: 'Turn the artist world around you into one booking-ready Passport.',
-    body: 'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and proof — into one Passport a booking person can feel confident opening.',
+    body: 'LOCK helps artists turn the nights they already lived — rooms, crowds, links, people and context — into one Passport a booking person can feel confident opening.',
     primaryCta: { label: 'Join free pilot', href: SIGNUP },
     secondaryCta: { label: 'See Passport demo', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',

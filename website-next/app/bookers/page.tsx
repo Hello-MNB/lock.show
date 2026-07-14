@@ -9,6 +9,7 @@
 
 import Link from 'next/link'
 
+import { EntityMoment } from '@/components/marketing/cards'
 import { FinalCta } from '@/components/marketing/final-cta'
 import { Hero } from '@/components/marketing/hero'
 import { Icon } from '@/components/marketing/icons'
@@ -137,6 +138,22 @@ export default function BookersPage() {
         image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
         chips={t.hero.chips}
         floatingBottom={<PassportPreviewCard />}
+      />
+
+      <EntityMoment
+        eyebrow="Buyer reality"
+        title="A booking decision is emotional before it is operational."
+        body="Whether it is a club night, wedding, festival slot or company event, the buyer wants to feel the fit before they risk the room, the budget and their name."
+        image={{
+          src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp',
+          alt: 'Venue load-in moment before a booking decision becomes real',
+          position: 'center',
+        }}
+        points={[
+          'No account is needed to understand the Passport.',
+          'Claims read with method labels, not hype.',
+          'Private clients get plain language, not industry jargon.',
+        ]}
       />
 
       {/* ג”€ג”€ AUDIENCE BAND (entity-model audit 2026-07-14): private clients ג€”

@@ -22,6 +22,24 @@ declare global {
   }
 }
 
+function measurementContext() {
+  const host = window.location.hostname
+  const environment =
+    host === 'localhost' || host === '127.0.0.1'
+      ? 'development'
+      : host.includes('vercel.app')
+        ? 'staging'
+        : 'production'
+
+  return {
+    surface: 'marketing',
+    auth_state: 'anonymous',
+    route_name: window.location.pathname || '/',
+    environment,
+    event_schema_version: 'site-2026-07-14',
+  }
+}
+
 function readChoice(): Choice | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -50,14 +68,14 @@ function loadGA(gaId: string) {
   s.async = true
   s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`
   document.head.appendChild(s)
-  window.gtag('config', gaId, { anonymize_ip: true })
+  window.gtag('config', gaId, { anonymize_ip: true, ...measurementContext() })
 }
 
 function loadGTM(gtmId: string) {
   if (document.getElementById('gtm-src')) return
   window.gtag('consent', 'update', { analytics_storage: 'granted' })
   window.dataLayer = window.dataLayer || []
-  window.dataLayer.push({ event: 'lock_consent_granted' })
+  window.dataLayer.push({ event: 'lock_consent_granted', ...measurementContext() })
   const s = document.createElement('script')
   s.id = 'gtm-src'
   s.async = true
@@ -77,7 +95,7 @@ export function ConsentBanner({ gaId, gtmId }: { gaId: string; gtmId?: string })
   useEffect(() => {
     const choice = readChoice()
     if (choice === 'granted') loadMeasurement({ gaId, gtmId })
-    else if (choice === null) setVisible(true)
+    else if (choice === null) queueMicrotask(() => setVisible(true))
   }, [gaId, gtmId])
 
   if (!visible) return null

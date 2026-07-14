@@ -6,6 +6,7 @@
 
 import { Fragment } from 'react'
 
+import { EntityMoment } from '@/components/marketing/cards'
 import { FinalCta } from '@/components/marketing/final-cta'
 import { Hero } from '@/components/marketing/hero'
 import { Icon } from '@/components/marketing/icons'
@@ -102,6 +103,22 @@ export default function ManagersPage() {
         trustLine={t.hero.trustLine}
         image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
         floatingBottom={<RosterOverlayCard />}
+      />
+
+      <EntityMoment
+        eyebrow="Representation reality"
+        title="A good roster is not enough if every pitch starts from zero."
+        body="Managers and artist-side teams need calm leverage: what can be sent today, what needs one more detail, and how to move without taking ownership away from the artist."
+        image={{
+          src: '/brand/lockshow-atmosphere-agency-roster-room-v1.webp',
+          alt: 'Representation team reviewing artist roster context',
+          position: 'center',
+        }}
+        points={[
+          'Roster readiness appears as next actions, never grades.',
+          'ArtistAccess is consented access, not ownership.',
+          'Every artist gets a cleaner route to the next room.',
+        ]}
       />
 
       {/* ג”€ג”€ 1 ֲ· ROSTER PAIN (brief ֲ§5.3): scattered links ֲ· uneven readiness ֲ·
