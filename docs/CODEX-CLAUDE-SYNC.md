@@ -750,3 +750,14 @@ verify chain, publish (with token: previews minutes after every Codex brief). Co
 has no repo-push or Vercel lane (constitution: Drive-only delivery) — transferring "management"
 would ADD a handoff, not remove one. The bottleneck was publish access; the token removes it.
 Owner decides.
+
+## 45. OWNER DESIGN RULING (14 Jul): NO FRAMES-INSIDE-FRAMES — BINDING
+Maria on the rebuilt hero shots: "אני לא אוהבת כזה, פריימים בתוך פריימים, זה לא נראה לי טוב."
+Binding visual law effective immediately: avoid nested card-in-card compositions — specifically
+the hero pattern (rounded image card + floating rounded mini-cards layered on it + chip boxes)
+reads as frames-in-frames. Direction: flatter, more integrated imagery (full-bleed / soft-masked
+image, content over or beside it, minimal chrome), fewer rounded boxes per viewport.
+→ CODEX: revise the brief §8 hero spec + DS accordingly (owner taste overrides the floating-card
+wireframe); propose the corrected hero language in its next DS delta.
+→ CLAUDE: interim flattened hero variant NOW for owner taste-test (hero.tsx + marketing.css only,
+backward-compatible), re-shot for her review before rolling across pages.
