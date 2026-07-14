@@ -1,4 +1,10 @@
 {
   "cleanUrls": true,
-  "ignoreCommand": "bash -c 'if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; if git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .; then exit 0; else exit 1; fi'"
+  "ignoreCommand": "bash -c 'if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; if git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .; then exit 0; else exit 1; fi'",
+  "rewrites": [
+    {
+      "source": "/app/:path*",
+      "destination": "/app/index.html"
+    }
+  ]
 }
