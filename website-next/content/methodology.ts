@@ -214,7 +214,7 @@ const he: MethodologyContent = {
       },
       {
         chip: 'Producer-confirmed',
-        title: 'מאושר על ידי מקות', // verbatim from HE pack (pack likely intends 'מקור' — flagged, not fixed)
+        title: 'מאושר על ידי מקור', // pack typo מקות→מקור corrected (obvious typo in the pack's own canonical term מאשר-מקור; flagged to Codex, SYNC §40)
         body: 'מאשר-מקור שהיה שם אישר את הפרט.',
       },
     ],

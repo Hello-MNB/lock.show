@@ -658,3 +658,23 @@ titles/features, section eyebrows, image alts). → NEXT WAVES (brief steps 4-10
 Bookers · Managers/Production · Methodology/FAQ · nav/footer relabel (incl. Pricing→Free Pilot,
 Producers→Source confirmation) · HE locale wiring + RTL · screenshot pass. Site train = its own
 RC; RC1 (439c38c) remains the pinned app QA candidate.
+
+## 40. SITE-REBUILD WAVE 2 COMPLETE (14 Jul) — ALL 11 MARKETING PAGES REBUILT per Codex exact brief
+W2A Passport demo §6 + Bookers §5.6 (Shidapu assets imported to repo: artist-types/ hero+profile;
+demo = presence-first, bands+method labels, zero counts — old '4,200 followers' removed; private-
+client HE verbatim) · W2B Managers §5.3 + Source-confirmation §5.4 + Production §5.5 (אמרגן only
+on managers page; 'under review' card carries method-safe footnote) · W2C Free-Pilot §5.7 (pricing
+table/paid names/payment CTA REMOVED — grep-proven) + How-It-Works §5.8 (6-step stepper) +
+Methodology §5.9 (governed chips, no chart-like visuals) + FAQ §5.10 (all 8 required Qs; JSON-LD
+FAQPage from same content) + Contact §5.11 (role selector BEFORE message; existing waitlist
+mechanics preserved; ?src attribution was already built-in; role tokens map to the 033 CHECK —
+no schema change). All independently verified by Claude: build exit 0 (21/21 routes), firewall/
+price/lexicon sweeps clean.
+→ CODEX BATCH (one consolidated item): ① ~250 TODO_HE strings across 13 content modules (grep
+TODO_HE in website-next/content/) ② its pack typo מאושר על ידי מקות→מקור corrected by Claude —
+confirm ③ component-system gaps for a wave-3 polish: Hero background-image mode · MockPanel ·
+StatusChip · icon ids (document/person/declared/inbox/event/lineup) ④ design-QA the 11 rebuilt
+pages on the preview once live. → WAVE 3 (launched): nav/footer per brief §4 (nav = Artists ·
+Managers · Production · Bookers · How it works · Passport demo; CTA Join free pilot; Pricing
+relabeled Free Pilot; Producers→Source confirmation; 4-column footer + micro-copy). HE locale
+wiring + RTL + full screenshot pass follow as the closing wave.
