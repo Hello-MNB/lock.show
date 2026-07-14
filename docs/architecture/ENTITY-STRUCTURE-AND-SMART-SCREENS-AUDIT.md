@@ -200,3 +200,107 @@ hand-QA before user-facing. Needs migration (source_type='discovered', person.fu
 artist.country/languages) + POST /api/discovery-scan/:actId + Cron worker. Prototype MAY show the
 intended experience (vision), method-labels stay honest (found vs confirmed). Source spec:
 DISCOVERY-ENGINE-SPEC (Drive/scratchpad) — persist to repo when the build is scheduled.
+
+---
+
+## PART 5 · RADAR COMPONENT & SIGNAL SPEC — the durable spec (owner directive: "document the Radar's signals & components"; also the reference for the ENGAGING redesign)
+_Numbered PART 5 to avoid clashing with the existing "PART 4 · PRIORITIZED GAPS" above; this IS the "Radar component & signal spec" the owner asked to be documented._
+_Grounded in `src/features/artist/RadarUniverse.jsx`, `src/lib/radarUniverse.js`, `src/lib/genreWeights.js`, `src/lib/analytics.js` (M1–M8), and the redesigned prototype Radar (`scratchpad/lock-full-prototype.html`)._
+
+**What the Radar IS (one sentence).** The artist's private, living picture of their own professional proof — six dimensions a booking manager weighs — where LOCK shows what it *found* on public sources and the artist *confirms* what's really theirs, one tap at a time. Buyers never see the Radar; they see only the Passport (verified strengths). The Radar is where evidence is reviewed and confirmed — it is not a separate "dashboard".
+
+**Two readings for every component.** *Artist read* = "what's strong, what still needs me, what to do next" (gaps are invitations, never penalties). *Buyer relevance* = the same signal, once confirmed and method-labelled, becomes a checkable strength on the public Passport. The Radar itself is never buyer-facing.
+
+**FIREWALL (applies to EVERY row below, no exceptions).** Bands + binaries + method labels only. NEVER a score, percentile, rank, "bookability %", prediction, gauge, headcount, peer-leaderboard, or position. State is shown as one of four bounded words (Ready · Developing · Needs you · Locked) + four bounded node marks (✓ ✦ ? +) + a colour. N/A ≠ weakness. Nothing goes public until the artist confirms it.
+
+---
+
+### 5.1 · CENTER STAR — the artist (and the multi-Act switch)
+- **MEANING.** *Artist:* "this universe is mine — this Act." The gravitational centre everything else orbits. *Buyer:* the identity + genre a booking manager reads first. **MULTI-ACT:** one Person may hold several Acts (a psytrance Act + a techno Act…); each Act is its own universe with its own evidence — **non-transferable**. Tapping the name opens the Act switch; switching swaps the *whole* Radar, never merges two Acts.
+- **VISUAL.** A round artist photo (or the stage-name initial) inside the one warm gold aura, name below, a small genre chip under it, a ▾ affordance signalling the Act switch. It is the only element carrying the gold "backstage-lamp" glow (gold budget = center aura + method labels).
+- **STATES.** Default Act (prop-driven) · a switched-in non-default Act · empty/"blossom" Act (a brand-new Act, honestly empty). The genre chip is tappable → opens the Identity dimension.
+- **HOW PRESENTED (engaging + safe).** Redesign adds a slow **`starglow`** breath (~4.5s) so the star feels alive; confirmed dimensions **flow energy inward** along their constellation thread (see 5.7) — the star visibly "gathers" the artist's proof. No number ever sits on the star.
+
+### 5.2 · THE SIX PROOF-DIMENSION PLANETS
+Six planets on a fixed orbit (angles −90/−30/30/90/150/210 in code, `radarUniverse.js:9-16`). Each planet = one dimension a buyer weighs; the signals ("nodes") that live under it are derived at render time from the Act's real `artist` fields + `profile_items` + `claims` — nothing stored, nothing scored.
+
+| Planet | MEANING — artist / buyer | Signals that live under it (nodes) | Icon |
+|---|---|---|---|
+| **Identity & Story** | Who you are and how you position — *artist:* your first impression; *buyer:* the first thing they read. | Stage name, one-line positioning, genre, press photo, Act goal (guidance only). Public profile links whose home is identity. | person glyph |
+| **Music & Catalogue** | A live, checkable catalogue on public platforms — *source-linked, not self-described.* | Spotify / SoundCloud / Bandcamp / Apple catalogue links; releases; mixes & DJ sets. | equalizer bars |
+| **Live Show** | Proof you perform consistently and draw a real crowd — *shown as bands, never a headcount.* | Lineup-frequency band, track-record events, RA/event-page bookings, ticket/settlement export (the single strongest draw proof). | stage/venue glyph |
+| **Audience & Community** | The audience you own and can bring to a room — *a band, not an exact follower number.* | Owned-community **band** (integer stays working-only; only the band is public), engaged-following consistency, social links. | people glyph |
+| **Professional Kit** | The practical facts a buyer needs to book you without friction — *binaries + bands.* | Set length, regions, technical rider, invoice-ready (yes/no), WhatsApp/contact. | flightcase glyph |
+| **Career Proof** | Third-party proof that outranks any self-claim — *the trust a buyer leans on.* | Producer-confirmed rebookings, press mentions, draw claims (frequency / tickets / vouch / settlement), "ask a producer to confirm". | star/seal glyph |
+
+- **VISUAL.** A 54–68px circle: neutral surface, thin state ring, the dimension's line-glyph, name label, and (redesign) a plain-language **state word** directly beneath (see 5.6). Genre-primary planets carry a second gold ring + a ★ (see 5.3).
+- **STATES (planet rollup, bounded — never a count on the face).** **Ready** (has confirmed proof, no gaps, nothing waiting) · **Developing** (some confirmed, gaps remain) · **Needs you** (something found is waiting for your confirm, OR the dimension is still empty) · **Locked** (Professional Kit stays locked until the Live Show is backed — a deliberate sequencing hook, not a judgement). A small ✦ found-dot and a settled ✓ can sit on the face.
+- **HOW PRESENTED.** Tap any planet → the drill-in panel (5.10). The face never shows how many findings — only the bounded state; the *number* of found items appears only inside the panel copy ("we found 2 things here"), never as a badge that grades.
+
+### 5.3 · GENRE-PRIMARY RINGS ( ★ )
+- **MEANING.** *Artist:* "in your genre, buyers look at these dimensions first — put your energy here." *Buyer:* n/a (guidance is artist-side only). Derived from `genreWeights.js` (`primaryPlanets()`): e.g. **dj-club → Live · Audience · Kit**, **dj-festival → Music · Live · Career Proof**, **original-artist → Music · Identity · Live**. Guard: **no genre/format signal → no emphasis at all** (every planet renders equal — never a guessed emphasis).
+- **VISUAL.** An *additive* second concentric ring in the gold register + a ★ prefix on the planet label + a topline caption ("★ Buyers in your genre look here first · Live · Audience · Kit"). Additive ONLY — non-primary planets keep full opacity, full interactivity, same order (no dimming, no reordering).
+- **STATES.** On (genre signal present) / Off (none).
+- **FIREWALL.** A ring + words — **never a weight, number, rank, %, genre-leaderboard, public badge, or buyer-facing weakness** (`genreWeights.js:3-4`).
+
+### 5.4 · FOUND DOTS ✦ (discovered — to confirm)
+- **MEANING.** *Artist:* "LOCK found this on a public source; confirm if it's really you — nothing is public until you do." *Buyer:* never sees a ✦ (found ≠ published). This is the DISCOVER→CONFIRM spine: the artist **approves what was found**, they don't build from scratch.
+- **VISUAL.** A small gold dot on the planet face (`fdpulse` breathing ring) + a gold "✦ Found" chip on the row inside the panel; a quiet gold dot also sits on the "Needs you" lens.
+- **STATES.** Found (waiting) → Confirmed (✓, on one tap) → or dismissed "not me" (recorded, not deleted — for name-ambiguity honesty).
+- **HOW PRESENTED.** Every found row shows, BEFORE the confirm button: (1) the exact claim wording, (2) the concrete source (method label + identifiable reference, e.g. "instagram.com · listings #3–#16"), (3) the honest proves / doesn't-prove line. The button names what it confirms. A confirm "blooms" (Master-Class "minting a moment") + a small celebration.
+
+### 5.5 · CONFIRMED ✓ (method-labelled, settled)
+- **MEANING.** *Artist:* "this is mine, backed, and can go on my Passport." *Buyer:* the same fact, method-labelled, is what they read as a verified strength.
+- **VISUAL.** A settled lime ✓ chip; on the planet face a small ✓ when a dimension is fully confirmed with no gaps (Ready). Confirmed nodes carry their method label (5.11).
+- **STATES.** Confirmed & Passport-bound (verified/supporting + passport-ok visibility) → lands on the public Passport; Confirmed but private → stays working-only. The receipt names *what* landed *where* ("Added to your Passport" vs "Saved privately") with a 7s undo.
+- **HOW PRESENTED.** Honest destination every time — only verified/supporting + passport-ok claims actually reach the Passport; everything else stays private and says so.
+
+### 5.6 · PER-PLANET STATE WORD (redesign — "meaning at a glance")
+- **MEANING.** The single most important read: without tapping, the artist sees each dimension's status in plain words. Replaces "colour-only" state (which was unreadable at a glance — a driver of the "boring / unclear" complaint).
+- **VISUAL.** One bounded word under each planet, colour-coded: **Ready** (lime) · **Developing** (teal) · **Needs you** (amber) · **Locked** (faint). Mono, tiny, calm.
+- **FIREWALL.** These four words are bounded bands/binaries — the ONLY status vocabulary. Never a %, count, or rank.
+
+### 5.7 · THE CONSTELLATION + ORBIT + RADAR SWEEP (living intelligence)
+- **ORBIT RINGS.** Thin concentric hairlines — the quiet geometry of the night; pure structure, no meaning attached.
+- **RADAR SWEEP.** A slow rotating conic wedge (`sweep`, ~9s) — the "we are continuously watching your public footprint" cue. Thematic only; **explicitly NOT a gauge** (it points at nothing, measures nothing).
+- **CONSTELLATION THREADS (redesign).** A thread runs from every dimension into the artist star, coloured by that dimension's live state: **amber** = Needs you, **teal** (gently flowing) = Developing, **lime** (flowing, glowing) = Ready, **faint** = Locked. *Meaning:* the six dimensions are ONE connected system feeding the artist's proof — and as dimensions get confirmed, their thread lights and **flows energy inward**, so growth is something you can literally see. **FIREWALL:** the thread's colour is a state only — its length/position/thickness grade nothing (geometry is fixed by planet angle, identical for every artist).
+- **SONAR + STARFIELD (redesign).** A slow ring breathing out from the star (`sonar`) + a faint twinkling starfield give depth and the "alive, scanning" feel. Parallax tilts the whole universe toward the pointer on desktop. All motion is disabled under `prefers-reduced-motion`.
+
+### 5.8 · THE PLATFORM RING (where your proof comes from)
+- **MEANING.** *Artist:* "these are the public sources LOCK reads — the same ones a booking manager would check." *Buyer:* the provenance behind each verified strength. **META-FIELD LAW:** one node per platform actually detected in *this Act's own data*; each shows the real row value — **never an invented count/follower number**. A platform with no data simply isn't shown; one "+ connect" affordance stands in for every not-yet-connected source.
+- **PER-PLATFORM MEANING (hover copy, plain language).** Instagram = *your lineup listings & community* · Spotify = *your streaming catalogue* · SoundCloud = *your mixes & DJ sets* · YouTube = *your live video & sets* · Resident Advisor = *your club & festival bookings* · Bandcamp = *your releases* · TikTok = *your engaged following* · **Eventer / Tickchak / Go-Out = your Israeli ticketed events / ticket sales / event listings** (locale-aware — the local sources an Israeli buyer actually checks).
+- **VISUAL.** Small source-logo tiles; connected = full colour + a lime dot; not-yet = greyed. Caption stays honest: "buyers check these to verify you · a wider automatic scan is in development".
+- **STATES.** Connected (real data) · not-connected (greyed, invites) · "+ connect".
+
+### 5.9 · MILESTONE JOURNEY M1–M8 (the growth track)
+- **MEANING.** *Artist:* the named waypoints of building a Passport — a felt journey, not a progress bar. *Buyer:* n/a. The eight waypoints (prototype naming): **Arrived → First light → Radar alive → Focused → Backed → Published → In market → Answered.** These map to the measurable funnel in `analytics.js` (signup → onboarding → radar_opened → evidence_added → claim_confirmed → passport_published → share_link_created → availability_request/reaction) — the same events that measure the Gate (a booking manager reacts AND one pays).
+- **VISUAL.** A horizontal track of named dots with a filling line; done = lime ✓, current = glowing pulse, next = quiet outline. A "N of 8 milestones" count-up.
+- **STATES.** Per-step done / current / next.
+- **FIREWALL.** Named waypoints + a step count of the artist's *own* journey — **no %, no score, no peer comparison.** (Counting a user's own product milestones is allowed; grading the artist is not.)
+
+### 5.10 · LENSES — All · Needs you · Ready
+- **MEANING.** Three calm ways to read the same universe. *All* = everything. **Needs you** = what's waiting on the artist (found items to confirm + gaps to fill) — this lens IS the review entry: it opens the batch-confirm panel inside the Radar. **Ready** = what's already confirmed/strong ("show me what a buyer would see"). Plus an optional **worlds** filter (techno · trance · weddings · festivals…) — a pure subset, zero judgement.
+- **VISUAL.** Three rounded mono pills; the active one is raised; a quiet gold dot sits on "Needs you" when items are waiting. Off-lens planets dim to ~22% (a focus aid, reversible) — never removed.
+- **STATES.** Active lens · found-waiting dot on/off.
+- **HOW PRESENTED.** Selecting a lens re-reads the universe instantly; the drill-in and review panels live *inside* the Radar surface — nothing is a separate destination.
+
+### 5.11 · METHOD LABELS (how we know it)
+- **MEANING.** The trust vocabulary on every confirmed fact — *artist:* "here's how strong this proof is"; *buyer:* the exact basis they can lean on. Four bounded labels, strongest to weakest:
+  - **Producer-confirmed** — a counterparty acknowledged this specific claim (strongest; covers this claim only, not a general endorsement).
+  - **Source-linked** — a public footprint that can be checked against its live source.
+  - **Evidence-supported** — a captured record supporting the claim (authenticity limited without a live source).
+  - **Self-declared** — the artist's own statement, shown as a band; strengthen with a source.
+- **VISUAL.** A small mono chip; Producer-confirmed carries a subtle emphasis. Always paired with the concrete source reference (host / listing range / "Spotify for Artists"), never a bare "a link".
+- **STATES.** One label per node; can upgrade (e.g. Self-declared → Producer-confirmed when a producer confirms).
+- **FIREWALL.** Labels describe *provenance*, never *quality*. They are the mechanism that lets draw be shown honestly as bands + binaries.
+
+---
+
+**Redesign changes made to the prototype Radar (`scratchpad/lock-full-prototype.html`) using this spec — for the record.**
+1. **Constellation threads** center↔planet, state-coloured, with lime/teal energy flowing inward on confirmed/developing dimensions → growth made visible.
+2. **Per-planet plain-language state word** (Ready/Developing/Needs you/Locked) → meaning at a glance, replacing colour-only status.
+3. **Depth + life:** twinkling starfield, breathing `sonar` ring, `starglow` on the center star, glow on confirmed/developing planet faces; parallax retained; all motion respects `prefers-reduced-motion`.
+4. **Genre emphasis made plain:** "★ Buyers in your genre look here first · …" topline + a ★ on each genre-primary planet.
+5. **Platform ring copy rewritten to plain language** with per-source meaning on hover ("Your Spotify · your streaming catalogue").
+6. **Copy de-jargoned:** "Tap any planet to see what it means and confirm what's yours. No score, no rank — only bands and how-we-know-it labels" (was terser/colder); found-banner and platform caption reworded to warm, plain English.
+_Firewall re-verified across all six: no score/rank/%/gauge introduced; state stays the four bounded words + four node marks + method labels._
