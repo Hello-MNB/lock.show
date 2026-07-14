@@ -1,0 +1,155 @@
+/*
+ * LOCK Marketing Page System — Codex rebuild brief 2026-07-14 (§3)
+ * ────────────────────────────────────────────────────────────────
+ * One reusable page rhythm for every marketing page.
+ *
+ * Layout tokens (brief §3, binding):
+ *   - Page max width:            1180–1240px  → 1200px
+ *   - Section padding desktop:   96px  · mobile: 56px
+ *   - Hero image/card radius:    28–36px → 32px
+ *   - Card radius:               20–28px → 24px
+ *   - Buttons: ≥44px mobile, 48–56px desktop
+ *   - ONE lime CTA per viewport; secondary CTAs = dark/outline/text
+ */
+
+/* ── Section rhythm ─────────────────────────────────── */
+.mk-section {
+  padding: 96px max(24px, 4vw);
+}
+.mk-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+.mk-container--narrow {
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+.mk-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(72px, 10vh, 120px) max(24px, 4vw) 96px;
+}
+.mk-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.92fr);
+  gap: clamp(2.5rem, 5vw, 4.5rem);
+  align-items: center;
+}
+.mk-hero-media {
+  position: relative;
+  border-radius: 32px;
+  overflow: visible; /* floating cards may overhang */
+}
+.mk-hero-media-img {
+  border-radius: 32px;
+  overflow: hidden;
+  aspect-ratio: 4 / 4.6;
+  max-height: 560px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 32px 80px -28px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(243, 245, 239, 0.12);
+}
+
+/* Floating product cards over the hero media */
+.mk-float {
+  position: absolute;
+  z-index: 2;
+  box-shadow: 0 20px 48px -16px rgba(0, 0, 0, 0.7);
+}
+.mk-float--top {
+  top: clamp(-18px, -2vw, -10px);
+  inset-inline-end: clamp(-14px, -1.5vw, -8px);
+}
+.mk-float--bottom {
+  bottom: clamp(-18px, -2vw, -10px);
+  inset-inline-start: clamp(-22px, -2.5vw, -12px);
+}
+
+/* ── Cards ──────────────────────────────────────────── */
+.mk-card {
+  border-radius: 24px;
+}
+
+/* ── Buttons ────────────────────────────────────────── */
+.mk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 1.75rem;
+  border-radius: 12px;
+  font-family: var(--font-space-mono), 'DM Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.mk-btn--primary {
+  background: var(--color-stamp);
+  color: var(--color-ink);
+}
+.mk-btn--outline-dark {
+  /* secondary on dark backgrounds */
+  color: var(--color-paper);
+  border: 1px solid rgba(243, 245, 239, 0.28);
+  background: transparent;
+}
+.mk-btn--outline-light {
+  /* secondary on paper backgrounds */
+  color: var(--color-ink);
+  border: 1px solid rgba(10, 13, 11, 0.22);
+  background: transparent;
+}
+
+/* ── Flow (LOCK loop / step flows) ──────────────────── */
+.mk-flow {
+  display: grid;
+  grid-template-columns: repeat(var(--mk-flow-cols, 4), minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+@media (max-width: 960px) {
+  .mk-hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .mk-flow {
+    grid-template-columns: 1fr;
+  }
+  .mk-hero-media-img {
+    aspect-ratio: 4 / 3;
+    max-height: 420px;
+  }
+  .mk-float--top {
+    display: none; /* keep mobile hero calm — one overlay max */
+  }
+  .mk-float--bottom {
+    inset-inline-start: 12px;
+    bottom: -16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mk-section {
+    padding: 56px 20px;
+  }
+  .mk-hero {
+    padding: 48px 20px 64px;
+  }
+  .mk-btn {
+    min-height: 44px;
+    width: 100%;
+  }
+  .mk-cta-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

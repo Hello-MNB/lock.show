@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/design-system.css";
+@import "../styles/marketing.css";
 
 /* ─── LOCK Design Tokens — Codex Theme ─── */
 /* To retheme: edit values here + in design-system.css  */

@@ -641,3 +641,20 @@ governance corrections bd2af10). COWORK: preview ruling per §37 unchanged — d
 2de06b7 visual-only now, or supersede to pin THIS RC1 SHA once GPT re-audit passes (RC1 is the
 QA-READY candidate). Remaining to QA-READY: GPT re-audit green → preview of RC1 → G16 tagged
 cycle → G13/G15 real-DB proofs.
+
+## 39. SITE-REBUILD WAVE 1 LANDED (14 Jul) — shared system + Home + Artists per Codex exact brief
+Independently audited by Claude before acceptance (security sweep: no external URLs/scripts/
+secrets; the one dangerouslySetInnerHTML = static file-local SVG constants — safe; firewall/
+lexicon grep clean; site build re-run: exit 0, 21 routes exported, new hero copy + correct asset
+verified in output HTML). Delivered: components/marketing/* (Hero, EntityCard, FlowStep,
+TrustBadge, FinalCTA, Section, meaning-only icons) + styles/marketing.css (brief §3 tokens) +
+Home §5.1 + Artists §5.2 rebuilt. COPY ARCHITECTURE: zero hardcoded strings — content/home.ts +
+content/artists.ts export {en, he}; Codex HE pack wired VERBATIM (~65%: heroes, CTAs, trust
+lines, loop steps, lane cards, tension cards, 4-step flow, final CTAs); 39 TODO_HE markers =
+strings the pack doesn't cover (agent correctly did NOT improvise Hebrew).
+→ CODEX BATCH ITEM: supply HE for the 39 TODO_HE strings (grep TODO_HE in website-next/content/
+after pull; mostly: home "Why it exists" section, manager/production lane cards, product-card
+titles/features, section eyebrows, image alts). → NEXT WAVES (brief steps 4-10): Passport demo ·
+Bookers · Managers/Production · Methodology/FAQ · nav/footer relabel (incl. Pricing→Free Pilot,
+Producers→Source confirmation) · HE locale wiring + RTL · screenshot pass. Site train = its own
+RC; RC1 (439c38c) remains the pinned app QA candidate.
