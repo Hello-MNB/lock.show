@@ -130,8 +130,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
 - **FLOWS-DETAIL RULE (owner, 14 Jul): the Flows-per-Entity doc must specify PER SCREEN: (1) screen name + route (2) content/purpose (3) interactive design on arrival — what the user sees/does (4) UX/UI + DESIGN TOKENS (5) images/logos where needed. Every screen effective + user-friendly. Kept current as screens evolve. HTMLs (Flows + Version Map) updated on every relevant change.**
 - **CANONICAL ARTIFACTS (owner order 14 Jul — keep ONLY these 3, delete the rest; no new strays):**
   ① VERSION MAP a65d12d9-a66d-442c-9077-306eb05fddd6 ② ENTITIES (single canonical: structure+screens+
-  intelligence+target) f702abc5-beb4-41a6-9f60-a2f8d239b6c6 ③ APP DESKTOP DEMO (interactive: entity-switch,
-  Radar tab, Passports tab) c5ca8ae7-406e-4a1f-9e95-407d338126f7. RETIRED (Maria deletes): Optimization Plan
+  intelligence+target) f702abc5-beb4-41a6-9f60-a2f8d239b6c6 ③ FULL APP PROTOTYPE (complete blueprint: 6 entities/24 screens, nav, complete flow, DB-map, real branding) 1c9b0030-9b25-4e1a-87ee-5d18823a661b (supersedes the rough demo c5ca8ae7 — delete that). RETIRED (Maria deletes): Optimization Plan
   ddb50504 (merged into ②).
   All other artifacts = SUPERSEDED/prototype/old-brand — owner deletes from gallery. Do NOT publish
   new standalone artifacts unless owner asks; extend these three.
