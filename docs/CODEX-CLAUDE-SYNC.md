@@ -888,3 +888,13 @@ Google-loop fix is WHAT PRODUCTION SERVES; final interactive proof = Maria's one
 Live screenshots: docs/design-system/current-screens/2026-07-14-LIVE/. Minor notes (no blockers):
 preload-tuning nit (7 warnings) · one scroll-reveal card blank in headless mobile capture only
 (text in HTML; one real-phone glance recommended) — both queued to wave-6 polish.
+
+## 54. WAVE-6 VISUAL UPGRADE on branch (14 Jul) — Codex mobile-first spec; NOT deployed (named-train law)
+Verified by Claude: build 0 · zero horizontal overflow 360/390/430 all 7 pages · mobile nav sheet
+clean+sticky CTA · free-pilot = product composition (no photo). Tokens (amber-stage/ember/smoke/
+source-blue + gradients/glows) · mobile nav sheet + accordion footer · card variants (Signal/
+Editorial/MediaTile/Firewall/Chip) w/ hover-focus-active · per-page accent rhythm · Free-Pilot
+orbit · Methodology trust-lab. 18 shots: docs/design-system/current-screens/2026-07-14-wave6/.
+GATES to SITE-TRAIN-2 production: ① Maria taste ② Codex mobile-screenshot approval (its DOD) →
+one named deploy + Production-QA round. HE RTL wave runs in parallel. Not in scope: HE RTL, OG
+images, broader interior card swaps.
