@@ -174,8 +174,7 @@ GPT RC1 relay · Google retest · Q8 · Supabase Pro · Eran · G20 legal · res
 P-1 no annotations ✅ · P-2 full-screen no-scroll ✅ · P-3 real images ✅ · P-4 gamification ✅ ·
 P-5 flows tested ✅ · P-6 DS tokens ✅ (missing-token flags to Codex) · P-7 mobile-first ✅ ·
 P-8 clear IA (switcher/nav/account) ✅ · P-9 interactive Radar ✅ · P-10 all-entity sweep ✅ ·
-P-11 planet drill-in status'd logos + add/confirm 🟠running · P-12 onboarding discovery→confirm
-narrative (pro copy EN+HE) 🟠running · P-13 effective-not-technical screens 🟠running.
+P-11 planet drill-in status logos (✦found/✓confirmed/+empty) + one-tap confirm ✅ · P-12 onboarding narrative (basics→scan→confirm, pro copy EN+HE, locale-aware market pill) ✅ · P-13 effective-not-technical screens ✅ (source-derived states, min-clicks).
 ### B · PRODUCT / APP / ENTITY MODEL
 B-1 canonical entity ruling (3 workspaces; role+authority layers; Manager≠Booking-Agent) — ⏳ AWAITS OWNER APPROVAL ·
 B-2 interactive-screens build plan (INTERACTIVE-SCREENS-BUILD-PLAN.md) — ✅ authored, build on approval ·
