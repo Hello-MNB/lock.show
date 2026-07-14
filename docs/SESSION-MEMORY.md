@@ -134,3 +134,7 @@ No booking commission ever. Each entity pays its own plan; artist always owns/pa
   ddb50504 (merged into ②).
   All other artifacts = SUPERSEDED/prototype/old-brand — owner deletes from gallery. Do NOT publish
   new standalone artifacts unless owner asks; extend these three.
+- **NO-NEW-DOCS RULE (owner, 14 Jul — BINDING): Claude Code is FORBIDDEN to create new documents or
+  artifacts without explicit owner approval. UPDATE existing versions ONLY (the 3 canonical artifacts
+  in place; edit existing repo docs — SYNC/VERSIONS/existing audits). If a new doc seems needed, ASK
+  FIRST and wait for yes. No exceptions.**
