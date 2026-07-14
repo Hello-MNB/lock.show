@@ -386,3 +386,37 @@ _Owner pointed to docs/design-system/A13-TOKEN-VALUES.md + DS-v1.2.0-DIGEST-AND-
 **5. BIG DS FINDING — THEME INVERSION (validates the owner's "dark-on-dark isn't sales-y").** The DIGEST headline: the DS is a **LIGHT, paper-grounded system that SANCTIONS dark "media/editorial" surfaces** — i.e. cinematic dark Radar/Passport is *inside* the system, but **everyday UI should be PAPER (light)**, dark reserved for Passport/Radar/media. The DIGEST names "theme inversion" as the **#1 app-alignment gap**: our app/prototype is ALL dark and remaps DS light names onto dark. → This is exactly why Passport reads "dark-on-dark, not marketable" (U24). **DECISION (owner — visual direction is owner's call): re-ground everyday UI (shell, onboarding, confirmation, account) to PAPER, keep dark only for the Passport hero + Radar universe (DS-sanctioned media surfaces)?** Recommend YES — it resolves U24 at the root and finally matches the site.
 
 **Impact on the running P-16 implementer:** its structural work (one-nav, one-viewport, personal confirmation, multi-view Passport, de-technical, token LAYER) is theme-agnostic and stands. Only the GROUND (dark→paper) and the gold ruling are token-level flips to apply AFTER the owner decides (2) and (5). Awaiting owner ruling before flipping the ground.
+
+## PART 8 · UX BATCH 2 + DS v1.6.23 + COVERAGE AUDIT (owner 14 Jul, second annotated round)
+_Owner: "you're doing technical design, not application design" + "I forbid technical design — remember." + Codex delivered DS v1.6.23. Documenting so nothing repeats._
+
+### 8.0 · BINDING RULE (strengthened) — NO TECHNICAL DESIGN
+The app carries ONLY app-native UX + human microcopy. FORBIDDEN examples the owner flagged: a "Navigation" label on the nav (if nav isn't self-evident, the design failed), a "Career Workspace" eyebrow, "genre-primary" labels, decorative hero/atmosphere images that don't contribute. **Every element must earn its place by contributing; if it doesn't, it doesn't exist.** Images allowed ONLY as genuine entity content (artist photo, platform/venue logos), never decoration.
+
+### 8.1 · New requests
+| ID | Request | Status |
+|---|---|---|
+| U28 | Remove the "Navigation" rail label (technical). Nav must be self-evident. | ✅ done |
+| U29 | Remove decorative HERO/atmosphere images from the app (they don't contribute). Images = entity content only. | ✅ done (atmos band off app-wide) |
+| U30 | **Requests screen redesign** — per-component hierarchy + tokens (person name · company name · event details as distinct components), redesign the whole container + ordering, and add a **has-info / no-info STATE** for missing fields. | 🔴 spec dispatched |
+| U31 | **Artist → grant a manager access** — the artist can grant scoped access to a representative (ArtistAccess, migration 027 — CONFIRMED real). It's NOT surfaced in the artist UI. Add a "who can act for you / representation access" surface (grant/revoke). | 🔴 spec dispatched |
+| U32 | **Radar planet widget** — on planet click, LOGOS ORBIT the planet; click a logo → confirm/update inline; likely drop the massive drill-in sheet. Make the widget far more effective (interactivity/gamification/UX expert). Firewall-safe, one-viewport. | 🔴 spec dispatched |
+| (also) | de-jargon "genre-primary" drill-in label → "Buyers in your scene look here first." | ✅ done |
+
+### 8.2 · DS v1.6.23 ARRIVED (Codex, 14 Jul) — resolves the theme decision
+Codex upgraded the CURRENT DS to **v1.6.23** (not a duplicate) and cleaned the folder (active = `00_CURRENT/LOCKSHOW_Design_System_CURRENT.html` + `02_ASSETS` + `VERSION.json` + `CHANGELOG.md`; entry = `00_START_HERE_LOCKSHOW.md`). New rules delivered (prose):
+- **"Dark is atmosphere, not camouflage."** Dark sections FORCE most cards/containers to **readable paper/light cards** unless explicitly the **Radar-universe**. → **This RESOLVES the held theme decision: everyday UI = light/paper cards; dark reserved for the Radar universe + genuine atmosphere.** (Matches the DIGEST "theme inversion = #1 gap" + the owner's "dark-on-dark not sales-y".)
+- Real **typography hierarchy** (H1/H2/card-title/body, desktop + mobile) · **CTA hierarchy** + button consistency · **44px tap-target** rule · section rhythm · emotional brand treatment.
+- **THEME NOW UNBLOCKED** → re-ground the artist prototype to light cards (A13 light palette: paper #F3F5EF / white #FFFFFF cards · forest #18221A panels · ink #0A0D0B text · slate #687269 · lime #C8F04D CTA; AA pairs in A13), dark kept for the Radar universe only.
+
+### 8.3 · CONSOLIDATED GAP-FEEDBACK TO CODEX (owner offered to relay)
+The Drive DS v1.6.23 HTML is NOT in the repo, so to implement faithfully I need from Codex (values, not prose):
+1. **Exact type-scale numbers** for v1.6.23 (H1/H2/card/body px + weight, desktop + mobile).
+2. **App LIGHT-card token values** (the paper/white card bg, border, text, muted on light — beyond A13's core hexes) + which surfaces stay dark ("Radar-universe" definition boundary).
+3. **CTA hierarchy** spec (primary/secondary/ghost states) + the 44px rule's paddings.
+4. **The logo master SVG** (`lockshow-symbol-spotlight-lens-v2-master-lime.svg`) — replace the geometry stand-in.
+5. **Real venue logos** (Barby, The Block, Sunset) for the evidence cards.
+6. **Ruling on `state.found`/`state.needsReview` gold+amber** — keep as small accents (A13) or retire (owner lean).
+
+### 8.4 · HONEST COVERAGE AUDIT (owner asked "are you sure you went over ALL the specs?")
+Done + verified: U1,U2,U3,U5,U6,U7,U13,U14,U15,U16,U17,U19,U20,U21,U22,U23,U25,U26,U27,U28,U29 + genre-line. **MISSED in round 1 (owner caught — fixing now):** U8 was incomplete (left "Navigation"/"Career Workspace"/"genre-primary" — now removed); **the Requests screen was never redesigned** (not in the 3 round-1 specs — now U30); artist→manager grant not surfaced (U31). **Pending owner/Codex:** U4/U18/U24 fully resolved only after the light-theme re-ground (v1.6.23); U9/U11 standing; theme + gold values from Codex (§8.3).
