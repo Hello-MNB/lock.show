@@ -867,3 +867,13 @@ sweep, fingerprints, embed/OAuth evidence, live screenshots → docs/design-syst
 2026-07-14-LIVE/) ③ live-status transparency: Version Map artifact = the live board.
 NOTE: sandbox CAN now reach www.lock.show (HTTP 200) — live verification is in-house; Cowork's
 outside-in check remains as redundancy, not dependency.
+
+## 52. COST-BOUNDARIES MAP + DEPLOY-TRAIN LAW (owner order 14 Jul)
+docs/COSTS-BOUNDARIES-2026.07.14.md = the single free-vs-paid map (CFRO-aligned; CFRO owns
+updates). Owner-flagged waste CONFIRMED by measurement: 50+ deployments today (26 app/24 site)
+vs Vercel Hobby 100/day. FIXED: site smart-skip restored (range-aware, website-next-only,
+fail-open; API train-deploys bypass it by design). LAW: production = named trains only
+(SITE-TRAIN-2 target 16 Jul: wave-6+HE/RTL one deploy · APP-TRAIN target 16-17 Jul: post-Q8 one
+deploy), each train = Production-QA agent round; branch pushes batched. Paid triggers ahead of
+us, in order: Supabase Pro $25 (pre-launch, backups — pending owner) → Vercel Pro $20 (at first
+revenue, ToS) → Resend $20 (if >100 auth emails/day). Nothing else changes cost at launch.
