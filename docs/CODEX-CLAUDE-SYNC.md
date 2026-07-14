@@ -839,3 +839,15 @@ non-account reviewers via dashboard Share when needed):
   write-flows, no test accounts distributed (GPT release ruling; unchanged).
 Next: Maria browses the site preview (real thing, beats screenshots) → taste verdict → wave 6.
 QA chain: G16 tagged cycle (Claude now holds Supabase API for it) → QA-READY on RC1+.
+
+## 50. W5 ENTITY-MESSAGING CLOSED (14 Jul) — Codex audit corrections live in candidate; verified
+All 7 corrections spot-verified by Claude + build green: Managers=Representation framing (hero
+"For managers, booking agents and artist-side teams" + representation section EN+HE verbatim) ·
+Bookers private-client band at hero level (wedding/company-event copy EN+HE) · Production
+freelancer/crew/company scale note · Artists solo/band/collective Act framing (EN-only, no HE
+improvised) · Contact = entity-family labels (tokens untouched = 033 CHECK) · chrome HE nav
+Managers → משרדי אמרגנות · Producers residuals killed ("not a production workspace" closing).
++27 TODO_HE closed on passport-demo from Codex's QA doc (19 remain there; other files' HE rides
+the he-site-copy pack). Agent double-fetched Drive docs (base64+plain) to guarantee verbatim
+Hebrew — caught 2 transcription errors; adopt as standing practice for HE imports.
+Push of this commit refreshes both previews automatically (§48 infra).

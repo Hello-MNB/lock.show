@@ -51,9 +51,11 @@ const en: ArtistsContent = {
       'LOCK helps you turn shows, links, media and source context into a Passport you can proudly send before booking. No scores. No rankings. You control what goes public.',
   },
   hero: {
-    eyebrow: 'For artists',
+    // Entity-model audit 2026-07-14: solo / band / collective — an Act can be
+    // a person or a group; each Act carries its own Passport.
+    eyebrow: 'For artists — solo, band or collective',
     h1: 'Stop rebuilding your story from scattered links.',
-    body: 'LOCK helps you turn shows, links, media and source context into a Passport you can proudly send before booking.',
+    body: 'LOCK helps you turn shows, links, media and source context into a Passport you can proudly send before booking. Your Act can be a solo project, a band or a collective — each Act carries its own Passport.',
     primaryCta: { label: 'Start free in the pilot', href: SIGNUP },
     secondaryCta: { label: 'See sample Passport', href: '/passport/demo' },
     trustLine: 'No scores. No rankings. Artist controls what goes public.',

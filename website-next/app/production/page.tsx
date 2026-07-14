@@ -304,6 +304,22 @@ export default function ProductionPage() {
              Events first — never a Team-only default (brief §5.5 Remove). ── */}
       <Section tone="paper">
         <SectionHeading eyebrow={t.workspace.eyebrow} title={t.workspace.title} body={t.workspace.body} />
+        {/* Entity-model audit 2026-07-14 — freelancer / crew / company =
+            one Production family at different scale (verbatim). */}
+        <p
+          style={{
+            textAlign: 'center',
+            fontFamily: 'Georgia, "Times New Roman", serif',
+            fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
+            lineHeight: 1.5,
+            letterSpacing: '-0.01em',
+            color: 'var(--color-ink)',
+            maxWidth: '720px',
+            margin: '-1.25rem auto clamp(2rem, 4vw, 3rem)',
+          }}
+        >
+          {t.workspace.scaleNote}
+        </p>
         <div
           style={{
             display: 'grid',

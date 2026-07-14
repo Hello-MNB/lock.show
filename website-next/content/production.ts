@@ -47,6 +47,12 @@ export interface ProductionContent {
   workspace: SectionHeadingContent & {
     /** Brief §5.5 Remove: no default screen that opens only on "Team". */
     note: string
+    /**
+     * Entity-model audit 2026-07-14 "Production page, add", EN+HE verbatim:
+     * freelancer / crew / company are the same Production family at
+     * different scale — the workspace grows, the entity stays Production.
+     */
+    scaleNote: string
     cards: { icon: IconId; title: string; body: string }[]
   }
   finalCta: FinalCtaContent
@@ -61,7 +67,8 @@ const en: ProductionContent = {
       'LOCK helps a production office read fit, availability, sources and trust signals around artists — so you build lineups with fewer guesses and less scatter across chats. Join the production beta.',
   },
   hero: {
-    eyebrow: 'For production offices',
+    // Entity-model audit: freelancer / crew / company — one Production family.
+    eyebrow: 'For production — freelancer, crew or company',
     h1: 'Build lineups with clearer artist context.',
     body: 'LOCK helps a production office read fit, availability, sources and trust signals around artists — so you build lineups with fewer guesses and less scatter across chats.',
     primaryCta: { label: 'Join production beta', href: SIGNUP },
@@ -115,6 +122,9 @@ const en: ProductionContent = {
     title: 'Team, events and artists — one workspace.',
     body: 'Everyone on the production works from the same lineup, the same requests and the same artist context.',
     note: 'Events first — the workspace opens on the lineup, not on team admin.',
+    // Entity-model audit 2026-07-14 — EN verbatim.
+    scaleNote:
+      'Built for a freelance production lead, a crew or a formal production company. The workspace grows with the team; the entity stays Production.',
     cards: [
       {
         icon: 'production',
@@ -195,6 +205,8 @@ const he: ProductionContent = {
     title: TODO_HE,
     body: TODO_HE,
     note: TODO_HE,
+    // Entity-model audit 2026-07-14 — HE verbatim.
+    scaleNote: 'מתאים למפיק עצמאי, לצוות הפקה או לחברת הפקה. המרחב גדל עם הצוות; הישות נשארת הפקה.',
     cards: [
       { icon: 'production', title: TODO_HE, body: TODO_HE },
       { icon: 'artist', title: TODO_HE, body: TODO_HE },

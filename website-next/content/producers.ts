@@ -55,13 +55,16 @@ const en: ProducersContent = {
   },
   hero: {
     eyebrow: 'Source confirmation',
-    h1: 'One link. One claim. No account.',
+    // Entity-model audit 2026-07-14: while the route stays /producers, the
+    // visible H1 must carry the Source-confirmation label — verbatim.
+    h1: 'Source confirmation — one link, one detail, no account.',
     body: 'A source confirmer doesn’t open an account or manage anything. You see one claim, confirm or correct it, and get back to your day.',
     primaryCta: { label: 'See confirmation example', href: EXAMPLE_ANCHOR },
     secondaryCta: { label: 'Learn how confirmation works', href: '/how-it-works' },
     trustLine: 'You were there. Say so.',
-    imageAlt:
-      'Darkened production warehouse — quiet backdrop for a single confirmation task',
+    // Alt kept free of production-office wording (audit: no production-company
+    // reading anywhere on this page) — the image is scenery, nothing more.
+    imageAlt: 'Darkened warehouse space — quiet backdrop for a single confirmation task',
   },
   phone: {
     appLabel: 'WhatsApp · link preview',
@@ -126,7 +129,8 @@ const en: ProducersContent = {
         body: 'One answer and you’re done — LOCK doesn’t come back with homework.',
       },
     ],
-    closing: 'This is not a workspace — on purpose.',
+    // Entity-model audit 2026-07-14 — EN verbatim.
+    closing: 'This is not a production workspace. It is one bounded source-confirmation flow.',
   },
   control: {
     eyebrow: 'The artist stays in control',
@@ -220,7 +224,8 @@ const he: ProducersContent = {
       { title: 'אין דאשבורד', body: TODO_HE },
       { title: 'אין תפקיד מתמשך', body: TODO_HE },
     ],
-    closing: 'זה לא מרחב עבודה — בכוונה',
+    // Entity-model audit 2026-07-14 — HE verbatim.
+    closing: 'זה לא מרחב עבודה של משרד הפקה. זה תהליך קצר לאישור מקור אחד.',
   },
   control: {
     eyebrow: TODO_HE,

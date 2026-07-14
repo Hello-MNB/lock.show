@@ -62,11 +62,14 @@ const en: ContactContent = {
   form: {
     heading: 'Send a message',
     rolePrompt: 'Who are you in relation to LOCK?',
+    // Entity-family labels per the Codex entity-model ruling (2026-07-14).
+    // LABELS ONLY — the submitted role values stay the migration-033 CHECK
+    // tokens exactly as mapped below; never invent or rename a token.
     roles: [
-      { value: 'artist', label: 'Artist' },
-      { value: 'artist_manager', label: 'Manager / agency' },
-      { value: 'production', label: 'Production office' },
-      { value: 'booking_manager', label: 'Buyer / private event' },
+      { value: 'artist', label: 'Artist or Act' },
+      { value: 'artist_manager', label: 'Representation (manager/booking agent/agency)' },
+      { value: 'production', label: 'Production (freelancer/crew/company)' },
+      { value: 'booking_manager', label: 'Performance buyer (professional or private event)' },
       { value: 'producer', label: 'Source confirmer' },
       { value: 'other', label: 'Other' },
     ],
