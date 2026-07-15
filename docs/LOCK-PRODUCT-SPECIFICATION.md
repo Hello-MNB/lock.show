@@ -1281,15 +1281,27 @@ owner approval.
 
 #### 13.5.5 CSP / security headers, and the localStorage-session XSS risk
 
-- **CSP / security headers: OWED.** There is **no** Content-Security-Policy, `X-Frame-Options`,
-  HSTS, or `helmet` anywhere in the server or `vercel.json` (grep confirms zero references). Define
-  a header set (CSP, HSTS, frame-ancestors for the embed, `Referrer-Policy`, `Permissions-Policy`)
-  before public launch.
+- **App security headers: BUILT** (`vercel.json` `headers`, 15 Jul). The app now ships:
+  - **Content-Security-Policy:** `default-src 'self'; base-uri 'self'; object-src 'none';
+    frame-ancestors 'self' https://lock.show https://www.lock.show; script-src 'self' 'unsafe-inline'
+    https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline'
+    https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self'
+    data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co
+    https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com;
+    form-action 'self'; frame-src 'self'; manifest-src 'self'; worker-src 'self' blob:;
+    upgrade-insecure-requests`. `frame-ancestors` (not `X-Frame-Options DENY`) is used so the
+    `lock.show/app` embed keeps working while still blocking foreign clickjacking.
+  - **Strict-Transport-Security** `max-age=31536000; includeSubDomains; preload` ·
+    **X-Content-Type-Options** `nosniff` · **Referrer-Policy** `strict-origin-when-cross-origin` ·
+    **Permissions-Policy** `camera=(), microphone=(), geolocation=(), interest-cohort=()`.
+  - **Follow-ups (OWED):** (a) `script-src` keeps `'unsafe-inline'` for the inline gtag consent
+    bootstrap — tighten to a **nonce/hash** in a later pass; (b) the **marketing site**
+    (`website-next/vercel.json`) still ships no headers (S2p) — mirror this set there (static export
+    can't use `next.config` `headers()`).
 - **localStorage session (XSS) — OPEN.** The Supabase session (JWT) is stored in `localStorage`
-  (`persistSession:true`), which is readable by any injected script. Combined with the absent CSP,
-  a stored-XSS on any app surface could exfiltrate a live session. **Target mitigation:** a **BFF**
-  (backend-for-frontend) that keeps tokens in httpOnly cookies and proxies Supabase — plus CSP as
-  the first line. This is the recommended durable security upgrade; not built.
+  (`persistSession:true`), which is readable by any injected script. The CSP above is now the first
+  line of defence; the durable upgrade is still a **BFF** (backend-for-frontend) keeping tokens in
+  httpOnly cookies and proxying Supabase. Recommended before wider launch; not built.
 
 ---
 
@@ -1728,6 +1740,23 @@ Two channels: the **in-app bell** (built) and **transactional email** (mostly OW
 | Org invite | token on the invited membership row | Persists until accepted/cancelled; `cancelInvite` removes the row. No TTL — **OWED** if invites should expire. |
 
 All redirect targets are **surface-aware** (`BASE_URL` → `/` standalone vs `/app/` embed) so a link never bounces to the wrong deployment (`AuthProvider.jsx:107`, `ForgotPassword.jsx:20`).
+
+#### 14.6.5 Email template bodies (authored — implement verbatim when Resend is wired)
+
+FROM `LOCK <notifications@lock.show>`. Plain, warm, one action each. **Firewall:** no count/score/rank
+about a person or a reaction anywhere — the availability-request email says *that* a buyer asked, never
+*how many*. All bodies bilingual; send in the recipient's stored language, default Hebrew for `.co.il`
+signups. `{name}`, `{link}` are the only interpolations; no free buyer text is ever inserted.
+
+| Key | Subject (EN · HE) | Body (EN) | Body (HE) | CTA → |
+|---|---|---|---|---|
+| `email.request` (the Gate email, high-pri) | "Someone asked about your date" · "מישהו שאל על התאריך שלך" | "Hi {name} — a booking manager just asked about your availability through your LOCK Passport. It's a question, not a booking or a hold. Open your Requests to see it and reply." | "היי {name} — מזמין הופעות בדיוק שאל על הזמינות שלך דרך הפספורט שלך ב-LOCK. זו שאלה, לא הזמנה ולא שריון. פתח את הבקשות שלך כדי לראות ולהשיב." | "See the request" / "לצפייה בבקשה" → `/artist/requests` |
+| `email.confirmSignup` | "Confirm your email" · "אישור כתובת המייל" | "Welcome to LOCK, {name}. Confirm your email to start building your Passport." | "ברוך הבא ל-LOCK, {name}. אשר את כתובת המייל שלך כדי להתחיל לבנות את הפספורט." | "Confirm email" / "אישור מייל" → confirm link |
+| `email.reset` | "Reset your password" · "איפוס סיסמה" | "We got a request to reset your LOCK password. If it was you, use the link below — it expires soon. If not, ignore this email." | "קיבלנו בקשה לאיפוס הסיסמה שלך ב-LOCK. אם זה היה אתה, השתמש בקישור שלמטה — הוא יפוג בקרוב. אם לא, התעלם מהמייל." | "Reset password" / "איפוס סיסמה" → reset link |
+| `email.invite` | "{org} invited you to LOCK" · "{org} הזמינו אותך ל-LOCK" | "{org} invited you to join their workspace on LOCK. You choose what you share and can revoke access any time." | "{org} הזמינו אותך להצטרף למרחב העבודה שלהם ב-LOCK. אתה מחליט מה לשתף ויכול לבטל גישה בכל עת." | "Accept invite" / "לקבלת ההזמנה" → `/invite/:token` |
+| `email.confirmed` | "Your detail was confirmed" · "פרט אומת" | "Good news, {name} — a source confirmed a detail on your Passport. It now shows a confirmed method label." | "חדשות טובות, {name} — מקור אישר פרט בפספורט שלך. הוא מוצג כעת עם תווית שיטה 'מאומת'." | "See your Passport" / "לפספורט שלך" → `/artist/passport` |
+
+_Transport still OWED (Resend key). The **spec is complete** — these bodies are implementation-ready; wiring is the only remaining step (§14.6.3)._
 
 ---
 
@@ -2288,8 +2317,8 @@ next-action guidance and planet emphasis **only** — never a public number.
 | `live-band` | Live band | הרכב חי / להקה | live · prokit · proof | audience · identity | `act.format='band'` or `'duo'` |
 | `original-artist` | Original artist / vocalist | אמן מקורי / זמר-ית | music · identity · live | proof · audience | `act.format='vocalist'` |
 | `live-electronic` | Live electronic act | סט אלקטרוני חי | music · live · identity | prokit · proof | `act.format='live-set'` |
-| `comedian-host` | Comedian / host / MC | סטנדאפיסט / מנחה | live · identity · prokit | proof · audience | Not yet reachable from a `format` value — see gap note |
-| `corporate-ceremony` | Corporate / ceremony act | אמן אירועים / טקסים | prokit · proof · live | identity · music | Not yet reachable from a `format` value — see gap note |
+| `comedian-host` | Comedian / host / MC | סטנדאפיסט / מנחה | live · identity · prokit | proof · audience | Reachable via `act.format='comedian-host'` (§16.A.2) |
+| `corporate-ceremony` | Corporate / ceremony act | אמן אירועים / טקסים | prokit · proof · live | identity · music | Reachable via `act.format='ceremony-act'` (§16.A.2) |
 
 > **Firewall:** the "primary/secondary" columns are the internal emphasis order
 > (`planetEmphasisOrder`, `isPrimaryPlanet`). They render as *guidance wording* only —
@@ -2330,7 +2359,7 @@ family-by-family fill (F1 first) is the OWED task from the taxonomy audit.
 | `singer-songwriter` | Singer-songwriter | זמר-ית / יוצר-ת | `original-artist` | |
 | `vocalist-feature` | Vocalist / featured singer | זמר-ית אורח-ת | `original-artist` | |
 | `live-electronic-act` | Live electronic act | לייב אלקטרוני | `live-electronic` | Hardware/DAW live set |
-| `comedy-standup` | Stand-up / comedy | סטנדאפ | `comedian-host` | Needs a `format` path — see gap |
+| `comedy-standup` | Stand-up / comedy | סטנדאפ | `comedian-host` | via `act.format='comedian-host'` |
 | `mc-host` | MC / event host | מנחה אירועים | `comedian-host` | |
 | `ceremony-act` | Ceremony / corporate act | אמן טקסים / אירועים | `corporate-ceremony` | |
 
@@ -2339,11 +2368,12 @@ family-by-family fill (F1 first) is the OWED task from the taxonomy audit.
 > `scene → family → primary planets`; the free-text `artist.genre` / `act.genre` migrates to a
 > nullable FK, with the old string retained during transition.
 
-**Gap flagged:** two families (`comedian-host`, `corporate-ceremony`) exist in `GENRE_FAMILIES` but
-have **no** `act.format` value that resolves to them in `familyFor()` — they are only reachable once a
-scene→family override or the planned `scene_family` field (migration 034) is wired. Until then a
-comedian/ceremony act falls to the IL default (`dj-club`). This is an existing product gap, documented,
-not introduced here.
+**Gap RESOLVED (spec-side):** the two families (`comedian-host`, `corporate-ceremony`) now have
+dedicated `act.format` values (`comedian-host`, `ceremony-act` — §16.A.2) that resolve to them
+deterministically in `familyFor()`, so a comedian/ceremony act no longer falls to the IL DJ default.
+**Remaining to implement:** (1) widen the `act.format` CHECK via a diff-first migration; (2) extend
+`familyFor()` with the two new cases; (3) owner ratifies the HE labels (T-1). The taxonomy itself is
+now complete and internally consistent.
 
 ---
 
@@ -2361,7 +2391,16 @@ decides family; genre text only refines the DJ split).
 | `duo` | Duo | דואו | `live-band` | Treated as live-band |
 | `open-format` | Open-format DJ | תקליטן אופן-פורמט | `open-format` | Events/weddings/corporate |
 | `vocalist` | Vocalist | זמר-ית | `original-artist` | Singer / featured vocalist |
+| `comedian-host` | Comedian / MC / host | סטנדאפיסט / מנחה | `comedian-host` | **NEW (closes T-2):** makes the `comedian-host` family reachable from a format value, not only via the IL default |
+| `ceremony-act` | Ceremony / corporate act | אמן טקסים / אירועים | `corporate-ceremony` | **NEW (closes T-2):** makes the `corporate-ceremony` family reachable from a format value |
 | `other` | Other | אחר | IL default (`dj-club`) | Catch-all; no guessed emphasis under G2 if no genre text |
+
+> **T-2 resolution (spec-side):** adding `comedian-host` and `ceremony-act` to the `act.format` enum
+> makes both non-music families reachable deterministically in `familyFor()` — the gap flagged in
+> §16.A.1.a is closed in the spec. **Two follow-ups remain:** (1) the CHECK-constraint widening is a
+> migration to author diff-first (do not recreate the enum); (2) the HE labels stay **proposed** until
+> owner ratification (T-1). Method labels for these families follow the same canon (§4.4) — a comedian's
+> "confirmed by the venue" reads identically to a DJ's; no new label vocabulary is introduced.
 
 > **Entity note (§3 / ENTITY-GLOSSARY):** `format` is a property of the **Act**, not the Person. One
 > artist may hold several Acts, each with its own format, genre, evidence, and Passport
