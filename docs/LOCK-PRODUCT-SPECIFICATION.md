@@ -1,7 +1,7 @@
 # LOCK — PRODUCT SPECIFICATION
 
 **The single source of truth for building the LOCK product.**
-_Status: consolidated master spec · Written 15 Jul 2026 · Firewall-safe · Repo doc (shareable — contains no credentials or secrets)._
+_Status: consolidated master spec (complete) · Written 15 Jul 2026 · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–12 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §18 = open owner rulings._
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
@@ -23,10 +23,15 @@ _Status: consolidated master spec · Written 15 Jul 2026 · Firewall-safe · Rep
 - **9. AI / Scan Intelligence** — built vs target; discovery step; locale-awareness; provider fallback
 - **10. QA / Acceptance** — mobile-first, desktop, per-field DoD, contrast, firewall scan
 - **11. Current State & Living References**
-- **12. Open Decisions** — owner rulings still pending
+- **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–036); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
+- **14. Measurement, Payments & Notifications** — the 29-event analytics canon; measurement architecture; demo/test exclusion; the Gate measurement; free-pilot payments; transactional-email catalog
+- **15. Legal, Consent & Localization** — legal docs & status; Amendment-13/GDPR consent framework; Consent Mode v2; `consent_records`; localization architecture + RTL rules; the delivered Hebrew string set; legal placeholders (L-1…L-9) + HE ratification list (H-1…H-7)
+- **16. Taxonomy & Business** — genre/format/venue/method/platform taxonomies (EN·HE); product goals; the Gate; business model; honest pre-Gate business case; unit economics; consolidated owner-decision list
+- **17. Interactivity, Motion Depth & Utility Screens** — the motion system (easing tokens + duration ladder + reduced-motion contract); per-screen interactivity depth (Radar + Inspector deepest); the inline-edit widget; the 11 missing utility screens (signup/login/reset/invite/settings/org/billing/consent/notifications/404/skeleton)
+- **18. Open Decisions** — owner rulings still pending
 
 ### 0.1 How to read
-Sections 1–7 are the laws every screen inherits. Section 8 is the buildable core: each screen carries PURPOSE · DESKTOP layout · MOBILE layout · COMPONENTS · STATES · INTERACTIONS · EXACT MICROCOPY · FIREWALL notes · DEFINITION OF DONE, and is buildable from its sub-spec alone. Sections 9–12 are the intelligence layer, acceptance, current state, and unresolved rulings.
+Sections 1–7 are the laws every screen inherits. Section 8 is the buildable **screen** core: each screen carries PURPOSE · DESKTOP layout · MOBILE layout · COMPONENTS · STATES · INTERACTIONS · EXACT MICROCOPY · FIREWALL notes · DEFINITION OF DONE, and is buildable from its sub-spec alone. Sections 9–11 are the intelligence layer, acceptance, and current state. **Sections 13–17 are the deep build spec** — §13 Engineering & Architecture (the real DB schema, API/RPC contracts, auth, RLS, deploy/rollback, Q8), §14 Measurement/Payments/Notifications, §15 Legal/Consent/Localization (incl. the delivered Hebrew string set), §16 Taxonomy & Business, and §17 Interactivity/Motion depth + the 11 utility screens that §8 did not cover. Section 18 is the unresolved owner rulings. A developer can build the product from §§1–17; §18 lists what still needs an owner decision.
 
 ### 0.2 Reconciliation rules (applied throughout)
 1. **Prototype + newest doc win** over older docs on any conflict.
@@ -279,7 +284,7 @@ The brand is **dark/forest canvas + a single lime accent.** There is **NO orange
 | `state.needsReview` | `#E39A4B` (amber) | needs artist review/correction — "invitation to improve, never shame" |
 | `state.notAssessable` | `#9AA29B` | not enough context — **never** weakness |
 
-> **OPEN ruling (gold/amber):** whether to keep `state.found` gold + `state.needsReview` amber as small accents (A13's position) or retire them to lime+neutral (owner's earlier lean). The prototype currently renders the "Needs you"/"Found" states in **neutral mist** as an interim (pending the ruling). Do not treat gold/amber as settled until the owner rules (§12).
+> **OPEN ruling (gold/amber):** whether to keep `state.found` gold + `state.needsReview` amber as small accents (A13's position) or retire them to lime+neutral (owner's earlier lean). The prototype currently renders the "Needs you"/"Found" states in **neutral mist** as an interim (pending the ruling). Do not treat gold/amber as settled until the owner rules (§18).
 
 ### 5.5 Approved AA contrast pairs (use these; never invent a pair)
 Body text target: **AA minimum ≥ 4.5:1; prefer 7:1.** Key pairs from A13:
@@ -337,7 +342,7 @@ These are flagged so they are not mistaken for settled; build with the A13 inter
 3. **CTA hierarchy spec** (primary/secondary/ghost states) + the 44px rule's paddings.
 4. **The logo master SVG** (`lockshow-symbol-spotlight-lens-v2-master-lime.svg`) — the prototype uses a geometry stand-in (padlock/keyhole/spotlight-lens mark).
 5. **Real venue logos** (Barby, The Block, Sunset) for the evidence cards.
-6. **The gold/amber ruling** — keep `state.found`/`state.needsReview` as small accents (A13) or retire to lime+neutral (owner lean). See §5.4 / §12.
+6. **The gold/amber ruling** — keep `state.found`/`state.needsReview` as small accents (A13) or retire to lime+neutral (owner lean). See §5.4 / §18.
 7. The full dark-app semantic scale + status set + elevation shadows + the `forest-2/chrome-bg/rail-bg` chrome tints proposed in the nav consolidation (all tints/opacities of existing hues — Codex to confirm/rename).
 
 ---
@@ -772,7 +777,2682 @@ React + Vite + Tailwind + Supabase (ref `qexfndiyallwqhhzeerd`) + Vercel + Anthr
 
 ---
 
-## 12. Open Decisions (owner rulings still pending)
+---
+
+## 13. Engineering & Architecture
+
+**Product:** LOCK (repo codename GIGPROOF / B4). Pre-booking proof & risk-reduction tool.
+**Scope of this section:** the *as-built* engineering reality — surfaces, data model, server
+contracts, auth, security/firewall enforcement, DB-ops/deploy, and the Q8 production gate.
+**Grounding rule:** every claim below is traced to a file in the repo (cited inline). Anything
+genuinely not yet built is marked **OWED** (a deliverable) or **OPEN** (an unresolved decision).
+No secrets, keys, or credentials appear here.
+
+> **The Firewall (governing constraint for the whole stack).** No score / percentile / rank /
+> "bookability %" / prediction / gauge is ever computed, stored, or returned. Draw is expressed
+> ONLY as **bands** + **binaries** with **method labels**. This is enforced at three physical
+> layers — RLS row gates, per-column `GRANT`s to the `anon` role, and explicit column lists in
+> server/client read paths — so a score column *could not* surface even if one were mistakenly
+> added. Streaming is secondary context only.
+
+---
+
+### 13.1 System architecture
+
+#### 13.1.1 Surfaces
+
+LOCK ships as three deployment surfaces over **one** React SPA codebase plus a Next.js marketing
+site:
+
+| Surface | Domain | Tech | Serves |
+|---|---|---|---|
+| **Marketing site** (`website-next/`) | `lock.show`, `www.lock.show` | Next.js `output: 'export'` (static) | Public marketing, waitlist capture, SEO pages |
+| **App SPA** (`src/`) | `app.lock.show` | React 18 + Vite + Tailwind, React Router | The product (artist / buyer / agency / production / producer / operator workspaces) |
+| **Embed** | `www.lock.show/app/*` | The SAME Vite SPA, built `--mode embed`, committed as a static bundle under `website-next/public/app/` | Same-origin embedded copy of the app |
+
+The **embed is a second physical copy** of the SPA bundle committed into the marketing repo. This is
+a known version-skew class (two bundles for one app): the standalone serves `index-*.js` from its own
+build; the embed serves a separately-committed `public/app/assets/index-*.js`. Mitigation is a
+CI embed-sync gate (**OWED**, see `docs/architecture/P1-REFRESH-LOGOUT-ROOTCAUSE.md` Fix C and
+`BRANCHING-MODEL.md` hard-gate 2 "every app release rebuilds the embed").
+
+#### 13.1.2 Stack & runtime topology
+
+- **Client:** React + Vite + Tailwind; routing in `src/App.jsx` (React Router). State via context
+  (`AuthProvider`, `OrgContext`).
+- **Data plane:** Supabase (Postgres + Auth + Storage + RLS), project ref `qexfndiyallwqhhzeerd`.
+  The browser talks to Supabase **directly** with the public **anon** key (`src/lib/supabase.js`).
+- **API server:** a single Express app (`server/index.js`) holding the Anthropic key and the
+  Supabase **service-role** key. Runs on port 8787 locally; on Vercel it is imported by
+  `api/index.js` as a serverless function (the exact same Express `app` export).
+- **AI:** Anthropic API via `src/lib/ai` (`createClaimProcessor`); default model
+  `claude-opus-4-8` (`server/index.js:34`). Stub processor when no key is set.
+- **Hosting:** Vercel (both projects). Marketing static-export; app SPA with a catch-all rewrite.
+
+#### 13.1.3 Request flow (where the logic lives)
+
+There are **two** live data paths, by design, because the pilot must run even with **no server**:
+
+1. **Direct-to-Supabase (primary, no-server path).** The SPA reads/writes Postgres directly under
+   RLS using the anon (or the logged-in user's) JWT. Publishing, passport reads, evidence rows,
+   claims review, org/roster RPCs all work this way (`src/lib/db.js`, `src/lib/orgs.js`). A build
+   flag `NO_API_DEPLOY` (`src/lib/db.js`) makes the client the processor when there is no `/api`.
+2. **Via the Express server (privileged path).** Used when a task **requires** the service role or
+   the Anthropic key: AI claim extraction, cross-user notification writes, anonymous-buyer request
+   creation, producer magic-link confirmation, and the immutable publish snapshot. See §13.3.
+
+**Logic placement:**
+
+| Concern | Client (SPA) | Server (Express) | Database (Postgres) |
+|---|---|---|---|
+| Routing / role gates | ✅ `App.jsx` + `navigation.js` | — | — |
+| Firewall column selection | ✅ explicit `.select()` lists | ✅ `buildSafePayload` explicit lists | ✅ RLS + per-column anon `GRANT`s |
+| Tenant isolation | — | service role (bypasses RLS — must self-enforce) | ✅ RLS via `current_org_ids()` / `can_access_artist()` |
+| AI claim extraction | stub fallback only | ✅ `/api/process-evidence` | claims rows |
+| Draw materialization (Radar) | canonical rules `src/lib/radar.js` | — | `recompute_radar_for_org()` + triggers (subset R1/R2/R4/R7) |
+| Abuse controls / spend caps | — | ✅ in-memory + analytics ledger | — |
+
+#### 13.1.4 Trust boundaries
+
+- **Anon browser ↔ Postgres:** the anon key is public and shippable. The boundary is **RLS row
+  policies + per-column `GRANT`s** (migrations 016/025). The DB *is* the firewall on this path.
+- **Authenticated browser ↔ Postgres:** the user's JWT widens RLS to their own/org rows; the buyer
+  "public passport" view must therefore **re-filter explicitly** (see the `artist_approved` gate,
+  §13.5) because RLS shows an owner *all* their own rows.
+- **Browser ↔ Express:** CORS allowlist + `requireAuth` (Bearer JWT verified against Supabase) +
+  ownership gate (`requireArtistOwner`). Public-by-design routes (health, public passport GET,
+  passport-signal, availability-request, tokened producer confirm) skip auth intentionally.
+- **Express ↔ Postgres:** the **service role bypasses RLS entirely** — the server is inside the
+  trust boundary and must enforce every gate in code. This is the single highest-risk surface
+  (§13.5.3).
+
+---
+
+### 13.2 Data model — the real DB schema
+
+Source of truth: `supabase/migrations/001…035` (+ `036…DRAFT`), and the consolidated
+`supabase/apply_to_supabase.sql`. Postgres schema `public`. All tables carry RLS.
+
+#### 13.2.1 Migration map
+
+| # | File | What it does | State |
+|---|---|---|---|
+| 001 | `initial_schema` | Core: profiles, artists, profile_items, evidence_artifacts, claims, availability_requests, consent_records, passport_versions + RLS + storage buckets | applied |
+| 002 | `add_whatsapp_and_notifications` | `artists.whatsapp_number`; `notifications` table (`notif_self` RLS) | applied |
+| 003 | `operator_admin` | `operator` role; `is_operator()`; platform oversight read + targeted moderation update | applied |
+| 004 | `producer_role` | adds `producer` to `profiles.role` CHECK | applied |
+| 005 | `producer_confirmations` | `claims.method_label`; `producer_confirmations` table (magic-link, server-mediated) | applied |
+| 006 | `passport_signals` | `passport_signals` table (B2 action-ladder rungs, anon insert) | applied |
+| 007 | `entitlements` | `entitlements` table (manual founding-passport payment; pending→active by operator) | applied |
+| 008 | `org_first_model` | Org tenancy spine: person, organization, organization_membership, role_assignment, active_role_context, artist_access, subscription, gigs, draw_signals; `organization_id` on domain tables; RLS spine helpers (`current_org_ids`, `has_org_role`, `can_access_artist`, `is_comember`) | applied |
+| 009 | `org_bootstrap` | SECURITY DEFINER RPCs: `bootstrap_personal_org`, seats/invites (resolves signup chicken-and-egg) | applied |
+| 010 | `radar` | `radar_signal` materialized store; `recompute_radar_for_org()`; feeding triggers | applied |
+| 011 | `audit_operator` | `audit_log` table; operator right-to-erasure delete on artists | applied |
+| 012 | `agency_upgrade` | `approve_agency_upgrade()` (Solo→Agency on the same org) + operator read | applied |
+| 013 | `invite_info` | `invite_info()` RPC — safe invite display fields for the accept screen | applied |
+| 014 | `artist_org_autoset` | BEFORE-INSERT trigger fills `artists.owner_organization_id` from active org | applied |
+| 015 | `live_fixes` | Fix `artists_org` INSERT…RETURNING (42501), trigger 014, invite token `gen_random_uuid()` | applied |
+| 016 | `firewall_column_security` | **Physical firewall:** `REVOKE SELECT` from anon, re-`GRANT` buyer-safe columns only on artists/profile_items/claims | applied |
+| 017 | `owner_publish_snapshot` | `pv_owner_insert` — owner writes their own passport snapshot under RLS (no service role needed to publish) | applied |
+| 018 | `professional_reaction` | professional_reaction, reaction_reason, opportunity + producer_confirmations enrichment | **failed & rolled back** (bad `opp_org_all` policy referenced non-existent `org_memberships.user_id`) |
+| 019 | `repair_professional_reaction` | Re-applies everything 018 lost, policy defect fixed, FK guarded | applied (supersedes 018) |
+| 020 | `acts_spine` | **Multi-Act foundation:** `act` table; `act_id` threaded through 11 child tables; backfill (`act.id = artists.id`); transition triggers | applied |
+| **021** | `vocabulary_and_consent` | Renames `mirror-only`→`working-only`, `booker`→`booking_manager`, adds `venue_programmer`, 4 canonical consent scopes | **⛔ FROZEN — NOT APPLIED** (would break the running app; see 13.2.5) |
+| 022 | `claim_evidence_depth` | claims public-display fields + **`artist_approved` gate (default false)** + status lifecycle; evidence Amendment-13 fields; `processing_job` table | applied |
+| 023 | `gig_depth` | gig-scoped draw bands + closeout fields; `exact_count` (working-only) | applied |
+| 024 | `measurement_and_share` | share_link, passport_view_event, analytics_event (event-name CHECK — the **analytics head**) | applied |
+| 025 | `firewall_grants` | Extends 016 to new tables/columns (gigs, act, share_link, analytics_event, passport_view_event) | applied |
+| 026 | `waitlist` | `waitlist_signup` (public insert, operator-only read) | applied |
+| 027 | `workspace_types_and_access_scopes` | `organization.workspace_type`; artist_access scope[]/territory/expiry/consent + lifecycle; `can_access_artist()` honors scope+expiry; access-handshake RPCs | applied (was owner-approval-gated; 030 later fixes recursion it introduced, confirming it is live) |
+| 028 | `discovery_analytics_plans` | `discovered` evidence source; bilingual name fields; M1 funnel events; `organization.plan_flags` jsonb | applied (owner-approval-gated in header) |
+| 029 | `artist_whatsapp_share` | `artists.whatsapp_share`; `get_shared_whatsapp()` gated exposure | applied |
+| 030 | `fix_artists_rls_recursion` | Breaks artists↔artist_access mutual-RLS loop via SECURITY DEFINER `owns_artist()` | applied |
+| 031 | `passport_approval_gate` | **Adds `and artist_approved = true` to `claims_public_read`** (firewall breach fix) | applied |
+| 032 | `roster_and_production_rpcs` | `list_roster_grants()`, `list_production_requests()` (read-only RPCs) | applied ✓ verified |
+| 033 | `waitlist_outreach_roles` | Widens `waitlist_signup.role` CHECK (manager/production outreach) | applied |
+| **034** | `event_canon_unpublish` | **analytics_event CHECK = app CANON exactly: 29 event names** (file=DB=app, reconciled) | applied ✓ (**the analytics CHECK head**) |
+| 035 | `create_workspace` | `create_workspace()` RPC (second/additional workspace) | applied ✓ |
+| 036 | `token_hash.sql.DRAFT` | Hashed producer-token storage (G15-4) — dual-read rollout plan | **DRAFT — deliberately not runnable** (`.DRAFT` suffix; `token` still plaintext, migration 005) |
+
+**Live migration head (per `docs/VERSIONS.md`, 13–15 Jul 2026):** **035**. 021 is permanently
+skipped/frozen; 036 is a draft. Every migration file has a paired `NNN_*.down.sql` from 019
+onward. Migrations ship **alone**, applied+verified before dependent code (`BRANCHING-MODEL.md`
+hard-gate 4).
+
+> **Diff before authoring 037+** — do not recreate existing tables. Structural renames (e.g.
+> workspace_type `producer`→`production`, folding 021's vocabulary) are gated on Supabase Pro
+> backups being ON before any destructive change (`rel-2026.07.13-PLAN.md` §4b item 4).
+
+#### 13.2.2 Table catalog — core evidence spine
+
+**`artists`** (001; the transition anchor — child rows still hang here while the app migrates to
+act-first reads)
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `created_by` | uuid → `auth.users` | owner (ownership gate) |
+| `stage_name`, `name`, `genre`, `city`, `photo_url`, `one_line`, `regions`, `set_length` | text | buyer-safe identity |
+| `invoice_ready` | boolean | |
+| `rider_url` | text | **private** (not anon-granted) |
+| `whatsapp_number` | text (002) | **private**; exposed only via `get_shared_whatsapp()` |
+| `whatsapp_share` | boolean (029) | artist opt-in |
+| `music_links` | jsonb | |
+| `lineup_frequency_band`, `price_band`, `community_size_band` | text | **BANDS only** (firewall) |
+| `sells_tickets` | boolean | binary |
+| `published` | boolean default false | the publish/firewall gate |
+| `owner_organization_id`, `organization_id` | uuid → organization (008) | tenancy |
+| `stage_name_he`, `name_he` | text (028) | bilingual search |
+
+**`profile_items`** (001) — track record. `item_type` CHECK: `event · lineup · collab · release ·
+residency · self_produced_event · link · draw_signal`. `source_status` CHECK: `public-verified ·
+artist-provided`. `visibility` CHECK: `passport-ok · mirror-only` (001; 021 would rename to
+`working-only` but is frozen). `act_id` (020).
+
+**`evidence_artifacts`** (001) — artist-supplied proof (files go to Storage, not through the API).
+`evidence_type` CHECK: `file · link · band`. `source_type` CHECK: `ticket-export · settlement ·
+screenshot · public-profile · producer-vouch · self-band · self-reported · discovered` (028).
+`status` CHECK: `submitted · processed · error`. Depth fields (022): `claim_intent`,
+`source_owner_consent`, `checksum`, `retention_policy`, `platform`, `pii_scrubbed`. Discovery
+provenance (028): `discovery_source_url`, `discovery_query`, `same_person_state`
+(`unreviewed · artist-confirmed · artist-dismissed`). `act_id` (020).
+
+**`claims`** (001; output of AI processing — the firewall-critical table)
+
+| Column | Type | CHECK / notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `artist_id` | uuid → artists | |
+| `act_id` | uuid → act (020) | |
+| `evidence_id` | uuid → evidence_artifacts (set null) | |
+| `claim_type`, `value` | text | `value` = exact working text |
+| `verification_status` | text default `self-reported` | `verified · supporting · self-reported · not-assessable` |
+| `verified_by` | text default `system` | `system · artist` |
+| `verified_at`, `expires_at` | timestamptz | `expires_at` drives auto-**stale**; **never** sent to public |
+| `visibility` | text default `mirror-only` | `passport-ok · mirror-only · internal` |
+| `method_label` | text (005) | `producer-confirmed` (strongest) / `stale` / null |
+| `extraction_method`, `model_version` | text | provenance (truthful): `anthropic · deterministic_fallback · mock · client_stub` |
+| `internal_confidence` | numeric | **DB-only — NEVER returned to any client (a score → firewall)** |
+| `reason_code` | text | |
+| `public_band` | text (022) | **the only public draw form** (band string) |
+| `public_wording`, `limitation_text` | text (022) | exact public text + "what this does/does not establish" |
+| **`artist_approved`** | boolean default false (022) | **the publish gate — nothing reaches any view without this** |
+| `source_timestamp` | timestamptz (022) | |
+| `status` | text default `submitted` (022) | `submitted · processed · source-supported · published · self-reported · not-assessable · stale · disputed` |
+
+**`passport_versions`** (001) — **immutable** buyer-safe snapshots (insert-only; never updated).
+`snapshot` jsonb MUST NOT contain score/percentile/exact-count/internal_confidence. `act_id` (020).
+
+**`availability_requests`** (001) — buyer reaction. `status` CHECK: `new · replied · closed`.
+Bands only (`capacity_band`, `budget_band`). `act_id` (020).
+
+**`consent_records`** (001) — legal basis. `status`: `accepted · declined · withdrawn`. `scope`
+CHECK (post-021 target = `privacy-processing · public-publication · thirdparty-evidence · marketing
+· account-deletion`) — but 021 is frozen, so the **live** scope vocabulary is the pre-021 set plus
+`scope_legacy` staging is not yet present. **OPEN:** live consent-scope vocabulary is whatever 001
+defined until 021 (or a re-authored equivalent) lands.
+
+#### 13.2.3 Table catalog — org tenancy (008/027)
+
+| Table | Key columns | CHECK / enum values |
+|---|---|---|
+| `person` | `id` → auth.users, `email`, `display_name` | 1:1 with auth user |
+| `organization` | `id`, `name`, `slug` unique, `plan`, `created_by`, `workspace_type` (027), `plan_flags` jsonb (028) | `plan`: `solo · agency · agency_plus`; `workspace_type`: `artist · management · producer` |
+| `organization_membership` | `organization_id`, `person_id` (null until invite accepted), `org_role`, `status`, `invite_token` unique | `org_role`: `owner · admin · member`; `status`: `active · invited · suspended`; unique(org, person) |
+| `role_assignment` | `organization_id`, `person_id`, `functional_role`, `authority_scope` jsonb | `functional_role` (post-027 CHECK): `artist · booking_manager · artist_manager · producer · venue_programmer · operator · booking_agent · roster_coordinator · viewer` **+ tolerated legacy** `booker · agency` |
+| `active_role_context` | `person_id` PK, `active_organization_id` | which workspace is active |
+| `artist_access` | `organization_id`, `artist_id`, `access_level`, `scope[]` (027), `territory`, `expires_at`, `consent_at`, `status` | `access_level`: `manage · view`; `scope ⊆ {view,upload,edit,share,publish}`; `status` (027): `pending · active · revoked · disputed`; unique(org, artist) |
+| `subscription` | `organization_id` unique, `plan`, `seats_included`, `seats_used`, `status` | `status`: `active · trialing · past_due · canceled` |
+
+#### 13.2.4 Table catalog — domain, measurement, ops
+
+| Table | Migration | Key columns / enums (firewall-relevant) |
+|---|---|---|
+| `gigs` | 008/023 | `status`: `lead·hold·confirmed·settled·canceled`; `role_at_event`: `headliner·support·lineup-member`; `audience_band`: `<50·50-150·150-300·300-600·600+·unknown`; `band_means`: `sold·scanned·attended·attributed-via-link`; **`exact_count` int — working-only, never anon-granted**; closeout: `attendance_band`, `settlement_band`, `closeout_status` (`pending·completed·skipped`), `ticket_attribution_confirmed`, `repeat_booking_signal` |
+| `draw_signals` | 008 | `signal_type`: `lineup-frequency·sells-tickets·price-band·community-size`; `band_value` (band only), `method_label` |
+| `radar_signal` | 010 | `rule_id`: `R1…R8`; `status`: `strong·developing·missing·notAssessable`; `action_type`: `refresh-evidence·request-evidence·respond·publish·promote·review`; `evidence_basis` (ref, not a number); unique(org, artist, rule) |
+| `act` | 020 | `person_id`, `stage_name`, `genre`, `city`, `positioning` (≤120), `format` (`dj-set·live-set·duo·band·open-format·vocalist·other`), `artist_goal` enum; **`contact` internal-only**, **`community_count_declared` int working-only**; `is_default` |
+| `producer_confirmations` | 005/019 | `token` unique (plaintext — see 036 DRAFT), `response`: `yes·partial·no·wrong_person`, `revoked`, `responded_at`; enrichment (019): `authority_type` (`producer·venue_rep·ticketing_admin·organizer·other`), `name_visibility` (`public·initials·anonymous`), `identity_verified`, `conflict_of_interest`, `offline_confirmation_source` (`phone·message·in_person`) |
+| `professional_reaction` | 018/019 | `action_type`: `check_availability·request_price·save·forward·future_fit·request_proof·not_fit`; `reaction_status`: `recorded·retracted`; `idempotency_key` unique |
+| `reaction_reason` | 018/019 | `reason_type` enum; `free_text` **INTERNAL ONLY** |
+| `opportunity` | 018/019 | `status`: `open·filled·cancelled·expired`; `capacity_band`/`budget_band` (bands only) |
+| `processing_job` | 022 | `status`: `queued·running·completed·failed`; `model_version`, `ruleset_version` (server-written only) |
+| `share_link` | 024 | `tracking_disclosed` (must be true before send), `status`: `active·expired·revoked`, `act_id` |
+| `passport_view_event` | 024 | anon insert **only against a published artist**; a view is NOT a reaction (must never merge) |
+| `analytics_event` | 024/028/034 | `event_name` CHECK = **29 canonical events** (034); append-only, operator-read only; `properties` jsonb (no PII) |
+| `notifications` | 002 | `user_id` self-RLS; cross-user writes go through the server service role |
+| `entitlements` | 007 | `status`: `pending·active·cancelled`; operator activates |
+| `audit_log` | 011 | operator-only; destructive actions write a row first |
+| `waitlist_signup` | 026/033 | public insert, operator read only; `role`: `artist·booking_manager·artist_manager·production·producer·other` |
+
+**analytics_event CHECK (034 — the analytics head), 29 names:** `passport_view`,
+`professional_reaction_submitted`, `availability_request_created`, `producer_confirmation_sent`,
+`producer_confirmation_received`, `claim_published`, `passport_published`, `entitlement_activated`,
+`gig_evidence_refresh_completed`, `passport_unpublished`, `share_link_created`, `share_link_opened`,
+`consent_granted`, `consent_withdrawn`, `account_deleted`, `signup_started`, `signup_completed`,
+`login`, `oauth_login`, `onboarding_started`, `onboarding_completed`, `radar_opened`,
+`evidence_added`, `claim_confirmed`, `act_created`, `act_switched`, `workspace_switched`,
+`payment_reference_created`, `availability_request_responded`. File=DB=app is a maintained
+invariant (drift found twice by hand; 034 is generated from `src/lib/analytics.js` CANON).
+
+#### 13.2.5 Multi-Act `act_id` threading (020)
+
+Canon: one **Person** may hold several **Acts** (e.g. a psytrance Act + a techno Act), each with its
+own Passport and its own **non-transferable** evidence; a new Act starts empty. Migration 020:
+
+1. Creates `public.act` (`person_id` FK — bound to a Person, not conflated with the legacy artist).
+2. Backfills exactly one default Act per existing artist reusing the **same id**
+   (`act.id = artists.id`), so every existing child row maps 1:1 trivially.
+3. Adds `act_id` to **11** child tables (claims, evidence_artifacts, profile_items, gigs,
+   passport_versions, availability_requests, producer_confirmations, professional_reaction,
+   draw_signals, radar_signal, entitlements) + `share_link` (024), backfilled from `artist_id`.
+4. Installs **transition triggers** so the current app keeps working untouched: a new `artists`
+   row auto-creates its default Act (`act_from_artist`); a new child row auto-fills `act_id` from
+   `artist_id` (`set_act_from_artist_id`). The app can migrate to act-first reads screen by screen.
+
+**Binding rule (canon):** a Passport binds to an Act via `passport_version.act_id`, not to a Person.
+Public reads are still served off `artists` under the 016/025 column grants; the `act` public-read
+policy (025 `act_public_read`) and act-first passport cutover are the transition target.
+
+---
+
+### 13.3 API / server contracts
+
+Base: `server/index.js` (Express). Body limit 100 KB; every string field ≤ 2000 chars
+(`MAX_FIELD_CHARS`); CORS allowlist; per-IP rate limit on **all** routes (§13.5.4). Auth via
+`Authorization: Bearer <supabase access_token>` verified by `requireAuth` → `req.userId`.
+
+#### 13.3.1 Endpoint catalog
+
+| Method / path | Auth | Request | Response (success) | Purpose |
+|---|---|---|---|---|
+| `GET /api/health` | none | — | `{ ok, supabase, ai: 'configured'|'mock', model }` | Liveness; "configured" = key present, not that any call succeeded |
+| `POST /api/process-evidence` | Bearer + artist owner | `{ artistId }` | `{ processed, deduped, ai: 'mock'|'degraded'|'live', methods, claims[], budget_alert }` | AI-label submitted evidence → write claims (§13.3.3) |
+| `POST /api/publish/:artistId` | Bearer + owner | — | `{ ok, published:true }` | Write immutable buyer-safe snapshot + set `published` |
+| `GET /api/passport/:artistId` | none | — | snapshot jsonb `{ artist, items[], claims[] }` | Serve immutable snapshot; live `published` flag re-gates |
+| `POST /api/passport-signal` | none | `{ artistId, signal, sessionId? }` | `{ ok }` or `{ ok, deduped:true }` | Buyer one-tap signal; `signal ∈ price_details·future_fit·needs_proof·not_this_event·forwarded`; 24h idempotency via hashed session key |
+| `POST /api/availability-request` | none | closed field list incl. `artistId`, `requester_name`, bands | `{ ok, request }` | Anonymous buyer request; server-authored notification body |
+| `POST /api/notify` | Bearer | `{ artistId, type, body, link }` | `{ ok }` | Notification writer; caller must **own** the artist or be **operator**; `type ∈ request_received·confirmation_received·system` |
+| `POST /api/request-confirmation` | Bearer + owner | `{ claimId, producerContact? }` | `{ token, path:'/confirm/<token>' }` | Mint a producer magic-link token |
+| `GET /api/confirm/:token` | none (token) | — | `{ claimText, artistName, response, revoked, responded }` | Producer opens link (safe fields only) |
+| `POST /api/confirm/:token` | none (token) | `{ response }` or `{ revoke:true }` | `{ ok, response }` / `{ ok, revoked:true }` / `{…already_recorded:true}` | Producer replies/revokes; `response ∈ yes·partial·no·wrong_person`; only `yes` earns `producer-confirmed` |
+
+Error envelope is uniformly `{ error: '<code>' }` with codes: `auth_required` (401), `forbidden`
+(403), `rate_limited` / `daily_limit_reached` / `monthly_budget_reached` (429), `too_many_items` /
+`field_too_long` (400), `link_expired` (410), `server_error` (500).
+
+#### 13.3.2 Postgres RPCs (SECURITY DEFINER, called directly from the SPA)
+
+These run privileged inside the DB to break the RLS chicken-and-egg / recursion, then gate on
+`current_org_ids()` / `has_org_role()` / ownership internally:
+
+| RPC | Migration | Purpose |
+|---|---|---|
+| `bootstrap_personal_org(name, functional_role, email?, display_name?)` | 009/021 | Create the signup solo org (person + org + owner membership + role + subscription + active context) |
+| `create_workspace(name, workspace_type, functional_role)` | 035 | Create an **additional** workspace (empty; nothing copied — G3 boundary) |
+| `invite_member(...)`, `accept_invite(token)`, `invite_info(token)` | 009/013/021 | Team invites + safe invite-display lookup |
+| `approve_agency_upgrade(org, seats)` | 012 | Solo→Agency on the same org (operator-gated) |
+| `request_artist_access(org, artist, scope[], territory?)` | 027 | Agency/production requests a scoped, revocable grant |
+| `list_incoming_access_requests()` | 027 | Artist-side "who wants access to me" (safe join) |
+| `respond_to_access_request(id, approve, scope?)` | 027 | Artist approves/declines (optionally narrows scope) |
+| `revoke_artist_access(id)` | 027 | Either side revokes an active grant |
+| `list_roster_grants()` | 032 | Manager roster from consented active grants |
+| `list_production_requests()` | 032 | Production outbound-request inbox with reply status |
+| `get_shared_whatsapp(artistId)` | 029 | Returns the WhatsApp number ONLY if published AND opted in |
+| `recompute_radar_for_org(org)` | 010 | Deterministic Radar materialization (R1/R2/R4/R7 subset) |
+
+#### 13.3.3 The claim-safe payload contract (`buildSafePayload`) — the physical firewall
+
+`server/index.js` `buildSafePayload(artistId)` (used both to write the publish snapshot and as the
+live fallback in `GET /api/passport/:artistId`). This is the **contract that guarantees private gaps
+and unreviewed claims never leak** to a buyer. Because the server uses the **service role**, which
+**bypasses RLS**, every gate must be re-stated explicitly in the query — RLS does not protect this
+path.
+
+The contract, exactly:
+
+- **artists** — an **explicit column allowlist**: `id, stage_name, name, genre, city, photo_url,
+  one_line, regions, set_length, invoice_ready, music_links, lineup_frequency_band, sells_tickets,
+  price_band, community_size_band`. (No `internal_confidence`, `rider_url`, `whatsapp_number`,
+  `created_by` — none could appear even if present.)
+- **profile_items** — allowlist `id, item_type, title, detail, item_date, public_url,
+  source_status`, filtered `visibility = 'passport-ok'`.
+- **claims** — allowlist `id, claim_type, value, source_type, verification_status, reason_code,
+  method_label, expires_at`, filtered by **all four** gates:
+  1. `visibility = 'passport-ok'`
+  2. `verification_status IN ('verified','supporting')` (`PUBLISHABLE_STATUSES`)
+  3. **`artist_approved = true`** (the 031/022 gate — this is the line that stops auto-labeled,
+     never-reviewed claims from going public; the admin client would otherwise ignore RLS)
+  4. `artist_is_published` is enforced by the caller (`GET /api/passport` checks live `published`)
+- **Stale computed server-side, timestamp stripped:** for each claim, if `method_label ≠
+  producer-confirmed` and `expires_at < now`, the label becomes `stale`; then **`expires_at` is
+  deleted from the object**. Raw timestamps never leave the server — only the bounded label does.
+
+The client no-server path mirrors this exactly (`src/lib/db.js` `getPublicPassport` /
+`buildPassportSnapshot`): the anon branch relies on the DB (016 column grants exclude `visibility`
+so it can't even be referenced), and the **authenticated** branch re-filters
+`passport-ok + publishable + artist_approved` explicitly, because an owner's RLS shows all their
+own rows. **One Passport, identical for every viewer class.**
+
+---
+
+### 13.4 Auth & sessions
+
+#### 13.4.1 Client configuration
+
+`src/lib/supabase.js` creates the client with `persistSession: true`, `autoRefreshToken: true`,
+`flowType: 'pkce'`, `detectSessionInUrl: true`. PKCE + `detectSessionInUrl` are required so Google's
+`?code=` redirect can be exchanged (without them the user bounced back to login — the bug Maria hit
+9 Jul). Session lives in **localStorage** (see §13.5.5 for the XSS consideration).
+
+#### 13.4.2 Flows
+
+| Flow | Mechanism | Notes |
+|---|---|---|
+| Email signup / login | Supabase Auth email+password; `/signup`, `/login` | On signup the app calls `bootstrap_personal_org` |
+| Google OAuth | PKCE redirect; `OAUTH_ENABLED` default ON since 8 Jul (`VITE_OAUTH_ENABLED=0` kill-switch) | Google provider enabled in Supabase dashboard |
+| Facebook OAuth | `OAUTH_FACEBOOK_ENABLED` default **OFF** | Provider NOT enabled in Supabase; a visible button produced a raw error, so it is flag-gated |
+| Email confirm | Supabase email link; SMTP (Resend) delivery is QA item Q3 | Delivery is a Cowork/owner setup step |
+| Forgot / reset password | `/forgot-password` → `/reset-password` (`ForgotPassword.jsx`, `ResetPassword.jsx`) | Standard Supabase recovery |
+| Org invite | `organization_membership.invite_token` (unique, minted by `invite_member`); `/invite/:token` → `AcceptInvite`; `invite_info(token)` shows safe fields; `accept_invite(token)` verifies email match then activates | **Expiry: OPEN/OWED** — invite tokens have no explicit TTL in the schema (unlike producer tokens) |
+| Producer confirm | `/confirm/:token` (producer magic link); minted by `POST /api/request-confirmation` | **Expiry 14 days** (`CONFIRM_TOKEN_TTL_DAYS`); a row with no `created_at` is treated as **expired** (fail-closed); token stored **plaintext** today (036 DRAFT hashes it) |
+
+#### 13.4.3 Session/role model
+
+- **Auth identity** = Supabase user (`useAuth()` / `AuthProvider`). Profile role via `getProfile`.
+- **Effective role** = the **active workspace's** derived role from `useOrg()` (`OrgContext`), NOT
+  the static profile role — so a workspace switch actually re-gates the UI. Route guards
+  (`RequireRole`, `RequireAgency`, `RequireProduction`) and `RoleHome` all delegate to the pure
+  functions in `src/lib/navigation.js` (`homePathFor`, `requireRoleRedirect`, etc.), which are
+  exhaustively verified by `scripts/nav-contract.test.mjs` (34 journeys) on every build.
+- **Producer** is never a self-selected signup role (`SIGNUP_ROLES = artist·booker·agency`); it is
+  an accountless magic-link task.
+
+#### 13.4.4 Refresh-logout root cause + fix (folded from `P1-REFRESH-LOGOUT-ROOTCAUSE.md`)
+
+**Symptom (14 Jul):** logged in, edited artist details, pressed refresh, ejected from the app.
+
+**Verdict:** **NOT an auth/session bug.** The session/auth code (`AuthProvider.jsx`,
+`supabase.js`, `main.jsx`) is **byte-identical** across the embed, standalone, and HEAD. The boot
+logic correctly `await`s `getSession()` + `loadProfile` before clearing `loading`. None of it runs
+on the failing reload.
+
+**Actual mechanism:** an **SPA deep-link routing gap on static hosting**. A hard reload of a client
+route issues a real GET for that exact path. With Next `output: 'export'` (no server rewrites) and a
+`vercel.json` that had only `cleanUrls`, only paths with a **physical file** existed
+(`/app/`, `/app/login`, `/app/signup` were hand-created shells). Every other route
+(`/app/settings`, `/app/artist/*`, `/app/onboarding`, …) returned **404** and served the marketing
+404 page — the app bundle never booted to read the intact localStorage session. Confirmed by live
+HTTP: `/app/` → 200 (app), `/app/settings` → 404 (Next marketing). The standalone had the same gap
+(root `vercel.json` also lacked rewrites).
+
+**Fix (both now applied in the repo):**
+- **Embed** — `website-next/vercel.json` adds `rewrites: [{ source: '/app/:path*', destination:
+  '/app/index.html' }]`. (Vercel rewrites run **after** the filesystem check, so real files/assets
+  still serve directly; only 404-ing deep routes fall through to the SPA shell.)
+- **Standalone** — root `vercel.json` adds `rewrites: [{ source: '/((?!assets/|_next/).*)',
+  destination: '/index.html' }]`.
+- **Durable target (OWED):** collapse to a single canonical bundle (redirect `www.lock.show/app/*`
+  to the standalone) **or** add a CI embed-sync hash gate so the embed can never silently go stale.
+
+---
+
+### 13.5 Security & firewall server-enforcement
+
+#### 13.5.1 RLS policy catalog (per table: who reads / who writes)
+
+Helper functions (all `SECURITY DEFINER`, so they don't recurse through RLS): `owns_artist(a)`
+(030, org-owner check without self-selecting artists), `can_access_artist(a)` (008/027 — owning org
+OR active, unexpired, `view`-scoped `artist_access`), `current_org_ids()`, `has_org_role(org,
+roles[])`, `is_operator()` (003), `artist_is_published(a)`.
+
+| Table | Public / anon | Authenticated user / org | Operator |
+|---|---|---|---|
+| `profiles` | — | self all (`profiles_self`) | read all |
+| `artists` | SELECT if `published` (`artists_public_read`); **column-restricted** by 016 | org access `can_access_artist` (`artists_org`); INSERT check `owner_organization_id ∈ current_org_ids` | read / update / delete (moderation, erasure) |
+| `profile_items` | SELECT `passport-ok` of published (col-restricted 016) | org (`items_org`) | read |
+| `evidence_artifacts` | **none** (private) | org (`evidence_org`) | read |
+| `claims` | SELECT `passport-ok` + publishable + **`artist_approved`** + published (`claims_public_read`, 031); columns restricted 016/025 | org (`claims_org`) | read + update |
+| `availability_requests` | INSERT if `artist_is_published` (`req_public_insert`) | org read/update | read/update |
+| `passport_versions` | SELECT if published (`pv_public_read`); **owner INSERT** (`pv_owner_insert`, 017) | org read | — |
+| `passport_signals` | INSERT if published; no read | owner read | read |
+| `producer_confirmations` | **none** (all writes server/service-role) | org read | read |
+| `professional_reaction` | **INSERT open** (`with check (true)`) | org read | read |
+| `reaction_reason` | INSERT open | org read (via reaction join) | read |
+| `passport_view_event` | INSERT **only against a published artist** (stricter than reactions) | org read | read |
+| `analytics_event` | **INSERT open** (append-only) | — | **read only** |
+| `share_link` | no anon read (025) | org all | read |
+| `person / organization / membership / role_assignment / artist_access / subscription` | — | member read; owner/admin write; artist-side access-request read/respond (027/030) | selective read (012) |
+| `gigs / draw_signals / radar_signal / opportunity / act` | anon read of buyer-safe columns where published (025); else none | org tenant scope | read |
+| `entitlements` | — | owner read + insert own pending | read + activate |
+| `notifications` | — | self only (`notif_self`) | — |
+| `waitlist_signup` | **INSERT open**; no read (revoked from anon) | — | read only |
+| `audit_log` / `processing_job` | — | processing_job: org read only | operator all |
+
+#### 13.5.2 The `artist_approved` firewall gate (the load-bearing rule)
+
+A claim is born `visibility='passport-ok'` the instant it is auto-labeled verified/supporting —
+**before** the artist reviews it. `artist_approved` defaults **false** (022) and is the intended
+publish gate ("Nothing publishes without you"; canon: "zero claims publish without review"). The
+breach (found 10 Jul) was that `claims_public_read` filtered on visibility+status+published but NOT
+`artist_approved`, so publishing exposed every unreviewed auto-claim. **Enforced in all four read
+paths** (must stay in lockstep — this is the single most important firewall invariant):
+
+1. RLS `claims_public_read` — `and artist_approved = true` (migration 031).
+2. Server `buildSafePayload` — `.eq('artist_approved', true)` (service role bypasses RLS).
+3. Client `getPublicPassport` authenticated branch — `.eq('artist_approved', true)`.
+4. Client `buildPassportSnapshot` — `.eq('artist_approved', true)`.
+
+#### 13.5.3 Service-role bypass risk
+
+The Express server holds the **service-role** key, which **bypasses RLS**. Consequences that are
+actively managed in `server/index.js`:
+
+- Every read that could leak private data (`buildSafePayload`) re-states the RLS filters explicitly.
+- Every mutation gate is re-checked in code: `requireAuth` (JWT), `requireArtistOwner`
+  (`artists.created_by === req.userId`), operator check for cross-user notifications.
+- Cross-user writes that RLS would forbid (notifications to another user's bell) are **only**
+  reachable via server routes with server-authored bodies (`/api/availability-request` writes the
+  notification body itself; `/api/notify` restricts `type` to a closed enum and requires ownership
+  or operator).
+- **Residual risk (OPEN):** any new server read path that forgets a firewall filter leaks with no
+  RLS backstop. Mitigation target = a shared safe-select helper + a server-payload firewall test in
+  CI (**OWED**; `scripts/test-security-denial.mjs` exists for denial cases — G11).
+
+#### 13.5.4 Rate limits & AI spend caps (actual values in `server/index.js`)
+
+| Control | Value (env-tunable) | Enforcement |
+|---|---|---|
+| Per-IP rate limit | `RATE_LIMIT_PER_MIN = 30` / trailing 60s | in-memory sliding window, ALL routes → 429 `rate_limited` |
+| Items per job | `MAX_ITEMS_PER_JOB = 15` | reject batch → 400 `too_many_items` |
+| Items per user / day | `MAX_ITEMS_PER_USER_DAY = 15` | in-memory per-user/UTC-day → 429 `daily_limit_reached` |
+| Monthly AI budget (hard) | `MONTHLY_BUDGET_USD = 50` | estimate from `analytics_event` count × `COST_PER_ITEM_USD (0.02)` → 429 `monthly_budget_reached` |
+| Budget alert | `BUDGET_ALERT_AT_USD = 25` | warn + `budget_alert:true` in response |
+| Producer-token TTL | `CONFIRM_TOKEN_TTL_DAYS = 14` | 410 `link_expired` |
+| Body / field caps | JSON ≤ 100 KB; string field ≤ 2000 chars | 400 `field_too_long` |
+| CORS allowlist | `app.lock.show`, `lock.show`, `www.lock.show`, `localhost:5173` (env `ALLOWED_ORIGINS`) | non-allowlisted origin → no CORS headers |
+
+**Honesty caveats (as documented in code):** the in-memory counters reset on serverless-instance
+restart (accepted pilot bound, not a persistence guarantee); the monthly ledger is an **estimate**
+(row count × flat per-item cost, not token accounting — real per-token accounting is **OWED**, P1);
+the budget check **fails open** on a ledger-query error (an analytics hiccup must not brick the
+artist loop — the in-memory daily caps still bound damage). AI budget policy is CFRO v2.8, pending
+owner approval.
+
+#### 13.5.5 CSP / security headers, and the localStorage-session XSS risk
+
+- **CSP / security headers: OWED.** There is **no** Content-Security-Policy, `X-Frame-Options`,
+  HSTS, or `helmet` anywhere in the server or `vercel.json` (grep confirms zero references). Define
+  a header set (CSP, HSTS, frame-ancestors for the embed, `Referrer-Policy`, `Permissions-Policy`)
+  before public launch.
+- **localStorage session (XSS) — OPEN.** The Supabase session (JWT) is stored in `localStorage`
+  (`persistSession:true`), which is readable by any injected script. Combined with the absent CSP,
+  a stored-XSS on any app surface could exfiltrate a live session. **Target mitigation:** a **BFF**
+  (backend-for-frontend) that keeps tokens in httpOnly cookies and proxies Supabase — plus CSP as
+  the first line. This is the recommended durable security upgrade; not built.
+
+---
+
+### 13.6 DB ops / environments / deploy / rollback
+
+#### 13.6.1 Environments
+
+| Env | Data plane | API | Notes |
+|---|---|---|---|
+| Local dev | Supabase (shared project) or DEMO fixtures | `node server/index.js` @ :8787 (`concurrently -k` with Vite) | `DEMO` mode short-circuits db.js to fixtures; `NO_API_DEPLOY` makes the client the processor |
+| Preview | isolated preview (one-time hook; previews OFF globally for quota) | Vercel serverless | Write-path URLs distributed only after G11+G12+G16 close (QA isolation) |
+| Production | Supabase `qexfndiyallwqhhzeerd` | Vercel serverless (`api/index.js`) | `app.lock.show` (app) + `lock.show` (site) |
+
+There is **one** Supabase project (no separate staging DB). Migration safety therefore leans on
+additive-only + idempotent files and the frozen-021 rule rather than a throwaway staging database.
+
+#### 13.6.2 Branching, deploy train, alias-promote
+
+- **Trunk-based:** `main` = production; short-lived `claude/<task>` work branches
+  (`BRANCHING-MODEL.md`). **Current train law (rel-2026.07.13):** ONE full release train —
+  canon-lock → candidate SHA → isolated preview → Q1–Q7 → owner Q8 → atomic merge → live smoke →
+  tag + rollback anchor. Small frequent trunk releases resume post-launch.
+- **Verify gate (`npm run verify`, Q1):** nav-contract test (34 journeys) + i18n language purity +
+  real build + demo build + `next build` + `scripts/test-security-denial.mjs`. A red gate never
+  ships (`RELEASE-PROCESS.md`).
+- **Deploy:** `app.lock.show` auto-builds from `main`; the marketing site is triggered by its
+  **deploy hook** (auto-deploy unreliable — documented workaround). Both `vercel.json` files carry
+  a smart `ignoreCommand` build-skip (diff-gated) and the SPA-fallback rewrites (§13.4.4).
+- **Alias-promote:** site releases are alias-promoted to the live domain (e.g. rel-site-2026.07.15-3
+  → SHA `9a18249` alias-promoted, rollback anchor `6f01e56` per `VERSIONS.md`).
+- **Per-track versioning:** app `rel-app-YYYY.MM.DD[-n]`, site `rel-site-YYYY.MM.DD[-n]`, embed
+  mirrors app, DS = Codex semver, DB = migration head N. Every release records the DS version it
+  implements.
+
+#### 13.6.3 Rollback anchors & backups
+
+- **SHA is the authoritative rollback anchor** (git tags are LOCAL-ONLY — the integration cannot
+  push tags, 403). Every deploy records its SHA (+ prior SHA) in `docs/DEPLOY-LOG.md` and
+  `docs/VERSIONS.md`; Vercel retains every past deployment, so rollback = re-point production to the
+  previous deployment or reset `main` to the previous SHA and redeploy.
+- **Rollback rehearsal** is itself a must-pass launch row (G21, post-404 lesson).
+- **Backups: OWED/OPEN.** Structural (destructive) migrations are gated on **Supabase Pro backups
+  ON** (owner, ~$25/mo) — backups are the prerequisite for any structural migration (021 fold,
+  workspace_type rename), NOT for additive ones like 032/035.
+
+#### 13.6.4 Migration runbook
+
+1. Author `NNN_name.sql` + `NNN_name.down.sql`; **diff against 001–035 first** — never recreate an
+   existing table (idempotent `if not exists` / `drop policy if exists` throughout).
+2. Additive + idempotent unless backups are ON. Firewall check: no score/percentile/rank/head-count
+   column; bands + method labels only.
+3. Apply to the single Supabase project (SQL editor) **before** the code that depends on it; verify.
+4. Keep 021 **frozen** until its lockstep code change (constants.js/db.js/orgs.js vocabulary) ships
+   in the same wave — otherwise every AI-pipeline claim insert fails `claims_visibility_check` and
+   the labeling loop silently stops writing.
+5. Record the new head in `VERSIONS.md`; update analytics CANON in lockstep if event names change
+   (file=DB=app).
+
+---
+
+### 13.7 Q8 — the production-readiness gate (definition)
+
+"Q8" is referenced across the spec as the pre-production gate but is under-defined. Reconstructing
+from `docs/releases/rel-2026.07.13-PLAN.md §4` and `docs/VERSIONS.md`:
+
+#### 13.7.1 What is actually documented (the Q1–Q8 lanes)
+
+QA runs in **two stages; the version is invalid until all pass.** **Stage 1** (Q1–Q7) runs on the
+**immutable candidate SHA on the isolated preview** — never against production. **Stage 2** is live
+smoke + **Q8 = Maria's owner acceptance walk** (sole assignee, no delegate).
+
+| # | Lane | Owner | Evidence |
+|---|---|---|---|
+| Q1 | Pre-deploy gate: `npm run verify` (nav 34 · i18n purity · build · demo) + `next build` | Claude | CI output in release doc |
+| Q2 | Live fingerprints: served JS/pages contain this release's markers; **embed hash matches app** | Claude | fingerprint list + hashes in DEPLOY-LOG |
+| Q3 | Real-browser flows: signup (email + Google), artist journey, booker link open, workspace switch, producer magic link | Cowork | screenshots + pass/fail table |
+| Q4 | Mobile pass: 360px screenshots (Radar, roster, Passport, recipient flow) | Claude (Playwright demo) + Cowork (real devices) | PNGs |
+| Q5 | **Firewall scan on live surfaces:** no score/%/rank/gauge; bands + binaries + method labels only | Claude | grep + visual check |
+| Q6 | **Terminology scan:** 0 forbidden terms; buyer never rendered as אמרגן | Claude | scan output |
+| Q7 | Version governance: VERSIONS + DEPLOY-LOG + roadmap updated; ledger row added | Claude | Cowork cross-audit |
+| **Q8** | **Owner approval walk** → ledger flips to "approved" (Stage 2 production acceptance) | **Maria ONLY** | her word, recorded |
+
+Q8-READY (the pre-condition for Maria's walk) = all lanes green on **one frozen SHA**: Cowork Q1–Q7
+EN/HE + Codex Q4 + GPT delta audit + CFRO final-RC check. Rollback rule: any Q1–Q6 failure on live →
+immediate redeploy of the previous SHA, fix on branch, re-run from Q1.
+
+#### 13.7.2 The Q8 owner walk — an 8-point production-readiness checklist (**PROPOSED**)
+
+The lanes above define *who runs what*, but the **content** of Maria's Q8 walk — the concrete things
+she personally confirms before saying the word — is not enumerated anywhere. The following 8-point
+walk is **PROPOSED**, consistent with the firewall, the launch DoDs (`LAUNCH-DOD-2026.07.13.md`),
+and the two-stage protocol. It is run by the owner on the **exact promoted SHA**, after Stage-1
+Q1–Q7 are green:
+
+1. **Firewall, seen with her own eyes.** Open a real published Passport as an anonymous buyer: no
+   score / percentile / rank / gauge / "%" anywhere; draw appears only as bands + binaries + method
+   labels; streaming is secondary. (Backs Q5 at the human layer.)
+2. **"Nothing publishes without you."** Confirm an auto-labeled, un-reviewed claim is **invisible**
+   on the public Passport until the artist approves it (`artist_approved` gate) — the single most
+   important product promise.
+3. **Two-view integrity.** The Artist (private) view shows gaps; the Buyer (public) view shows
+   verified strengths only. The same Passport, no private gap or `mirror-only`/working-only item
+   leaking into the buyer view.
+4. **Terminology & language.** Hebrew buyer copy never renders the buyer as אמרגן (buyer = מזמין
+   הופעות / booking manager); no forbidden score vocabulary; EN/HE parity on the P0 screens.
+5. **The core loop end-to-end, live.** Artist signup → add evidence → claim labeled/reviewed →
+   publish → buyer opens the link → sends an availability request → artist's bell rings. On real
+   devices at 360px (backs Q3/Q4). Includes a producer magic-link confirmation upgrading a claim to
+   `producer-confirmed`.
+6. **Multi-Act non-transfer.** A second Act starts **empty**; evidence from Act A never appears on
+   Act B's Passport; workspace/Act switch re-gates correctly and copies nothing (G3 boundary).
+7. **Deep-link durability & rollback readiness.** Hard-refresh a deep app route (e.g.
+   `/app/settings`) → the SPA boots, session survives, no 404 eject (the P1 fix). The prior SHA is
+   recorded as the rollback anchor and a rollback rehearsal has passed (G21).
+8. **Governance & legal complete.** VERSIONS + DEPLOY-LOG + roadmap updated (Q7); AI spend caps
+   active; legal/privacy/accessibility pages signed off (G20a–c); pilot QA data excluded from Gate
+   signal counts (G16). Only then does the ledger column flip to **approved**.
+
+**Gate outcome:** Q8 pass = the owner's recorded word. It is the boundary between "Q8-READY" (all
+lanes green on a frozen SHA) and "PRODUCTION-READY" (atomic merge + deploy + live smoke + rollback
+anchor). The product-stage Gate itself (business milestone) remains: **one booking manager reacts to
+a real Passport AND one pays** — measured, not required, pre-launch.
+
+---
+
+### 13.8 Open items & owed deliverables (consolidated)
+
+| Ref | Type | Item |
+|---|---|---|
+| 13.1.1 / 13.4.4 | OWED | CI embed-sync hash gate (or single-canonical-bundle redirect) to kill embed/standalone skew |
+| 13.2.1 | OPEN | 037+ authoring: fold 021 vocabulary + workspace_type rename — gated on Pro backups |
+| 13.2.2 | OPEN | Live consent-scope vocabulary is the pre-021 set until 021 (or equivalent) lands |
+| 13.4.2 | OWED | Org invite-token expiry (producer tokens have a 14-day TTL; invite tokens do not) |
+| 13.4.2 / 13.5.5 | OWED | Producer token hashing (036 is a DRAFT; tokens are plaintext today) |
+| 13.5.3 | OWED | Shared safe-select helper + CI server-payload firewall test (no RLS backstop on the service-role path) |
+| 13.5.4 | OWED | Real per-token AI cost accounting (current monthly ledger is an estimate); persistent rate/daily counters |
+| 13.5.5 | OWED / OPEN | CSP + security headers (none exist); BFF with httpOnly cookies to remove the localStorage-XSS session-theft class |
+| 13.6.3 | OWED | Supabase Pro backups ON (prerequisite for structural migrations) |
+| 13.7.2 | PROPOSED | The 8-point Q8 owner-walk content (lanes are defined; the walk's checklist is not) |
+
+*Ambiguities flagged for the owner:* (a) migrations 027/028 carried "requires owner approval before
+applying" headers — they are treated here as **applied** because 030 fixes a recursion bug that only
+027 introduces and 031 depends on 022's `artist_approved`, but the live head recorded in VERSIONS is
+stated as 035 without an explicit 027/028 "applied ✓" mark; confirm. (b) The `docs/canon/
+B4-40.10-Technical-Spec.md` and `docs/CODEX-FUNCTIONAL-CONTRACTS.md` files exist in the tree but this
+section was grounded directly in the migrations + source, which are the authoritative build; if
+those canon docs assert a different value, code wins per the firewall/lockstep rules and the delta
+should be reconciled.
+
+---
+
+## 14. Measurement, Payments & Notifications
+
+_Master-spec section 14. Grounded in the live repo (migrations 001–035, `src/lib/*`, `server/index.js`) as of 2026-07-15. Where the spec describes a target that is not yet built, it is marked **OWED** (must be built) or **OPEN** (a decision not yet locked). Everything not so marked is verified in code._
+
+### 14.0 Scope and firewall posture
+
+This section covers three tightly-coupled systems:
+
+1. **Measurement** — the first-party product-analytics canon (`analytics_event`), its GA4 counterpart, and the read models the owner/advisor use to read the pilot.
+2. **Payments** — the dormant, free-pilot payment model (Bit + manual reconciliation) and what turns on after the Gate.
+3. **Notifications** — the in-app bell (built) and the transactional-email catalog (mostly OWED).
+
+**Firewall (absolute, applies to every subsystem here).** No score, percentile, rank, "bookability %", prediction, or gauge is ever computed, stored, or emitted — not to the artist, not to the buyer, and **not to GA4**. Analytics may count **product events** (how many passports were published, how many reactions arrived); it may never store or transmit a **number _about a person_** (draw, followers, fee, a derived quality score). This is enforced in code: `src/lib/analytics.js` header — _"`properties` carries ids/roles/context only — NEVER a score, percentage, rank, or count-about-an-artist."_ Reaction-insight that returns to the artist is method-safe bounded text only (see §14.6), never a count/%/score. No third-party pixel sits on or near any evidence surface.
+
+---
+
+### 14.1 Analytics event canon
+
+The canon is a **single source of truth expressed three times**, kept byte-identical by hand (drift was found twice, hence the discipline):
+
+| Layer | Location | Role |
+|---|---|---|
+| App CANON | `src/lib/analytics.js` → `const CANON` | The generator. Only names in this Set persist to the DB. |
+| DB CHECK | `analytics_event.event_name` CHECK | The gate. A name absent from the CHECK fails the insert (harmlessly → localStorage only). |
+| Migration of record | `034_event_canon_unpublish.sql` | The applied CHECK; header: _"the analytics event CHECK now equals the app CANON exactly (29 events)."_ |
+
+#### 14.1.1 The CHECK reconciliation — 28 vs 29 (current true count = **29**)
+
+There are two constraint generations in the migration history, and they differ by exactly one event:
+
+| Migration | Events in CHECK | Note |
+|---|---|---|
+| `024_measurement_and_share.sql` | 14 | Original taxonomy. `analytics_event` table created here. |
+| `028_discovery_analytics_plans.sql` | **28** | Adds the 14 M1-funnel events. **Omits `passport_unpublished`.** |
+| `034_event_canon_unpublish.sql` | **29** | Widens the CHECK to add `passport_unpublished`, reconciling DB = app CANON. **This is the applied, current constraint.** |
+
+**The "28 vs 29" is a real, resolved drift, not an ambiguity.** Before 034, the app CANON already contained `passport_unpublished` (making 29 in code) while the DB CHECK allowed only 28 — so `passport_unpublished` inserts failed the CHECK and fell back to localStorage-only (documented inline at `analytics.js:29` and in `ADMIN-PANEL-SPEC.md §E.3`). Migration 034 closed the gap. **Current true count = 29** in all three layers.
+
+> **Verify-on-apply (OWED check):** 034 is written "AS APPLIED, reconciled by Cowork+owner 13 Jul." Confirm against the live DB that 034 is actually applied before relying on `passport_unpublished` persisting; until confirmed, current-unpublished state is read from `artists.published = false` and republish cadence from repeated `passport_published` (per `ADMIN-PANEL-SPEC.md §E.3`).
+
+#### 14.1.2 The full event canon (29 persisted events)
+
+Legend — **Sink**: `DB` = in CANON, persists to `analytics_event`; **Key?**: ✅ = a milestone that is also a GA4 key event / Gate proof (see §14.2, §14.4). Trigger boundary = the exact moment `logEvent()` fires.
+
+| # | Event name | Fires when (trigger boundary) | Subject / entity | Key? |
+|---|---|---|---|---|
+| 1 | `signup_started` | Signup form begins (OWED — see wiring note) | Person (anon) | |
+| 2 | `signup_completed` | Supabase `signUp()` returns success | Person | ✅ |
+| 3 | `login` | `signInWithPassword()` success | Person | ✅ |
+| 4 | `oauth_login` | OAuth (Google) callback resolves a session | Person | |
+| 5 | `consent_granted` | Consent banner "accept" | Person | |
+| 6 | `consent_withdrawn` | Consent withdrawn (settings) | Person | |
+| 7 | `onboarding_started` | Onboarding step 1 opens (OWED) | Artist | |
+| 8 | `onboarding_completed` | 2-screen onboarding finished | Artist | ✅ |
+| 9 | `radar_opened` | Artist opens the Radar | Artist | |
+| 10 | `evidence_added` | An evidence artifact is submitted | Artist evidence | |
+| 11 | `gig_evidence_refresh_completed` | AI claim pipeline finishes a run | Artist evidence | |
+| 12 | `claim_confirmed` | Artist approves an extracted claim | Claim | |
+| 13 | `claim_published` | A claim reaches `passport-ok` on a public Passport | Claim | |
+| 14 | `passport_published` | Artist publishes the Passport (`artists.published=true`) | Passport version | ✅ |
+| 15 | `passport_unpublished` | Artist unpublishes (staleness/republish cadence signal) | Passport version | |
+| 16 | `act_created` | A second/subsequent Act is created | Act | |
+| 17 | `act_switched` | Active Act is switched | Act | |
+| 18 | `workspace_switched` | Active workspace (org) is switched | Membership | |
+| 19 | `share_link_created` | Artist copies/creates a tagged share link | Share link | |
+| 20 | `share_link_opened` | A public Passport is reached via a `?s=1` link (once per visit) | Share link | |
+| 21 | `passport_view` | A published Passport is **opened** (NOT a reaction — P0-5) | Passport version | |
+| 22 | `availability_request_created` | Booking manager submits the availability-request form | Availability request | ✅ **Gate ½** |
+| 23 | `availability_request_responded` | Artist replies to a request | Availability request | |
+| 24 | `professional_reaction_submitted` | A qualified buyer submits a professional reaction | Professional reaction | ✅ **Gate signal** |
+| 25 | `producer_confirmation_sent` | Artist mints a producer-confirm magic link | Producer confirmation | |
+| 26 | `producer_confirmation_received` | Producer answers the confirm link | Producer confirmation | |
+| 27 | `payment_reference_created` | Artist marks "I've paid" → creates a Bit reference | Entitlement (intent) | ✅ **pay-intent** |
+| 28 | `entitlement_activated` | Operator activates a paid entitlement | Entitlement (verified) | ✅ **Gate ½ (pay)** |
+| 29 | `account_deleted` | Account deletion completes | Person | |
+
+**Dev-only events (NOT persisted — absent from CANON, localStorage-ring only):** `onboarding_step`, `claim_visibility_changed`, `request_whatsapp_click`, `settings_opened`, `delete_account_requested`, `language_changed` (`analytics.js:104–109`). These are dev-inspection breadcrumbs; adding any to the DB requires widening the CHECK (a new migration) **and** the CANON Set, in lockstep.
+
+**Wiring status (from `PILOT-MEASUREMENT-MAP.md`, 12 Jul).** Most events are live. **Known-unwired at pilot start:** `signup_started`, `onboarding_started`, `oauth_login`, `claim_published`, `share_link_created`, `share_link_opened` — none blocks the pilot; each is **OWED** in the next build push. Treat these as "instrumented-not-firing": a zero count means "not yet wired," not "did not happen" (see §14.2 declared≠measured).
+
+#### 14.1.3 Two sinks (both best-effort — analytics must NEVER break a user action)
+
+`logEvent(name, props)` writes to two sinks, each wrapped so a failure is swallowed:
+
+1. **localStorage ring buffer** (`gigproof_events`, max 100) — dev/offline inspection, always on.
+2. **`public.analytics_event`** — only if `!DEMO && supabase && CANON.has(name)`. Direct client insert (RLS `ae_any_insert` allows anon + authenticated INSERT) so it works on `app.lock.show` **and** the static `lock.show/app` embed with no server dependency. Operator-only SELECT (`ae_operator_read`); no UPDATE/DELETE path (append-only).
+
+`analytics_event` columns (024): `id, event_name, session_id, actor_user_id, actor_role, passport_version_id, act_id, properties (jsonb), created_at`. The client currently writes `event_name, actor_user_id, actor_role (props.role), properties`. **`session_id`, `passport_version_id`, `act_id` are schema-present but not populated by the current client writer** (`analytics.js:58–63`) — **OWED** if per-Passport / per-Act / anonymous-session funnels are needed.
+
+#### 14.1.4 GA4-vs-Supabase split (the governing rule)
+
+| | **Supabase `analytics_event`** | **GA4 (property 544738110 / `G-ZX907M2NY8`)** |
+|---|---|---|
+| Role | **Product truth** — the full 29-event funnel, the Gate, all owner/CFRO reads | **Bounded acquisition milestones only** (~5–6, see §14.2) |
+| Firewall scope | Internal counts allowed (operator surface); never a per-person score | Even stricter: only coarse milestone counts, **no PII, no per-person number, no score** |
+| Consent | First-party, append-only, RLS-gated | Consent Mode v2, gtag injected **only on grant** (`ConsentBanner.jsx`) |
+| Retention | Owned, indefinite (product record) | Google's default GA4 windows |
+| Read path | Bounded read models (`admin_business_overview` RPC, SECURITY DEFINER + operator check) — client never free-queries raw analytics | Google Analytics UI / GSC |
+
+**Rule:** the business is measured from Supabase; GA4 exists to attribute _acquisition_ (which channel produced signups) and nothing more. The two are never reconciled row-for-row — they answer different questions.
+
+---
+
+### 14.2 Measurement architecture
+
+#### 14.2.1 One GA4 property, segmented by `surface`
+
+There is **one** GA4 property (544738110), one measurement ID **`G-ZX907M2NY8`**, wired at page level on **both** surfaces — the marketing site (`website-next` `layout.tsx` default) and the app (`index.html`) — with Consent Mode v2 defaults-denied, gtag injected only after consent grant, `localStorage gigproof_consent`, 12-month re-ask (`CONSENT-BANNER-SPEC`, `SESSION-MEMORY`).
+
+Because it is **one stream for two surfaces**, every hit must be segmentable by a **`surface`** dimension so `lock.show` (marketing) and `app.lock.show` (product) never blur. The dimension set:
+
+| Custom dimension | Values | Purpose |
+|---|---|---|
+| `surface` | `site` \| `app` | Separate marketing from product (mandatory — one property, two surfaces) |
+| `route_name` | route path/name | Which screen (not a raw URL with ids) |
+| `actor_role` | `artist` \| `booker` \| `agency` \| `producer` \| `operator` \| `anon` | Funnel-by-role (never pooled into a person score) |
+| `auth_state` | `anon` \| `authed` | Pre- vs post-login |
+| `environment` | `production` \| `preview` | Exclude preview/QA traffic |
+
+> **Status: these five GA4 custom dimensions are OWED.** The current wiring is page-level GA4 with Consent Mode; there is **no event-level `gtag()` dual-emit in `src/`** (grep confirms none). Registering the custom dimensions in GA4 admin and emitting them is a build task.
+
+#### 14.2.2 Dual-emit of the bounded milestones
+
+A small, fixed set of milestones is emitted to **both** sinks — to Supabase (full fidelity) and, in coarse form, to GA4 (acquisition attribution). GA4 receives **only** these:
+
+| Milestone (GA4 key event) | Supabase canon event | Emit to GA4? |
+|---|---|---|
+| `sign_up` | `signup_completed` | ✅ |
+| `login` | `login` | ✅ |
+| `onboarding_complete` | `onboarding_completed` | ✅ |
+| `passport_publish` | `passport_published` | ✅ |
+| `availability_request` | `availability_request_created` | ✅ |
+| `purchase` | `entitlement_activated` | **Only when payments are live** (§14.5) — omitted during the free pilot |
+
+That is 5 during the pilot, 6 post-Gate. Each GA4 payload carries **only** `surface/route_name/actor_role/auth_state/environment` — never an id, name, email, or any per-person number. **Status: the dual-emit layer is OWED** (Supabase side of these events is largely live per §14.1.2; the GA4 mirror is not yet wired).
+
+#### 14.2.3 Search Console (GSC)
+
+Google Search Console is linked as a **domain property** with a submitted sitemap (14 URLs) — `CONNECTIONS-REGISTRY`. GSC covers organic acquisition on the marketing surface; it is not a product-analytics source and never touches evidence surfaces. Link GSC ↔ GA4 so query/landing-page data joins acquisition milestones.
+
+#### 14.2.4 "Declared ≠ measured" honesty
+
+Every metric surface must distinguish three states and never collapse them:
+
+- **Measured** — the event is wired and firing; the count is real.
+- **Declared-not-instrumented** — the event exists in canon but its writer is not yet wired (§14.1.2 unwired list, or P1 metrics like improvement-cycles/gig-debriefs). Render as **"not instrumented yet," never as `0`** (`ADMIN-PANEL-SPEC §E.6`).
+- **Excluded** — demo/seed data filtered out (§14.3).
+
+The read-model contract (`admin_business_overview(window_key, entity_filter)`, `ADMIN-PANEL-SPEC §E.7`) discloses on every response: generated-at / data-through timestamps, vocabulary version, the missing-instrumentation list, demo-exclusion status, and per-metric unit/denominator/source/limitation. Funnels are split **per entity** (artist / manager / buyer / production / confirmer / site) — no single mixed funnel, no cross-unit conversion rates (`§E.4`).
+
+---
+
+### 14.3 Demo / test-data exclusion
+
+Two distinct populations must be kept out of business metrics; they are excluded by **two different mechanisms**, and only the first is fully solved today.
+
+#### 14.3.1 DEMO-mode builds — fully excluded (verified)
+
+`export const DEMO = import.meta.env.VITE_DEMO === '1'` (`src/lib/demo.js`). The analytics writer short-circuits before any DB insert: `persist()` returns immediately if `DEMO` is true (`analytics.js:55`). **A demo build (`vite build --mode demo`) never writes a single `analytics_event` row.** Demo fixtures (PERLMAN et al., `demo@lock.test`) therefore cannot pollute metrics — they exist only in-memory. This is airtight.
+
+#### 14.3.2 Seed / `@gigproof.test` accounts — **NOT yet excluded (OWED)**
+
+The 5 seed personas (`artist@`, `booker@`, `producer@`, `agency@`, `operator@gigproof.test`, password `Gigproof!2026`, `scripts/seed.mjs`) are **real Supabase auth users on the live DB**. When they act, `DEMO` is false, so their events **do persist** to `analytics_event`. There is currently **no `is_demo` / `environment` column on `analytics_event`** (024/028/034 schema has none). Consequences:
+
+- The friends-cohort pilot (`PILOT-MEASUREMENT-MAP`) can rely on demo exclusion _only_ because the cohort uses real accounts, not the demo build — but seed-account noise is not filtered.
+- `ADMIN-PANEL-SPEC §E.8` explicitly flags this: _"verify which events actually carry … `is_demo`; absent key → metric marked **unavailable**, never silently estimated."_
+
+**OWED design (the admin "demo-excluded" badge).** To make the exclusion real and honest:
+
+1. Add an `is_demo boolean` (or `environment text`) to `analytics_event` (additive migration ≥ 036) — set true when the actor is a seed/`@gigproof.test`/operator-seed account, or derive it in the read model from `profiles`/email domain.
+2. The read model filters `is_demo = false` for business counts and **discloses the exclusion status** in its response envelope (`§E.7`).
+3. Every admin metric tile renders a consistent **"demo-excluded" badge** (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT §Admin`, `ADMIN-PANEL-SPEC`). If the flag is absent for an event, that metric shows **"unavailable,"** not a possibly-contaminated number.
+
+Until (1) ships, "demo-excluded" can only be asserted for demo-build data, not for seed accounts — state this limitation on any tile that claims exclusion.
+
+---
+
+### 14.4 The Gate measurement
+
+**The Gate (canon):** _1 booking manager reacts to a real Passport **AND** 1 pays._ Monetisation is **measured, not required**; no price/ICP is locked until the Gate is met (CLAUDE.md, `PILOT-MEASUREMENT-MAP`).
+
+#### 14.4.1 The exact events that prove each half
+
+The admin Gate tile renders **three columns** — reaction, pay-intent, verified-pay — and must never present intent as payment (`ADMIN-PANEL-SPEC §E.5`):
+
+| Gate half | Proving event(s) | Source of truth | What it means |
+|---|---|---|---|
+| **A booking manager reacts to a real Passport** | `professional_reaction_submitted` (the Gate signal) — with `availability_request_created` as the concrete buyer action | `analytics_event` + `professional_reaction` table (018) + `availability_requests` | A qualified buyer took a professional action on a **published, real** Passport. `passport_view` alone is explicitly **NOT** a reaction (P0-5, 024 header). |
+| **One pays** | **Intent:** `payment_reference_created` → **Verified:** `entitlement_activated` | `analytics_event` + `entitlements` table (007) | Only `entitlement_activated` (operator-verified) counts as **paid**. `payment_reference_created` is willingness-to-pay **intent**, shown in its own column, never merged into the paid count. |
+
+`availability_request_created` fires from `AvailabilityRequest.jsx:81` after a successful submit; `payment_reference_created` from `OfferPayment.jsx:52` after `createEntitlement`; `entitlement_activated` when the operator flips an entitlement to `active` (007 RLS: only `is_operator()` may UPDATE).
+
+#### 14.4.2 How a REAL reaction is distinguished from a demo/seed one
+
+Layered defenses, strongest first:
+
+1. **Published-artist gate (server + RLS).** `POST /api/availability-request` rejects any request unless `artists.published = true` (`server/index.js:609–613`); `passport_view_event` anon-insert RLS also requires a published artist (024). A reaction can only attach to a real, published Passport.
+2. **View ≠ reaction (P0-5).** The two are separate tables/events and must never be merged; a Gate half requires the reaction event, not a view.
+3. **Demo build emits nothing** (§14.3.1) — a demo reaction never reaches the DB.
+4. **Seed exclusion (OWED, §14.3.2).** A reaction originating from a seed/`@gigproof.test` actor is still real in the DB today; the `is_demo` flag + read-model filter is required before the Gate tile can claim "**this was a genuine outside buyer.**" Until then, the operator must manually confirm the reacting party is not a seed/team account.
+
+> **Gate honesty rule:** the Gate is declared met **only** when a `professional_reaction_submitted` / `availability_request_created` from a non-demo, non-seed buyer coincides with an `entitlement_activated` — both surviving §14.3 exclusion. Intent (`payment_reference_created`) never satisfies the pay half.
+
+---
+
+### 14.5 Payments
+
+#### 14.5.1 Free pilot — payments DORMANT (verified)
+
+Canon G17: **no payment CTA or screen at launch.** The flag:
+
+```
+export const PAYMENTS_ENABLED = import.meta.env?.VITE_PAYMENTS_ENABLED === '1'   // constants.js:30
+```
+
+`PAYMENTS_ENABLED` gates **both** the route and the CTAs — "not linked from nav" was explicitly rejected as an unsafe boundary (GPT A5 / Codex P0). In `App.jsx:175` the `/artist/offer` route renders `OfferPayment` **only** when the flag is on, otherwise `<Navigate to="/artist/home" replace />`. With the flag off (pilot default), the payment surface is unreachable, not merely unlinked.
+
+#### 14.5.2 The dormant model — Bit + manual reconciliation (built, gated off)
+
+When the flag is on, `OfferPayment.jsx` implements a fully manual, no-Stripe flow (migration 007 `entitlements`):
+
+| Step | Actor | Mechanism | Event / state |
+|---|---|---|---|
+| 1. See offer | Artist | `/artist/offer` (Founding Passport). Price = existing range copy, **not locked** | — |
+| 2. Pay | Artist | **Bit** to operator number `054-4555060` (shown in-app, not a secret), with a deterministic reference `GP-<first4 of artist id, uppercased>` added to the transfer note | — |
+| 3. "I've paid" | Artist | `markPaid()` → `createEntitlement(artistId, userId, "GP-XXXX · ₪<amt> · Bit")` | `entitlement.status = 'pending'` · **`payment_reference_created`** (pay-intent) |
+| 4. Reconcile | Operator | Matches the `GP-XXXX` reference in the Bit app; activates in `/admin` (007 RLS: operator-only UPDATE) | `entitlement.status = 'active'` · **`entitlement_activated`** (+ actor) |
+| 5. Confirmation | Artist | Screen reflects `pending` → `active`, shows the date the confirmation was received + calm "operator will activate you" note; the artist is **never stuck** | — |
+
+The reference code (`GP-` + 4 chars) is the manual join key between the artist's Bit note and the operator's reconciliation — there is no payment-provider webhook, by design.
+
+#### 14.5.3 Receipts / invoices / ledger — gaps (OWED)
+
+| Capability | Status |
+|---|---|
+| Automatic receipt to the payer | **OWED** — none. `amount_note` is a free-text string, not an invoice. |
+| Tax invoice (Israeli חשבונית) | **OWED / OPEN** — not modeled; commercial launch will require it (needs entity/ח.פ., postal address — still placeholder per `SESSION-MEMORY`). |
+| Payment ledger / reconciliation log | Partial — `entitlements` rows + operator `audit` (011) record activation + actor; there is no double-entry ledger or Bit-statement reconciliation view. **OWED** for post-Gate. |
+| Refund / cancellation flow | Partial — `entitlements.status` supports `cancelled` (007 CHECK) but no UI/flow. **OWED.** |
+| Price | **OPEN** — deliberately unlocked until the Gate (CLAUDE.md: "no price/ICP locked until then"). `OfferPayment` uses range copy. |
+
+#### 14.5.4 What turns on post-Gate
+
+After the Gate (1 reaction + 1 pay, §14.4), the owner may: flip `VITE_PAYMENTS_ENABLED=1` (surfacing `/artist/offer` and CTAs), lock a price, add the `purchase` GA4 milestone (§14.2.2), and prioritise the receipts/invoice/ledger OWED items. Plan gating already has a home: `organization.plan_flags jsonb` (028) — app reads, operator writes, **never rendered as a score/level to buyers** (028 comment). No provider (Stripe/etc.) is assumed; the Bit-manual model is the current committed path until a business case justifies otherwise.
+
+---
+
+### 14.6 Notifications and email
+
+Two channels: the **in-app bell** (built) and **transactional email** (mostly OWED). They are independent — the bell does not depend on email.
+
+#### 14.6.1 In-app bell — built (`src/lib/notifications.js`, migration 002 `notifications`)
+
+- Table `notifications(user_id, type, body, link, read, created_at)`; RLS `notif_self` → a session lists/marks-read **only its own** rows.
+- **Writing for another user** goes through the service-role server route, never the client. Two writers:
+  - `POST /api/notify` (`server/index.js:555`) — caller must **own the target artist** OR be `operator`; closed type enum `request_received | confirmation_received | system`.
+  - `POST /api/availability-request` (`:588`) — **public** (bookers have no login); creates the request **and** the artist's bell notification server-side, with a **server-authored body** (`en.notifications.newRequest(name)`) so anonymous free text can never be injected into someone's bell.
+- **Firewall:** `body` is bounded text from `T.notifications.*` templates (`i18n/en.js:648`: `newRequest`, `passportPublished`, `confirmationArrived`) — never a raw score/%/count.
+- **Offline-embed limitation (honest):** on the static `lock.show/app` embed with no server, an availability request still records via direct RLS insert, but **no cross-user bell can be written** (RLS is `user_id = auth.uid()`) — the artist sees the request in their inbox, without a bell ping (`AvailabilityRequest.jsx:73–79`).
+
+#### 14.6.2 Transactional email catalog (mostly OWED)
+
+**Auth emails today are sent by Supabase Auth (GoTrue) built-in templates, not by an app-side provider.** The app only sets the redirect target:
+
+| Email | Trigger | Delivery today | Redirect / token | Status |
+|---|---|---|---|---|
+| **Signup confirmation** | `supabase.auth.signUp()` (`AuthProvider.jsx:111`) | Supabase Auth built-in | `emailRedirectTo = origin + BASE_URL` (surface-aware: `/` app vs `/app/` embed) | Live via GoTrue; branding/FROM = **OWED** (Resend) |
+| **Magic-link — password reset** | `resetPasswordForEmail()` (`ForgotPassword.jsx:25`) | Supabase Auth built-in | `redirectTo = origin + BASE_URL + reset-password` → `/reset-password` route | Live via GoTrue |
+| **Magic-link — producer confirm** | `POST /api/request-confirmation` mints a token → artist sends the link **manually** (like `wa.me`) | **No email** — link is handed off by the artist | `/confirm/:token` (`ProducerConfirm.jsx`) | By design manual; optional auto-email = OWED |
+| **Org invite** | `inviteMember()` → `/invite/:token` (`AcceptInvite.jsx`) | **Not sent** — `resendInvite()` is a no-op stub: _"email provider is Phase-2"_ (`orgs.js:212`) | `/invite/:token` | **OWED** (email provider) |
+| **Availability-request notification to the artist (the Gate reaction)** | `POST /api/availability-request` (`server/index.js:619`) | **In-app bell only** — no email | link `/artist/requests` | **Email OWED — see below** |
+
+**The critical one — how the artist learns a buyer reacted.** This is the artist-facing half of the Gate signal, and today it is delivered **only as an in-app bell**. If the artist is not in the app, they do not learn a booking manager reacted until they next open it. For a pre-booking trust tool whose entire Gate hinges on a buyer reaction reaching the artist, an **email (and/or WhatsApp) notification on `request_received` is OWED and high-priority.** The server already has the trigger point (`:619`), the recipient (`artists.created_by`), and a server-authored bounded body — it needs an email transport. Firewall holds: the email body must stay method-safe bounded text, never a count/score about the buyer or the reaction.
+
+#### 14.6.3 Resend — planned, not active (OWED)
+
+**Resend is the chosen provider for transactional/auth email but is not wired** (`SESSION-MEMORY` P1-11; `COSTS.md`: _"Resend for auth emails (free tier)"_). Target FROM address `notifications@lock.show` (the `notifications` inbox already exists on the domain, alongside `hello/privacy/support/...`). Until Resend is wired: signup-confirm and password-reset ride Supabase Auth's default sender; org invites are **not emailed at all** (stub); the availability-request email does **not exist**.
+
+#### 14.6.4 Magic-link delivery / expiry rules
+
+| Link | Generator | Expiry / single-use |
+|---|---|---|
+| Signup confirm & password-reset (GoTrue) | Supabase Auth | Governed by Supabase Auth token TTL (GoTrue default; configurable in the Auth dashboard) — **OWED: document the exact TTL once confirmed in the dashboard.** |
+| Producer-confirm | `randomUUID()` token in `producer_confirmations` (`server/index.js:650`) | Token persists on the row; **no explicit expiry/rotation in schema — OWED** if time-boxing is required. Revoke clears the confirmed label. |
+| Org invite | token on the invited membership row | Persists until accepted/cancelled; `cancelInvite` removes the row. No TTL — **OWED** if invites should expire. |
+
+All redirect targets are **surface-aware** (`BASE_URL` → `/` standalone vs `/app/` embed) so a link never bounces to the wrong deployment (`AuthProvider.jsx:107`, `ForgotPassword.jsx:20`).
+
+---
+
+### 14.7 OWED / OPEN register (build-from checklist)
+
+| Ref | Item | Type | Priority |
+|---|---|---|---|
+| 14.1.1 | Confirm migration 034 is APPLIED on the live DB (unblocks `passport_unpublished` persistence) | OWED (verify) | High |
+| 14.1.2 | Wire remaining events: `signup_started`, `onboarding_started`, `oauth_login`, `claim_published`, `share_link_created/opened` | OWED | Med |
+| 14.1.3 | Populate `session_id` / `passport_version_id` / `act_id` on the client writer (per-Passport/Act/anon funnels) | OWED | Med |
+| 14.2.1 | Register + emit GA4 custom dimensions `surface/route_name/actor_role/auth_state/environment` | OWED | High |
+| 14.2.2 | Build the GA4 dual-emit layer for the 5 pilot milestones (`gtag()` on grant) | OWED | High |
+| 14.3.2 | Add `is_demo`/`environment` to `analytics_event` (or read-model derivation) + read-model exclusion + admin "demo-excluded" badge | OWED | High (Gate integrity) |
+| 14.4.2 | Seed/`@gigproof.test` exclusion must land before the Gate can be declared "genuine outside buyer" | OWED | High |
+| 14.5.3 | Receipts, tax invoice (חשבונית), payment ledger/reconciliation view, refund flow | OWED | Post-Gate |
+| 14.5.3 | Price / ICP | OPEN | Locked only after Gate |
+| 14.6.2 | **Availability-request email/WhatsApp to the artist on `request_received`** (Gate reaction reaches the artist off-app) | OWED | High |
+| 14.6.3 | Wire Resend (FROM `notifications@lock.show`); org-invite emails currently not sent (stub) | OWED | Med-High |
+| 14.6.4 | Document GoTrue token TTLs; decide producer-confirm & invite token expiry/rotation | OWED / OPEN | Med |
+| 14.5.4 | Add `purchase` GA4 milestone + flip `VITE_PAYMENTS_ENABLED` when payments go live | OPEN | Post-Gate |
+
+---
+
+_Sources of record: `src/lib/analytics.js`, `src/lib/constants.js`, `src/lib/demo.js`, `src/lib/notifications.js`, `src/features/artist/OfferPayment.jsx`, `src/features/passport/AvailabilityRequest.jsx`, `src/features/auth/{AuthProvider,ForgotPassword}.jsx`, `src/App.jsx`, `server/index.js`; migrations 002, 007, 018, 024, 028, 034; `docs/PILOT-MEASUREMENT-MAP.md`, `docs/ADMIN-PANEL-SPEC.md`, `docs/SESSION-MEMORY.md`, `docs/CONNECTIONS-REGISTRY.md`, `docs/COSTS.md`._
+
+---
+
+## 15. Legal, Consent & Localization
+
+**Master-spec section 15 · LOCK (lock.show) · Israeli market, bilingual EN + HE**
+**Status: consolidating draft — grounded in the repo as of 15 Jul 2026. Legal copy is DRAFT pending counsel (task #23); HE microcopy below is the piece the rest of the spec DEFERS and is delivered here.**
+
+> **Firewall (governs this whole section).** No score / percentile / rank / "bookability %" / prediction / gauge anywhere — including in legal, consent, or localized copy. Draw is shown ONLY as bands + binaries with method labels. Streaming is secondary context. Reaction insight back to the artist is method-safe text only, never a count/%/score. Every string in §15.4 was checked against this rule.
+
+---
+
+### 15.0 Scope & sources
+
+This section specifies three things and delivers a fourth:
+
+1. **Legal** — the documents LOCK must publish, their real content and status, and the data-handling model behind the consent-gated public-footprint scan.
+2. **Consent** — the consent UX and the record model that proves it.
+3. **Localization architecture** — the EN + HE, Israeli-first i18n system, its RTL rules, and the font ruling.
+4. **The delivered Hebrew string set** — canon HE microcopy for the key screens as EN→HE tables (the deferred piece).
+
+**Grounded in (repo paths, all under repo root):**
+
+| Area | Source of truth in repo |
+|---|---|
+| Legal copy (live pages) | `website-next/app/terms/terms-content.tsx` · `website-next/app/privacy/privacy-content.tsx` · `website-next/app/accessibility/accessibility-content.tsx` |
+| Legal drafts (source) | `docs/legal/TERMS-HE.md` · `docs/legal/PRIVACY-HE.md` · `docs/legal/ACCESSIBILITY-HE.md` · `docs/legal/CONSENT-BANNER-SPEC.md` |
+| Consent UX (app) | `src/features/auth/ConsentLegal.jsx` · `src/components/ConsentBanner.jsx` |
+| Consent record model | `supabase/migrations/001_initial_schema.sql` (table) · `021_vocabulary_and_consent.sql` (scope canon) · `src/lib/db.js` (`recordConsent*`, `hasConsent`, `getConsents`, `requestAccountDeletion`) |
+| i18n string tables | `src/lib/i18n/en.js` · `src/lib/i18n/he.js` (app) · `website-next/messages/en.json` · `he.json` (site) |
+| Localization status | `docs/LOCALIZATION-MATRIX.md` |
+| HE canon vocabulary | `docs/GLOSSARY.md` · `docs/ENTITY-GLOSSARY.md` |
+| Session/legal state | `docs/SESSION-MEMORY.md` |
+
+---
+
+### 15.1 LEGAL
+
+#### 15.1.1 Required documents & status
+
+LOCK publishes three legal documents, each as a bilingual page (HE source + faithful EN translation) rendered by the shared `LegalDocument` component from a typed `LegalContent` object.
+
+| Document | Route | Repo content file | Version / status | Blocking gap |
+|---|---|---|---|---|
+| **Terms of Use** (תנאי שימוש) | `/terms` | `website-next/app/terms/terms-content.tsx` | v0.1 · 8 Jul 2026 · **DRAFT for counsel** (task #23) | jurisdiction city `[עיר]`, refund/cancellation policy `[to be completed]`; HE source uses retired word "Mirror" (canon-flag) |
+| **Privacy Policy** (מדיניות פרטיות) | `/privacy` | `website-next/app/privacy/privacy-content.tsx` | v0.2-corrected · 8 Jul 2026 · **DRAFT for counsel** (task #23) | controller legal name, business/ח.פ. number, postal address, phone |
+| **Accessibility Statement** (הצהרת נגישות) | `/accessibility` | `website-next/app/accessibility/accessibility-content.tsx` | v0.1 · 8 Jul 2026 · **DRAFT** (task #27) | coordinator name + phone, last-updated date, real remediation-pass results; furthest from ready |
+
+Each page renders a persistent **draft notice** ("טיוטה בבדיקת יועץ משפטי — נוסח לא סופי" / "Draft under legal review — not final"). This banner MUST remain until counsel signs off; removing it is a counsel-gated action, not an engineering one.
+
+**Vocabulary firewall on legal copy.** The Terms HE source still contains the retired word **"Mirror" / המראה** for the artist's private view. Canon retired it (one Passport, shown in views; the private view is **האזור הפרטי / הרדאר**). The EN translation already substitutes "the artist's private view"; the **HE Terms source must be re-aligned before publication** (GLOSSARY.md row: Mirror/המראה is forbidden). Privacy v0.2 is already aligned (uses פספורט / האזור הפרטי הרדאר; "מראה" does not appear) — this is why it is v0.2-corrected.
+
+#### 15.1.2 Regulatory framework
+
+LOCK operates from Israel, serves Israeli demand-side buyers, and uses infrastructure that stores data outside Israel (Supabase, Vercel, Anthropic — all US-region). Two regimes therefore apply simultaneously:
+
+- **Israeli Privacy Protection Law 5741-1981, including Amendment 13** (בתוקף מ-14.8.2025 / in effect from 14 Aug 2025). The Privacy Policy explicitly names it and dates it. Amendment 13 obligations reflected in the drafts and code:
+  - A named **database controller** (בעל השליטה במאגר המידע) who determines purposes and means — §1 of the Privacy Policy (placeholder for the legal entity).
+  - Data-subject rights: access, correction, deletion/closure, withdrawal of optional consent, marketing opt-out (§13).
+  - Purpose limitation and a stated lawful basis per purpose (§6).
+  - Breach handling per the incident-response duty (§12).
+  - The **30-business-day deletion SLA** surfaced to the user in Settings (`settings.deleteWarning`: "כל הנתונים יימחקו תוך 30 ימי עסקים לפי תיקון 13").
+- **GDPR** — for any EU visitor (the marketing site is world-reachable). Reflected via:
+  - Consent Mode v2 with **default = denied** before any analytics fires (see §15.2.1).
+  - Cross-border transfer disclosure (§10 of the Privacy Policy) with "appropriate measures … agreements, undertakings or other safeguards."
+  - The same access/rectification/erasure/withdrawal rights, which GDPR and Amendment 13 largely align on.
+
+> **DPO / representative — OPEN.** Neither draft appoints a Data Protection Officer or an Israeli/EU representative. Whether Amendment 13 or GDPR Art. 27/37 requires one for LOCK's scale is a **counsel question** — listed OPEN in §15.1.6.
+
+#### 15.1.3 Data handling — the consent-gated public-footprint scan
+
+The product's distinctive data operation is the **deep public-footprint scan**: at onboarding the artist gives a name + one strong link, and LOCK reads the artist's *own public footprint* to surface candidate evidence, which the artist then confirms. This is the **TARGET architecture** (multi-source deep scan once at onboarding, ≈$1 target cost, cheap incremental re-scans) — **not yet built**, and per CLAUDE.md no business case may price or assume it until measured. §15 specifies its legal envelope so the build is compliant by construction.
+
+**Governing principles (already stated in Privacy §4, §7):**
+
+- The scan reads **the artist's own public footprint only**, in the context the artist provided ("from a public source you referred us to"). The Privacy Policy explicitly disclaims systematic third-party scraping: *"The Service is not intended to perform systematic scraping, continuous monitoring, or covert collection of information about artists."*
+- **Nothing is published automatically.** Scanned material becomes candidate claims shown to the artist for review, correction, or removal *before any publication* (Privacy §7; consent copy "nothing reaches your Passport — or even your private view — without your explicit confirmation").
+- **Server-side AI, minimized payload.** Evidence is routed through LOCK's servers to Anthropic, not browser→provider; only the minimum needed for labeling is sent; no excess third-party PII is forwarded (Privacy §7).
+
+**What is collected (Privacy §3.1–3.7):**
+
+| Category | Examples | Notes |
+|---|---|---|
+| Account & identity | name, stage name, email, phone (optional), hashed password/login id, role, org | required minimum to operate an account |
+| Professional info | genre, region, bio, media links, lineups, experience, **draw as bands**, community size **as a count only** | firewall: ranges/bands, never exact draw numbers on the public surface |
+| Evidence & documents | public links, screenshots, ticket/settlement exports, pro documents | user warrants authority; excess third-party PII must not be uploaded; LOCK may redact/reject |
+| Claims & processing outputs | extracted data points, source, **method label**, verification date, status, version history, **consent records** | method labels are canon (see §15.4) |
+| Availability requests | requester name, org, event type/date/location, capacity/budget **band**, message | demand-side inbound |
+| Technical/security | IP, device/OS/browser, login times, pages, security events, necessary cookies | |
+| Payment (pilot) | payer name, amount, date, reference, invoice details (via Bit / transfer) | no payment credentials stored |
+
+**Lawful basis by purpose (Privacy §6 + Amendment-13 mapping):**
+
+| Purpose | Basis |
+|---|---|
+| Open/operate account, deliver the service | performance of the service the user requested |
+| Build the private Radar; organize/label evidence | consent (`privacy-processing` scope) |
+| Read the artist's public footprint for candidate evidence | **explicit per-connection consent** (`thirdparty-evidence` scope) — see §15.2.2 |
+| Publish the public Passport | **separate explicit consent** (`public-publication` scope) |
+| Payments, invoices, accounting | legal/accounting obligation |
+| Security, abuse prevention, fault handling | legitimate operation of the service |
+| Marketing messages | **separate optional consent** (`marketing` scope), withdrawable anytime |
+
+#### 15.1.4 Retention & deletion
+
+Retention rule (Privacy §11): keep data only as long as needed for its purpose; then delete, anonymize, or restrict. Specifics already committed:
+
+- Account data — while the account is active.
+- Evidence/content — while the user keeps using it.
+- Published Passports + versions — retained to manage publication and document user actions.
+- Availability requests — for handling, documentation, service improvement.
+- **Consent, security, and audit records — retained longer, to demonstrate legal compliance** (this is why deletion is not a raw `DELETE` of everything — see below).
+- Payment/accounting documents — for legally required periods.
+- Backups — purged on backup/operational cycles.
+
+**Account deletion → data (the user-facing SLA):** Settings exposes "Request data deletion" with the copy *"This action is irreversible. All your data is deleted within 30 business days, as Israeli privacy law requires"* (`settings.deleteWarning` / `.deleteSubmitted`). The flow is a **request that is recorded, not an instant purge**: `requestAccountDeletion(userId)` writes a `consent_records` row with `scope='account-deletion'`, `status='withdrawn'` (see §15.2.3) — an auditable withdrawal event — and the operator console runs the actual cascade delete via `adminDeleteArtist(artistId, reason)`, which **writes an audit row before the cascade** (firewall/due-process) and requires a mandatory reason. Operator-side deletion is surfaced in the admin console (`admin.deleteData`, `admin.deleteAuditNote`: "Irreversible — this will be written to the audit log").
+
+> **Retention-period values — OWED.** The policy commits to "legally required periods" and "as long as necessary" but does **not** yet state concrete durations (e.g. accounting = 7 years per Israeli tax law; audit/consent logs = N years). Counsel must fill exact numbers; until then the drafts stay qualitative on purpose.
+
+#### 15.1.5 Consent record model (legal view)
+
+The `consent_records` table (defined in `001_initial_schema.sql`, scope canon set by `021_vocabulary_and_consent.sql`) is the legal proof-of-consent store. Full field/behavior detail is in §15.2.3; legally the salient points are:
+
+- Every consent, withdrawal, and deletion request is an **append-only timestamped row** tied to the auth user (`subject_id`), never an in-place flag flip — so the history is provable.
+- Row-Level Security (`consent_self`) means a subject sees only their own records; the operator console reads them for compliance oversight (`admin.consentsTitle` / `getAllConsents` limited to 200 latest).
+- The four Amendment-13 canonical scopes are enforced by a DB `CHECK` constraint (see §15.2.3) so an out-of-canon scope cannot be written.
+
+#### 15.1.6 OPEN placeholders — need owner + counsel
+
+These are the live `[…]` placeholders in the published legal pages, plus structural counsel questions. **All block final publication.** (Cross-referenced from `SESSION-MEMORY.md` "Legal/compliance set" and "Official channels".)
+
+| # | Placeholder / question | Where | Owner action |
+|---|---|---|---|
+| L-1 | **Controller legal name** (שם העוסק/החברה) | Privacy §1, §19 | owner provides registered entity name |
+| L-2 | **Business / ח.פ. number** | Privacy §1 | owner provides |
+| L-3 | **Postal address** (כתובת למשלוח דואר) | Privacy §1, §19 | owner provides |
+| L-4 | **Jurisdiction city** `[עיר]` for courts | Terms §9 | owner + counsel |
+| L-5 | **Refund / cancellation policy** `[to be completed]` | Terms §5 | owner + counsel (gated on pilot-price decision) |
+| L-6 | **Accessibility coordinator** — name + phone + last-updated date | Accessibility §"contact" | owner appoints; real remediation pass (task #27) |
+| L-7 | **DPO / representative** — required? | not present in drafts | counsel ruling (Amendment 13 / GDPR Art. 27/37) |
+| L-8 | **Concrete retention periods** | Privacy §11 | counsel provides durations |
+| L-9 | **Terms "Mirror"→private-view re-alignment** in HE source | Terms HE §1 | copy fix before counsel sign-off (canon) |
+
+Known contact inboxes already wired (do not need counsel, per SESSION-MEMORY "Official channels"): `privacy@lock.show`, `legal@lock.show`, `support@lock.show` (accessibility), `hello@lock.show`. Phone/WhatsApp `+972544555060`.
+
+---
+
+### 15.2 CONSENT
+
+LOCK uses **two independent consent surfaces** that must not be confused:
+
+1. a **cookie/analytics consent banner** (site + app), and
+2. **four in-product consent scopes** captured in context and stored in `consent_records`.
+
+Canon rule (from `ConsentLegal.jsx` and consent copy): **nothing is ever bundled.** Each scope is asked at the moment it becomes relevant, never as one upfront wall.
+
+#### 15.2.1 Cookie / analytics banner — Consent Mode v2
+
+**Ruling: Consent Mode v2, BASIC implementation, default = denied.** GA4 (`G-ZX907M2NY8`) does **not** load until the user grants; on grant, `analytics_storage` flips to `granted` and the GA4 script is injected (basic model — the tag is withheld entirely pre-consent, rather than the advanced model where cookieless pings are sent while denied). Rationale: the pilot has no ad pixels and no need for pre-consent modeling; basic is the privacy-maximizing and simplest-to-defend choice, and matches the shipped code.
+
+Grounded in `src/components/ConsentBanner.jsx` and `docs/legal/CONSENT-BANNER-SPEC.md`:
+
+- **Default denied on first paint** (spec): `ad_storage/analytics_storage/ad_user_data/ad_personalization = 'denied'`, `wait_for_update: 500`, before any GA call.
+- Bottom banner, keyboard-accessible (`role="dialog"`, `aria-label`), **direction-aware** (`dir = lang==='he' ? 'rtl' : 'ltr'`), links to `/privacy`.
+- **Accept** → `gtag('consent','update',{ analytics_storage:'granted' })` → inject GA4 → `config` with `anonymize_ip: true`. **Decline** → stays denied, GA4 never loads.
+- **Persistence & re-ask:** choice stored in `localStorage` key `gigproof_consent` as `{value, at}`; **re-ask after 12 months** (`MAX_AGE_MS = 365d`; spec allows 6–12) or on policy change. A "שנה העדפות / change preferences" control lives in the footer (site: `consent.preferences`).
+- **Acceptance criteria (spec):** zero GA network calls before consent; reject path sends zero analytics; RTL/Hebrew correct; WCAG AA; do not bundle marketing/ad pixels unless/until paid ads exist.
+
+> **🐛 SHIPPED DEFECT (app banner) — carry into the build board.** `LOCALIZATION-MATRIX.md` flagged that `en.js`/`he.js` historically declared the `consent:` key **twice**, so the banner strings were shadowed to `undefined`. The current tables were since split into a distinct **`cookieConsent`** block (`en.js`/`he.js` lines 2–9) which `ConsentBanner.jsx` must read — **but the component still references `T.cookieConsent`** (it does, line 52: `const t = T.cookieConsent`), so this is resolved *if and only if* the component points at `cookieConsent`, not `consent`. Verified resolved in the current `ConsentBanner.jsx`. Keep the two blocks distinct: `cookieConsent` = the analytics banner; `consent` = the in-product scope copy.
+
+#### 15.2.2 In-product consent — the four scopes, captured in context
+
+Per `ConsentLegal.jsx`, all four scopes write through the **same** `recordConsentScope` path but fire at four different moments:
+
+| Scope (canon value) | Fires where | Required? | Copy anchor (key) |
+|---|---|---|---|
+| `privacy-processing` | **inline checkbox on onboarding step 1** (never a full-screen wall before first value) — combines privacy-policy + data-processing | required to proceed | `consent.inlineTitle` / `consent.inlineAgree` |
+| `thirdparty-evidence` | **at connect** — when the artist adds/authorizes a public source in EvidenceCapture | required to scan that source | `consent.evidenceTitle` / `consent.evidence` / `consent.evidenceGateCta` |
+| `public-publication` | **at publish** — before the Passport goes live (onboarding step 7 / ArtistDashboard / ClaimReview) | required to publish only | `consent.publishTitle` / `consent.publishBody` / `consent.publishAgree` |
+| `marketing` | **Settings toggle**, optional | never required | `consent.marketingTitle` / `consent.marketing` |
+
+**Per-connection consent for the scan is the load-bearing promise.** Each scanned source is authorized individually, with the plain-language contract: *"we read only your public footprint; nothing is published until you confirm."* The evidence-capture copy already carries this (EN `evidence.authorityNote`: "By adding evidence you confirm you have authority over this source"; `evidence.communityPII`: never upload member lists — Israeli privacy law forbids it; we store the count only). The consent scope copy carries it too (`consent.evidence`: "collection and storage of evidence from public sources I authorize (links, ticket exports, documents)").
+
+**Firewall in consent copy.** Privacy §7's consent-relevant clause is reproduced verbatim as product law: automated processing — deterministic or AI — *"does not, and will never, constitute a booking decision, score, ranking, percentile, prediction, or guarantee of any kind."*
+
+#### 15.2.3 `consent_records` — table & fields
+
+Defined in `supabase/migrations/001_initial_schema.sql`; scope canon in `021_vocabulary_and_consent.sql`; accessed via `src/lib/db.js`.
+
+```
+consent_records
+  id                uuid  PK  default gen_random_uuid()
+  subject_id        uuid  NOT NULL  → auth.users(id) ON DELETE CASCADE
+  scope             text  NOT NULL   -- CHECK (see below)
+  version           text  NOT NULL   -- policy/consent version string
+  status            text  NOT NULL  default 'accepted'
+                          CHECK (status in ('accepted','declined','withdrawn'))
+  marketing_opt_in  boolean         default false
+  timestamp         timestamptz NOT NULL default now()
+RLS: consent_self — subject sees only their own rows
+```
+
+**Scope CHECK constraint (canon, migration 021):**
+`scope in ('privacy-processing','public-publication','thirdparty-evidence','marketing','account-deletion')`
+
+Migration 021 also **migrated legacy scope values** into canon and stashed originals in `scope_legacy`:
+`privacy-policy`,`data-processing` → `privacy-processing` · `public-publish` → `public-publication` · `evidence-storage` → `thirdparty-evidence`.
+
+**Access functions (`db.js`):**
+
+- `recordConsent(rec)` — raw insert (full row).
+- `recordConsentScope(userId, scope, extra)` — inserts `{subject_id, scope, version:'v3-inline-gates', status:'accepted', ...extra}`.
+- `hasConsent(userId, scope)` — true if an `accepted` row exists.
+- `getConsents(userId)` / `latestConsent(userId)` — history, newest first.
+- `requestAccountDeletion(userId)` — inserts `{scope:'account-deletion', version:'v1', status:'withdrawn'}`.
+
+> **⚠ CONSISTENCY GAP (engineering, not legal) — OWED.** `ConsentLegal.jsx`'s `recordPrivacyConsent` still calls `recordConsentScope(userId, 'privacy-policy')` and `'data-processing'` — the **pre-021 legacy scope names** — while the DB CHECK now only accepts the canonical `privacy-processing`. Under the current constraint these inserts would be rejected (or need the legacy-mapping path). The write path must be updated to emit `privacy-processing` (and the other three canon scopes). Flag for the build board; it does not change the legal design, only the string the code writes. Likewise `version` strings differ across call sites (`v3-inline-gates` vs `v1` vs settings-list `(v2)` labels) — pick one versioning scheme and record the policy version that was actually shown.
+
+#### 15.2.4 Withdrawal
+
+- **Optional consents** (marketing) — withdrawable anytime: unsubscribe link in every marketing message + Settings toggle (Privacy §15; `settings.consents`). Withdrawal never affects service/transactional messages.
+- **Publication** — the artist can unpublish the Passport at any time (`consent.publishBody`: "I can unpublish at any time"). Caveat disclosed (Privacy §8): copies already saved/forwarded by third parties cannot be recalled.
+- **Third-party evidence / representation grants** — artist-granted access is revocable (`representation.revoke`, `access.*` scopes; "a grant, never ownership").
+- **Account/data deletion** — the withdrawal-of-everything path in §15.1.4.
+
+---
+
+### 15.3 LOCALIZATION ARCHITECTURE
+
+#### 15.3.1 Principles (owner law — `LOCALIZATION-MATRIX.md`, `SESSION-MEMORY.md`)
+
+- **Launch language is HEBREW.** EN and HE must **each** be complete and professional on their own — HE is not "EN with Hebrew sprinkled in," and EN must not regress to service-Hebrew.
+- **Never mixed within a rendered screen.** A user in HE mode sees 100% Hebrew — no English leftovers. (Missing HE keys currently deep-merge to English, which produces exactly the forbidden mixed screen — see gaps below.)
+- **Built for language scaling.** i18n keys complete, **no hardcoded strings**, RTL/LTR both native, per-key fallback. EN + HE now (both first-class); Russian + German next.
+- **Firewall/method-label vocabulary is identical in both languages** per `GLOSSARY.md`.
+
+#### 15.3.2 The key system (no hardcoded strings)
+
+Two parallel i18n systems, by surface:
+
+| Surface | System | Shape | Consumer |
+|---|---|---|---|
+| **App** (`src/`) | `src/lib/i18n/en.js` + `he.js` exporting `T` (+ `BANDS`, `PROFILE_ITEM_TYPES`) | nested JS object; leaf values are strings **or functions** for interpolation (e.g. `stepOf: (s,total) => …`, `confirmBody: (email) => …`) | `LangContext` provides `{ T, lang }`; components read `T.section.key`; **`LangContext` deep-merges HE over EN** so a missing HE leaf silently falls back to EN |
+| **Site** (`website-next/`) | `messages/en.json` + `he.json` | flat-ish JSON namespaces (`nav, footer, home, passport, methodology, common, consent`) | `lib/locale-context.tsx`; `components/nav.tsx` `LocaleToggle` |
+| **Demo fixtures** | `src/lib/demo.js` | `L(en, he)` bilingual getter per datum | language purity by construction |
+
+Enforcement: `npm run lint:i18n` (`scripts/i18n-purity.mjs`) fails the build on hardcoded UI strings. Current baseline = **3 accepted violations**, all regex *matchers* in `src/lib/radarUniverse.js` (classifier patterns, not rendered copy) — marked `i18n-allow`, not real debt.
+
+#### 15.3.3 Current matrix status (measured — `LOCALIZATION-MATRIX.md` v1.1)
+
+| Surface | Coverage | Blocking gap for HE launch |
+|---|---|---|
+| **App `T`** | **~83.6%** (858 EN leaf keys · ~141 missing in HE, latest measure) | Core **Radar/universe** screens least translated (`radar.universe.*`, `radar.nextActions.*`, `radar.dimensions.*`), plus `evidence.*` intent-capture, `claims.*` review/approve, `onboarding.*` goal copy. Missing keys fall back to EN → mixed screens (forbidden). |
+| **Site `messages/*.json`** | **100% key parity**, but `he.json` self-flagged `SCAFFOLD ONLY — requires native Hebrew editor review`; ~13 EN-identical values (mostly intentional fixed method-label tags) | needs a **native-editor QA pass**; key-parity ≠ launch-ready |
+| **Site page prose** (`app/**/page.tsx`) | **~0% / ~18% of routes wired** | **STRUCTURAL / highest blocker:** 8 of 11 routes (`bookers, artists, producers, contact, how-it-works, pricing, faq, radar` — ~3,650 lines) are hardcoded English JSX with **no locale wiring at all** — nothing to translate until the prose is externalized into `messages/*.json`. The nav locale toggle is live on these pages but does nothing to their body. |
+| **Legal pages** | bilingual HE+EN present | draft, counsel-gated (§15.1) |
+| **Transactional email** | **un-auditable from repo** | almost certainly Supabase Auth default EN-only templates (dashboard-configured, not versioned); decide if HE transactional email is in the launch gate |
+
+**Bottom line:** the **app** is one focused translation pass (~141 keys, Radar-first) from coverage; the **marketing site body** needs a structural externalization step before it can be Hebrew at all. Both need a native-editor professional-HE review; key-coverage is necessary, not sufficient.
+
+#### 15.3.4 RTL rules
+
+**Direction is derived from language, not hardcoded.** The pattern in `ConsentBanner.jsx` is canonical: `const dir = lang === 'he' ? 'rtl' : 'ltr'` and `dir={dir}` on the root of any directionally-sensitive block; the document root should carry `dir="rtl"` in HE mode.
+
+Rules for the build:
+
+- **Layout mirroring.** In HE (RTL) the whole page mirrors: reading order right→left, nav rail and back-arrows flip side, drop-shadows/gutters mirror. Use **logical CSS properties** (`margin-inline-start/end`, `padding-inline-*`, `inset-inline-*`, `text-align: start/end`) and Tailwind logical utilities (`ms-*/me-*`, `ps-*/pe-*` — already used, e.g. `ConsentLegal.jsx` `ms-2`) rather than physical `left/right`, so a single tree serves both directions.
+- **What mirrors vs what does not.** *Mirror:* text blocks, form fields + labels, nav/menus, list bullets, progress/stepper order, chevrons/back-arrows, sheet slide-in side. *Do NOT mirror:* the LOCK wordmark/logo, brand-Latin names (artist/stage names stay Latin in both languages — see demo.js rule), media (photos/video), **method-label chips** (kept in English inside Hebrew text by design — see §15.4), and directional media controls that map to time.
+- **Numbers, dates, direction handling.** Digits are Western Arabic numerals in both languages (bands like `₪2,000–5,000`, `50–150`, `60–90 דק׳` are identical strings in `he.js`/`en.js`). Currency symbol `₪` precedes the number in both. **Bidi isolation:** any string that mixes RTL Hebrew with LTR runs (URLs, emails, `@handles`, phone `+972…`, Latin brand names, method-label chips) must be wrapped so the LTR run does not visually scramble the Hebrew — use `dir="auto"`/`<bdi>` or Unicode isolates on interpolated values. This is especially important for the function-valued keys that interpolate names/links (e.g. `askedToConfirm(name)`, `whatsappMsg(...)`, `reviewedShort(d)`).
+- **Icons/affordances.** Directional glyphs in strings must flip: HE uses `←`/`→` deliberately (e.g. `production.manageTeam: 'ניהול צוות ←'` vs EN `'Manage team →'`; `evidence.changeIntent: '← Different claim'`). Keep these as translated per-language strings, not shared, so the arrow points the right way.
+- **Consent banner & legal pages** already set `dir` per language and must keep doing so; the `LegalDocument` component renders each language block in its own direction.
+
+#### 15.3.5 Font ruling (the DS is silent on Hebrew — resolved here)
+
+**Finding.** Two different font stacks ship, and they disagree on Hebrew:
+
+- **App (`src/`, `tailwind.config.js` + `index.html`)** — **already Hebrew-capable.** Display = **Frank Ruhl Libre** (Hebrew + Latin serif) → Georgia → serif; Body/UI = **Heebo** (covers Hebrew) → system-ui → sans; Mono = IBM Plex Mono. All three loaded from Google Fonts. This stack renders Hebrew in the brand voice.
+- **Marketing site (`website-next/app/layout.tsx`)** — **NOT Hebrew-capable.** It loads **Manrope** (Latin-only) via `next/font/google` into a CSS variable **misleadingly named `--font-heebo`**, with `fontFamily: 'var(--font-heebo), Manrope, system-ui, sans-serif'`. There is **no actual Hebrew font in the site stack** — Hebrew would fall back to the OS system font, breaking brand consistency. The design-system reference (Manrope body / Georgia display) is silent on Hebrew because it was authored Latin-first.
+
+**Ruling (binding for the HE launch):**
+
+1. **The app stack is correct — keep it.** Frank Ruhl Libre (display) + Heebo (body) is the canonical **Hebrew-capable** pairing and matches the DS intent (editorial serif display + clean sans body) while covering Hebrew.
+2. **The marketing site must adopt the same Hebrew-capable stack before HE launch.** Load **Heebo** for body (replacing/co-loading with Manrope) and **Frank Ruhl Libre** for display, and **rename the `--font-heebo` variable to reflect what it actually loads** (today it loads Manrope, not Heebo — a latent trap). Do not ship Hebrew site copy on a Manrope-only stack.
+3. **The DS must state a Hebrew stack explicitly.** The design system is silent on Hebrew; this section fills the gap: **display = Frank Ruhl Libre; body/UI = Heebo; both must be loaded wherever Hebrew renders.** Georgia/Manrope remain the Latin fallbacks only. (Flag to Codex/DS owner as a DS gap; the app is already compliant, the site is not.)
+4. Weights already loaded (app): Frank Ruhl Libre 400/700/900, Heebo 400/500/600/700/800 — sufficient for HE headings and UI.
+
+---
+
+### 15.4 THE DELIVERED HEBREW STRING SET
+
+This is the piece the rest of the master spec **defers**; it is delivered here. Strings below are drawn from the shipped `src/lib/i18n/he.js` where they exist (marked **✓ shipped**), and provided as **strong drafts** where a key is missing or where a screen needs ratified microcopy (**◐ PENDING owner taste**). All were checked against the firewall and against the canon HE vocabulary.
+
+#### 15.4.0 Canon HE vocabulary (binding — `GLOSSARY.md`, `ENTITY-GLOSSARY.md`)
+
+| Concept | HE canon term | Forbidden / note |
+|---|---|---|
+| Public buyer view | **פספורט** / הפספורט הציבורי | never **דרכון** (any form) |
+| Artist private view | **האזור הפרטי (הרדאר)** | never **מראה / Mirror** (retired) |
+| The bookable project | **אקט** (de-facto live term) | formal taste-ratification still pending; never invent a third term (not מופע/פרויקט in UI) |
+| Source Confirmer | **מאשר-מקור** (only UI term) | "מפיק מאשר" = historical alias, docs only |
+| Professional buyer | **מזמין הופעות** / מנהל בוקינג / פרומוטר | booking language OK for pros |
+| Artist-side agent/office | **אמרגן / משרד אמרגנות** | **buyer is NEVER an אמרגן** (supply side only) |
+| Private event client | **לקוח פרטי / מזמין אירוע** | warm, non-industry register; never venue jargon |
+| Method labels | **kept in English inside HE text** by design | do NOT translate the chip tags |
+
+**Method-label chips (universal tags — rendered in EN inside HE; HE gloss for reference only):**
+
+| Chip (rendered) | HE gloss (`he.methodLabel`, for tooltips/reference) |
+|---|---|
+| PRODUCER-CONFIRMED | אושר ע"י מפיק |
+| Evidence-supported | נתמך בראיות |
+| Source-linked | מקושר למקור |
+| Self-declared / Artist-declared | הצהרת האמן |
+| Unable to verify | לא ניתן לאמת |
+| Stale | לא עודכן לאחרונה |
+
+#### 15.4.1 Onboarding (`onboarding.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| entryTitle | Your name on the flyer | השם שלך על הפלייר |
+| entryHint | Two quick questions and your Radar takes over… | שתי שאלות קצרות — ומכאן הרדאר לוקח פיקוד ואוסף איתך את כל השאר, בקצב שלך. |
+| entryLinkTitle | Your strongest link | הקישור החזק שלך |
+| entryLinkHint | One link that shows you best — Instagram or SoundCloud. The Radar scans it… | קישור אחד שמציג אותך הכי טוב — אינסטגרם או סאונדקלאוד. הרדאר סורק אותו ומתחיל לבנות את ההוכחות שלך. |
+| entryDeferNote | Photo, gigs, numbers… nothing else is asked now. | תמונה, הופעות, מספרים, שאר הקישורים — לא שואלים עכשיו. הרדאר יציף כל אחד מהם כצעד שקט הבא, כשזה רלוונטי. |
+| entryStartScan | Scan it — open my Radar | סרוק — ופתח את הרדאר שלי |
+| goalTitle | What are you trying to achieve? | מה אתה מנסה להשיג? |
+| goalWhy | Your goal decides which evidence we prioritize — it never changes what is true. | המטרה קובעת אילו ראיות נקדם קודם — היא לעולם לא משנה מה נכון. |
+| stepOf(s,total) | Step {s} of {total} | שלב {s} מתוך {total} |
+
+*Consent inline (fires here):* `consent.inlineTitle` = **פרטיות ושימוש בנתונים** ; `consent.inlineAgree` = *אני מסכים למדיניות הפרטיות של LOCK ולעיבוד המידע שסיפקתי לצורך בניית הפרופיל שלי.* ✓ shipped.
+
+#### 15.4.2 Radar inspector / universe (`radar.*`)
+
+Mixed status — the North-Star next-actions and act-switch are ✓ shipped in HE; several `universe.*` leaves fall back to EN and are delivered here as **◐ PENDING** drafts to close the mixed-language gap.
+
+| Key | EN | HE | Status |
+|---|---|---|---|
+| scanKickoff | Your Radar is live — strengths appear first; anything that needs you waits quietly below. | הרדאר שלך פועל — חוזקות מופיעות קודם; מה שצריך אותך מחכה בשקט למטה. | ✓ shipped |
+| genrePrimary | Central in your genre | מרכזי בז'אנר שלך | ✓ shipped |
+| nextActions.publish.title | Publish your Passport | פרסם את הפספורט שלך | ✓ shipped |
+| nextActions.share.title | Share your Passport with a buyer | שתף את הפספורט עם מזמין הופעות | ✓ shipped |
+| nextActions.replyRequest.title | A buyer is waiting — reply to the request | מזמין ממתין — ענה לבקשה | ✓ shipped |
+| nextActions.refreshProof.why | Your newest evidence is over 90 days old… | הראיה החדשה ביותר שלך בת יותר מ-90 יום. ראיה טרייה מהופעה אחרונה שומרת את הדרכון עדכני. | ✓ shipped *(note: uses "הדרכון" — should read "הפספורט"; **fix — דרכון is forbidden**)* |
+| dimensions.identity / liveDraw / trackRecord / community / readiness | Identity / Live draw / Track record / Community / Booking readiness | זהות / משיכה חיה / קורות מסלול / קהילה / מוכנות להזמנה | ◐ PENDING (EN-fallback today) |
+| universe.planets.identity…proof | Identity & Story / Music & Catalogue / Live Show / Audience & Community / Professional Kit / Career Proof | זהות וסיפור / מוזיקה וקטלוג / הופעה חיה / קהל וקהילה / ערכת מקצוען / הוכחת קריירה | ◐ PENDING (EN-fallback today) |
+| universe.whatItProves / whatItDoesNotProve | What it proves / What it does NOT prove | מה זה מוכיח / מה זה **לא** מוכיח | ◐ PENDING |
+| universe.nothingNeedsYou | Nothing needs you right now. | אין כרגע שום דבר שדורש אותך. | ✓ shipped |
+| actSwitch.newActHint | New act starts empty — evidence never transfers between acts | אקט חדש מתחיל ריק — ראיות לא עוברות בין אקטים | ✓ shipped |
+
+> **Fix flagged:** `radar.nextActions.refreshProof.why` (he.js) contains **הדרכון** — replace with **הפספורט** (canon; דרכון forbidden). This is the one live firewall/vocabulary slip found in the shipped HE.
+
+#### 15.4.3 Passport — buyer-facing (`passport.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| chip | Verified professional profile | פרופיל מקצועי מאומת |
+| firewall | LOCK presents verified professional facts by source. No promises or predictions. | LOCK מציג עובדות מקצועיות מאומתות לפי מקור. ללא הבטחות וללא ניבויים. |
+| drawCaption | FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT | מוצג כטווח — ללא ספירת ראשים מדויקת |
+| disclaimer | THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY. NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE… | הפספורט מציג חוזקות מאומתות בלבד. ללא ציון · ללא דירוג · ללא ניבוי · ללא הבטחה. כל טענה נושאת את שיטת האימות והתאריך שלה. משיכת קהל מוצגת כטווח — לעולם לא מספר מדויק. |
+| checkAvailability | Check availability | בדיקת זמינות |
+| communityCaption | CONTEXTUAL — NOT DRAW EVIDENCE | הקשר בלבד — לא ראיית משיכה |
+| readinessCaption | BINARIES ONLY — READY OR NOT SHOWN | בינארי בלבד — מוכן, או לא מוצג |
+| reviewedShort(d) | REVIEWED {d} | נבדק {d} |
+
+#### 15.4.4 Requests / availability (`request.*`, `agency.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| request.title(name) | Availability check — {name} | בדיקת זמינות — {name} |
+| request.subtitle | Fill in the details and the artist will get back to you. No commitment. | ממלאים פרטים, והאמן יחזור אליך. בלי התחייבות. |
+| request.capacity | Expected audience (range) | קהל צפוי (טווח) |
+| request.budget | Budget (range) | תקציב (טווח) |
+| request.noCommitment | No commitment — this only asks the artist about the date. | ללא התחייבות — זו רק שאלה לאמן לגבי התאריך. |
+| request.confirmBody(name) | {name} will get back to you soon. Thank you. | {name} יחזור אליך בקרוב. תודה. |
+| agency.requestsEmptyHint | No requests yet. Share a published Passport link — availability requests land here. | אין בקשות עדיין. שתף קישור לפספורט מפורסם — בקשות זמינות נוחתות כאן. |
+
+#### 15.4.5 Source-Confirmer (`producer.*`) — ✓ shipped (accountless one-claim flow)
+
+Canon: this person is a **מאשר-מקור**; the `producer.*` namespace is the shipped code home for the one-tap confirmation ceremony. The confirmation is about ONE statement and never becomes a score.
+
+| Key | EN | HE |
+|---|---|---|
+| oneStatementEyebrow | One-statement confirmation | אישור של הצהרה אחת |
+| askedToConfirm(name) | {name} asked you to confirm one statement. | {name} מבקש ממך לאשר הצהרה אחת. |
+| noAccountNote | No account needed. Your reply applies to this statement only. | בלי חשבון ובלי הרשמה. התשובה שלך חלה על ההצהרה הזאת בלבד. |
+| confirmYes | Yes — this is accurate | כן — זה מדויק |
+| confirmPartial | Partly right — needs a fix | נכון חלקית — צריך תיקון |
+| confirmNo | No — this isn't accurate | לא — זה לא מדויק |
+| confirmWrongPerson | I'm not the right person for this | אני לא האדם המתאים לזה |
+| footnote | This confirmation refers to the specific statement above only — it is not a general endorsement and never becomes a score. | האישור הזה מתייחס אך ורק להצהרה הספציפית שלמעלה — הוא אינו המלצה כללית ולעולם אינו הופך לציון. השם שלך מוצג כפי שתבחר. |
+
+> **◐ PENDING (terminology):** the UI-visible eyebrow/labels for this flow should surface **מאשר-מקור** where the role is named to the artist (e.g. request-to-confirm screens), even though the code namespace is `producer`. Current strings say "מפיק"; owner-ratify the swap to **מאשר-מקור** in artist-facing copy (`producer.requestTitle` → *בקש ממאשר-מקור לאשר* as a draft).
+
+#### 15.4.6 Buyer / discover (`booker.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| booker.eyebrow | Booking manager | מזמין הופעות |
+| booker.whatIsTitle | What is a LOCK passport? | מה זה פספורט LOCK? |
+| booker.whatIsBody | A standardized evidence page an artist shares before you book them. Every claim carries its verification method and review date… never a score. | עמוד ראיות אחיד שאמן משתף איתך לפני שאתה סוגר אותו. כל טענה נושאת את שיטת האימות ותאריך הבדיקה שלה, ומשיכת קהל מוצגת כטווח — לעולם לא מספר מדויק, לעולם לא ציון. |
+| booker.whatIsPoints[1] | Method-labeled claims — you see how each fact was verified | טענות עם תווית שיטה — רואים בדיוק איך כל עובדה אומתה |
+| booker.whatIsPoints[2] | Draw as bands and binaries — no rankings, no predictions | משיכה כטווחים ובינאריים — בלי דירוגים, בלי ניבויים |
+
+> **◐ PENDING (private-client register):** for the **private buyer** (wedding couple / private event — `לקוח פרטי`), the demand-side canon requires a **warmer, non-industry** variant of buyer copy — not "מזמין הופעות" venue jargon. No such register exists in `he.js` yet. Draft opener for owner taste: *"מזמינים אמן להופעה?"* / body avoiding booking jargon (style, fit, trust, availability). This is a **new string set OWED** once the private-buyer flow is built.
+
+#### 15.4.7 Settings — deletion & consent (`settings.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| deleteWarning | This action is irreversible. All your data is deleted within 30 business days, as Israeli privacy law requires. | פעולה זו בלתי הפיכה. כל הנתונים יימחקו תוך 30 ימי עסקים לפי תיקון 13. |
+| deleteSubmitted | Your data deletion request has been received. We will send a confirmation email and delete all data within 30 business days. | בקשת מחיקת הנתונים שלך התקבלה. אנו נשלח אישור לאימייל ונמחק את כל הנתונים תוך 30 ימי עסקים. |
+| consentsContact | For full management contact: privacy@lock.show (DRAFT) | לניהול מלא צור קשר: privacy@lock.show (DRAFT) |
+
+#### 15.4.8 Cookie banner (`cookieConsent.*`) — ✓ shipped
+
+| Key | EN | HE |
+|---|---|---|
+| ariaLabel | Cookie consent | הסכמה לקובצי Cookie |
+| message | We use analytics cookies to understand how the product is used. Essential cookies always work; measurement runs only with your consent. | אנחנו משתמשים בקובצי Cookie למדידה כדי להבין איך המוצר משמש אתכם. קובצי Cookie חיוניים פועלים תמיד; מדידה פועלת רק בהסכמתכם. |
+| accept / decline | Accept / Decline | אישור / דחייה |
+| privacyLink | Privacy Policy | מדיניות פרטיות |
+
+#### 15.4.9 HE strings needing owner ratification (summary)
+
+| # | Item | Draft / issue |
+|---|---|---|
+| H-1 | **`radar…refreshProof.why`** uses **הדרכון** | change to **הפספורט** (canon; firewall/vocabulary fix) — engineering fix, not taste |
+| H-2 | **Radar `universe.*` / `dimensions.*` HE** | ~missing leaves fall back to EN (mixed screen); drafts in §15.4.2 need native-editor + owner sign-off |
+| H-3 | **Source-Confirmer artist-facing labels** | swap visible "מפיק" → **מאשר-מקור** in artist copy; §15.4.5 draft — owner taste |
+| H-4 | **Private-buyer (`לקוח פרטי`) register** | new warm, non-jargon string set OWED once the flow exists; §15.4.6 draft opener |
+| H-5 | **`אקט` formal ratification** | de-facto live; owner taste-ratification pending (non-blocking) |
+| H-6 | **Terms HE "Mirror"→private-view** | align HE legal source to canon before publication (L-9) |
+| H-7 | **Site `he.json` scaffold** | native-editor QA pass; ~13 EN-identical values confirmed intentional or fixed |
+
+---
+
+### 15.5 Buildable-from checklist (what §15 hands the implementer)
+
+- [ ] Legal: fill L-1…L-9 (owner + counsel); keep draft banners until sign-off; re-align Terms HE "Mirror".
+- [ ] Consent banner: Consent Mode v2 **basic, default denied**; verify zero GA calls pre-consent; keep `cookieConsent` block distinct from `consent`.
+- [ ] Consent scopes: fire the four scopes in-context (never bundled); **fix write path to emit canon scope `privacy-processing`** (not legacy `privacy-policy`/`data-processing`); unify `version` scheme.
+- [ ] `consent_records`: enforce scope CHECK (canon 5 values); append-only; RLS `consent_self`; deletion writes audit row before cascade.
+- [ ] Localization: translate ~141 app keys (Radar-first) to professional HE; externalize 8 site routes' prose into `messages/*.json` before any site HE; native-editor QA on `he.json`.
+- [ ] RTL: `dir` from language everywhere; logical CSS props; bidi-isolate interpolated LTR runs; keep method-label chips EN.
+- [ ] **Fonts: adopt Heebo (body) + Frank Ruhl Libre (display) on the marketing site; rename the mislabeled `--font-heebo` (loads Manrope); add a Hebrew stack to the DS.**
+- [ ] Deliver §15.4 HE strings; resolve H-1…H-7 with owner.
+
+---
+
+*End of §15. Firewall re-verified across all copy in this section: no score / % / rank / prediction / gauge; draw only as bands + binaries with method labels; method-label chips kept in English by design.*
+
+---
+
+## 16. Taxonomy & Business
+
+_Section 16 of the LOCK Master Product Specification. Standalone, grounded in the repo._
+_Author lens: product strategy + data-taxonomy design. Status date: 15 Jul 2026._
+
+> **Reading rules inherited from the master spec (§0.2):** the firewall (CLAUDE.md) is absolute
+> and overrides everything; the glossary (§4 / `docs/GLOSSARY.md`) is binding; code identifiers are
+> frozen (renames are governed migrations); **BUILT is never presented as TARGET**; unresolved items
+> are marked **OPEN** (owner ruling) or **OWED** (a deliverable another party must supply).
+>
+> **Firewall reminder for this whole section:** nothing here may become a score, percentile, rank,
+> "bookability %", prediction, or gauge. Genre weightings are INTERNAL prioritization only
+> (`src/lib/genreWeights.js` header: "never rendered as a number, score, rank, percentage, genre
+> leaderboard, public badge, or buyer-facing weakness"). Draw is shown only as bands + binaries with
+> method labels. Streaming is secondary context.
+
+---
+
+### 0. Why this section exists
+
+Today **genre and format are free text.** Verified in code and DB:
+- `src/lib/genreWeights.js` resolves a family from `act.format` plus a *temporary* text heuristic
+  (`FESTIVAL_HINT = /festival|psytrance|trance|rave/i`), explicitly accepted "until a controlled
+  `scene_family` field ships with migration 034."
+- `src/lib/radarUniverse.js` splits `artist.genre` on `/[\/,·]+/` — i.e. it parses a free-text string.
+- `docs/TAXONOMY-REGISTRY-AUDIT.md` (8 Jul) confirmed: **"app genre tags are free text"**, the DB has
+  **no `field_id`**, `claims.claim_type` is free text, and the real taxonomy (6 families · 55 subtypes ·
+  32 DJ specializations · 42 instruments · 121 legacy labels) lives **only in a Google Sheet**, with
+  Registry B empty. It flagged **migration 029 (bilingual reference tables)** as the fix, later
+  re-scoped alongside the `scene_family` field at **migration 034**.
+
+**This section is the reference registry the product needs** — the bounded, bilingual tables a
+migration would create so that genre, format, venue/region, method/status, and source all stop being
+free text and start being governed enums with EN + HE labels. Part A is the taxonomy. Part B captures
+the documented business model and clearly flags what still needs the owner.
+
+**Migration note:** the migration head is already past 029 (VERSIONS.md: applied 032/033/034/035; 021
+FROZEN). The historical "029" label from the taxonomy audit is superseded — **these reference tables
+should be authored as a NEW migration (036+), diffed against existing tables first (CLAUDE.md rule),
+never recreating existing tables.** Wherever this section says "migration 029" it means "the bilingual
+reference-table migration, now 036+."
+
+---
+
+### PART A — TAXONOMY
+
+Each taxonomy below is presented as the reference table a migration would create: `id` (stable code /
+enum value) · `EN` (locked English label) · `HE` (Hebrew label) · `notes`. Codes are `lower-kebab`
+and are the frozen identifiers; labels are display-only and localize.
+
+> **HE labels are OPEN for owner/Codex taste-ratification.** Per the standing HE-ruling rule
+> (`docs/GLOSSARY.md`, SESSION-MEMORY), Maria owns the canonical Hebrew column and terms are never
+> invented. The HE labels in the genre and venue tables below are *proposed seeds* — professional
+> defaults for the owner to confirm or correct, not canon until she signs them.
+
+---
+
+### 16.A.1 Genre / scene taxonomy
+
+Two layers, deliberately separated (the taxonomy audit's G4/D4 finding: don't collapse a rich scene
+list into the coarse family used for planet weighting):
+
+- **Layer 1 — Scene (`genre_scene`):** the music-scene the artist actually names (melodic techno,
+  afro house, psytrance…). This is the free-text field today; the table below is what closes the gap.
+- **Layer 2 — Family (`genre_family`):** the 8 bounded families in `genreWeights.js:GENRE_FAMILIES`
+  that drive Radar planet emphasis. Every scene maps to exactly one family. Family is *also* derivable
+  format-first (see §16.A.2), so scene→family is an override/refinement, not the only path.
+
+#### 16.A.1.a — `genre_family` reference table (drives planet weighting — from `genreWeights.js`)
+
+The six planets are: **identity · music · live · audience · prokit · proof** (`radarUniverse.js:PLANETS`).
+"Primary" planets are where the family's evidence carries the most booking weight; they order
+next-action guidance and planet emphasis **only** — never a public number.
+
+| id (`genre_family`) | EN | HE (proposed) | Primary planets | Secondary planets | Notes |
+|---|---|---|---|---|---|
+| `dj-club` | Club DJ | תקליטן מועדונים | live · audience · prokit | proof · identity | Default IL DJ family; from `act.format='dj-set'` w/o festival hint |
+| `dj-festival` | Festival DJ | תקליטן פסטיבלים | music · live · proof | audience · identity | `dj-set` + festival/psytrance/trance/rave text hint |
+| `open-format` | Open-format / events DJ | תקליטן אופן-פורמט | prokit · live · proof | audience · identity | `act.format='open-format'` |
+| `live-band` | Live band | הרכב חי / להקה | live · prokit · proof | audience · identity | `act.format='band'` or `'duo'` |
+| `original-artist` | Original artist / vocalist | אמן מקורי / זמר-ית | music · identity · live | proof · audience | `act.format='vocalist'` |
+| `live-electronic` | Live electronic act | סט אלקטרוני חי | music · live · identity | prokit · proof | `act.format='live-set'` |
+| `comedian-host` | Comedian / host / MC | סטנדאפיסט / מנחה | live · identity · prokit | proof · audience | Not yet reachable from a `format` value — see gap note |
+| `corporate-ceremony` | Corporate / ceremony act | אמן אירועים / טקסים | prokit · proof · live | identity · music | Not yet reachable from a `format` value — see gap note |
+
+> **Firewall:** the "primary/secondary" columns are the internal emphasis order
+> (`planetEmphasisOrder`, `isPrimaryPlanet`). They render as *guidance wording* only —
+> i18n key `radar.genreFocus` ("A useful place to focus in your genre: …") and `genrePrimary`
+> ("Central in your genre"). Never a weight, count, or leaderboard.
+>
+> **G2 guard (built):** when an act declares **no** genre/format signal, `hasGenreSignal` returns
+> false and **no** planet is emphasized — every planet renders equal. A missing genre must never
+> produce a guessed emphasis. The reference table must preserve this: a scene row is applied only
+> when the artist actually selected it.
+
+#### 16.A.1.b — `genre_scene` reference table (the scene registry — NEW, closes the free-text gap)
+
+Seed set below covers the electronic + IL demand the product serves today (the demo persona DJ PERLMAN
+is multi-genre: psytrance Act + techno Act). It is **extensible** — the migration should allow adding
+scenes without code changes. This is a *starter registry*, not the full 55-subtype sheet; the full
+family-by-family fill (F1 first) is the OWED task from the taxonomy audit.
+
+| id (`genre_scene`) | EN | HE (proposed) | → `genre_family` | Notes |
+|---|---|---|---|---|
+| `melodic-techno` | Melodic techno | מלודי טכנו | `dj-club` | |
+| `techno` | Techno | טכנו | `dj-club` | |
+| `progressive-house` | Progressive house | פרוגרסיב האוס | `dj-club` | |
+| `afro-house` | Afro house | אפרו האוס | `dj-club` | |
+| `house` | House | האוס | `dj-club` | |
+| `deep-house` | Deep house | דיפ האוס | `dj-club` | |
+| `tech-house` | Tech house | טק האוס | `dj-club` | |
+| `minimal` | Minimal / deep tech | מינימל | `dj-club` | |
+| `psytrance` | Psytrance | פסייטראנס | `dj-festival` | Festival family via hint |
+| `progressive-psy` | Progressive psy | פרוגרסיב פסיי | `dj-festival` | |
+| `trance` | Trance | טראנס | `dj-festival` | |
+| `hard-techno` | Hard techno / rave | הארד טכנו | `dj-festival` | Rave hint |
+| `open-format-events` | Open-format events | אופן פורמט אירועים | `open-format` | Weddings/corporate DJ sets |
+| `mainstream-pop` | Mainstream / pop set | מיינסטרים / פופ | `open-format` | |
+| `hip-hop` | Hip-hop / R&B | היפ-הופ | `open-format` | |
+| `live-band-cover` | Cover / party band | הרכב אירועים | `live-band` | |
+| `live-band-original` | Original band | להקה מקורית | `live-band` | |
+| `singer-songwriter` | Singer-songwriter | זמר-ית / יוצר-ת | `original-artist` | |
+| `vocalist-feature` | Vocalist / featured singer | זמר-ית אורח-ת | `original-artist` | |
+| `live-electronic-act` | Live electronic act | לייב אלקטרוני | `live-electronic` | Hardware/DAW live set |
+| `comedy-standup` | Stand-up / comedy | סטנדאפ | `comedian-host` | Needs a `format` path — see gap |
+| `mc-host` | MC / event host | מנחה אירועים | `comedian-host` | |
+| `ceremony-act` | Ceremony / corporate act | אמן טקסים / אירועים | `corporate-ceremony` | |
+
+> **Proposed columns for `genre_scene`:** `id` (PK, kebab code) · `en_label` · `he_label` ·
+> `family_id` (FK → `genre_family.id`) · `sort_order` · `active` (bool). The Radar reads
+> `scene → family → primary planets`; the free-text `artist.genre` / `act.genre` migrates to a
+> nullable FK, with the old string retained during transition.
+
+**Gap flagged:** two families (`comedian-host`, `corporate-ceremony`) exist in `GENRE_FAMILIES` but
+have **no** `act.format` value that resolves to them in `familyFor()` — they are only reachable once a
+scene→family override or the planned `scene_family` field (migration 034) is wired. Until then a
+comedian/ceremony act falls to the IL default (`dj-club`). This is an existing product gap, documented,
+not introduced here.
+
+---
+
+### 16.A.2 Act-type / performance-format taxonomy
+
+The bounded `act.format` enum — the CHECK constraint referenced in `genreWeights.js` and the switch in
+`familyFor()`. This is **format-LED and deterministic at the first level** (the design principle: format
+decides family; genre text only refines the DJ split).
+
+| id (`act.format`) | EN | HE (proposed) | → default `genre_family` | Notes |
+|---|---|---|---|---|
+| `dj-set` | DJ set | סט תקליטן | `dj-club` (→ `dj-festival` on festival/psy text) | The one family split refined by genre text |
+| `live-set` | Live electronic set | סט חי אלקטרוני | `live-electronic` | Hardware/live performance, not a mix |
+| `band` | Band | הרכב / להקה | `live-band` | Full band |
+| `duo` | Duo | דואו | `live-band` | Treated as live-band |
+| `open-format` | Open-format DJ | תקליטן אופן-פורמט | `open-format` | Events/weddings/corporate |
+| `vocalist` | Vocalist | זמר-ית | `original-artist` | Singer / featured vocalist |
+| `other` | Other | אחר | IL default (`dj-club`) | Catch-all; no guessed emphasis under G2 if no genre text |
+
+> **Entity note (§3 / ENTITY-GLOSSARY):** `format` is a property of the **Act**, not the Person. One
+> artist may hold several Acts, each with its own format, genre, evidence, and Passport
+> (`passport_version.act_id` binds to an Act). Evidence is per-Act and non-transferable.
+>
+> **Proposed reference table `act_format`:** `id` · `en_label` · `he_label` · `default_family_id` ·
+> `sort_order` · `active`. Replaces the inline CHECK with an FK, keeping the enum values frozen.
+
+---
+
+### 16.A.3 Venue / room-type + region taxonomy
+
+Used by Requests / Production / readiness (`prokit` planet fields `regions`, `set_length`). Today
+`artist.regions` is free text with the placeholder "Center, North" (`i18n/en.js`). Three bounded
+tables proposed.
+
+#### 16.A.3.a — `il_region` (Israeli regions)
+
+| id (`il_region`) | EN | HE (proposed) | Notes |
+|---|---|---|---|
+| `center` | Center | מרכז | Gush Dan / Tel Aviv metro — the default in placeholder copy |
+| `tel-aviv` | Tel Aviv | תל אביב | Optional finer grain within Center |
+| `sharon` | Sharon | השרון | |
+| `jerusalem` | Jerusalem area | ירושלים והסביבה | |
+| `north` | North | צפון | Haifa, Galilee, Krayot |
+| `south` | South | דרום | Be'er Sheva, Eilat, periphery |
+| `lowlands` | Shfela / Lowlands | שפלה | Optional |
+| `nationwide` | Nationwide | כל הארץ | "Travels anywhere" |
+
+> Multi-select (an artist plays several regions). Proposed as a join table `act_region` (per-Act, since
+> touring reach can differ between Acts).
+
+#### 16.A.3.b — `venue_type` (performance context / room type)
+
+| id (`venue_type`) | EN | HE (proposed) | Aligns with `radarUniverse` world | Notes |
+|---|---|---|---|---|
+| `club` | Club | מועדון | `club` (`/club\|קלאב\|מועדון/`) | Nightclub |
+| `festival` | Festival | פסטיבל | `festival` (`/festival\|פסטיבל\|stage/`) | Outdoor / stage |
+| `bar-lounge` | Bar / lounge | בר / לאונג' | `club` | Smaller room |
+| `wedding` | Wedding | חתונה | `weddings` (`/wedding\|חתונ\|private/`) | Private event |
+| `private-event` | Private event | אירוע פרטי | `weddings` | Family / party |
+| `corporate` | Corporate event | אירוע חברה | `weddings` (corporate pattern) | Company / conference |
+| `theater-hall` | Theater / hall | אולם / תיאטרון | — | Seated venue |
+| `arena` | Arena / large venue | אולם גדול / ארנה | — | Rare pre-Gate |
+
+> These align with the **content-world tags** already in `radarUniverse.js:CONTEXT_WORLDS`
+> (`club` / `festival` / `weddings`) — the classifier regexes there are the working seed; this table
+> formalizes them into a governed enum. Worlds remain a *filter axis*, never a rank
+> ("where do I stand" = evidence coverage per world, not a position).
+
+#### 16.A.3.c — `room_size_band` (capacity band — describes the ROOM, not the artist)
+
+| id (`room_size_band`) | EN | HE (proposed) | Notes |
+|---|---|---|---|
+| `xs` | Under 150 | עד 150 | Bar / intimate |
+| `s` | 150–400 | 150–400 | Small club |
+| `m` | 400–800 | 400–800 | Mid club |
+| `l` | 800–2,000 | 800–2,000 | Large club / small festival stage |
+| `xl` | 2,000+ | 2,000+ | Festival / arena |
+
+> **Firewall:** capacity bands describe the *room*, a context fact — they are **not** a measure of the
+> artist. They must never be aggregated or presented as an artist-level draw score. Draw itself stays
+> bands + binaries with method labels (§16.A.4).
+
+---
+
+### 16.A.4 Method-label + status vocabularies
+
+These are already bounded enums in `src/lib/constants.js` — restated here as the closed taxonomies they
+are. **These are canon and MUST NOT be extended without a firewall review.**
+
+#### 16.A.4.a — `method_label` (the 6 public "how verified" labels — `constants.js:METHOD_LABELS`)
+
+| id (`method_label`) | EN (public chip) | HE (`docs/GLOSSARY.md`) | Strength | Notes |
+|---|---|---|---|---|
+| `producer-confirmed` | PRODUCER-CONFIRMED | מאושר ע"י מפיק | strongest | Set by server when a Source Confirmer vouches a specific claim |
+| `evidence-supported` | Evidence-supported | נתמך בראיה/מסמך/מקור | strong | Maps from `verification_status='verified'` |
+| `source-linked` | Source-linked | — (kept EN as universal tag) | medium | Maps from `verification_status='supporting'` |
+| `artist-declared` | Self-declared | מדווח ע"י האמן | base | Maps from `verification_status='self-reported'` |
+| `unable-to-verify` | Unable to verify | לא ניתן לאמת | n/a | Maps from `verification_status='not-assessable'` — N/A ≠ weakness |
+| `stale` | Needs refresh | דורש רענון | time state | Auto-set when a claim passes `expires_at` |
+
+> **Canon guard (ENTITY-GLOSSARY §2d):** the headline chip vocabulary is exactly
+> **Producer-confirmed / Source-linked / Evidence-supported / Self-declared** and is **never** reworded
+> to "source-confirmed" (which would blur into the *Source Confirmer* person). Method labels are kept in
+> English inside Hebrew text by deliberate universal-tag design (GLOSSARY).
+
+#### 16.A.4.b — `verification_status` (claim provenance — `constants.js:VERIFICATION_STATUS`)
+
+| id | EN | HE | Publishable to public Passport? |
+|---|---|---|---|
+| `verified` | Verified | מאומת (context-bound; never generic) | ✅ yes |
+| `supporting` | Supporting | נתמך | ✅ yes |
+| `self-reported` | Self-reported | מדווח ע"י האמן | ❌ no |
+| `not-assessable` | Not assessable | לא ניתן להעריך | ❌ no |
+
+> `PUBLISHABLE_STATUSES = [verified, supporting]` — the firewall gate on what may reach a public
+> Passport. HE for "verified" is context-bound: the glossary forbids the generic **מאומת** standing
+> alone.
+
+#### 16.A.4.c — `status` (the bounded readiness vocabulary — `constants.js:STATUS`)
+
+| id | EN | HE (`constants.js` comment) | Notes |
+|---|---|---|---|
+| `strong` | Strong | חזק | |
+| `developing` | Developing | מתפתח | |
+| `missing` | Missing proof | חסר-הוכחה | An invitation, not a failure |
+| `notAssessable` | Not assessable | לא-ניתן-להעריך | N/A ≠ zero |
+
+#### 16.A.4.d — Radar node states (`radarUniverse.js:NODE`)
+
+| id | Glyph | EN | Notes |
+|---|---|---|---|
+| `confirmed` | ✓ | Confirmed | Artist-approved / connected |
+| `found` | ✦ | Found | Discovered, awaiting confirm |
+| `review` | ? | In review | Disputed |
+| `missing` | + | Missing | A fillable invitation |
+
+> **Firewall:** node states are *bounded states only, never numbers that grade the artist*
+> (`radarUniverse.js` header). Planet rollup is `developing / established / needs` — also a state, never
+> a count shown publicly (`foundCount` is working-only).
+
+#### 16.A.4.e — Supporting bounded enums (also in `constants.js`, for completeness)
+
+| Enum | Values | Purpose |
+|---|---|---|
+| `visibility` | `passport-ok` · `mirror-only` · `internal` | What surface a claim/item may appear on |
+| `source_status` | `public-verified` · `artist-provided` | Provenance of a profile item |
+| Community band (`bandFromCount`) | `<250` · `250–500` · `500–1,000` · `1,000–2,500` · `2,500–5,000` · `5,000+` | Audience size shown ONLY as a band; the integer stays working-only (firewall) |
+| Draw fields | `sells_tickets` (yes/no) · `price_band` · `lineup_frequency_band` | Draw as bands + binaries only |
+
+> **Vocabulary drift note:** `mirror-only` remains a live CHECK value the app still writes, but canon
+> retired "Mirror" (one Passport, shown in views). Migration 021 (which would drop it) is **FROZEN** —
+> do not apply without app lockstep (SESSION-MEMORY). The reference-table migration must respect this.
+
+---
+
+### 16.A.5 Source / platform taxonomy
+
+The platforms LOCK reads. Planet routing is from `radarUniverse.js:linkPlanet()`; "what it signals" is
+firewall-safe (a footprint that can be checked against its source — never a score). The honesty lines
+are the canon `PROVES` map (`radarUniverse.js:PROVES`, shown verbatim at the confirm moment).
+
+| id (`source_platform`) | EN | HE (proposed) | → planet | What it signals (firewall-safe) | Israeli? |
+|---|---|---|---|---|---|
+| `spotify` | Spotify | ספוטיפיי | `music` | Public music footprint; secondary context — never a draw claim | |
+| `soundcloud` | SoundCloud | סאונדקלאוד | `music` | Public catalogue / mixes footprint | |
+| `bandcamp` | Bandcamp | בנדקמפ | `music` | Releases / catalogue footprint | |
+| `apple-music` | Apple Music | אפל מיוזיק | `music` | Music footprint | |
+| `deezer` | Deezer | דיזר | `music` | Music footprint | |
+| `beatport` | Beatport | ביטפורט | `identity` / `music` | Release/label presence in electronic scene | |
+| `youtube` | YouTube | יוטיוב | `live` | Live/set footage — performance footprint | |
+| `vimeo` | Vimeo | וימאו | `live` | Performance footage | |
+| `resident-advisor` | Resident Advisor | רזידנט אדוויזר | `identity` | Scene presence / event history (electronic) | |
+| `instagram` | Instagram | אינסטגרם | `audience` | Public community footprint (shown as a band) | |
+| `tiktok` | TikTok | טיקטוק | `audience` | Community footprint (band) | |
+| `facebook` | Facebook | פייסבוק | `audience` | Community / events footprint | |
+| `twitter-x` | X (Twitter) | X (טוויטר) | `audience` | Community footprint | |
+| `telegram` | Telegram | טלגרם | `audience` | Community channel | |
+| `eventer` | Eventer | אוונטר | `proof` | IL ticketing — ticket export / settlement = real sourced draw | ✅ |
+| `tickchak` | Tickchak | טיקצ'אק | `proof` | IL ticketing — ticket export / settlement | ✅ |
+| `go-out` | Go-Out | גו-אאוט | `proof` | IL events/ticketing — event history / ticket export | ✅ |
+
+> **Firewall guards baked into the model:**
+> - Streaming (`music` planet) is **secondary context** by canon — a footprint that "does not establish
+>   local ticket demand" (`PROVES['public-profile'].notProves`). It never becomes a draw claim.
+> - Audience platforms surface a **band**, never a follower count (`bandFromCount`).
+> - Ticketing platforms (Eventer / Tickchak / Go-Out) feed the **`proof`** planet via the
+>   evidence+consent flow — a ticket export "proves real, sourced draw" but "does not establish the
+>   crowd came specifically for you" (`PROVES['ticket-export']`). This honesty line ships verbatim.
+>
+> **Proposed table `source_platform`:** `id` · `en_label` · `he_label` · `planet_key` ·
+> `signal_note_key` (i18n key, not raw text) · `is_israeli` (bool) · `source_type` (FK → the
+> `PROVES`/`source_type` set: `ticket-export`, `settlement`, `producer-vouch`, `public-profile`,
+> `screenshot`, `self-band`, `self-reported`) · `active`. The `signal_note` must be an i18n key so the
+> firewall-safe wording is localized, never hardcoded.
+
+---
+
+### 16.A.6 Migration & implementation note (Part A summary)
+
+All six taxonomies above should land as **bilingual DB reference tables** in one migration
+(historically called "029 bilingual reference tables"; author now as **036+**, diff-first). Proposed set:
+
+| Table | Replaces (free text today) | Keyed by |
+|---|---|---|
+| `genre_family` | `genreWeights.js` inline object | code |
+| `genre_scene` | `artist.genre` / `act.genre` free text | code → family FK |
+| `act_format` | `act.format` inline CHECK | code |
+| `il_region` + `act_region` | `artist.regions` free text | code |
+| `venue_type` | `radarUniverse.CONTEXT_WORLDS` regexes | code |
+| `room_size_band` | (none — new) | code |
+| `source_platform` | `linkPlanet()` regex routing | code → planet + source_type |
+| method/status enums | `constants.js` (already bounded) | keep as CHECK or promote to lookup |
+
+Common column shape: `id` (PK) · `en_label` · `he_label` · `sort_order` · `active`, plus the mapping
+FKs noted per table. **Rules:** frozen code identifiers stay frozen (§0.2 rule 5); every user-facing
+label resolves through i18n keys, never hardcoded; the G2 guard (no signal → no emphasis) must survive
+the migration; `mirror-only` is not dropped while 021 is FROZEN.
+
+---
+
+### PART B — BUSINESS
+
+> Everything documented is captured with its source. Everything **not** yet decided is marked **OPEN
+> (owner)**. Per the standing rule, no business numbers are invented — they are framed and flagged.
+
+---
+
+### 16.B.6 Product goals / objectives
+
+#### 16.B.6.a — Purpose (documented, canon)
+
+LOCK is a **pre-booking proof / risk-reduction tool** (CLAUDE.md, CFO-BRIEF §1). Its documented purpose
+has two sides:
+
+1. **Supply side — help artists build a provable professional identity.** "Talent ≠ bookability."
+   The artist assembles standardized, method-labeled evidence into a Passport, per Act.
+2. **Demand side — help Israeli buyers evaluate an unfamiliar artist and reduce booking risk.**
+   Booking managers, promoters, event producers, planners, and private/corporate clients
+   (מזמיני הופעות) can check an unfamiliar artist against method-labeled evidence "before they risk
+   their name."
+
+It is explicitly **NOT** an EPK, **NOT** a booking CRM, **NOT** a guarantee, and carries **NO** score /
+rank / prediction (CLAUDE.md firewall).
+
+#### 16.B.6.b — Goals framework (targets OPEN)
+
+No numeric goals are documented. Clean framework below; **all targets are OPEN for the owner to set** —
+and by canon none may be a public score, only internal counters (PILOT-MEASUREMENT-MAP: "internal
+counters for Maria + CFRO only").
+
+| Goal dimension | Documented signal / event (built) | Metric shape | Target |
+|---|---|---|---|
+| Artist activation | `onboarding_completed` | Signups → onboarding-complete rate | **OPEN (owner)** |
+| Value delivered | `passport_published` | Built → published rate ("value proof") | **OPEN (owner)** |
+| Distribution | `share_link_created` → `passport_view` | Share → view rate ("distribution proof") | **OPEN (owner)** |
+| **The Gate metric** | `passport_view` → `professional_reaction_submitted` | View → reaction rate | **OPEN (owner)** |
+| Trust network | `producer_confirmation_sent` → `claim_confirmed` | Confirm completion rate | **OPEN (owner)** |
+| Multi-Act appetite | `act_created` | Count / artist | **OPEN (owner)** |
+| Willingness to pay | `payment_reference_created` | Voluntary-pay count | **OPEN (owner)** |
+
+> These events are **built and wired** (PILOT-MEASUREMENT-MAP, 12 Jul). What's missing is the owner's
+> numeric bar for each — deliberately, because no ICP or price is locked pre-Gate.
+
+---
+
+### 16.B.7 The Gate
+
+**The single validation gate (north star):**
+> **One real booking manager reacts to a real Passport AND one pays.** (CLAUDE.md · CFO-BRIEF §2)
+
+#### Why it's the north star
+LOCK is at **pre-validation** stage (CLAUDE.md: STAGE). The entire product thesis — that buyers will
+trust method-labeled evidence enough to act, and that someone will pay for the proof layer — is unproven
+until both halves fire once on a *real* Passport (not the demo). Everything before the Gate is
+instrumentation and readiness; nothing about pricing or ICP is treated as known.
+
+#### How it's measured (built)
+Both halves are live analytics events on `analytics_event` (demo excluded; each row carries actor +
+timestamp):
+
+| Gate half | Event | Status |
+|---|---|---|
+| A buyer **reacts** to a real Passport | `professional_reaction_submitted` | ✅ live — **the Gate signal** (PILOT-MEASUREMENT-MAP) |
+| Someone **pays** | `entitlement_activated` (operator activation, records WHO) | ✅ live |
+
+#### What unlocks after the Gate
+Per canon (CLAUDE.md, CFO-BRIEF §2–3): **monetisation is measured, not required, and no price / no ICP
+is locked until the Gate.** Passing it unlocks the decisions currently frozen:
+- Fixed pilot **price** (recommendation on file: ₪179; range ₪149–249 — OPEN until Gate).
+- The **ICP** (which demand-side segment pays first).
+- Turning on payment surfaces (the `PAYMENTS_ENABLED` flag, dormant today).
+
+---
+
+### 16.B.8 Business model
+
+#### Shape — two-sided
+Supply side (artists + their artist-side representation) and Israeli demand side (buyers). The
+**workspace carries the subscription, not the person** (GLOSSARY, CFO-BRIEF §3).
+
+#### Documented rulings (Monetization — APPROVED, SESSION-MEMORY)
+- **No booking commission — ever.** (canon)
+- **Each entity pays its own plan;** the artist always owns/pays his portable evidence-truth layer;
+  the office pays the roster layer; a **Billing Sponsor** mechanism exists.
+- **Buyer is free forever** — no account needed to read a Passport (`/passport/:id` is outside auth
+  guards).
+- **Source Confirmer never pays, never signs up** (accountless magic link).
+- **Free pilot now** — no price locked pre-Gate; `PAYMENTS_ENABLED` flag keeps all payment surfaces
+  dormant (`constants.js`, canon G17).
+
+#### Plans (concept — pricing OPEN)
+
+| Payer entity | Plan | Current ruling | Price |
+|---|---|---|---|
+| Artist workspace (holds Acts) | **Passport** (free) → **Momentum** | Free in pilot | **OPEN** — if asked, ₪149–249 range only; pilot rec ₪179; never a fixed public price pre-Gate |
+| Manager office / אמרגן (artist-side, solo or team) | **Roster** | Deliberately UNPRICED — payer candidate post-validation | **OPEN (owner)** |
+| Event-production workspace | — | Not priced; events + lineups context | **OPEN (owner)** |
+| Buyer / booking manager (incl. private clients) | — | **FREE FOREVER** (canon) | ₪0 |
+| Source Confirmer | — | Never pays | ₪0 |
+
+#### Money mechanics as built today (CFO-BRIEF §4)
+- Payment: **Bit → 054-4555060**, reference code **GP-XXXX**, **manual operator activation** in the
+  admin console (each activation records WHO — actor on the event).
+- An **entitlements** table drives access; activation fires the Gate's "paid" signal
+  (`entitlement_activated`).
+- **Known legal gap (P1 before real money): no receipts/invoices** — Green Invoice signup pending
+  (deferred by owner until first payment intent).
+- **Agency-side payments currently capture NO financial record** (flagged in the financial review).
+
+#### Firewall constraint on the model
+"Money never buys a better story · no score to sell" is **live site canon** (CFO-BRIEF §1). Any
+monetization surface must survive: the firewall (no score to sell), free-forever buyer, and
+no-commission. Money may unlock *capacity* (more Acts, roster seats, distribution), never *a better
+verdict*.
+
+---
+
+### 16.B.9 Business case (honest, pre-Gate — no invented traction)
+
+#### The problem
+- **Talent ≠ bookability.** A great set doesn't tell a buyer the artist will show up, draw, and not
+  burn the buyer's name.
+- **Proof is scattered** across Spotify, Instagram, ticketing exports, WhatsApp screenshots — no
+  standardized, checkable form.
+- **The buyer carries reputational risk.** Booking an unfamiliar artist puts the buyer's own name on
+  the line; today they decide on vibes, favors, or inflated EPKs.
+
+#### The wedge
+**Israeli pre-booking proof.** A narrow, concrete beachhead: the Israeli demand side (מזמיני הופעות)
+evaluating an unfamiliar artist, in Hebrew and English, with local ticketing sources (Eventer,
+Tickchak, Go-Out) as first-class evidence. Not a global directory; a trust-check at the exact moment a
+booking decision is being made.
+
+#### Why now
+- The demand side has no standardized way to check an artist that isn't self-promotion.
+- Method-labeled evidence + a locale-aware scan (target) is newly cheap enough to attempt at ~$1/artist
+  (TARGET — see §16.B.10; not yet built, must not be priced on).
+- The IL scene is small and networked enough that one real reaction + one payment is a meaningful,
+  reachable Gate.
+
+#### The moat
+- **Method-labeled evidence** — a bounded, honest vocabulary (Producer-confirmed / Source-linked /
+  Evidence-supported / Self-declared) that competitors' EPKs and CRMs structurally can't match without
+  abandoning hype.
+- **The Radar / Passport asymmetry** — one Passport shown in two views: the Artist view (private) shows
+  gaps and invitations; the Buyer view (public) shows verified strengths only. The artist is *supported,
+  not inspected*; the buyer sees *only what's checkable*.
+- **Per-Act, non-transferable evidence** — a structural integrity property (a new Act starts empty)
+  that makes the proof hard to game.
+- **The firewall as a brand** — "no score to sell" is a credibility position, not just a rule.
+
+#### Risks (honest)
+| Risk | Note |
+|---|---|
+| Demand-side cold start | Buyers must trust an unfamiliar format; the Gate is precisely the test of this |
+| Two-sided chicken-and-egg | Artists need buyers to read Passports; buyers need artists worth reading |
+| The scan is TARGET, not built | The ~$1 deep scan and locale-aware auto-discovery are unbuilt; the business case cannot lean on them yet (§16.B.10) |
+| Legal/receipts gap | No invoices/receipts before real money (P1); counsel items open |
+| Free-tier ceilings | Supabase pause / Vercel deploy caps can bite pre-Pro (§16.B.10) |
+| No traction claimed | Pre-validation by definition — there is **no** invented traction in this section |
+
+---
+
+### 16.B.10 Unit economics / cost
+
+#### AI claim-extraction cost model
+- **BUILT:** per-evidence AI claim extraction — the pipeline labels claims per evidence item, no
+  concierge / by-hand step (CLAUDE.md; CFO-BRIEF §5). Anthropic API is active; on credit exhaustion it
+  falls back to mock (ACCOUNTS-LIMITS-REGISTRY).
+- **TARGET (not built — do not price on it):** a multi-source **deep scan once at onboarding, target
+  cost ≈ $1/artist**, plus cheap automatic incremental re-scans. CLAUDE.md is explicit: this is
+  **TARGET ARCHITECTURE, not yet built; no business case may price or assume it until implementation
+  and measured cost are verified.**
+- **Provider fallback** may use a cheaper tier with narrower extraction, but must **preserve the
+  evidence firewall and disclose the narrower scope** (CLAUDE.md).
+
+> **Honesty firewall (§0.2 rule 4):** any unit-economics model that assumes the $1 deep scan is
+> TARGET-based and must be labeled so. The only BUILT cost today is per-evidence extraction at
+> pay-as-you-go, magnitude unmeasured at scale.
+
+#### Free-tier constraints (ACCOUNTS-LIMITS-REGISTRY, 12 Jul)
+
+| Service | Plan | Constraint that can bite | Upgrade trigger |
+|---|---|---|---|
+| **Vercel** (both projects) | Hobby (free) | 100 deploys/day (hit once); previews build on every push | Disable previews (mitigation); Pro if needed |
+| **Supabase** | Free | 500MB DB · 1GB storage · 50K MAU · **project pauses after ~7 days inactivity** | **Pro $25/mo** — trigger = first real users / pre-pilot backups (OPEN, owner) |
+| **Anthropic API** | Pay-as-you-go | Credit runs out silently → falls back to mock | Billing alert; balance currently unknown |
+| **Google Cloud** | Free | OAuth "Testing" mode caps 100 test users | Publish to production |
+| **Resend** (email) | Not yet created | Free 3K/mo, 100/day when created | Owner signup pending |
+| **GoDaddy** (lock.show) | Paid domain | Annual renewal — losing it loses everything | Confirm auto-renew |
+| **GA4 / Search Console** | Free | None material pre-launch | — |
+
+#### Budget snapshot (ACCOUNTS-LIMITS-REGISTRY)
+Domain ~₪5/mo amortized · everything else ₪0 (free tiers) · Anthropic usage-based
+(**~$1/artist onboarding is the TARGET deep-scan figure, not a measured current cost**). First real
+spend decisions arrive with the pilot: **Supabase Pro $25/mo** (OPEN — owner), Resend stays free-tier.
+
+---
+
+### 16.C — Items needing the owner's decision (consolidated OPEN list)
+
+Everything this section could not close because it requires Maria's ruling:
+
+**Taxonomy (Part A)**
+1. **HE labels** for `genre_scene`, `genre_family`, `act_format`, `il_region`, `venue_type` — the
+   proposed Hebrew is a *seed*; Maria owns the canonical HE column (GLOSSARY rule). **OPEN.**
+2. **Scope of the genre-scene registry** — approve the seed set or commission the full family-by-family
+   fill (55 subtypes / 32 DJ specializations from the Google Sheet; Registry B is empty). **OPEN / OWED.**
+3. **`comedian-host` / `corporate-ceremony` reachability** — these families have no `act.format` path;
+   decide whether to add formats or wait for the `scene_family` field (migration 034). **OPEN.**
+4. **Migration authorization** for the bilingual reference tables (author as 036+, diff-first; respect
+   FROZEN 021 / `mirror-only`). **OPEN (migration approval is owner's per CLAUDE.md).**
+5. **Hebrew word for "Act"** — de-facto live term is אקט; formal taste-ratification still pending
+   (SESSION-MEMORY pending list). **OPEN.**
+
+**Business (Part B)**
+6. **Numeric goal targets** for every metric in §16.B.6.b (activation, publish, share→view, the Gate
+   rate, confirm completion, act_created, willingness-to-pay). **OPEN.**
+7. **Fixed pilot price** — recommendation ₪179 (range ₪149–249); locked only after the Gate. **OPEN.**
+8. **ICP** — which demand-side segment monetizes first; unlocked by the Gate. **OPEN.**
+9. **Manager-office (Roster) and Production pricing** — deliberately unpriced. **OPEN.**
+10. **Supabase Pro $25/mo timing** — pre-pilot backups vs wait. **OPEN.**
+11. **Green Invoice / receipts** — priority relative to first real payments (P1 legal gap; currently
+    deferred by owner). **OPEN.**
+12. **Agency-side financial record** — no payment trail captured today; decide whether to close before
+    monetizing the office layer. **OPEN.**
+13. **Token rotation** (Anthropic / Tavily, low urgency) — infra hygiene, owner action. **OPEN.**
+
+---
+
+_End of §16. Sources: `CLAUDE.md` · `docs/SESSION-MEMORY.md` · `docs/CFO-BRIEF.md` ·
+`docs/ENTITY-GLOSSARY.md` · `docs/GLOSSARY.md` · `docs/TAXONOMY-REGISTRY-AUDIT.md` ·
+`docs/ACCOUNTS-LIMITS-REGISTRY.md` · `docs/PILOT-MEASUREMENT-MAP.md` · `docs/VERSIONS.md` ·
+`src/lib/genreWeights.js` · `src/lib/radarUniverse.js` · `src/lib/constants.js` ·
+`src/lib/i18n/en.js`._
+
+---
+
+## 17. Interactivity, Motion Depth & Utility Screens
+
+_Codex role — senior interaction designer. Becomes §17 of the LOCK master spec._
+_Grounded in the behavioral ground-truth prototype (`scratchpad/lock-full-prototype.html`), the Radar signal spec (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT.md` PART 5), the widget kit + per-screen law (PART 9 · PART 10), and `LOCK-PRODUCT-SPECIFICATION.md` §8. §8 defines *what each screen is and holds*; **this section defines how it moves, responds, and feels** — the interaction layer §8 defers to "see the prototype." It does not repeat §8; it deepens it._
+
+**How to read this file.** Every motion value, easing, duration, and gesture threshold in PART A is **lifted from the real prototype** (path:line where load-bearing) — a developer can build the feel without opening the HTML. PART B specs the utility screens the prototype never drew. Markers: **`OWED`** = an exact DS v1.6.25 value that lives only on Drive (`00_CURRENT/LOCKSHOW_Design_System_CURRENT.html`) and must be filled by Codex; **`OPEN`** = a product/owner decision not yet made. Neither blocks building the interaction — they refine the finish.
+
+---
+
+### 17.0 · The motion system (build these tokens once, reference everywhere)
+
+The prototype uses a **small, disciplined easing vocabulary**. Do not introduce new curves per component — bind these five tokens and reuse them. This is the single control point for the app's "feel."
+
+#### 17.0.1 · Easing tokens
+
+| Token | Curve | Personality | Used by |
+|---|---|---|---|
+| `--ease-orbit` | `cubic-bezier(.2,.8,.25,1)` | The signature LOCK ease — fast out, long settle. Confident, "instrument-grade." | Orbit logos, inspector slide-in, source-card rise, mobile sheet transform (proto :63) |
+| `--ease-ui` | `cubic-bezier(.2,.7,.3,1)` | The standard UI ease — quick, neutral, unfussy. | Screen change, planet focus/recede (uni transform), sheet slide-up, rail (proto :209,300,982) |
+| `--ease-bloom` | `cubic-bezier(.2,.9,.3,1)` | The reward ease — snappy entry, soft landing. | Confirm bloom, celebrate card, hero card, `cardpop` (proto :920,931,1017) |
+| `--ease-fill` | `cubic-bezier(.3,.8,.3,1)` | Slow, deliberate growth. | Milestone journey fill bar (proto :878) |
+| `--ease-overshoot` | `cubic-bezier(.2,1.4,.4,1)` | Playful overshoot past 1.0 — used **once**, for the seal mint. | `sealpop` on the "Verified" seal (proto :933). Do not reuse elsewhere. |
+
+> `OWED` — Codex to confirm these five against DS v1.6.25 named motion tokens (the prototype names only `--ease-orbit`; the other four are inferred from repeated inline curves and should be promoted to named tokens).
+
+#### 17.0.2 · Duration ladder (the only durations allowed)
+
+| Band | Duration | Meaning | Examples (proto) |
+|---|---|---|---|
+| **Micro** | 140–200ms | Hover, press, chip toggle, tooltip, node hover | `.navitem .14s` · `.rf .16s` · `.pnode transform .2s` · tooltip `.18s` |
+| **Transition** | 260–300ms | Enter/exit of a panel, planet focus/recede, sheet, scene fade | inspector `inspIn .26s` · `.uni transform .3s` · scrim `.22s` · sheet `.28s` |
+| **Emerge** | 300–460ms | Staggered arrival — orbit logos, satellites, cards | `satEmerge .3s` · `orbit-emerge .46s` · `card-rise .26s` |
+| **Reward** | 500–700ms | Confirm bloom, lock-in, celebrate, seal | `cardpop .5s` · `logo-lock .6s` · `sealpop .7s` · `bloom .42s` |
+| **Fill / slow** | 1000ms | Milestone fill, count-up settle | `jfill width 1s` |
+| **Ambient** | 1.8–9s loop | Living background — never triggered, always breathing | `sweep 9s` · `starglow 4.5s` · `sonar 5s` · `pfloat 6s` · `fdpulse 2s` |
+
+**Rule:** an *interaction* (something the user triggered) uses Micro→Reward. An *ambient* loop is décor and is the **first thing killed** under reduced-motion. Never animate an interaction slower than 700ms — it stops feeling like a response.
+
+#### 17.0.3 · `prefers-reduced-motion` — the global contract
+
+The prototype's reduced-motion block (proto :409–411) kills every **ambient loop** and every **transform-based idle**, but **keeps opacity fades** so the UI still reads as responsive. Build the same three-tier rule everywhere:
+
+| Tier | Full motion | Reduced motion |
+|---|---|---|
+| **Ambient loops** (sweep, sonar, starfield, starglow, pfloat, fdpulse, twinkle, logo-invite, jglow/jpulse, shimmer, scanbar) | play, infinite | **`animation:none`** — frozen at rest state |
+| **Interaction transforms** (planet focus scale, orbit emerge, sheet slide, bloom, lock-in) | full transform + duration | **collapse to an instant opacity swap** — the element still appears/updates, but does not travel or scale |
+| **State feedback** (fade-in of overlays, color change on confirm, toast) | fade `.18–.3s` | **keep** — a 180ms opacity fade is safe and preserves "something happened" |
+
+Every `@keyframes` that moves geometry needs a reduced-motion sibling that only changes opacity. Every JS-triggered effect (`bloomAt`, confetti) must early-return on `reducedMotion()` (proto :1487,1497,2590) and instead flip straight to the success state.
+
+#### 17.0.4 · The gold budget (motion-relevant)
+
+Lime `#C8F04D` is reserved for **action + confirmed** and is the *only* color allowed to bloom, glow, or pulse on success. Gold `#F2C063` (`state.found`) may pulse **only** as the quiet "found, waiting" invitation (`fdpulse`, `logo-invite`, `foundpulse`) — a slow 2–2.8s breath, never a hard flash. Amber `#E39A4B` (`state.needsReview`) never animates — a static invitation, never shame. `OPEN` — owner leans toward retiring gold/amber for lime+neutral (§7.0/§8.2 of the audit); if retired, the found-state breath becomes a neutral `--mist` pulse (already the `fdpulse` shadow color, proto :321), no motion change required.
+
+---
+
+### PART A — INTERACTIVITY & MOTION DEPTH (per screen)
+
+Each screen below is specified as **buildable interaction rules**: every interactive element as `trigger → immediate feedback (<100ms) → result state`; a **motion table**; a **gesture table** (mobile); and a **state-transition map**. The universal law from PART 9/10 holds on every screen: **one screen, one job, one next action; exactly one primary lime CTA on screen at any instant; immediate feedback on every action; warm, firewall-safe microcopy.**
+
+The universal interaction primitives (reused on all screens):
+
+- **Press feedback (all buttons/tappables):** on `:active`, scale to `.97` + shadow tighten over ~120ms `--ease-ui`; release springs back. Tap target ≥ 44px (PART 10). Never a button with no press state.
+- **Toast / save confirm:** a small pill rises from bottom (mobile) or lower-right (desktop), `pop .5s --ease-bloom`, holds ~2.4s, fades. Carries an **undo** where the action is reversible (7s window on Passport-affecting confirms — §8.3).
+- **Skeleton loading:** `shimmer 1.4s linear infinite` on a `--surface2→--raise` gradient (proto :626). Reduced-motion → static `--surface2` block, no shimmer.
+- **Overlay/scrim entry:** `fade .18–.3s ease` + `backdrop-filter: blur(3–6px)` (proto :338,841). Scrim tap = dismiss (except where a decision is required).
+
+---
+
+### 17.A.1 · Onboarding (`/onboarding`) — the discover→confirm narrative in motion
+
+§8.1 defines the 3 steps and copy. The **motion is the message**: Step 2 must *feel* like a machine reading the artist's public life, so that Step 3's findings feel *earned, not typed*.
+
+#### Interaction model
+| Element | Trigger | Immediate feedback (<100ms) | Result state |
+|---|---|---|---|
+| Name / link fields | focus | border lifts to `--accent`, label rises | active input; primary stays disabled until **both** non-empty (helper: "Add your name and one link to start.") |
+| Primary "Find my footprint →" | tap (enabled) | press-scale `.97` | advances to Step 2; scan auto-runs |
+| Source tiles (Step 2) | none (auto) | tiles light **one-by-one**, greyscale→color | see motion table; auto-advances ~3.2s |
+| Scan bar | none (auto) | a lime sweep runs left→right, looping | `scanbar 1.15s linear infinite` (proto :1120) |
+| Caption line | none (auto) | cycles the scan lines ~900ms each | 6 lines then Step 3 |
+| Found rows (Step 3) | none (arrival) | rows stagger in, "✦ Found" chip pops per source | static found-grid; nothing is confirmed here |
+| "Open my Radar & confirm →" | tap | press-scale | closes overlay (`fade` out), lands on Radar with ✦ items waiting |
+| "I'll explore a sample first" | tap | quiet underline | Radar with sample data |
+
+#### Motion table
+| Moment | Property | Duration · easing | Reduced-motion |
+|---|---|---|---|
+| Step→step swap | opacity+translateY | `slidein .28s --ease-ui` (proto :209) | opacity only |
+| Source tile light-up | greyscale(1)→0, opacity .38→1, scale .88→1 | `.45s cubic-bezier(.2,.8,.3,1)` staggered ~180ms each (proto :1111) | tiles appear lit instantly, no stagger |
+| "✦ Found" chip on tile | scale .4→1, opacity 0→1 | `.3s` (proto :1115) | appears at rest |
+| Scan bar | translateX loop | `scanbar 1.15s linear ∞` | **frozen** (hidden) — show a static "Reading…" label instead |
+| Step-dot fill | width/color | `.3s` (proto :1089) | color swap only |
+| Overlay in/out | opacity + blur | `fade .2s` | keep (fade is safe) |
+
+**Firewall.** The tally ("8 findings") is a count of the artist's *own* found items, each method-labeled; never a grade. The animation discloses scope honestly ("a wider multi-source auto-scan is in development"). No score/gauge ever animates.
+
+**Mobile.** Identical single-column card. Scan tiles wrap to a 4-col grid; the caption + scan bar sit below. No gestures required — this is a linear, auto-advancing narrative. One primary CTA, full-width, pinned to the card bottom.
+
+**DoD (motion).** Step 2 auto-advances and is fully legible with motion off (static "Reading your public footprint…" + a determinate "5 of 5 sources" text). Tiles stagger only with motion on. No page scroll at 390 and 1360.
+
+---
+
+### 17.A.2 · Artist Radar + Inspector — the central interactive engine
+
+This is the deepest interaction surface in the product. §8.2/§8.3 define the 4-zone canvas, the six planets, and the 3-layer inspector. Below is the **complete motion + gesture + state model** — the "orbit widget" the owner asked to be explained (U32).
+
+#### 17.A.2.a · The living background (ambient, always breathing)
+
+Six loops run continuously on the dark universe island; all six are in the reduced-motion kill-list (proto :410).
+
+| Layer | Animation | Meaning (never a gauge) |
+|---|---|---|
+| Radar sweep | `sweep 9s linear ∞`, conic wedge, radial mask (proto :306) | "we continuously watch your public footprint." Points at nothing, measures nothing. |
+| Sonar | `sonar 5s ease-out ∞`, ring 14%→94% (proto :391) | the star "pinging" outward — alive, scanning |
+| Starfield | `twinkle 5s ease-in-out ∞` (proto :386) | depth |
+| Center star | `starglow 4.5s ease-in-out ∞`, lime shadow 24px↔40px (proto :357) | the artist's proof "breathing" — the one gold/lime aura |
+| Planet bob | `pfloat 6s ease-in-out ∞`, ±2.5px (proto :310) | planets feel afloat, not pinned |
+| Found dot | `fdpulse 2s ease-in-out ∞` (proto :321) | "something here is waiting for you" |
+
+Constellation threads (`.constel line`, proto :398) transition `stroke .4s, opacity .4s` when a planet's state changes; **Ready/Developing threads flow energy inward** via `flowLit`/`flowDev` (dash-offset march, proto :403–404) — growth made visible. Reduced-motion freezes the flow (`.cl-lit,.cl-dev animation:none`) but keeps the state color.
+
+#### 17.A.2.b · Planet focus / recede — the core gesture
+
+**Trigger:** tap a planet (`openPlanet`). **Immediate feedback (<100ms):** the tapped planet's `.pnode` lifts (transform+shadow `.2s`); the whole universe reflows.
+
+| Effect | Property | Duration · easing |
+|---|---|---|
+| Universe subtle zoom toward selection | `.uni` transform | `.3s --ease-ui` (proto :300) |
+| **Non-selected planets recede** | opacity→~40% (desktop) / dim to ~22% off-lens, `filter` | `.3s` opacity+filter (proto :308) — **fade, never removed** |
+| Selected planet node emphasis | box-shadow/border | `.2s` |
+| Source logos **orbit-emerge** around the planet | scale .2→1, opacity 0→1, fanned inward (~84° spread) toward the star | `orbit-emerge .46s --ease-orbit both`, **staggered** per logo (proto :576) |
+| Inspector slides in (desktop right rail) | translateX 14px→0, opacity .3→1 | `inspIn .26s --ease-orbit` (proto :443) |
+| Proof card rises under planet (mobile "focus card") | translateY 8px→0, scale .96→1 | `card-rise .26s --ease-orbit` (proto :594) |
+
+**Recede rule (firewall + design):** off-focus planets fade but **stay interactive and full-order** — dimming is a focus aid, reversible, never a judgement and never a reorder. Tapping the center star or the scrim returns all planets to 100%.
+
+#### 17.A.2.c · The orbit-logo widget (the heart of U32)
+
+On planet select, its evidence sources become **logos orbiting the planet**. Each logo is a live control.
+
+| Logo state | Visual | Motion | Trigger → result |
+|---|---|---|---|
+| **Found (waiting)** | gold ring | `logo-invite 2s ease-in-out ∞` (proto :577) — slow breath | tap → opens the found-row (exact wording + concrete source + proves/doesn't-prove) in the inspector |
+| **Confirmed** | lime ✓ | static, settled | tap → shows method label + human source line; long-press → method detail |
+| **Emerging** | — | `orbit-emerge .46s --ease-orbit` staggered | arrival on planet select |
+| **Locking in** (confirm) | lime bloom | `logo-lock .6s --ease-orbit` — scale 1→1.18→1, 30px lime flash (proto :586) | the "minting a moment" — see 17.A.2.e |
+| **Dismissed ("not me")** | fades out | `orbit-dismiss` — opacity→0, scale→.4 (proto :588) | recorded, **not deleted** (name-ambiguity honesty) |
+
+The orbit ring itself can slowly rotate (`orbit-spin`/`orbit-spin-rev`, proto :565–566) as pure décor; reduced-motion stops it. A **scrim** (`orbit-scrim`, `fade .2s`, proto :553) sits behind the orbiting set on mobile so the focused planet reads as modal; tap-scrim = recede.
+
+#### 17.A.2.d · The 3-layer inspector (desktop rail · mobile sheet)
+
+Content per §8.3 (Meaning / Found proof / Next action). Motion:
+
+- **Desktop:** persistent right rail, always visible, always holds the single primary CTA. On planet change it re-renders with `inspIn .26s --ease-orbit` (or `slidein-r .26s --ease-ui`, proto :341). It never leaves.
+- **Mobile:** a **bottom-sheet** (`.rwinsp`, `.psheet`). Closed = translated off-screen (`translateY(calc(100% + 240px))`, proto :543). Open = `slidein-up .26s --ease-ui` (proto :982) / transform `.28s --ease-orbit`. A **grab handle** (`.insp-grab`) sits at the top. The scrim (`.rwscrim`, opacity `.22s`, proto :548) darkens behind.
+- **The one-CTA guarantee:** `holdsCTA = !mobileMQ() || sheetOpen` (proto :1955). Desktop inspector always holds the CTA; on mobile the inspector holds it **only when the sheet is open**, otherwise the **bottom dock** (`radarDock`) carries the next-best move. Net: exactly one primary lime CTA on screen at every instant (proto :1972–1973).
+
+#### 17.A.2.e · Confirm → lock-in bloom (the reward moment)
+
+The single most important micro-interaction in the app. **Trigger:** tap "Review your {dimension}" → confirm a found row (`confirmTop`).
+
+| Stage | Effect | Motion |
+|---|---|---|
+| 1 · button press | scale `.97` | 120ms `--ease-ui` |
+| 2 · node flips ✦→✓ | `litpop` — scale .6→1.18→1, 34px lime shadow bloom (proto :326) | ~500ms `--ease-bloom` |
+| 3 · orbit logo locks | `logo-lock .6s --ease-orbit` (proto :586) | overlaps stage 2 |
+| 4 · bloom burst at planet center | `bloomAt(x,y)` → a lime radial scales .2→26, fades (proto :916, :1497) | `bloom .42s --ease-bloom`; **early-returns on reduced-motion** |
+| 5 · optional celebrate | confetti `fall` + `celebrate-card pop .5s` (proto :913,931) | reserved for milestone-crossing confirms only, not every tap |
+| 6 · named receipt toast | "**Added to your Passport**" _or_ "**Saved privately**" + **7s undo** | `pop .5s --ease-bloom`; honest destination (only verified/supporting + passport-ok reach the Passport — §8.3) |
+| 7 · thread relights | the planet's constellation thread → lime, energy flows inward (`flowLit`) | `stroke .4s` |
+
+Reduced-motion path: node swaps ✦→✓ instantly (opacity), no bloom, no confetti; the receipt toast still fades in (feedback preserved).
+
+#### 17.A.2.f · Scene lens & filter lens
+
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| Scene segmented control (Melodic/Progressive/Afro/All) | tap segment (`pickScene`) | active pill raises, `.14s` (proto :426) | re-weights which planets carry the **★ genre-primary ring** — a *reading lens on the same evidence*, **never a data change**. Threads/planets keep values; only the ★ moves. |
+| Show-lens (All · Needs my review · Ready to publish) | tap (`pickFilter`) | pill raises `.16s` (proto :296) | off-lens planets dim to ~22% `.3s` (reversible); "Needs my review" opens the batch-confirm entry |
+
+The scene control sits **top-center and never overlays the act card** (proto :417 grid area `scene`). ★ additive only — non-primary planets keep full opacity/interactivity/order.
+
+#### 17.A.2.g · Gesture table (mobile "Radar Focus")
+
+Real handler at proto :1940–1947.
+
+| Gesture | Threshold (from prototype) | Action |
+|---|---|---|
+| **Tap planet** | — | focus in place, logos orbit, sheet available |
+| **Tap orbit logo** | — | small proof card |
+| **Long-press logo** | ~500ms `OWED` (prototype uses tap→method; long-press is the §8.3/PART10 target) | method label detail |
+| **Swipe left / right** on universe or inspector | `\|dx\| > 48px` **and** `\|dx\| > \|dy\| × 1.4` (proto :1945) | `cyclePlanet(±1)` — next/prev planet, universe reflows |
+| **Pull-down / grab-handle drag** on sheet | drag past handle | `closeSheet` — sheet slides out `.28s`, planets return to 100% |
+| **Tap scrim** | — | `closeSheet` |
+| **Tap center star** | — | overview (deselect all) |
+
+`OWED` — the sheet **drag-follow** (finger tracks the sheet 1:1 before the release threshold) is a target refinement; the prototype animates open/closed but does not finger-track. Spec: while dragging, `translateY` follows touch delta; release past ~30% height or with downward velocity → close, else snap back `.28s --ease-orbit`.
+
+#### State-transition map (Radar planet)
+| State | Face | Thread | Trigger in → | Motion |
+|---|---|---|---|---|
+| **Needs you** | amber ring, ✦ found-dot pulsing | amber | found item exists / empty | `fdpulse` on dot |
+| **Developing** | teal ring | teal, flowing | some confirmed, gaps remain | `flowDev` |
+| **Ready** | lime, ✓ | lime, glowing+flowing | all confirmed, no gaps | `flowLit` |
+| **Locked / Not needed yet** | faint, no orbit evidence | faint | Kit before Live backed | static; warm copy "opens once your live draw is backed" |
+| selected | node lifts, logos orbit | — | tap | focus motion (17.A.2.b) |
+| confirming | ✦→✓ bloom | relights | confirm | lock-in (17.A.2.e) |
+| dismissed | logo fades | unchanged | "not me" | `orbit-dismiss`, recorded not deleted |
+
+**DoD (Radar motion).** Six ambient loops present and all in the reduced-motion kill-list; planet focus fades others to 40% (never removes); orbit logos emerge staggered + lock-in blooms; exactly one primary CTA (inspector XOR dock) at all times; swipe cycles at the 48px/1.4 threshold; pull-down/scrim close; scene ★ re-weights without changing data; zero score/rank/%/gauge; no h-scroll at 390/1360.
+
+---
+
+### 17.A.3 · Passport (artist multi-view · edit vs buyer-preview)
+
+§8.4. Light surface, a single dark hero island. The interaction job: **switch faces cheaply, preview the true public read, publish/share.**
+
+#### Interaction model
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| **View-switcher chip** ("Viewing as: {view} ▾") | tap (`toggleView`) | chip depresses, popover fades in `fade .18s` | popover "Show this Passport as" + radio rows (Booker/Representation/Production/Private) with ✓ on active |
+| View row | tap (`pickView`) | ✓ moves | **ledger re-orders per face** — proof cards restack; the "what {noun} sees" line + lead proof swap |
+| Gaps bar (artist-only) | tap (`toggleGaps`) | chevron rotates `.3s` | expands the private item + "Add it" ghost |
+| "Publish Passport" (draft) | tap (`publish`) | press-scale; **seal mint** | standing → "Live for buyers · refreshed {date}"; the "LOCK · Verified" seal does `sealpop .7s --ease-overshoot` (proto :933) — the one overshoot in the app |
+| Proof card | hover (desktop) | lifts `.18s` | source-peek affordance (mirrors Buyer, 17.A.6) |
+| "Preview on Passport" | tap | — | jumps to the true public read |
+
+#### Motion table
+| Moment | Duration · easing | Reduced-motion |
+|---|---|---|
+| Face switch (ledger re-order) | cards fade+restack `.26s --ease-ui` | instant restack, opacity only |
+| Popover open | `fade .18s` | keep |
+| Gaps expand | height/chevron `.3s` | keep (no travel — height only) |
+| Publish → seal mint | `sealpop .7s --ease-overshoot` + `spin` (proto :924) | seal appears at rest, no spin |
+| Hero island | static dark; no per-load animation (atmos band removed app-wide, U29) | — |
+
+**Firewall.** Verified strengths only; draw = bands, readiness = binaries, each with a method chip. No gap on any buyer face. **No firewall strip / no narration** (U33) — enforced by the absence of any score/rank component, never announced. De-technicalised provenance (method chips + seal, not "✓ 2 published" badges, U23).
+
+**Mobile.** View-switcher chip in the page header (not in-card tabs). Popover becomes a bottom-sheet (`slidein-up .26s`). Single column; hero island first-viewport. One primary CTA (Publish, or Preview).
+
+**DoD.** Four faces from one pool re-order on switch; header view-switcher shared with the Radar scene-switch pattern; publish → seal mint (overshoot, motion-off safe); gaps bar artist-only; no firewall strip.
+
+---
+
+### 17.A.4 · Requests (artist inbox → decision cockpit)
+
+§8.13 / PART 10 §10.4. Each request is a **decision widget**, not a list row: one-sentence fit summary, missing-info, safety cue, three actions.
+
+#### Interaction model
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| Request card | tap / expand | details slide open `.26s --ease-ui` | shows event, date, LOCK's one-sentence fit line, "no contact shared yet" safety cue, missing-info flags |
+| **"Say I may be available"** (primary) | tap | press-scale; toast | reply logged; card → "✓ Availability sent" chip; **this is the Gate reaction path** |
+| "Ask one question" | tap | inline field opens | a bounded question back to the buyer |
+| "Not for me" | tap | card collapses, muted | declined, logged |
+| Swipe (mobile) | swipe right = available / left = not-for-me | card slides with finger | `OWED` threshold — reuse Radar's `\|dx\|>48 & \|dx\|>\|dy\|×1.4`; require a confirm tap for a booking-affecting swipe (no accidental send) |
+
+#### State-transition map
+| State | Visual | Motion |
+|---|---|---|
+| new | lime dot, raised | subtle `foundpulse 2.8s` (proto :1011) — "needs you" |
+| opened | expanded details | slide `.26s` |
+| replied | "✓ Availability sent" | `cardpop .5s --ease-bloom` |
+| asked | "Awaiting reply" chip | static |
+| declined | muted, collapsed | fade |
+| empty | "No requests yet — when a buyer checks your date, it lands here." | — |
+
+**Firewall.** The reaction insight that later returns to the artist is **method-safe text only, never a count/%/score** (CLAUDE.md — the most fragile spot). A request never shows a "match score"; fit is a one-sentence human reason.
+
+**DoD.** Cards carry fit-line + missing-info + safety cue; three actions; new-state pulse; reply mutates the card in place; swipe requires confirm; zero score.
+
+---
+
+### 17.A.5 · Access — "Who can act for you" (`/artist/access`)
+
+§8.5. A calm consent surface. Motion is minimal by design — trust, not spectacle.
+
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| "Invite someone" | tap (`accessInvite`) | sheet/dialog `slidein-up .26s` | invite form (name + scope checkboxes) |
+| Scope toggle | tap | checkbox fills `.16s`, lime | scope added; live "what they'll be able to do" line updates |
+| "End access" | tap (`accessRevoke`) | confirm dialog | card → "Access ended", actions removed |
+| "Resend invite" | tap (`accessResend`) | toast "Invite resent" | pending card unchanged |
+
+State map: **Active** (since date) · **Pending** (waiting) · **Ended** (no actions) · **Empty** (invite prompt). No score, no rank. Entity law: never "grant/ownership" language toward the artist — consent-based, scoped, revocable by either side.
+
+**DoD.** Invite/active/pending/ended/empty; scope toggles update the live description; revoke behind a confirm; no ownership language.
+
+---
+
+### 17.A.6 · Buyer / Public Passport (`/passport/:id`) — the 60-second decision, in motion
+
+§8.7. **No login.** The interaction job: answer fit·trust·readiness·availability in the first viewport, and make trust **inspectable** via the source-peek.
+
+#### Interaction model
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| Persona toggle (Booking a show / Representing) | tap | segment slides `.16s` | copy + section titles + CTA swap (draw↔career; "Check availability"↔"Discuss representation") |
+| **Proof-unit source-peek** | hover (desktop) / tap (mobile) | a small peek card rises `card-rise .26s --ease-orbit` | shows **where it comes from** + **what the method label means** — trust made inspectable |
+| Sticky availability CTA | scroll | stays pinned (mobile) | tap → availability request (§8.8) |
+| "Send to partner" | tap | copy-link toast | shareable URL copied |
+
+#### Motion table
+| Moment | Duration · easing | Reduced-motion |
+|---|---|---|
+| Persona swap | `.16s` segment + `.2s` content cross-fade | opacity only |
+| Source-peek in/out | `card-rise .26s --ease-orbit` / fade out `.18s` | fade only |
+| Sticky CTA | no animation, position:sticky | — |
+| Hero | static dark island (no atmos animation) | — |
+
+**Firewall.** Verified strengths only; draw = bands, readiness = binaries, each method-labeled. No gap, no score/rank/prediction. **Remove the leftover `.fwstrip` footer** (U33). Peer bands never shown buyer-side unless method-safe and requested. The source-peek explains provenance, never quality.
+
+**Mobile.** Single column; sticky compact availability CTA; source-peek is tap (not hover). Non-pro register for private/corporate (warm, non-industry).
+
+**DoD.** First viewport answers the four questions; persona swap changes copy+CTA; source-peek on every proof unit; sticky CTA; no firewall strip; no login.
+
+---
+
+### 17.A.7 · Source-Confirmer (`/confirm/:token`) — warm one-minute confirmation
+
+§8.9. **Accountless**, one statement, one decision. The entire surface is one centered card — **no nav, no shell** (retire `/producer`, D3). Motion = warmth, not gamification.
+
+#### Interaction model
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| "Yes — this is accurate" (primary) | tap (`cfConfirm`) | press-scale; **quiet lime settle** (no confetti — this is someone else's reward, keep it dignified) | Done state: "Recorded — thank you" + the statement now carries **Producer-confirmed** |
+| "Partly right — needs a fix" | tap | inline correction field opens `.26s` | confirms most + notes the correction |
+| "No — this isn't accurate" | tap (`cfDecline`) | warn-tint press | records a decline (won't show as confirmed) |
+| "What happens after I answer?" | tap | expandable opens `.3s` | legal + name-visibility detail (moved out of the primary flow) |
+| "Replay this link" | tap (`cfReset`) | — | back to Ask |
+
+State map: **Ask** (three large choices) → **Done** (receipt + "Revocable anytime" + replay). Motion is restrained: the Done state fades in (`fade .3s`); the "Producer-confirmed" chip may do a single gentle `cardpop`, no bloom-burst. Reduced-motion → instant.
+
+**Firewall.** This one statement only — never an endorsement, never a score/rating. Adds only the canon **Producer-confirmed** label. Revocable; the artist controls publishing.
+
+**DoD.** Single card, no shell; three warm choices incl. inline "partly"; Done receipt with revoke route; legal in an expandable; motion restrained + motion-off safe.
+
+---
+
+### 17.A.8 · Representation — Roster cockpit
+
+§8.10. A **cockpit of artist-bound action cards** ("who needs help today"), never a CRM table.
+
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| Roster action card | tap | expands `.26s` | what-changed line + why + method/band chips + ArtistAccess scopes |
+| **Urgent card** (a buyer is waiting) | arrival | `foundpulse 2.8s` + amber flag | "A buyer is waiting on you…" — always sorts first |
+| "Publish update" / "Answer request" (one per card) | tap | press-scale; toast | row → "✓ Update published" / "✓ Availability sent" (`cardpop .5s`) |
+| Filter (urgent / ready / needs-approval) | tap | pill raises `.16s` | list re-filters, cards fade-restack `.26s` |
+| "Invite artist" | tap | sheet | invite by ArtistAccess (consent, not ownership) |
+
+**Firewall / entity law.** **No roster rank** (never-rank-roster). Reaction insight = method-safe text only. No CRM tables. ArtistAccess = a grant the artist can revoke — never ownership language. **DoD.** Each row = one artist-bound card (what changed · why · one action); urgent state pulses+sorts first; action mutates the row; consent+scope shown; no rank.
+
+---
+
+### 17.A.9 · Production — Lineup board
+
+§8.11. An event/lineup **board** of time-ordered slots, not rows. Booking = acting as a Buyer (open a Passport → availability request).
+
+| Element | Trigger | Feedback | Result |
+|---|---|---|---|
+| Event card | tap | expands to timeline | slots top-to-bottom by set-time |
+| **Slot chip** (Open/Requested/Confirmed) | tap | press-scale | Open → "Confirm for this slot" opens a Passport/act picker |
+| "＋ New event / open slot" | tap | sheet `slidein-up .26s` | Draft event card created (`cardpop`) |
+| Suggested-act card | tap | — | fit *reason* (never a rank) + open its Passport |
+| Slot confirm | tap | slot → "✓ Confirmed · {act}" | `cardpop .5s --ease-bloom` |
+
+State map (per slot): **Open** ("needs an act") · **Requested** ("Awaiting reply") · **Confirmed** ("✓ {act}"). Note: event/lineup **creation** UI is target (view-only in the real app today). **Firewall.** Production never owns an artist's evidence — it reads Passports; suggested acts carry a fit *reason*, never a rank/score. **DoD.** Time-ordered slots; open/requested/confirmed states; create-event/open-slot; one CTA per slot; Production-as-Buyer path; no evidence ownership.
+
+---
+
+### 17.A.10 · The inline-edit widget (full spec — the D1 fix, reused everywhere)
+
+The single most reused interactive primitive after the button. It opens **in place** (never a new page), on the Radar inspector (§8.3), the Act-Identity Editor (§8.6), and Account (17.B.5). Per PART 10 §10.4 every field is QA'd with: **empty · typing · long value · Hebrew · URL · invalid.**
+
+#### The seven states (per field)
+| State | Visual | Motion | Copy example |
+|---|---|---|---|
+| **Display** | value + "Edit" affordance | — | value shown; "Edit" ghost |
+| **Open in place** | field replaces value, focus, caret | field grows in `.16s`, border → `--accent` | placeholder / current value prefilled |
+| **Typing** | active border, live validation | border stays lime; counter ticks (textarea) | live char-count "82 / 120" |
+| **Valid / dirty** | "● Editing" chip + Save + Cancel | chip fades in `.18s` | "Save — right here" |
+| **Saving** | button → spinner, field locks | `shimmer` on the row `.16s` | "Saving…" |
+| **Saved** | "✓ Saved" chip, value returns to display | `cardpop .5s --ease-bloom` on the row | "✓ Saved" (auto-fades ~2.4s) |
+| **Error** | red hairline + human message + Retry | field shakes once (2px, 120ms) — **skipped on reduced-motion** | "That link doesn't look right — paste the full address (https://…). [Retry]" |
+
+#### Per-field behavior
+| Field | Validation | Empty helper | Invalid message |
+|---|---|---|---|
+| Stage name | non-empty | "Your Act's name — what a buyer reads first." | "Add a name so buyers know who they're booking." |
+| City | non-empty | "Where you're based." | — |
+| One-line positioning | ≤120 chars, live counter | "One line on what you do." | "Keep it to one line — {n} left." |
+| Genre | from set / free | "Your scene — it also lights the planets that matter most." | — |
+| Link / URL | URL shape, `dir=ltr` | "Paste a public link." | "That link doesn't look right — paste the full address." |
+| Draw fields | **band select only** | — | (never free-typed — firewall) |
+
+**Interaction law.** Field-level save (each row independent); **undo** on save (a quiet "Undo" in the saved toast); confirmed radar nodes expose an "edit" affordance that **re-opens the fill widget pre-filled**; a "what becomes public" chip on each field; nothing publishes until the Passport is refreshed. **Firewall.** Draw saves as bands only; no score/rank field can exist. **DoD (per field):** empty=friendly helper · typing=active border+live validation · invalid=human explanation · saved=visible confirmation+undo · loading · error-retry · Hebrew/RTL + long-value + URL cases all pass.
+
+---
+
+### PART B — THE MISSING UTILITY SCREENS
+
+These are the screens the prototype never drew — the plumbing that a real product needs and that §8 does not cover. **All utility screens are LIGHT / paper theme** (dark is reserved for Radar/Passport atmosphere only — DS v1.6.23 "dark is atmosphere, not camouflage"). **Mobile = bottom-sheets, one primary CTA, 44px targets.** Language is human — **no internal terms** (no "org", "role_assignment", "entitlement" on screen). Each is spec'd like §8: **PURPOSE · DESKTOP · MOBILE · COMPONENTS · STATES · INTERACTIONS · MICROCOPY (EN + HE where derivable) · FIREWALL · DoD.**
+
+Shared tokens (light): paper `#F3F5EF` · white card `#FFFFFF` · forest panel `#18221A` · ink text `#0A0D0B` · slate muted `#687269` · lime CTA `#C8F04D` · mist border `#DDE3D9`. `OWED` — exact card border/elevation, radius scale (`--r`, `--r2`), light-card muted/faint, and CTA primary/secondary/ghost paddings + the 44px rule's exact values live only in DS v1.6.25 (Drive) — fill from `LOCKSHOW_Design_System_CURRENT.html`.
+
+---
+
+### 17.B.1 · Signup
+
+**PURPOSE.** Create an account with the least friction, then hand off to the right onboarding (artist → §8.1; buyer needs no account). One decision: email or Google.
+
+**DESKTOP.** Centered light card (max ~420px) on paper. Brand lockup · H1 "Create your account" · Google button (full-width, secondary) · "or" divider · email + password fields · primary "Create account" · legal microcopy · footer "Already have an account? Log in".
+**MOBILE.** Same card full-bleed with 16px gutters; primary CTA pinned; Google button first (thumb-reachable). No bottom-sheet needed (this is a full page).
+
+**COMPONENTS.** Brand lockup · Google OAuth button (with G mark) · email field · password field (show/hide toggle) · primary CTA · inline error region · legal line.
+
+**STATES.** default · field-focus (lime border) · password-too-short (inline helper) · email-taken ("That email already has an account — log in instead" + link) · submitting (CTA → spinner, `shimmer` on card) · success (→ onboarding) · OAuth-cancelled (return to default, quiet note) · offline (see 17.B.10).
+
+**INTERACTIONS.** Google → OAuth popup/redirect → on return, route by role (`state.from` honored). Email → validate → create → route. Enter submits. Password show/hide toggles.
+
+**MICROCOPY (EN / HE).** H1 "Create your account" / "פתיחת חשבון" · Google "Continue with Google" / "המשך עם Google" · email "Email" / "אימייל" · password "Password" / "סיסמה" · helper "At least 8 characters." / "לפחות 8 תווים." · CTA "Create account" / "יצירת חשבון" · legal "By continuing you agree to our Terms and Privacy Policy." / "בהמשך אתה מאשר את תנאי השימוש ומדיניות הפרטיות." · footer "Already have an account? **Log in**" / "כבר יש לך חשבון? **התחברות**".
+
+**FIREWALL.** Neutral — no evidence surface. Do not pre-collect anything that implies a score.
+**DoD.** Email + Google paths; validation states; email-taken → login link; `state.from` deep-link honored; light theme; one primary CTA; keyboard-submittable; HE strings externalized.
+
+---
+
+### 17.B.2 · Login (email + Google OAuth)
+
+**PURPOSE.** Return an existing user to where they were. One job, two paths.
+
+**DESKTOP / MOBILE.** Mirror of Signup: brand · H1 "Log in" · Google button · email + password · "Forgot password?" link · primary "Log in" · footer "New here? Create an account".
+
+**COMPONENTS.** Google button · email · password (show/hide) · forgot-password link · primary CTA · inline error.
+
+**STATES.** default · focus · wrong-credentials ("Email or password doesn't match. Try again or reset your password.") · submitting · success (→ `state.from` or role home) · OAuth-cancelled · rate-limited ("Too many attempts — wait a moment and try again.") · offline.
+
+**INTERACTIONS.** Enter submits; Google OAuth; "Forgot password?" → 17.B.3; on success honor deep-link `state.from` (§8.13).
+
+**MICROCOPY (EN / HE).** H1 "Log in" / "התחברות" · "Forgot password?" / "שכחת סיסמה?" · error "Email or password doesn't match." / "האימייל או הסיסמה לא תואמים." · CTA "Log in" / "התחברות" · footer "New here? **Create an account**" / "חדש כאן? **פתיחת חשבון**".
+
+**FIREWALL.** Neutral. **DoD.** Both paths; wrong-credential + rate-limit states; forgot-password link; deep-link honored; light theme; one CTA.
+
+---
+
+### 17.B.3 · Forgot / Reset password
+
+**PURPOSE.** Recover access safely in two steps: request a link → set a new password.
+
+**DESKTOP / MOBILE.** Step 1 (request): H1 "Reset your password" · email field · primary "Send reset link" · "Back to login". Step 2 (from email link): H1 "Set a new password" · new password + confirm · primary "Save new password".
+
+**COMPONENTS.** email field · CTA · confirmation panel · (step 2) two password fields with match validation · show/hide.
+
+**STATES.** request-default · submitting · **sent** ("Check your email — we sent a reset link to {email}. It expires in 60 minutes." — always shown even if the email doesn't exist, to avoid account enumeration) · link-expired ("This link has expired — request a new one.") · step2-default · passwords-mismatch · saving · success (→ login) · offline.
+
+**INTERACTIONS.** Send → always show the neutral "sent" panel (enumeration-safe). Step 2 validates match + length, saves, routes to login with a success toast.
+
+**MICROCOPY (EN / HE).** "Reset your password" / "איפוס סיסמה" · CTA "Send reset link" / "שליחת קישור לאיפוס" · sent "Check your email — we sent a reset link to {email}." / "בדוק את האימייל — שלחנו קישור לאיפוס אל {email}." · expired "This link has expired — request a new one." / "הקישור פג תוקף — בקש קישור חדש." · step2 "Set a new password" / "בחר סיסמה חדשה" · mismatch "The two passwords don't match." / "הסיסמאות אינן תואמות." · CTA "Save new password" / "שמירת סיסמה חדשה".
+
+**FIREWALL.** Neutral; enumeration-safe (never reveal whether an email exists). **DoD.** Two steps; enumeration-safe "sent"; expired-link state; match+length validation; success → login; light theme.
+
+---
+
+### 17.B.4 · Invite → Accept (org / team)
+
+**PURPOSE.** A person clicks an invite link (`/invite/:token`) and joins a workspace with a role — the team-formation moment. Human language only ("Maya invited you to join {Workspace}"), never "role_assignment".
+
+**DESKTOP / MOBILE.** Centered card: inviter avatar + "**{Inviter}** invited you to join **{Workspace}**" · a one-line "what you'll be able to do" (role in plain words) · primary "Accept & join" · secondary "Not now". If not signed in → first create/log in (17.B.1/2), then land back here (token preserved).
+
+**COMPONENTS.** inviter chip · workspace name · plain-role line · Accept CTA · decline ghost · expired/used panel.
+
+**STATES.** valid (accept) · **needs-auth** (prompt to sign in first, token held) · accepting (spinner) · **accepted** (→ that workspace home with a welcome toast) · **expired** ("This invite has expired — ask {Inviter} to send a new one.") · **already-used** ("This invite was already used.") · **wrong-account** ("This invite is for {email}. You're signed in as {other} — switch accounts?").
+
+**INTERACTIONS.** Accept → join, route to workspace, toast "You've joined {Workspace}". Decline → neutral confirmation. Auth-gate preserves `:token` through signup/login.
+
+**MICROCOPY (EN / HE).** "**{Inviter}** invited you to join **{Workspace}**" / "**{Inviter}** הזמין אותך להצטרף ל-**{Workspace}**" · role line "You'll be able to {help with bookings / manage the roster / …}." / "תוכל {לעזור עם הזמנות / לנהל את הרוסטר / …}." · CTA "Accept & join" / "אישור והצטרפות" · decline "Not now" / "לא עכשיו" · expired "This invite has expired — ask {Inviter} to send a new one." / "ההזמנה פגה — בקש מ-{Inviter} הזמנה חדשה."
+
+**FIREWALL.** Neutral; no ranking of members. Role shown in plain capability words, never internal enum. **DoD.** Valid/expired/used/wrong-account/needs-auth states; token survives auth; accept routes to workspace + toast; plain-language role; light theme.
+
+---
+
+### 17.B.5 · Account Settings (person-level)
+
+**PURPOSE.** The person (not the Act, not the workspace) edits their own basics and controls their account. Reachable from the top-right hub (§ PART 6). `OPEN` — owner U26: whether this is a full screen or folds into the hub; spec here as a screen with the hub linking in.
+
+**DESKTOP.** Light page, single column of setting rows (reuse the inline-edit widget, 17.A.10): **Name** · **WhatsApp** · **Language** (EN/HE select — this is where language lives, removed from every workflow per U1) · **Marketing preferences** (toggle) · a divider · **Danger zone**: "Delete account".
+**MOBILE.** Same rows full-width; "Delete account" opens a bottom-sheet confirm.
+
+**COMPONENTS.** inline-edit rows (name, WhatsApp) · language select · marketing toggle · delete-account row + confirm sheet · save toasts.
+
+**STATES.** per-row (display/editing/saving/saved/error — 17.A.10) · marketing toggle (on/off, saves immediately with a toast) · language change (applies + confirms; RTL flips for HE) · **delete confirm** (bottom-sheet: "This removes your account and your Acts' evidence. This can't be undone." + type-to-confirm or explicit "Delete my account" + "Cancel") · deleting · deleted (→ signed-out marketing page).
+
+**INTERACTIONS.** Inline field save; toggle saves live; language switch re-renders (RTL for HE); delete → confirm sheet → hard confirm → sign out.
+
+**MICROCOPY (EN / HE).** H1 "Account" / "חשבון" · "Name" / "שם" · "WhatsApp" / "וואטסאפ" · "Language" / "שפה" · marketing "Send me product updates and tips" / "שלחו לי עדכונים וטיפים על המוצר" · delete "Delete account" / "מחיקת חשבון" · confirm "This removes your account and your Acts' evidence. This can't be undone." / "פעולה זו מוחקת את החשבון ואת הראיות של האקטים שלך. אי אפשר לבטל." · CTA "Delete my account" / "מחק את החשבון שלי".
+
+**FIREWALL.** Neutral. Marketing prefs are opt-in-honest (see 17.B.8). **DoD.** Editable name/WhatsApp/language/marketing with inline-edit DoD; language RTL flip; delete behind a hard confirm → sign-out; light theme; HE strings.
+
+---
+
+### 17.B.6 · Org / Team management (members, roles, seats)
+
+**PURPOSE.** A workspace owner/admin manages who's on the team, their role, and seats — human language, no CRM feel. (This is `/org/members` today — §8.10 `/team`.)
+
+**DESKTOP.** Light page: H1 "{Workspace} team" · seat line ("3 of 5 seats used") · "Invite teammate" primary · a **members list** (avatar · name · role chip · status) · per-member menu (change role, remove). 
+**MOBILE.** Members as stacked cards; invite as a bottom-sheet; per-member actions in a sheet.
+
+**COMPONENTS.** seat meter (used/total, **plain text — not a graded bar**) · invite CTA · member row (avatar, name, role chip, status: active/invited) · role picker (plain words) · remove-member confirm.
+
+**STATES.** default list · invite-sheet (email + role) · pending member ("Invited — waiting to accept") · seats-full ("All seats are used — upgrade to add more" → 17.B.7) · changing-role (saving/saved) · remove-confirm · empty (owner-only, "Invite your first teammate").
+
+**INTERACTIONS.** Invite → creates `/invite/:token` (17.B.4) → toast. Change role → saves inline. Remove → confirm → row fades. Seats-full → routes to Billing.
+
+**MICROCOPY (EN / HE).** H1 "{Workspace} team" / "צוות {Workspace}" · seats "3 of 5 seats used" / "3 מתוך 5 מושבים בשימוש" · CTA "Invite teammate" / "הזמנת חבר צוות" · pending "Invited — waiting to accept" / "הוזמן — ממתין לאישור" · full "All seats are used — upgrade to add more." / "כל המושבים בשימוש — שדרג כדי להוסיף." · remove "Remove {name} from the team?" / "להסיר את {name} מהצוות?".
+
+**FIREWALL.** No member **rank/leaderboard**. Roles in plain capability language. Seat count is a plain fact, never a grade. **DoD.** Members list with role chips + status; invite → token flow; inline role change; seats used/total; seats-full → upgrade; remove-confirm; light theme.
+
+---
+
+### 17.B.7 · Billing / Plan / Upgrade (free-pilot state)
+
+**PURPOSE.** Show the current plan, let a workspace upgrade / add seats. **STAGE-honest:** LOCK is pre-validation — monetisation is **measured, not required**; the founding cohort is a **free pilot**. No price/ICP is locked until the Gate. So the default state is a clean "You're on the founding pilot," not a hard paywall.
+
+**DESKTOP.** Light page: current-plan card ("Founding pilot · free during the pilot") · a plan picker (cards: Solo / Team / Company) with plain feature lists + seat counts · "Request upgrade" primary (`OPEN` — whether upgrade is self-serve checkout or an operator-approved request; today it's a request → admin approves, §8.12). Seat add-on row.
+**MOBILE.** Plan cards stack; picker as a sheet; one primary CTA.
+
+**COMPONENTS.** current-plan card · plan cards (name · what you get · seats · price-or-"free during pilot") · seat stepper · "Request upgrade" CTA · pilot badge.
+
+**STATES.** **pilot-free** (default — "You're on the founding pilot. It's free while we build with you.") · comparing plans · upgrade-requested ("Request sent — we'll set this up with you.") · seats-add-requested · (post-Gate, `OPEN`) paid/active · payment-needed.
+
+**INTERACTIONS.** Pick plan → highlight + feature diff. "Request upgrade" → logs request → admin cockpit (§8.12) → toast. Seat stepper adjusts requested seats.
+
+**MICROCOPY (EN / HE).** pilot "You're on the **founding pilot** — free while we build with you." / "אתה בפיילוט המייסדים — חינם בזמן שאנחנו בונים יחד." · CTA "Request upgrade" / "בקשת שדרוג" · requested "Request sent — we'll set this up with you." / "הבקשה נשלחה — נסדר את זה יחד." · note "No card needed during the pilot." / "אין צורך בכרטיס אשראי בזמן הפיילוט."
+
+**FIREWALL / honesty.** Do **not** price or assume the deep-scan cost (target architecture, unmeasured — CLAUDE.md). Intent (a request) is **never** shown as revenue (§8.12). Free-pilot is the honest default. **DoD.** Pilot-free default; plan picker with plain features + seats; upgrade = request → admin (or `OPEN` checkout); "no card during pilot"; light theme; no cost claims about unbuilt scan.
+
+---
+
+### 17.B.8 · Consent / cookie banner
+
+**PURPOSE.** Honest, minimal consent — the app's firewall/honesty ethos extends to privacy. Not a dark-pattern wall.
+
+**DESKTOP.** A slim bottom bar (not a full-screen blocker) on paper: one line + "Accept" (primary) + "Only essentials" (equal-weight secondary) + "Manage" link. 
+**MOBILE.** A bottom-sheet with the same three choices; **"Accept" and "Only essentials" are visually equal** (no tricked hierarchy).
+
+**COMPONENTS.** message line · Accept · Only-essentials · Manage (opens a small preferences sheet with toggles: essential [locked on], analytics, marketing).
+
+**STATES.** shown (first visit) · manage-open (toggles) · saved (bar dismisses, `fade`) · already-consented (never shown again).
+
+**INTERACTIONS.** Accept / Only-essentials both dismiss + persist. Manage → toggle sheet → Save. Choice persists; re-openable from Account.
+
+**MICROCOPY (EN / HE).** "We use only what's needed to run LOCK, plus optional analytics to improve it. You choose." / "אנחנו משתמשים רק במה שנדרש להפעלת LOCK, ובנוסף אנליטיקה אופציונלית לשיפור. אתה בוחר." · "Accept" / "אישור" · "Only essentials" / "רק החיוני" · "Manage" / "ניהול".
+
+**FIREWALL.** Honest, symmetric choices (no dark patterns). Analytics here are the product-funnel events (§8.12) — never a grade of the user. **DoD.** Non-blocking bar/sheet; equal-weight accept/essentials; manage toggles with essentials locked; persists; re-openable; light theme.
+
+---
+
+### 17.B.9 · Notifications inbox (incl. the availability-request reaction)
+
+**PURPOSE.** One place for what's happened — the most important item being the **availability-request reaction** (the Gate signal) and confirmations. Method-safe throughout.
+
+**DESKTOP.** Bell in the top chrome → a dropdown panel (recent) + a full `/notifications` page. Light. List of notification rows grouped by day: icon · human line · timestamp · optional inline action.
+**MOBILE.** Bell → full-screen list; or a bottom-sheet for the recent few. Pull-to-refresh.
+
+**COMPONENTS.** notification row (icon · text · time · unread dot) · inline action (e.g. "Reply" on a request) · mark-all-read · empty state · day groupings.
+
+**STATES.** unread (lime dot, subtly raised) · read (muted) · **availability-request** ("A buyer asked about your date — {event}, {date}." → "Reply" → Requests, 17.A.4) · **confirmation** ("{Name} confirmed a statement on your Passport." — method-safe, **no count/score**) · **published/reaction** (method-safe text only) · empty ("Nothing yet — this is where buyer interest and confirmations land."). loading (skeleton) · offline.
+
+**INTERACTIONS.** Open row → routes to the source screen. Inline "Reply" → Requests. Mark-all-read. New arrival while open → row slides in `slidein .28s` + unread pulse (`foundpulse`), reduced-motion → appears at rest.
+
+**MICROCOPY (EN / HE).** availability "A buyer asked about your date — {event}, {date}." / "מזמין שאל לגבי התאריך שלך — {event}, {date}." · action "Reply" / "מענה" · confirmation "{Name} confirmed a statement on your Passport." / "{Name} אישר הצהרה בפספורט שלך." · empty "Nothing yet — buyer interest and confirmations land here." / "עדיין אין כלום — כאן ינחתו התעניינות של מזמינים ואישורים." · mark-all "Mark all read" / "סמן הכל כנקרא".
+
+**FIREWALL (critical).** The reaction insight returning to the artist is **method-safe text only — never a count, %, or score** (CLAUDE.md — the most fragile spot). "A buyer asked about your date," never "3 buyers viewed / 80% interest." No leaderboard of who reacted. **DoD.** Grouped inbox; unread/read; availability-request row with inline reply; confirmation rows method-safe; empty/loading/offline; new-arrival motion (reduced-motion safe); **zero count/score in any reaction line.**
+
+---
+
+### 17.B.10 · 404 / global error / offline
+
+**PURPOSE.** Keep a lost or broken moment warm, honest, and recoverable — one clear way back. Never a technical stack trace on screen (U8).
+
+**DESKTOP / MOBILE.** Centered light card: a calm mark, a short human line, one primary CTA ("Back to home" / retry), one quiet secondary. Same layout for all three; copy differs.
+
+**COMPONENTS.** illustration/mark (brand, subtle) · headline · one-line explanation · primary CTA · secondary link.
+
+**STATES.**
+- **404** — "This page moved or never existed." · primary "Back to my home" · secondary "Go to my Passport".
+- **Global error (500 / crash boundary)** — "Something broke on our side — not your fault." · primary "Try again" (re-mount) · secondary "Back to home". No stack trace, no error code on screen (log it silently).
+- **Offline** — a slim top banner (not a takeover): "You're offline — we'll reconnect automatically." Actions that need the network disable with a tooltip; queued where safe. On reconnect, banner turns "Back online" and fades.
+
+**INTERACTIONS.** Retry re-attempts the failed route/action. Offline banner auto-updates on `online`/`offline` events; disabled CTAs show "Reconnecting…" not a dead click.
+
+**MICROCOPY (EN / HE).** 404 "This page moved or never existed." / "הדף הזה עבר או לא היה קיים." · error "Something broke on our side — not your fault." / "משהו נשבר אצלנו — לא באשמתך." · offline "You're offline — we'll reconnect automatically." / "אתה במצב לא מקוון — נתחבר מחדש אוטומטית." · back "Back to my home" / "חזרה לדף הבית".
+
+**FIREWALL.** Neutral; no technical content on screen (U8). **DoD.** Warm 404/500/offline; one primary recovery CTA each; offline as a non-blocking banner with auto-reconnect + disabled-not-dead actions; no stack trace/error code on screen; light theme.
+
+---
+
+### 17.B.11 · Loading / skeleton states pattern (the app-wide rule)
+
+**PURPOSE.** One consistent loading language so nothing ever looks frozen or blank. This is a **pattern**, applied on every screen, not a screen.
+
+**THE PATTERN.**
+- **Skeletons, not spinners, for content.** A loading list/card renders its shape as `--surface2→--raise` gradient blocks with `shimmer 1.4s linear infinite` (proto :626), matching the real layout's boxes (proto :2003 shows the evidence-capture skeleton). Reduced-motion → static `--surface2` blocks, **no shimmer**.
+- **Spinners only for a single in-flight action** (a button mid-submit): the button label → a small spinner, button stays sized (no layout shift).
+- **Optimistic where safe.** Confirms, toggles, and saves apply immediately and reconcile — the UI never waits on the round-trip for a reversible action (undo covers the rare failure).
+- **The honest-AI loading line.** Anywhere the extraction runs, show the honest state, never a fake progress bar: "AI is labeling your evidence" + "Every claim waits for your confirmation." (proto :2000–2001). A pulse dot (`.pulsedot`), not a percentage.
+- **Timing:** if a load resolves under ~200ms, **don't** show a skeleton (avoids a flash); show it only past ~200ms. Keep skeletons for max ~10s, then fall to an error/retry state (17.B.10).
+
+**MOTION table.**
+| Element | Animation | Reduced-motion |
+|---|---|---|
+| Skeleton block | `shimmer 1.4s linear ∞` | static block |
+| In-flight button | inline spinner | static "Saving…" text |
+| AI-labeling line | `.pulsedot` breath | static dot |
+| Content arrival | `fade .18s` / `slidein .28s` | fade only |
+
+**MICROCOPY (EN / HE).** AI "AI is labeling your evidence." / "ה-AI מסמן את הראיות שלך." · sub "Every claim waits for your confirmation." / "כל טענה ממתינה לאישור שלך." · generic "Loading…" / "טוען…".
+
+**FIREWALL.** No fake progress bar that implies a measured %; the AI line is honest and method-safe. **DoD.** Skeleton (shape-matched, shimmer, reduced-motion static) for content; spinner only for single actions; optimistic reversible actions; honest AI line (no % bar); ≥200ms threshold before showing; ~10s → error fallback.
+
+---
+
+### 17.C · Cross-cutting acceptance (applies to every screen above)
+
+1. **One primary lime CTA on screen at any instant** — enforced structurally (Radar's `holdsCTA`; utility screens have a single primary).
+2. **Immediate feedback (<100ms) on every interactive element** — press-scale, focus border, or optimistic apply. No dead clicks.
+3. **`prefers-reduced-motion` has a defined equivalent for every animation** — ambient loops off, interaction transforms collapse to opacity, feedback fades kept (17.0.3).
+4. **Firewall by design, never narrated** — no score/rank/%/gauge/headcount/leaderboard component exists; reaction-to-artist is method-safe text only; no firewall strip.
+5. **Light theme for all utility screens; dark only for Radar/Passport atmosphere.**
+6. **Human language only** — no internal terms on screen (org/role/entitlement/enum).
+7. **Mobile = bottom-sheets + gestures, never a new page per tap; 44px targets; no horizontal scroll at 390.**
+8. **Motion tokens reused, not re-invented** — the five easings + the duration ladder are the only vocabulary.
+
+---
+
+### 17.D · Provenance & open items (what I could / couldn't derive)
+
+**Derived from the prototype (ground-truth, path:line cited above):** every easing, duration, keyframe, and the swipe threshold in PART A. The five-token easing system, the duration ladder, and the reduced-motion three-tier contract are generalisations of the prototype's repeated inline values — faithful, but promoted to named tokens (flagged `OWED` for Codex to confirm as DS v1.6.25 named motion tokens).
+
+**Could NOT be derived — carried as `OWED` (need DS v1.6.25 from Drive):** exact light-card border/elevation/radius scale, CTA primary/secondary/ghost paddings, the 44px rule's exact hit-area values, named motion tokens, and the master logo SVG. The prototype is dark-themed and the utility screens (PART B) are new — their exact light-token values are not in the repo (only the A13 core hexes are).
+
+**Could NOT be derived — carried as `OPEN` (product/owner decisions):** (a) gold/amber retire-vs-keep (§7.0 — affects only the found-state pulse color, not the motion); (b) Account as a full screen vs folded into the hub (U26); (c) Billing upgrade = self-serve checkout vs operator-approved request (today it's a request); (d) post-Gate paid billing states (no price/ICP locked pre-Gate — CLAUDE.md STAGE); (e) the sheet **drag-follow** (finger-tracking) refinement — the prototype animates open/closed but does not 1:1 track the finger; spec'd as a target in 17.A.2.g; (f) long-press-logo → method (prototype uses tap→method; long-press is the PART 10 target).
+
+**Not built, spec'd honestly (per CLAUDE.md honesty firewall):** the deep multi-source discovery scan animation in Onboarding (17.A.1) shows the intended experience (vision) with honest method-labels ("a wider auto-scan is in development"); event/lineup **creation** in Production (17.A.9) is target, view-only today.
+
+---
+
+## 18. Open Decisions (owner rulings still pending)
 
 Marked so they are never mistaken for settled. **OPEN** = an owner ruling; **OWED** = a deliverable another party must supply.
 
@@ -790,6 +3470,22 @@ Marked so they are never mistaken for settled. **OPEN** = an owner ruling; **OWE
 | — | **Buyer register segmentation UI (D9)** | build task (P2) | private/corporate/planner warm-copy paths. |
 | — | **Production event/lineup creation** | build task | currently view-only; add create-event / open-slot / confirm-slot. |
 | — | **Retire Source-Confirmer workspace shell (D3)** + fix create dead-end (D2) | build task (P0) | confirmer lives only at `/confirm/:token`; recompute effective role so a base-role producer/booker isn't dead-ended. |
+
+### 18.1 New owner-level rulings surfaced by §§13–17
+
+Assembling the deep build spec surfaced additional decisions that only the owner (some with counsel) can settle. The technical **OWED** items live in each section's own register — §13.8 (engineering), §14.7 (measurement/payments), §15.1 (legal placeholders L-1…L-9) + §15.4 (Hebrew ratification H-1…H-7), §16.C (taxonomy/business), §17.D (motion/utility OWED+OPEN). The owner-decision subset is consolidated here:
+
+| # | Item | Type | Notes / where |
+|---|---|---|---|
+| L-1…L-9 | **Legal placeholders** — controller legal name · business ח.פ. number · postal address · jurisdiction city · refund policy · accessibility-coordinator name/phone/date · DPO/EU-representative question · concrete retention periods · Terms-HE "Mirror" re-alignment | OPEN (owner + counsel) | blocks Terms/Privacy/Accessibility publication. Full table in §15.1. |
+| — | **Consent Mode v2 scope** | RESOLVED → build | ruling recorded: **basic, default = denied** before any analytics fires (§15.2). Listed here so the ruling is visible, not re-opened. |
+| T-1 | **Genre-family gap** — comedian-host & corporate-ceremony (MC/עורך אירוע) families are not yet in the genre taxonomy | OPEN (owner taxonomy) | affects onboarding genre list + method labels; §16.A.1 flags it. Decide whether these are first-class families pre-Gate. |
+| — | **027/028 applied-state confirmation** | OPEN (owner confirm) | VERSIONS records head 035 but no explicit "027/028 applied ✓"; 030/031 imply they are live. One-line confirmation requested (§13.2). |
+| B-2 | **Billing model** — self-serve checkout vs operator-approved upgrade request | OPEN (owner) | today it is an operator-approved request; no price/ICP locked pre-Gate (§17.B.7). |
+
+**Two engineering bugs found while grounding (build-fix, NOT owner decisions — flagged for the board):**
+1. `ConsentLegal.jsx` `recordPrivacyConsent` still writes the **pre-021 legacy scope names** (`privacy-policy` / `data-processing`) while the live DB CHECK only accepts canon `privacy-processing` → inserts would be rejected (§15.2, §13.2).
+2. The marketing site (`website-next/app/layout.tsx`) loads **Manrope into a CSS variable misleadingly named `--font-heebo`** — there is no actual Hebrew webfont in the site stack, so Hebrew falls back to the OS font. The app stack (Frank Ruhl Libre + Heebo) is Hebrew-capable; the site must adopt a real Hebrew stack and the DS must state it (§15.3).
 
 ---
 
