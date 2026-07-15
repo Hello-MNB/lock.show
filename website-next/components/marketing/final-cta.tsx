@@ -25,8 +25,8 @@ export function FinalCta({
       className="mk-section mk-final-cta"
       style={{
         background:
-          'radial-gradient(640px 360px at 50% 120%, rgba(200,240,77,0.1), transparent 65%), var(--color-ink)',
-        color: 'var(--color-paper)',
+          'radial-gradient(760px 360px at 50% 120%, rgba(255,255,255,0.34), transparent 68%), var(--color-stamp)',
+        color: 'var(--color-ink)',
         textAlign: 'center',
       }}
     >
@@ -39,7 +39,7 @@ export function FinalCta({
             letterSpacing: '-0.035em',
             lineHeight: 1.08,
             margin: '0 0 1rem',
-            color: 'var(--color-paper)',
+              color: 'var(--color-ink)',
           }}
         >
           {title}
@@ -49,7 +49,7 @@ export function FinalCta({
             style={{
               fontSize: '1rem',
               lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.62)',
+              color: 'rgba(10,13,11,0.68)',
               maxWidth: '520px',
               margin: '0 auto 2rem',
             }}
@@ -90,7 +90,7 @@ export function FinalCta({
                 fontWeight: 700,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: 'var(--color-paper)',
+                color: 'var(--color-ink)',
                 textDecoration: 'none',
                 display: 'inline-flex',
                 alignItems: 'center',

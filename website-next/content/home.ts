@@ -42,15 +42,15 @@ const en: HomeContent = {
   meta: {
     title: 'LOCK — Build a Passport that helps the next room understand you',
     description:
-      'LOCK helps artists start with one link, gather real show context, and publish one clear Passport when they are ready.',
+      'Start with one link. LOCK builds a private Radar from the artist world around you, then helps you publish one clear Passport when you are ready.',
   },
   hero: {
-    eyebrow: 'Artist-first booking context',
-    h1: 'Build a Passport that helps the next room understand you.',
+    eyebrow: 'Private Radar · Public Passport',
+    h1: 'Turn your artist world into a Passport people can trust.',
     body: 'Start with one link. LOCK gathers the shows, rooms, clips, people and source context around your act into a private Radar — then helps you publish one Passport when you are ready.',
-    primaryCta: { label: 'Join pilot', href: SIGNUP },
+    primaryCta: { label: 'Start free pilot', href: SIGNUP },
     secondaryCta: { label: 'See Passport demo', href: '/passport/demo' },
-    trustLine: '',
+    trustLine: 'No scores. No rankings. Nothing public until the artist approves.',
     imageAlt:
       'Electronic artist in a night-show atmosphere preparing material for the next booking conversation',
     chips: [],
@@ -67,19 +67,19 @@ const en: HomeContent = {
     },
   },
   why: {
-    eyebrow: 'Why it exists',
-    title: 'You are not hard to explain. Your context is scattered.',
+    eyebrow: 'The real problem',
+    title: 'You should not have to explain yourself from zero every time.',
     cards: [
       {
-        title: 'Artists repeat the same story.',
+        title: 'Links do not carry the room.',
         body: 'Every opportunity asks for the same proof again — a bio here, links there, screenshots somewhere else.',
       },
       {
-        title: 'Booking people need context, not a score.',
+        title: 'Good nights disappear too fast.',
         body: 'A booking decision deserves a warm, clear picture of the act — not a rank, a score or a cold spreadsheet.',
       },
       {
-        title: 'Teams need one clean version.',
+        title: 'The next yes needs confidence.',
         body: 'Representation and production teams need the same story visible before calls, not buried in scattered message threads.',
       },
     ],

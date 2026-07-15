@@ -152,7 +152,7 @@ export function MediaTile({
         aria-hidden="true"
         style={{ backgroundImage: `url('${image.src}')`, backgroundPosition: image.position ?? 'center' }}
       />
-      <span className="mk-media-tile__cap">{caption}</span>
+      <span className="mk-media-tile__cap" style={{ color: '#F3F5EF' }}>{caption}</span>
     </>
   )
   if (href) {

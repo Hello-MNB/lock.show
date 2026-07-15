@@ -229,6 +229,203 @@
   background: rgba(255, 255, 255, 0.56);
 }
 
+/* Bright brand/product moment: lemon carries the message, black carries the
+   reading. This breaks the previous dark-after-dark rhythm. */
+.mk-product-split {
+  padding: clamp(64px, 8vw, 104px) max(22px, 4vw);
+  background:
+    radial-gradient(760px 360px at 94% 0%, rgba(255,255,255,0.38), transparent 68%),
+    var(--color-stamp);
+  color: var(--color-ink);
+}
+.mk-product-split__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  align-items: center;
+}
+.mk-product-split__eyebrow,
+.mk-emotional-band__eyebrow {
+  font-family: var(--font-space-mono), 'DM Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.85rem;
+}
+.mk-product-split h2 {
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 520;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  margin: 0 0 1rem;
+  max-width: 10ch;
+}
+.mk-product-split p {
+  font-size: clamp(1rem, 1.6vw, 1.14rem);
+  line-height: 1.7;
+  color: rgba(10,13,11,0.72);
+  margin: 0;
+  max-width: 58ch;
+}
+.mk-product-split__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.9rem, 2vw, 1.25rem);
+}
+.mk-product-split__cards article {
+  min-height: 260px;
+  border-radius: 28px;
+  padding: clamp(1.35rem, 2.6vw, 2rem);
+  background: rgba(10,13,11,0.92);
+  color: var(--color-paper);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  box-shadow: 0 28px 80px -42px rgba(10,13,11,0.72);
+}
+.mk-product-split__cards article:nth-child(2) {
+  background: rgba(243,245,239,0.94);
+  color: var(--color-ink);
+}
+.mk-product-split__cards span {
+  font-family: var(--font-space-mono), 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-stamp-onlight);
+  margin-bottom: 0.5rem;
+}
+.mk-product-split__cards h3 {
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  margin: 0 0 0.8rem;
+}
+.mk-product-split__cards p {
+  color: inherit;
+  opacity: 0.72;
+  font-size: 0.98rem;
+}
+
+/* Full-bleed emotional band: image is atmosphere, not a framed thumbnail. */
+.mk-emotional-band {
+  position: relative;
+  min-height: clamp(560px, 72vh, 780px);
+  padding: clamp(80px, 10vw, 128px) max(22px, 4vw);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: var(--color-paper);
+  background:
+    linear-gradient(90deg, rgba(10,13,11,0.92) 0%, rgba(10,13,11,0.7) 38%, rgba(10,13,11,0.18) 100%),
+    url('/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp') center / cover no-repeat;
+}
+.mk-emotional-band::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(560px 320px at 15% 84%, rgba(200,240,77,0.15), transparent 68%),
+    linear-gradient(180deg, rgba(10,13,11,0.08), rgba(10,13,11,0.42));
+  pointer-events: none;
+}
+.mk-emotional-band .mk-container {
+  position: relative;
+  z-index: 1;
+  max-width: 820px;
+}
+.mk-emotional-band__eyebrow {
+  color: var(--color-stamp);
+}
+.mk-emotional-band h2 {
+  font-family: var(--font-display), Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  font-weight: 520;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: var(--color-paper);
+  margin: 0 0 1.2rem;
+  max-width: 12ch;
+}
+.mk-emotional-band p {
+  max-width: 58ch;
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  line-height: 1.7;
+  color: rgba(243,245,239,0.76);
+  margin: 0 0 2rem;
+}
+
+.mk-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(1rem, 2vw, 1.25rem);
+}
+
+.mk-room-card {
+  display: grid;
+  min-height: 390px;
+  overflow: hidden;
+  border-radius: 28px;
+  text-decoration: none;
+  color: #F3F5EF;
+  background: #0A0D0B;
+  border: 1px solid rgba(243,245,239,0.14);
+  box-shadow: 0 34px 90px -58px rgba(0,0,0,0.9);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.mk-room-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(200,240,77,0.42);
+  box-shadow: 0 42px 110px -62px rgba(0,0,0,0.96);
+}
+
+.mk-room-card__image {
+  min-height: 255px;
+  background-size: cover;
+  background-repeat: no-repeat;
+  filter: saturate(1.08) contrast(1.04);
+}
+
+.mk-room-card__copy {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  min-height: 135px;
+  padding: 1.05rem;
+  background:
+    radial-gradient(260px 160px at 100% 0%, rgba(200,240,77,0.12), transparent 65%),
+    linear-gradient(180deg, #0F1912 0%, #07100B 100%);
+}
+
+.mk-room-card__copy strong {
+  font-family: var(--font-space-mono), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #C8F04D;
+}
+
+.mk-room-card__copy span {
+  max-width: 28ch;
+  font-size: 0.96rem;
+  line-height: 1.35;
+  color: rgba(243,245,239,0.9);
+}
+
+.mk-final-cta .mk-btn--primary {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-color: rgba(10,13,11,0.84);
+  box-shadow: 0 18px 48px -28px rgba(10,13,11,0.72);
+}
+.mk-final-cta .mk-btn--primary svg {
+  color: var(--color-paper);
+}
+
 /* ── Flow (LOCK loop / step flows) ──────────────────── */
 .mk-flow {
   display: grid;
@@ -240,6 +437,23 @@
 @media (max-width: 960px) {
   .mk-hero-grid {
     grid-template-columns: 1fr;
+  }
+  .mk-product-split__grid,
+  .mk-product-split__cards {
+    grid-template-columns: 1fr;
+  }
+  .mk-product-split__cards article {
+    min-height: 210px;
+  }
+  .mk-emotional-band {
+    min-height: 620px;
+    align-items: flex-end;
+    background:
+      linear-gradient(180deg, rgba(10,13,11,0.12) 0%, rgba(10,13,11,0.42) 34%, rgba(10,13,11,0.94) 100%),
+      url('/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp') center / cover no-repeat;
+  }
+  .mk-emotional-band h2 {
+    max-width: 11ch;
   }
   .mk-flow {
     grid-template-columns: 1fr;
@@ -2190,6 +2404,34 @@ button.mk-btn,
   box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.28);
 }
 
+@media (min-width: 901px) {
+  .mk-consent {
+    inset-inline: auto 22px !important;
+    bottom: 22px !important;
+    width: min(430px, calc(100vw - 44px)) !important;
+    border: 1px solid rgba(243,245,239,0.12) !important;
+    border-radius: 22px !important;
+    padding: 12px !important;
+  }
+
+  .mk-consent__inner {
+    max-width: none !important;
+    gap: 10px !important;
+  }
+
+  .mk-consent__text {
+    flex-basis: 100% !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+  }
+
+  .mk-consent__actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .mk-hero,
   .mk-hero--flat,
@@ -2247,5 +2489,55 @@ button.mk-btn,
   .mk-decision-card,
   .mk-firewall-card {
     border-radius: 20px !important;
+  }
+}
+
+/* Homepage rebuild QA fixes — image cards must remain readable on every
+   background, and the consent banner must be legally present without stealing
+   the first mobile screen. */
+.mk-media-tile__cap {
+  color: #F3F5EF !important;
+  background:
+    linear-gradient(180deg, rgba(10,13,11,0.02) 0%, rgba(10,13,11,0.56) 38%, rgba(10,13,11,0.94) 100%) !important;
+}
+
+.mk-media-tile__cap strong {
+  color: #C8F04D !important;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.55);
+}
+
+.mk-media-tile__cap span {
+  color: rgba(243,245,239,0.9) !important;
+}
+
+@media (max-width: 520px) {
+  .mk-consent {
+    inset-inline: 10px !important;
+    bottom: 10px !important;
+    padding: 10px !important;
+    border: 1px solid rgba(243,245,239,0.12) !important;
+    border-radius: 18px !important;
+  }
+
+  .mk-consent__inner {
+    gap: 8px !important;
+  }
+
+  .mk-consent__text {
+    flex-basis: 100% !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .mk-consent__actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mk-consent button {
+    min-height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
   }
 }

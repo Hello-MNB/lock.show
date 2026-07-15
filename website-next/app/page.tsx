@@ -6,12 +6,10 @@
 
 import Link from 'next/link'
 
-import { EntityCard } from '@/components/marketing/entity-card'
 import { FinalCta } from '@/components/marketing/final-cta'
 import { FlowRow, FlowStep } from '@/components/marketing/flow-step'
 import { Hero } from '@/components/marketing/hero'
 import { Icon } from '@/components/marketing/icons'
-import { MediaTile } from '@/components/marketing/cards'
 import { Section, SectionHeading } from '@/components/marketing/section'
 import { homeContent } from '@/content/home'
 import { buildPageMetadata } from '@/lib/seo'
@@ -241,7 +239,7 @@ export default function HomePage() {
         <Hero
           eyebrow={t.hero.eyebrow}
           title={t.hero.h1}
-          body={t.hero.body}
+          body="Start with one link. LOCK finds the shows, rooms, clips, people and source context already around your act — then helps you approve and share one clear Passport."
           primaryCta={t.hero.primaryCta}
           secondaryCta={t.hero.secondaryCta}
           trustLine={t.hero.trustLine}
@@ -251,7 +249,7 @@ export default function HomePage() {
           floatingBottom={<PassportPreviewCard />}
         />
 
-        {/* ג”€ג”€ WHY IT EXISTS ג€” 3 cards, varied rhythm (brief ֲ§3 + ֲ§5.1) ג”€ג”€ */}
+        {/* ג”€ג”€ WHY IT EXISTS ג€” light, artist-first, not another dark panel ג”€ג”€ */}
         <Section tone="paper">
           <SectionHeading eyebrow={t.why.eyebrow} title={t.why.title} />
           <div
@@ -262,7 +260,20 @@ export default function HomePage() {
               gap: 'clamp(1rem, 2vw, 1.5rem)',
             }}
           >
-            {t.why.cards.map((card, i) => {
+            {[
+              {
+                title: 'Links do not carry the room.',
+                body: 'A profile link can show a track or a clip. It rarely shows the night, the source, the room or why someone should trust the fit.',
+              },
+              {
+                title: 'Good nights disappear too fast.',
+                body: 'Real shows, reactions, confirmations and venue context get buried in chats, screenshots and memory.',
+              },
+              {
+                title: 'The next yes needs confidence.',
+                body: 'Artists, reps, production teams and buyers all need one calm version of the story before the next call.',
+              },
+            ].map((card, i) => {
               const dark = i === 1 // card rhythm: paper ֲ· dark ֲ· paper
               return (
                 <div
@@ -304,46 +315,102 @@ export default function HomePage() {
           </div>
         </Section>
 
-        <Section tone="ink">
+        {/* Product education: one bright brand moment, black text on lime. */}
+        <section className="mk-product-split" aria-labelledby="private-radar-public-passport">
+          <div className="mk-container mk-product-split__grid">
+            <div>
+              <p className="mk-product-split__eyebrow">The product</p>
+              <h2 id="private-radar-public-passport">Private Radar. Public Passport.</h2>
+              <p>
+                LOCK separates the private work from the public story: artists improve context inside
+                their Radar, then approve one Passport people can actually read before a booking call.
+              </p>
+            </div>
+            <div className="mk-product-split__cards" aria-label="Private Radar and public Passport">
+              <article>
+                <span>Private</span>
+                <h3>Radar</h3>
+                <p>Finds shows, links, sources and gaps. Built for the artist and their team first.</p>
+              </article>
+              <article>
+                <span>Public</span>
+                <h3>Passport</h3>
+                <p>One approved page that helps buyers, clients and teams understand the act faster.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* Full-bleed emotional band: image as atmosphere, not framed thumbnails. */}
+        <section className="mk-emotional-band" aria-labelledby="booking-moment">
+          <div className="mk-container">
+            <p className="mk-emotional-band__eyebrow">The moment</p>
+            <h2 id="booking-moment">Before a name goes on the line, people need to feel the fit.</h2>
+            <p>
+              An artist trying to be understood. A manager protecting a roster. A production team
+              building a night. A buyer deciding who to trust.
+            </p>
+            <Link href="/passport/demo" className="mk-btn mk-btn--outline-dark">
+              View sample Passport
+            </Link>
+          </div>
+        </section>
+
+        <Section tone="paper">
           <SectionHeading
-            tone="ink"
-            eyebrow="The rooms behind the product"
-            title="LOCK is built for the moments before a name goes on the line."
-            body="An artist trying to be understood. A manager protecting a roster. A production team building a night. A buyer deciding who to trust."
+            eyebrow="Choose the room"
+            title="Each side needs a different kind of clarity."
+            body="The same product opens differently for every person around the booking."
           />
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 'clamp(1rem, 2vw, 1.25rem)',
-            }}
-          >
-            <MediaTile
-              image={{ src: '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp', alt: 'Artist performing inside an energetic night room', position: 'center 42%' }}
-              caption={<><strong>Artist</strong><span>Make the next room understand what already happened.</span></>}
-              href="/artists"
-            />
-            <MediaTile
-              image={{ src: '/brand/lockshow-atmosphere-agency-roster-room-v1.webp', alt: 'Representation team reviewing roster context' }}
-              caption={<><strong>Representation</strong><span>Turn roster potential into cleaner, calmer pitches.</span></>}
-              href="/managers"
-            />
-            <MediaTile
-              image={{ src: '/brand/lockshow-atmosphere-production-warehouse-v1.webp', alt: 'Production team preparing a live event' }}
-              caption={<><strong>Production team</strong><span>Protect the lineup before the room is committed.</span></>}
-              href="/production"
-            />
-            <MediaTile
-              image={{ src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp', alt: 'Booker or private client checking context before booking an artist' }}
-              caption={<><strong>Booker / client</strong><span>Feel the fit before saying yes.</span></>}
-              href="/bookers"
-            />
+          <div className="mk-room-grid">
+            {[
+              {
+                label: 'Artist',
+                text: 'Make the next room understand what already happened.',
+                href: '/artists',
+                image: '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp',
+                position: 'center 42%',
+              },
+              {
+                label: 'Representation',
+                text: 'Turn roster potential into cleaner, calmer pitches.',
+                href: '/managers',
+                image: '/brand/lockshow-atmosphere-agency-roster-room-v1.webp',
+                position: 'center',
+              },
+              {
+                label: 'Production team',
+                text: 'Protect the lineup before the room is committed.',
+                href: '/production',
+                image: '/brand/lockshow-atmosphere-production-warehouse-v1.webp',
+                position: 'center',
+              },
+              {
+                label: 'Booker / client',
+                text: 'Feel the fit before saying yes.',
+                href: '/bookers',
+                image: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp',
+                position: 'center',
+              },
+            ].map((room) => (
+              <Link key={room.href} href={room.href} className="mk-room-card">
+                <span
+                  className="mk-room-card__image"
+                  aria-hidden="true"
+                  style={{ backgroundImage: `url('${room.image}')`, backgroundPosition: room.position }}
+                />
+                <span className="mk-room-card__copy">
+                  <strong>{room.label}</strong>
+                  <span>{room.text}</span>
+                </span>
+              </Link>
+            ))}
           </div>
         </Section>
 
         {/* ג”€ג”€ THE LOCK LOOP (brief ֲ§5.1) ג”€ג”€ */}
-        <Section tone="forest">
-          <SectionHeading tone="forest" eyebrow={t.loop.eyebrow} title={t.loop.title} />
+        <Section tone="paper">
+          <SectionHeading eyebrow={t.loop.eyebrow} title={t.loop.title} />
           <FlowRow cols={5}>
             {t.loop.steps.map((step, i) => (
               <FlowStep
@@ -358,32 +425,12 @@ export default function HomePage() {
           </FlowRow>
         </Section>
 
-        {/* ג”€ג”€ CHOOSE YOUR LANE ג€” 5 entity cards (brief ֲ§5.1) ג”€ג”€ */}
-        <Section tone="paper">
-          <SectionHeading eyebrow={t.lanes.eyebrow} title={t.lanes.title} body={t.lanes.body} />
-          {/* 5 cards: mk-grid-5 lays them out 3 + 2 at desktop widths so the
-              last row is intentional (no lone orphan card). */}
-          <div className="m-divide mk-grid-5">
-            {t.lanes.cards.map((card, i) => (
-              <EntityCard
-                key={card.cta.href}
-                icon={card.icon}
-                audienceLabel={card.audienceLabel}
-                title={card.title}
-                body={card.body}
-                cta={card.cta}
-                variant={i === 0 ? 'forest' : 'paper'}
-              />
-            ))}
-          </div>
-        </Section>
-
         {/* ג”€ג”€ FINAL CTA ג”€ג”€ */}
         <FinalCta
-          title={t.finalCta.title}
-          body={t.finalCta.body}
-          primaryCta={t.finalCta.primaryCta}
-          secondaryLink={t.finalCta.secondaryLink}
+          title="One link in. One private Radar. One Passport you control."
+          body="Join the free pilot and build a booking page that makes the next conversation easier to trust."
+          primaryCta={{ label: 'Join free pilot', href: t.finalCta.primaryCta.href }}
+          secondaryLink={{ label: 'See sample Passport', href: '/passport/demo' }}
         />
       </main>
     </>
