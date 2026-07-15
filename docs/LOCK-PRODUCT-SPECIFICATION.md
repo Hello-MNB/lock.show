@@ -1,7 +1,7 @@
 # LOCK — PRODUCT SPECIFICATION
 
 **The single source of truth for building the LOCK product.**
-_Status: consolidated master spec (complete) · Written 15 Jul 2026 · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §18 = open owner rulings._
+_Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-review pass 16 Jul · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §16.B.11–16 = strategy (GTM · monetization · growth · risk · trust&safety) · §18 = open rulings (priority-tiered) · §19 = scaling & future-readiness (reserved, post-Gate)._
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
@@ -28,7 +28,8 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026 · Firewall-
 - **15. Legal, Consent & Localization** — legal docs & status; Amendment-13/GDPR consent framework; Consent Mode v2; `consent_records`; localization architecture + RTL rules; the delivered Hebrew string set; legal placeholders (L-1…L-9) + HE ratification list (H-1…H-7)
 - **16. Taxonomy & Business** — genre/format/venue/method/platform taxonomies (EN·HE); product goals; the Gate; business model; honest pre-Gate business case; unit economics; **GTM approach; monetization roadmap; growth loops; risk & assumptions register; trust & safety / anti-gaming / IP; post-Gate roadmap**; consolidated owner-decision list
 - **17. Interactivity, Motion Depth & Utility Screens** — the motion system (easing tokens + duration ladder + reduced-motion contract); per-screen interactivity depth (Radar + Inspector deepest); the inline-edit widget; the 11 missing utility screens (signup/login/reset/invite/settings/org/billing/consent/notifications/404/skeleton)
-- **18. Open Decisions** — owner rulings still pending
+- **18. Open Decisions** — owner rulings still pending (priority-tiered: pre-Gate / post-Gate / reserved)
+- **19. Scaling & Future-Readiness (RESERVED)** — international expansion · data/ops at scale · billing/finance · high-volume surfaces · ecosystem/moat · canon-change & release process (all post-Gate; named, not gold-plated)
 
 ### 0.1 How to read
 Sections 1–7 are the laws every screen inherits. Section 8 is the buildable **screen** core: each screen carries PURPOSE · DESKTOP layout · MOBILE layout · COMPONENTS · STATES · INTERACTIONS · EXACT MICROCOPY · FIREWALL notes · DEFINITION OF DONE, and is buildable from its sub-spec alone. Sections 9–11 are the intelligence layer, acceptance, and current state. **Sections 13–17 are the deep build spec** — §13 Engineering & Architecture (the real DB schema, API/RPC contracts, auth, RLS, deploy/rollback, Q8), §14 Measurement/Payments/Notifications, §15 Legal/Consent/Localization (incl. the delivered Hebrew string set), §16 Taxonomy & Business, and §17 Interactivity/Motion depth + the 11 utility screens that §8 did not cover. Section 18 is the unresolved owner rulings. A developer can build the product from §§1–17; §18 lists what still needs an owner decision.
@@ -65,6 +66,8 @@ The core insight: **talent ≠ bookability.** A buyer's real question is not "is
 
 ### 1.3 The pre-booking-proof thesis
 A booking manager risks their reputation every time they book an unfamiliar act. LOCK converts an artist's scattered public footprint (lineup listings, streaming catalogue, RA bookings, ticketed nights, press, producer word-of-mouth) into a **single Passport of method-labeled strengths** the buyer can check in under a minute — draw shown as **bands**, readiness as **binaries**, each carrying **how we know it**. The artist controls exactly what is public. The buyer never sees a number they must trust blindly; they see evidence they can open and verify.
+
+**Post-Gate international readiness (thesis, not a build):** Israel is the deliberate **beachhead**, not the ceiling. The architecture is kept locale-aware by design (discovery in the market's own languages §9.2, per-market taxonomies §16.A, surface-aware links §13.4) so that expansion — next language, local sources, currency/tax, per-jurisdiction privacy — is a *configuration and content* effort, not a re-architecture. The full framework is reserved in **§19.1**; it is named here so the beachhead is never mistaken for the boundary.
 
 ### 1.4 The guiding sentence (the north star for EVERY screen)
 > **"LOCK found something real. Here's what it means. Here's the one thing to do next."**
@@ -112,6 +115,8 @@ When a buyer's reaction returns to the artist, it is expressed as **method-safe 
 
 ### 2.6 Method labels describe provenance, never quality
 The four method labels describe *how strong the basis is* (provenance), never *how good the artist is*. They are the mechanism that lets draw be shown honestly as bands + binaries.
+
+**Future-proofing rule (as intelligence deepens):** any NEW provenance method — including future ML/AI-derived signals — may be added **only via owner + counsel review**, must describe *how a fact was established* (not *how good the artist is*), and **must never imply a quality score, ranking, or prediction.** The label set is a trust vocabulary, not a scoring surface; deepening the AI must never dilute this. New labels join the canon (§4.4) or they do not ship.
 
 ### 2.7 Genre/scene emphasis is guidance, never grading
 Scene emphasis ("buyers in your scene look here first") is a **ring + words only** — never a weight, number, rank, %, genre-leaderboard, public badge, or buyer-facing weakness. With **no genre/scene signal → no emphasis at all** (every planet equal; never a guessed weight).
@@ -360,6 +365,7 @@ These are flagged so they are not mistaken for settled; build with the A13 inter
 9. **Every proof explains "why this matters."**
 10. **The firewall is enforced by design, never narrated** (§2.2).
 11. **Value before effort** — the user sees value grow after every useful contribution (Input→benefit; Discovery→confirmation; Gap→opportunity; Private→protected).
+12. **Interactive under load** — every primary screen stays responsive as data grows. The Radar is the core experience and must not degrade: **target < 1.2s first-interaction on a mid-tier mobile device with ~200 evidence items across the six planets** (virtualise/aggregate beyond that; never render hundreds of live nodes). A "many-Acts / many-evidence" state is a design case, not an afterthought (see §19.4 high-volume Radar). This is a guardrail, not yet a measured result — flagged for a QA performance budget (§10).
 
 ---
 
@@ -392,6 +398,18 @@ In the **real app**, a user sees **ONLY the roles/workspaces they actually have*
 
 ### 7.5 Mobile bottom-nav
 On ≤640px, per-entity nav becomes a bottom nav (`.botnav`): the same nav items as icons + labels + badges, current item active. Radar adds a bottom-sheet inspector and a bottom action dock (§8.3). Bottom sheets and gestures (swipe between planets, pull-down to close) are the mobile interaction idiom — never a new page per tap.
+
+### 7.6 Deep-link & share schema (virality-critical)
+The Passport is the growth engine (§16.B.13) — its links must be exact, shareable, and never dead-ended. The canonical public routes (no login, no AppShell):
+
+| Link | Route | Notes |
+|---|---|---|
+| Public Passport | `/passport/:id` | buyer-facing; `?view=rep` swaps to the representation face; `?s=1` = a shared/tracked open |
+| Availability request | `/passport/:id/request` → `/passport/:id/sent` | the Gate action + receipt |
+| Source-Confirmer | `/confirm/:token` | accountless magic link; single card, no shell |
+| Org invite | `/invite/:token` | accept flow |
+
+**Rules:** (a) all redirect targets are **surface-aware** (`BASE_URL` → `/` standalone vs `/app/` embed, §13.4) so a shared link never bounces to the wrong deployment; (b) a bad/expired link resolves to the **warm 404** (§17.B.10), never a silent redirect; (c) share links carry **no PII** in the URL; (d) **OWED:** OpenGraph/preview meta on `/passport/:id` (so a shared link unfurls richly in WhatsApp/Telegram) and true **universal/app links** are a post-embed enhancement.
 
 ---
 
@@ -725,6 +743,16 @@ A provider fallback may use a **cheaper tier with narrower extraction**, but it 
 
 ### 9.6 Render principle for all three pillars (method-safe)
 scan result = a **found card** (source + proves/doesn't-prove + confirm/reject); comparison = a **muted mono caption of bands + method labels**; recommendation = the **one lime next-action card** citing the finding. **No gauge, no cohort number, no rank — ever.** Reaction insight back to the artist = method-safe text only.
+
+### 9.7 Intelligence at scale (cost & honesty controls — TARGET, honest)
+AI cost is the biggest variable expense post-Gate (§16.B.10). The controls below are **TARGET architecture** (not built) and must not be priced on until measured:
+- **Cost monitoring + spend caps** — per-artist and global budget caps with alerting (a basic server spend cap exists today, §13.5.4; a real cost-monitoring view is OWED).
+- **Caching + dedup-by-hash** — never re-extract identical evidence; cache scan results; incremental re-scans only on change (the "cheap automatic re-scan" target, CLAUDE.md).
+- **Model versioning + provider fallback** — pin the extraction model; a cheaper fallback tier is allowed **only if it preserves the firewall and discloses the narrower scope** (§9.5).
+- **Human-review queue** — a low-confidence or disputed extraction routes to an operator (the ops console exists; the queue is OWED).
+- **Firewall at volume** — none of the above may introduce a score/rank/cohort number; scale changes cost, never the firewall.
+
+_Honesty: the deep multi-source scan itself is TARGET (§16.B.10); these scale controls are the operational layer around it, equally unbuilt. Full high-volume engineering (sharding, replicas, DR) is reserved in §19.2._
 
 ---
 
@@ -3600,6 +3628,16 @@ Shared tokens (light): paper `#F3F5EF` · white card `#FFFFFF` · forest panel `
 
 Marked so they are never mistaken for settled. **OPEN** = an owner ruling; **OWED** = a deliverable another party must supply.
 
+### 18.0 Priority tiers (execution focus)
+The full lists below, grouped by when they must be resolved so effort stays on the Gate:
+
+- **① PRE-GATE MUST-HAVES** (block a real buyer reaching a real Passport, or block trust): legal package L-1…L-9 + Terms/Privacy/Accessibility publish · the Gate availability→artist **email** (N2/N3) · **D1** Act-editor (done ✅) + **S6** Passport multi-view + **D2/D3** effective-role/producer-shell · consent-scope bug (done ✅) · app security headers (done ✅) · **B-1** beachhead entity/ICP ruling · pilot **price** (needed only at the pay-moment of the Gate).
+- **② POST-GATE** (turn on once the Gate is proven): self-serve billing + receipts/invoices/tax (§14.5, §19.3) · plan-enforcement flip + monetization numbers (G-2) · GA4 dual-emit + is_demo + growth-loop instrumentation (§16.B.13, G-3) · target deep-scan + intelligence-at-scale controls (§9.7) · Hebrew launch (~141-key pass + site prose).
+- **③ NICE-TO-HAVE / RESERVED** (do not build pre-Gate — see §19): international-expansion framework · agency-group hierarchy (E5) · white-label/partner themes · sharding/replicas/DR · high-volume Radar mode · competitive-moat doc · full LTV/CAC model.
+
+_Everything in the tables below carries its own tier implicitly via this grouping; when in doubt, ask "does this block the Gate?" — if no, it is ② or ③._
+
+
 | # | Item | Type | Notes |
 |---|---|---|---|
 | B-1 | **Canonical entity ruling** — 3 workspaces; role + authority layers; Manager ≠ Booking-Agent; which buyer types serve Gate 1 | OPEN (owner) | awaits approval; the demand-side segmentation (§3.5) is the working model. |
@@ -3632,8 +3670,32 @@ Assembling the deep build spec surfaced additional decisions that only the owner
 | G-4 | **Trust & safety rulings** — dispute/takedown flow, identity-verification bar, IP/content-rights ToS clauses (counsel) | OPEN (owner + counsel) | §16.B.15; IP clauses currently absent from legal drafts. |
 
 **Two engineering bugs found while grounding (build-fix, NOT owner decisions — flagged for the board):**
-1. `ConsentLegal.jsx` `recordPrivacyConsent` still writes the **pre-021 legacy scope names** (`privacy-policy` / `data-processing`) while the live DB CHECK only accepts canon `privacy-processing` → inserts would be rejected (§15.2, §13.2).
-2. The marketing site (`website-next/app/layout.tsx`) loads **Manrope into a CSS variable misleadingly named `--font-heebo`** — there is no actual Hebrew webfont in the site stack, so Hebrew falls back to the OS font. The app stack (Frank Ruhl Libre + Heebo) is Hebrew-capable; the site must adopt a real Hebrew stack and the DS must state it (§15.3).
+1. ✅ **FIXED (15 Jul, wave-1):** `ConsentLegal.jsx` `recordPrivacyConsent` wrote the pre-021 legacy scope names that the live CHECK rejects → now writes the canon `privacy-processing` (write + read paths) (§15.2, §13.2).
+2. The marketing site (`website-next/app/layout.tsx`) loads **Manrope into a CSS variable misleadingly named `--font-heebo`** — there is no actual Hebrew webfont in the site stack, so Hebrew falls back to the OS font. The app stack (Frank Ruhl Libre + Heebo) is Hebrew-capable; the site must adopt a real Hebrew stack and the DS must state it (§15.3). **STILL OPEN.**
+
+---
+
+## 19. Scaling & Future-Readiness (RESERVED — post-Gate; do NOT build pre-Gate)
+
+_Added 16 Jul from an external scaling review. **STAGE discipline (CLAUDE.md):** LOCK is pre-validation — the correct move is to **reserve** these so they are acknowledged and named, **without gold-plating them before the Gate proves the business.** Nothing here is a pre-Gate build; each is a stub with the trigger that should unlock it. Every number stays OPEN._
+
+### 19.1 International expansion framework (trigger: Gate proven in Israel)
+Israel is the beachhead; the model must not hard-code it. Reserved dimensions: **language** (locale-aware discovery already a directive, §9.2 — extend the string system beyond HE/EN), **sources** (per-market platform/venue taxonomies, §16.A), **currency + tax** (per-country billing entities), **legal** (per-jurisdiction privacy regimes beyond Amendment-13/GDPR), and **method-label locale** (labels must read natively). Cross-ref §1.3 (post-Gate international readiness), §16.B.16 Phase 4. **OPEN:** which market is second.
+
+### 19.2 Data & ops at scale (trigger: sustained load / paid tier)
+Reserved: read-replicas + query-cost monitoring; a partitioning/sharding plan **only if** table sizes demand it (unlikely pre-Gate); **backup/DR plan** (ties to the Supabase Pro decision, C-2); monitoring + alerting + on-call; and an **expanded production-readiness checklist** layered on Q8 (§13.7) — monitoring, alerting, rollback playbooks (rollback anchor = SHA is already the practice). Also: a **Technical-Debt register** (embed version-skew §13.1, service-role bypass §13.5.3, plaintext producer tokens migration 036-DRAFT) with owners — recommended as a living doc in `docs/`, not spec body.
+
+### 19.3 Billing & finance at scale (trigger: post-Gate monetization ON)
+Reserved: self-serve checkout, receipts/invoices (Green Invoice deferred), tax handling, dunning/failed-payment, churn + cohort reporting, and a **financial-model skeleton** (CAC · LTV · contribution margin · payback) with **all inputs OPEN** until Gate data exists. Today: manual Bit + reference-code activation (§14.5), correct for the pilot. Cross-ref §16.B.12.
+
+### 19.4 High-volume product surfaces (trigger: real rosters / heavy Acts)
+Reserved: a **"Roster at scale" variant** for Representation (50+ artists — filtering, saved views, bulk next-actions; current roster assumes a handful); a **high-volume Radar mode** (virtualise/aggregate beyond ~200 evidence items per §6 law 12); **admin bulk actions + reporting views** (the §8.12 cockpit expanded). All must preserve the firewall and the one-screen-one-action law at volume.
+
+### 19.5 Ecosystem, partnerships & defensibility (trigger: post-Gate growth)
+Reserved: **partnership/channel play** (festivals, ticketing platforms, management software, venues embedding Passports — needs the "Partner Theme"/white-label variant: token remap + logo injection, structurally ready via the 3-tier tokens §5.6); **competitive moat** (the firewall + method-verified evidence + the Source-Confirmer human anchor + per-Act non-transferable evidence are the defensibility thesis vs EPKs/CRMs — write the explicit moat doc when a competitor forces it). **OPEN:** partner strategy, white-label pricing.
+
+### 19.6 Canon-change & release process (maintainability as the team grows)
+How a spec/canon change is proposed → reviewed → merged: (1) a change is a **PR against `Hello-MNB/lock.show`** touching the spec + code together (lockstep, §0.2 rule 5); (2) the PR must pass the **`npm run verify` suite** (nav-contract · act-isolation · canon-drift · security-denial · **i18n-purity firewall lint** · registry · deltas · build) — the firewall check is mechanical, not a human judgment call; (3) a **design-critic pass** for any user-facing change (the no-Codex continuation model); (4) deploy via the **named release train** with the **SHA as rollback anchor** (`VERSIONS.md`, `DEPLOY-LOG.md`); (5) Q8 owner-walk before production (§13.7). This keeps canon changes safe and reviewable as the team scales. _(Reserved enhancement: a PR template that surfaces the firewall checklist inline.)_
 
 ---
 
