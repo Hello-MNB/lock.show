@@ -27,7 +27,7 @@ Every app/site release row also records **which DS version it implements** (desi
 | Track | Version | SHA | DS implemented | Live-verified |
 |---|---|---|---|---|
 | App | rel-2026.07.10 (incl. firewall hotfix eafcd4e) | **a874ab5** — last app production deploy (10 Jul) | pre-DS dark legacy (A13 mapping = this train) | ✅ bundle fingerprints (DEPLOY-LOG) |
-| Site | **rel-site-2026.07.15-2 (Codex redesign + contrast HOTFIX + phone-from-JSON-LD removed)** | **6f01e56** — 15 Jul: alias-promoted; fixes the dark-on-dark contrast failure in 0082919 (headers were ~1.19:1). **Rollback anchor: 4f4ff74** (last pre-redesign good). | Codex DS v1.6.25 | ✅ live-verified: 8/8 routes 200, cleanUrls, live SHA=6f01e56; **contrast re-measured on live = 0 failures (19 headings 14.91–17.78:1)**. ⚠️ REMAINING (Codex next brand/art-direction pass, not a bug): the 4 "rooms behind the product" cards are still empty image placeholders; overall art direction not yet the final show-business brand. |
+| Site | **rel-site-2026.07.15-3 (Codex homepage narrative rebuild: 7-section flow Hero→Problem→lime Product band→emotional image→entity "rooms"→LOCK loop→CTA)** | **9a18249** — 15 Jul: alias-promoted. **Rollback anchor: 6f01e56.** | Codex DS v1.6.25 | ✅ live-verified: 8/8 routes 200; section HEADERS readable (prior dark-on-dark bug NOT recurring). NOTE: automated tool flagged CTA buttons/footer links but those are the lime CTAs (dark-on-lime, readable) — measurement artifact; a few footer links read slightly faint (minor, Codex next pass). Homepage only — inner pages still pending the same architecture pass. |
 | Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash |
 
 ### Reference tracks
