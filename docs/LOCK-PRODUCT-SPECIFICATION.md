@@ -134,7 +134,7 @@ Never present TARGET architecture as BUILT. Per-evidence Anthropic claim extract
 **Solo → team → company is one shape upgraded:** a solo workspace is an org with one owner-member; a company is the same org upgraded (plan) with seats filled. Only **Artist, Manager office, and Production** are workspaces that can grow solo→team→company.
 
 ### 3.2 Acts (multi-Act)
-One artist (Person) may hold several **Acts** — e.g. a psytrance Act and a techno Act — each its own universe with its own Passport and its own evidence, **non-transferable**. The solo/team/company axis lives on **(a)** the Act's performing form (`act.format ∈ dj-set/live-set/duo/band/open-format/vocalist/other`) and **(b)** workspace seats — **never** on the Person (the Person is always one human). Multi-Act is a *within-Person* fan-out, orthogonal to solo/team. Act switch = the Radar center-star; switching swaps the whole universe.
+One artist (Person) may hold several **Acts** — e.g. a psytrance Act and a techno Act — each its own universe with its own Passport and its own evidence, **non-transferable**. The solo/team/company axis lives on **(a)** the Act's performing form (`act.format ∈ dj-set/live-set/duo/band/open-format/vocalist/comedian-host/ceremony-act/other`) and **(b)** workspace seats — **never** on the Person (the Person is always one human). Multi-Act is a *within-Person* fan-out, orthogonal to solo/team. Act switch = the Radar center-star; switching swaps the whole universe.
 
 ### 3.3 ArtistAccess (scoped, revocable, artist-approves)
 A **separate axis** from org/team membership. An artist grants a manager/representative scoped access (`artist_access` grants, migrations 027/032). Properties: **consent-based · scoped · revocable by either side · artist-approves · NEVER implies ownership.** UI copy must never say "grant" in ownership language; the artist surface is "Who can act for you" (§8.5). Scopes seen in the prototype: **see** ("See my Passport") · **reply** ("Reply to date requests for me") · **manage** ("Help keep my Passport up to date").
@@ -1011,7 +1011,7 @@ defined until 021 (or a re-authored equivalent) lands.
 | `gigs` | 008/023 | `status`: `lead·hold·confirmed·settled·canceled`; `role_at_event`: `headliner·support·lineup-member`; `audience_band`: `<50·50-150·150-300·300-600·600+·unknown`; `band_means`: `sold·scanned·attended·attributed-via-link`; **`exact_count` int — working-only, never anon-granted**; closeout: `attendance_band`, `settlement_band`, `closeout_status` (`pending·completed·skipped`), `ticket_attribution_confirmed`, `repeat_booking_signal` |
 | `draw_signals` | 008 | `signal_type`: `lineup-frequency·sells-tickets·price-band·community-size`; `band_value` (band only), `method_label` |
 | `radar_signal` | 010 | `rule_id`: `R1…R8`; `status`: `strong·developing·missing·notAssessable`; `action_type`: `refresh-evidence·request-evidence·respond·publish·promote·review`; `evidence_basis` (ref, not a number); unique(org, artist, rule) |
-| `act` | 020 | `person_id`, `stage_name`, `genre`, `city`, `positioning` (≤120), `format` (`dj-set·live-set·duo·band·open-format·vocalist·other`), `artist_goal` enum; **`contact` internal-only**, **`community_count_declared` int working-only**; `is_default` |
+| `act` | 020 | `person_id`, `stage_name`, `genre`, `city`, `positioning` (≤120), `format` (`dj-set·live-set·duo·band·open-format·vocalist·comedian-host·ceremony-act·other`), `artist_goal` enum; **`contact` internal-only**, **`community_count_declared` int working-only**; `is_default` |
 | `producer_confirmations` | 005/019 | `token` unique (plaintext — see 036 DRAFT), `response`: `yes·partial·no·wrong_person`, `revoked`, `responded_at`; enrichment (019): `authority_type` (`producer·venue_rep·ticketing_admin·organizer·other`), `name_visibility` (`public·initials·anonymous`), `identity_verified`, `conflict_of_interest`, `offline_confirmation_source` (`phone·message·in_person`) |
 | `professional_reaction` | 018/019 | `action_type`: `check_availability·request_price·save·forward·future_fit·request_proof·not_fit`; `reaction_status`: `recorded·retracted`; `idempotency_key` unique |
 | `reaction_reason` | 018/019 | `reason_type` enum; `free_text` **INTERNAL ONLY** |
@@ -1438,7 +1438,7 @@ a real Passport AND one pays** — measured, not required, pre-launch.
 | 13.4.2 / 13.5.5 | OWED | Producer token hashing (036 is a DRAFT; tokens are plaintext today) |
 | 13.5.3 | OWED | Shared safe-select helper + CI server-payload firewall test (no RLS backstop on the service-role path) |
 | 13.5.4 | OWED | Real per-token AI cost accounting (current monthly ledger is an estimate); persistent rate/daily counters |
-| 13.5.5 | OWED / OPEN | CSP + security headers (none exist); BFF with httpOnly cookies to remove the localStorage-XSS session-theft class |
+| 13.5.5 | BUILT (app) / OWED | App CSP + HSTS + nosniff + Referrer/Permissions-Policy SHIPPED (vercel.json, 15 Jul). OWED: marketing-site headers (S2p), nonce-hardening of the gtag inline script, and the BFF/httpOnly-cookie upgrade to remove the localStorage-XSS session-theft class |
 | 13.6.3 | OWED | Supabase Pro backups ON (prerequisite for structural migrations) |
 | 13.7.2 | PROPOSED | The 8-point Q8 owner-walk content (lanes are defined; the walk's checklist is not) |
 
@@ -2811,8 +2811,10 @@ Everything this section could not close because it requires Maria's ruling:
    proposed Hebrew is a *seed*; Maria owns the canonical HE column (GLOSSARY rule). **OPEN.**
 2. **Scope of the genre-scene registry** — approve the seed set or commission the full family-by-family
    fill (55 subtypes / 32 DJ specializations from the Google Sheet; Registry B is empty). **OPEN / OWED.**
-3. **`comedian-host` / `corporate-ceremony` reachability** — these families have no `act.format` path;
-   decide whether to add formats or wait for the `scene_family` field (migration 034). **OPEN.**
+3. **`comedian-host` / `corporate-ceremony` reachability** — RESOLVED in the spec: `act.format` now
+   carries `comedian-host` + `ceremony-act` (§16.A.2), which resolve deterministically to both families.
+   Remaining to implement: the CHECK-widening migration (036+, diff-first) + `familyFor()` cases +
+   **owner ratification of the HE labels (T-1)**. **OPEN only on the HE-label ratification.**
 4. **Migration authorization** for the bilingual reference tables (author as 036+, diff-first; respect
    FROZEN 021 / `mirror-only`). **OPEN (migration approval is owner's per CLAUDE.md).**
 5. **Hebrew word for "Act"** — de-facto live term is אקט; formal taste-ratification still pending
@@ -3518,7 +3520,7 @@ Assembling the deep build spec surfaced additional decisions that only the owner
 |---|---|---|---|
 | L-1…L-9 | **Legal placeholders** — controller legal name · business ח.פ. number · postal address · jurisdiction city · refund policy · accessibility-coordinator name/phone/date · DPO/EU-representative question · concrete retention periods · Terms-HE "Mirror" re-alignment | OPEN (owner + counsel) | blocks Terms/Privacy/Accessibility publication. Full table in §15.1. |
 | — | **Consent Mode v2 scope** | RESOLVED → build | ruling recorded: **basic, default = denied** before any analytics fires (§15.2). Listed here so the ruling is visible, not re-opened. |
-| T-1 | **Genre-family gap** — comedian-host & corporate-ceremony (MC/עורך אירוע) families are not yet in the genre taxonomy | OPEN (owner taxonomy) | affects onboarding genre list + method labels; §16.A.1 flags it. Decide whether these are first-class families pre-Gate. |
+| T-1 | **Genre-family HE labels** — comedian-host & corporate-ceremony (MC/עורך אירוע) are now in the taxonomy (§16.A.1/§16.A.2, reachable from `act.format`); their **Hebrew labels are proposed, pending owner ratification** | OPEN (owner taxonomy) | families are first-class in the spec; ratify HE wording + authorize the CHECK-widening migration (036+). |
 | — | **027/028 applied-state confirmation** | OPEN (owner confirm) | VERSIONS records head 035 but no explicit "027/028 applied ✓"; 030/031 imply they are live. One-line confirmation requested (§13.2). |
 | B-2 | **Billing model** — self-serve checkout vs operator-approved upgrade request | OPEN (owner) | today it is an operator-approved request; no price/ICP locked pre-Gate (§17.B.7). |
 
