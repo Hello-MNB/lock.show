@@ -16,7 +16,7 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-rev
 - **2. The Firewall (absolute rules)**
 - **3. Entity Model** — Person→Membership→Role→Workspace; Acts; ArtistAccess; the 6 actor families; demand-side segmentation; entity universe map; what is instantiated today
 - **4. Canon Glossary** — every term, EN + HE
-- **5. Design System** — palette/tokens; 3-tier token control layer; "dark is atmosphere not camouflage"; type/spacing/radius; CTA hierarchy; 44px; motion; the widget kit + full state sets; values still OWED by Codex
+- **5. Design System** — palette/tokens; 3-tier token control layer; "dark is atmosphere not camouflage"; type/spacing/radius; CTA hierarchy; 44px; motion; the widget kit + full state sets; **§5.10 humanized rendering (warmth over the firewall); §5.11 self-contained DS defaults (no Codex dependency — type scale, radius, CTA paddings all DEFINED)**
 - **6. Global UX Laws**
 - **7. Navigation & Shell** — identity hub; per-entity nav; real-app rule; mobile bottom-nav
 - **8. Per-Screen Specification** — THE CORE (Onboarding · Artist Radar + full Inspector · Passport · Requests · Access · Buyer/Public Passport · Source-Confirmer · Representation · Production · Admin · shared screens)
@@ -26,7 +26,7 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-rev
 - **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–036); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
 - **14. Measurement, Payments & Notifications** — the 29-event analytics canon; measurement architecture; demo/test exclusion; the Gate measurement; free-pilot payments; transactional-email catalog
 - **15. Legal, Consent & Localization** — legal docs & status; Amendment-13/GDPR consent framework; Consent Mode v2; `consent_records`; localization architecture + RTL rules; the delivered Hebrew string set; legal placeholders (L-1…L-9) + HE ratification list (H-1…H-7)
-- **16. Taxonomy & Business** — genre/format/venue/method/platform taxonomies (EN·HE); product goals; the Gate; business model; honest pre-Gate business case; unit economics; **GTM approach; monetization roadmap; growth loops; risk & assumptions register; trust & safety / anti-gaming / IP; post-Gate roadmap**; consolidated owner-decision list
+- **16. Taxonomy & Business** — taxonomies (EN·HE); goals; the Gate; business model; business case; unit economics; **GTM approach; monetization roadmap (plans-by-customer · monthly/annual-discounted billing · smart-upsell architecture); growth loops; risk register; trust & safety / IP; post-Gate roadmap**; owner-decision list
 - **17. Interactivity, Motion Depth & Utility Screens** — the motion system (easing tokens + duration ladder + reduced-motion contract); per-screen interactivity depth (Radar + Inspector deepest); the inline-edit widget; the 11 missing utility screens (signup/login/reset/invite/settings/org/billing/consent/notifications/404/skeleton)
 - **18. Open Decisions** — owner rulings still pending (priority-tiered: pre-Gate / post-Gate / reserved)
 - **19. Scaling & Future-Readiness (RESERVED)** — international expansion · data/ops at scale · billing/finance · high-volume surfaces · ecosystem/moat · canon-change & release process · SEO/AEO/GEO · platformization/domain-template engine (all post-Gate; named, not gold-plated)
@@ -332,7 +332,7 @@ Change a value in ONE place and every component follows. Codex owns names + valu
 - **How to restyle:** globally = edit Tier 1/2; pointwise = edit the component→state map row; a DS update = re-map Tier 1/2/3 to new values here, verify AA against §5.5, components inherit.
 
 ### 5.7 Type, spacing, radius, tap-target, motion
-- **Type:** Display/headings **Georgia serif** (marketing/hero; clamp 44–78px, tight tracking) · Body/UI **Manrope** (EN) / **Heebo** (HE) · Labels/meta/dates **DM Mono** (8–9px, 700, uppercase, restricted to wordmark/eyebrows/method chips). **Body never below 16px**; metadata never carries meaning alone. Real typographic hierarchy (H1/H2/card-title/body, desktop + mobile) is defined by Codex — **exact px + weights OWED (§5.9).**
+- **Type (reconciled to the fonts actually loaded, `index.html`):** Display/headings **Frank Ruhl Libre** (400/700/900) · Body/UI **Heebo** (400–800; covers EN **and** HE, so no font-swap RTL↔LTR) · Labels/meta/dates **IBM Plex Mono** (400/600, uppercase chips). *(The marketing site uses **Manrope**; "Georgia/DM Mono" in older drafts was the historical DS v1.2.0 — superseded.)* **Body never below 16px**; metadata never carries meaning alone. The **exact px/weight scale is now DEFINED in §5.11** (interim defaults — no longer blocked on Codex).
 - **Radius:** controls 9–10px · cards 12–18px · hero 20px · mobile sheets 22px top.
 - **Spacing:** 4px base. **Grid:** 12-col / 1440 desktop · 4-col + bottom-nav mobile.
 - **Icons:** 1.8px stroke, currentColor, 16 dense / 20 standard / 24 feature / 32 empty; critical actions carry a text label.
@@ -360,7 +360,9 @@ LOCK is **interactive workspaces made of smart widgets, not pages.** Every widge
 | **Workspace switcher** | identity hub | human labels; ✓ on current; account actions |
 
 ### 5.9 Values still OWED by Codex (v1.6.25 / the Drive DS)
-These are flagged so they are not mistaken for settled; build with the A13 interim values until Codex supplies:
+> **⚠️ NO LONGER A BLOCKER (16 Jul):** every *scale* value below now has a **hard interim DEFAULT in §5.11** — type scale, radius, CTA paddings, spacing, elevation, light-card tokens. Build against §5.11; do **not** wait for Codex and do **not** guess. Only the **logo/venue-logo assets** and the **gold/amber ruling** remain genuinely owed, and neither blocks a code value. This list is kept as the "refine later" wishlist, not a dependency.
+
+These are flagged so they are not mistaken for settled; build with the §5.11 / A13 interim values until Codex supplies:
 1. **Exact type-scale numbers** (H1/H2/card/body px + weight, desktop + mobile).
 2. **App LIGHT-card token values** (paper/white card bg, border, text, muted on light beyond A13 core hexes) + the precise "Radar-universe" dark-boundary definition.
 3. **CTA hierarchy spec** (primary/secondary/ghost states) + the 44px rule's paddings.
@@ -396,6 +398,38 @@ Rules: the human line **describes room fit, never ranks the artist**; always pai
 2. **Private vs public border** — private/draft items render with a **dashed border**, public items with a **solid** border — a global, wordless signal reinforcing "always show private/public" (law 6).
 
 **Firewall guardrails on this whole layer:** no ranked ladder; no numeric grade; no negative state on a buyer face; the band/binary stays the stored truth; every human line pairs with provenance. Warmth is a **wording + visual** change, never a data change.
+
+### 5.11 Self-contained DS defaults — the repo does NOT depend on Codex's Drive
+The audit's top drift point: values marked "OWED by Codex (Drive)" (§5.9) are unreachable by an AI agent or a new dev → they guess → CSS debt. **Resolution: every owed *scale* value now has a hard interim DEFAULT below.** The **palette, surfaces, states, and AA-proven contrast pairs are already in-repo and authoritative** (`tailwind.config.js` + `docs/design-system/A13-TOKEN-VALUES.md`, mapped in §5.2–5.5) — nothing there is owed. What was owed was only the *scale*, defined here. **Rule for builders: use these values; never guess. If Codex later ships v1.6.25, remap Tier-1/2 in the 3-tier layer (§5.6) and every component follows — the app is never blocked.**
+
+**Type scale (interim — fonts per §5.7).** px · weight · line-height:
+| Role | Font | Size (mobile→desktop) | Weight | LH |
+|---|---|---|---|---|
+| Display / hero | Frank Ruhl Libre | `clamp(38px, 8vw, 72px)` | 900 | 1.05 |
+| H1 (screen title) | Frank Ruhl Libre | 26 → 30 | 700 | 1.15 |
+| H2 (section) | Frank Ruhl Libre | 20 → 22 | 700 | 1.2 |
+| H3 / card title | Heebo | 17 → 18 | 600 | 1.25 |
+| Body | Heebo | **16** (floor) | 400 | 1.5 |
+| Secondary | Heebo | 14 | 400 | 1.45 |
+| Chip / eyebrow / method label | IBM Plex Mono | 11 | 600 | 1.2 · uppercase · +0.06em |
+| Micro / date | IBM Plex Mono | 12 | 500 | 1.3 |
+
+**Spacing — 4px base:** `4 · 8 · 12 · 16 · 24 · 32 · 44 · 64`. Card padding 16 (mobile) → 20–24 (desktop). Section gap 24 → 32.
+**Radius:** input **8** · button **10** (or pill `full` for chips) · card **12** · panel **16** · hero **20** · mobile sheet **22** (top corners).
+**Elevation:** light card `0 1px 2px rgba(0,0,0,.06), 0 6px 16px rgba(0,0,0,.05)` · raised/sheet `0 12px 32px rgba(0,0,0,.12)` · dark island uses **border (`line`) + inner glow**, not a drop shadow.
+**CTA spec (interim, satisfies the 44px law):**
+| Variant | Box | Fill | Text |
+|---|---|---|---|
+| **Primary** | padding `12px 20px` · min-height **44** · radius 10 | **solid lime** `#C8F04D`, text `on-accent #12160A` | Heebo 15/600 |
+| **Secondary (ghost)** | same box | transparent + `1px border line-2` | text `ink`/`muted` |
+| **Text / tertiary** | inline, no box, 44px hit-area | none | `accent` text, underline on hover |
+Solid-lime is **buttons only** (a confirmed *status* uses lime **outline/text** — §5.10). One primary per view (law 3).
+**Light-card token (task surfaces):** bg `ds-card #FFFFFF` · border `1px ds-mist #DDE3D9` · radius 12 · padding 16–20 · text `ds-forest #18221A`.
+**Motion tokens:** the 5 easings + duration ladder + reduced-motion contract are DEFINED in §17.0 (derived from the prototype) — also no longer owed.
+
+**Still genuinely OWED (assets, not blockers):** the **master logo SVG** and **real venue logos** (Barby/Block/Sunset) — until delivered, use the existing wordmark component + neutral text placeholders; and the **gold/amber ruling** (§5.4, interim = neutral mist). These are asset/owner items; no *code value* is blocked by them.
+
+_Optional hardening: mirror this scale into `tailwind.config.js` (`fontSize`/`spacing`/`borderRadius`/`boxShadow` keys) + `src/tokens.ts` so the values live in code, not just the spec — a clean atomic slice (§20)._
 
 ---
 
@@ -2981,6 +3015,36 @@ _Principle (CLAUDE.md STAGE): monetisation is **measured, not required**; **no p
 **Profitability guardrail:** subscription revenue must exceed (AI + server cost) per paid artist; if auto-scan cost runs hot, gate it behind a **scan-credit** allowance rather than unlimited. Numbers OPEN; the *fence line* (manual = free, auto-scan = paid) is the architecture to build now.
 
 **OPEN (owner):** every price, the Momentum/Roster feature boundaries, the exact free confirmation/credit allowances, annual vs monthly, trial length, and when to flip enforcement from display-only to real.
+
+#### 16.B.12.a Plans by customer type (the full matrix — structure fixed, prices OPEN)
+Each demand/supply actor gets a plan tuned to *their* job. **The buyer side never pays** (adoption depends on it); revenue is artist + representation + production only.
+| Customer | Plan | Core value | Paid unlocks | Price |
+|---|---|---|---|---|
+| **Artist** | **Passport** (free) | 1 Act · manual evidence · public Passport · a few Source-Confirmations · availability requests | — | ₪0 |
+| **Artist** | **Momentum** (paid) | everything free, deeper | unlimited Acts · **AI auto-scan** (the cost feature) · unlimited confirmations · staleness alerts · priority support | OPEN |
+| **Representation** | **Roster** (paid) | manage many artists as consented grants | team **seats** · roster radar · bulk next-actions · org tools | OPEN (per-seat or tiered) |
+| **Production company** | **Lineups** (paid, post-Gate) | events + slots + confirm flows | team seats · event/lineup creation · production requests | OPEN |
+| **Buyer** (booker/promoter/private/corporate) | **free forever** | view Passports · send availability requests | — | **₪0 · never charged · no commission** |
+
+#### 16.B.12.b Billing cadence — monthly & annual (annual is the discounted default)
+Offer **two cadences** on every paid plan; **annual is billed once at a discount** vs 12× monthly (the "discounted monthly" the owner asked for):
+- **Monthly** — full flexibility, higher effective rate, cancel anytime.
+- **Annual (recommended)** — one charge, priced as **~10 months for 12** (≈2 months free / ~15–20% off the monthly run-rate — **exact discount OPEN**). Surfaced as "save {X}% · billed yearly." Improves retention + cash flow + LTV.
+- **Mechanics:** `entitlements` already drives access (§14.5); add a `billing_cycle ∈ monthly|annual` + `renews_at` when payments turn on. Free-pilot today = no charge (`PAYMENTS_ENABLED=0`); the cadence UI ships **dormant** behind the flag. **All prices + the exact annual discount are OPEN** (locked only post-Gate with real willingness-to-pay).
+
+#### 16.B.12.c Smart-upsell architecture (contextual, firewall-safe, never a nag)
+Upsell is triggered by **the user hitting a real limit or a real desire** — a product prompt at the moment of value, never a score and never a dark pattern:
+| Trigger (moment of intent) | Upsell prompt | → Plan |
+|---|---|---|
+| Tries to add a **2nd Act** | "Hold more than one Act with Momentum." | Momentum |
+| Wants the **auto-scan** (vs manual paste) | "Let LOCK find your footprint automatically." | Momentum |
+| Runs out of **free confirmations** | "Unlimited source-confirmations on Momentum." | Momentum |
+| Evidence goes **stale** (`expires_at`) | "Keep your Passport fresh — auto staleness alerts." | Momentum |
+| Manager invites past **free seats** | "Add your whole roster — seats on Roster." | Roster |
+| Booker upgrades to run a **roster** | the built-in booker→agency path (§3) | Roster |
+**Rules:** the prompt appears **in-context at the limit**, not as interruptive modals; it states the *benefit*, never pressure; a firewall check applies — an upsell may reference **product capability** ("unlimited Acts"), never a **number about the person** ("your score would rise"). Expansion revenue = seats · multi-Act · org growth (§16.B.12). The gating is **display-only today** (`plan_flags`, 028) — these prompts render but nothing is charged pre-Gate.
+
+**OPEN (owner):** all prices, the annual discount %, per-seat vs tiered Roster, trial length, and which upsell triggers to turn on first.
 
 ### 16.B.13 Growth loops (the engine behind "Growth System")
 
