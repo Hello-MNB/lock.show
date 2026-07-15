@@ -24,6 +24,7 @@ import ArtistDashboard from './features/artist/ArtistDashboard.jsx'
 import ArtistReadiness from './features/artist/ArtistReadiness.jsx'
 import ClaimReview from './features/artist/ClaimReview.jsx'
 import PassportSelf from './features/artist/PassportSelf.jsx'
+import ActEditor from './features/artist/ActEditor.jsx'
 import ArtistRequests from './features/artist/ArtistRequests.jsx'
 import OfferPayment from './features/artist/OfferPayment.jsx'
 import EvidenceCapture from './features/evidence/EvidenceCapture.jsx'
@@ -188,6 +189,9 @@ export default function App() {
             public passport surface (/passport/:id), the same reused pattern
             ArtistDashboard/ClaimReview already link out to. */}
         <Route path="/artist/passport" element={<RequireRole role={ROLES.ARTIST}><PassportSelf /></RequireRole>} />
+        {/* Act-Identity Editor (§8.6 / D1 fix) — edit stage_name/one_line/genre/
+            city/photo after onboarding. Reached from the Radar identity + Settings. */}
+        <Route path="/artist/act/edit" element={<RequireRole role={ROLES.ARTIST}><ActEditor /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
         {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
