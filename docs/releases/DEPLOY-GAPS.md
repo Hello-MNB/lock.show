@@ -115,7 +115,7 @@ leaves the DB). The gaps cluster in: (a) a few firewall/correctness defects (now
 screens that are thin (Act-editor, Passport multi-view), (c) the platform's outer processes (email transport,
 GA4 dual-emit, Hebrew wiring, governed taxonomy), and (d) two owner decisions (retire `/producer`; Resend).
 
-## MASTER P0 TRACKER (10 P0s — 5 CLOSED this session)
+## MASTER P0 TRACKER (10 P0s — 6 CLOSED this session)
 | P0 | Domain | What | State |
 |---|---|---|---|
 | B3 | Buyer | Narrated firewall strip on public Passport footer (U33/§2.2 violation) | ✅ FIXED (b9514d1) |
@@ -123,7 +123,7 @@ GA4 dual-emit, Hebrew wiring, governed taxonomy), and (d) two owner decisions (r
 | U10 | Auth | No real 404 — catch-all silently redirected, hiding broken links | ✅ FIXED (b9514d1) — warm NotFound |
 | SW1/SW2 | Workspaces | Base booker/producer switching into agency/production workspace was dead-ended (role not re-derived) | ✅ FIXED (b9514d1) |
 | S1 | Platform | Zero HTTP security headers (no CSP/HSTS); JWT in localStorage unmitigated | ✅ FIXED (b9514d1) — vercel.json headers |
-| P7/D1 | Artist | Act-Identity Editor — the owner's reported broken screen; no edit surface for stage_name/positioning/genre/city; confirmed Radar nodes can't be re-opened | 🔴 OPEN — wave-2 build |
+| P7/D1 | Artist | Act-Identity Editor — the owner's reported broken screen | ✅ FIXED (6e969c5) — /artist/act/edit, inline-edit per field, visually verified |
 | S6 | Artist | Passport self-view is a bare redirect — no multi-view / edit-vs-buyer-preview / publish widget (§8.4, Codex P0) | 🔴 OPEN — wave-2 build |
 | S11 | Artist | No `/artist/access` and no `/artist/act/edit` routes; Account tab points to generic `/settings` | 🔴 OPEN — wave-2 (pairs with P7) |
 | N2/N3 | Platform | Gate-critical availability-request → artist EMAIL does not exist; no email transport at all | 🟠 OWNER-BLOCKED — needs a Resend account + `RESEND_API_KEY` |
@@ -203,7 +203,7 @@ _Firewall: no score/rank in roster/radar cards (counts are declared inbox/invent
 | BUILT | 29-event CANON (file=DB=app), event RLS, in-app notifications, buildSafePayload firewall, internal_confidence DB-only, snapshot firewall, server rate-limit/CORS | | BUILT | — | — | — |
 
 ## FIX REPORT — what happened this session
-**Wave-1 (DONE, committed b9514d1, verify-green, pushed):** B3 firewall strip · A6 consent scope · U10 404 · SW1/SW2 effective-role · S1 app security headers. → **5 of 10 P0s closed.**
+**Wave-1 (DONE, committed b9514d1, verify-green, pushed):** B3 firewall strip · A6 consent scope · U10 404 · SW1/SW2 effective-role · S1 app security headers. → **5 of 10 P0s closed.** (wave-2 added D1 → **6 of 10**.)
 
 **Wave-2 (next, build — no owner input needed):** P7/D1 Act-Identity Editor + S11 routes · S6 Passport multi-view. These are the two thin artist screens; each is a focused build through the GO→AUDIT→FIX loop.
 
