@@ -26,6 +26,7 @@ const CANON = new Set([
   'passport_view', 'professional_reaction_submitted', 'availability_request_created',
   'producer_confirmation_sent', 'producer_confirmation_received', 'claim_published',
   'passport_published', 'entitlement_activated', 'gig_evidence_refresh_completed',
+  'passport_unpublished', // requires migration 034 (CHECK widened); before it, insert fails harmlessly → localStorage only
   'share_link_created', 'share_link_opened', 'consent_granted', 'consent_withdrawn',
   'account_deleted',
   // 028 M1 funnel additions
@@ -81,9 +82,14 @@ export const EVENTS = {
   CLAIM_CONFIRMED: 'claim_confirmed',
   CLAIM_PUBLISHED: 'claim_published',
   PASSPORT_PUBLISHED: 'passport_published',
+  PASSPORT_UNPUBLISHED: 'passport_unpublished', // republish cadence/staleness (CFRO v2.4 recurring signal)
   ACT_CREATED: 'act_created',
   ACT_SWITCHED: 'act_switched',
   WORKSPACE_SWITCHED: 'workspace_switched',
+  // G7 — share ladder: created when the artist copies their share link;
+  // opened once per visit on a public Passport reached via a ?s=1 link.
+  SHARE_LINK_CREATED: 'share_link_created',
+  SHARE_LINK_OPENED: 'share_link_opened',
   // ── the GATE (react + pay) ──
   PASSPORT_VIEWED: 'passport_view',
   REQUEST_SENT: 'availability_request_created',

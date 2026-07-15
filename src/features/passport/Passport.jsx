@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Wordmark, BottomSheet, PageShell } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -44,6 +44,10 @@ export default function Passport() {
   const [sheet, setSheet] = useState(false)
   const [receipt, setReceipt] = useState(null)
   const [busy, setBusy] = useState(false)
+  // G7 — share_link_opened once per visit (ref guard: retries/re-renders never
+  // double-log). Only when the URL carries the ?s=1 share marker the artist's
+  // copied link appends — an organic open is a passport_view, not a share open.
+  const shareOpenLogged = useRef(false)
 
   useEffect(() => {
     let alive = true
@@ -64,6 +68,12 @@ export default function Passport() {
         if (id !== 'demo-artist') {
           recordPassportView(id) // measurement, never blocks
           logEvent(EVENTS.PASSPORT_VIEWED, { artist_id: id })
+          // G7 — this visit arrived via a shared link (?s=1): log the share
+          // open once, on a REAL successfully-loaded passport only.
+          if (sp.get('s') === '1' && !shareOpenLogged.current) {
+            shareOpenLogged.current = true
+            logEvent(EVENTS.SHARE_LINK_OPENED, { artist_id: id })
+          }
         }
       } catch {
         if (alive) setView('error')
@@ -77,15 +87,15 @@ export default function Passport() {
     const copy = {
       notfound: {
         title: T.passport.notFound,
-        body: 'Check the link you received — passport links are exact. If it was shared with you, ask the sender for a fresh one.',
+        body: T.passport.notFoundBody,
       },
       unpublished: {
-        title: "This passport isn't published",
-        body: 'The artist has taken it offline for now. Ask them for a fresh link when it goes live again.',
+        title: T.passport.unpublishedTitle,
+        body: T.passport.unpublishedBody,
       },
       error: {
-        title: "Couldn't load this passport",
-        body: 'Connection issue on our side or yours — your link is probably fine.',
+        title: T.passport.loadErrorTitle,
+        body: T.passport.loadErrorBody,
       },
     }[view]
     return (
@@ -96,7 +106,7 @@ export default function Passport() {
           <p className="mt-2 text-sm leading-relaxed text-muted">{copy.body}</p>
           {view === 'error' && (
             <button className="btn-primary mt-5" onClick={() => setAttempt((a) => a + 1)}>
-              Try again
+              {T.common.tryAgain}
             </button>
           )}
         </div>
@@ -143,7 +153,7 @@ export default function Passport() {
       >
         <div className="mx-auto flex max-w-[720px] items-center gap-4">
           <p className="hidden flex-1 text-[11px] leading-snug text-faint sm:block">
-            LOCK shows evidence only — not a guarantee.
+            {T.authScene.disclaimer}
           </p>
           <button
             className="btn-primary min-h-[48px] flex-1 shadow-[0_10px_26px_-10px_rgba(190,226,78,.6)] sm:flex-none sm:px-8"
@@ -153,7 +163,7 @@ export default function Passport() {
           </button>
         </div>
         <p className="mt-1.5 text-center text-[10px] text-faint sm:hidden">
-          LOCK shows evidence only — not a guarantee.
+          {T.authScene.disclaimer}
         </p>
       </div>
 

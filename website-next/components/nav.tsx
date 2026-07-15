@@ -1,28 +1,30 @@
 'use client'
 
+// Header chrome — structure/labels per Codex rebuild brief §4 (2026-07-14):
+// Artists · Managers · Production · Bookers · How it works · Passport demo,
+// then locale toggle + Log in + "Join free pilot" CTA. All strings live in
+// content/chrome.ts ({ en, he }); mechanics (sticky header, APP_URL signup
+// href, mobile hamburger, aria patterns) are unchanged from the previous nav.
+//
+// LIME-COLLISION DECISION: every rebuilt page hero renders a lime primary
+// CTA (.mk-btn--primary) above the fold, and the brief's layout tokens allow
+// only ONE lime CTA per viewport. The sticky header shares that viewport, so
+// the header CTA uses the DARK/OUTLINE variant (matches .mk-btn--outline-dark
+// tokens) instead of lime — in both desktop and mobile menus.
+
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
-import { DoorStamp } from '@/components/door-stamp'
+import { chromeContent } from '@/content/chrome'
 
 import { APP_URL } from '@/lib/app-url'
-
-const NAV_LINK_KEYS = [
-  { href: '/artists',      key: 'artists'      },
-  { href: '/bookers',      key: 'bookers'      },
-  { href: '/producers',    key: 'producers'    },
-  // How-it-works + Methodology demoted from the top nav (owner IA ruling 10 Jul:
-  // each audience page tells its own story; the reference pages stay reachable
-  // from the footer + deep links — never a 404).
-  { href: '/pricing',      key: 'pricing'      },
-] as const
 
 function LocaleToggle() {
   const { locale, setLocale } = useLocale()
   const next: Locale = locale === 'en' ? 'he' : 'en'
-  const label = locale === 'en' ? 'עב' : 'EN'
+  const label = locale === 'en' ? 'HE' : 'EN'
   return (
     <button
       onClick={() => setLocale(next)}
@@ -47,19 +49,30 @@ function LocaleToggle() {
 
 export function Nav() {
   const [open, setOpen] = useState(false)
-  const { messages } = useLocale()
-  const nav = messages.nav
+  const { locale } = useLocale()
+  const t = chromeContent[locale].nav
   const pathname = usePathname()
-
-  const navLinks = NAV_LINK_KEYS.map(({ href, key }) => ({
-    href,
-    label: nav[key as keyof typeof nav] as string,
-  }))
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`)
 
+  // Close the mobile sheet on Escape; lock body scroll while it is open.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open])
+
   return (
+    <>
     <nav
       role="navigation"
       aria-label="Main navigation"
@@ -74,15 +87,15 @@ export function Nav() {
       }}
     >
       <div style={{
-        maxWidth: '1100px',
+        maxWidth: '1240px',
         margin: '0 auto',
-        padding: '0 24px',
+        padding: '0 max(20px, 4vw)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '64px',
       }}>
-        {/* Wordmark + stamp logo */}
+        {/* Governed DS wordmark: use physical brand asset, never an improvised mark. */}
         <Link
           href="/"
           style={{
@@ -96,10 +109,18 @@ export function Nav() {
             color: 'var(--color-paper)',
             textDecoration: 'none',
             flexShrink: 0,
+            minHeight: '44px',
+            padding: '6px 0',
           }}
           aria-label="LOCK home"
         >
-          <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+            alt=""
+            width={32}
+            height={32}
+            style={{ display: 'block', width: 32, height: 32 }}
+          />
           LOCK
         </Link>
 
@@ -108,11 +129,11 @@ export function Nav() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '28px',
+            gap: 'clamp(14px, 1.65vw, 24px)',
           }}
           className="nav-desktop"
         >
-          {navLinks.map(({ href, label }) => {
+          {t.links.map(({ href, label }) => {
             const active = isActive(href)
             return (
               <Link
@@ -127,6 +148,9 @@ export function Nav() {
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   position: 'relative',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  minHeight: '44px',
                   paddingBottom: '4px',
                   borderBottom: active
                     ? '2px solid var(--color-stamp)'
@@ -151,30 +175,33 @@ export function Nav() {
               fontWeight: 600,
             }}
           >
-            {nav.login}
+            {t.login}
           </a>
+          {/* Header CTA — outline variant, NOT lime (page heroes own the one
+              lime CTA in this viewport; see file header note). */}
           <a
             href={`${APP_URL}/signup`}
             style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
               letterSpacing: '0.08em',
-              color: 'var(--color-ink)',
+              color: 'var(--color-paper)',
               textDecoration: 'none',
-              backgroundColor: 'var(--color-stamp)',
-              padding: '15px 18px',
+              backgroundColor: 'transparent',
+              border: '1px solid rgba(243,245,239,0.28)',
+              padding: '14px 18px',
               borderRadius: '10px',
               whiteSpace: 'nowrap',
               fontWeight: 700,
             }}
           >
-            {nav.getStarted}
+            {t.cta}
           </a>
         </div>
 
         {/* Mobile hamburger — 44px min touch target */}
         <button
-          aria-label={open ? nav.closeMenu : nav.openMenu}
+          aria-label={open ? t.closeMenu : t.openMenu}
           aria-expanded={open}
           aria-controls="mobile-menu"
           onClick={() => setOpen(!open)}
@@ -199,95 +226,145 @@ export function Nav() {
         </button>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div
-          id="mobile-menu"
-          style={{
-            backgroundColor: 'rgba(10,13,11,0.97)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            padding: '16px 24px 24px',
-          }}
-          className="nav-mobile-menu"
-        >
-          {navLinks.map(({ href, label }) => {
-            const active = isActive(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontFamily: 'var(--font-heebo)',
-                  fontSize: '1rem',
-                  fontWeight: active ? 700 : 400,
-                  color: active ? 'var(--color-stamp)' : 'var(--color-paper)',
-                  textDecoration: 'none',
-                  padding: '14px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                {label}
-              </Link>
-            )
-          })}
-          <div style={{ paddingTop: '16px', paddingBottom: '4px' }}>
-            <LocaleToggle />
-          </div>
-          <a
-            href={`${APP_URL}/login`}
-            style={{
-              display: 'block',
-              marginTop: '12px',
-              padding: '15px 20px',
-              border: '1px solid var(--color-mist, rgba(255,255,255,.15))',
-              color: 'var(--color-paper)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 600,
-            }}
-          >
-            {nav.login}
-          </a>
-          <a
-            href={`${APP_URL}/signup`}
-            style={{
-              display: 'block',
-              marginTop: '10px',
-              padding: '15px 20px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 700,
-            }}
-          >
-            {nav.getStarted}
-          </a>
-        </div>
-      )}
-
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
           .nav-desktop { display: none !important; }
           .nav-mobile-btn { display: flex !important; }
         }
-        @media (min-width: 769px) {
-          .nav-mobile-menu { display: none !important; }
-        }
       `}</style>
     </nav>
+
+      {/* Mobile SHEET — rendered OUTSIDE <nav> so the nav's backdrop-filter
+          does not become the fixed sheet's containing block (that clipped it
+          to the 64px header). Slide-in from the right, dark surface, 52px tap
+          rows, sticky primary CTA at bottom (Codex build scope §2). */}
+      {open && (
+        <>
+          <div
+            className="mk-sheet-backdrop"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            id="mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.closeMenu}
+            className="mk-sheet"
+          >
+            {/* Sheet header — wordmark + close */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontFamily: 'var(--font-space-mono)',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  letterSpacing: '0.06em',
+                  color: 'var(--color-paper)',
+                }}
+              >
+                <img
+                  src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+                  alt=""
+                  width={32}
+                  height={32}
+                  style={{ display: 'block', width: 32, height: 32 }}
+                />
+                LOCK
+              </span>
+              <button
+                aria-label={t.closeMenu}
+                onClick={() => setOpen(false)}
+                style={{
+                  background: 'none',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: '10px',
+                  color: 'var(--color-paper)',
+                  width: '44px',
+                  height: '44px',
+                  cursor: 'pointer',
+                  fontSize: '1.2rem',
+                  lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable rows */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 20px' }}>
+              {t.links.map(({ href, label }) => {
+                const active = isActive(href)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? 'page' : undefined}
+                    className="mk-sheet__row"
+                  >
+                    <span>{label}</span>
+                    <span aria-hidden="true" style={{ opacity: 0.4 }}>→</span>
+                  </Link>
+                )
+              })}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '20px' }}>
+                <LocaleToggle />
+                <a
+                  href={`${APP_URL}/login`}
+                  style={{
+                    flex: 1,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '48px',
+                    border: '1px solid rgba(243,245,239,0.28)',
+                    color: 'var(--color-paper)',
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.08em',
+                    textDecoration: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                  }}
+                >
+                  {t.login}
+                </a>
+              </div>
+            </div>
+
+            {/* Sticky primary CTA at bottom of the sheet — lime is allowed here
+                (the sheet covers the hero, so it owns this viewport). */}
+            <div
+              style={{
+                padding: '16px 20px',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                background: 'rgba(10,13,11,0.6)',
+              }}
+            >
+              <a
+                href={`${APP_URL}/signup`}
+                className="mk-btn mk-btn--primary"
+                style={{ width: '100%' }}
+              >
+                {t.cta}
+              </a>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   )
 }

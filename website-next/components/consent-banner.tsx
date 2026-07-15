@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLocale } from '@/lib/locale-context'
 
-const STORAGE_KEY = 'gigproof_consent'
+const STORAGE_KEY = 'lockshow_consent'
 const MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000 // re-ask after 12 months
 
 type Choice = 'granted' | 'denied'
@@ -19,6 +19,24 @@ declare global {
   interface Window {
     dataLayer: unknown[]
     gtag: (...args: unknown[]) => void
+  }
+}
+
+function measurementContext() {
+  const host = window.location.hostname
+  const environment =
+    host === 'localhost' || host === '127.0.0.1'
+      ? 'development'
+      : host.includes('vercel.app')
+        ? 'staging'
+        : 'production'
+
+  return {
+    surface: 'marketing',
+    auth_state: 'anonymous',
+    route_name: window.location.pathname || '/',
+    environment,
+    event_schema_version: 'site-2026-07-14',
   }
 }
 
@@ -50,18 +68,35 @@ function loadGA(gaId: string) {
   s.async = true
   s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`
   document.head.appendChild(s)
-  window.gtag('config', gaId, { anonymize_ip: true })
+  window.gtag('config', gaId, { anonymize_ip: true, ...measurementContext() })
 }
 
-export function ConsentBanner({ gaId }: { gaId: string }) {
+function loadGTM(gtmId: string) {
+  if (document.getElementById('gtm-src')) return
+  window.gtag('consent', 'update', { analytics_storage: 'granted' })
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({ event: 'lock_consent_granted', ...measurementContext() })
+  const s = document.createElement('script')
+  s.id = 'gtm-src'
+  s.async = true
+  s.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`
+  document.head.appendChild(s)
+}
+
+function loadMeasurement({ gaId, gtmId }: { gaId: string; gtmId?: string }) {
+  if (gtmId) loadGTM(gtmId)
+  else loadGA(gaId)
+}
+
+export function ConsentBanner({ gaId, gtmId }: { gaId: string; gtmId?: string }) {
   const { messages, dir } = useLocale()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
     const choice = readChoice()
-    if (choice === 'granted') loadGA(gaId)
-    else if (choice === null) setVisible(true)
-  }, [gaId])
+    if (choice === 'granted') loadMeasurement({ gaId, gtmId })
+    else if (choice === null) queueMicrotask(() => setVisible(true))
+  }, [gaId, gtmId])
 
   if (!visible) return null
   const t = messages.consent
@@ -69,11 +104,12 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
   const decide = (value: Choice) => {
     storeChoice(value)
     setVisible(false)
-    if (value === 'granted') loadGA(gaId)
+    if (value === 'granted') loadMeasurement({ gaId, gtmId })
   }
 
   return (
     <div
+      className="mk-consent"
       role="dialog"
       aria-label={t.ariaLabel}
       dir={dir}
@@ -89,6 +125,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
       }}
     >
       <div
+        className="mk-consent__inner"
         style={{
           margin: '0 auto',
           maxWidth: 760,
@@ -98,13 +135,13 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
           gap: 12,
         }}
       >
-        <p style={{ flex: '1 1 320px', fontSize: 14, color: 'var(--color-tally, #98A19A)', margin: 0 }}>
+        <p className="mk-consent__text" style={{ flex: '1 1 320px', fontSize: 14, color: 'var(--color-tally, #98A19A)', margin: 0 }}>
           {t.message}{' '}
           <Link href="/privacy" style={{ color: 'var(--color-paper, #F3F0E8)', textDecoration: 'underline' }}>
             {t.privacyLink}
           </Link>
         </p>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div className="mk-consent__actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => decide('denied')}

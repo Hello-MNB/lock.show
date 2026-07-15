@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW OG template - Source Confirmer</title>
+  <desc id="desc">Neutral Source Confirmer image. One claim, one action, no workspace implication.</desc>
+  <rect width="1200" height="630" fill="#0a0d0b"/>
+  <rect x="80" y="72" width="1040" height="486" rx="36" fill="#f3f5ef"/>
+  <text x="124" y="138" fill="#718078" font-family="DM Mono, monospace" font-size="18" font-weight="700" letter-spacing="3">SOURCE CONFIRMER · מאשר-מקור</text>
+  <text x="124" y="248" fill="#18221a" font-family="Georgia, serif" font-size="72" letter-spacing="-4">Confirm one claim.</text>
+  <text x="124" y="326" fill="#18221a" font-family="Georgia, serif" font-size="72" letter-spacing="-4">Nothing more implied.</text>
+  <rect x="128" y="390" width="470" height="74" rx="18" fill="#ffffff" stroke="#d4dbd2"/>
+  <text x="158" y="436" fill="#18221a" font-family="Manrope, Arial, sans-serif" font-size="23" font-weight="800">Confirm · Correct · Reject</text>
+  <circle cx="944" cy="258" r="98" fill="#18221a"/>
+  <path d="M904 260l28 28 60-72" fill="none" stroke="#c8f04d" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="124" y="522" fill="#18221a" font-family="Manrope, Arial, sans-serif" font-size="22" font-weight="900">LOCK.SHOW</text>
+</svg>

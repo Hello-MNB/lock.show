@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW square social template - Artist Radar</title>
+  <desc id="desc">Square post introducing private Radar as supportive artist growth, not inspection.</desc>
+  <rect width="1080" height="1080" fill="#0a0d0b"/>
+  <circle cx="790" cy="250" r="210" fill="#c8f04d" opacity="0.82"/>
+  <circle cx="790" cy="250" r="92" fill="#0a0d0b"/>
+  <circle cx="790" cy="250" r="14" fill="#c8f04d"/>
+  <text x="78" y="108" fill="#c8f04d" font-family="DM Mono, monospace" font-size="22" font-weight="700" letter-spacing="4">ARTIST RADAR</text>
+  <text x="78" y="332" fill="#ffffff" font-family="Georgia, serif" font-size="92" letter-spacing="-5">A private scan</text>
+  <text x="78" y="432" fill="#ffffff" font-family="Georgia, serif" font-size="92" letter-spacing="-5">for your next</text>
+  <text x="78" y="532" fill="#ffffff" font-family="Georgia, serif" font-size="92" letter-spacing="-5">career move.</text>
+  <text x="82" y="646" fill="#aab5ac" font-family="Manrope, Arial, sans-serif" font-size="34">Not a score. Not public pressure.</text>
+  <text x="82" y="696" fill="#aab5ac" font-family="Manrope, Arial, sans-serif" font-size="34">A guided way to improve your story.</text>
+  <rect x="80" y="836" width="266" height="72" rx="18" fill="#c8f04d"/>
+  <text x="118" y="883" fill="#0a0d0b" font-family="Manrope, Arial, sans-serif" font-size="25" font-weight="900">Start with one link</text>
+  <text x="78" y="998" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="28" font-weight="900">LOCK.SHOW</text>
+</svg>

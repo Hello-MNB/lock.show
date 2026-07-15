@@ -45,7 +45,7 @@ const content: LegalContent = {
         heading: 'דרכי פנייה בנושא נגישות',
         paragraphs: [
           'רכז/ת הנגישות: [שם]',
-          'אימייל: support@lock.show · טלפון: [___]',
+          'אימייל: support@lock.show',
           'נשתדל לתת מענה בהקדם. תאריך עדכון אחרון: [___].',
         ],
       },

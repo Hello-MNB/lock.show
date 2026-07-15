@@ -1,0 +1,527 @@
+<title>LOCK — Per-Entity Optimization Plan</title>
+<style>
+:root{--paper:#f3f5ef;--card:#fff;--ink:#0a0d0b;--forest:#18221a;--lime:#C8F04D;--mist:#dde3d9;--slate:#687269;--amber:#c8892a;--ember:#9A5A2E;--srcblue:#6EA6A3;--line:#dde3d9;--shadow:0 1px 2px rgba(24,34,26,.05),0 8px 24px -16px rgba(24,34,26,.25);--serif:Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--paper:#0e140d;--card:#18221a;--ink:#eef2ea;--forest:#0b100c;--mist:#2b362c;--slate:#9aa79b;--amber:#e0aa4e;--line:#2b362c;--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="light"]{--paper:#f3f5ef;--card:#fff;--ink:#0a0d0b;--forest:#18221a;--mist:#dde3d9;--slate:#687269;--line:#dde3d9}
+:root[data-theme="dark"]{--paper:#0e140d;--card:#18221a;--ink:#eef2ea;--forest:#0b100c;--mist:#2b362c;--slate:#9aa79b;--line:#2b362c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px 60px}
+h1{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.3rem);margin:0 0 4px;letter-spacing:-.01em}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);margin:22px 0 10px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a9a1e;font-weight:700;margin:0 0 6px}
+.sub{color:var(--slate);font-size:14px;max-width:82ch;margin:4px 0 0}
+.eh{font-family:var(--serif);font-size:20px;font-weight:700;margin:0 0 2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:12px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:960px}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;text-align:left;color:var(--slate);padding:9px 10px;border-bottom:2px solid var(--line);vertical-align:bottom;background:var(--card);position:sticky;top:54px;z-index:2}
+td{padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.rt{font-weight:700;font-family:var(--serif);font-size:13.5px;width:16%}
+b{color:var(--ink)}
+code{font-family:var(--mono);font-size:11px;background:var(--paper);padding:1px 5px;border-radius:5px;color:var(--ember);white-space:nowrap}
+@media (prefers-color-scheme:dark){code{background:#0b100c;color:#f2c98a}}
+:root[data-theme="dark"] code{background:#0b100c;color:#f2c98a}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;background:var(--paper);padding:12px 0 10px;z-index:6;border-bottom:1px solid var(--line);margin-bottom:14px}
+.tab{font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);background:var(--card);color:var(--slate);border-radius:999px;padding:8px 13px;cursor:pointer;font-weight:700}
+.tab.active{background:var(--forest);color:var(--lime);border-color:var(--forest)}
+.tab.xc.active{background:var(--ember);color:#fff;border-color:var(--ember)}
+.panel{display:none}.panel.active{display:block}
+@media(max-width:640px){.tab{padding:7px 10px;font-size:10px}th{position:static}}
+/* priority pills */
+.pri{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;border-radius:6px;padding:2px 7px;letter-spacing:.03em;white-space:nowrap}
+.p0{background:#f3d9cf;color:#8a331b}.p1{background:#f6e6c4;color:#8a5a12}.p2{background:#e2e7dd;color:#5a6559}
+@media (prefers-color-scheme:dark){.p0{background:#4a251a;color:#f0a98c}.p1{background:#463315;color:#f2c98a}.p2{background:#2b362c;color:#aab6ab}}
+:root[data-theme="dark"] .p0{background:#4a251a;color:#f0a98c}
+:root[data-theme="dark"] .p1{background:#463315;color:#f2c98a}
+:root[data-theme="dark"] .p2{background:#2b362c;color:#aab6ab}
+/* audit-code chips */
+.ac{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;border-radius:5px;padding:1px 5px;white-space:nowrap;margin:1px 1px}
+.d{background:#f3d9cf;color:#8a331b}.a{background:#d9e6f3;color:#1b4a7a}.e{background:#e6ddf3;color:#5a3b8a}.t{background:#d9efe0;color:#1d5c31}
+@media (prefers-color-scheme:dark){.d{background:#4a251a;color:#f0a98c}.a{background:#1a3247;color:#9cc4f0}.e{background:#33254a;color:#c9b0f0}.t{background:#1d3a28;color:#9fe0b4}}
+:root[data-theme="dark"] .d{background:#4a251a;color:#f0a98c}
+:root[data-theme="dark"] .a{background:#1a3247;color:#9cc4f0}
+:root[data-theme="dark"] .e{background:#33254a;color:#c9b0f0}
+:root[data-theme="dark"] .t{background:#1d3a28;color:#9fe0b4}
+.pill{display:inline-block;font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin:2px 3px 2px 0;color:var(--ink)}
+.pill.now{border-style:dashed;color:var(--slate);text-decoration:line-through;text-decoration-color:var(--ember)}
+.pill.tgt{border-color:var(--lime);background:rgba(200,240,77,.14);color:var(--ink);font-weight:700}
+.nav{margin:2px 0 12px;font-size:12px;color:var(--slate)}
+.nav b{color:var(--ink);font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.arrow{color:var(--slate);margin:0 3px}
+.firewall{border-left:4px solid var(--amber);padding:8px 12px;margin:12px 0 4px;font-size:12px;color:var(--slate);background:rgba(200,137,42,.08);border-radius:0 10px 10px 0}
+.firewall b{color:var(--ink)}
+.banner{border:2px solid var(--forest);border-radius:14px;padding:14px 16px;margin-bottom:14px;background:var(--card);box-shadow:var(--shadow)}
+.banner .flag{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--ember);border-radius:6px;padding:2px 8px;margin-bottom:8px}
+.banner h3{font-family:var(--serif);font-size:16px;margin:0 0 6px}
+.banner p{margin:6px 0 0;font-size:13px;color:var(--slate)}
+.banner .three{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.wsf{flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--paper)}
+.wsf .t1{font-family:var(--serif);font-weight:700;font-size:14px}
+.wsf .t2{font-size:11px;color:var(--slate);margin-top:2px}
+.legend{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 15px;margin-bottom:14px;font-size:12px;box-shadow:var(--shadow)}
+.legend h3{margin:0 0 7px;font-size:11px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.legend .row{margin:5px 0;color:var(--slate)}
+.legend .row b{color:var(--ink)}
+.he{font-size:12.5px;direction:rtl;text-align:right}
+.consensus{border-left:4px solid var(--lime);padding:8px 12px;margin:10px 0;font-size:12.5px;background:rgba(200,240,77,.10);border-radius:0 10px 10px 0}
+.consensus b{color:var(--ink)}
+.count{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 2px}
+.cbox{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--paper);min-width:90px}
+.cbox .n{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1}
+.cbox .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate);margin-top:3px}
+ul.q{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--slate)}
+ul.q li{margin:3px 0}
+ul.q b{color:var(--ink)}
+</style>
+<div class="wrap">
+
+<p class="eyebrow">LOCK · Per-Entity Optimization Plan · consolidated from 4 audits · 14 Jul 2026</p>
+<h1>What each entity should become — screen by screen</h1>
+<p class="sub">One consolidated plan across all four audits: my Entity-Nav/UX audit (D-defects), the architect's Tech-Upgrade + Refresh-Logout root-cause (P0 tech), the Entity-Model gap audit (E-gaps), and the GPT architecture + Codex role-language rulings (A-fixes). The four <b>strongly agree</b>; where they converge it is marked <span class="ac t">CONSENSUS</span>. Per entity you see: current nav &amp; screens → the issue (with its audit code) → the optimized target → content/interactivity → priority.</p>
+
+<!-- ══ CANONICAL RULING BANNER ══ -->
+<div class="banner">
+<span class="flag">Canonical ruling · PENDING MARIA'S APPROVAL</span>
+<h3>Three customer workspace families — everything else is a role or a context, not a workspace</h3>
+<p>GPT architecture audit and Codex role-language audit <b>both independently reach the same model.</b> A workspace is an operating context (data · billing · seats). Only three customer families own one. Everyone else is either a scoped <b>role assignment</b> inside a workspace, or a non-workspace <b>context</b>.</p>
+<div class="three">
+<div class="wsf"><div class="t1">Artist · אקט</div><div class="t2">Private growth/Radar context. Holds Acts — each Act its own evidence + פספורט.</div></div>
+<div class="wsf"><div class="t1">Representation · ייצוג</div><div class="t2">ONE workspace, role-adapted. מנהל אמן (manager) vs איש בוקינג (booking agent) = roles, not separate screen-sets.</div></div>
+<div class="wsf"><div class="t1">Production · משרד הפקה</div><div class="t2">Event-first workspace. Events + lineups; team is a setting.</div></div>
+</div>
+<p style="margin-top:10px"><b>Non-workspace contexts:</b> <b>Buyer / מזמין הופעות</b> (reads a Passport link — can be a private individual; needs NO login) · <b>Source-Confirmer / מאשר-מקור</b> (accountless one-claim magic link). <b>Operator</b> = internal console. <b>All other ecosystem roles</b> (publicist, label, lawyer, roster/finance staff…) = scoped role assignments / access grants, <b>never new workspaces</b>. Role + authority (Act / territory / category / action / effective-dates) is assigned <b>inside</b> a workspace — never encoded as a permanent <code>profiles.role</code> identity.</p>
+</div>
+
+<!-- ══ LEGEND ══ -->
+<div class="legend">
+<h3>How to read this plan</h3>
+<div class="row"><b>Priority</b> — <span class="pri p0">P0</span> launch-blocker, before the Gate / Q8 proof · <span class="pri p1">P1</span> fast-follow, early app-backlog · <span class="pri p2">P2</span> post-Gate depth.</div>
+<div class="row"><b>Audit codes</b> — <span class="ac d">D1–D9</span> nav/UX defects (my audit) · <span class="ac a">A1–A6</span> architecture fixes (GPT/Codex) · <span class="ac e">E1–E8</span> entity-model gaps · <span class="ac t">P0-n</span> tech-upgrade items. <span class="ac t">CONSENSUS</span> = two or more audits agree.</div>
+<div class="row"><b>Nav pills</b> — <span class="pill now">retired</span> screen removed/merged &nbsp; <span class="pill tgt">target</span> the optimized nav item.</div>
+<div class="row he"><b>מונחי קנון:</b> <span class="pill">פספורט</span> <span class="pill">מזמין הופעות (קונה — לא אמרגן)</span> <span class="pill">מאשר-מקור</span> <span class="pill">אקט</span> <span class="pill">מנהל אמן</span> <span class="pill">איש בוקינג</span> <span class="pill">משרד הפקה</span></div>
+</div>
+
+<div class="firewall"><b>Firewall (holds on every optimized screen):</b> NO score / percentile / rank / "bookability %" / gauge / prediction. Draw shown ONLY as bands + binaries with method labels; streaming = secondary context. פספורט in two views — Artist (private, shows gaps) vs Buyer (public, verified strengths only). Reaction insight back to the artist = method-safe text only, never a count/%/score. Any edit surface must keep evidence band/binary — never introduce a numeric.</div>
+
+<!-- ══ TABS ══ -->
+<div class="tabs" id="tabs">
+<button class="tab active" data-t="p1">🎤 Artist</button>
+<button class="tab" data-t="p2">💼 Representation</button>
+<button class="tab" data-t="p3">🤝 Buyer</button>
+<button class="tab" data-t="p4">🎬 Production</button>
+<button class="tab" data-t="p5">✅ Source-Confirmer</button>
+<button class="tab" data-t="p6">👑 Admin</button>
+<button class="tab xc" data-t="p7">🚨 Cross-cutting P0</button>
+<button class="tab" data-t="p8">📐 Canonical Model</button>
+</div>
+
+<!-- ══════════════ ARTIST ══════════════ -->
+<section class="panel active" id="p1"><div class="card">
+<div class="eh">🎤 Artist · אקט</div>
+<div class="sub">The North-Star lane. One Person holds several Acts; evidence per-Act &amp; non-transferable. Current completeness ≈ 80% — the whole gap is the missing edit surface (the owner's reported broken screen).</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">Radar</span> <span class="arrow">·</span>
+<span class="pill tgt">Passport</span> <span class="arrow">·</span>
+<span class="pill tgt">Requests</span> <span class="arrow">·</span>
+<span class="pill tgt">Settings Hub</span>
+&nbsp;—&nbsp; <span class="pill now">Readiness</span> folds into Radar · <span class="pill now">Claims</span> = panel off Radar · <span class="pill now">Offer/pay</span> hidden in free pilot · Act switch lives inside Radar.</div>
+<div class="consensus"><b>Consensus:</b> all four audits name the artist edit surface as the #1 launch item — <span class="ac d">D1</span> (no edit screen), <span class="ac a">A6</span> (build a reusable Identity Editor), <span class="ac t">P0-5</span> ("UX/UI לא טוב והאפיון לא גמור"), <span class="ac e">E3</span> (entity-form implicit). Same fix.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">Identity is write-once<br><code>/onboarding</code> writes <code>stage_name</code>+<code>city</code> once; Radar fills are <b>add-only</b>; <code>/settings</code> edits only <code>full_name</code>+WhatsApp</td>
+<td><span class="ac d">D1</span> <span class="ac a">A6</span> <span class="ac t">P0-5</span> <span class="ac e">E3</span> <span class="ac t">CONSENSUS</span><br>Artist cannot fix a typo, change a photo, genre or positioning after onboarding. Rich Act identity (format/genre/bio/territory) on the <code>act</code> table has no edit form.</td>
+<td>Reusable <b>Artist / Act Identity Editor</b>. Confirmed Radar nodes gain an <b>edit affordance</b> that re-opens the <code>MissingFill</code> form pre-filled; add <code>stage_name</code>+<code>city</code> to the identity field set; per-Act form bound to <code>act</code> + <code>passport_versions</code>. Reached from the <code>identity</code> planet tap that already exists.</td>
+<td>Field-level validation + dirty-state (not the flat <code>saved</code> boolean). Per-Act switching in the same editor. Every field stays band/binary — no numeric ever. This is the concrete "broken edit screen."</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Radar / Dashboard<br><code>/artist/home</code> — 6 planets, milestones M1–M8, next-action card</td>
+<td>Core is built &amp; reads real data. Only the add-only fill limit (above) and orphan back-paths drag it.</td>
+<td><span class="pill tgt">Radar</span> stays the home. Absorbs Readiness as an inline readiness surface; the edit affordance lands here. One funnelled "next best action" card (mobile+desktop) preserved.</td>
+<td>Tap planet → expand → fill OR edit. Genre-emphasis guidance ("which planets matter in your genre") — never a score. Act switch/create BottomSheet stays here.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Readiness<br><code>/artist/readiness</code> — orphaned route; a dangling <code>quickLinks</code> chip still points to it</td>
+<td><span class="ac d">D6</span><br>Neither in nav nor cleanly absorbed — an inconsistent half-state.</td>
+<td><span class="pill now">/artist/readiness</span> fully absorbed into the Radar readiness surface; remove the dangling chip (<code>ArtistDashboard.jsx:312-315</code>).</td>
+<td>Read-only readiness in bands/binaries, inline in Radar. Decide once: in-Radar, not a separate route.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Claim review<br><code>/artist/claims</code> — deep-link / panel only</td>
+<td><span class="ac d">D6</span><br>Intentionally off-nav, but the status is ambiguous alongside the dangling chip.</td>
+<td>Keep as a <b>panel</b> reached from the Radar next-action card + notifications. Not a nav tab. Clarify the intent in code so it stops looking orphaned.</td>
+<td>Per-claim approve / edit / send-to-מאשר-מקור. Sending a claim to a Source-Confirmer upgrades evidence to method-labeled "verified."</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Offer / payment<br><code>/artist/offer</code> — founding-Passport manual pay (Bit)</td>
+<td><span class="ac a">A5</span><br>A payment route contradicts the free-pilot stance; monetisation is measured, not required; no price locked pre-Gate.</td>
+<td><b>Remove or feature-flag OFF</b> the <code>/artist/offer</code> payment route for the pilot. Publish stays free. Re-introduce only after the Gate defines price/ICP.</td>
+<td>No card capture, no "mark paid" surfaced during the pilot. Keeps the artist funnel to one honest path: build → publish → share → Requests.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Account / Settings<br><code>/settings</code> — full_name, WhatsApp, opt-ins, access-handshake</td>
+<td><span class="ac a">consolidation</span><br>Universal account screen sits apart from artist identity; overlaps with the Editor above.</td>
+<td>Fold into a single <b>Settings Hub</b> (see Cross-cutting). Account prefs + the artist side of the ArtistAccess approve/decline handshake live here; rich identity moves to the Editor.</td>
+<td>Approve/decline a manager's access request. Clear split: <b>who you are</b> (Editor) vs <b>account prefs</b> (Settings Hub).</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Act management<br>create/switch only, inside the Radar BottomSheet</td>
+<td><span class="ac d">D8</span> <span class="ac e">E1</span> <span class="ac e">E2</span><br>No rename / delete / per-Act Passport overview; no per-Act authority.</td>
+<td>Act-management surface: list · rename · delete · per-Act Passport overview. Per-Act territory/period authority (jsonb interim, then column post-Gate).</td>
+<td>New Act starts with empty evidence (<code>passport_version.act_id</code>). Authority shown as bands/binaries — "draws in TLV in summer" as structured method-labeled context, never a score.</td>
+<td><span class="pri p2">P2</span></td></tr>
+</table></div>
+<div class="firewall"><b>Two-view rule:</b> the Editor/Radar/Readiness/Claims are the Artist (private) view — they show gaps &amp; needs-you states. Passport-self shows the Buyer (public) view — verified strengths only. No numeric draw anywhere, including in the new editor.</div>
+</div></section>
+
+<!-- ══════════════ REPRESENTATION ══════════════ -->
+<section class="panel" id="p2"><div class="card">
+<div class="eh">💼 Representation · ייצוג (מנהל אמן · איש בוקינג — artist-side, NOT a buyer / NOT אמרגן=buyer)</div>
+<div class="sub">Consensus canonical ruling: <b>ONE workspace</b> with role-adapted modules. Artist Manager (מנהל אמן) vs Booking Agent (איש בוקינג) are <b>roles inside it</b>, not separate screen-sets. Completeness ≈ 80% — gaps are structural, not screens.</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">Roster</span> <span class="arrow">·</span>
+<span class="pill tgt">Requests</span> <span class="arrow">·</span>
+<span class="pill tgt">Settings Hub</span>
+&nbsp;—&nbsp; <span class="pill now">Radar feed</span> merges into Roster · <span class="pill now">/org/settings · /org/members · /org/billing · /org/upgrade</span> collapse into Settings Hub.</div>
+<div class="consensus"><b>Consensus:</b> GPT+Codex — Representation is one workspace with role-adapted modules; merge <span class="ac a">/agency/radar → Roster</span>. Entity-model — <span class="ac e">E4</span> multi-role stacking + <span class="ac e">E6</span> upgrade-in-place are the two high-signal <b>early</b> app-backlog items.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">Roster / Dashboard<br><code>/agency</code> — consented roster + ArtistAccess request/revoke</td>
+<td>Built &amp; reads real data (roster-grants, migration 032). Separate radar screen splits attention.</td>
+<td><span class="pill tgt">Roster</span> is the home. Absorbs the demand-signal feed as a <b>section</b> within it.</td>
+<td>Per-artist request-access / revoke; open artist. Grants ≠ ownership — either side revokes. Empty state = "request access to your first artist."</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Radar feed<br><code>/agency/radar</code> — firewall-safe demand signals</td>
+<td><span class="ac a">consolidation</span> <span class="ac t">CONSENSUS</span><br>Separate screen for what is a Roster overview.</td>
+<td><span class="pill now">/agency/radar</span> merged into Roster as a signals strip. Method-labeled, never a score/rank.</td>
+<td>Signal list inline with roster; open a signal. One workspace, fewer tabs.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Requests inbox<br><code>/agency/requests</code></td>
+<td>Built. Fine as-is.</td>
+<td><span class="pill tgt">Requests</span> stays. Availability requests touching the roster's artists.</td>
+<td>Rows with bounded status (new/replied/closed); open request. Mono dates.</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Multi-role stacking<br>one person = manager + booking-agent is legal in schema (2 role rows) but <b>no UI</b></td>
+<td><span class="ac e">E4</span><br>Roles are invisible — no way to create or see that a member holds two functional roles.</td>
+<td>A <b>"roles in this workspace"</b> panel in Settings Hub: assign/label manager vs booking-agent per member. Role + authority set here, not as a permanent identity.</td>
+<td>Label-map now (UI), widen the CHECK constraint post-Gate. This is the concrete surface for the canonical "roles assigned inside workspaces" rule.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Upgrade / grow<br><code>/org/upgrade</code>, <code>ContextSwitcher</code> — create-new only</td>
+<td><span class="ac e">E6</span><br>Individual→team→company upgrade moment doesn't exist as a flow; the switcher only offers "+ create new," never "grow this one."</td>
+<td><b>"Add teammate" = the upgrade trigger</b>, in-place on the current workspace (not a new workspace). Entity-form (person/team/company) derived from member count now; explicit column post-Gate.</td>
+<td>Inviting the first teammate turns a solo Representation workspace into a team without re-creating it. High-signal for rep onboarding.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Org screens<br><code>/org/settings · /org/members · /org/billing · /org/upgrade</code></td>
+<td><span class="ac a">consolidation</span><br>Four sibling routes for one settings surface.</td>
+<td>Collapse into one <b>Settings Hub</b> with sections: Profile · Members &amp; roles · Billing · Plan. (Shared spec in Cross-cutting.)</td>
+<td>Members = seats + invites; <code>/invite/:token</code> is the accept landing. Billing intentionally light pre-Gate.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Per-Act / territory authority on grants<br><code>artist_access</code> is per-ARTIST</td>
+<td><span class="ac e">E2</span><br>No <code>act_id</code>/territory/period on grants — roster is per-artist, not per-Act.</td>
+<td>Carry <code>{act_id, territory, from, to}</code> in <code>authority_scope</code> jsonb (no migration short-term); formal columns post-Gate.</td>
+<td>Per-Act Passport routing so a rep can hold authority over one Act, not the whole Person.</td>
+<td><span class="pri p2">P2</span></td></tr>
+</table></div>
+<div class="firewall"><b>Cross-entity note:</b> a booker/producer base role that taps "+ New workspace → agency" here hits the <span class="ac d">D2</span> dead-end — fixed centrally in Cross-cutting (<span class="ac a">A1/A4</span>).</div>
+</div></section>
+
+<!-- ══════════════ BUYER ══════════════ -->
+<section class="panel" id="p3"><div class="card">
+<div class="eh">🤝 Buyer · מזמין הופעות (promoter · planner · corporate · PRIVATE person — NOT אמרגן)</div>
+<div class="sub">Consensus: Buyer is a <b>non-workspace context</b> by default. The public Passport + request flow needs no login (zero friction, deliberate). A signed-in booker gets one private link-resolver home. Completeness ≈ 70% (pilot-scoped).</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">Public Passport</span> <span class="arrow">→</span>
+<span class="pill tgt">Availability request</span> <span class="arrow">→</span>
+<span class="pill tgt">Sent</span>
+&nbsp;·&nbsp; signed-in: <span class="pill tgt">Discover (link resolver)</span> &nbsp;—&nbsp; <b>no workspace shell by default.</b></div>
+<div class="consensus"><b>Consensus:</b> GPT+Codex — Buyer is a context, not a workspace; the fix that unblocks buyers is <span class="ac a">A1/A4</span> (derive effective role from any active membership + restrict workspace creation), which is exactly my <span class="ac d">D2</span> dead-end.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">Public Passport<br><code>/passport/:id</code> — THE product; persona toggle booking/rep</td>
+<td>Built &amp; live. No account needed — correct.</td>
+<td><span class="pill tgt">Public Passport</span> stays the entire front door. Buyer view = verified strengths only; draw as bands/binaries/method labels; streaming secondary.</td>
+<td>Scroll evidence; toggle booking↔rep persona; one "request availability" CTA. Opens instantly, no login prompt. ≤3 taps to request.</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Availability request + Sent<br><code>/passport/:id/request · /sent</code></td>
+<td>Built. THE Gate action. Fine.</td>
+<td>Kept. Short form (name/event/date) → lands in the artist's Requests inbox → receipt.</td>
+<td>One screen, one action; minimal validation to preserve zero-friction. Optional "save this passport" nudge → signup.</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Booker dead-end<br>booker base role that "+ New workspace" lands in an <b>unreachable</b> workspace</td>
+<td><span class="ac d">D2</span> <span class="ac a">A1/A4</span> <span class="ac t">CONSENSUS</span><br><code>ORG_DERIVED_ROLES=[ARTIST,AGENCY]</code> only; a booker who creates a workspace is bounced back to <code>/discover</code> and every role gate rejects the new screens. Silent, no error, no back-path.</td>
+<td>Two-part fix: (a) <b>derive effective role from ANY active membership</b> so a created workspace is reachable; (b) <b>restrict "+ New workspace"</b> types by base role so buyers aren't offered a path they can't use.</td>
+<td>Buyer stays a context by default; if they legitimately hold a membership, the switch lands on that workspace's home instead of a dead-end.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Booker home<br><code>/discover</code> — link-resolver + explainer, one action</td>
+<td>Correct scope for pre-Gate (open discovery deferred).</td>
+<td><span class="pill tgt">Discover</span> kept as a link-resolver for signed-in bookers, with the sample-passport escape hatch.</td>
+<td>Paste/open a Passport link; sample-passport as empty-state escape. Open discovery stays deferred by design.</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Single register<br>one generic booker surface / one copy register</td>
+<td><span class="ac d">D9</span><br>Demand is segmented (professional / private / corporate / planner) but there's one register; the private warm path ("מזמינים אמן להופעה?") is missing.</td>
+<td>Register-segmentation copy/IA: professional buyer · private client (לקוח פרטי, no workspace) · corporate · planner. Copy paths, not new workspaces.</td>
+<td>Private buyers need no workspace (glossary §2c) — this is a copy/IA slice, not a schema or team change. <span class="ac e">E5</span> (buyer team) correctly out of scope.</td>
+<td><span class="pri p2">P2</span></td></tr>
+</table></div>
+<div class="firewall"><b>Private buyers need no workspace</b> — a wedding couple IS a מזמין הופעות. The public Passport + request flow is their whole surface. D9 is copy/IA; E5 (buying-team org) is post-Gate.</div>
+</div></section>
+
+<!-- ══════════════ PRODUCTION ══════════════ -->
+<section class="panel" id="p4"><div class="card">
+<div class="eh">🎬 Production · משרד הפקה (<code>workspace_type='producer'</code>)</div>
+<div class="sub">Consensus: the third customer workspace family, but <b>event-first</b> — Events default, Team demoted to a setting. One component, three tabs today. Completeness ≈ 65%. Gated by <code>RequireProduction</code> on <code>workspace_type</code>, so it never falls through to the agency roster.</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">Events (default)</span> <span class="arrow">·</span>
+<span class="pill tgt">Requests</span> <span class="arrow">·</span>
+<span class="pill tgt">Settings Hub (Team here)</span>
+&nbsp;—&nbsp; <span class="pill now">Team-as-home</span> demoted; Events becomes the landing.</div>
+<div class="consensus"><b>Consensus:</b> GPT+Codex — Production is event-first (Events default, Team→Settings). And a shared architecture fix: <span class="ac a">A3</span> — Production is <b>marketed but unreachable</b> (no signup path); add one or drop the CTA.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">No signup path<br><code>/production</code> is marketed on the site but has no way to sign up into it</td>
+<td><span class="ac a">A3</span> <span class="ac t">CONSENSUS</span><br>The Production audience page exists and pitches, but the entity is unreachable from signup — a marketed-but-dead door.</td>
+<td><b>Add a Production signup path</b> (role-select / create-workspace into <code>workspace_type='producer'</code>) OR remove the site CTA. Decide, don't leave both half-true.</td>
+<td>If added: <code>/select</code> gains a Production choice → create production workspace → Events home.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Team (home)<br><code>/production</code> — team roster is the default tab</td>
+<td><span class="ac a">event-first</span> <span class="ac t">CONSENSUS</span><br>Team-as-home mis-frames a production office; the job is events, not a member list.</td>
+<td><span class="pill tgt">Events</span> becomes the default landing. <span class="pill now">Team</span> demoted into Settings Hub.</td>
+<td>Answers "what next decision?" with events, not a roster. Team still editable — just not the front door.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Events<br><code>/production/events</code> — view real org data, <b>no create/edit</b></td>
+<td>View-only — no event/lineup creation UI, no slot-booking action.</td>
+<td><span class="pill tgt">Events</span> gains event/lineup <b>creation + edit</b> and a slot-booking action (production books an artist by acting as a Buyer on a Passport link).</td>
+<td>Create/edit event → build lineup → book slot. To book, opens a Passport link → availability request (no separate outbound screen).</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Requests<br><code>/production/requests</code> — honest "not wired yet" if migration 032 absent</td>
+<td>Honest-gap tri-state (null / empty / gap). Depends on migration 032.</td>
+<td><span class="pill tgt">Requests</span> kept; wire fully once 032 is confirmed applied. Never render "0" for uninstrumented.</td>
+<td>Request rows with bounded status; honest-gap card while the dependency is pending.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">Team + org screens</td>
+<td><span class="ac a">consolidation</span></td>
+<td>Team, profile, seats collapse into the shared <b>Settings Hub</b>.</td>
+<td>Consistent with Representation — one settings surface, not scattered tabs.</td>
+<td><span class="pri p1">P1</span></td></tr>
+</table></div>
+</div></section>
+
+<!-- ══════════════ SOURCE-CONFIRMER ══════════════ -->
+<section class="panel" id="p5"><div class="card">
+<div class="eh">✅ Source-Confirmer · מאשר-מקור (venue / festival / production confirming ONE claim)</div>
+<div class="sub">Consensus: a <b>non-workspace context</b>. Glossary is explicit — accountless magic-link task, NO signup, NO dashboard, NO workspace shell. Only the confirm screen is right today; the two logged-in screens violate the model and collide with the Production <i>company</i> workspace. Completeness ≈ 60%.</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">/confirm/:token (accountless)</span>
+&nbsp;—&nbsp; <span class="pill now">/producer</span> retired · <span class="pill now">/producer/received</span> retired · <b>no shell, no nav, ever.</b></div>
+<div class="consensus"><b>Consensus:</b> GPT+Codex+glossary+my audit all agree — retire <span class="ac a">A4</span> / <span class="ac d">D3/D4</span> the <code>/producer</code> workspace; the confirmer's only surface is <code>/confirm/:token</code>. This is the exact "ערבוב בין ישויות" (entity-mixing) the owner flagged.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">Confirm claim<br><code>/confirm/:token</code> — the real confirmer flow</td>
+<td>Complete &amp; correct — the actual value.</td>
+<td><span class="pill tgt">/confirm/:token</span> is the <b>entire</b> intended surface. Accountless magic link, one claim, one decision.</td>
+<td>Read the exact one claim → Yes / Partly / No / Not-me → done. No login, no nav. Confirmation upgrades evidence to method-labeled "verified."</td>
+<td><span class="pri p0">P0</span> (protect — nothing to build, but the model must be enforced around it)</td></tr>
+
+<tr><td class="rt">Producer home<br><code>/producer</code> — "Producer workspace" landing inside AppShell</td>
+<td><span class="ac d">D3</span> <span class="ac d">D4</span> <span class="ac a">A4</span> <span class="ac t">CONSENSUS</span><br>Mis-modeled as a persistent workspace; orphan route (in no nav); collides with the Production company workspace (<code>workspace_type='producer'</code>).</td>
+<td><b>Retire.</b> <span class="pill now">/producer</span> removed from AppShell + nav. The Source-Confirmer must be accountless <code>/confirm/:token</code> only.</td>
+<td>Nothing replaces it — the confirmer is a task, not a place. Removing it also un-collides the naming with Production.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Received passports<br><code>/producer/received</code> — "Passports shared with you"</td>
+<td><span class="ac d">D5</span> <span class="ac d">D7</span><br>Functional stub — no data fetch (its own header admits it); <code>ProducerHome</code> strings are hardcoded English, bypassing i18n.</td>
+<td><b>Drop</b> with D3. <span class="pill now">/producer/received</span> removed. (If any received-passports concept survives, it belongs to a Buyer context, not a confirmer shell.)</td>
+<td>Deleting resolves D5 (stub) and D7 (i18n breach) at once — no separate work.</td>
+<td><span class="pri p0">P0</span></td></tr>
+</table></div>
+<div class="firewall"><b>Entity-mixing flag for Maria:</b> D3 is precisely the "ערבוב בין ישויות" reported — the ROLES.PRODUCER magic-link confirmer is dressed as a persistent workspace and collides with the משרד הפקה company workspace. Retiring the shell is the fix.</div>
+</div></section>
+
+<!-- ══════════════ ADMIN ══════════════ -->
+<section class="panel" id="p6"><div class="card">
+<div class="eh">👑 Admin / Operator — Maria (owner)</div>
+<div class="sub">Internal console. Not in signup — granted by runbook (<code>profiles.role='operator'</code>). Intentionally dense, firewall-respecting. Completeness ≈ 90% — the most complete entity; only additive work.</div>
+<div class="nav"><b>Target navigation:</b>
+<span class="pill tgt">Ops console <code>/admin</code></span> &nbsp;—&nbsp; single dense operator surface; no consolidation needed.</div>
+<div class="scroll"><table>
+<tr><th>Current screens + nav</th><th>Issue (code)</th><th>Optimized nav + screens (target)</th><th>Content / interactivity</th><th>Priority</th></tr>
+
+<tr><td class="rt">Ops console<br><code>/admin</code> — publish · activation · consents · export · delete · audit · upgrade approval</td>
+<td>Complete for its purpose. No screen gap.</td>
+<td><span class="pill tgt">/admin</span> kept as-is. Dense by intent (operator). Firewall-respecting.</td>
+<td>Sections: Payments · Upgrades · Artists · Requests · Claims · Consents · Audit. One active action per section.</td>
+<td>—</td></tr>
+
+<tr><td class="rt">Business cockpit<br>Gate tile · per-entity funnels · outreach attribution</td>
+<td>Missing — a next-version add, not a defect.</td>
+<td>Add a business cockpit: Gate tile (1 reaction + 1 payment), per-entity funnels, <code>?src</code> outreach attribution.</td>
+<td>Counts are OWNER-only product usage — never artist scores, never public. "Not instrumented" renders as such, never a misleading "0".</td>
+<td><span class="pri p2">P2</span></td></tr>
+
+<tr><td class="rt">Advisor separation<br>single operator grant today</td>
+<td>Governance — no read-only advisor role yet.</td>
+<td>Add a read-only advisor separation before any second operator grant.</td>
+<td>Read-only cannot publish/activate/delete. Required before widening access.</td>
+<td><span class="pri p2">P2</span></td></tr>
+</table></div>
+<div class="firewall"><b>Firewall note:</b> admin counts = product usage for the owner's eyes only; "not instrumented" must render as such, never as a misleading "0".</div>
+</div></section>
+
+<!-- ══════════════ CROSS-CUTTING P0 ══════════════ -->
+<section class="panel" id="p7"><div class="card">
+<div class="eh">🚨 Cross-cutting P0 — the launch-blockers that span every entity</div>
+<div class="sub">These sit under the whole app, not one entity. The architect's Refresh-Logout root-cause proves the owner's "it threw me out of the system" is a <b>hosting/routing gap</b>, not an auth bug — and it blocks the Gate for every entity (a buyer opening a shared deep <code>/app/passport/:id</code> gets a 404). Ship before the Q1–Q8 proof.</div>
+<div class="consensus"><b>Consensus:</b> the Tech-Upgrade plan and the Refresh-Logout root-cause independently converge: fix the SPA fallback first, then kill the embed/standalone skew that spawns this class of bug, then add the reload smoke test so it never regresses.</div>
+<div class="scroll"><table>
+<tr><th>Item</th><th>Issue (code)</th><th>Optimized fix (target)</th><th>Content / verification</th><th>Priority</th></tr>
+
+<tr><td class="rt">SPA deep-link fallback<br>THE refresh-logout bug</td>
+<td><span class="ac t">P0-1</span> <span class="ac t">CONSENSUS</span><br>Static export (<code>output:'export'</code>) + no <code>rewrites</code> → every deep <code>/app/*</code> route 404s to the marketing page on hard reload / shared link. Live-proven: <code>/app/settings</code>, <code>/app/artist/home</code>, <code>/app/passport/demo</code> all → 404.</td>
+<td>Add <code>{"source":"/app/:path*","destination":"/app/index.html"}</code> to <code>website-next/vercel.json</code>; add a root Vite SPA fallback for <code>app.lock.show</code>. Rewrites run after the filesystem check, so real assets/files still serve directly.</td>
+<td>Code present — <b>deploy + verify pending.</b> Verify: <code>curl -s -o /dev/null -w '%{http_code}' https://www.lock.show/app/settings</code> must return <b>200</b> serving <code>index-*.js</code>, not <code>/_next/</code>.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Embed-vs-standalone skew<br>the recurring root cause</td>
+<td><span class="ac t">P0-2</span><br>App deployed twice (committed static embed bundle vs separately-built standalone). They drift whenever <code>src/</code> changes without an embed rebuild — HEAD already ~18 <code>src/</code> commits ahead. Owner sees "the live app is behaving like an old version."</td>
+<td>Collapse to a <b>single canonical app domain</b> (proxy-rewrite/308 <code>www.lock.show/app/*</code> → <code>app.lock.show</code>) — one build, one bundle. If the same-origin embed must stay: a <b>CI embed-sync gate</b> that rebuilds and fails on hash drift.</td>
+<td>Do the sync-gate now even if the domain collapse is deferred. Verify PWA scope + OAuth <code>redirectTo</code> origins line up.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Session-boot resilience<br>tell real logouts apart from 404 ejections</td>
+<td><span class="ac t">P0-3</span><br><code>onAuthStateChange</code> calls <code>loadProfile</code> without await and has no branch for <code>SIGNED_OUT</code>/refresh-failure — a genuine token expiry looks identical to the P0-1 bug to the owner.</td>
+<td>Branch on <code>TOKEN_REFRESHED</code> vs <code>SIGNED_OUT</code>; on <code>SIGNED_OUT</code> route to <code>/login</code> with a toast, not a bare bounce. Add a boot log line.</td>
+<td>Makes real auth failures distinguishable from 404 ejections in the pilot.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Auth/route reload smoke test<br>stop P0-1-class regressions</td>
+<td><span class="ac t">P0-4</span><br>Playwright is a devDep but there are no test files and no <code>test</code> script — regressions ship undetected.</td>
+<td>One Playwright smoke spec per surface: log in, <b>reload a deep route</b>, assert the app (not a 404) renders. Add a deep-route reload smoke test to the <code>verify</code> chain.</td>
+<td>This single test would have caught P0-1.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Artist Identity Editor<br>(same item as Artist tab)</td>
+<td><span class="ac t">P0-5</span> <span class="ac d">D1</span> <span class="ac a">A6</span> <span class="ac t">CONSENSUS</span><br>Reusable Artist/Act Identity Editor — identity is write-once today (the owner's broken screen).</td>
+<td>Build the reusable editor (see Artist tab): confirmed nodes editable, <code>stage_name</code>+<code>city</code> in the identity set, per-Act form bound to <code>act</code>+<code>passport_versions</code>, field-level validation.</td>
+<td>Edits must stay band/binary — never introduce a numeric. Load the artifact-design / Figma flow for the UX.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Effective-role + workspace-creation guard<br>fixes the buyer dead-end for all base roles</td>
+<td><span class="ac a">A1/A4</span> <span class="ac d">D2</span> <span class="ac t">CONSENSUS</span><br>Effective role recomputed only for <code>[ARTIST,AGENCY]</code>, but "+ New workspace" is offered to everyone → non-artist/agency base roles create unreachable workspaces (silent dead-end).</td>
+<td>(a) Derive effective role from <b>ANY active membership</b>; (b) <b>restrict workspace creation</b> types by base role. Fixes D2 centrally for buyer, producer, operator.</td>
+<td>Aligns with the canonical rule: role + authority live inside a workspace; a created workspace must always be reachable.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Retire the /producer workspace shell<br>(same item as Source-Confirmer tab)</td>
+<td><span class="ac a">A4</span> <span class="ac d">D3/D4</span> <span class="ac t">CONSENSUS</span><br>Source-Confirmer mis-modeled as a logged-in workspace; must be accountless <code>/confirm/:token</code> only.</td>
+<td>Remove <code>/producer</code> + <code>/producer/received</code> from AppShell/nav. Un-collides with the Production company workspace.</td>
+<td>Also closes D5 (stub) and D7 (hardcoded English) in one move.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Remove the /artist/offer payment route<br>(same item as Artist tab)</td>
+<td><span class="ac a">A5</span><br>A payment route contradicts the free pilot; no price/ICP locked pre-Gate.</td>
+<td>Feature-flag OFF / remove <code>/artist/offer</code> for the pilot. Publish stays free.</td>
+<td>One honest artist funnel during the pilot.</td>
+<td><span class="pri p0">P0</span></td></tr>
+
+<tr><td class="rt">Settings Hub consolidation<br>shared across Artist / Representation / Production</td>
+<td><span class="ac a">consolidation</span><br><code>/settings</code> + <code>/org/*</code> scatter one settings surface across many routes.</td>
+<td>One <b>Settings Hub</b> with sections (Profile · Members &amp; roles · Billing · Plan · Team for Production). Every workspace family uses the same hub, role-adapted.</td>
+<td>Answers Codex's "what authority / what role now" in one predictable place.</td>
+<td><span class="pri p1">P1</span></td></tr>
+
+<tr><td class="rt">A3 Production signup path<br>(same item as Production tab)</td>
+<td><span class="ac a">A3</span> <span class="ac t">CONSENSUS</span><br>Production is marketed but unreachable (no signup path).</td>
+<td>Add a signup/create path into <code>workspace_type='producer'</code> — or remove the site CTA.</td>
+<td>Cross-listed here because it spans site + app + router.</td>
+<td><span class="pri p0">P0</span></td></tr>
+</table></div>
+<div class="firewall"><b>Deploy law reminder:</b> the P0-1 rewrite code exists but is <b>deploy+verify pending</b>. Per the owner's one-release-train rule, these ship together, proven on preview with the full Q1–Q8 protocol, then one atomic go-live.</div>
+</div></section>
+
+<!-- ══════════════ CANONICAL MODEL ══════════════ -->
+<section class="panel" id="p8"><div class="card">
+<div class="eh">📐 Canonical Model — the ruling this plan is built on</div>
+<div class="sub">GPT architecture audit and Codex role-language audit reached this <b>independently and identically</b>. It is the reference model for every optimization above. <b>Pending Maria's approval.</b></div>
+
+<div class="count">
+<div class="cbox"><div class="n">3</div><div class="l">workspace families</div></div>
+<div class="cbox"><div class="n">2</div><div class="l">non-workspace contexts</div></div>
+<div class="cbox"><div class="n">1</div><div class="l">internal (Operator)</div></div>
+<div class="cbox"><div class="n">∞</div><div class="l">scoped role grants</div></div>
+</div>
+
+<h2>The layered model</h2>
+<div class="card" style="box-shadow:none">
+<b>Entity family → organizational form → role assignment → authority → Act / territory / period.</b>
+<div style="margin-top:8px;font-size:12.5px;color:var(--slate)">
+<b style="color:var(--ink)">Customer workspace families (own a workspace = data · billing · seats):</b><br>
+• <b>Artist · אקט</b> — private growth/Radar context; holds Acts, each with its own evidence + פספורט (per-Act, non-transferable, <code>passport_version.act_id</code>).<br>
+• <b>Representation · ייצוג</b> — ONE workspace, role-adapted: מנהל אמן (manager) vs איש בוקינג (booking agent) are roles inside it, not separate screen-sets. Solo OR team. Membership ≠ ArtistAccess.<br>
+• <b>Production · משרד הפקה</b> — event-first workspace; Events + lineups; team is a setting.<br><br>
+<b style="color:var(--ink)">Non-workspace contexts (by default no workspace, no shell):</b><br>
+• <b>Buyer · מזמין הופעות</b> — reads a Passport link; can be a PRIVATE individual (a wedding couple IS a מזמין הופעות); public Passport review needs NO login. NOT אמרגן.<br>
+• <b>Source-Confirmer · מאשר-מקור</b> — accountless one-claim magic-link task; NO signup, NO dashboard, never built as a workspace; only <code>/confirm/:token</code>.<br><br>
+<b style="color:var(--ink)">Internal:</b> <b>Operator</b> — the <code>/admin</code> console, granted by runbook.<br><br>
+<b style="color:var(--ink)">Everything else</b> (publicist, label, lawyer, roster/finance/territory staff…) = <b>scoped role assignments / access grants inside a workspace</b>, never new top-level workspaces. Role + authority (Act / territory / category / action / effective-dates) is assigned <b>inside</b> a workspace — never encoded as a permanent <code>profiles.role</code> identity.
+</div>
+</div>
+
+<h2>Codex — every screen must answer six questions</h2>
+<div class="card" style="box-shadow:none">
+<ul class="q">
+<li><b>Who are you?</b> — the Person (login), never the public identity.</li>
+<li><b>What form?</b> — individual / team / company.</li>
+<li><b>What role now?</b> — the effective role in the current workspace (derived, not a permanent identity).</li>
+<li><b>For which Act / opportunity / territory?</b> — the scope of the current context.</li>
+<li><b>What authority?</b> — Act / territory / category / action / effective-dates.</li>
+<li><b>What next decision?</b> — the one primary action this screen exists to enable.</li>
+</ul>
+<p class="sub" style="margin-top:8px">Every optimized screen above is designed to answer these — e.g. Production's event-first reorg answers "what next decision?" with an event, not a member list; the Representation roles panel answers "what role now / what authority?"; the Buyer context answers "who are you / what form?" without forcing a workspace.</p>
+</div>
+
+<h2>Hebrew canon terms (Codex HE table)</h2>
+<div class="card he" style="box-shadow:none">
+<span class="pill">פספורט</span> = Passport &nbsp;
+<span class="pill">מזמין הופעות</span> = buyer / demand-side (NOT אמרגן) &nbsp;
+<span class="pill">אמרגן</span> = artist-side agent/office (Representation), NOT a buyer &nbsp;
+<span class="pill">מאשר-מקור</span> = Source-Confirmer &nbsp;
+<span class="pill">אקט</span> = Act &nbsp;
+<span class="pill">מנהל אמן</span> = Artist Manager &nbsp;
+<span class="pill">איש בוקינג</span> = Booking Agent &nbsp;
+<span class="pill">משרד הפקה</span> = Production office &nbsp;
+<span class="pill">לקוח פרטי</span> = private client (no workspace)
+</div>
+
+<div class="firewall"><b>Conflict rule (unchanged):</b> canon (CLAUDE.md) &gt; functional contracts &gt; DS &gt; prototypes. This model is proposed as canon — it does not ship to code until Maria approves it. Until then it is the shared reference the four audits agree on.</div>
+</div></section>
+
+</div>
+<script>
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});
+  b.classList.add('active');
+  document.getElementById(b.dataset.t).classList.add('active');
+  window.scrollTo(0,0);
+});
+</script>

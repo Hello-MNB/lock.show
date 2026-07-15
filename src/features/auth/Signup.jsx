@@ -64,7 +64,9 @@ export default function Signup() {
           /* genuine confirmation-required: fall through to confirmPending */
         }
       }
-      if (session) { logEvent(EVENTS.SIGNUP); nav('/select') }
+      // CFRO surface attribution: which build converted — the lock.show/app
+      // embed (BASE_URL '/app/') or the standalone app.lock.show deploy.
+      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone' }); nav('/select') }
       else setConfirmPending(true)
     } catch (err) {
       setError(err?.message?.includes('registered') ? T.signup.error : (err.message || T.common.error))

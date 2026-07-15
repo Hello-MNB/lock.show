@@ -8,7 +8,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { T as en } from '../src/lib/i18n/en.js'
@@ -35,26 +35,182 @@ const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8'
 
 const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : null
 
+// ──────────────────────────────────────────────────────────
+// ABUSE CONTROLS (G14) — env-tunable, safe defaults. All in-memory (per
+// serverless instance / local process): a restart resets counters, which is
+// an accepted pilot-stage bound, not a persistence guarantee.
+// ──────────────────────────────────────────────────────────
+const RATE_LIMIT_PER_MIN = Number(process.env.RATE_LIMIT_PER_MIN) || 30 // per IP, sliding 60s
+const MAX_ITEMS_PER_JOB = Number(process.env.MAX_ITEMS_PER_JOB) || 15 // per process-evidence call
+const MAX_ITEMS_PER_USER_DAY = Number(process.env.MAX_ITEMS_PER_USER_DAY) || 15 // AI items/user/day
+const CONFIRM_TOKEN_TTL_DAYS = Number(process.env.CONFIRM_TOKEN_TTL_DAYS) || 14 // G15 expiry
+const MAX_FIELD_CHARS = 2000 // longest accepted string field in any JSON body
+// G14 monthly spend ledger — HONESTLY AN ESTIMATE, not token accounting:
+// it counts this month's gig_evidence_refresh_completed rows in analytics_event
+// (one per completed client processing run — an approximation of items) at
+// COST_PER_ITEM_USD each. Real per-token cost accounting = P1. Persistent
+// (DB-backed), unlike the in-memory daily caps above.
+const COST_PER_ITEM_USD = Number(process.env.COST_PER_ITEM_USD) || 0.02
+const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD) || 50 // hard cap (CFRO)
+const BUDGET_ALERT_AT_USD = Number(process.env.ALERT_AT) || 25 // warn threshold
+
 // Single processor instance: StubClaimProcessor (no key) or AnthropicClaimProcessor (key set).
 // Callers never reference the concrete class — only the AiClaimProcessor interface.
 const processor = createClaimProcessor(ANTHROPIC_KEY, MODEL)
 
 const app = express()
-app.use(cors())
-app.use(express.json({ limit: '2mb' }))
+
+// CORS allowlist (G11-1). Origins come from ALLOWED_ORIGINS (comma-separated env);
+// default = production + local dev. Requests without an Origin header (curl,
+// server-to-server, same-origin) pass through — CORS only gates browsers.
+const ALLOWED_ORIGINS = (realValue(process.env.ALLOWED_ORIGINS)
+  ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+  : ['https://app.lock.show', 'https://lock.show', 'https://www.lock.show', 'http://localhost:5173'])
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true)
+    return cb(null, false) // not allowlisted → no CORS headers; the browser blocks it
+  },
+}))
+// Rate limiting (G14-1) — tiny in-memory sliding window, per IP, no new deps.
+// Applied to ALL routes (public + authed). 429 {error:'rate_limited'} beyond
+// RATE_LIMIT_PER_MIN requests in the trailing 60s.
+const rateBuckets = new Map() // ip → timestamps (ms) inside the trailing window
+function clientIp(req) {
+  // Vercel / any proxy puts the caller first in x-forwarded-for; fall back to socket.
+  const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+  return fwd || req.socket?.remoteAddress || 'unknown'
+}
+app.use((req, res, next) => {
+  const now = Date.now()
+  const ip = clientIp(req)
+  let hits = rateBuckets.get(ip)
+  if (!hits) { hits = []; rateBuckets.set(ip, hits) }
+  while (hits.length && now - hits[0] > 60_000) hits.shift() // slide the window
+  if (hits.length >= RATE_LIMIT_PER_MIN) return res.status(429).json({ error: 'rate_limited' })
+  hits.push(now)
+  // Memory bound: on pathological IP churn, sweep idle buckets.
+  if (rateBuckets.size > 10_000) {
+    for (const [k, v] of rateBuckets) {
+      if (!v.length || now - v[v.length - 1] > 60_000) rateBuckets.delete(k)
+    }
+  }
+  next()
+})
+
+// Schema guards (G14-2): JSON bodies capped at 100kb (every route here takes a
+// tiny JSON payload — evidence FILES go client→Supabase Storage, never through
+// this server), and no string field may exceed MAX_FIELD_CHARS.
+app.use(express.json({ limit: '100kb' }))
+function hasOverlongString(v, depth = 0) {
+  if (depth > 4 || v == null) return false
+  if (typeof v === 'string') return v.length > MAX_FIELD_CHARS
+  if (Array.isArray(v)) return v.some((x) => hasOverlongString(x, depth + 1))
+  if (typeof v === 'object') return Object.values(v).some((x) => hasOverlongString(x, depth + 1))
+  return false
+}
+app.use((req, res, next) => {
+  if (req.body && hasOverlongString(req.body)) {
+    return res.status(400).json({ error: 'field_too_long', max_chars: MAX_FIELD_CHARS })
+  }
+  next()
+})
+
+// ──────────────────────────────────────────────────────────
+// AUTH (G11-2). Every route that mutates or reads private data requires a
+// Supabase user JWT: Authorization: Bearer <access_token>, verified against
+// Supabase Auth via the service client. Attaches req.userId.
+// Public-by-design routes (health, public passport GET, passport-signal,
+// tokened producer /confirm links) skip this.
+// ──────────────────────────────────────────────────────────
+async function requireAuth(req, res, next) {
+  try {
+    const m = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '')
+    if (!m || !admin) return res.status(401).json({ error: 'auth_required' })
+    const { data, error } = await admin.auth.getUser(m[1])
+    if (error || !data?.user?.id) return res.status(401).json({ error: 'auth_required' })
+    req.userId = data.user.id
+    next()
+  } catch (e) {
+    console.error('[auth]', e)
+    res.status(401).json({ error: 'auth_required' })
+  }
+}
+
+// Ownership gate (G11-3): artists.created_by must equal the authenticated user.
+// Writes the failure response itself; caller just returns false.
+async function requireArtistOwner(req, res, artistId) {
+  if (!artistId) {
+    res.status(400).json({ error: 'artistId required' })
+    return false
+  }
+  const { data: artist, error } = await admin
+    .from('artists').select('id, created_by').eq('id', artistId).maybeSingle()
+  if (error) throw error
+  if (!artist) {
+    res.status(404).json({ error: 'Artist not found.' })
+    return false
+  }
+  if (artist.created_by !== req.userId) {
+    res.status(403).json({ error: 'forbidden' })
+    return false
+  }
+  return true
+}
 
 // ──────────────────────────────────────────────────────────
 // GET /api/health
 // ──────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'live' : 'mock', model: MODEL })
+  // 'configured' = a key is present; it does NOT claim any call succeeded
+  // (truthful-provenance rule: liveness is only reported per processed item).
+  res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'configured' : 'mock', model: MODEL })
 })
+
+// AI-spend caps (G14-3) — per-user daily counter, in-memory. Key = userId + UTC
+// day; stale (non-today) keys are swept on write so the map never grows past
+// one day's active users.
+const dailyItemCount = new Map() // `${userId}:${YYYY-MM-DD}` → AI items processed today
+const dayKey = (userId) => `${userId}:${new Date().toISOString().slice(0, 10)}`
+function bumpDailyCount(userId, n) {
+  const key = dayKey(userId)
+  dailyItemCount.set(key, (dailyItemCount.get(key) || 0) + n)
+  const today = key.slice(-10)
+  for (const k of dailyItemCount.keys()) if (!k.endsWith(today)) dailyItemCount.delete(k)
+}
+
+// G14 spend ledger (see constants above): estimated month-to-date AI spend from
+// the persistent analytics_event table via the service client. Throws only on a
+// query error — the caller decides whether to fail open or closed.
+async function monthlySpendEstimateUsd() {
+  const monthStart = new Date()
+  monthStart.setUTCDate(1)
+  monthStart.setUTCHours(0, 0, 0, 0)
+  const { count, error } = await admin
+    .from('analytics_event')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_name', 'gig_evidence_refresh_completed')
+    .gte('created_at', monthStart.toISOString())
+  if (error) throw error
+  return (count || 0) * COST_PER_ITEM_USD
+}
+
+// Dedup basis (G14-4): evidence_artifacts has no stored hash column, but its
+// content IS derivable — value + public_url + file_url are the exact inputs the
+// AI labels. sha256 over them identifies "same evidence content" for an artist.
+// Rows with none of the three (nothing to label from) get no hash → never deduped.
+function evidenceHash(ev) {
+  const basis = [ev.value, ev.public_url, ev.file_url].filter(Boolean).join('\n')
+  return basis ? createHash('sha256').update(basis).digest('hex') : null
+}
 
 // ──────────────────────────────────────────────────────────
 // POST /api/process-evidence { artistId }
 // Reads submitted evidence, labels each via AiClaimProcessor, writes Claims.
+// G14 caps: MAX_ITEMS_PER_JOB per call · MAX_ITEMS_PER_USER_DAY per user ·
+// content-hash dedup against this artist's already-processed evidence.
 // ──────────────────────────────────────────────────────────
-app.post('/api/process-evidence', async (req, res) => {
+app.post('/api/process-evidence', requireAuth, async (req, res) => {
   try {
     if (!admin) {
       return res.status(400).json({
@@ -63,17 +219,86 @@ app.post('/api/process-evidence', async (req, res) => {
     }
     const { artistId } = req.body || {}
     if (!artistId) return res.status(400).json({ error: 'artistId required' })
+    if (!(await requireArtistOwner(req, res, artistId))) return
 
+    // 'error' items (a previous terminal AI failure — see below) are retryable here.
     const { data: evidence, error: evErr } = await admin
       .from('evidence_artifacts')
       .select('*')
       .eq('artist_id', artistId)
-      .eq('status', 'submitted')
+      .in('status', ['submitted', 'error'])
     if (evErr) throw evErr
 
-    const claims = []
+    // Dedup (G14-4): skip pending items whose content hash was already processed
+    // for THIS artist (cross-batch: compare against processed rows in the DB;
+    // in-batch: the same Set catches duplicates inside this request).
+    const { data: doneRows, error: doneErr } = await admin
+      .from('evidence_artifacts')
+      .select('value, public_url, file_url')
+      .eq('artist_id', artistId)
+      .eq('status', 'processed')
+    if (doneErr) throw doneErr
+    const seen = new Set((doneRows ?? []).map(evidenceHash).filter(Boolean))
+    const candidates = []
+    const duplicates = []
     for (const ev of evidence ?? []) {
-      const labelled = await processor.label(ev)
+      const h = evidenceHash(ev)
+      if (h && seen.has(h)) { duplicates.push(ev); continue }
+      if (h) seen.add(h)
+      candidates.push(ev)
+    }
+
+    // Per-request cap (G14-3a): reject the batch outright rather than silently
+    // truncating — the caller sees exactly why nothing was processed.
+    if (candidates.length > MAX_ITEMS_PER_JOB) {
+      return res.status(400).json({ error: 'too_many_items', max: MAX_ITEMS_PER_JOB, pending: candidates.length })
+    }
+    // Per-user daily cap (G14-3b).
+    const usedToday = dailyItemCount.get(dayKey(req.userId)) || 0
+    if (usedToday + candidates.length > MAX_ITEMS_PER_USER_DAY) {
+      return res.status(429).json({ error: 'daily_limit_reached', max: MAX_ITEMS_PER_USER_DAY, used: usedToday })
+    }
+
+    // Monthly budget (G14 spend ledger — an ESTIMATE, see monthlySpendEstimateUsd):
+    // >= MONTHLY_BUDGET_USD → hard 429; >= BUDGET_ALERT_AT_USD → warn + flag the
+    // response. A ledger-query failure fails OPEN with a warning (an analytics
+    // hiccup must not brick the artist's core loop) — the in-memory daily caps
+    // above still bound the damage.
+    let budgetAlert = false
+    try {
+      const spentUsd = await monthlySpendEstimateUsd()
+      if (spentUsd >= MONTHLY_BUDGET_USD) {
+        console.warn(`[budget] monthly AI budget reached: ~$${spentUsd.toFixed(2)} >= $${MONTHLY_BUDGET_USD} — rejecting`)
+        return res.status(429).json({ error: 'monthly_budget_reached' })
+      }
+      if (spentUsd >= BUDGET_ALERT_AT_USD) {
+        budgetAlert = true
+        console.warn(`[budget] monthly AI spend estimate ~$${spentUsd.toFixed(2)} passed the $${BUDGET_ALERT_AT_USD} alert threshold (hard cap $${MONTHLY_BUDGET_USD})`)
+      }
+    } catch (e) {
+      console.warn('[budget] spend estimate unavailable (failing open):', e?.message || e)
+    }
+
+    // Duplicates never reach the AI: mark them processed WITHOUT a new claim —
+    // the identical content already produced this artist's claim earlier.
+    for (const dup of duplicates) {
+      await admin.from('evidence_artifacts').update({ status: 'processed' }).eq('id', dup.id)
+    }
+
+    const claims = []
+    for (const ev of candidates) {
+      // TRUTHFUL PROVENANCE (G12): labelWithMethod reports the ACTUAL execution
+      // path — 'anthropic' only when the API call succeeded, 'deterministic_fallback'
+      // when the stub ran after a terminal API failure, 'mock' when no key is set.
+      const { label: labelled, method, aiFailed } = await processor.labelWithMethod(ev)
+
+      // Retry of a previously failed item: replace its fallback-labelled claim
+      // (never touches 'anthropic'/'mock' claims) so a retry doesn't duplicate.
+      if (ev.status === 'error') {
+        await admin.from('claims').delete()
+          .eq('evidence_id', ev.id).eq('extraction_method', 'deterministic_fallback')
+      }
+
       const claim = {
         artist_id: artistId,
         evidence_id: ev.id,
@@ -84,18 +309,33 @@ app.post('/api/process-evidence', async (req, res) => {
         verified_by: 'system',
         verified_at: new Date().toISOString(),
         visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
-        extraction_method: ANTHROPIC_KEY ? 'anthropic' : 'mock',
-        model_version: ANTHROPIC_KEY ? MODEL : 'mock-v1',
+        extraction_method: method,
+        model_version: method === 'anthropic' ? MODEL : 'mock-v1',
         reason_code: labelled.reason || null,
       }
       const { data: inserted } = await admin.from('claims').insert(claim).select().single()
       claims.push(inserted)
-      await admin.from('evidence_artifacts').update({ status: 'processed' }).eq('id', ev.id)
+      // Terminal AI failure → schema status 'error' (visible + retryable),
+      // not a silent 'processed' that masquerades the stub label as done.
+      await admin.from('evidence_artifacts')
+        .update({ status: aiFailed ? 'error' : 'processed' }).eq('id', ev.id)
     }
-    res.json({ processed: claims.length, ai: ANTHROPIC_KEY ? 'live' : 'mock', claims })
+
+    // Count this batch against the caller's daily AI budget (G14-3b).
+    if (claims.length) bumpDailyCount(req.userId, claims.length)
+
+    // Response reports the REAL per-item methods (each claim row carries its
+    // extraction_method) plus a truthful summary — never key-presence.
+    const methods = claims.reduce((acc, c) => {
+      const m = c?.extraction_method || 'unknown'
+      acc[m] = (acc[m] || 0) + 1
+      return acc
+    }, {})
+    const ai = !ANTHROPIC_KEY ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
+    res.json({ processed: claims.length, deduped: duplicates.length, ai, methods, claims, budget_alert: budgetAlert })
   } catch (e) {
     console.error('[process-evidence]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -158,7 +398,7 @@ async function buildSafePayload(artistId) {
 // The public Passport reads the snapshot, so later visibility edits don't
 // silently change what a buyer already saw until the artist re-publishes.
 // ──────────────────────────────────────────────────────────
-app.post('/api/publish/:artistId', async (req, res) => {
+app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
   try {
     if (!admin) {
       return res.status(400).json({
@@ -166,6 +406,7 @@ app.post('/api/publish/:artistId', async (req, res) => {
       })
     }
     const { artistId } = req.params
+    if (!(await requireArtistOwner(req, res, artistId))) return
     const payload = await buildSafePayload(artistId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 
@@ -180,7 +421,7 @@ app.post('/api/publish/:artistId', async (req, res) => {
     res.json({ ok: true, published: true })
   } catch (e) {
     console.error('[publish]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -219,7 +460,7 @@ app.get('/api/passport/:artistId', async (req, res) => {
     res.json(payload)
   } catch (e) {
     console.error('[passport]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -239,12 +480,41 @@ app.post('/api/passport-signal', async (req, res) => {
       .from('artists').select('id, published').eq('id', artistId).maybeSingle()
     if (pErr) throw pErr
     if (!pub || !pub.published) return res.status(404).json({ error: 'Artist not published.' })
+    // Idempotency (G14): one identical signal (artist+type) per session key per
+    // 24h. Session key = optional client sessionId (the app's gp_session id),
+    // else the caller's IP — hashed, so neither is stored raw. The dedup record
+    // lives in analytics_event (persistent, unlike the in-memory rate buckets):
+    // event_name 'professional_reaction_submitted' is in CANON + the 034 CHECK,
+    // and this route is the signal's server-side reaction writer. A dedup-lookup
+    // error fails open — a measurement hiccup must never block the signal.
+    const sessionKey = createHash('sha256')
+      .update(String(req.body?.sessionId || '').slice(0, 100) || clientIp(req))
+      .digest('hex').slice(0, 32)
+    const since = new Date(Date.now() - 86_400_000).toISOString()
+    const { data: dup } = await admin
+      .from('analytics_event')
+      .select('id')
+      .eq('event_name', 'professional_reaction_submitted')
+      .eq('properties->>artist_id', artistId)
+      .eq('properties->>signal', signal)
+      .eq('properties->>session_key', sessionKey)
+      .gte('created_at', since)
+      .limit(1)
+      .maybeSingle()
+    if (dup) return res.json({ ok: true, deduped: true })
     const { error } = await admin.from('passport_signals').insert({ artist_id: artistId, signal })
     if (error) throw error
+    // Persist the dedup key (best-effort — the signal itself is already recorded).
+    try {
+      await admin.from('analytics_event').insert({
+        event_name: 'professional_reaction_submitted',
+        properties: { artist_id: artistId, signal, session_key: sessionKey, via: 'passport_signal_api' },
+      })
+    } catch (e) { console.warn('[passport-signal] dedup record failed:', e?.message || e) }
     res.json({ ok: true })
   } catch (e) {
     console.error('[passport-signal]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -267,14 +537,95 @@ async function notifyArtistOwner(artistId, { type, body, link }) {
   }
 }
 
-// POST /api/notify { artistId, type, body, link } — generic fire-and-forget
-// notification writer used by the admin console (payment activated) and the
-// public availability-request form (request received). Always 200s so the
-// caller's primary action is never blocked by a notification hiccup.
-app.post('/api/notify', async (req, res) => {
-  const { artistId, type, body, link } = req.body || {}
-  if (admin && artistId && type && body) await notifyArtistOwner(artistId, { type, body, link })
-  res.json({ ok: true })
+// POST /api/notify { artistId, type, body, link } — notification writer.
+// G11 (hardened): a logged-in user alone was NOT enough — any authenticated
+// account could write arbitrary text into any artist owner's bell via the
+// service role. Now the caller must either (a) OWN the target artist (writing
+// to themselves), or (b) hold profiles.role='operator' (the admin console's
+// payment-activated notice). Anonymous-booker request notifications go through
+// POST /api/availability-request instead (server-authored body, not caller text).
+// type is a CLOSED enum — anything else is rejected 403.
+const NOTIFY_TYPES = ['request_received', 'confirmation_received', 'system']
+async function isOperator(userId) {
+  try {
+    const { data } = await admin.from('profiles').select('role').eq('id', userId).maybeSingle()
+    return data?.role === 'operator'
+  } catch { return false }
+}
+app.post('/api/notify', requireAuth, async (req, res) => {
+  try {
+    if (!admin) return res.status(400).json({ error: 'Supabase not configured.' })
+    const { artistId, type, body, link } = req.body || {}
+    if (!artistId || !type || !body) return res.status(400).json({ error: 'artistId + type + body required' })
+    if (!NOTIFY_TYPES.includes(type)) return res.status(403).json({ error: 'forbidden' })
+    const { data: artist, error } = await admin
+      .from('artists').select('id, created_by').eq('id', artistId).maybeSingle()
+    if (error) throw error
+    if (!artist) return res.status(404).json({ error: 'Artist not found.' })
+    const ownsTarget = artist.created_by === req.userId
+    if (!ownsTarget && !(await isOperator(req.userId))) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
+    await notifyArtistOwner(artistId, { type, body, link })
+    res.json({ ok: true })
+  } catch (e) {
+    console.error('[notify]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
+})
+
+// ──────────────────────────────────────────────────────────
+// POST /api/availability-request — PUBLIC (no JWT: bookers have no login).
+// G11 fix for the anonymous-buyer notification: the client's direct
+// availability_requests insert satisfied RLS, but its /api/notify call could
+// never legitimately pass an auth/ownership gate — so artist bells went silent
+// for anonymous buyers. This route creates the request AND the notification
+// server-side with the service role; the notification BODY is server-authored
+// (never caller-controlled free text into someone's bell). Rate-limited by the
+// global per-IP limiter; schema-validated to a closed field list.
+// ──────────────────────────────────────────────────────────
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+app.post('/api/availability-request', async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'Supabase not configured.' })
+    const b = req.body || {}
+    const artistId = b.artistId || b.artist_id
+    const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+    const requesterName = str(b.requester_name)
+    if (!artistId || !UUID_RE.test(String(artistId)) || !requesterName) {
+      return res.status(400).json({ error: 'artistId + requester_name required' })
+    }
+    // Closed schema — only these fields can reach the insert.
+    const row = {
+      artist_id: artistId,
+      requester_name: requesterName,
+      requester_org: str(b.requester_org),
+      event_date: /^\d{4}-\d{2}-\d{2}$/.test(String(b.event_date || '')) ? b.event_date : null,
+      location: str(b.location),
+      capacity_band: str(b.capacity_band),
+      budget_band: str(b.budget_band),
+      message: str(b.message),
+    }
+    // Same gate as passport-signal: only a PUBLISHED artist receives requests.
+    const { data: pub, error: pErr } = await admin
+      .from('artists').select('id, published').eq('id', artistId).maybeSingle()
+    if (pErr) throw pErr
+    if (!pub || !pub.published) return res.status(404).json({ error: 'Artist not published.' })
+    const { data: created, error } = await admin
+      .from('availability_requests').insert(row).select().single()
+    if (error) throw error
+    // Artist's bell — server-authored body (EN template; server has no
+    // user-language preference to read), best-effort, never blocks the request.
+    await notifyArtistOwner(artistId, {
+      type: 'request_received',
+      body: en.notifications.newRequest(requesterName),
+      link: '/artist/requests',
+    })
+    res.json({ ok: true, request: created })
+  } catch (e) {
+    console.error('[availability-request]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
 })
 
 // ──────────────────────────────────────────────────────────
@@ -285,7 +636,7 @@ app.post('/api/notify', async (req, res) => {
 
 // POST /api/request-confirmation { claimId, producerContact }
 // Artist generates a tokened magic link to send a producer (manual, like wa.me).
-app.post('/api/request-confirmation', async (req, res) => {
+app.post('/api/request-confirmation', requireAuth, async (req, res) => {
   try {
     if (!admin) return res.status(400).json({ error: 'Supabase not configured.' })
     const { claimId, producerContact } = req.body || {}
@@ -294,6 +645,8 @@ app.post('/api/request-confirmation', async (req, res) => {
       .from('claims').select('id, artist_id').eq('id', claimId).maybeSingle()
     if (cErr) throw cErr
     if (!claim) return res.status(404).json({ error: 'Claim not found.' })
+    // G11: claim → artist → owner; only the artist's owner may mint a token.
+    if (!(await requireArtistOwner(req, res, claim.artist_id))) return
     const token = randomUUID()
     const { error: iErr } = await admin.from('producer_confirmations').insert({
       token, claim_id: claim.id, artist_id: claim.artist_id, producer_contact: producerContact || null,
@@ -302,9 +655,21 @@ app.post('/api/request-confirmation', async (req, res) => {
     res.json({ token, path: `/confirm/${token}` })
   } catch (e) {
     console.error('[request-confirmation]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
+
+// Token expiry (G15-1): producer_confirmations.created_at + CONFIRM_TOKEN_TTL_DAYS.
+// 410 keeps the client's existing dead-link ceremony (ProducerConfirm maps
+// status 410 / "expir" to its 'expired' state). NOTE (G15-3, audited): no route
+// in this file ever logs the raw token — catch blocks log error objects only,
+// and the minted token appears solely in the JSON response to its owner.
+function confirmTokenExpired(createdAt) {
+  // G15: a legacy row without created_at can't be aged — treat it as EXPIRED,
+  // never immortal (fail-closed: an undatable token must not live forever).
+  if (!createdAt) return true
+  return Date.now() - new Date(createdAt).getTime() > CONFIRM_TOKEN_TTL_DAYS * 86_400_000
+}
 
 // GET /api/confirm/:token — producer opens the link; sees the claim + artist (safe fields only).
 app.get('/api/confirm/:token', async (req, res) => {
@@ -313,10 +678,11 @@ app.get('/api/confirm/:token', async (req, res) => {
     const { token } = req.params
     const { data: pc, error } = await admin
       .from('producer_confirmations')
-      .select('id, response, revoked, responded_at, claim_id, artist_id')
+      .select('id, response, revoked, responded_at, claim_id, artist_id, created_at')
       .eq('token', token).maybeSingle()
     if (error) throw error
     if (!pc) return res.status(404).json({ error: 'Invalid or expired link.' })
+    if (confirmTokenExpired(pc.created_at)) return res.status(410).json({ error: 'link_expired' })
     const { data: claim } = await admin.from('claims').select('value, claim_type').eq('id', pc.claim_id).maybeSingle()
     const { data: artist } = await admin.from('artists').select('stage_name').eq('id', pc.artist_id).maybeSingle()
     res.json({
@@ -326,7 +692,7 @@ app.get('/api/confirm/:token', async (req, res) => {
     })
   } catch (e) {
     console.error('[confirm-get]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -337,9 +703,26 @@ app.post('/api/confirm/:token', async (req, res) => {
     const { token } = req.params
     const { response, revoke } = req.body || {}
     const { data: pc, error } = await admin
-      .from('producer_confirmations').select('id, claim_id, artist_id').eq('token', token).maybeSingle()
+      .from('producer_confirmations')
+      .select('id, claim_id, artist_id, response, revoked, responded_at, created_at')
+      .eq('token', token).maybeSingle()
     if (error) throw error
     if (!pc) return res.status(404).json({ error: 'Invalid or expired link.' })
+    if (confirmTokenExpired(pc.created_at)) return res.status(410).json({ error: 'link_expired' })
+
+    // Single-use rule (G15-2). Verified pre-change behaviour: this route
+    // OVERWROTE a recorded response on every POST. Now, once a response is on
+    // record (and not revoked), a repeated response POST is idempotent — it
+    // returns the recorded state and writes nothing. Two lifecycle moves stay
+    // deliberately allowed because they are product features, not replays:
+    // · revoke of a live yes/partial (the ceremony's own Revoke button)
+    // · a fresh response AFTER a revoke (re-confirmation path)
+    if (!revoke && pc.responded_at && !pc.revoked) {
+      return res.json({ ok: true, response: pc.response, already_recorded: true })
+    }
+    if (revoke && pc.revoked) {
+      return res.json({ ok: true, revoked: true, already_recorded: true })
+    }
 
     if (revoke) {
       await admin.from('producer_confirmations').update({ revoked: true }).eq('id', pc.id)
@@ -392,7 +775,7 @@ app.post('/api/confirm/:token', async (req, res) => {
     res.json({ ok: true, response })
   } catch (e) {
     console.error('[confirm-post]', e)
-    res.status(500).json({ error: String(e.message || e) })
+    res.status(500).json({ error: 'server_error' })
   }
 })
 
@@ -400,7 +783,7 @@ app.post('/api/confirm/:token', async (req, res) => {
 // as a serverless function (VERCEL=1 is set automatically there), so skip listen.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ANTHROPIC_KEY ? 'live' : 'mock'}, supabase: ${admin ? 'on' : 'off'})`)
+    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ANTHROPIC_KEY ? 'configured' : 'mock'}, supabase: ${admin ? 'on' : 'off'})`)
   })
 }
 

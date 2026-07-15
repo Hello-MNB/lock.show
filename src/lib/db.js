@@ -122,6 +122,27 @@ export async function listActs(artistId) {
   return data ?? []
 }
 
+// Create a SECOND (or third…) Act for the same Person (rel-07.13 A3/N12).
+// Canon: the new Act starts EMPTY — evidence is per-Act and never transfers.
+// person_id is resolved from the currently-active Act row (same resolution
+// path listActs uses), so a caller can never attach an Act to someone else.
+// Known transition gap (documented in switchAct): a non-default Act has no
+// matching `artists` row — artists-only fields stay honestly absent for it.
+export async function createAct(currentActId, { stage_name, genre = null }) {
+  if (DEMO) throw new Error('demo') // UI shows the friendly demo hint
+  const name = (stage_name || '').trim()
+  if (!name) throw new Error('stage name required')
+  const { data: mine, error: e1 } = await supabase.from('act').select('person_id').eq('id', currentActId).maybeSingle()
+  if (e1) throw e1
+  if (!mine?.person_id) throw new Error('active act has no person — cannot create')
+  const { data, error } = await supabase.from('act')
+    .insert({ person_id: mine.person_id, stage_name: name, genre, is_default: false })
+    .select('id, stage_name, genre, city, positioning, photo_url, is_default, created_at')
+    .single()
+  if (error) throw error
+  return data
+}
+
 // Switching Acts swaps the WHOLE evidence universe. Reads are act_id-scoped —
 // migration 020 threaded act_id through every evidence table and backfilled it
 // for existing rows, so the default Act's own history still resolves here too.
@@ -158,9 +179,14 @@ export async function listClaimsByArtists(artistIds) {
 
 export async function listAgencyArtists(userId) {
   if (DEMO) return [demoArtist, demoArtist2]
+  // G4 (A5) read model: each roster row carries the BOUNDED per-artist state the
+  // one next-best-action ladder derives from — `published` rides on artists.*,
+  // and the nested profile_items are limited to item_type + created_at (evidence
+  // presence/kind/age only, never content). FIREWALL: inputs to a rule; the UI
+  // renders action text, never a count/%/score.
   const { data, error } = await supabase
     .from('artists')
-    .select('*')
+    .select('*, profile_items(item_type, created_at)')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -268,6 +294,15 @@ export async function listRequestsForArtist(artistId) {
 // SAME deterministic canon stub CLIENT-SIDE, so evidence→claim→method-label works
 // with the anon key alone (no server, no secret). FIREWALL: bounded statuses +
 // bands + method-labels only — never a score/percentile/head-count.
+//
+// G12 static-deploy capability signal: the client stub is a DEPLOYMENT MODE,
+// not an error handler. It may run only when the build itself declares "no API
+// exists here" — VITE_NO_API=1, or the embed build (vite.config sets base
+// '/app/' exclusively in embed mode; the embed ships inside the static
+// website-next export, which has no /api function). `import.meta.env?.` keeps
+// this file importable outside Vite (constants.js precedent).
+const NO_API_DEPLOY =
+  import.meta.env?.VITE_NO_API === '1' || import.meta.env?.BASE_URL === '/app/'
 const _clientProcessor = new StubClaimProcessor()
 async function processEvidenceClientSide(artistId) {
   const { data: evidence, error } = await supabase
@@ -284,7 +319,12 @@ async function processEvidenceClientSide(artistId) {
       verification_status: labelled.status,
       verified_by: 'system', verified_at: new Date().toISOString(),
       visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
-      extraction_method: 'mock', model_version: 'mock-v1',
+      // G12 truthful provenance: this is the CLIENT stub path, so the stored
+      // method says exactly that. 'mock' is reserved for the server's keyless
+      // StubClaimProcessor; DEMO mode never reaches this insert (processEvidence
+      // returns fixtures first). claims.extraction_method is unconstrained text
+      // (001/schema.sql) — no CHECK migration needed for 'client_stub'.
+      extraction_method: 'client_stub', model_version: 'client-stub-v1',
       reason_code: labelled.reason || null,
     }
     const { data: inserted, error: cErr } = await supabase.from('claims').insert(claim).select().single()
@@ -295,17 +335,69 @@ async function processEvidenceClientSide(artistId) {
   return { processed: claims.length, ai: 'client-stub', claims }
 }
 
+// G11 client side — protected API routes need the caller's Supabase JWT.
+// Returns {} when there is no session (server then answers 401 and callers
+// fall back / surface it per their own contract).
+export async function authHeaders() {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const t = data?.session?.access_token
+    return t ? { Authorization: `Bearer ${t}` } : {}
+  } catch { return {} }
+}
+
+// Server errors that mean "the server DECIDED not to process" (auth, abuse
+// controls, budget, schema). Masking any of these with the client stub would
+// both defeat the control AND mislabel the result (G12+G14) — they must
+// surface as an error state, never as stub claims.
+const SERVER_REFUSAL_CODES = new Set([
+  'auth_required', 'forbidden', 'rate_limited', 'too_many_items',
+  'daily_limit_reached', 'monthly_budget_reached', 'field_too_long',
+])
+
 export async function processEvidence(artistId) {
   if (DEMO) return { processed: demoClaims.length, ai: 'demo', claims: demoClaims }
+  // Static/embed deploy declared at BUILD time (NO_API_DEPLOY above): there is
+  // no /api by design, so the client stub IS the processor — no fetch attempt.
+  if (NO_API_DEPLOY) return processEvidenceClientSide(artistId)
+  let res
   try {
-    const res = await fetch('/api/process-evidence', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    res = await fetch('/api/process-evidence', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ artistId }),
     })
-    const ct = res.headers.get('content-type') || ''
-    if (res.ok && ct.includes('application/json')) return await res.json()
-  } catch { /* no server (static deploy) — fall through to the client-side stub */ }
-  return processEvidenceClientSide(artistId)
+  } catch (e) {
+    // Network-unreachable (fetch rejects with TypeError before any response) —
+    // the ONLY runtime stub case. Anything stranger than that is not "offline",
+    // so it surfaces as the retryable error state instead of fake stub claims.
+    if (e instanceof TypeError) return processEvidenceClientSide(artistId)
+    const err = new Error(e?.message || 'network error')
+    err.code = 'server_refused'
+    throw err
+  }
+  const ct = res.headers.get('content-type') || ''
+  const body = ct.includes('application/json') ? await res.json().catch(() => null) : null
+  if (res.ok && body) return body
+  // G12+G14 refusal policy: a 401/403/429 or an explicit refusal code is a
+  // server DECISION — surface it (EvidenceCapture shows T.evidence.serverRefused),
+  // never run the client stub over it. SERVER_REFUSAL_CODES kept for the
+  // explicit enumeration even though every arrived failure now throws.
+  if (body && ([401, 403, 429].includes(res.status) || SERVER_REFUSAL_CODES.has(body.error))) {
+    const err = new Error(body.error || `server refused (${res.status})`)
+    err.code = 'server_refused'
+    err.status = res.status
+    throw err
+  }
+  // G12 (reopened 14 Jul): ANY response that arrived but isn't usable JSON —
+  // an HTML 404/500 error page, a proxy error, a truncated body — is a LIVE
+  // but FAILING server, never proof that no server exists. Auto-stubbing here
+  // turned outages into fake-successful claims. Throw the same retryable
+  // server-refusal error so the UI shows the retry state and evidence stays
+  // 'submitted'.
+  const err = new Error(body?.error || `server error (${res.status})`)
+  err.code = 'server_refused'
+  err.status = res.status
+  throw err
 }
 
 // ── Claims ─────────────────────────────────────────────── (extended)
@@ -330,6 +422,19 @@ export async function deleteClaim(id) {
   if (DEMO) return
   const { error } = await supabase.from('claims').delete().eq('id', id)
   if (error) throw error
+}
+
+// ── Milestone M7 input (Codex M7) — has THIS artist ever had a share link
+// created, per the localStorage analytics ring buffer (analytics.js KEY —
+// 'gigproof_events'). Works offline and on the static embed. HONESTY NOTE:
+// device-local only — a share made on another device won't be seen here; the
+// server-side share_link_created query is P1.
+export function hasShareEvent(artistId) {
+  if (DEMO) return true
+  try {
+    const events = JSON.parse(localStorage.getItem('gigproof_events') || '[]')
+    return events.some((e) => e?.name === 'share_link_created' && e?.props?.artist_id === artistId)
+  } catch { return false }
 }
 
 // ── Measurement (024) — a VIEW is not a REACTION; never merge them ──────────

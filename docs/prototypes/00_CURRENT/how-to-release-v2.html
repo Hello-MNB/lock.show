@@ -1,0 +1,91 @@
+<title>How to Release a Version — LOCK</title>
+<style>
+:root{--paper:#f3f5ef;--card:#fff;--ink:#0a0d0b;--lime:#C8F04D;--mist:#dde3d9;--slate:#687269;--amber:#c8892a;--line:#dde3d9;--shadow:0 1px 2px rgba(24,34,26,.05),0 8px 24px -16px rgba(24,34,26,.25);--serif:Georgia,serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme:dark){:root{--paper:#0e140d;--card:#18221a;--ink:#eef2ea;--mist:#2b362c;--slate:#9aa79b;--amber:#e0aa4e;--line:#2b362c;--shadow:0 1px 2px rgba(0,0,0,.3)}}
+:root[data-theme="light"]{--paper:#f3f5ef;--card:#fff;--ink:#0a0d0b;--mist:#dde3d9;--slate:#687269;--line:#dde3d9}
+:root[data-theme="dark"]{--paper:#0e140d;--card:#18221a;--ink:#eef2ea;--mist:#2b362c;--slate:#9aa79b;--line:#2b362c}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:32px 20px 56px}
+h1{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.3rem);margin:0 0 4px}
+h2{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--slate);margin:26px 0 10px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#7a9a1e;font-weight:700;margin:0 0 6px}
+.sub{color:var(--slate);font-size:14px;max-width:72ch}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--slate);padding:7px 9px;border-bottom:2px solid var(--line)}
+td{padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.scroll{overflow-x:auto}
+.step{display:flex;gap:12px;margin:10px 0}.n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--lime);color:#0a0d0b;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
+.small{font-size:12px;color:var(--slate)} b{color:var(--ink)} code{font-family:var(--mono);font-size:12px;background:var(--mist);padding:1px 5px;border-radius:5px}
+.warn{border-left:4px solid var(--amber);padding-left:12px}
+</style>
+<div class="wrap">
+<p class="eyebrow">LOCK · Release Law · v2 — rebuilt 12 Jul 2026 (supersedes the 9 Jul edition)</p>
+<h1>How to Release a Version</h1>
+<p class="sub">The rule this document exists for: <b>every version is documented — its status, its content, and what the NEXT version holds — per SITE, per APP, and per ENTITY (system user)</b> — so that when something breaks we know exactly what changed, for whom, on which screen, and how to roll it back.</p>
+
+<h2>1 · Where each truth lives (source-of-truth map)</h2>
+<div class="card scroll"><table>
+<tr><th>Truth</th><th>Document</th><th>Kept by</th></tr>
+<tr><td>What is live RIGHT NOW, per track (app / site / embed / DB / DS / infra)</td><td><code>docs/VERSIONS.md</code></td><td>Claude, every release</td></tr>
+<tr><td>Every deploy: SHA + bundle fingerprints = <b>rollback anchors</b></td><td><code>docs/DEPLOY-LOG.md</code></td><td>Claude</td></tr>
+<tr><td>Scope contract of the next version (closed IN/OUT lists, site + app)</td><td><code>docs/releases/SCOPE-rel-*.md</code></td><td>Claude drafts · Maria locks</td></tr>
+<tr><td>Full build detail per entity × screens × tech × subscription</td><td><code>docs/releases/rel-*-PLAN.md</code></td><td>Claude</td></tr>
+<tr><td>Owner-facing live picture, per entity, with evidence per ✅</td><td>Version Map artifact (one URL, always current)</td><td>Claude, after every change</td></tr>
+<tr><td>Vocabulary + entity law (buyer ≠ אמרגן, Source Confirmer, registers)</td><td><code>docs/GLOSSARY.md</code> + <code>docs/ENTITY-GLOSSARY.md</code></td><td>Codex names · Claude binds · Maria rules HE</td></tr>
+<tr><td>Design law (tokens, DOD per platform/entity)</td><td>Drive <code>00_CURRENT/LOCKSHOW_Design_System_CURRENT.html</code> (v1.6.1)</td><td>Codex</td></tr>
+<tr><td>Cross-agent protocol + who owns what</td><td><code>docs/CODEX-CLAUDE-SYNC.md</code> §13–14</td><td>all agents read first</td></tr>
+</table></div>
+
+<h2>2 · The release pipeline (the train — every version rides it)</h2>
+<div class="card">
+<div class="step"><div class="n">1</div><div><b>Canon-lock.</b> Open vocabulary/product rulings answered by Maria BEFORE building. Nothing builds on shifting words.</div></div>
+<div class="step"><div class="n">2</div><div><b>One branch = one train.</b> All site+app+docs changes ride a single branch. No partial pushes to main, ever.</div></div>
+<div class="step"><div class="n">3</div><div><b>Machine gate.</b> <code>npm run verify</code> — 34 navigation journeys · language purity · app build · demo build — plus site <code>next build</code>. Red = train stops.</div></div>
+<div class="step"><div class="n">4</div><div><b>Preview proof.</b> One preview deploy (Cowork's one-time hook). The FULL QA/QC protocol (§3) runs on the preview URL. Production is never the test surface.</div></div>
+<div class="step"><div class="n">5</div><div><b>DB safety.</b> Additive migrations (new tables/RPCs) may ride the train. Structural changes (renames/drops) NEVER ride — they are separate owner-approved migrations, only after Supabase backups are ON. Migration 021 stays FROZEN forever.</div></div>
+<div class="step"><div class="n">6</div><div><b>Atomic go-live.</b> Merge → main = one production deploy per project. Embed (<code>build:embed</code>) rebuilt in the SAME push — the two surfaces must never skew.</div></div>
+<div class="step"><div class="n">7</div><div><b>Live re-verification.</b> QA/QC protocol §3 runs again against production. Fingerprints recorded in DEPLOY-LOG.</div></div>
+<div class="step"><div class="n">8</div><div><b>Document + tag.</b> VERSIONS.md updated · release doc written with the per-entity table · Version Map refreshed · tag pushed (Cowork/owner — integration token cannot). </div></div>
+<div class="step"><div class="n">9</div><div><b>Owner pass.</b> Maria approves the live experience. Only then the ledger row turns fully green. <b>A version that has not passed §3 + owner pass is NOT a valid version.</b></div></div>
+</div>
+
+<h2>3 · QA/QC protocol (Q1–Q8) — binding</h2>
+<div class="card scroll"><table>
+<tr><th>#</th><th>Check</th><th>Who</th><th>Evidence</th></tr>
+<tr><td>Q1</td><td>Pre-deploy machine gate (verify suite + site build)</td><td>Claude</td><td>CI output in release doc</td></tr>
+<tr><td>Q2</td><td>Live/preview fingerprints; embed hash = app hash</td><td>Claude</td><td>DEPLOY-LOG</td></tr>
+<tr><td>Q3</td><td>Real-browser flows: signup (email+Google), artist journey, booker Passport link, workspace switch, producer magic link</td><td>Cowork</td><td>screenshots + pass/fail table</td></tr>
+<tr><td>Q4</td><td>Mobile pass @360px: Radar, roster, Passport, recipient flow</td><td>Claude (Playwright demo) + Cowork (real devices)</td><td>PNGs in current-screens/</td></tr>
+<tr><td>Q5</td><td>Firewall scan: no score/%/rank/gauge anywhere; bands+binaries+method labels only</td><td>Claude</td><td>scan output</td></tr>
+<tr><td>Q6</td><td>Terminology scan: 0 forbidden terms, 0 buyer=אמרגן, registers correct</td><td>Claude</td><td>scan output</td></tr>
+<tr><td>Q7</td><td>Governance: VERSIONS.md + DEPLOY-LOG + Version Map updated; C6 cross-audit</td><td>Claude + Cowork</td><td>doc diffs</td></tr>
+<tr><td>Q8</td><td>Owner approval of the live experience</td><td>Maria</td><td>her word, recorded in the ledger</td></tr>
+</table></div>
+
+<h2>4 · The per-version documentation standard (the template — no version ships without it)</h2>
+<div class="card"><b>Every release doc (docs/releases/rel-*.md) contains:</b><br>
+① Version IDs per track (rel-app-* / rel-site-* / embed / DB head / DS version implemented) + the exact SHAs.<br>
+② <b>The per-entity table</b> — for EACH system user (Artist · Manager office · Production · Booker/buyer · Source Confirmer · Operator): what changed · exact screens/routes · technology behind it · account/subscription dependency · evidence of verification.<br>
+③ What the NEXT version holds for each entity (link to the locked SCOPE).<br>
+④ Status ladder per item: <b>built → preview-verified → live-verified (evidence named) → owner-approved</b>. A ✅ never appears without its evidence beside it.<br>
+⑤ The rollback anchor: previous SHAs per project, one line each.</div>
+
+<h2>5 · When something breaks — the repair playbook</h2>
+<div class="card warn">
+<b>1. Identify the layer.</b> Site, app, embed, or DB? Check the Version Map §2 + DEPLOY-LOG for what shipped last and for whom (the per-entity table tells you which screens/entities are hit).<br>
+<b>2. Roll back code in one move.</b> Redeploy the PREVIOUS SHA (recorded per project in DEPLOY-LOG) via the deploy hook — site and app roll back independently; rebuild the embed if the app rolled back.<br>
+<b>3. Never "roll back" the DB casually.</b> Additive migrations don't need rollback. Structural issues = restore from backups (Supabase Pro) + owner decision. Migration 021 is FROZEN — applying it breaks live claim inserts.<br>
+<b>4. Call the owner of the lane</b> (v1.6.1 ownership map): design fault → Codex · code fault → Claude · flow/API/infra fault → Cowork · approval/product call → Maria.<br>
+<b>5. Document the incident</b> in DEPLOY-LOG (what broke, for which entity, rollback SHA, fix version) — the next version's release doc references it.</div>
+
+<h2>6 · Who owns what (ratified DS v1.6.1)</h2>
+<div class="card scroll"><table>
+<tr><th>Workstream</th><th>Owner</th><th>Evidence required</th></tr>
+<tr><td>Brand / DS / UX-UI law / entity language / image specs</td><td>Codex</td><td>updated DS + changelog + source map</td></tr>
+<tr><td>Development (repo), docs-of-record, release mechanics</td><td>Claude</td><td>code diffs, tests, screenshots, deploy fingerprints</td></tr>
+<tr><td>Technical/API/flow QA + Drive/GPT archive operations</td><td>Cowork</td><td>logs, real-browser proof, QA report, file hygiene</td></tr>
+<tr><td>Release approval</td><td>Maria</td><td>owner pass only</td></tr>
+</table>
+<p class="small">Handoff law (SYNC §13): every cross-agent task = full self-contained text + explicit source-of-truth reference + reasoning. No shorthand. Codex: always <code>git pull</code> before scanning the repo.</p></div>
+</div>

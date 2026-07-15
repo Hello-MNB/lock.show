@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getArtist, createRequest } from '../../lib/db.js'
-import { createNotification } from '../../lib/notifications.js'
+import { DEMO } from '../../lib/demo.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { PageShell, Wordmark, Field, Spinner, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -42,22 +42,43 @@ export default function AvailabilityRequest() {
     e.preventDefault()
     // inline validation — message next to the field, input stays intact
     if (!f.requester_name.trim()) {
-      setFieldErr({ requester_name: 'Add your name so the artist knows who is asking.' })
+      setFieldErr({ requester_name: T.request.nameRequired })
       return
     }
     setBusy(true); setError('')
     try {
-      await createRequest({ artist_id: id, ...f, event_date: f.event_date || null })
+      // G11 — PUBLIC server route first: it creates the request AND the artist's
+      // notification server-side with the service role (the direct /api/notify
+      // path is now owner/operator-only, so an anonymous booker could no longer
+      // ring the artist's bell without this). Rate-limited + schema-validated.
+      const payload = { artistId: id, ...f, event_date: f.event_date || null }
+      let sent = false
+      let refusal = null
+      try {
+        if (DEMO) throw new Error('demo') // demo fixtures only — never a live server call
+        const res = await fetch('/api/availability-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const ct = res.headers.get('content-type') || ''
+        if (ct.includes('application/json')) {
+          const body = await res.json().catch(() => null)
+          if (res.ok && body?.ok) sent = true
+          else refusal = body?.error || 'server_error' // a live server REFUSED — surface, don't bypass
+        }
+        // non-JSON = static host answered for /api (offline embed) → fallback below
+      } catch { /* server unreachable — fallback below */ }
+      if (refusal) throw new Error(T.common.error)
+      if (!sent) {
+        // Offline-embed fallback: the direct insert still records the request
+        // under RLS. Honesty note: without the server no cross-user notification
+        // can be written (notifications RLS is user_id = auth.uid()) — the artist
+        // sees the request in their Requests inbox, without a bell.
+        await createRequest({ artist_id: id, ...f, event_date: f.event_date || null })
+      }
       // GATE signal — a booking manager reacted to a real Passport.
       logEvent(EVENTS.REQUEST_SENT, { artist_id: id })
-      // P1-1 — fire-and-forget (not awaited): a notification hiccup must never
-      // block or delay the booker's confirmation screen.
-      createNotification({
-        artistId: id,
-        type: 'new_request',
-        body: T.notifications.newRequest(f.requester_name.trim()),
-        link: '/artist/requests', // the artist's inbox — an ARTIST role is bounced off /agency/* (flow-gap R4)
-      })
       nav(`/passport/${id}/sent`, {
         state: { requester_name: f.requester_name, artist_name: artist?.stage_name },
       })
@@ -90,17 +111,17 @@ export default function AvailabilityRequest() {
 
           <Field label={T.request.name} error={fieldErr.requester_name}>
             <input className="field" value={f.requester_name} onChange={set('requester_name')}
-              placeholder="Your full name" autoComplete="name" />
+              placeholder={T.request.namePlaceholder} autoComplete="name" />
           </Field>
           <Field label={T.request.org}>
             <input className="field" value={f.requester_org} onChange={set('requester_org')}
-              placeholder="Venue, agency or production" autoComplete="organization" />
+              placeholder={T.request.orgPlaceholder} autoComplete="organization" />
           </Field>
           <Field label={T.request.eventDate}>
             <input className="field" type="date" value={f.event_date} onChange={set('event_date')} />
           </Field>
           <Field label={T.request.location}>
-            <input className="field" value={f.location} onChange={set('location')} placeholder="City / venue" />
+            <input className="field" value={f.location} onChange={set('location')} placeholder={T.request.locationPlaceholder} />
           </Field>
           <Field label={T.request.capacity}>
             <select className="field" value={f.capacity_band} onChange={set('capacity_band')}>
@@ -114,14 +135,14 @@ export default function AvailabilityRequest() {
           </Field>
           <Field label={T.request.message}>
             <textarea className="field" rows={3} value={f.message} onChange={set('message')}
-              placeholder="Anything the artist should know about the event" />
+              placeholder={T.request.messagePlaceholder} />
           </Field>
 
           <button className="btn-primary min-h-[48px] w-full shadow-[0_10px_26px_-10px_rgba(190,226,78,.6)]" disabled={busy}>
             {busy ? <><Spinner /> {T.common.sending}</> : T.request.cta}
           </button>
           <p className="mt-3 text-center text-[11px] text-faint">
-            No commitment — this only asks the artist about the date.
+            {T.request.noCommitment}
           </p>
         </form>
       </PageShell>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW OG template - Professional entertainment buyers</title>
+  <desc id="desc">Dark premium share image for venue bookers, talent buyers, promoters and festival or club programmers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07100b"/>
+      <stop offset="0.66" stop-color="#18221a"/>
+      <stop offset="1" stop-color="#344338"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#c8f04d" stop-opacity="0"/>
+      <stop offset="1" stop-color="#c8f04d" stop-opacity="0.58"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <path d="M718 0h420L844 630H512z" fill="url(#beam)"/>
+  <rect x="64" y="62" width="1072" height="506" rx="34" fill="#0a0d0b" opacity="0.62" stroke="#405046"/>
+  <text x="98" y="124" fill="#c8f04d" font-family="DM Mono, monospace" font-size="18" font-weight="700" letter-spacing="3">PROFESSIONAL BUYER</text>
+  <text x="98" y="232" fill="#ffffff" font-family="Georgia, serif" font-size="76" letter-spacing="-4">Book with context,</text>
+  <text x="98" y="312" fill="#ffffff" font-family="Georgia, serif" font-size="76" letter-spacing="-4">not guesswork.</text>
+  <text x="102" y="388" fill="#aab5ac" font-family="Manrope, Arial, sans-serif" font-size="25">Recipient-safe artist context for venue, festival, club and promoter decisions.</text>
+  <rect x="100" y="462" width="210" height="58" rx="14" fill="#c8f04d"/>
+  <text x="130" y="499" fill="#0a0d0b" font-family="Manrope, Arial, sans-serif" font-size="19" font-weight="900">Open Passport</text>
+  <circle cx="988" cy="168" r="72" fill="none" stroke="#c8f04d" stroke-width="14"/>
+  <circle cx="988" cy="168" r="12" fill="#c8f04d"/>
+  <text x="98" y="540" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="22" font-weight="900">LOCK.SHOW</text>
+</svg>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/design-system.css";
+@import "../styles/marketing.css";
 
 /* ─── LOCK Design Tokens — Codex Theme ─── */
 /* To retheme: edit values here + in design-system.css  */
@@ -16,6 +17,17 @@
 
   /* Accent — LIME, the single dominant action (DS #c8f04d) */
   --color-stamp:  #c8f04d;
+
+  /* ── WAVE-6 secondary palette (SYNC §47 / Codex visual-architecture
+     correction). LAW: lime = action / live-signal ONLY; the warm and source
+     accents below are for ATMOSPHERE, never for CTAs. ── */
+  --color-amber-stage:  #D7A84A;   /* warm show-business accent */
+  --color-ember:        #9A5A2E;   /* deep warmth / live-room glow */
+  --color-smoke:        #202820;   /* secondary card surface (gray-green) */
+  --color-source-blue:  #6EA6A3;   /* source / platform accents only */
+  /* Readable on-paper variants (WCAG AA on the #f3f5ef canvas) */
+  --color-amber-onlight:       #8a5e10;   /* amber text/icon on paper (~5.1:1) */
+  --color-source-blue-onlight: #2f5b58;   /* source-blue text/icon on paper (~5.3:1) */
 
   /* Text */
   --color-tally:  #929b94;   /* muted / secondary — dark-bg contexts only */
@@ -47,6 +59,24 @@ html {
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(900px 520px at 85% -10%, rgba(200, 240, 77, 0.06), transparent 62%),
+    radial-gradient(760px 480px at 6% 24%, rgba(215, 168, 74, 0.045), transparent 64%),
+    var(--color-night);
+  color: var(--color-ink);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  max-width: 100%;
 }
 
 /* ─── Interaction layer — ONE duration/easing site-wide ───────────────── */

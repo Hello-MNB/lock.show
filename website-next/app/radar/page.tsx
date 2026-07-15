@@ -1,12 +1,7 @@
-﻿import type { Metadata } from 'next'
+﻿import { APP_URL } from '@/lib/app-url'
+import { buildPageMetadata } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/radar' },
-  title: 'Artist Radar — Your Private Evidence Workspace',
-  description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
-}
-
-import { APP_URL } from '@/lib/app-url'
+export const metadata = buildPageMetadata('radar')
 
 const dimensions = [
   {
@@ -32,7 +27,7 @@ const dimensions = [
   {
     id: 'READINESS',
     title: 'Readiness',
-    body: 'Practical booking factors — rider, tech spec, travel availability, agent or self-managed. Makes evaluation faster for booking managers.',
+    body: 'Practical booking factors — rider, tech spec, travel availability, agent or self-managed. Helps booking people understand fit faster, without judging the artist.',
   },
   {
     id: 'FEE CONTEXT',

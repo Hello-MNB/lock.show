@@ -64,6 +64,20 @@ export class AnthropicClaimProcessor {
     }
   }
 
+  // Truthful-provenance variant (G12): same behavior as label(), but reports
+  // the ACTUAL execution path — 'anthropic' ONLY when the API call succeeded,
+  // 'deterministic_fallback' when the stub ran after a terminal API failure.
+  // aiFailed lets the caller mark the item retryable instead of silently done.
+  async labelWithMethod(ev) {
+    try {
+      const json = await this.#callWithRetry(ev)
+      return { label: this.#sanitize(json, ev), method: 'anthropic', aiFailed: false }
+    } catch (err) {
+      console.error('[anthropic] label failed, using deterministic fallback:', err?.message || err)
+      return { label: await this.#fallback.label(ev), method: 'deterministic_fallback', aiFailed: true }
+    }
+  }
+
   async #callWithRetry(ev) {
     const { default: Anthropic } = await import('@anthropic-ai/sdk')
     const client = new Anthropic({ apiKey: this.#apiKey, maxRetries: 0 }) // we own the retry loop
@@ -77,7 +91,16 @@ export class AnthropicClaimProcessor {
           messages: [{ role: 'user', content: userPrompt(ev) }],
         })
         const text = msg.content.map((c) => c.text || '').join('')
-        return safeParse(text)
+        const parsed = safeParse(text)
+        // G12: unusable model output is a FAILURE, not a success — throw so the
+        // retry loop (and ultimately the deterministic fallback with
+        // aiFailed:true) runs. Returning null here would let labelWithMethod
+        // stamp stub-shaped output as method:'anthropic', aiFailed:false — a
+        // provenance lie. No `status` on the error → treated as retryable.
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('anthropic returned unparseable/unusable output')
+        }
+        return parsed
       } catch (err) {
         lastErr = err
         const status = err?.status

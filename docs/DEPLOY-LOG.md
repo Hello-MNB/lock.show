@@ -1,11 +1,16 @@
 # DEPLOY LOG — every LOCK release, newest first
 
+> **SHA = authoritative rollback anchor; tags = convenience aliases, pending remote-tag
+> verification.** (Added 13 Jul — tags are local-only until remote tag push is verified;
+> always roll back by SHA.)
+
 The chronological record of what shipped to production. One row per release. See
 `docs/RELEASE-PROCESS.md` for how releases are made. "Verified" = fingerprints checked live,
 not just pushed. Surfaces: **app** = app.lock.show · **site** = lock.show.
 
 | Tag | Date | `main` @ | Surface | What shipped | Gate | Verified live |
 |---|---|---|---|---|---|---|
+| `hotfix-site-cleanurls` ✅ RESOLVED | 12 Jul 2026 | 6183e81 (merge of d06ac25, PR #2 by Cowork) | site | **INCIDENT (same day): all inner pages 404** — extensionless routing off after domain config change (apex→www redirect); files existed at `*.html`. Fix = 1 line (`cleanUrls: true`, website-next/vercel.json), authored by Claude (main-push permission-blocked → staged branch), merged+deployed by Cowork. **Claude independent re-verify: all 10 inner pages 200 · pricing fingerprint ✓ · FAQ still old copy (proof nothing else rode) · app/embed bundles unchanged.** Incident-to-resolution ≈ 1 hour; playbook §5 followed. Fix mirrored on train branch. | playbook §5 | live ✅ 10/10 pages (Claude curl) + Cowork browser 4/4 |
 | `rel-site-2026.07.11-inner` | 11 Jul 2026 | 917ef57 | site | **Inner-pages release (7 pages).** Pricing rebuilt for ALL 4 entities ("Four people make a booking happen") + pilot-truth aligned; how-it-works friend-voice + image header; methodology warm-precise; FAQ truth fix (automated pipeline); contact humanized; radar page positive-values + persona image band. Sitewide EN purity: ZERO Hebrew glyphs (unicode-verified). Earlier same day: embed-skew regression fix + nav IA (e027958). | ✅ build + sweeps | live ✓ pricing/radar fingerprints + 0 hebrew |
 | `rel-2026.07.10` | 10 Jul 2026 | a874ab5 | app | **R1 + R2-mini — the full 10-Jul feature release.** Two-persona public Passport (Booking · Representation, ?view=rep), booker nav tab, sample passport works on live, draw-headline firewall hardening, Hebrew auth screens (app surface), GATE events (professional_reaction_submitted + entitlement_activated), producer-reply notification + claim_confirmed event, request-notification link fix, 42P17 soft-catch. Owner delegated autonomous execution. | ✅ nav 34/34 + language-pure + build + demo | deploy fired; public-surface verify below |
 | `rel-hotfix-2026.07.10` | 10 Jul 2026 | eafcd4e | app | **🔒 FIREWALL HOTFIX** — artist_approved gate enforced on the service-role server path (buildSafePayload) + authenticated buyer view + owner snapshot. Complements migration 031 (anon RLS, applied). Recommended by Codex + Claude; owner delegated autonomous execution. Tag local-only (remote tag push 403 — integration perms); SHA is the anchor. | ✅ nav 34/34 + build | app 200 ✅ (deep browser pass pending) |

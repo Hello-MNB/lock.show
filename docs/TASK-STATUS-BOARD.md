@@ -1,3 +1,11 @@
+# LOCK — TASK STATUS BOARD
+
+⛔ **SUPERSEDED (13 Jul 2026)** — current truth: **docs/releases/DEPLOY-GAPS.md** (gap register,
+G1–G22 lifecycle states) + the **Version Map artifact**. This file is retained for history only —
+do not update it, do not read it as current state.
+
+--- ARCHIVED ---
+
 # LOCK — MASTER TASK STATUS BOARD (PRIORITY-SORTED)
 **Version:** 2.4 · **Date:** 10 July 2026 · **Legend:** ✅ working · 🟡 partial · 🔴 not built · ⬜ n/a
 

@@ -2,7 +2,7 @@
 // public snapshot. Device-local (localStorage) — a lightweight "you have
 // unpublished changes" hint, NOT a security boundary. The server's immutable
 // passport_versions snapshot remains the source of truth; this only nudges the
-// artist to re-publish so their edits reach the public דרכון.
+// artist to re-publish so their edits reach the public Passport.
 const key = (artistId) => `gigproof_pp_dirty_${artistId}`
 
 export function markPassportDirty(artistId) {

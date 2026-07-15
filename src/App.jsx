@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
 import { Loading } from './components/ui.jsx'
-import { ROLES } from './lib/constants.js'
+import { ROLES, PAYMENTS_ENABLED } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
 import {
   ROUTES,
@@ -170,7 +170,9 @@ export default function App() {
         <Route path="/artist/passport" element={<RequireRole role={ROLES.ARTIST}><PassportSelf /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
-        <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}><OfferPayment /></RequireRole>} />
+        {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
+            when payments are dormant — no payment surface reachable at launch. */}
+        <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}>{PAYMENTS_ENABLED ? <OfferPayment /> : <Navigate to="/artist/home" replace />}</RequireRole>} />
         <Route path="/evidence/:artistId" element={<RequireRole role={ROLES.ARTIST}><EvidenceCapture /></RequireRole>} />
 
         {/* manager/agency workspace */}

@@ -1,15 +1,21 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { Manrope, DM_Mono } from 'next/font/google'
+import { Manrope, Heebo, DM_Mono, Fraunces } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
+import { SAME_AS, CONTACT_POINTS } from '@/lib/social'
 
 const manrope = Manrope({
   subsets: ['latin'],
+  variable: '--font-manrope',
+  display: 'swap',
+})
+
+const heebo = Heebo({
+  subsets: ['hebrew', 'latin'],
   variable: '--font-heebo',
   display: 'swap',
 })
@@ -21,11 +27,21 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property LOCK (544738110), stream LOCK App; env can override
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
+
+// GA4 — property LOCK (544738110), target naming: LOCK Web Journey / LOCK Web.
+// Measurement plan v7: one production property/stream, segmented by surface.
+// Env can override for staging or future container routing.
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID
 
 const SITE_URL = 'https://lock.show'
 const OG_IMAGE = `${SITE_URL}/og/og-default.png`
+const LOGO_IMAGE = `${SITE_URL}/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg`
 
 // Next.js App Router viewport export
 export const viewport = {
@@ -37,16 +53,21 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'LOCK — Booking Proof for Independent Artists',
+    default: 'LOCK — Private Radar and public Passport for artist booking context',
     template: '%s | LOCK',
   },
   description:
-    'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
+    'LOCK helps artists, representation teams, production offices and buyers share clearer pre-booking context through a private Radar and a public Passport.',
   keywords: [
-    'artist booking proof',
-    'live performance verification',
-    'booking manager',
+    'artist booking context',
     'artist passport',
+    'private artist radar',
+    'live performance context',
+    'artist representation',
+    'production office',
+    'private event artist',
+    'booking buyer',
+    'מזמין הופעות',
     'אמרגן',
     'אמן',
     'LOCK',
@@ -76,7 +97,7 @@ export const metadata: Metadata = {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'LOCK — Booking Proof for Independent Artists',
+        alt: 'LOCK — private Radar and public Passport for artist booking context',
         type: 'image/png',
       },
     ],
@@ -92,8 +113,12 @@ export const metadata: Metadata = {
   // canonical (audit G8 finding: site-wide duplicate signal). No /he hreflang
   // until a real Hebrew route exists.
   icons: {
-    icon: [{ url: '/favicon.ico' }],
-    apple: [{ url: '/app/apple-touch-icon.png' }],
+    icon: [
+      { url: '/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg', type: 'image/svg+xml' },
+      { url: '/app/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    shortcut: [{ url: '/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg' }],
+    apple: [{ url: '/app/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 }
 
@@ -109,7 +134,7 @@ const jsonLd = {
       url: SITE_URL,
       name: 'LOCK',
       description:
-        'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
+        'Pre-booking context tool for artists, representation teams, production offices and buyers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
       inLanguage: ['en', 'he'],
     },
@@ -120,7 +145,7 @@ const jsonLd = {
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: OG_IMAGE,
+        url: LOGO_IMAGE,
       },
       foundingLocation: {
         '@type': 'Place',
@@ -139,13 +164,6 @@ const jsonLd = {
       // brand to its official channels (single source: lib/social.ts).
       sameAs: SAME_AS,
       contactPoint: [
-        {
-          '@type': 'ContactPoint',
-          contactType: 'customer support',
-          telephone: WHATSAPP_E164,
-          areaServed: 'IL',
-          availableLanguage: ['he', 'en'],
-        },
         ...CONTACT_POINTS.map((c) => ({
           '@type': 'ContactPoint',
           contactType: c.contactType,
@@ -155,17 +173,17 @@ const jsonLd = {
         })),
       ],
       description:
-        'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK helps artists organize private context in a Radar and publish a controlled Passport for booking conversations.',
     },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#software`,
-      name: 'LOCK — Bookability Passport',
+      name: 'LOCK — Artist Radar and Passport',
       url: SITE_URL,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (אמרגנים) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
+        'A pre-booking context tool for the live-music industry: artists organize sources in a private Radar and approve a public Passport for buyers, representation teams and production offices — no scores, percentiles or predictions.',
       provider: { '@id': `${SITE_URL}/#organization` },
       areaServed: {
         '@type': 'Country',
@@ -177,7 +195,7 @@ const jsonLd = {
         price: '0',
         priceCurrency: 'USD',
         description:
-          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
+          'Free pilot access. No public paid plan is active yet.',
       },
     },
   ],
@@ -197,9 +215,9 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} ${dmMono.variable} antialiased`}
+        className={`${manrope.variable} ${heebo.variable} ${dmMono.variable} ${fraunces.variable} antialiased`}
         style={{
-          fontFamily: 'var(--font-heebo), Manrope, system-ui, sans-serif',
+          fontFamily: 'var(--font-manrope), var(--font-heebo), system-ui, sans-serif',
           backgroundColor: 'var(--color-night)',
           color: 'var(--color-paper)',
         }}
@@ -208,7 +226,7 @@ export default function RootLayout({
           <Nav />
           {children}
           <Footer />
-          <ConsentBanner gaId={GA_ID} />
+          <ConsentBanner gaId={GA_ID} gtmId={GTM_ID} />
         </LocaleProvider>
         {/* GA4 Consent Mode v2 — defaults DENIED; gtag.js loads only after the
             visitor grants consent in the banner (docs/legal/CONSENT-BANNER-SPEC.md) */}

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence, updateAct } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -11,12 +12,13 @@ import { useLang } from '../../context/LangContext.jsx'
 // A pasted link is recognized live, the way the Radar's setup does it: name
 // the platform + show its logo, never just swallow the text silently.
 function LinkPlatformHint({ value }) {
+  const { T } = useLang()
   const platform = detectPlatform(value)
   if (!platform) return null
   return (
     <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
       <PlatformLogo name={platform} size={15} className="text-gold" />
-      {platform.charAt(0).toUpperCase() + platform.slice(1)} recognized
+      {T.evidence.platformRecognized(platform.charAt(0).toUpperCase() + platform.slice(1))}
     </p>
   )
 }
@@ -26,28 +28,11 @@ function LinkPlatformHint({ value }) {
 // matching evidence. Three capture paths, presented as cards:
 //   UPLOAD a document · CONNECT a source · DECLARE a band.
 // Each intent maps to its evidence ask + source_type (canon claim→source table).
+// Card copy lives in i18n (T.evidence.paths[key].title/desc) — EN + HE.
 const PATHS = [
-  {
-    key: 'upload',
-    icon: '⇪',
-    title: 'Upload proof',
-    desc: 'Ticket exports, settlements, posters — the strongest evidence.',
-    intents: ['drew-crowd', 'sold-via-link', 'produced-event'],
-  },
-  {
-    key: 'connect',
-    icon: '↗',
-    title: 'Connect a source',
-    desc: 'Public links and producer references that can be checked.',
-    intents: ['rebooked', 'consistent-frequency', 'producer-confirm'],
-  },
-  {
-    key: 'declare',
-    icon: '✎',
-    title: 'Declare a band',
-    desc: 'Your own numbers — shown only as a bounded band, never a raw count.',
-    intents: ['community'],
-  },
+  { key: 'upload', icon: '⇪', intents: ['drew-crowd', 'sold-via-link', 'produced-event'] },
+  { key: 'connect', icon: '↗', intents: ['rebooked', 'consistent-frequency', 'producer-confirm'] },
+  { key: 'declare', icon: '✎', intents: ['community'] },
 ]
 
 export default function EvidenceCapture() {
@@ -108,6 +93,7 @@ export default function EvidenceCapture() {
   // every artifact carries the claim intent + source-authority confirmation
   async function submitEvidence(item) {
     await addEvidence({ artist_id: artistId, claim_intent: intent, source_owner_consent: true, ...item })
+    logEvent(EVENTS.EVIDENCE_UPLOADED, { artist_id: artistId, evidence_type: item.evidence_type }) // pilot signal (A10)
     resetForms(); await load(); flash(T.evidence.addedOk)
   }
 
@@ -160,9 +146,15 @@ export default function EvidenceCapture() {
   async function process() {
     setProcessing(true); setError('')
     try {
-      await processEvidence(artistId) // server (real AI) if present, else client-side canon stub
+      await processEvidence(artistId) // server (real AI) if present; client stub ONLY when no server exists
+      logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId }) // pilot signal (A10)
       await load()
-    } catch (err) { setError(err.message || T.common.error) } finally { setProcessing(false) }
+    } catch (err) {
+      // G12+G14: a server refusal (auth / rate limit / budget) surfaces as its
+      // own honest state — never masked by stub output (db.js throws code
+      // 'server_refused'; evidence stays 'submitted' and retryable).
+      setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
+    } finally { setProcessing(false) }
   }
 
   if (loading) return <Loading />
@@ -211,8 +203,8 @@ export default function EvidenceCapture() {
               <div className="mb-2 flex items-center gap-3">
                 <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line2 font-mono text-sm text-muted">{p.icon}</span>
                 <div className="min-w-0">
-                  <p className="font-display text-base font-bold text-ink">{p.title}</p>
-                  <p className="text-xs text-muted">{p.desc}</p>
+                  <p className="font-display text-base font-bold text-ink">{T.evidence.paths[p.key].title}</p>
+                  <p className="text-xs text-muted">{T.evidence.paths[p.key].desc}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -359,9 +351,9 @@ export default function EvidenceCapture() {
         <div className="card mb-4" role="status" aria-live="polite">
           <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
             <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-            AI is labeling your evidence
+            {T.evidence.processingTitle}
           </p>
-          <p className="mb-3 text-xs text-muted">Nothing publishes without you — every claim waits for your confirmation.</p>
+          <p className="mb-3 text-xs text-muted">{T.evidence.processingNote}</p>
           <div className="space-y-2">
             {[0, 1, 2].map((i) => (
               <div key={i} className="animate-pulse rounded-xl border border-line bg-surface2 px-3 py-3">

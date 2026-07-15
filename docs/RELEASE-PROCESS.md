@@ -1,3 +1,9 @@
+> ⛔ **SUPERSEDED FOR THIS TRAIN (rel-2026.07.13, banner added 13 Jul 2026).** Current law =
+> ONE full release train: canon-lock → candidate SHA → isolated preview → Q1–Q7 → owner Q8 →
+> atomic merge → live smoke → tag + rollback anchor. The "small frequent releases" model below
+> RESUMES POST-LAUNCH. Rule of record until then: **main = live truth; the release branch =
+> candidate truth until promoted.** (Train law: docs/releases/rel-2026.07.13-PLAN.md §4b.)
+
 # RELEASE PROCESS — how a version ships, and how we never lose the thread
 
 **For Maria (plain language).** This is the professional way we deploy LOCK and keep it traceable.
@@ -37,7 +43,10 @@ Every git release is also **tagged** (`rel-YYYY.MM.DD`), so there is an immutabl
 return to. You never have to hold the state in your head — it lives in these four places, always current.
 
 ## Versioning
-- Pre-launch we use **date tags**: `rel-2026.07.09` (easy to reason about — "the July 9 release").
+- **Per-track scheme (12 Jul):** `rel-app-YYYY.MM.DD` · `rel-site-YYYY.MM.DD` · embed mirrors app ·
+  DS = Codex semver · DB = migration head. Current state of every track: `docs/VERSIONS.md` (updated in
+  the release checklist, every release).
+- Pre-launch date tags: `rel-2026.07.09` (easy to reason about — "the July 9 release").
 - `package.json` `version` stays `0.x` until public launch, then we switch to **semver**
   (`1.0.0`, `1.1.0`, …) and one tag per version.
 

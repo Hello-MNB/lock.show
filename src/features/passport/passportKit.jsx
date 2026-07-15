@@ -195,7 +195,7 @@ export function ContextSection({ data, artist, T, title }) {
   return (
     <section className="mt-10 rounded-[18px] border border-dashed border-line2 p-5">
       <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-faint">
-        {title || 'Context — not a draw metric'}
+        {title || T.passport.contextTitle}
       </p>
       {artist.community_size_band && (
         <div className="mt-3 flex flex-wrap items-center gap-2.5">

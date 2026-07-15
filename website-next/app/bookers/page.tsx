@@ -1,520 +1,462 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
-import { DoorStamp } from '@/components/door-stamp'
+﻿// Bookers / Buyers ג€” rebuilt per Codex exact rebuild brief ֲ§5.6 (2026-07-14).
+// Goal: the page works for BOTH professional booking people and private
+// clients (weddings, company nights). Hero H1 "Understand the artist before
+// you say yes." + venue load-in image + Passport preview card; sections:
+// three buyer fears ג†’ what Passport answers ג†’ private-client explanation
+// (EN+HE, warm register) ג†’ no-account CTA. Ticket-sales overemphasis removed.
+// ALL copy lives in content/bookers.ts ({ en, he }); this page renders EN ג€”
+// locale wiring is a later wave and stays mechanical.
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/bookers' },
-  title: 'For Booking Managers — Book With Context, Not Guesswork',
-  description:
-    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
-  openGraph: {
-    url: '/bookers',
-    title: 'For Booking Managers | LOCK',
-    description:
-      'Book with context, not guesswork. Checked evidence in two minutes — free for booking managers, always.',
-    type: 'website',
-  },
+import Link from 'next/link'
+
+import { EntityMoment } from '@/components/marketing/cards'
+import { FinalCta } from '@/components/marketing/final-cta'
+import { Hero } from '@/components/marketing/hero'
+import { Icon } from '@/components/marketing/icons'
+import { Section, SectionHeading } from '@/components/marketing/section'
+import { bookersContent } from '@/content/bookers'
+import { buildPageMetadata } from '@/lib/seo'
+
+const t = bookersContent.en
+const tHe = bookersContent.he
+
+const HERO_IMAGE = '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp'
+
+export const metadata = buildPageMetadata('bookers')
+
+// ג”€ג”€ Floating Passport preview card (brief ֲ§5.6 hero right) ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+
+function PassportPreviewCard() {
+  const c = t.hero.passportCard
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        border: '1px solid rgba(10,13,11,0.1)',
+        borderRadius: '18px',
+        padding: '1rem 1.2rem',
+        minWidth: '210px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.55rem' }}>
+        <Icon id="passport" size={14} color="var(--color-stamp-onlight)" />
+        <span
+          style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--color-stamp-onlight)',
+          }}
+        >
+          {c.label}
+        </span>
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--font-archivo)',
+          fontSize: '1rem',
+          fontWeight: 800,
+          color: 'var(--color-ink)',
+          marginBottom: '0.15rem',
+        }}
+      >
+        {c.name}
+      </div>
+      <div
+        style={{
+          fontFamily: 'var(--font-space-mono)',
+          fontSize: '0.6rem',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--color-tally-onlight)',
+          marginBottom: '0.7rem',
+        }}
+      >
+        {c.tag}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.75rem',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.58rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            color: 'var(--color-stamp-onlight)',
+            background: 'rgba(200,240,77,0.14)',
+            border: '1px solid rgba(200,240,77,0.4)',
+            borderRadius: '4px',
+            padding: '0.14rem 0.4rem',
+          }}
+        >
+          {c.methodChip}
+        </span>
+        <Link
+          href={c.viewCta.href}
+          style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.58rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--color-ink)',
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          {c.viewCta.label}
+          <Icon id="arrow" size={11} />
+        </Link>
+      </div>
+    </div>
+  )
 }
 
-const risks = [
-  {
-    num: '01',
-    title: 'The dead dancefloor.',
-    body: 'When a room stays empty, nobody blames the artist they’ve never heard of. They remember the booking manager who put the name on the bill. That night follows you.',
-  },
-  {
-    num: '02',
-    title: 'The hype folder.',
-    body: 'EPKs, follower counts, “sold out” stories. Everything looks enormous, and none of it answers the only question that matters: who actually shows up?',
-  },
-  {
-    num: '03',
-    title: 'No time to play detective.',
-    body: 'New names land every week. You can’t give each one an evening of digging through Instagram — and you shouldn’t have to.',
-  },
-]
-
-const passportFeatures = [
-  {
-    label: 'DRAW AS A BAND, NOT A BOAST',
-    title: 'A range the evidence can actually carry.',
-    body: 'Audience draw appears as a band — 60–100, 100–200 — not a flattering number someone typed into a bio. It’s a quieter claim, and that’s exactly why you can lean on it.',
-  },
-  {
-    label: 'HOW IT WAS CHECKED',
-    title: 'You always know what a claim is worth.',
-    body: 'Confirmed by the producer who ran the night. Pulled from a ticket platform. Or the artist’s own word — clearly marked as such. Nothing hides behind polish; you weigh it yourself.',
-  },
-  {
-    label: 'FRESH AND LOCAL',
-    title: 'A packed room in 2023 isn’t a packed room now.',
-    body: 'Every claim carries when it happened and where. You’re reading the artist who exists today, in the market you actually book — not a highlight reel from another life.',
-  },
-  {
-    label: 'NO ACCOUNT, EVER',
-    title: 'One link, two minutes, zero friction.',
-    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK is free for booking managers, always.',
-  },
-]
+// ג”€ג”€ Page ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
 
 export default function BookersPage() {
   return (
-    <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
+    <main data-accent="bookers">
+      {/* ג”€ג”€ HERO (brief ֲ§5.6) ג”€ג”€ */}
+      <Hero
+        eyebrow={t.hero.eyebrow}
+        title={t.hero.h1}
+        body={t.hero.body}
+        primaryCta={t.hero.primaryCta}
+        secondaryCta={t.hero.secondaryCta}
+        trustLine={t.hero.trustLine}
+        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
+        chips={t.hero.chips}
+        floatingBottom={<PassportPreviewCard />}
+      />
 
-      {/* ── HERO ─────────────────────────────────────────── */}
+      <EntityMoment
+        eyebrow="Buyer reality"
+        title="A booking decision is emotional before it is operational."
+        body="Whether it is a club night, wedding, festival slot or company event, the buyer wants to feel the fit before they risk the room, the budget and their name."
+        image={{
+          src: '/brand/lockshow-atmosphere-booker-context-venue-loadin-v1.webp',
+          alt: 'Venue load-in moment before a booking decision becomes real',
+          position: 'center',
+        }}
+        points={[
+          'No account is needed to understand the Passport.',
+          'Claims read with method labels, not hype.',
+          'Private clients get plain language, not industry jargon.',
+        ]}
+      />
+
+      {/* ג”€ג”€ AUDIENCE BAND (entity-model audit 2026-07-14): private clients ג€”
+          wedding couples, company events ג€” visible at the top of the page,
+          EN+HE verbatim, rendered directly under the hero. */}
       <section
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
-          background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-manager-v1.webp') center/cover no-repeat`,
-          color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
+          background: 'var(--color-paper)',
+          padding: 'clamp(1.5rem, 3vw, 2.25rem) max(24px, 4vw)',
+          borderBottom: '1px solid rgba(10,13,11,0.08)',
         }}
       >
-        {/* Stamp watermarks */}
         <div
-          aria-hidden="true"
           style={{
-            position: 'absolute',
-            top: '-15px',
-            right: '-55px',
-            transform: 'rotate(-11deg)',
-            color: 'var(--color-paper)',
-            opacity: 0.07,
-            pointerEvents: 'none',
+            maxWidth: '880px',
+            margin: '0 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.7rem',
           }}
         >
-          <DoorStamp size={310} />
-        </div>
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: '-20px',
-            left: '-70px',
-            transform: 'rotate(7deg)',
-            color: 'var(--color-paper)',
-            opacity: 0.03,
-            pointerEvents: 'none',
-          }}
-        >
-          <DoorStamp size={240} />
-        </div>
-        <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
-            style={{
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.75rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-stamp)',
-              textTransform: 'uppercase',
-              marginBottom: '1.75rem',
-            }}
-          >
-            FOR BOOKING MANAGERS
-          </p>
-          <h1
             style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(2.4rem, 5vw, 4rem)',
-              fontWeight: 400,
-              lineHeight: 0.96,
-              letterSpacing: '-0.055em',
-              color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
+              lineHeight: 1.5,
+              letterSpacing: '-0.01em',
+              color: 'var(--color-ink)',
+              margin: 0,
             }}
           >
-            Book with context,
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              not guesswork.
-            </em>
-          </h1>
-          <p
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
-              lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.72)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
-            }}
-          >
-            An unfamiliar artist wants your stage. Before your name goes on
-            that flyer, open their Passport and see what actually happened at
-            their last shows — checked, dated, readable in two minutes.
+            {t.audience.en}
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <Link
-              href="/passport/demo"
-              style={{
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono), monospace',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 1.75rem',
-                textDecoration: 'none',
-                borderRadius: '10px',
-                display: 'inline-block',
-              }}
-            >
-              SEE A SAMPLE PASSPORT →
-            </Link>
-            <Link
-              href="/how-it-works"
-              style={{
-                border: '1px solid rgba(243,245,239,0.22)',
-                color: 'var(--color-paper)',
-                fontFamily: 'var(--font-space-mono), monospace',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 1.75rem',
-                textDecoration: 'none',
-                borderRadius: '10px',
-                display: 'inline-block',
-              }}
-            >
-              HOW IT WORKS
-            </Link>
-          </div>
           <p
+            dir="rtl"
+            lang="he"
             style={{
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              color: 'rgba(243,245,239,0.7)',
-              marginTop: '1.5rem',
+              fontSize: '1rem',
+              lineHeight: 1.7,
+              color: 'var(--color-tally-onlight)',
+              margin: 0,
             }}
           >
-            FREE FOR BOOKING MANAGERS — ALWAYS. NO ACCOUNT, NO SIGNUP.
+            {t.audience.he}
           </p>
         </div>
       </section>
 
-      {/* ── THE RISK ─────────────────────────────────────── */}
-      <section
-        style={{
-          background: 'var(--color-paper)',
-          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
-          borderBottom: '1px solid var(--color-mist)',
-        }}
-      >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.75rem',
-              color: 'var(--color-tally-onlight)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: '0.5rem',
-            }}
-          >
-            THE NIGHT YOU&apos;RE PROTECTING
-          </p>
-          <h2
-            style={{
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-              color: 'var(--color-ink)',
-              marginBottom: '2.5rem',
-            }}
-          >
-            An empty floor remembers your name, not theirs.
-          </h2>
-          <div
-            className="m-divide"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: '1px',
-              background: 'rgba(10,13,11,0.08)',
-              border: '1px solid rgba(10,13,11,0.08)',
-            }}
-          >
-            {risks.map((r) => (
+      {/* ג”€ג”€ SECTION 1 ג€” THREE BUYER FEARS (brief ֲ§5.6) ג”€ג”€ */}
+      <Section tone="paper">
+        <SectionHeading eyebrow={t.fears.eyebrow} title={t.fears.title} />
+        <div
+          className="m-divide"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 'clamp(1rem, 2vw, 1.5rem)',
+          }}
+        >
+          {t.fears.cards.map((card, i) => {
+            const dark = i === 1 // card rhythm: paper ֲ· dark ֲ· paper (brief ֲ§3)
+            return (
               <div
-                key={r.num}
-                className="m-flat"
-                style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
+                key={card.title}
+                className="mk-card m-flat"
+                style={{
+                  background: dark ? 'var(--color-forest)' : '#ffffff',
+                  border: dark
+                    ? '1px solid rgba(243,245,239,0.1)'
+                    : '1px solid rgba(10,13,11,0.1)',
+                  padding: 'clamp(1.5rem, 3vw, 2rem)',
+                }}
               >
                 <span
                   style={{
-                    fontFamily: 'var(--font-space-mono), monospace',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-tally-onlight)',
-                    opacity: 0.5,
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    color: dark ? 'var(--color-stamp)' : 'var(--color-stamp-onlight)',
                     display: 'block',
                     marginBottom: '0.75rem',
                   }}
                 >
-                  {r.num}
+                  {String(i + 1).padStart(2, '0')}
                 </span>
                 <h3
                   style={{
-                    fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                    fontSize: '1.05rem',
-                    color: 'var(--color-ink)',
-                    marginBottom: '0.5rem',
+                    fontFamily: 'var(--font-archivo)',
+                    fontSize: '1.15rem',
+                    fontWeight: 800,
+                    lineHeight: 1.3,
+                    color: dark ? 'var(--color-paper)' : 'var(--color-ink)',
+                    margin: '0 0 0.7rem',
                   }}
                 >
-                  {r.title}
+                  {card.title}
                 </h3>
                 <p
                   style={{
-                    fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-                    fontSize: '1rem',
-                    color: 'var(--color-tally-onlight)',
-                    lineHeight: 1.6,
+                    fontSize: '0.95rem',
+                    lineHeight: 1.65,
+                    color: dark ? 'rgba(243,245,239,0.65)' : 'var(--color-tally-onlight)',
+                    margin: 0,
                   }}
                 >
-                  {r.body}
+                  {card.body}
                 </p>
               </div>
-            ))}
-          </div>
+            )
+          })}
         </div>
-      </section>
+      </Section>
 
-      {/* ── EVIDENCE ANCHOR IMAGE ────────────────────────── */}
-      {/* TODO: swap for a lockshow-atmosphere-* scene if a better booker-desk shot arrives from Codex's Drive */}
+      {/* ג”€ג”€ SECTION 2 ג€” WHAT THE PASSPORT ANSWERS (brief ֲ§5.6) ג”€ג”€ */}
+      <Section tone="forest">
+        <SectionHeading tone="forest" eyebrow={t.answers.eyebrow} title={t.answers.title} />
+        <div style={{ maxWidth: '880px', margin: '0 auto' }}>
+          {t.answers.items.map((item) => (
+            <div
+              key={item.label}
+              style={{
+                padding: '1.6rem 0',
+                borderBottom: '1px solid rgba(243,245,239,0.1)',
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.11em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-stamp)',
+                  display: 'block',
+                  marginBottom: '0.45rem',
+                }}
+              >
+                {item.label}
+              </span>
+              <h3
+                style={{
+                  fontFamily: 'var(--font-archivo)',
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  lineHeight: 1.3,
+                  color: 'var(--color-paper)',
+                  margin: '0 0 0.45rem',
+                }}
+              >
+                {item.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: '0.95rem',
+                  lineHeight: 1.65,
+                  color: 'rgba(243,245,239,0.65)',
+                  margin: 0,
+                  maxWidth: '720px',
+                }}
+              >
+                {item.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ג”€ג”€ SECTION 3 ג€” PRIVATE-CLIENT EXPLANATION (brief ֲ§5.6) ג”€ג”€
+          MUST include the wedding/company-night copy EN+HE ג€” private
+          clients are valid buyers; warm register, no venue jargon. */}
+      <Section tone="paper" narrow>
+        <SectionHeading
+          eyebrow={t.privateClients.eyebrow}
+          title={t.privateClients.title}
+          align="start"
+        />
+        <div
+          className="mk-card"
+          style={{
+            background: '#ffffff',
+            border: '1px solid rgba(10,13,11,0.1)',
+            padding: 'clamp(1.75rem, 3.5vw, 2.5rem)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.1rem',
+          }}
+        >
+          <p
+            style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 'clamp(1.15rem, 2.2vw, 1.4rem)',
+              lineHeight: 1.45,
+              letterSpacing: '-0.015em',
+              color: 'var(--color-ink)',
+              margin: 0,
+            }}
+          >
+            {t.privateClients.lead.en}
+          </p>
+          {/* HE verbatim from the brief ֲ§5.6 ג€” rendered alongside EN by design */}
+          <p
+            dir="rtl"
+            lang="he"
+            style={{
+              fontSize: '1.05rem',
+              lineHeight: 1.7,
+              color: 'var(--color-ink)',
+              margin: 0,
+            }}
+          >
+            {t.privateClients.lead.he}
+          </p>
+          <p
+            style={{
+              fontSize: '0.98rem',
+              lineHeight: 1.7,
+              color: 'var(--color-tally-onlight)',
+              margin: 0,
+            }}
+          >
+            {t.privateClients.body}
+          </p>
+          <blockquote
+            style={{
+              margin: 0,
+              padding: '1rem 1.25rem',
+              borderInlineStart: '3px solid var(--color-stamp)',
+              background: 'rgba(200,240,77,0.07)',
+              borderRadius: '0 14px 14px 0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+            }}
+          >
+            <p
+              dir="rtl"
+              lang="he"
+              style={{
+                fontSize: '0.98rem',
+                lineHeight: 1.7,
+                color: 'var(--color-ink)',
+                margin: 0,
+              }}
+            >
+              {tHe.privateClients.warmQuote.he}
+            </p>
+            <p
+              style={{
+                fontSize: '0.9rem',
+                lineHeight: 1.65,
+                color: 'var(--color-tally-onlight)',
+                margin: 0,
+              }}
+            >
+              {t.privateClients.warmQuote.en}
+            </p>
+          </blockquote>
+        </div>
+      </Section>
+
+      {/* ג”€ג”€ SECTION 4 ג€” NO-ACCOUNT CTA (brief ֲ§5.6) ג”€ג”€ */}
       <section
         style={{
           background: 'var(--color-paper)',
-          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) 0',
+          padding: '0 max(24px, 4vw) 2.5rem',
         }}
       >
-        <figure style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <div
-            style={{
-              borderRadius: '16px',
-              overflow: 'hidden',
-              border: '1px solid rgba(10,13,11,0.08)',
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/lockshow-evidence-review.webp"
-              alt="A booking manager reading an artist's checked evidence before saying yes"
+        <div
+          style={{
+            maxWidth: '880px',
+            margin: '0 auto',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            justifyContent: 'center',
+          }}
+        >
+          {t.finalCta.chips.map((chip) => (
+            <span
+              key={chip}
               style={{
-                display: 'block',
-                width: '100%',
-                maxHeight: '440px',
-                objectFit: 'cover',
+                fontFamily: 'var(--font-space-mono)',
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                color: 'var(--color-tally-onlight)',
+                border: '1px solid rgba(10,13,11,0.15)',
+                padding: '0.3rem 0.7rem',
+                borderRadius: '999px',
               }}
-            />
-          </div>
-          <figcaption
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '1rem',
-              color: 'var(--color-tally-onlight)',
-              lineHeight: 1.6,
-              marginTop: '0.85rem',
-              maxWidth: '640px',
-            }}
-          >
-            Every claim is checked before it reaches you. You see what held up
-            — and exactly how it was checked.
-          </figcaption>
-        </figure>
-      </section>
-
-      {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.75rem',
-              color: 'var(--color-tally-onlight)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: '0.5rem',
-            }}
-          >
-            WHAT YOU OPEN
-          </p>
-          <h2
-            style={{
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-              color: 'var(--color-ink)',
-              marginBottom: '2.5rem',
-            }}
-          >
-            One link. The whole story, checked.
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-            {passportFeatures.map((f, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: '1.75rem 0',
-                  borderBottom: '1px solid var(--color-mist)',
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: 'var(--font-space-mono), monospace',
-                    fontSize: '0.75rem',
-                    color: 'var(--color-stamp-onlight)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    display: 'block',
-                    marginBottom: '0.4rem',
-                  }}
-                >
-                  {f.label}
-                </span>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-                    fontSize: '1.05rem',
-                    color: 'var(--color-ink)',
-                    marginBottom: '0.4rem',
-                  }}
-                >
-                  {f.title}
-                </h3>
-                <p
-                  style={{
-                    fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-                    fontSize: '1rem',
-                    color: 'var(--color-tally-onlight)',
-                    lineHeight: 1.65,
-                    maxWidth: '832px',
-                  }}
-                >
-                  {f.body}
-                </p>
-              </div>
-            ))}
-          </div>
+            >
+              {chip}
+            </span>
+          ))}
         </div>
       </section>
-
-      {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
-      <section style={{
-        background: 'var(--color-night)',
-        padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
-        borderTop: '1px solid #2a342d',
-        borderBottom: '1px solid #2a342d',
-      }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.75rem',
-              color: 'var(--color-stamp)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: '0.5rem',
-            }}
-          >
-            IMPORTANT TO KNOW
-          </p>
-          <h2
-            style={{
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-              color: 'var(--color-paper)',
-              marginBottom: '1rem',
-            }}
-          >
-            LOCK makes no promises. That&apos;s the point.
-          </h2>
-          <p
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '1rem',
-              color: 'rgba(243,245,239,0.72)',
-              lineHeight: 1.7,
-              marginBottom: '2rem',
-            }}
-          >
-            LOCK will never tell you an artist will fill your floor. No score,
-            no ranking, no prediction — only what happened, how it was checked,
-            and when. You read it in two minutes. The decision stays yours.
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            {[
-              'WHAT HAPPENED',
-              'HOW IT WAS CHECKED',
-              'WHEN IT HAPPENED',
-              'YOUR DECISION, ALWAYS',
-            ].map((chip) => (
-              <span
-                key={chip}
-                style={{
-                  fontFamily: 'var(--font-space-mono), monospace',
-                  fontSize: '0.75rem',
-                  color: 'rgba(243,245,239,0.7)',
-                  border: '1px solid rgba(243,245,239,0.12)',
-                  padding: '0.25rem 0.6rem',
-                  borderRadius: '10px',
-                  letterSpacing: '0.06em',
-                }}
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ──────────────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)', textAlign: 'center' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
-              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-              color: 'var(--color-ink)',
-              marginBottom: '1rem',
-            }}
-          >
-            The next link you get deserves two minutes.
-          </h2>
-          <p
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '1rem',
-              color: 'var(--color-tally-onlight)',
-              marginBottom: '2rem',
-              lineHeight: 1.6,
-            }}
-          >
-            Open it. See the room before you say yes. LOCK is free for booking
-            managers — always. No signup, no account, no catch.
-          </p>
-          <Link
-            href="/passport/demo"
-            style={{
-              background: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono), monospace',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              padding: '0.95rem 1.75rem',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              display: 'inline-block',
-            }}
-          >
-            SEE A SAMPLE PASSPORT →
-          </Link>
-        </div>
-      </section>
-
+      <FinalCta
+        title={t.finalCta.title}
+        body={t.finalCta.body}
+        primaryCta={t.finalCta.primaryCta}
+        secondaryLink={t.finalCta.secondaryLink}
+      />
     </main>
   )
 }

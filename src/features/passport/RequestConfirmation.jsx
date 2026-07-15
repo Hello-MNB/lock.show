@@ -92,10 +92,10 @@ export default function RequestConfirmation() {
             /* no WhatsApp on file — still not a dead end */
             <div className="mt-6 rounded-[14px] border border-line bg-surface2 p-4 text-left">
               <p className="text-sm leading-relaxed text-ink">
-                {artistName} or their agency will get back to you using the details you sent.
+                {T.request.willGetBack(artistName)}
               </p>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Keep the passport link for your file — the evidence stays available there.
+                {T.request.keepLinkHint}
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <span dir="ltr" className="min-w-0 flex-1 truncate rounded-md border border-line bg-bg2 px-3 py-2 font-mono text-[11px] text-muted">
@@ -103,14 +103,14 @@ export default function RequestConfirmation() {
                 </span>
                 <button onClick={copyLink}
                   className="btn-ghost shrink-0 px-4 py-2 text-xs">
-                  {copied ? 'Copied ✓' : 'Copy link'}
+                  {copied ? T.producer.copied : T.producer.copyLink}
                 </button>
               </div>
             </div>
           )}
 
           <Link to={`/passport/${id}`} className="mt-5 inline-block text-sm text-muted transition hover:text-ink">
-            ← Back to the passport
+            ← {T.request.backToPassport}
           </Link>
         </div>
       </PageShell>
