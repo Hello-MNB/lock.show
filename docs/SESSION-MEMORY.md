@@ -8,6 +8,8 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - Product: LOCK pre-booking proof tool (domain lock.show; formerly GIGPROOF, renamed 8 Jul 2026). Canon firewall in CLAUDE.md (no scores/ranks; bands+binaries+method labels).
 - Demo persona: Shai Perlman — 3 hats: DJ PERLMAN (artist, multi-genre Acts) / artist representative (roster) / INSOMNIA TLV (production company).
 
+## 🔑 TEST LOGINS (permanent — owner asked 15 Jul): docs/team/TEST-LOGINS.md · 5 accounts @gigproof.test · password Gigproof!2026 · seed = scripts/seed.mjs · login www.lock.show/app/login. NEVER put in shareable artifacts.
+
 ## ⏸ STOPPED-HERE MARKERS (14 Jul — owner: "remember where we stopped on the app; now advance the site")
 - **APP — where we stopped:** the interactive PROTOTYPE/BLUEPRINT (artifact ③) is COMPLETE and owner-approved-in-iteration — engaging Radar + signal spec (P-14), consolidated nav hub ≤2-step + branding (P-15), discovery→confirm planet drill-in (P-11), onboarding narrative EN+HE locale-aware (P-12), effective screens (P-13); all documented (audit PART 3b/5/6). **NEXT APP STEP = implement the approved prototype into the REAL React app (src/) as an RC**, then Q8, then production. The running app is still the OLD dark build (live a874ab5; RC1 candidate 439c38c pending Q8) — it does NOT yet reflect the prototype. Blocked-until-owner: B-1 entity-model ruling · migration 030 confirm · pilot price · Hebrew word for "Act."
 - **SITE — publish state (14 Jul):** LIVE www.lock.show = **4f4ff74** (Codex `codex/live-site-redesign-20260714` tip: emotional entity storytelling + moment bands + measurement context), alias-promoted 14 Jul, 8/8 routes 200. Rollback anchor 9a08069.
