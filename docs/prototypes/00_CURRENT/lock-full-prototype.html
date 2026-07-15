@@ -26,19 +26,20 @@
 
   /* ═══ TIER 2 — SEMANTIC (dark app roles; every component reads these) ═══ */
   /* Surface elevation ramp — each step ~+6–8% luminance, own hairline */
-  --canvas:#0A0F0C;                       /* app background (deepest) */
-  --surface-1:#0E1512;                    /* rail / chrome (sunken chrome) */
-  --surface-2:#161D18;                    /* cards, sheets (default container) */
-  --surface-3:#1F2822;                    /* insets, fields, rows on a card */
-  --surface-4:#28322B;                    /* hover / active raise */
-  --hairline:rgba(255,255,255,.06);       /* level divider */
-  --border:rgba(255,255,255,.10);         /* default container border */
-  --border-strong:rgba(255,255,255,.17);  /* focused / raised border */
-  --edge-top:inset 0 1px 0 rgba(255,255,255,.045); /* top-highlight per container */
+  /* A13 LIGHT RE-GROUND — paper/ink app; dark survives only in .dark-island scopes */
+  --canvas:#F3F5EF;                       /* app background · paper */
+  --surface-1:#FFFFFF;                    /* rail / chrome · white */
+  --surface-2:#FFFFFF;                    /* cards, sheets · white */
+  --surface-3:#F3F5EF;                    /* insets, fields, rows · paper inset */
+  --surface-4:#E9ECE4;                    /* hover / active raise · paper hover */
+  --hairline:rgba(10,13,11,.06);          /* level divider · ink α */
+  --border:#D4DBD2;                        /* default container border · DS hairline */
+  --border-strong:rgba(10,13,11,.16);     /* focused / raised border · ink α */
+  --edge-top:inset 0 1px 0 rgba(255,255,255,.6); /* top-highlight · paper top-light */
 
-  --text:#F3F5EF;         /* primary (=paper) */
-  --text-muted:#AEB6AE;   /* secondary (raised for legibility) */
-  --text-faint:#7C847D;   /* tertiary / captions */
+  --text:#0A0D0B;         /* primary · ink */
+  --text-muted:#687269;   /* secondary · slate */
+  --text-faint:#949B92;   /* tertiary / captions · slate-tint (A13: never critical) */
 
   --accent:var(--brand-lime);
   --accent-deep:var(--brand-lime-deep);
@@ -59,15 +60,16 @@
   --prov-pending-line:rgba(221,227,217,.16);
 
   --focus:0 0 0 3px rgba(200,240,77,.30);      /* single focus ring token */
-  --shadow-1:0 1px 0 rgba(255,255,255,.03);
-  --shadow-2:0 8px 24px -12px rgba(0,0,0,.6);
-  --shadow-card:0 24px 60px -24px rgba(0,0,0,.75);
+  --ease-orbit:cubic-bezier(.2,.8,.25,1);      /* orbit-widget motion */
+  --shadow-1:0 1px 2px rgba(10,13,11,.04);
+  --shadow-2:0 8px 24px -12px rgba(10,13,11,.16);
+  --shadow-card:0 18px 40px -24px rgba(10,13,11,.18);
   --glow-accent:0 10px 26px -10px rgba(200,240,77,.5);
 
   /* scales */
   --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;--s12:48px;
   --r1:8px;--r2:12px;--r3:16px;--r4:20px;
-  --t-xs:11px;--t-sm:13px;--t-md:15px;--t-lg:18px;--t-xl:24px;--t-2xl:30px;--t-3xl:40px;
+  --t-xs:11px;--t-sm:13px;--t-md:16px;--t-lg:18px;--t-xl:24px;--t-2xl:30px;--t-3xl:40px;
   --serif:"Frank Ruhl Libre",Georgia,"Times New Roman",serif;
   --sans:"Heebo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
@@ -82,7 +84,7 @@
   --field-radius:11px;
 
   --chrome-bg:var(--surface-1);
-  --rail-bg:#0B120E;                   /* one step under chrome */
+  --rail-bg:#FAFBF8;                   /* faint paper tint · distinguishes rail from white cards */
   --card-bg:var(--surface-2);
   --card-border:var(--border);
 
@@ -100,11 +102,27 @@
   --need:var(--state-attention);--na:var(--text-faint);
   --divider:var(--hairline);--card-shadow:var(--shadow-card);--glow:var(--glow-accent);
 }
+/* ── DARK ISLAND · re-establish the dark ramp locally so the global light flip can't leak in.
+   Applied to the radar universe stage and the Passport hero media band ONLY. ── */
+.dark-island{
+  --canvas:#0A0F0C; --surface-1:#0E1512; --surface-2:#161D18; --surface-3:#1F2822; --surface-4:#28322B;
+  --hairline:rgba(255,255,255,.06); --border:rgba(255,255,255,.10); --border-strong:rgba(255,255,255,.17);
+  --edge-top:inset 0 1px 0 rgba(255,255,255,.045);
+  --text:#F3F5EF; --text-muted:#AEB6AE; --text-faint:#7C847D;
+  /* keep legacy aliases resolving dark inside the island */
+  --bg:var(--canvas); --bg2:var(--surface-1); --surface:var(--surface-2); --surface2:var(--surface-3);
+  --raise:var(--surface-4); --muted:var(--text-muted); --faint:var(--text-faint);
+  --line:var(--hairline); --line2:var(--border); --near-black:var(--canvas); --panel:var(--surface-1);
+  --rail-bg:var(--surface-1); --chrome-bg:var(--surface-1); --card-bg:var(--surface-2); --card-border:var(--border);
+  --field-bg:var(--surface-3); --field-bg-focus:var(--surface-4); --divider:var(--hairline);
+}
+/* mobile type scale (DS body ≥16px; display steps down) */
+@media(max-width:640px){ :root{ --t-3xl:32px; --t-2xl:24px; --t-xl:20px; } }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;width:100%;overflow:hidden}
 body{
   font-family:var(--sans);color:var(--text);-webkit-font-smoothing:antialiased;line-height:1.5;
-  background:#070807;
+  background:var(--canvas);
   position:fixed;inset:0;width:100vw;height:100vh;
   display:flex;flex-direction:column;
 }
@@ -174,7 +192,7 @@ button{font-family:inherit;cursor:pointer}
 .navitem.active{background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
 .navitem.active svg{opacity:1;color:var(--accent)}
 .navitem.active::before{content:"";position:absolute;left:-12px;top:11px;bottom:11px;width:3px;border-radius:2px;background:var(--accent)}
-.navitem .badge-n{margin-left:auto;background:var(--accent);color:#12160A;font-size:10px;font-weight:800;border-radius:999px;padding:1px 7px;font-family:var(--mono)}
+.navitem .badge-n{margin-left:auto;background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:800;border-radius:999px;padding:1px 7px;font-family:var(--mono)}
 
 /* ── MOBILE BOTTOM-NAV (shown ≤640px only) ── */
 .botnav{display:none;position:absolute;left:0;right:0;bottom:0;z-index:35;background:var(--bg2);border-top:1px solid var(--line2);
@@ -184,7 +202,7 @@ button{font-family:inherit;cursor:pointer}
 .botnav .bn svg{width:21px;height:21px}
 .botnav .bn.active{color:var(--accent)}
 .botnav .bn.active svg{color:var(--accent)}
-.botnav .bn .badge-n{position:absolute;top:2px;right:calc(50% - 20px);background:var(--accent);color:#12160A;font-size:8.5px;font-weight:800;border-radius:999px;padding:0 5px;font-family:var(--mono);line-height:1.5}
+.botnav .bn .badge-n{position:absolute;top:2px;right:calc(50% - 20px);background:var(--accent);color:var(--on-accent);font-size:8.5px;font-weight:800;border-radius:999px;padding:0 5px;font-family:var(--mono);line-height:1.5}
 
 .screen{flex:1;overflow:auto;padding:26px 30px;min-width:0;position:relative}
 .screen.paper{background:#F3F5EF;padding:0}
@@ -195,19 +213,24 @@ button{font-family:inherit;cursor:pointer}
 .eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .h-display{font-family:var(--serif);font-weight:700;letter-spacing:-.01em}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r4);padding:var(--s6);box-shadow:var(--card-shadow)}
-.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 18px;
-  font-weight:800;font-size:13.5px;color:#12160A;background:linear-gradient(180deg,var(--accent),var(--accent-deep));box-shadow:var(--glow)}
+/* ── Light button hierarchy · one lime primary per view · 44px tap target ── */
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:12px;padding:12px 20px;min-height:44px;
+  font-weight:800;font-size:13.5px;color:var(--on-accent);background:linear-gradient(180deg,var(--accent),var(--accent-deep));box-shadow:var(--glow)}
 .btn-primary:hover{filter:brightness(1.05)}
-.btn-primary.sm{padding:9px 14px;font-size:12.5px}
+.btn-primary.sm{padding:9px 16px;min-height:40px;font-size:12.5px}
 .btn-primary:disabled{opacity:.5;filter:grayscale(.3);cursor:not-allowed}
-.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;
-  font-weight:700;font-size:13px;color:var(--text);background:var(--surface2);border:1px solid var(--line2)}
-.btn-ghost:hover{border-color:var(--faint)}
-.btn-ghost.sm{padding:8px 13px;font-size:12px}
+.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 18px;min-height:44px;
+  font-weight:700;font-size:13px;color:var(--text);background:var(--surface-1);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border-strong);background:var(--surface-4)}
+.btn-secondary.sm{padding:9px 15px;min-height:40px;font-size:12.5px}
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;min-height:44px;
+  font-weight:700;font-size:13px;color:var(--text);background:transparent;border:1px solid transparent}
+.btn-ghost:hover{background:var(--surface-4);border-color:var(--hairline)}
+.btn-ghost.sm{padding:8px 13px;min-height:40px;font-size:12px}
 .chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;line-height:1.4}
 .chip.lime{background:rgba(190,226,78,.1);color:var(--good)}
 .chip.gold{background:var(--prov-pending-bg);color:var(--state-attention)}
-.chip.na{background:rgba(255,255,255,.05);color:var(--na)}
+.chip.na{background:rgba(10,13,11,.05);color:var(--na)}
 .chip.blue{background:rgba(110,166,163,.12);color:var(--source-blue)}
 .chip.teal{background:rgba(70,220,194,.1);color:var(--teal)}
 .chip.amber{background:var(--prov-pending-bg);color:var(--state-attention)}
@@ -228,7 +251,7 @@ button{font-family:inherit;cursor:pointer}
 .hr{height:1px;background:var(--line);border:0;margin:14px 0}
 .hint{font-size:11.5px;color:var(--faint);line-height:1.55}
 .pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:6px;flex-wrap:wrap}
-.pagehead h1{font-size:var(--t-xl)}
+.pagehead h1{font-size:var(--t-2xl)}
 .subtle{font-size:12px;color:var(--muted);margin:2px 0 16px}
 
 /* hint pulse on the primary next action */
@@ -387,6 +410,79 @@ button{font-family:inherit;cursor:pointer}
   .sweep,.sonar,.starfield,.cl-lit,.cl-dev,.pnode,.star .avatar,.founddot,.hint-pulse::after{animation:none!important}
 }
 
+/* ═══ RADAR ORBIT WIDGET · tap planet → logos orbit it → tap logo → inline card ═══ */
+.orbit-scrim{position:absolute;inset:0;z-index:20;background:rgba(6,7,6,.55);backdrop-filter:blur(2px);animation:fade .2s ease;cursor:pointer}
+.uni.focused .planet,.uni.focused .star,.uni.focused .constel,
+.uni.focused .sweep,.uni.focused .sonar,.uni.focused .starfield,.uni.focused .orbit{
+  opacity:.10;filter:blur(1px) grayscale(.5);pointer-events:none;transition:opacity .3s,filter .3s}
+.orbit-layer{position:absolute;inset:0;z-index:22;pointer-events:none}
+.orbit-layer>*{pointer-events:auto}
+.orbit-hub{position:absolute;transform:translate(-50%,-50%);text-align:center;z-index:30;cursor:pointer;width:92px}
+.orbit-hub .pnode{transform:scale(1.32);box-shadow:0 0 34px rgba(200,240,77,.28),inset 0 0 0 1px rgba(200,240,77,.4);animation:none;margin:0 auto}
+.orbit-hub .ocap{margin-top:16px;display:inline-flex;flex-direction:column;gap:2px;background:var(--surface);border:1px solid var(--line2);border-radius:10px;padding:6px 11px;box-shadow:var(--card-shadow)}
+.orbit-hub .ocap b{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--text);white-space:nowrap}
+.orbit-hub .ocap span{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.orbit-ring{position:absolute;left:0;top:0;width:0;height:0;z-index:26}
+@keyframes orbit-spin{to{transform:rotate(360deg)}}
+@keyframes orbit-spin-rev{to{transform:rotate(-360deg)}}
+.orbit-ring.spin{animation:orbit-spin 54s linear infinite}
+.orbit-ring.spin .orbit-logo-inner{animation:orbit-spin-rev 54s linear infinite}
+.orbit-ring.paused{animation-play-state:paused}
+.orbit-ring.paused .orbit-logo-inner{animation-play-state:paused}
+.orbit-logo{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;border:1px solid var(--line2);background:var(--surface2);
+  display:grid;place-items:center;cursor:pointer;transform:translate(-50%,-50%) var(--to);transition:transform .3s var(--ease-orbit),box-shadow .2s,border-color .2s}
+.orbit-logo-inner{display:grid;place-items:center;width:100%;height:100%}
+.orbit-logo .srctile{width:38px;height:38px}
+.orbit-logo.emerge{animation:orbit-emerge .46s var(--ease-orbit) both}
+@keyframes orbit-emerge{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}60%{opacity:1}100%{opacity:1;transform:translate(-50%,-50%) scale(1) var(--to)}}
+.orbit-logo.found{animation:logo-invite 2s ease-in-out infinite}
+@keyframes logo-invite{0%,100%{box-shadow:0 0 0 0 rgba(221,227,217,.45)}50%{box-shadow:0 0 0 6px rgba(221,227,217,0)}}
+.orbit-logo.confirmed{border-color:rgba(200,240,77,.5);box-shadow:0 0 14px -4px rgba(200,240,77,.4)}
+.orbit-logo .chk{position:absolute;bottom:-3px;right:-3px;width:17px;height:17px;border-radius:50%;background:rgba(200,240,77,.95);color:#12160A;font-size:9px;display:grid;place-items:center;font-weight:900}
+.orbit-logo.empty{border-style:dashed}
+.orbit-logo.empty .srctile{filter:grayscale(1);opacity:.5}
+.orbit-logo.sel{transform:translate(-50%,-50%) var(--to) scale(1.15);border-color:var(--accent);box-shadow:0 0 20px -4px rgba(200,240,77,.5)}
+.orbit-logo.dimmed{opacity:.35}
+.orbit-logo.justlock{animation:logo-lock .6s var(--ease-orbit)}
+@keyframes logo-lock{0%{transform:translate(-50%,-50%) var(--to) scale(1)}45%{transform:translate(-50%,-50%) var(--to) scale(1.18);box-shadow:0 0 30px rgba(200,240,77,.6)}100%{transform:translate(-50%,-50%) var(--to) scale(1)}}
+.orbit-logo.leaving{animation:orbit-dismiss .3s ease forwards}
+@keyframes orbit-dismiss{to{opacity:0;transform:translate(-50%,-50%) var(--to) scale(.4)}}
+.orbit-tether{position:absolute;inset:0;z-index:28;pointer-events:none;overflow:visible}
+.orbit-tether line{stroke:rgba(200,240,77,.35);stroke-width:1;stroke-dasharray:2 3}
+.orbit-card{position:absolute;z-index:40;left:50%;transform:translateX(-50%);background:linear-gradient(180deg,var(--surface),var(--bg2));
+  border:1px solid var(--line2);border-radius:16px;padding:13px 14px;box-shadow:var(--card-shadow);
+  width:min(300px,calc(100% - 24px));animation:card-rise .26s var(--ease-orbit)}
+@keyframes card-rise{from{opacity:0;transform:translateX(-50%) translateY(8px) scale(.96)}to{opacity:1;transform:translateX(-50%)}}
+.orbit-card .oc-head{display:flex;gap:10px;align-items:flex-start}
+.orbit-card .oc-lg .srctile{width:34px;height:34px}
+.orbit-card .oc-eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:6px;line-height:1.3}
+.orbit-card .oc-eyebrow .spark{color:var(--text-muted)}
+.orbit-card .oc-eyebrow.confirmed{color:var(--good)}
+.orbit-card .oc-status{margin-left:auto;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line2);color:var(--faint);flex-shrink:0;height:max-content}
+.orbit-card .oc-status.found{color:var(--state-attention)}
+.orbit-card .oc-status.confirmed{color:var(--good);border-color:rgba(200,240,77,.4)}
+.orbit-card .oc-item{font-size:14px;font-weight:600;color:var(--text);line-height:1.4;margin-top:8px}
+.orbit-card .oc-proves{font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:5px}
+.orbit-card .oc-mrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.orbit-card .oc-ref{font-family:var(--mono);font-size:10px;color:var(--faint)}
+.orbit-card .oc-done{display:flex;align-items:flex-start;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--good);margin-top:9px;line-height:1.5}
+.orbit-card .oc-acts{display:flex;gap:8px;margin-top:11px}
+.orbit-card .oc-confirm{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:11px;padding:11px;min-height:44px;font-weight:800;font-size:13px;color:var(--on-accent);background:linear-gradient(180deg,var(--accent),var(--accent-deep));box-shadow:var(--glow)}
+.orbit-card .oc-notme{flex-shrink:0;font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);background:transparent;border:1px solid var(--line);border-radius:10px;padding:0 14px;min-height:44px}
+.orbit-card .oc-add{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--line2);border-radius:11px;padding:11px;min-height:44px;font-weight:700;font-size:12.5px;color:var(--text);background:var(--surface2);margin-top:10px}
+.orbit-locked{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);z-index:30;text-align:center;width:min(280px,calc(100% - 32px));
+  background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--line2);border-radius:16px;padding:18px 16px;box-shadow:var(--card-shadow)}
+.orbit-locked .lk{font-size:24px}
+.orbit-locked .olt{font-size:14px;font-weight:700;color:var(--text);margin:8px 0 6px}
+.orbit-locked p{margin:0 0 13px;font-size:12px;color:var(--muted);line-height:1.5}
+@media(prefers-reduced-motion:reduce){
+  .orbit-ring.spin,.orbit-ring.spin .orbit-logo-inner,.orbit-logo.found{animation:none!important}
+  .orbit-logo.emerge{animation:none!important}
+  .orbit-card{animation:none!important}
+  .orbit-logo.justlock{animation:none!important;border-color:var(--accent);box-shadow:0 0 0 2px rgba(200,240,77,.6)}
+  .uni.focused .planet,.uni.focused .star,.uni.focused .constel,.uni.focused .sweep,.uni.focused .sonar,.uni.focused .starfield,.uni.focused .orbit{filter:none;transition:none}
+}
+
 /* claim / evidence */
 .skel{border-radius:10px;background:linear-gradient(90deg,var(--surface2) 25%,var(--raise) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -400,7 +496,7 @@ button{font-family:inherit;cursor:pointer}
 .statebar{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 14px;flex-wrap:wrap}
 .section-title{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--text);display:flex;align-items:center;gap:9px}
 .pub-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:var(--surface2)}
-.gap-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed var(--line2);border-radius:12px;padding:11px 13px;background:rgba(255,255,255,.012)}
+.gap-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed var(--line2);border-radius:12px;padding:11px 13px;background:rgba(10,13,11,.02)}
 .bandpill{display:inline-flex;align-items:center;border:1px solid var(--line2);border-radius:999px;padding:3px 11px;font-family:var(--mono);font-size:11px;color:var(--text)}
 
 /* ═══ ARTIST PASSPORT — public preview · four buyer faces (U22/U23/U25) ═══ */
@@ -450,7 +546,7 @@ button{font-family:inherit;cursor:pointer}
 .evcardp .rv{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-left:auto}
 .evcardp .lgrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .ppready{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-.gapsbar{border:1px dashed var(--line2);border-radius:12px;padding:9px 13px;margin-top:9px;background:rgba(255,255,255,.012);flex-shrink:0}
+.gapsbar{border:1px dashed var(--line2);border-radius:12px;padding:9px 13px;margin-top:9px;background:rgba(10,13,11,.02);flex-shrink:0}
 .gapsbar .gt{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--text);font-weight:600;cursor:pointer}
 .gapsbar .gx{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:7px}
 .fwstripd{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;flex-shrink:0}
@@ -793,6 +889,51 @@ button{font-family:inherit;cursor:pointer}
 .kit-locked{text-align:center;padding:14px 8px}
 .kit-locked .lk-ic{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--line2);color:var(--faint);font-size:22px}
 
+/* ═══ REQUESTS + ACCESS · light, one-viewport, internal scroll ═══ */
+.screen.reqs-mode{overflow:hidden;display:flex;flex-direction:column;padding:26px 30px 18px}
+.screen.reqs-mode .screen-anim{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.reqlist{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;max-width:680px;padding-bottom:6px}
+.reqcard{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow-card)}
+.reqcard.unread{border-color:rgba(200,240,77,.55);box-shadow:0 0 0 1px rgba(200,240,77,.25),var(--shadow-card)}
+.req-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.req-co{font-family:var(--serif);font-size:var(--t-lg);font-weight:700;color:var(--text);line-height:1.2}
+.req-venue{font-family:var(--sans);font-weight:600;color:var(--text-muted);font-size:14px}
+.req-contact{font-size:13px;color:var(--text-muted);margin-top:3px}
+.req-contact.empty,.reqf.empty .reqf-v{color:var(--text-faint);font-style:italic}
+.req-new{background:var(--accent);color:var(--on-accent);font-family:var(--mono);font-size:10px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px;flex-shrink:0}
+.req-when{font-family:var(--mono);font-size:11px;color:var(--text-faint);flex-shrink:0}
+.reqgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;margin:14px 0 4px}
+.reqf{display:flex;flex-direction:column;gap:2px;padding:2px 0;border-top:1px solid var(--hairline)}
+.reqf-l{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.reqf-v{font-size:15px;color:var(--text);line-height:1.35}
+.reqgrid .reqf:last-child{grid-column:1 / -1}
+.req-acts{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.svgico{display:inline-flex;flex-shrink:0}.svgico svg{width:100%;height:100%;display:block}
+/* Access · human scope pills + rep state dots */
+.canrow{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 2px}
+.canpill{font-size:12.5px;font-weight:600;color:var(--text);background:var(--surface-3);
+  border:1px solid var(--border);border-radius:999px;padding:5px 11px}
+.rep-state{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);flex-shrink:0}
+.rep-state .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.rep-state.active .dot{background:var(--accent);box-shadow:0 0 8px rgba(200,240,77,.5)}
+.rep-state.pending .dot{background:var(--text-faint)}
+.rep-state.ended .dot{background:var(--text-faint);opacity:.6}
+/* Access grant modal · human toggles */
+.grantscope{display:flex;flex-direction:column;gap:9px;margin:12px 0}
+.scoptoggle{display:flex;align-items:flex-start;gap:11px;border:1px solid var(--border);background:var(--surface-1);
+  border-radius:12px;padding:11px 13px;cursor:pointer;text-align:left;width:100%}
+.scoptoggle:hover{border-color:var(--border-strong)}
+.scoptoggle.on{border-color:rgba(200,240,77,.55);background:rgba(200,240,77,.06)}
+.scoptoggle .sbox{width:22px;height:22px;border-radius:7px;border:1px solid var(--border-strong);flex-shrink:0;display:grid;place-items:center;
+  font-size:13px;color:var(--on-accent);background:transparent;margin-top:1px}
+.scoptoggle.on .sbox{background:var(--accent);border-color:transparent}
+.scoptoggle .sbox i{opacity:0}
+.scoptoggle.on .sbox i{opacity:1}
+.scoptoggle .st-t{display:block;font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
+.scoptoggle .st-x{display:block;font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.4}
+@media(max-width:640px){ .reqgrid{grid-template-columns:1fr} .req-acts .btn-primary,.req-acts .btn-secondary{flex:1;min-height:44px} }
+
 /* ═══ ONBOARDING — basics → finding → confirm ═══ */
 .ob{max-width:440px;width:100%;padding:24px 26px 22px;background:linear-gradient(180deg,var(--surface-2),var(--surface-1));
   border:1px solid var(--border);box-shadow:var(--shadow-card),var(--edge-top);border-radius:22px;
@@ -1046,9 +1187,25 @@ function defaults(){
       evStage:'pick', evLink:'https://instagram.com/noyavolk', justLit:null,
       radarFilter:'all',
       activeScene:'techno', sceneOpen:false,   // U27 scene lens (reading emphasis only, no data change)
-      ppView:'booker', gapsOpen:false,  // U22 passport buyer-face + collapsible private gaps
+      ppView:'booker', viewOpen:false, gapsOpen:false,  // U22 passport buyer-face + collapsible private gaps (U34: header dropdown switcher)
       discovered:false,                 // the onboarding scan has landed findings on the radar
       confirmed:{}, dismissed:{},        // per-source-item: confirmed by the artist / marked "not me"
+      orbit:null,                        // radar orbit-widget: null=universe · {planet,logo} = focused
+      requests:[
+        { id:'r1', company:'Levi Events', venue:'The Block', contact:'Dana Levi',
+          date:'14 Sep 2026', place:'Tel Aviv · The Block', audience:'300–800',
+          budget:'₪8,000–20,000', setLength:'~90 min · closing set', note:'Doors till late — want the peak-hour energy.',
+          unread:true, when:'Just now' },
+        { id:'r2', company:'Barby Club', venue:'', contact:'',
+          date:'February 2026', place:'Center region · club night', audience:'400–700',
+          budget:'', setLength:'', note:'', unread:false, when:'6h ago' },
+      ],
+      reps:[
+        { id:'a1', name:'Yael Ben-Ami', org:'Kol-Sound', status:'active',
+          can:['see','reply'], since:'Since May 2026' },
+        { id:'a2', name:'Ronen K.', org:'Kol-Sound', status:'pending',
+          can:['see'], invited:'Invited 2d ago' },
+      ],
     },
     buyer:{ persona:'booking', sent:false },
     confirmer:{ done:false },
@@ -1070,7 +1227,7 @@ window.charCount=function(id,max){const el=document.getElementById('edit_'+id);c
 
 const URLS={
   'artist/radar':'/artist/home','artist/passport':'/artist/passport','artist/evidence':'/evidence/noya-volk',
-  'artist/requests':'/artist/requests','artist/account':'/artist/home · Identity',
+  'artist/requests':'/artist/requests','artist/account':'/artist/home · Identity','artist/access':'/artist/who-can-act',
   'representation/roster':'/rep/roster','representation/reqs':'/rep/requests','representation/radar':'/rep/radar','representation/team':'/rep/team',
   'production/events':'/prod/events','production/reqs':'/prod/requests','production/workspace':'/prod/workspace',
   'buyer/passport':'/passport/sable','buyer/request':'/passport/sable/request',
@@ -1105,8 +1262,12 @@ function buildAcctMenu(){
     '<div class="acct-head">'+headAv+
     '<span style="min-width:0"><b>'+esc(a.name)+'</b><small>'+esc(a.role)+'</small>'+
     '<small class="ws-cur">'+esc(e.label)+' workspace</small></span></div>';
+  const accessItem = (S.entity==='artist')
+    ? '<button class="acct-item" data-action="openAccess" role="menuitem" tabindex="-1">'+I.team+'<span>Who can act for you</span></button>'
+    : '';
   const actions = isApp
-    ? '<button class="acct-item" data-action="acctProfile" role="menuitem" tabindex="-1">'+I.account+'<span>Edit profile</span></button>'+
+    ? accessItem+
+      '<button class="acct-item" data-action="acctProfile" role="menuitem" tabindex="-1">'+I.account+'<span>Edit profile</span></button>'+
       '<button class="acct-item" data-action="acctSettings" role="menuitem" tabindex="-1">'+I.gear+'<span>Account settings</span></button>'+
       '<button class="acct-item" data-action="doRestart" role="menuitem" tabindex="-1">'+I.restart+'<span>Restart demo</span></button>'+
       '<button class="acct-item danger" data-action="signOut" role="menuitem" tabindex="-1">'+I.signout+'<span>Sign out</span></button>'
@@ -1163,7 +1324,7 @@ function renderShell(){
       '<button class="bn '+(n.id===S.screen?'active':'')+'" data-nav="'+n.id+'">'+I[n.icon]+'<span>'+n.label+'</span>'+(n.badge?'<span class="badge-n">'+n.badge+'</span>':'')+'</button>'
     ).join('');
   } else { botnav.classList.remove('on'); botnav.innerHTML=''; }
-  screenEl.className='screen'+(e.mode==='public'?' paper':'')+((S.entity==='artist'&&S.screen==='radar')?' radar-mode':'')+((S.entity==='artist'&&S.screen==='passport')?' passport-mode':'');
+  screenEl.className='screen'+(e.mode==='public'?' paper':'')+((S.entity==='artist'&&S.screen==='radar')?' radar-mode':'')+((S.entity==='artist'&&S.screen==='passport')?' passport-mode':'')+((S.entity==='artist'&&(S.screen==='requests'||S.screen==='access'))?' reqs-mode':'');
   const fn=SCREENS[S.entity+'/'+S.screen];
   // Owner rule U29: no decorative hero/atmosphere images in the app — images only where they are genuine entity content (artist photo, platform logos). Atmos band removed app-wide.
   const showAtm = false;
@@ -1175,7 +1336,7 @@ function renderShell(){
   requestAnimationFrame(()=>{
     const jf=document.getElementById('jfill'); if(jf) jf.style.width=jf.dataset.w+'%';
     const jc=document.getElementById('jcount'); if(jc) countUp(jc,+jc.dataset.to);
-    if(S.entity==='artist'&&S.screen==='radar'){ setupParallax(); if(S.artist.justLit){ setTimeout(()=>{S.artist.justLit=null;},1000); } }
+    if(S.entity==='artist'&&S.screen==='radar'){ setupParallax(); if(S.artist.orbit){ renderOrbit(); } if(S.artist.justLit){ setTimeout(()=>{S.artist.justLit=null;},1000); } }
   });
 }
 /* count-up animation */
@@ -1184,6 +1345,7 @@ function countUp(el,to){ let v=0; const step=Math.max(1,Math.ceil(to/14));
 
 /* ═══ CELEBRATION helpers ═══ */
 function confettiBurst(n){
+  try{ if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return; }catch(e){}
   const layer=document.createElement('div'); layer.className='confetti-layer'; win.appendChild(layer);
   const cols=['#C8F04D','#DDE3D9','#46DCC2','#AEDA36','#F3F0E8'];
   for(let i=0;i<(n||70);i++){ const c=document.createElement('i'); c.className='confetti';
@@ -1193,7 +1355,8 @@ function confettiBurst(n){
     c.style.opacity=.9; layer.appendChild(c); }
   setTimeout(()=>layer.remove(),3600);
 }
-function bloomAt(x,y){ const b=document.createElement('div'); b.className='bloom';
+function bloomAt(x,y){ try{ if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return; }catch(e){}
+  const b=document.createElement('div'); b.className='bloom';
   b.style.left=x+'px'; b.style.top=y+'px'; win.appendChild(b); setTimeout(()=>b.remove(),950); }
 function achievement(title,sub,icon){
   const old=document.getElementById('achieve'); if(old) old.remove();
@@ -1473,8 +1636,8 @@ reg('artist/radar',()=>{
     '</div>'+
     /* [B] LENS RAIL */
     '<div class="lensrail">'+rf('all','All')+rf('needs','Needs you')+rf('ready','Ready')+'</div>'+
-    /* [C] UNIVERSE */
-    '<div class="radar-stage">'+
+    /* [C] UNIVERSE — dark-island keeps the star-map dark under the global light flip */
+    '<div class="radar-stage dark-island">'+
       '<div class="uni" id="uni"><div class="starfield"></div><div class="sweep"></div><span class="sonar"></span><span class="sonar s2"></span><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div>'+constellation()+
         '<div class="star"><div class="avatar">'+photoAvatar('50% 20%')+'</div><span class="name">'+esc(a.identity.stageName)+'</span>'+
           '<div class="gtag"><span class="chip na">'+esc(scene.label)+'</span></div></div>'+
@@ -1593,7 +1756,7 @@ reg('artist/passport',()=>{
   const standing = a.published
     ? '<span class="standing live"><span class="dot"></span><b>Live for buyers</b> · refreshed 12 May</span>'
     : '<span class="standing draft"><span class="dot"></span><b>Draft</b> — only you can see this<span class="pubn"><button class="btn-primary sm hint-pulse" data-action="publish">Publish Passport</button></span></span>';
-  const hero='<div class="pphero">'+
+  const hero='<div class="pphero dark-island">'+
     '<div class="ph" style="background-image:url('+IMG.goa+')"></div><div class="phveil"></div>'+
     '<span class="pp-seal">'+PP_SEAL_MK+'LOCK · Verified</span>'+
     '<div class="pic">'+photoAvatar('50% 18%')+'</div>'+
@@ -1601,8 +1764,13 @@ reg('artist/passport',()=>{
       '<div class="one">'+esc(a.identity.positioning)+'</div>'+
       '<div class="logos">'+srcMark('instagram',26)+srcMark('spotify',26)+srcMark('residentadvisor',26)+srcMark('eventer',26)+'</div>'+
     '</div></div>';
-  const faceRow='<div class="ppface-row">'+['booker','manager','production','private'].map(v=>
-    '<button class="ppface'+(V===v?' on':'')+'" data-action="ppView" data-v="'+v+'">'+PPFACE[v].seg+'</button>').join('')+'</div>';
+  // U34 — unified view-switcher: the SAME dropdown-chip the Radar uses for scenes, in the page header (not in-card tabs)
+  const viewMenu=a.viewOpen?('<div class="scene-menu">'+
+      '<div class="lab">Show this Passport as</div>'+
+      ['booker','manager','production','private'].map(v=>'<button data-action="pickView" data-v="'+v+'" class="'+(V===v?'on':'')+'"><span class="rd"></span>'+PPFACE[v].seg+'</button>').join('')+
+      '<div class="note">Each buyer weighs different proof first.</div>'+
+    '</div>'):'';
+  const viewChip='<div class="scene-chip" data-action="toggleView"><span class="sdot"></span>Viewing as: '+esc(F.seg)+' <span class="cv">&#9662;</span>'+viewMenu+'</div>';
   const lead = F.leadReady
     ? '<div class="evcardp lead"><span class="lg">'+srcMark('rider',36)+'</span><div class="cbody"><div class="cl">Ready on the night</div><div class="cx">Everything production checks before the doors open.</div><div class="ppready">'+PP_READY+'</div></div></div>'
     : ppCardHTML(F.lead,true);
@@ -1611,33 +1779,51 @@ reg('artist/passport',()=>{
   const gaps='<div class="gapsbar"><div class="gt" data-action="toggleGaps"><span>＋ 1 private item to add · only you</span><span>'+(a.gapsOpen?'&#9652;':'&#9662;')+'</span></div>'+
     (a.gapsOpen?'<div class="gx">Ticket / settlement export — the strongest proof of draw, one file. Gaps never appear on a buyer\'s Passport — adding one builds strength, it never removes a penalty. <button class="btn-ghost sm" data-action="goEvidence" style="margin-top:7px">Add it</button></div>':'')+
   '</div>';
-  const firewall='<div class="fwstripd"><span>No score</span><span>No ranking</span><span>No prediction</span><span>No guarantee</span><span>Bands · Binaries · Method labels</span></div>';
+  // U33 — firewall is ENFORCED BY DESIGN (no score/rank component exists), never NARRATED on screen. Strip removed.
   return '<div class="pagehead"><div><h1>Passport</h1>'+
-      '<p class="pp-purpose">This is the proof a booking manager reads before they put their name on your night — your real strengths, in each buyer\'s language, never a demo reel.</p></div></div>'+
+      '<p class="pp-purpose">This is the proof a booking manager reads before they put their name on your night — your real strengths, in each buyer\'s language, never a demo reel.</p></div>'+viewChip+'</div>'+
     '<div class="ppwrap">'+
-      standing + hero + faceRow +
+      standing + hero +
       '<p class="cares"><span class="cares-q">'+F.care+'</span></p>'+
       '<div class="public-frame">This is your public Passport — <b>exactly what '+F.noun+' sees.</b> Nothing here reveals a gap.</div>'+
       '<div class="pp-eyebrow" style="margin-top:10px">'+F.eye+'</div>'+
       '<div class="evledger">'+lead+support+'</div>'+
-      readyRow + gaps + firewall +
+      readyRow + gaps +
     '</div>';
 });
 
 reg('artist/requests',()=>{
-  return '<div class="pagehead"><h1>Requests</h1></div>'+
-  '<p class="subtle">Availability requests from booking managers who read your Passport.</p>'+
-  '<div style="max-width:640px;display:flex;flex-direction:column;gap:12px">'+
-    '<div class="card" style="border-color:rgba(200,240,77,.4)">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Levi Events · Dana Levi</b><span class="chip lime">New</span></div>'+
-      '<p class="hint" style="margin:8px 0 12px">Tel Aviv · The Block · 14/09/2026 · audience band 300–800 · budget ₪8,000–20,000. "Closing set, ~90 min."</p>'+
-      '<div style="display:flex;gap:9px"><button class="btn-primary sm" data-action="reqReply">Reply with availability</button><button class="btn-ghost sm" data-action="reqAsk">Ask a question</button></div></div>'+
-    '<div class="card">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Barby Club · Feb date</b><span class="chip na">6h ago</span></div>'+
-      '<p class="hint" style="margin:8px 0 12px">Center region · club night · audience band 400–700. Waiting on you.</p>'+
-      '<div style="display:flex;gap:9px"><button class="btn-primary sm" data-action="reqReply">Reply with availability</button></div></div>'+
-  '</div>';
+  const rs=S.artist.requests, n=rs.filter(r=>r.unread).length;
+  return '<div class="pagehead"><div><h1>Requests</h1>'+
+      '<p class="subtle">Booking managers who read your Passport and want to check a date.'+
+        (n?' <b>'+n+' new.</b>':'')+'</p></div></div>'+
+    '<div class="reqlist">'+ (rs.length? rs.map(reqCard).join('')
+      : '<div class="card"><p class="hint" style="margin:0">No requests yet. When a booking manager checks your date, it lands here.</p></div>')+'</div>';
 });
+function reqField(label,val){
+  const has=val && String(val).trim().length;
+  return '<div class="reqf'+(has?'':' empty')+'">'+
+    '<span class="reqf-l">'+label+'</span>'+
+    '<span class="reqf-v">'+(has?esc(val):'Not specified yet')+'</span></div>';
+}
+function reqCard(r){
+  const contact = r.contact ? '<div class="req-contact">'+esc(r.contact)+'</div>'
+                            : '<div class="req-contact empty">Contact not shared yet</div>';
+  return '<article class="reqcard'+(r.unread?' unread':'')+'" data-req="'+r.id+'">'+
+    '<header class="req-top">'+
+      '<div><div class="req-co">'+esc(r.company)+(r.venue?' <span class="req-venue">· '+esc(r.venue)+'</span>':'')+'</div>'+contact+'</div>'+
+      (r.unread?'<span class="req-new">New</span>':'<span class="req-when">'+esc(r.when)+'</span>')+
+    '</header>'+
+    '<div class="reqgrid">'+
+      reqField('Date',r.date)+ reqField('Place',r.place)+
+      reqField('Audience',r.audience)+ reqField('Budget',r.budget)+
+      reqField('Set length',r.setLength)+ reqField('Note',r.note)+
+    '</div>'+
+    '<footer class="req-acts">'+
+      '<button class="btn-primary sm" data-action="reqReply" data-req="'+r.id+'">Reply with availability</button>'+
+      '<button class="btn-secondary sm" data-action="reqAsk" data-req="'+r.id+'">Ask a question</button>'+
+    '</footer></article>';
+}
 reg('artist/account',()=>{
   const a=S.artist;
   return '<div class="pagehead"><div><div class="eyebrow" style="color:var(--accent)">&#9670; Identity &amp; Story · Act</div><h1 style="margin-top:3px">Your Act &amp; identity</h1></div>'+
@@ -1649,7 +1835,11 @@ reg('artist/account',()=>{
     idRow('positioning','One-line positioning',a.identity.positioning,false,120)+
     idRow('genre','Genre',a.identity.genre,false)+
   '</div>'+
-  '<p class="hint" style="margin-top:14px">Your genre also lights the planets that matter most in your world. Draw fields save as bands only.</p>';
+  '<p class="hint" style="margin-top:14px">Your genre also lights the planets that matter most in your world. Draw fields save as bands only.</p>'+
+  '<div class="card" style="max-width:560px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">'+
+    '<div style="min-width:0"><div class="section-title"><span class="svgico" style="width:18px;height:18px;color:var(--accent)">'+I.team+'</span>Who can act for you</div>'+
+      '<p class="hint" style="margin:5px 0 0">Let a manager you trust help with date requests — you decide what they can do, and you can end it anytime.</p></div>'+
+    '<button class="btn-secondary sm" data-action="openAccess">Manage access</button></div>';
 });
 function idRow(id,label,val,serif,max){
   const a=S.artist; const editing=a.editing===id; const saved=a.saved[id];
@@ -1666,6 +1856,34 @@ function idRow(id,label,val,serif,max){
     '<div class="valdisplay" style="'+(serif?'font-weight:600;font-family:var(--serif);font-size:18px':'')+'">'+esc(val)+'</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">'+pubChip+
       '<button class="btn-ghost sm" data-action="editField" data-field="'+id+'">Edit</button></div></div>';
+}
+
+/* ═══ ARTIST → MANAGER ACCESS (U31) · consent-based, revocable, never ownership ═══ */
+const SCOPE_LABEL={see:'See my Passport',reply:'Reply to date requests for me',manage:'Help keep my Passport up to date'};
+reg('artist/access',()=>{
+  const reps=S.artist.reps;
+  return '<div class="pagehead"><div><h1>Who can act for you</h1>'+
+      '<p class="subtle">People you\'ve allowed to help with bookings. This never hands over your account — you decide what they can do, and you can end it anytime.</p></div>'+
+      '<button class="btn-primary sm" data-action="accessInvite">Invite someone</button></div>'+
+    '<div class="reqlist">'+ (reps.length? reps.map(repCard).join('')
+      : '<div class="card"><p class="hint" style="margin:0">No one has access yet. Invite a manager you trust to help handle date requests.</p></div>')+'</div>';
+});
+function repCard(m){
+  const can=m.can.map(c=>SCOPE_LABEL[c]).filter(Boolean).map(t=>'<span class="canpill">'+t+'</span>').join('');
+  const state = m.status==='active' ? '<span class="rep-state active"><span class="dot"></span>Active · '+esc(m.since||'')+'</span>'
+              : m.status==='pending' ? '<span class="rep-state pending"><span class="dot"></span>Invited — waiting for them to accept</span>'
+              : '<span class="rep-state ended"><span class="dot"></span>Access ended</span>';
+  const acts = m.status==='ended'
+    ? '<span class="req-when">No longer has access</span>'
+    : (m.status==='pending'
+        ? '<button class="btn-secondary sm" data-action="accessResend" data-rep="'+m.id+'">Resend invite</button>'
+        : '<button class="btn-secondary sm" data-action="accessEdit" data-rep="'+m.id+'">Change what they can do</button>')+
+      (m.status==='ended'?'':'<button class="btn-ghost sm" data-action="accessRevoke" data-rep="'+m.id+'">End access</button>');
+  return '<article class="reqcard" data-rep="'+m.id+'">'+
+    '<header class="req-top"><div><div class="req-co">'+esc(m.name)+'</div>'+
+      '<div class="req-contact">'+esc(m.org||'')+'</div></div>'+state+'</header>'+
+    '<div class="canrow">'+can+'</div>'+
+    '<footer class="req-acts">'+acts+'</footer></article>';
 }
 
 /* ═══════════════════════  BUYER  ═══════════════════════ */
@@ -1851,11 +2069,15 @@ const ACTIONS={
   pickFilter(el){ S.artist.radarFilter=el.dataset.f; renderShell(); },
   pickScene(el){ S.artist.activeScene=el.dataset.s; S.artist.sceneOpen=false; renderShell(); },
   toggleScene(){ S.artist.sceneOpen=!S.artist.sceneOpen; renderShell(); },
+  pickView(el){ S.artist.ppView=el.dataset.v; S.artist.viewOpen=false; renderShell(); },
+  toggleView(){ S.artist.viewOpen=!S.artist.viewOpen; renderShell(); },
   /* U16: advance IN PLACE — open the target planet's drill-in sheet, never nav
      away, except the terminal publish hand-off (Passport is a different surface). */
-  nextStep(){ const n=nextBestStep(); if(n.mode==='publish'){ closePsheet(); nav('artist','passport'); return; } if(n.planetId){ openPlanetSheet(n.planetId); } },
-  openPlanet(el){ openPlanetSheet(el.dataset.planet); },
-  openLive(){ openPlanetSheet('live'); },
+  nextStep(){ const n=nextBestStep(); if(n.mode==='publish'){ S.artist.orbit=null; nav('artist','passport'); return; } if(n.planetId){ focusPlanet(n.planetId); } },
+  openPlanet(el){ focusPlanet(el.dataset.planet); },
+  openLive(){ focusPlanet('live'); },
+  focusLogo(el){ if(!S.artist.orbit) return; S.artist.orbit.logo=el.dataset.id; renderShell(); },
+  exitOrbit(){ S.artist.orbit=null; renderShell(); },
   closePsheet(){ closePsheet(); },
   /* DISCOVER→CONFIRM · one tap confirms a found source item; the planet lights,
      the journey advances, and a small celebration mints the moment. */
@@ -1865,14 +2087,10 @@ const ACTIONS={
     const wasLive=S.artist.liveLit;
     S.artist.confirmed[id]=true;
     if(id==='lv-ig'){ S.artist.liveLit=true; S.artist.justLit='live'; }
-    renderShell();
-    openPlanetSheet(planet,id);
-    // bloom over the sheet head + a small achievement banner
-    requestAnimationFrame(()=>{
-      const pi=document.querySelector('#psheet .psheet-head .pi');
-      if(pi){ const r=pi.getBoundingClientRect(), w=win.getBoundingClientRect();
-        bloomAt(r.left-w.left+r.width/2, r.top-w.top+r.height/2); }
-    });
+    // stay in the orbit; collapse the card; light the just-confirmed logo IN PLACE
+    if(S.artist.orbit && S.artist.orbit.planet===planet){ S.artist.orbit.logo=null; }
+    S.artist.justLockLogo=id;
+    renderShell();  // renderOrbit re-runs, applies .justlock + bloomAt at the logo center
     const meta=planetMeta()[planet]||{found:0,conf:0};
     const nm=(PLANET_INFO[planet].name||'').replace('&amp;','&');
     if(id==='lv-ig'&&!wasLive){
@@ -1885,10 +2103,12 @@ const ACTIONS={
   },
   dismissItem(el){
     const id=el.dataset.id, planet=el.dataset.planet;
-    S.artist.dismissed[id]=true; renderShell(); openPlanetSheet(planet);
+    S.artist.dismissed[id]=true;
+    if(S.artist.orbit && S.artist.orbit.planet===planet){ S.artist.orbit.logo=null; }
+    renderShell();
     toast('Marked "not you" — it won\'t show on your Passport');
   },
-  addSource(el){ closePsheet(); S.artist.evStage='pick'; nav('artist','evidence'); },
+  addSource(){ S.artist.orbit=null; closePsheet(); S.artist.evStage='pick'; nav('artist','evidence'); },
   analyze(){ const inp=document.getElementById('evLink'); if(inp) S.artist.evLink=inp.value;
     S.artist.evStage='processing'; renderShell(); setTimeout(()=>{ S.artist.evStage='result'; renderShell(); },1500); },
   addToRadar(){ S.artist.evStage='added'; S.artist.liveLit=true; S.artist.justLit='live'; renderShell();
@@ -1896,8 +2116,30 @@ const ACTIONS={
   publish(){ openPublishModal(); },
   copyShare(){ copy('lock.show/passport/noya-volk?s=1'); S.artist.shared=true; renderShell();
     confettiBurst(45); toast('Share link copied — send it to one booking manager'); },
-  reqReply(){ toast('Availability reply drafted — the buyer will be notified'); },
-  reqAsk(){ toast('Question sent to the booking manager'); },
+  reqReply(el){ const r=S.artist.requests.find(x=>x.id===el.dataset.req); if(r)r.unread=false; renderShell();
+    toast('Availability reply drafted — the manager will be notified'); },
+  reqAsk(el){ const r=S.artist.requests.find(x=>x.id===el.dataset.req); if(r)r.unread=false; renderShell();
+    toast('Question sent to the booking manager'); },
+  /* ── Artist → manager access (U31) ── */
+  openAccess(){ closeMenus(); nav('artist','access'); },
+  accessInvite(){ openAccessGrant(null); },
+  accessEdit(el){ openAccessGrant(el.dataset.rep); },
+  accessResend(){ toast('Invite re-sent — you\'ll see them here once they accept.'); },
+  accessRevoke(el){ const m=S.artist.reps.find(x=>x.id===el.dataset.rep); if(m)m.status='ended'; renderShell();
+    toast('Access ended — they can no longer act for you.'); },
+  grantToggle(el){ const c=el.dataset.scope; if(!GRANT) return;
+    if(GRANT.can.includes(c)) GRANT.can=GRANT.can.filter(x=>x!==c); else GRANT.can.push(c);
+    if(!GRANT.can.length) GRANT.can=['see']; renderGrantModal(); },
+  grantCopyLink(){ copy('lock.show/act-for/noya-volk?i=INV-'+Math.random().toString(36).slice(2,8));
+    toast('Invite link copied — send it to a manager you trust.'); },
+  grantSend(){
+    if(!GRANT) return;
+    const nameEl=document.getElementById('grantName'); const nm=(nameEl&&nameEl.value.trim())||'Invited manager';
+    if(GRANT.edit){ const m=S.artist.reps.find(x=>x.id===GRANT.edit); if(m){ m.can=[...GRANT.can]; } closeModal(); GRANT=null; renderShell();
+      toast('Updated — what they can do is saved.'); return; }
+    S.artist.reps.push({ id:'a'+(Date.now()%100000), name:nm, org:'Invited', status:'pending', can:[...GRANT.can], invited:'Invited just now' });
+    closeModal(); GRANT=null; renderShell();
+    toast('Invite sent — you\'ll see them here once they accept.'); },
   editField(el){ S.artist.editing=el.dataset.field; renderShell(); const f=document.getElementById('edit_'+S.artist.editing); if(f){f.focus();} },
   cancelEdit(){ S.artist.editing=null; renderShell(); },
   saveEdit(el){ const id=el.dataset.field; const f=document.getElementById('edit_'+id);
@@ -1997,6 +2239,127 @@ function openPlanetSheet(id,justId){
   ov.addEventListener('click',e=>{ if(e.target===ov) closePsheet(); });
   win.appendChild(ov);
 }
+
+/* ═══ RADAR ORBIT WIDGET — in-place drill-in (replaces .psheet on artist radar) ═══ */
+function focusPlanet(id){ S.artist.orbit={planet:id,logo:null}; renderShell(); }
+function reducedMotion(){ try{ return window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){ return false; } }
+/* one compact inline card — same evidence content the retired .psheet showed */
+function orbitCard(it,planet){
+  const tile='<span class="oc-lg">'+srcMark(it.key,34)+'</span>';
+  if(it.status==='confirmed'){
+    return '<div class="orbit-card" data-oc="1">'+
+      '<div class="oc-head">'+tile+
+        '<div style="flex:1;min-width:0"><div class="oc-eyebrow confirmed">&#10003; '+esc(it.method||'Confirmed')+'</div></div>'+
+        '<span class="oc-status confirmed">Confirmed</span></div>'+
+      '<div class="oc-item">'+it.item+'</div>'+
+      '<div class="oc-done">&#10003; Confirmed by you — now a verified strength on your Passport'+(it.ref?' · '+esc(it.ref):'')+'</div>'+
+    '</div>';
+  }
+  if(it.status==='empty'){
+    return '<div class="orbit-card" data-oc="1">'+
+      '<div class="oc-head">'+tile+
+        '<div style="flex:1;min-width:0"><div class="oc-eyebrow">'+platName(it.key)+' · no info yet</div></div></div>'+
+      '<div class="oc-item">'+it.item+'</div>'+
+      '<button class="oc-add" data-action="addSource" data-id="'+it.id+'" data-planet="'+planet+'">+ '+esc(it.add||'Add this')+'</button>'+
+    '</div>';
+  }
+  /* found */
+  return '<div class="orbit-card" data-oc="1">'+
+    '<div class="oc-head">'+tile+
+      '<div style="flex:1;min-width:0"><div class="oc-eyebrow"><span class="spark">&#9679;</span> Found on '+platName(it.key)+'</div></div>'+
+      '<span class="oc-status found">Found</span></div>'+
+    '<div class="oc-item">'+it.item+'</div>'+
+    (it.proves?'<div class="oc-proves">'+it.proves+'</div>':'')+
+    '<div class="oc-mrow"><span class="method source">'+esc(it.method)+'</span>'+(it.ref?'<span class="oc-ref">'+esc(it.ref)+'</span>':'')+'</div>'+
+    '<div class="oc-acts"><button class="oc-confirm" data-action="confirmItem" data-id="'+it.id+'" data-planet="'+planet+'">&#10003; '+esc(it.cta||'Yes — this is me')+'</button>'+
+    '<button class="oc-notme" data-action="dismissItem" data-id="'+it.id+'" data-planet="'+planet+'">Not me</button></div>'+
+  '</div>';
+}
+/* build the focus layer INSIDE #uni (measured geometry; nothing scrolls) */
+function renderOrbit(){
+  const o=S.artist.orbit; if(!o) return;
+  const uni=$('#uni'); if(!uni) return;
+  const id=o.planet, info=PLANET_INFO[id]; if(!info) return;
+  uni.classList.add('focused');
+  // clear any prior orbit layer
+  uni.querySelectorAll('.orbit-scrim,.orbit-layer').forEach(el=>el.remove());
+  const U=uni.getBoundingClientRect().width||480;
+  const RM=reducedMotion();
+  const isMob=(function(){ try{ return window.matchMedia('(max-width:700px)').matches; }catch(e){ return U<520; } })();
+  const Fx=50, Fy=isMob?34:40;                          // percent of U
+  const hubCx=U*Fx/100, hubCy=U*Fy/100;                 // px
+  const clamp=(v,a,b)=>Math.max(a,Math.min(v,b));
+  const Rpx = isMob ? clamp(0.22*U,62,78) : clamp(0.19*U,88,116);
+  const GAP = isMob?150:76, span=360-GAP, start = 270 + GAP/2;
+
+  // scrim (tap = exit)
+  const scrim=document.createElement('div'); scrim.className='orbit-scrim'; scrim.dataset.action='exitOrbit'; uni.appendChild(scrim);
+  const layer=document.createElement('div'); layer.className='orbit-layer';
+
+  const pm=planetModel(); const pmodel=pm.find(p=>p.id===id)||{state:'needs'};
+  const word=PSTATE_WORD[pmodel.state]||'';
+
+  // LOCKED kit before Live is backed → centered mini-card, no ring
+  if(id==='kit' && !S.artist.liveLit){
+    layer.innerHTML=
+      '<div class="orbit-hub" style="left:'+Fx+'%;top:'+Fy+'%" data-action="exitOrbit">'+
+        '<div class="pnode locked">'+I[info.icon]+'<span class="plock">&#128274;</span></div>'+
+        '<div class="ocap"><b>'+info.name.replace('&amp;','&')+'</b><span>Locked</span></div></div>'+
+      '<div class="orbit-locked"><div class="lk">&#128274;</div>'+
+        '<div class="olt">Unlocks once your Live Show is backed</div>'+
+        '<p>Confirm a live-draw finding first — then invoice, set length &amp; rider light up here.</p>'+
+        '<button class="btn-primary sm" data-action="openLive">Go confirm your draw &rarr;</button></div>';
+    uni.appendChild(layer); return;
+  }
+
+  const src=planetSources()[id]||[];
+  const N=src.length;
+  const logos=src.map((it,i)=>{
+    const a=(N===1)?90:(start+span*(i/(N-1)));
+    const rad=a*Math.PI/180;
+    const X=Rpx*Math.cos(rad), Y=-Rpx*Math.sin(rad);
+    const sel = o.logo===it.id;
+    const dim = o.logo && o.logo!==it.id;
+    const lock = S.artist.justLockLogo===it.id;
+    const canEmerge = !RM && !o.logo && !S.artist.justLockLogo;
+    const cls=['orbit-logo',it.status,(sel?'sel':''),(dim?'dimmed':''),(lock?'justlock':(canEmerge?'emerge':''))].filter(Boolean).join(' ');
+    const chk = it.status==='confirmed' ? '<span class="chk">&#10003;</span>' : '';
+    const delay = RM?'':(';animation-delay:'+(i*60)+'ms');
+    return '<button class="'+cls+'" data-action="focusLogo" data-id="'+it.id+'" data-planet="'+id+'" '+
+      'style="--to:translate('+X.toFixed(1)+'px,'+Y.toFixed(1)+'px)'+delay+'">'+
+      '<span class="orbit-logo-inner">'+srcMark(it.key,38)+chk+'</span></button>';
+  }).join('');
+  const ringCls='orbit-ring'+((!RM&&!o.logo)?' spin':'')+(o.logo?' paused':'');
+
+  layer.innerHTML=
+    '<div class="orbit-hub" style="left:'+Fx+'%;top:'+Fy+'%" data-action="exitOrbit" role="button" aria-label="Back to your universe">'+
+      '<div class="pnode '+{needs:'needs',lit:'lit',dev:'dev',locked:'locked'}[pmodel.state]+'">'+I[info.icon]+'</div>'+
+      '<div class="ocap"><b>'+info.name.replace('&amp;','&')+'</b><span>'+word+'</span></div></div>'+
+    '<div class="'+ringCls+'" style="left:'+Fx+'%;top:'+Fy+'%" role="dialog" aria-label="'+info.name.replace('&amp;','&')+' sources">'+logos+'</div>'+
+    (o.logo ? orbitCard(src.find(x=>x.id===o.logo)||src[0], id) : '');
+  uni.appendChild(layer);
+
+  // card bottom placement + tether (measured; guarded)
+  const card=layer.querySelector('.orbit-card');
+  if(card){
+    card.style.bottom=(isMob?12:16)+'px';
+    // tether from selected logo → card top
+    requestAnimationFrame(()=>{
+      const sd=layer.querySelector('.orbit-logo.sel'); if(!sd||!card) return;
+      const ur=uni.getBoundingClientRect(), lr=sd.getBoundingClientRect(), cr=card.getBoundingClientRect();
+      const x1=lr.left-ur.left+lr.width/2, y1=lr.top-ur.top+lr.height/2;
+      const x2=cr.left-ur.left+cr.width/2, y2=cr.top-ur.top;
+      const svg='<svg class="orbit-tether" viewBox="0 0 '+ur.width+' '+ur.height+'"><line x1="'+x1.toFixed(0)+'" y1="'+y1.toFixed(0)+'" x2="'+x2.toFixed(0)+'" y2="'+y2.toFixed(0)+'"/></svg>';
+      const holder=document.createElement('div'); holder.innerHTML=svg; const s=holder.firstChild; if(s) layer.insertBefore(s,card);
+    });
+  }
+  if(S.artist.justLockLogo){
+    const lk=layer.querySelector('.orbit-logo.justlock');
+    if(lk){ const ur=uni.getBoundingClientRect(), lr=lk.getBoundingClientRect(), w=win.getBoundingClientRect();
+      bloomAt(lr.left-w.left+lr.width/2, lr.top-w.top+lr.height/2); }
+    setTimeout(()=>{ S.artist.justLockLogo=null; },650);
+  }
+}
 /* gentle parallax — the universe tilts toward the pointer (desktop only) */
 function setupParallax(){
   const uni=$('#uni'); if(!uni) return;
@@ -2020,7 +2383,44 @@ function openPublishModal(){
     '<div class="actions"><button class="btn-primary" data-action="confirmPublish">Publish now</button><button class="btn-ghost" data-action="closeModal">Not yet</button></div></div>';
   win.appendChild(ov);
 }
-function closeModal(){ const o=$('#ov'); if(o) o.remove(); }
+function closeModal(){ const o=$('#ov'); if(o) o.remove(); GRANT=null; }
+/* ── Grant-access flow · invite → choose what they can do → pending row ── */
+let GRANT=null;
+function openAccessGrant(repId){
+  const m = repId ? S.artist.reps.find(x=>x.id===repId) : null;
+  GRANT={ edit: repId||null, can: m ? [...m.can] : ['see'], name: m ? m.name : '' };
+  const ov=document.createElement('div'); ov.className='overlay'; ov.id='ov';
+  win.appendChild(ov); renderGrantModal();
+  ov.addEventListener('click',e=>{ if(e.target===ov) closeModal(); });
+}
+function renderGrantModal(){
+  const ov=$('#ov'); if(!ov||!GRANT) return;
+  const editing=!!GRANT.edit;
+  const scope=(key)=>{
+    const on=GRANT.can.includes(key);
+    const sub={see:'They can open your Passport to see your verified strengths.',
+      reply:'They can reply to date requests on your behalf — you still see everything.',
+      manage:'They can help keep your Passport details current — never publish without you.'}[key];
+    return '<button class="scoptoggle'+(on?' on':'')+'" data-action="grantToggle" data-scope="'+key+'">'+
+      '<span class="sbox"><i>&#10003;</i></span>'+
+      '<span style="min-width:0"><span class="st-t">'+SCOPE_LABEL[key]+'</span><span class="st-x">'+sub+'</span></span></button>';
+  };
+  const idField = editing ? '' :
+    '<div class="ob-fieldset" style="margin-top:4px">'+
+      '<div><label class="label">Their name (optional)</label>'+
+        '<input class="field" id="grantName" value="'+esc(GRANT.name||'')+'" placeholder="e.g. Yael Ben-Ami"></div>'+
+      '<div style="display:flex;align-items:center;gap:9px"><button class="btn-secondary sm" data-action="grantCopyLink" type="button">Copy invite link</button>'+
+        '<span class="hint" style="margin:0">Send this to a manager you trust. They\'ll accept before anything is shared.</span></div>'+
+    '</div>';
+  ov.innerHTML='<div class="modal"><div class="role-line">&#9673; '+(editing?'Change access':'Invite someone to act for you')+'</div>'+
+    '<h2>'+(editing?'What can they do?':'Who can act for you')+'</h2>'+
+    '<p>'+(editing?'Adjust what this person can do. It never transfers ownership of your Passport.':'Invite a manager you trust to help with your bookings. You choose what they can do, and you can end it anytime.')+'</p>'+
+    idField+
+    '<div class="grantscope">'+scope('see')+scope('reply')+scope('manage')+'</div>'+
+    '<p class="hint">You can change or end this whenever you want. It never transfers ownership of your Passport.</p>'+
+    '<div class="actions"><button class="btn-primary" data-action="grantSend">'+(editing?'Save changes':'Send invite')+'</button>'+
+      '<button class="btn-ghost" data-action="closeModal">'+(editing?'Cancel':'Not now')+'</button></div></div>';
+}
 /* ═══════════ ONBOARDING · basics → finding → confirm ═══════════
    Warm first-run narrative. The artist gives only the basics; LOCK discovers
    the footprint and presents it to CONFIRM. Every string is written as
@@ -2134,6 +2534,7 @@ function openWelcome(){ openOnboarding(); }
 function nav(entity,screen){
   if(entity && entity!==S.entity){ S.entity=entity; S.screen=screen||ENTITIES[entity].def; }
   else if(screen){ S.screen=screen; }
+  if(S.artist && S.screen!=='radar'){ S.artist.orbit=null; }
   renderShell();
 }
 win.addEventListener('click',ev=>{
