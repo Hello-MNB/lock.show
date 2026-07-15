@@ -124,6 +124,17 @@ Scene emphasis ("buyers in your scene look here first") is a **ring + words only
 ### 2.8 Honesty firewall (built vs target)
 Never present TARGET architecture as BUILT. Per-evidence Anthropic claim extraction is BUILT; the multi-source deep scan + locale-aware auto-discovery is TARGET. Copy may show the *intended* discovery experience as vision, but method labels stay honest (found vs confirmed) and any "wider automatic scan" is disclosed as "in development."
 
+### 2.9 Rejected ideas (firewall-blocked — logged so they never creep back)
+External reviews keep proposing well-intentioned features that quietly re-introduce a score, a grade, or a judgment. They are recorded here as **REJECTED** with the safe alternative, so a future contributor doesn't re-add them:
+| Proposed | Why it's blocked | Safe alternative (if any) |
+|---|---|---|
+| **"Pre-Booking Scorecard" / "coverage % per planet vs genre norms"** (even "internal only") | a coverage % is a score; internal scores leak and normalise the framing | the existing genre-lens **ring + words** guidance (§2.7) — "buyers in your scene look here first," never a % |
+| **"Bookability Verified by LOCK" badge / embeddable widget** | asserts a *quality/bookability status* — the exact claim the firewall forbids ("talent ≠ bookability") | a **provenance** badge only: "Evidence on LOCK · method-verified" — never "bookability verified" |
+| **Rejection-reason feedback shown to the artist** ("buyers are rejecting you for X", counts of rejections) | a reaction returning to the artist as a count/judgment violates §2.5 **and** "gaps are invitations, not penalties" (§6.8) | at most **method-safe, aggregate, opt-in text** with no count and no per-buyer attribution — and only if it never reads as a verdict; default = do not build |
+| **JSON-LD / structured data with a `score`, `rank`, or `bookabilityScore` field** | machine-readable scores are still scores — worse, they're scrapable | structured data may emit **bands + binaries + method labels only** (§19.7), never a numeric grade |
+| **OG share card / dwell-time signal that shows a per-person number** | a shared card or analytics tile that renders a count/score about a person breaks the firewall on the most viral surface | OG card = name · genre · **draw band** · method label (no counts); dwell-time stays an **internal, aggregate** metric never surfaced per-person to the artist |
+**The rule behind all five:** a number about a *person* is never allowed on any surface (public, internal-shown, or machine-readable). Numbers about *product events* (funnel counts for the operator) are fine. When a reviewer's idea is exciting, check it against this line first.
+
 ---
 
 ## 3. Entity Model
@@ -248,6 +259,11 @@ Additional universal tags seen in glossary/marketing copy: TICKET EXPORT · PLAT
 
 ### 4.5 Voice law
 Professional restraint; evidence-grade; show-business warmth without hype. NO emoji in UI/legal copy. No exclamation-mark salesiness. "Check, don't trust." EN and HE each fully professional — **never mixed in one view** (LANGUAGE LAW). Firewall words only: "needs your touch" / "ready to support" / "private for now" / "can become public when you approve" — never score/rank/weak/missing.
+
+**Dual-tone register (same firewall, two audiences).** The voice bends by *who is reading*, never breaking restraint:
+- **To the artist — the Coach:** empowering, transparent, scene-native. "Let's build your proof." "See yourself the way serious bookers see you — and strengthen what matters." "You don't start from zero — we found your footprint; you decide what becomes proof."
+- **To the buyer — the Auditor:** clinical, risk-aware, authoritative. "Check the evidence." "Your real proof, in the buyer's language. No hype — facts they can check."
+- **Candidate taglines (owner picks one; all firewall-safe):** "Check, don't trust." · "Don't book a vibe — book a proof." · "Evidence over promises." *(Avoid any tagline that asserts a **quality** verdict — e.g. "bookability verified" — per §2.9.)* **OPEN (owner):** the canonical tagline.
 
 ---
 
@@ -766,6 +782,23 @@ AI cost is the biggest variable expense post-Gate (§16.B.10). The controls belo
 - **Firewall at volume** — none of the above may introduce a score/rank/cohort number; scale changes cost, never the firewall.
 
 _Honesty: the deep multi-source scan itself is TARGET (§16.B.10); these scale controls are the operational layer around it, equally unbuilt. Full high-volume engineering (sharding, replicas, DR) is reserved in §19.2._
+
+### 9.8 Smart-link parsing — instant value on paste (solves the cold-start)
+The cold-start risk (§16.B.14 R2): an artist pastes a link and the extraction finds little, and onboarding stalls. Fix — on paste, immediately surface **metadata** so a "found" node appears at once:
+- Instagram → handle + bio + recent captions (potential gig mentions); follower count **as a BAND only, never exact**.
+- Spotify → monthly-listeners **band** + top cities (touring-readiness hint).
+- YouTube/SoundCloud → title/description + upload cadence.
+**Firewall (non-negotiable):** every number surfaces as a **band**, never an exact figure, never a score; a metadata hit is a **`found` node the artist must confirm**, never an auto-verified claim. This is fast metadata, not the deep scan — labeled honestly ("found on your public Instagram — confirm it's you"). TARGET (not built); the honest wedge that makes onboarding feel alive without over-claiming.
+
+### 9.9 The four data doors (provenance model → method labels)
+Every piece of evidence enters through exactly one **door**, and the door determines the method label the buyer sees — this makes provenance explicit and is the anti-gaming backbone (§16.B.15):
+| Door | Example | Trust | Friction | Buyer-facing label |
+|---|---|---|---|---|
+| **1 · Consented API** | Spotify, SoundCloud (OAuth) | high | medium | "read via {platform} (your connected account)" |
+| **2 · Public footprint** | RA, Instagram (public, consent-gated scan §15.2) | medium | low | "found on your public {platform}" |
+| **3 · User upload** | ticket export, settlement sheet, contract PDF | high | high | "you provided this" |
+| **4 · Human vouch** | Source-Confirmer (venue/promoter) | highest | medium | "confirmed by {role}" — the golden standard |
+**Rule:** the UI names the door, not just "source-linked" — "confirmed by the venue" ≠ "found on public Instagram." Door 2 (public scraping) carries the highest legal load and only fires under the public-footprint consent scope (§15.2). Doors map 1:1 to the canon method labels (§4.4); no new label vocabulary. *(Door 1 OAuth ingestion + Door-3 mobile-camera capture are TARGET; Door 4 is BUILT; Door 2 is the consent-gated scan, partly TARGET.)*
 
 ---
 
@@ -2889,7 +2922,16 @@ _Principle (CLAUDE.md STAGE): monetisation is **measured, not required**; **no p
 
 **Pricing method:** willingness-to-pay is **measured at the Gate** (the real pay signal), not guessed a priori. Post-Gate, test monthly vs annual, trial length, and the Momentum/Roster boundary against real conversion.
 
-**OPEN (owner):** every price, the Momentum/Roster feature boundaries, annual vs monthly, trial length, and when to flip enforcement from display-only to real.
+**The freemium fence (build the architecture now; the price stays OPEN).** Even pre-Gate, *what sits behind the paywall* should be fixed so the gating code and the cost model line up — the **AI auto-scan is the margin-critical fence** (it carries the ~$1 target cost, §16.B.10, so it must sit on the paid side):
+| | Free (Passport) | Paid (Momentum) |
+|---|---|---|
+| Acts | 1 | unlimited |
+| Evidence | manual paste/upload | **+ AI auto-scan** (the cost feature) |
+| Source-Confirmations | a few (e.g. 3) | unlimited |
+| Staleness alerts · priority support | — | ✓ |
+**Profitability guardrail:** subscription revenue must exceed (AI + server cost) per paid artist; if auto-scan cost runs hot, gate it behind a **scan-credit** allowance rather than unlimited. Numbers OPEN; the *fence line* (manual = free, auto-scan = paid) is the architecture to build now.
+
+**OPEN (owner):** every price, the Momentum/Roster feature boundaries, the exact free confirmation/credit allowances, annual vs monthly, trial length, and when to flip enforcement from display-only to real.
 
 ### 16.B.13 Growth loops (the engine behind "Growth System")
 
@@ -2931,7 +2973,7 @@ _The riskiest-assumption-first list. Qualitative L/I (pre-data). Each risk carri
 
 **Anti-gaming — the design already resists it.** LOCK cannot be gamed for a *higher score* because **there is no score** (the firewall). What a bad actor could try is **fabricated evidence**. Defenses, built vs needed:
 - **BUILT:** the method-label hierarchy (confirmed > evidence > declared) means a self-declared claim is *labeled* self-declared — inflation is visible, not hidden; the **artist-approval gate** (every claim the artist approves); **rate limits + spend caps** (server); the **Source-Confirmer** as the external human trust anchor (a venue/promoter vouches).
-- **NEEDED (OWED):** detection of fabricated links / evidence (basic URL/asset validation); a **dispute / flag path** (a buyer or confirmer flags a claim → operator reviews in the ops console, which exists) → **formal takedown flow OPEN**; **impersonation** handling (someone building a Passport for an artist they're not) — identity verification is light today (**OPEN**; the confirmer + evidence provenance are the current mitigations).
+- **NEEDED (OWED):** detection of fabricated links / evidence (basic URL/asset validation); a **dispute / flag path** — a buyer or confirmer flags a claim → operator reviews in the ops console (which exists). **Concrete mechanic (adopted from review):** a flagged **method-labeled** claim can **auto-downgrade toward `self-declared`** pending review (e.g. ≥N independent flags on a "confirmed" claim reverts its label to declared until re-verified) — this defends the trust of the *labels* without deleting the artist's content, and stays firewall-safe (it changes provenance, never a score). **Formal takedown flow OPEN.** **Impersonation** handling (someone building a Passport for an artist they're not) — identity verification is light today (**OPEN**; the confirmer + evidence provenance are the current mitigations).
 
 **IP & content rights (needs counsel — ties to §15.1 L-placeholders).** Uploaded evidence (photos, links, media) requires: the artist **warrants they hold the rights**; LOCK stores + displays **on the artist's behalf** (a license to display, not ownership); **takedown on request**; **no resale** of artist data; clear handling of third-party evidence (a venue's photo). These are **ToS clauses to author with counsel** — currently absent from the drafts (a real gap, flagged).
 
@@ -3731,6 +3773,14 @@ Reserved: **partnership/channel play** (festivals, ticketing platforms, manageme
 
 ### 19.6 Canon-change & release process (maintainability as the team grows)
 How a spec/canon change is proposed → reviewed → merged: (1) a change is a **PR against `Hello-MNB/lock.show`** touching the spec + code together (lockstep, §0.2 rule 5); (2) the PR must pass the **`npm run verify` suite** (nav-contract · act-isolation · canon-drift · security-denial · **i18n-purity firewall lint** · registry · deltas · build) — the firewall check is mechanical, not a human judgment call; (3) a **design-critic pass** for any user-facing change (the no-Codex continuation model); (4) deploy via the **named release train** with the **SHA as rollback anchor** (`VERSIONS.md`, `DEPLOY-LOG.md`); (5) Q8 owner-walk before production (§13.7). This keeps canon changes safe and reviewable as the team scales. _(Reserved enhancement: a PR template that surfaces the firewall checklist inline.)_
+
+### 19.7 SEO / AEO / GEO & structured data (RESERVED — post-Gate; firewall-constrained)
+The public Passport is a distribution surface; search engines and AI agents should be able to read it — **within the firewall.** Reserved:
+- **SEO** — programmatic landing pages (e.g. "techno DJs in Tel Aviv"), sitemap, per-Passport meta; the Passport page is the landing page.
+- **OG / share preview (highest-leverage, ties §7.6)** — a **dynamic preview card** on `/passport/:id` so a WhatsApp/Telegram share unfurls richly. Card content: **name · genre · draw BAND · a method label** — **no counts, no score** (see §2.9). This is the single most valuable growth-adjacent build; OG meta is OWED.
+- **AEO / GEO (AI-search)** — when a promoter asks an LLM "find a reliable techno DJ in Berlin," the answer needs structured data. Emit **JSON-LD** on public Passports built on standard `MusicGroup`/`Event` types, exposing **only firewall-safe fields**: `name`, `genre`, `drawBand` (a band string, never an exact number), `readinessBinaries` (booleans), `verificationMethod` (a method label). **Explicitly forbidden:** any `score`, `rank`, `rating`, or `bookabilityScore` field (§2.9). Done right, LOCK becomes a **method-labeled evidence source** for booking research — a genuine moat — without ever shipping a machine-readable grade.
+
+**Firewall note:** this section is the highest-risk for firewall drift (machine-readable = easy to add a hidden number). The constraint is absolute: structured data carries bands + binaries + method labels, never a numeric grade about a person. **OPEN (owner):** whether to invest here pre- or post-scale (recommendation: OG card early — it powers Loop 1 virality; full JSON-LD post-Gate).
 
 ---
 
