@@ -366,6 +366,7 @@ These are flagged so they are not mistaken for settled; build with the A13 inter
 10. **The firewall is enforced by design, never narrated** (§2.2).
 11. **Value before effort** — the user sees value grow after every useful contribution (Input→benefit; Discovery→confirmation; Gap→opportunity; Private→protected).
 12. **Interactive under load** — every primary screen stays responsive as data grows. The Radar is the core experience and must not degrade: **target < 1.2s first-interaction on a mid-tier mobile device with ~200 evidence items across the six planets** (virtualise/aggregate beyond that; never render hundreds of live nodes). A "many-Acts / many-evidence" state is a design case, not an afterthought (see §19.4 high-volume Radar). This is a guardrail, not yet a measured result — flagged for a QA performance budget (§10).
+13. **One canvas per workspace — screen-count ceiling.** Each entity role has **at most ~3 primary screens** (an overview canvas · a deep-work surface · settings). Every secondary action happens **in place** — inspector, bottom sheet, inline-edit widget, side panel — **never a new full page**. Every process must have a **1-screen happy path**. This is the "widget-workspace" direction the prototype already sets (Radar-as-canvas, inline-edit §17.A.10, bottom sheets §17.A.2); §7.7 states the per-entity target. *(Target/direction — some consolidations are P2 refactors; validate each in the prototype before collapsing, never merge if it hides a distinct job.)*
 
 ---
 
@@ -410,6 +411,18 @@ The Passport is the growth engine (§16.B.13) — its links must be exact, share
 | Org invite | `/invite/:token` | accept flow |
 
 **Rules:** (a) all redirect targets are **surface-aware** (`BASE_URL` → `/` standalone vs `/app/` embed, §13.4) so a shared link never bounces to the wrong deployment; (b) a bad/expired link resolves to the **warm 404** (§17.B.10), never a silent redirect; (c) share links carry **no PII** in the URL; (d) **OWED:** OpenGraph/preview meta on `/passport/:id` (so a shared link unfurls richly in WhatsApp/Telegram) and true **universal/app links** are a post-embed enhancement.
+
+### 7.7 Screen-count discipline — the one-canvas-per-workspace target (law 13)
+The direction: **each workspace is one primary canvas**, with everything else folded into tabs / inspectors / sheets rather than separate routes. This is a **target** (some are P2 refactors); it is stated so the build converges instead of sprouting pages. Routes stay valid as deep-links even where the UI folds them into one canvas.
+
+| Entity | Today (routes) | Target canvas | Folds via |
+|---|---|---|---|
+| **Artist** | radar · passport · requests · access · account · act/edit · evidence | **Radar canvas** (+ a Settings surface) | Passport/Requests as tabs on the canvas; **act-edit + access + evidence** as inspector/inline-edit (§17.A.10) — the D1 editor already opens inline; Account/Access fold into Settings or the hub |
+| **Representation** | roster · reqs · radar · team | **Roster cockpit** | Requests/Team/Radar as tabs or a side panel; one action per artist card; a mini-Radar for the selected artist |
+| **Production** | events · reqs · workspace | **Events board** | Requests + workspace settings as a side panel; slot create/confirm as bottom sheets, never new pages |
+| **Buyer** | passport · request | **Public Passport** | the availability request as an in-page sheet + receipt |
+
+**Guardrails (so consolidation helps, not hurts):** never merge two genuinely distinct *jobs* onto one canvas just to cut a route; keep **one primary CTA at a time** (law 3) even inside a tabbed canvas; a tab is not a screen — the canvas keeps a single "what's next." The reviewer's ~67% route-reduction figure is an *estimate of direction*, not a target to hit blindly. **Priority:** Artist first (highest-traffic; D1/inline pieces already exist), then Representation/Production as their depth is built.
 
 ---
 
@@ -2847,9 +2860,14 @@ _Added 15 Jul (owner: "identify gaps — is GTM included?"). Pre-validation stag
 | 2 | **Scene communities** (Telegram/WhatsApp groups, genre scenes) | Israeli electronic/live scenes are tight, group-native | seed a few artists in one scene, watch referral |
 | 3 | **Direct outreach to booking managers / promoters** | the buyer whose reaction defines the Gate | warm intros first, then cold |
 | 4 | **Venue / promoter partnerships via the Source-Confirmer** | confirmers are real buyer-side contacts touching LOCK already | measure confirmer → curiosity → signup |
-| 5 | **Content / SEO** (marketing site) | long-tail "how to check an artist before booking" | already live; low priority pre-Gate |
+| 5 | **Ticketing-platform / festival partnerships** (e.g. Eventer, Tickchak, festival organisers) | buyer-side aggregators; a co-branded embedded Passport reaches many bookers at once | one pilot embed conversation post-Gate |
+| 6 | **Content / SEO** (marketing site) | long-tail "how to check an artist before booking" | already live; low priority pre-Gate |
 
-**OPEN (owner):** the beachhead ICP (ties to **B-1** — which buyer segment leads Gate 1), channel priority + any budget, launch timing, and whether to run the pilot in one scene or across several.
+**Concrete IL seeds (hypotheses, not commitments):** scene channels — Tel Aviv techno / Psytrance-IL / Afro-House communities (Telegram/WhatsApp, seed 2–3 artists each, never spam); venues as Source-Confirmers — the named venues already in the DS (Barby · The Block · Sunset, §5.9) are natural first confirmers, each a buyer-side exposure; ticketing — Eventer / Tickchak as post-Gate embed partners.
+
+**Illustrative phased funnel (targets are directional, all OPEN):** Phase 0 concierge — ~10 artists → ~5 published → ~10 shares → ~3 views → **1 reaction target**; Phase 1 — instrument willingness-to-pay → **1 payment = Gate**; Phase 2 — scale the artist-led loop + venue/ticketing partnerships. Numbers are placeholders to shape the funnel, **not forecasts**.
+
+**OPEN (owner):** the beachhead ICP (ties to **B-1** — which buyer segment leads Gate 1; reviewer's sharpened candidate = *Israeli electronic/club/festival bookers + mid-tier representation offices who book unfamiliar acts*), rough TAM, channel priority + any budget, launch timing, and whether to run the pilot in one scene or across several.
 
 ### 16.B.12 Monetization roadmap (post-Gate)
 
@@ -3681,6 +3699,23 @@ _Added 16 Jul from an external scaling review. **STAGE discipline (CLAUDE.md):**
 
 ### 19.1 International expansion framework (trigger: Gate proven in Israel)
 Israel is the beachhead; the model must not hard-code it. Reserved dimensions: **language** (locale-aware discovery already a directive, §9.2 — extend the string system beyond HE/EN), **sources** (per-market platform/venue taxonomies, §16.A), **currency + tax** (per-country billing entities), **legal** (per-jurisdiction privacy regimes beyond Amendment-13/GDPR), and **method-label locale** (labels must read natively). Cross-ref §1.3 (post-Gate international readiness), §16.B.16 Phase 4. **OPEN:** which market is second.
+
+#### 19.1.a Localization readiness matrix (reserved — add a language only when a beachhead ICP justifies the legal/content work)
+Discipline: **technical cost is low (strings + discovery queries); the real cost is content + legal per jurisdiction.** Cap at ~4–5 active languages through v1–v2. Order below is a *recommendation grounded in electronic/club/festival infrastructure* — not a commitment; each market needs its own Gate.
+
+| Language | Phase (post-IL-Gate) | Why (scene infra) | Key sources to add | Legal trigger | Priority |
+|---|---|---|---|---|---|
+| **Hebrew** | live | home market | RA, local venues, IL streaming | Amendment-13 (done) | ✅ core |
+| **English** | live | international default | RA, global platforms | GDPR (site) | ✅ core |
+| **Russian** | live-ish | large IL immigrant + pro buyer segment | — (shares IL sources) | covered by IL | ✅ present |
+| **German** | Phase 2 | Berlin/EU electronic capital | RA-DE, local venue registries | GDPR (DE specifics) | high |
+| **French** | Phase 2 | Paris/Lyon scene, festivals | RA-FR, local platforms | GDPR (FR) | high |
+| **Spanish** | Phase 3 | Spain + LatAm (Ibiza pull), high volume | per-country platforms; ES ≠ LatAm | GDPR (ES) + LatAm regimes | medium-high |
+| **Dutch** | Phase 3 | Amsterdam/ADE — small but elite | RA-NL | GDPR (NL) | medium |
+| **Portuguese** | Phase 3+ | Brazil (huge) + Lisbon; BR-PT ≠ EU-PT | per-country | LGPD (Brazil) | medium |
+| **Italian** | Phase 3+ | Milan/Rome club + festival | RA-IT | GDPR (IT) | medium |
+
+**Deliberately NOT queued:** Arabic (different market, not the electronic-club buyer today), CJK (wholly separate strategy). **Rule:** a language ships only when (a) a real beachhead ICP exists in that market, (b) local sources + venue taxonomy are seeded, and (c) the jurisdiction's privacy/legal is cleared. **OPEN (owner):** the second market and the phase order.
 
 ### 19.2 Data & ops at scale (trigger: sustained load / paid tier)
 Reserved: read-replicas + query-cost monitoring; a partitioning/sharding plan **only if** table sizes demand it (unlikely pre-Gate); **backup/DR plan** (ties to the Supabase Pro decision, C-2); monitoring + alerting + on-call; and an **expanded production-readiness checklist** layered on Q8 (§13.7) — monitoring, alerting, rollback playbooks (rollback anchor = SHA is already the practice). Also: a **Technical-Debt register** (embed version-skew §13.1, service-role bypass §13.5.3, plaintext producer tokens migration 036-DRAFT) with owners — recommended as a living doc in `docs/`, not spec body.
