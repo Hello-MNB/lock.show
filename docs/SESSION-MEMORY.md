@@ -17,6 +17,11 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 - **Owner-blocked:** N2/N3 Gate availability→artist EMAIL needs a Resend account + RESEND_API_KEY (I'll build the guarded code path) · D3 retire /producer shell = product decision (retire vs reclassify as Production).
 - **P1 backlog** in DEPLOY-GAPS.md: Radar depth (S3), Production board CTAs, Admin cockpit tiles, offline banner, consent-banner equal-weight, deletion purge job, GA4 dual-emit, is_demo exclusion, site HE wiring+webfont, governed taxonomy.
 
+## 🌍 2ND EXTERNAL AUDIT FOLDED (16 Jul — owner relayed bilingual audit: localization langs · screen-reduction · GTM)
+- **Verified first:** 2 of its 'critical' items were already fixed (consent-scope bug, D1 Act-editor) — flagged stale, not re-done. Rest accurate/tracked.
+- **Folded verified value:** §6 law 13 'one canvas per workspace' (≤3 primary screens/entity; secondary in-place) · §7.7 per-entity screen-consolidation target (Artist→Radar+Settings, Rep→cockpit, Prod→events board, Buyer→Passport; guardrails: never merge distinct jobs, route stays deep-link, 67% is direction not blind target) · §19.1.a Localization Readiness Matrix (DE/FR Phase-2 → ES/NL/PT Phase-3 → IT; ships only w/ ICP+sources+legal; Arabic/CJK not queued) · §16.B.11 GTM (ticketing Eventer/Tickchak, named-venue confirmers, IL scene seeds, illustrative funnel — numbers OPEN, ICP candidate sharpened). Spec 3,739 lines. Committed+pushed.
+- **NEXT build option surfaced:** the screen-consolidation is a real refactor (Artist-first) — offered to Maria; validate in prototype before collapsing.
+
 ## 📈 SCALING-REVIEW PASS (16 Jul — owner relayed an external per-section scaling review)
 - **CTO stance taken:** honor STAGE (pre-validation) — ADD cheap stage-appropriate guardrails NOW; RESERVE heavy scale (don't gold-plate pre-Gate). Triaged every review item → ADD-NOW / RESERVE / ALREADY-OPEN.
 - **ADD-NOW (done, committed):** §2.6 firewall future-proofing (new provenance/ML methods only via owner+counsel, never a score) · §6 law 12 'interactive under load' (Radar <1.2s @ ~200 items) · §7.6 deep-link/share schema (virality) · §9.7 intelligence-at-scale honesty controls · §1.3 international-readiness thesis · §18.0 priority tiers (Pre-Gate/Post-Gate/Reserved).
