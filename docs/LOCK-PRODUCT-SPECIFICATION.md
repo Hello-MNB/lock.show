@@ -1,7 +1,7 @@
 # LOCK — PRODUCT SPECIFICATION
 
 **The single source of truth for building the LOCK product.**
-_Status: consolidated master spec (complete) · Written 15 Jul 2026 · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–12 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §18 = open owner rulings._
+_Status: consolidated master spec (complete) · Written 15 Jul 2026 · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §18 = open owner rulings._
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
@@ -79,7 +79,7 @@ There is exactly **one** Passport per Act. It is shown in **views**, never dupli
 The retired term "Mirror / המראה" must never reappear — it is one Passport, shown in views.
 
 ### 1.6 Stage & the Gate
-LOCK is **pre-validation**. The success **Gate** is deliberately small and binary: **one booking manager reacts to a real Passport AND one pays.** Monetisation is *measured, not required*; no price or ICP is locked until the Gate is reached. (Analytics events that measure the Gate: `availability_request_created` for the reaction; `entitlement_activated` for the verified payment — see §9 and §8.11 Admin.)
+LOCK is **pre-validation**. The success **Gate** is deliberately small and binary: **one booking manager reacts to a real Passport AND one pays.** Monetisation is *measured, not required*; no price or ICP is locked until the Gate is reached. (Analytics events that measure the Gate: `availability_request_created` for the reaction; `entitlement_activated` for the verified payment — see §9 and §8.12 Admin.)
 
 ---
 
@@ -2805,7 +2805,7 @@ _End of §16. Sources: `CLAUDE.md` · `docs/SESSION-MEMORY.md` · `docs/CFO-BRIE
 ## 17. Interactivity, Motion Depth & Utility Screens
 
 _Codex role — senior interaction designer. Becomes §17 of the LOCK master spec._
-_Grounded in the behavioral ground-truth prototype (`scratchpad/lock-full-prototype.html`), the Radar signal spec (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT.md` PART 5), the widget kit + per-screen law (PART 9 · PART 10), and `LOCK-PRODUCT-SPECIFICATION.md` §8. §8 defines *what each screen is and holds*; **this section defines how it moves, responds, and feels** — the interaction layer §8 defers to "see the prototype." It does not repeat §8; it deepens it._
+_Grounded in the behavioral ground-truth prototype (`scratchpad/lock-full-prototype.html`), the Radar signal spec (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT.md` PART 5), the widget kit + per-screen law (same audit doc, PART 9 · PART 10), and `LOCK-PRODUCT-SPECIFICATION.md` §8. §8 defines *what each screen is and holds*; **this section defines how it moves, responds, and feels** — the interaction layer §8 defers to "see the prototype." It does not repeat §8; it deepens it._
 
 **How to read this file.** Every motion value, easing, duration, and gesture threshold in PART A is **lifted from the real prototype** (path:line where load-bearing) — a developer can build the feel without opening the HTML. PART B specs the utility screens the prototype never drew. Markers: **`OWED`** = an exact DS v1.6.25 value that lives only on Drive (`00_CURRENT/LOCKSHOW_Design_System_CURRENT.html`) and must be filled by Codex; **`OPEN`** = a product/owner decision not yet made. Neither blocks building the interaction — they refine the finish.
 
@@ -2860,11 +2860,11 @@ Lime `#C8F04D` is reserved for **action + confirmed** and is the *only* color al
 
 ### PART A — INTERACTIVITY & MOTION DEPTH (per screen)
 
-Each screen below is specified as **buildable interaction rules**: every interactive element as `trigger → immediate feedback (<100ms) → result state`; a **motion table**; a **gesture table** (mobile); and a **state-transition map**. The universal law from PART 9/10 holds on every screen: **one screen, one job, one next action; exactly one primary lime CTA on screen at any instant; immediate feedback on every action; warm, firewall-safe microcopy.**
+Each screen below is specified as **buildable interaction rules**: every interactive element as `trigger → immediate feedback (<100ms) → result state`; a **motion table**; a **gesture table** (mobile); and a **state-transition map**. The universal law (§6 Global UX Laws) holds on every screen: **one screen, one job, one next action; exactly one primary lime CTA on screen at any instant; immediate feedback on every action; warm, firewall-safe microcopy.**
 
 The universal interaction primitives (reused on all screens):
 
-- **Press feedback (all buttons/tappables):** on `:active`, scale to `.97` + shadow tighten over ~120ms `--ease-ui`; release springs back. Tap target ≥ 44px (PART 10). Never a button with no press state.
+- **Press feedback (all buttons/tappables):** on `:active`, scale to `.97` + shadow tighten over ~120ms `--ease-ui`; release springs back. Tap target ≥ 44px (§5.7). Never a button with no press state.
 - **Toast / save confirm:** a small pill rises from bottom (mobile) or lower-right (desktop), `pop .5s --ease-bloom`, holds ~2.4s, fades. Carries an **undo** where the action is reversible (7s window on Passport-affecting confirms — §8.3).
 - **Skeleton loading:** `shimmer 1.4s linear infinite` on a `--surface2→--raise` gradient (proto :626). Reduced-motion → static `--surface2` block, no shimmer.
 - **Overlay/scrim entry:** `fade .18–.3s ease` + `backdrop-filter: blur(3–6px)` (proto :338,841). Scrim tap = dismiss (except where a decision is required).
@@ -3050,7 +3050,7 @@ Real handler at proto :1940–1947.
 
 ### 17.A.4 · Requests (artist inbox → decision cockpit)
 
-§8.13 / PART 10 §10.4. Each request is a **decision widget**, not a list row: one-sentence fit summary, missing-info, safety cue, three actions.
+§8.13 / §10.4. Each request is a **decision widget**, not a list row: one-sentence fit summary, missing-info, safety cue, three actions.
 
 #### Interaction model
 | Element | Trigger | Feedback | Result |
@@ -3177,7 +3177,7 @@ State map (per slot): **Open** ("needs an act") · **Requested** ("Awaiting repl
 
 ### 17.A.10 · The inline-edit widget (full spec — the D1 fix, reused everywhere)
 
-The single most reused interactive primitive after the button. It opens **in place** (never a new page), on the Radar inspector (§8.3), the Act-Identity Editor (§8.6), and Account (17.B.5). Per PART 10 §10.4 every field is QA'd with: **empty · typing · long value · Hebrew · URL · invalid.**
+The single most reused interactive primitive after the button. It opens **in place** (never a new page), on the Radar inspector (§8.3), the Act-Identity Editor (§8.6), and Account (17.B.5). Per §10.4 every field is QA'd with: **empty · typing · long value · Hebrew · URL · invalid.**
 
 #### The seven states (per field)
 | State | Visual | Motion | Copy example |
@@ -3288,7 +3288,7 @@ Shared tokens (light): paper `#F3F5EF` · white card `#FFFFFF` · forest panel `
 
 ### 17.B.5 · Account Settings (person-level)
 
-**PURPOSE.** The person (not the Act, not the workspace) edits their own basics and controls their account. Reachable from the top-right hub (§ PART 6). `OPEN` — owner U26: whether this is a full screen or folds into the hub; spec here as a screen with the hub linking in.
+**PURPOSE.** The person (not the Act, not the workspace) edits their own basics and controls their account. Reachable from the top-right hub (§7.2). `OPEN` — owner U26: whether this is a full screen or folds into the hub; spec here as a screen with the hub linking in.
 
 **DESKTOP.** Light page, single column of setting rows (reuse the inline-edit widget, 17.A.10): **Name** · **WhatsApp** · **Language** (EN/HE select — this is where language lives, removed from every workflow per U1) · **Marketing preferences** (toggle) · a divider · **Danger zone**: "Delete account".
 **MOBILE.** Same rows full-width; "Delete account" opens a bottom-sheet confirm.
@@ -3446,7 +3446,7 @@ Shared tokens (light): paper `#F3F5EF` · white card `#FFFFFF` · forest panel `
 
 **Could NOT be derived — carried as `OWED` (need DS v1.6.25 from Drive):** exact light-card border/elevation/radius scale, CTA primary/secondary/ghost paddings, the 44px rule's exact hit-area values, named motion tokens, and the master logo SVG. The prototype is dark-themed and the utility screens (PART B) are new — their exact light-token values are not in the repo (only the A13 core hexes are).
 
-**Could NOT be derived — carried as `OPEN` (product/owner decisions):** (a) gold/amber retire-vs-keep (§7.0 — affects only the found-state pulse color, not the motion); (b) Account as a full screen vs folded into the hub (U26); (c) Billing upgrade = self-serve checkout vs operator-approved request (today it's a request); (d) post-Gate paid billing states (no price/ICP locked pre-Gate — CLAUDE.md STAGE); (e) the sheet **drag-follow** (finger-tracking) refinement — the prototype animates open/closed but does not 1:1 track the finger; spec'd as a target in 17.A.2.g; (f) long-press-logo → method (prototype uses tap→method; long-press is the PART 10 target).
+**Could NOT be derived — carried as `OPEN` (product/owner decisions):** (a) gold/amber retire-vs-keep (§7.0 — affects only the found-state pulse color, not the motion); (b) Account as a full screen vs folded into the hub (U26); (c) Billing upgrade = self-serve checkout vs operator-approved request (today it's a request); (d) post-Gate paid billing states (no price/ICP locked pre-Gate — CLAUDE.md STAGE); (e) the sheet **drag-follow** (finger-tracking) refinement — the prototype animates open/closed but does not 1:1 track the finger; spec'd as a target in 17.A.2.g; (f) long-press-logo → method (prototype uses tap→method; long-press is the ENTITY-STRUCTURE audit PART 10 target).
 
 **Not built, spec'd honestly (per CLAUDE.md honesty firewall):** the deep multi-source discovery scan animation in Onboarding (17.A.1) shows the intended experience (vision) with honest method-labels ("a wider auto-scan is in development"); event/lineup **creation** in Production (17.A.9) is target, view-only today.
 
