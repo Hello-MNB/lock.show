@@ -235,7 +235,7 @@ button{font-family:inherit;cursor:pointer}
 .chip.teal{background:rgba(70,220,194,.1);color:var(--teal)}
 .chip.amber{background:var(--prov-pending-bg);color:var(--state-attention)}
 .method{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--prov-pending);background:var(--prov-pending-bg);border:1px solid var(--prov-pending-line);border-radius:6px;padding:2px 7px;display:inline-flex;align-items:center;gap:5px}
-.method.confirmed{color:var(--prov-confirmed);background:var(--prov-confirmed-bg);border-color:var(--prov-confirmed-line)}
+.method.confirmed{color:var(--text);background:var(--prov-confirmed-bg);border-color:var(--prov-confirmed-line)}
 .method.evidence{color:#BFE06B;background:transparent;border-color:rgba(200,240,77,.30)}
 .method.source{color:var(--text-muted);background:transparent;border-color:var(--border)}
 .method.declared{color:var(--text-faint);background:transparent;border-color:var(--divider)}
@@ -305,7 +305,7 @@ button{font-family:inherit;cursor:pointer}
   background:conic-gradient(from 0deg,rgba(200,240,77,.13),rgba(200,240,77,.04) 22%,transparent 44%);
   animation:sweep 9s linear infinite;mask:radial-gradient(circle,transparent 30%,#000 31%)}
 @keyframes sweep{to{transform:rotate(360deg)}}
-.planet{position:absolute;transform:translate(-50%,-50%);text-align:center;width:92px;z-index:2;cursor:pointer;transition:opacity .3s,filter .3s}
+.planet{position:absolute;transform:translate(-50%,-50%);text-align:center;width:112px;z-index:2;cursor:pointer;transition:opacity .3s,filter .3s}
 .planet.dim{opacity:.22;filter:grayscale(.55)}
 .pnode{position:relative;margin:0 auto;display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:var(--surface2);border:1px solid var(--line2);transition:transform .2s,box-shadow .2s,border-color .2s;animation:pfloat 6s ease-in-out infinite}
 .planet:nth-child(2n) .pnode{animation-duration:7.2s;animation-delay:-1.5s}
@@ -324,7 +324,7 @@ button{font-family:inherit;cursor:pointer}
 .planet.genre .pnode{box-shadow:0 0 26px -6px rgba(200,240,77,.18)}
 .pnode.justlit{animation:litpop .7s ease}
 @keyframes litpop{0%{transform:scale(.6);box-shadow:0 0 0 rgba(200,240,77,0)}55%{transform:scale(1.18);box-shadow:0 0 34px rgba(200,240,77,.55)}100%{transform:scale(1)}}
-.plabel{margin-top:7px;font-family:var(--mono);font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);line-height:1.25}
+.plabel{margin-top:8px;font-family:var(--sans);font-size:13.5px;font-weight:700;letter-spacing:.01em;color:#CFD6CC;line-height:1.2}
 .pgenre{margin-top:2px;font-family:var(--mono);font-size:7.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
 /* hover preview chip */
 .ptip{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%) translateY(4px);z-index:6;
@@ -403,7 +403,7 @@ button{font-family:inherit;cursor:pointer}
 @keyframes flowDev{to{stroke-dashoffset:-22.8}}
 @keyframes flowLit{to{stroke-dashoffset:-21.6}}
 /* per-planet plain-language state word — instant meaning at a glance, never a score */
-.pstate{margin-top:2px;font-family:var(--mono);font-size:7.5px;letter-spacing:.05em;text-transform:uppercase;line-height:1.2}
+.pstate{margin-top:3px;font-family:var(--mono);font-size:10px;letter-spacing:.02em;line-height:1.2}
 .pstate.s-needs{color:var(--need)}.pstate.s-lit{color:var(--good)}.pstate.s-dev{color:var(--teal)}.pstate.s-locked{color:var(--faint)}
 .plabel .gstar{color:var(--mist)}
 @media(prefers-reduced-motion:reduce){
@@ -411,14 +411,21 @@ button{font-family:inherit;cursor:pointer}
 }
 
 /* ═══ RADAR WORKSPACE · one-screen inspector (desktop 4-zone · mobile bottom-sheet) ═══ */
-.radar-work{flex:1 1 auto;min-height:0;display:grid;gap:14px;
-  grid-template-columns:196px minmax(0,1fr) 344px;
-  grid-template-rows:minmax(0,1fr) auto;
-  grid-template-areas:"ident stage inspect" "dock dock dock";position:relative}
+.radar-work{flex:1 1 auto;min-height:0;display:grid;gap:12px 14px;
+  grid-template-columns:196px minmax(0,1fr) 360px;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"scene scene scene" "ident stage inspect" "dock dock dock";position:relative}
+.rwscene{grid-area:scene;position:relative;display:flex;justify-content:center;align-items:center}
 .rwident{grid-area:ident;display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
 .rwstage{grid-area:stage;min-height:0}
 .rwinsp{grid-area:inspect;min-height:0}
 .rwdock{grid-area:dock}
+/* ── scene lens · top-center segmented control (never overlays the act card) ── */
+.seg-lab{position:absolute;left:2px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted)}
+.scene-seg{display:inline-flex;gap:3px;background:var(--surface-3);border:1px solid var(--border);border-radius:999px;padding:4px}
+.scene-seg .seg-btn{border:0;background:transparent;color:var(--text-muted);font-size:12.5px;font-weight:700;padding:7px 16px;border-radius:999px;transition:.14s;white-space:nowrap}
+.scene-seg .seg-btn:hover{color:var(--text)}
+.scene-seg .seg-btn.on{background:linear-gradient(180deg,var(--accent),var(--accent-deep));color:var(--on-accent);box-shadow:var(--shadow-1)}
 /* ── identity column ── */
 .idcard{background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:14px;box-shadow:var(--shadow-1)}
 .idcard .idpic{width:52px;height:52px;border-radius:50%;overflow:hidden;border:1px solid rgba(200,240,77,.55);box-shadow:0 0 16px -6px rgba(200,240,77,.45);margin-bottom:10px}
@@ -441,9 +448,20 @@ button{font-family:inherit;cursor:pointer}
 .insp-head h3{font-size:17px;color:var(--text);line-height:1.2}
 .insp-x{margin-left:auto;background:var(--surface3);border:1px solid var(--line2);border-radius:9px;color:var(--text-muted);width:30px;height:30px;flex-shrink:0;font-size:16px;line-height:1}
 .insp-x:hover{color:var(--text)}
-.insp-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:14px 16px 6px}
+.insp-scroll{flex:1 1 auto;min-height:0;overflow:auto;padding:0}
 .insp-explain{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.45;margin:0 0 12px}
-.insp-star{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text);background:var(--prov-confirmed-bg);border:1px solid var(--prov-confirmed-line);border-radius:999px;padding:4px 10px;margin-bottom:12px}
+.insp-star{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--text);background:var(--prov-confirmed-bg);border:1px solid var(--prov-confirmed-line);border-radius:999px;padding:4px 10px;margin-top:6px}
+/* ── 3-layer action widget: Meaning · Found proof · Next action ── */
+.insp-layer{padding:13px 16px;border-bottom:1px solid var(--line)}
+.insp-layer-lab{display:block;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px}
+.insp-meaning{margin:0;font-size:15px;font-weight:600;color:var(--text);line-height:1.4}
+.insp-found{margin:0 0 10px;font-size:13.5px;color:rgb(64,72,66);line-height:1.45}
+.insp-fromsrc{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--text);letter-spacing:0}
+.insp-found b{color:var(--text)}
+.insp-srclist{display:flex;flex-direction:column;gap:7px;margin-bottom:11px}
+.insp-status-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text);background:var(--surface-3);border:1px solid var(--border);border-radius:999px;padding:5px 11px}
+.insp-status-chip.pub{background:var(--prov-confirmed-bg);border-color:var(--prov-confirmed-line)}
+.insp-status-chip .insp-lock{font-size:11px;line-height:1}
 .insp-block{margin-bottom:13px}
 .insp-block .insp-lab{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-faint);margin-bottom:5px}
 .insp-block>p{margin:0;font-size:13px;color:var(--text-muted);line-height:1.5}
@@ -453,28 +471,28 @@ button{font-family:inherit;cursor:pointer}
 .insp-src .insp-lg{width:26px;height:26px;border-radius:7px;overflow:hidden;flex-shrink:0;display:inline-flex}
 .insp-srcmeta{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
 .insp-srcmeta .insp-plat{font-size:12.5px;font-weight:700;color:var(--text)}
-.insp-tag{font-family:var(--mono);font-size:8px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid var(--line2);color:var(--text-faint);flex-shrink:0}
+.insp-tag{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.01em;padding:3px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--text-muted);flex-shrink:0}
 .insp-tag.ok{color:var(--text);border-color:var(--prov-confirmed-line);background:var(--prov-confirmed-bg)}
 .insp-tag.found{color:var(--text-muted)}
 .insp-add{font-size:11.5px;color:var(--text-muted)}
-.insp-foot{padding:12px 16px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-.insp-cta{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:12px;
-  font-weight:800;font-size:13.5px;color:var(--accent-deep);background:var(--prov-confirmed-bg);border:1px solid var(--prov-confirmed-line)}
-.insp-cta:hover{background:rgba(200,240,77,.16)}
-.insp-sec{align-self:center;background:transparent;border:0;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint)}
-.insp-sec:hover{color:var(--text-muted)}
+.insp-foot{padding:13px 16px 15px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.insp-cta{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:12px;
+  font-weight:800;font-size:14px;color:var(--on-accent);background:linear-gradient(180deg,var(--accent),var(--accent-deep));border:0;box-shadow:var(--glow)}
+.insp-cta:hover{filter:brightness(1.05)}
+.insp-sec{align-self:center;background:transparent;border:0;font-size:12px;font-weight:600;color:var(--text-muted);padding:2px 4px}
+.insp-sec:hover{color:var(--text);text-decoration:underline}
 /* ── selected planet + orbiting source satellites ── */
 .planet.selected{z-index:6}
 .planet.selected .pnode{transform:scale(1.16);border-color:rgba(200,240,77,.8);box-shadow:0 0 30px rgba(200,240,77,.45),inset 0 0 0 1px rgba(200,240,77,.6);animation-play-state:paused}
 .planet.selected .plabel{color:var(--text)}
 .sat-layer{position:absolute;inset:0;z-index:7;pointer-events:none}
 .sat{position:absolute;transform:translate(-50%,-50%);pointer-events:none}
-.sat .sat-in{position:relative;display:inline-flex;width:26px;height:26px;border-radius:8px;overflow:hidden;
-  border:1px solid var(--border);box-shadow:0 4px 12px -6px rgba(0,0,0,.5);background:var(--surface-1)}
-.sat.sat-found .sat-in{border-color:rgba(221,227,217,.7);box-shadow:0 0 0 2px rgba(221,227,217,.18),0 4px 12px -6px rgba(0,0,0,.5)}
-.sat.sat-confirmed .sat-in{border-color:rgba(200,240,77,.75);box-shadow:0 0 0 2px rgba(200,240,77,.22),0 4px 12px -6px rgba(0,0,0,.5)}
-.sat.sat-empty .sat-in{opacity:.55;border-style:dashed}
-.sat .sat-chk{position:absolute;right:-3px;bottom:-3px;width:13px;height:13px;border-radius:50%;display:grid;place-items:center;font-size:8px;background:var(--accent);color:var(--on-accent);box-shadow:0 0 0 1.5px var(--surface-1)}
+.sat .sat-in{position:relative;display:inline-flex;width:42px;height:42px;border-radius:12px;overflow:hidden;
+  border:1.5px solid var(--border);box-shadow:0 6px 16px -6px rgba(0,0,0,.55);background:var(--surface-1)}
+.sat.sat-found .sat-in{border-color:rgba(221,227,217,.85);box-shadow:0 0 0 3px rgba(221,227,217,.22),0 6px 16px -6px rgba(0,0,0,.55)}
+.sat.sat-confirmed .sat-in{border-color:rgba(200,240,77,.9);box-shadow:0 0 0 3px rgba(200,240,77,.30),0 6px 16px -6px rgba(0,0,0,.55)}
+.sat.sat-empty .sat-in{opacity:.6;border-style:dashed}
+.sat .sat-chk{position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:var(--accent);color:var(--on-accent);box-shadow:0 0 0 2px var(--surface-1)}
 .sat.emerge{animation:satEmerge .3s var(--ease-orbit) both}
 @keyframes satEmerge{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .sat.just .sat-in{animation:satPop .6s ease}
@@ -500,8 +518,23 @@ button{font-family:inherit;cursor:pointer}
   .rwident .idpriv{margin-top:5px}
   .rwident .scene-chip{margin-top:6px!important}
   .rwident .idlens{display:none}
-  .rwstage{order:2;flex:1 1 auto;min-height:0}
-  .rwdock{order:3}
+  .rwscene{order:2;flex:0 0 auto;overflow-x:auto;justify-content:center}
+  .rwscene .seg-lab{display:none}
+  .scene-seg{padding:3px}
+  .scene-seg .seg-btn{padding:6px 12px;font-size:12px}
+  .rwstage{order:3;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center;overflow:visible;
+    /* reserve room for the fixed dock + the bottom planet's label so nothing sits under the dock */
+    padding-bottom:calc(var(--dockh) + 40px + env(safe-area-inset-bottom,0))}
+  /* scale the universe down on mobile so ALL SIX planets + labels sit comfortably above the dock */
+  .rwstage .uni{flex:0 1 auto;min-height:0;height:auto;width:88%;max-width:88%;margin:auto}
+  .rwstage .planet{width:88px}
+  .rwstage .pnode{width:46px;height:46px}
+  .rwstage .pnode svg{width:21px;height:21px}
+  .rwstage .plabel{margin-top:5px;font-size:13px}
+  .rwstage .pstate{font-size:9px;margin-top:1px}
+  .rwstage .star .avatar{width:60px;height:60px}
+  .rwstage .star .name{font-size:13px;margin-top:5px}
+  .rwdock{order:4}
   .rdock{position:fixed;left:10px;right:10px;bottom:calc(var(--bnh) + env(safe-area-inset-bottom,0));z-index:33;box-shadow:var(--shadow-2)}
   .rdock-t{font-size:14px}
   .insp-panel{position:fixed;left:0;right:0;z-index:46;max-height:52vh;
@@ -1501,10 +1534,10 @@ const PLANET_ORDER=['identity','music','live','aud','kit','proof'];
    Each scene names which dimensions buyers in that scene weigh first. A scene
    with no signal ('all') = no emphasis at all (firewall: never a guessed weight). */
 const SCENES={
-  techno:{label:'Melodic Techno', primary:['live','aud','kit']},
-  prog:{label:'Progressive', primary:['music','live','aud']},
-  afro:{label:'Afro House', primary:['live','aud','proof']},
-  all:{label:'All scenes', primary:[]},
+  techno:{label:'Melodic Techno', short:'Melodic', primary:['live','aud','kit']},
+  prog:{label:'Progressive', short:'Progressive', primary:['music','live','aud']},
+  afro:{label:'Afro House', short:'Afro', primary:['live','aud','proof']},
+  all:{label:'All scenes', short:'All', primary:[]},
 };
 const SCENE_ORDER=['techno','prog','afro','all'];
 /* one human line per dimension for the planet hover tip (no technical string) */
@@ -1584,7 +1617,7 @@ function planetModel(){
     return {id, label:info.name, pos:info.pos, icon:info.icon, genre:prim.includes(id)?1:0, state, cat, found:m.found};
   });
 }
-const PSTATE_WORD={needs:'Needs you',lit:'Ready',dev:'Developing',locked:'Locked'};
+const PSTATE_WORD={needs:'Needs you',lit:'Ready',dev:'Developing',locked:'Not needed yet'};
 /* constellation geometry — each planet\'s centre in the square universe (percent),
    so a line can run from the artist star (50,50) out to every dimension. */
 const PLANET_XY={identity:[50,8],music:[86,28],live:[86,72],aud:[50,92],kit:[14,72],proof:[14,28]};
@@ -1608,7 +1641,9 @@ function artistPlanets(){
     const matched = filter==='all' || (filter==='needs'&&p.cat==='needs') || (filter==='ready'&&p.cat==='ready');
     const lens = filter==='all' ? '' : (matched?' match':' dim');
     const sel = (S.artist.sel===p.id)?' selected':'';
-    const tip='<div class="ptip"><b>'+(PLANET_TIP[p.id]||p.label.replace('&amp;','&'))+'</b><span>'+PSTATE_WORD[p.state]+'</span></div>';
+    /* hover tooltip removed — each planet carries a visible label + state word,
+       so the tip is redundant and never collides with the scene switch. */
+    const tip='';
     const gstar=p.genre?'<span class="gstar" title="Buyers in this scene look here first">&#9733;</span> ':'';
     return '<div class="planet'+lens+sel+(p.genre?' genre':'')+'" data-action="openPlanet" data-planet="'+p.id+'" aria-pressed="'+(S.artist.sel===p.id?'true':'false')+'" style="'+p.pos+'">'+tip+
       '<div class="pnode '+cls+justlit+'">'+ring+I[p.icon]+extra+'</div>'+
@@ -1751,7 +1786,7 @@ const INSP={
     foundLocked:'Your invoice, set length and rider light up here once your live draw is backed.',
     why:'a clear set length, regions and paperwork let a buyer say yes without back-and-forth.'},
   proof:{cta:'Review career proof',
-    explain:'This is third-party proof that carries more weight than anything you say yourself.',
+    explain:'This is the proof that helps someone believe the room was real — without you having to oversell it.',
     found:'LOCK found a producer-confirmed rebooking at Barby TLV and a Time Out Tel Aviv mention.',
     why:'what a producer or the press says about you is the trust a buyer leans on.'},
 };
@@ -1768,61 +1803,77 @@ function inspectorModel(id){
   if(locked) foundText=base.foundLocked;
   else if(meta.found===0&&meta.conf>0) foundText=base.found+' You have confirmed everything here.';
   const whyText='In '+scene.label+', '+base.why;
-  let statusText;
-  if(locked) statusText='Locked for now — this opens once your live draw is backed.';
-  else if(a.published&&pm.cat==='ready') statusText='Some of this can already be seen on your Buyer-view Passport.';
-  else if(meta.found>0) statusText='Private for now — nothing here becomes public until you approve it.';
-  else statusText='Private for now — ready to support your Passport when you approve.';
+  const isPublicReady=(a.published&&pm.cat==='ready');
+  let statusText, statusChip, statusPublic=false;
+  if(locked){ statusText="This isn't needed yet — it opens once your live draw is backed."; statusChip='Not needed yet'; }
+  else if(isPublicReady){ statusText='This proof is ready. Want to see how a buyer will read it?'; statusChip='Ready on your Passport'; statusPublic=true; }
+  else { statusText='Still private. It only helps your Passport after you approve it.'; statusChip='Still private'; }
   let cta;
   if(locked) cta={label:'Confirm your live draw first',act:'selectLive'};
   else if(meta.found>0) cta={label:base.cta,act:'confirmTop',planet:id};
+  else if(isPublicReady) cta={label:'Preview on Passport',act:'goPassport'};
   else if(meta.empty>0&&meta.conf===0) cta={label:((src.find(x=>x.status==='empty')||{}).add)||'Add a source',act:'addSource'};
-  else cta={label:'View on your Passport',act:'goPassport'};
-  return {info,src,meta,pm,scene,base,locked,foundText,whyText,statusText,cta};
+  else cta={label:'Preview on Passport',act:'goPassport'};
+  return {info,src,meta,pm,scene,base,locked,foundText,whyText,statusText,statusChip,statusPublic,cta};
+}
+/* Own accounts read "from your …"; third-party listings read "from …".
+   Radar inspector only — the raw "Source-linked" method label is de-technicalised
+   into a human source line here. Canon method vocabulary stays intact on the Passport. */
+const OWN_SRC={instagram:1,spotify:1,soundcloud:1,tiktok:1,youtube:1,bandcamp:1,beatport:1};
+function humanSrcLine(it){
+  if(!it.method || it.method==='Source-linked')
+    return (OWN_SRC[it.key]?'from your ':'from ')+esc(platName(it.key));
+  return esc(it.method); // e.g. Producer-confirmed · Self-reported (already human, not raw)
 }
 function inspSrcRow(it){
   const st=it.status;
-  const method = st==='empty'
+  const line = st==='empty'
     ? '<span class="insp-add">'+esc(it.add||'Add this source')+'</span>'
-    : '<span class="method '+(st==='confirmed'?'confirmed':'source')+'">'+esc(it.method||'Source-linked')+'</span>';
+    : '<span class="insp-fromsrc">'+humanSrcLine(it)+'</span>';
   const tag = st==='confirmed'?'<span class="insp-tag ok">Confirmed</span>'
     : st==='found'?'<span class="insp-tag found">Found</span>'
     : '<span class="insp-tag">Needs you</span>';
   return '<div class="insp-src"><span class="insp-lg">'+srcMark(it.key,26)+'</span>'+
-    '<span class="insp-srcmeta"><span class="insp-plat">'+platName(it.key)+'</span>'+method+'</span>'+tag+'</div>';
+    '<span class="insp-srcmeta">'+line+'</span>'+tag+'</div>';
 }
-function inspectorPanel(id){
+function inspectorPanel(id, holdsCTA){
   const m=inspectorModel(id), info=m.info, a=S.artist;
-  const genreChip=m.pm.genre?'<span class="insp-star">&#9733; Buyers in your scene look here first</span>':'';
+  const genreChip=m.pm.genre?'<span class="insp-star">&#9733; Buyers here look first</span>':'';
   const rows=m.src.map(inspSrcRow).join('');
   const sec = m.cta.act==='confirmTop'
-    ? '<button class="insp-sec" data-action="dismissTop" data-planet="'+id+'">That’s not mine</button>' : '';
+    ? '<button class="insp-sec" data-action="dismissTop" data-planet="'+id+'">Not mine / later</button>' : '';
+  const chip='<span class="insp-status-chip'+(m.statusPublic?' pub':'')+'" title="'+esc(m.statusText)+'"><span class="insp-lock">'+(m.statusPublic?'&#9679;':'&#128274;')+'</span>'+esc(m.statusChip)+'</span>';
+  const ctaCls='insp-cta'+(holdsCTA?' btn-primary':'');
   return '<aside class="rwinsp insp-panel'+(a.sheetOpen?' open':'')+'" id="inspPanel" role="region" aria-label="'+info.name.replace('&amp;','&')+' inspector">'+
     '<div class="insp-grab" data-action="closeSheet" aria-hidden="true"></div>'+
     '<div class="insp-head" data-field="name"><span class="insp-ic">'+I[info.icon]+'</span>'+
-      '<div style="flex:1;min-width:0"><h3>'+info.name+'</h3></div>'+
+      '<div style="flex:1;min-width:0"><h3>'+info.name+'</h3>'+genreChip+'</div>'+
       '<button class="insp-x" data-action="closeSheet" aria-label="Close inspector">&times;</button></div>'+
     '<div class="insp-scroll">'+
-      '<p class="insp-explain" data-field="explain">'+m.base.explain+'</p>'+ genreChip +
-      '<div class="insp-block" data-field="found"><span class="insp-lab">What LOCK found</span><p>'+m.foundText+'</p></div>'+
-      '<div class="insp-block" data-field="why"><span class="insp-lab">Why this matters in '+esc(m.scene.label)+'</span><p>'+m.whyText+'</p></div>'+
-      '<div class="insp-block" data-field="status"><span class="insp-lab">Public or private</span>'+
-        '<p class="insp-status"><span class="insp-lock">&#128274;</span><span>'+m.statusText+'</span></p></div>'+
-      '<div class="insp-block" data-field="sources"><span class="insp-lab">Where the proof comes from</span>'+rows+'</div>'+
+      /* LAYER 1 · MEANING — one short line, scene-aware */
+      '<div class="insp-layer" data-layer="meaning"><span class="insp-layer-lab">Meaning</span>'+
+        '<p class="insp-meaning">'+m.whyText+'</p></div>'+
+      /* LAYER 2 · FOUND PROOF — brief + source logos + status chip */
+      '<div class="insp-layer" data-layer="found"><span class="insp-layer-lab">Found proof</span>'+
+        '<p class="insp-found">'+m.foundText+'</p>'+
+        '<div class="insp-srclist">'+rows+'</div>'+ chip +'</div>'+
     '</div>'+
-    '<div class="insp-foot" data-field="cta">'+
-      '<button class="insp-cta" data-action="'+m.cta.act+'"'+(m.cta.planet?' data-planet="'+m.cta.planet+'"':'')+'>'+m.cta.label+' &rarr;</button>'+sec+
+    /* LAYER 3 · NEXT ACTION — the single primary CTA + quiet secondary */
+    '<div class="insp-foot" data-field="cta" data-layer="action"><span class="insp-layer-lab">Next action</span>'+
+      '<button class="'+ctaCls+'" data-action="'+m.cta.act+'"'+(m.cta.planet?' data-planet="'+m.cta.planet+'"':'')+'>'+m.cta.label+' &rarr;</button>'+sec+
     '</div>'+
   '</aside>';
 }
+/* scene lens — top-center segmented control (never overlays the act card) */
+function sceneSwitch(){
+  const a=S.artist;
+  return '<span class="seg-lab">Your standing in</span>'+
+    '<div class="scene-seg" role="tablist" aria-label="Scene lens">'+
+      SCENE_ORDER.map(k=>'<button class="seg-btn'+(a.activeScene===k?' on':'')+'" role="tab" aria-selected="'+(a.activeScene===k?'true':'false')+'" data-action="pickScene" data-s="'+k+'">'+SCENES[k].short+'</button>').join('')+
+    '</div>';
+}
 function identityCol(){
-  const a=S.artist, scene=SCENES[a.activeScene]||SCENES.techno, filter=a.radarFilter||'all';
-  const sceneMenu=a.sceneOpen?('<div class="scene-menu">'+
-      '<div class="lab">Show my standing in</div>'+
-      SCENE_ORDER.filter(k=>k!=='all').map(k=>'<button data-action="pickScene" data-s="'+k+'" class="'+(a.activeScene===k?'on':'')+'"><span class="rd"></span>'+SCENES[k].label+'</button>').join('')+
-      '<button data-action="pickScene" data-s="all" class="'+(a.activeScene==='all'?'on':'')+'"><span class="rd"></span>All scenes</button>'+
-      '<div class="note">Buyers in each scene look at different proof first.</div>'+
-    '</div>'):'';
+  const a=S.artist, filter=a.radarFilter||'all';
   const priv=a.published
     ? '<div class="idpriv live"><span class="pd"></span>Some strengths are public on your Passport — you approved them.</div>'
     : '<div class="idpriv"><span class="pd"></span>Private to you — nothing is public until you approve it.</div>';
@@ -1832,24 +1883,20 @@ function identityCol(){
       '<div class="idpic">'+photoAvatar('50% 20%')+'</div>'+
       '<div class="idbody"><div class="eyebrow">Your Act</div>'+
         '<div class="idname">'+esc(a.identity.stageName)+'</div>'+
-        '<div class="scene-chip" data-action="toggleScene" style="margin-top:10px"><span class="sdot"></span>'+esc(scene.label)+' <span class="cv">&#9662;</span>'+sceneMenu+'</div>'+
         priv+'</div>'+
     '</div>'+
     '<div class="idlens"><div class="eyebrow" style="margin-bottom:6px">Show</div>'+
-      '<div class="lensrail">'+rf('all','All')+rf('needs','Needs you')+rf('ready','Ready')+'</div></div>'+
+      '<div class="lensrail">'+rf('all','All')+rf('needs','Needs my review')+rf('ready','Ready to publish')+'</div></div>'+
   '</div>';
 }
+/* Bottom dock · the next-best MOVE — shown only when the inspector is NOT
+   holding the primary CTA (mobile overview / no planet in focus). Ensures
+   exactly ONE primary lime CTA is ever visible at a time. */
 function radarDock(){
-  const id=S.artist.sel, m=inspectorModel(id);
-  const nm=(m.info.name||'').replace('&amp;','&');
-  let title;
-  if(m.cta.act==='confirmTop') title='Confirm what LOCK found in '+nm+'.';
-  else if(m.cta.act==='goPassport') title='Your proof here is ready — see it on your Passport.';
-  else if(m.cta.act==='selectLive') title='Back your live draw first to open '+nm+'.';
-  else title='Add one source to strengthen '+nm+'.';
+  const n=nextBestStep();
   return '<div class="rwdock rdock hint-pulse">'+
-    '<div class="rdock-txt"><span class="eyebrow">Your next move</span><span class="rdock-t">'+title+'</span></div>'+
-    '<button class="btn-primary rdock-cta" data-action="'+m.cta.act+'"'+(m.cta.planet?' data-planet="'+m.cta.planet+'"':'')+'>'+m.cta.label+' &rarr;</button>'+
+    '<div class="rdock-txt"><span class="eyebrow">'+esc(n.eyebrow)+'</span><span class="rdock-t">'+n.title+'</span></div>'+
+    '<button class="btn-primary rdock-cta" data-action="nextStep">'+n.cta+'</button>'+
   '</div>';
 }
 /* place source-logo satellites orbiting the SELECTED planet (in place, percent geometry) */
@@ -1862,7 +1909,7 @@ function renderSelectionLogos(){
   const RM=reducedMotion();
   const xy=PLANET_XY[id], px=xy[0], py=xy[1];
   const base=Math.atan2(50-py,50-px);         // inward, toward the star
-  const N=src.length, spread=(N>1?76:0)*Math.PI/180, R=13.5;
+  const N=src.length, spread=(N>1?84:0)*Math.PI/180, R=17;
   const layer=document.createElement('div'); layer.className='sat-layer';
   src.forEach((it,i)=>{
     const ang=base+(N>1?spread*((i-(N-1)/2)/(N-1)):0);
@@ -1874,7 +1921,7 @@ function renderSelectionLogos(){
     el.style.left=sx.toFixed(2)+'%'; el.style.top=sy.toFixed(2)+'%';
     if(!RM&&!just) el.style.animationDelay=(i*55)+'ms';
     el.setAttribute('title',platName(it.key)+' · '+(st==='confirmed'?'Confirmed':st==='found'?'Found on '+platName(it.key):'Add this source'));
-    el.innerHTML='<span class="sat-in">'+srcMark(it.key,26)+chk+'</span>';
+    el.innerHTML='<span class="sat-in">'+srcMark(it.key,42)+chk+'</span>';
     layer.appendChild(el);
   });
   uni.appendChild(layer);
@@ -1901,9 +1948,16 @@ function setupSwipe(){
 reg('artist/radar',()=>{
   const a=S.artist, scene=SCENES[a.activeScene]||SCENES.techno;
   if(!a.sel||!PLANET_INFO[a.sel]){ a.sel = nextBestStep().planetId || 'live'; if(!PLANET_INFO[a.sel]) a.sel='live'; }
+  /* The inspector holds the single primary CTA whenever it is visible:
+     always on desktop; on mobile only when the sheet is open. When it does
+     NOT hold the CTA, the bottom dock carries the next-best-move instead.
+     Net: exactly ONE primary lime CTA on screen at any moment. */
+  const holdsCTA = !mobileMQ() || !!a.sheetOpen;
   return '<div class="radar-screen">'+
     '<div class="radar-work'+(a.sheetOpen?' sheet-open':'')+'">'+
-      /* LEFT · Act identity + scene + privacy + lens */
+      /* TOP-CENTER · scene lens segmented control (never overlays the act card) */
+      '<div class="rwscene">'+sceneSwitch()+'</div>'+
+      /* LEFT · Act identity + privacy + lens */
       identityCol()+
       /* CENTER · the interactive universe (dark island) */
       '<div class="radar-stage dark-island rwstage">'+
@@ -1913,10 +1967,10 @@ reg('artist/radar',()=>{
           artistPlanets()+
         '</div>'+
       '</div>'+
-      /* RIGHT · the persistent planet inspector */
-      inspectorPanel(a.sel)+
-      /* BOTTOM · the one primary next action */
-      radarDock()+
+      /* RIGHT · the persistent planet inspector (holds the primary CTA when visible) */
+      inspectorPanel(a.sel, holdsCTA)+
+      /* BOTTOM · next-best-move dock — only when the inspector is not holding the CTA */
+      (holdsCTA ? '' : radarDock())+
       /* mobile bottom-sheet scrim */
       '<div class="rwscrim" data-action="closeSheet" aria-hidden="true"></div>'+
     '</div>'+
