@@ -134,6 +134,8 @@ External reviews keep proposing well-intentioned features that quietly re-introd
 | **Rejection-reason feedback shown to the artist** ("buyers are rejecting you for X", counts of rejections) | a reaction returning to the artist as a count/judgment violates §2.5 **and** "gaps are invitations, not penalties" (§6.8) | at most **method-safe, aggregate, opt-in text** with no count and no per-buyer attribution — and only if it never reads as a verdict; default = do not build |
 | **JSON-LD / structured data with a `score`, `rank`, or `bookabilityScore` field** | machine-readable scores are still scores — worse, they're scrapable | structured data may emit **bands + binaries + method labels only** (§19.7), never a numeric grade |
 | **OG share card / dwell-time signal that shows a per-person number** | a shared card or analytics tile that renders a count/score about a person breaks the firewall on the most viral surface | OG card = name · genre · **draw band** · method label (no counts); dwell-time stays an **internal, aggregate** metric never surfaced per-person to the artist |
+| **Replace bands with a ranked "Capacity Archetype" ladder + amend §2.1** (Intimate→Club→Hall→Arena as tiers) | an ordered tier ladder *is* a rank; amending §2.1 breaks the absolute firewall | keep the band as stored truth; render **warm venue-context wording over it** (§5.10) — describes room fit, never ranks; §2.1 unchanged |
+| **Negative readiness states on the buyer face** ("❌ Not Ready · docs required") | shows a gap to a buyer — violates "no gap on a buyer face" (§8.7) | positive capabilities only buyer-side ("✓ Turnkey"); negatives live only on the artist's private Radar as warm invitations |
 **The rule behind all five:** a number about a *person* is never allowed on any surface (public, internal-shown, or machine-readable). Numbers about *product events* (funnel counts for the operator) are fine. When a reviewer's idea is exciting, check it against this line first.
 
 ---
@@ -366,6 +368,34 @@ These are flagged so they are not mistaken for settled; build with the A13 inter
 5. **Real venue logos** (Barby, The Block, Sunset) for the evidence cards.
 6. **The gold/amber ruling** — keep `state.found`/`state.needsReview` as small accents (A13) or retire to lime+neutral (owner lean). See §5.4 / §18.
 7. The full dark-app semantic scale + status set + elevation shadows + the `forest-2/chrome-bg/rail-bg` chrome tints proposed in the nav consolidation (all tints/opacities of existing hues — Codex to confirm/rename).
+
+---
+
+### 5.10 Humanized rendering of bounded data (the warmth layer over the firewall)
+The recurring UX critique: a raw band ("300–800") or a binary ("invoice_ready · yes") reads like a spreadsheet, not show-business. The fix is a **rendering layer, not a firewall change** — **the DB still stores bounded bands + binaries (the firewall is unchanged, §2.1 is NOT amended); the UI renders warm human language over that truth.** The band remains the honest value beneath.
+
+**Draw band → venue-context narrative (never a ranked ladder).**
+| Stored band | Human line (render) |
+|---|---|
+| ~≤150 | "Fills intimate rooms & lounges" |
+| ~150–500 | "Regularly fills mid-size clubs" (band shown: 150–500) |
+| ~500–1,000 | "Moves large-hall crowds" |
+| ~1,000+ | "Plays festival-scale stages" |
+Rules: the human line **describes room fit, never ranks the artist**; always pair with the band (kept visible) + a method label; **the tiers are NOT an ordered "better→worse" ladder** — a lounge act is not "lower" than a festival act, just a different room. *(This is why §2.1 stays as-is: the moment these become a ranked ladder or replace the band, they are a rank — forbidden.)*
+
+**Binary → positive capability (negatives NEVER shown buyer-side).**
+- true → an active, warm trait: `✓ Issues formal tax invoices` · `✓ Stage-ready technical rider on file`. A cluster of trues can read as **"Turnkey · booking-ready."**
+- false/missing → **absent from the buyer Passport entirely** (gaps are never shown to a buyer, §8.7). "Admin needed / Not ready" states may appear **only on the artist's private Radar**, and there only as a warm invitation ("Unlock Turnkey — buyers book faster when docs are on file"), never a red "Not Ready" verdict.
+
+**Method label → canon chip + human sub-text.** Keep the English canon chip (the moat, §4.4); add a one-line human explainer on the buyer face / on source-peek: `★ Producer-confirmed` → *"verified by an industry peer who worked with them — this claim only."* (Source-peek detail = §8.7 B6 / §17.A.6.)
+
+**Status words → warm invitations** (already the voice law §4.5/§6.8): "ready to support" / "growing" / "needs your touch" — never "weak/missing/not assessable." **Dates → "Fresh proof · July 2026"** / "added this month," not "Reviewed 12/05/2026." **Milestones** render as named waypoints ("First light" … "Ready for market"), **never `M1–M8`** on screen (§8.2).
+
+**Two visual-grammar rules (adopted from review):**
+1. **Lime discipline** — solid lime = an actionable **button only**. A *confirmed status* uses a **lime outline / lime text**, never a solid-lime fill, so a buyer/artist never taps a status chip thinking it's a CTA. (Protects law 3's one-CTA clarity.)
+2. **Private vs public border** — private/draft items render with a **dashed border**, public items with a **solid** border — a global, wordless signal reinforcing "always show private/public" (law 6).
+
+**Firewall guardrails on this whole layer:** no ranked ladder; no numeric grade; no negative state on a buyer face; the band/binary stays the stored truth; every human line pairs with provenance. Warmth is a **wording + visual** change, never a data change.
 
 ---
 
@@ -634,6 +664,17 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 **COMPONENTS.** Persona toggle (**Booking a show** / **Representing**) that changes copy + CTA · proof cards (big band OR claim + context + method label + reviewed date) · performance track rows (each source-linked) · readiness chips (binaries only) · primary CTA + sub-line.
 
 **Non-pro language (target — broaden beyond "booker").** The buyer surface must read for **all** demand segments (private/corporate/planner), not only pros. Evidence is phrased buyer-readable ("Can this artist carry a room?" not "Proof of draw"). Booking-vs-representing changes the copy and the CTA. The private/corporate register is warm and non-industry.
+
+**The private/corporate register — concrete vocabulary (D9, closes a real blind-spot).** A corporate HR planner or a wedding couple does **not** know what "Club Headliner" or "Resident Advisor" means; they care about *professionalism, fit, and logistics*. Same evidence pool (§5.10), re-worded per face:
+| Club/pro face says | Private/corporate face says |
+|---|---|
+| "Club Headliner · fills 300–800" | "Comfortable for **100–300 guests**" |
+| "★ Producer-confirmed" | "**Venue-verified** professional" |
+| "Invoice-ready · rider on file" | "**Turnkey booking** · issues invoices, insured, own sound" |
+| "Melodic techno · RA-listed" | "**Lounge → high-energy** range · reads the room" |
+The switch is **vocabulary + emphasis only**, never different facts (firewall). The private/corporate warm register is **OWED** (D9) until this flow is built.
+
+**Cold-start empty-state framing (prevents new-artist churn).** A brand-new Act with zero `producer-confirmed` claims must **not** read as "empty/weak/unverified" to a buyer or feel hopeless to the artist. Instead, **elevate evidence-supported signals** (public footprint via §9.8/§9.9 Door 2) into a warm **"Rising / building momentum"** framing — "Verified footprint" rather than "Unverified." The artist is *starting*, not *failing* (voice law §4.5; gaps-are-invitations §6.8). On the artist's Radar, empty nodes show as **soft ghost/skeleton nodes** (§17.B.11) — "where your proof will live," an exciting build-up, never a dead canvas.
 
 **STATES.** Persona = booking (section title "Proof of draw"; CTA "Check availability for your date") · persona = rep (title "Career proof"; CTA "Discuss representation"). Hover a proof-unit → a source peek (where-it-comes-from + what-the-label-means).
 
@@ -3829,6 +3870,8 @@ An AI coding agent (Claude Code / Cursor) suffers context-window dilution — it
 **E · How to drive the agent (atomic spec slices, not "build the app").**
 - Good: *"Read §13.2 + §14.3.2. Write migration 037 adding `is_demo` to `analytics_event` with a down-migration. Do not touch the frontend."*
 - Good: *"Read §8.3 + §17.A.2. Build the Planet Inspector bottom-sheet with the confirm-bloom motion. Do not wire the DB yet."*
+- Good: *"Read §5.10. Add the humanized draw-band renderer: input a stored band, output the venue-context line + kept band + method chip. Pure function + unit test; no ranked ladder."*
+- Good: *"Read §17.A.2.e only. Implement the `bloom .42s` confirm animation on an existing node; reduced-motion → instant opacity. No other changes."*
 - Bad: *"Build the Radar."* (too broad → drift).
 - Every slice ends with `npm run verify` green (nav · isolation · canon · security · i18n-purity · registry · deltas · build) — the mechanical firewall gate (§19.6).
 
