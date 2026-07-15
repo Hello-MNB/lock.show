@@ -27,7 +27,7 @@ Every app/site release row also records **which DS version it implements** (desi
 | Track | Version | SHA | DS implemented | Live-verified |
 |---|---|---|---|---|
 | App | rel-2026.07.10 (incl. firewall hotfix eafcd4e) | **a874ab5** — last app production deploy (10 Jul) | pre-DS dark legacy (A13 mapping = this train) | ✅ bundle fingerprints (DEPLOY-LOG) |
-| Site | **rel-site-2026.07.15 (Codex visual-system redesign: brand hierarchy, entity language, chrome simplification, asset cleanup, 999-line marketing.css hardening; phone/WhatsApp removed from public surfaces)** | **0082919** — 15 Jul: pushed by Codex + alias-promoted to www.lock.show + lock.show (owner "publish if ready"). Source branch codex/live-site-redesign-20260714. **Rollback anchor: 4f4ff74** (prior live). | Codex from DS v1.6.25 (art-direction pass still pending per Codex) | ✅ live-verified: 8/8 routes 200, cleanUrls active, live SHA=0082919. ⚠️ Codex-flagged (next visual pass): low-contrast dark-on-dark section headers + empty image-placeholder entity cards |
+| Site | **rel-site-2026.07.15-2 (Codex redesign + contrast HOTFIX + phone-from-JSON-LD removed)** | **6f01e56** — 15 Jul: alias-promoted; fixes the dark-on-dark contrast failure in 0082919 (headers were ~1.19:1). **Rollback anchor: 4f4ff74** (last pre-redesign good). | Codex DS v1.6.25 | ✅ live-verified: 8/8 routes 200, cleanUrls, live SHA=6f01e56; **contrast re-measured on live = 0 failures (19 headings 14.91–17.78:1)**. ⚠️ REMAINING (Codex next brand/art-direction pass, not a bug): the 4 "rooms behind the product" cards are still empty image placeholders; overall art direction not yet the final show-business brand. |
 | Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash |
 
 ### Reference tracks
