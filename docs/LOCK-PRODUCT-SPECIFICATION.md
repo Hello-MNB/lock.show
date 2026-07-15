@@ -526,7 +526,7 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 
 ---
 
-### 8.1 Onboarding (`/onboarding`) — the 3-step discover→confirm narrative
+### 8.1 Onboarding (`/onboarding`) — the discover→confirm narrative (TARGET 3-step; BUILT 2-step)
 
 **PURPOSE.** Turn a cold artist into a live Passport-in-progress with the least possible effort: the artist gives only the basics; LOCK discovers the public footprint; the artist confirms. "You don't build from scratch — you approve what we found." Warm conversion copy, never technical. EN + HE, locale-aware.
 
@@ -2033,7 +2033,7 @@ The product's distinctive data operation is the **deep public-footprint scan**: 
 | Category | Examples | Notes |
 |---|---|---|
 | Account & identity | name, stage name, email, phone (optional), hashed password/login id, role, org | required minimum to operate an account |
-| Professional info | genre, region, bio, media links, lineups, experience, **draw as bands**, community size **as a count only** | firewall: ranges/bands, never exact draw numbers on the public surface |
+| Professional info | genre, region, bio, media links, lineups, experience, **draw as bands**, community size stored as a **working-only integer** (`community_count_declared`), **shown publicly only as a band** | firewall: ranges/bands, never exact draw numbers on the public surface |
 | Evidence & documents | public links, screenshots, ticket/settlement exports, pro documents | user warrants authority; excess third-party PII must not be uploaded; LOCK may redact/reject |
 | Claims & processing outputs | extracted data points, source, **method label**, verification date, status, version history, **consent records** | method labels are canon (see §15.4) |
 | Availability requests | requester name, org, event type/date/location, capacity/budget **band**, message | demand-side inbound |
@@ -2167,7 +2167,7 @@ Migration 021 also **migrated legacy scope values** into canon and stashed origi
 - `getConsents(userId)` / `latestConsent(userId)` — history, newest first.
 - `requestAccountDeletion(userId)` — inserts `{scope:'account-deletion', version:'v1', status:'withdrawn'}`.
 
-> **⚠ CONSISTENCY GAP (engineering, not legal) — OWED.** `ConsentLegal.jsx`'s `recordPrivacyConsent` still calls `recordConsentScope(userId, 'privacy-policy')` and `'data-processing'` — the **pre-021 legacy scope names** — while the DB CHECK now only accepts the canonical `privacy-processing`. Under the current constraint these inserts would be rejected (or need the legacy-mapping path). The write path must be updated to emit `privacy-processing` (and the other three canon scopes). Flag for the build board; it does not change the legal design, only the string the code writes. Likewise `version` strings differ across call sites (`v3-inline-gates` vs `v1` vs settings-list `(v2)` labels) — pick one versioning scheme and record the policy version that was actually shown.
+> **⚠ CONSENT-SCOPE — reconciled to §13.2's ledger (021 FROZEN, NOT applied).** The **live** `consent_records` has **no scope CHECK** — migration 001 defines `scope text not null` with *no* constraint, and migration 021 (which would *add* `check (scope in ('privacy-processing',…))`) is **frozen / not applied** (§13.2.1). So today the live DB accepts **any** scope string; neither the legacy pair nor the canon value is rejected. **Applied fix (16 Jul):** `recordPrivacyConsent` now writes the single **canon `privacy-processing`** (and the read path matches) — chosen because it is **forward-compatible** (already correct for when 021 or a re-authored canon-scope constraint lands) and internally consistent (write = read). *(Note: existing rows written under the old `privacy-policy`/`data-processing` names — if any pre-Gate — won't match a `hasConsent('privacy-processing')` read and would re-prompt; acceptable pre-Gate, or add a one-time backfill when the canon constraint is applied.)* Separately: `version` strings differ across call sites (`v3-inline-gates` vs `v1` vs `(v2)`) — pick one versioning scheme and record the policy version actually shown.
 
 #### 15.2.4 Withdrawal
 
@@ -2303,18 +2303,20 @@ Mixed status — the North-Star next-actions and act-switch are ✓ shipped in H
 
 > **Fix flagged:** `radar.nextActions.refreshProof.why` (he.js) contains **הדרכון** — replace with **הפספורט** (canon; דרכון forbidden). This is the one live firewall/vocabulary slip found in the shipped HE.
 
-#### 15.4.3 Passport — buyer-facing (`passport.*`) — ✓ shipped
+#### 15.4.3 Passport — buyer-facing (`passport.*`)
+
+> **⚠ THREE ROWS RETIRED (U33/U23 — removed 16 Jul, see §18 + §2.2/§8.4).** `passport.chip` ("Verified professional profile" — a technical badge, U23), `passport.firewall`, and `passport.disclaimer` (the narrated firewall strip, U33) were **deleted from `PassportFooter` / the i18n bundle** — the firewall is enforced by the *shape* of the evidence, never printed. They are struck through below so no localizer re-introduces them. The remaining rows (per-section band/binary clarifiers) are shipped and correct.
 
 | Key | EN | HE |
 |---|---|---|
-| chip | Verified professional profile | פרופיל מקצועי מאומת |
-| firewall | LOCK presents verified professional facts by source. No promises or predictions. | LOCK מציג עובדות מקצועיות מאומתות לפי מקור. ללא הבטחות וללא ניבויים. |
-| drawCaption | FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT | מוצג כטווח — ללא ספירת ראשים מדויקת |
-| disclaimer | THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY. NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE… | הפספורט מציג חוזקות מאומתות בלבד. ללא ציון · ללא דירוג · ללא ניבוי · ללא הבטחה. כל טענה נושאת את שיטת האימות והתאריך שלה. משיכת קהל מוצגת כטווח — לעולם לא מספר מדויק. |
-| checkAvailability | Check availability | בדיקת זמינות |
-| communityCaption | CONTEXTUAL — NOT DRAW EVIDENCE | הקשר בלבד — לא ראיית משיכה |
-| readinessCaption | BINARIES ONLY — READY OR NOT SHOWN | בינארי בלבד — מוכן, או לא מוצג |
-| reviewedShort(d) | REVIEWED {d} | נבדק {d} |
+| ~~chip~~ RETIRED | ~~Verified professional profile~~ | ~~פרופיל מקצועי מאומת~~ |
+| ~~firewall~~ RETIRED | ~~LOCK presents verified professional facts… No promises or predictions.~~ | ~~(removed — U33)~~ |
+| ~~disclaimer~~ RETIRED | ~~THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY. NO SCORE · NO RANKING…~~ | ~~(removed — U33 narrated firewall strip)~~ |
+| drawCaption ✓ | FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT | מוצג כטווח — ללא ספירת ראשים מדויקת |
+| checkAvailability ✓ | Check availability | בדיקת זמינות |
+| communityCaption ✓ | CONTEXTUAL — NOT DRAW EVIDENCE | הקשר בלבד — לא ראיית משיכה |
+| readinessCaption ✓ | BINARIES ONLY — READY OR NOT SHOWN | בינארי בלבד — מוכן, או לא מוצג |
+| reviewedShort(d) ✓ | REVIEWED {d} | נבדק {d} |
 
 #### 15.4.4 Requests / availability (`request.*`, `agency.*`) — ✓ shipped
 
@@ -3865,7 +3867,7 @@ Assembling the deep build spec surfaced additional decisions that only the owner
 | G-4 | **Trust & safety rulings** — dispute/takedown flow, identity-verification bar, IP/content-rights ToS clauses (counsel) | OPEN (owner + counsel) | §16.B.15; IP clauses currently absent from legal drafts. |
 
 **Two engineering bugs found while grounding (build-fix, NOT owner decisions — flagged for the board):**
-1. ✅ **FIXED (15 Jul, wave-1):** `ConsentLegal.jsx` `recordPrivacyConsent` wrote the pre-021 legacy scope names that the live CHECK rejects → now writes the canon `privacy-processing` (write + read paths) (§15.2, §13.2).
+1. ✅ **FIXED (15 Jul, wave-1) — rationale corrected 16 Jul:** `ConsentLegal.jsx` `recordPrivacyConsent` wrote the pre-021 legacy scope names. The live DB has **no scope CHECK** (021 FROZEN, §13.2.1), so those writes were **not** actually rejected — but the code now writes the canon `privacy-processing` (write + read paths) as the **forward-compatible** choice for when the canon-scope constraint lands (§15.2.3, §13.2).
 2. The marketing site (`website-next/app/layout.tsx`) loads **Manrope into a CSS variable misleadingly named `--font-heebo`** — there is no actual Hebrew webfont in the site stack, so Hebrew falls back to the OS font. The app stack (Frank Ruhl Libre + Heebo) is Hebrew-capable; the site must adopt a real Hebrew stack and the DS must state it (§15.3). **STILL OPEN.**
 
 ---
