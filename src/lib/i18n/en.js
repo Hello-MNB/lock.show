@@ -640,6 +640,10 @@ export const T = {
   },
   errors: {
     notFound: 'Page not found.',
+    notFoundTitle: "This page moved, or never existed.",
+    notFoundBody: "It's not your fault — the link may be old or mistyped. Let's get you back to solid ground.",
+    notFoundHome: 'Back to my home',
+    notFoundHomeHint: 'Take me to where I work',
     unauthorized: 'You do not have access to this page.',
     serverError: 'Server error — please try again in a few moments.',
     networkError: 'Connection issue. Check your internet.',

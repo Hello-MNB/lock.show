@@ -1,7 +1,8 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
-import { Loading } from './components/ui.jsx'
+import { useLang } from './context/LangContext.jsx'
+import { Loading, PageShell, Wordmark } from './components/ui.jsx'
 import { ROLES, PAYMENTS_ENABLED } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
 import {
@@ -117,6 +118,25 @@ function RoleHome() {
   return <Navigate to={homePathFor({ role, isProducerWorkspace, demo: DEMO })} replace />
 }
 
+// Warm 404 (spec §17.B.10). Replaces the old silent `Navigate to="/"` catch-all,
+// which hid broken links. "Back to my home" points at "/" → RoleHome routes a
+// logged-in user to their own home, and a logged-out one to /login — no dead-end.
+function NotFound() {
+  const { T } = useLang()
+  const e = T.errors
+  return (
+    <PageShell max="max-w-md">
+      <div className="card mt-16 text-center">
+        <div className="mb-5 flex justify-center"><Wordmark /></div>
+        <h1 className="font-display text-2xl text-ink">{e.notFoundTitle}</h1>
+        <p className="mt-2 text-muted">{e.notFoundBody}</p>
+        <Link to="/" className="btn-primary mt-6 inline-block">{e.notFoundHome}</Link>
+        <p className="mt-2 text-xs text-faint">{e.notFoundHomeHint}</p>
+      </div>
+    </PageShell>
+  )
+}
+
 export default function App() {
   const { isConfigured } = useAuth()
   if (!isConfigured) return <SetupNotice />
@@ -199,7 +219,7 @@ export default function App() {
         <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER}><ProducerReceivedPassports /></RequireRole>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   )

@@ -20,12 +20,18 @@ export const useOrg = () => useContext(OrgCtx) || {}
 
 const ACTIVE_ORG_KEY = 'gigproof_active_org_id'
 
-// Only these base (profile) roles currently "own" a workspace that can be
-// switched between (an artist's solo org vs. an agency/production org).
-// producer/booker/operator have no workspace-switch concept in this model yet,
-// so their profile role is left as the effective role — this keeps those demo
-// personas (and any real account in the same boat) working exactly as before.
-const ORG_DERIVED_ROLES = [ROLES.ARTIST, ROLES.AGENCY]
+// Base (profile) roles whose EFFECTIVE role is recomputed from the active
+// workspace's functional_role. Per the entity model (spec §3), role derives from
+// the OrgContext, not the static profile field. OPERATOR is deliberately excluded
+// — it is a platform role, not a workspace membership, and must stay operator.
+// booker/producer are INCLUDED (D2 fix): a base-role booker or producer who
+// creates or switches INTO an agency/production workspace was previously
+// dead-ended — the pill moved but the screen-set didn't, because their effective
+// role was never recomputed. The derivation below only changes behavior when the
+// active membership's functional_role DIFFERS from the base role (i.e. an actual
+// switch); a membership-less account has no active.functional_role and falls back
+// to authRole, so those personas are unaffected.
+const ORG_DERIVED_ROLES = [ROLES.ARTIST, ROLES.AGENCY, ROLES.BOOKER, ROLES.PRODUCER]
 
 export function OrgProvider({ children }) {
   const { user, role: authRole } = useAuth()

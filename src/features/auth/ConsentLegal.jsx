@@ -29,9 +29,11 @@ export default function ConsentLegal({ checked, onChange }) {
   )
 }
 
-// Records the two required scopes together — called once, when the artist
+// Records the required privacy+processing consent — called once, when the artist
 // checks the inline box and advances past onboarding step 1.
+// Canon scope is the single `privacy-processing` value (migration 021 CHECK).
+// The old two-write pair (`privacy-policy` / `data-processing`) predated 021 and
+// is rejected by the live CHECK — do not reintroduce it.
 export async function recordPrivacyConsent(userId) {
-  await recordConsentScope(userId, 'privacy-policy')
-  await recordConsentScope(userId, 'data-processing')
+  await recordConsentScope(userId, 'privacy-processing')
 }

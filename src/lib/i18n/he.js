@@ -623,6 +623,10 @@ export const T = {
   },
   errors: {
     notFound: 'הדף לא נמצא.',
+    notFoundTitle: 'הדף עבר, או מעולם לא היה קיים.',
+    notFoundBody: 'זו לא אשמתך — ייתכן שהקישור ישן או שגוי. בוא נחזיר אותך לקרקע יציבה.',
+    notFoundHome: 'חזרה לבית שלי',
+    notFoundHomeHint: 'קח אותי למקום שבו אני עובד',
     unauthorized: 'אין לך גישה לדף זה.',
     serverError: 'שגיאת שרת — נסה שוב בעוד מספר רגעים.',
     networkError: 'בעיית חיבור. בדוק את האינטרנט.',

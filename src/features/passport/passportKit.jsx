@@ -297,11 +297,13 @@ export function PersonaToggle({ persona, onChange, T }) {
   )
 }
 
-export function PassportFooter({ T }) {
+export function PassportFooter() {
+  // U33 / spec §2.2: the firewall is ENFORCED BY DESIGN, never NARRATED. The old
+  // "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE" strip narrated it — removed.
+  // Honesty is shown by the shape of the evidence (bands, method labels, remove-empty), not printed.
   return (
     <footer className="mt-12 border-t border-line pt-5 pb-2">
-      <p className="font-mono text-[9.5px] leading-relaxed tracking-[0.06em] text-faint">{T.passport.disclaimer}</p>
-      <Link to="/" className="mt-3 inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
+      <Link to="/" className="inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
         LOCK · lock.show
       </Link>
     </footer>

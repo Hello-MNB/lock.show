@@ -83,11 +83,8 @@ export default function Onboarding() {
         setArtist(a)
         setF({ stage_name: a.stage_name || '', city: a.city || '' })
         try {
-          const [privacyOk, processingOk] = await Promise.all([
-            hasConsent(user.id, 'privacy-policy'),
-            hasConsent(user.id, 'data-processing'),
-          ])
-          setConsentAlready(privacyOk && processingOk)
+          // Canon scope is the single `privacy-processing` (migration 021 CHECK).
+          setConsentAlready(await hasConsent(user.id, 'privacy-processing'))
         } catch { setConsentAlready(false) }
       } catch (e) { setError(e.message) } finally { setLoading(false) }
     })()
