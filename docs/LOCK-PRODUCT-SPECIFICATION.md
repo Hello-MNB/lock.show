@@ -46,6 +46,18 @@ Sections 1–7 are the laws every screen inherits. Section 8 is the buildable **
 ### 0.3 Sources consolidated
 CLAUDE.md (product definition + firewall) · `docs/architecture/ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT.md` PARTS 1–10 (richest source) · `docs/SESSION-MEMORY.md` (entity model, standing rules, U1–U34 register, test-logins pointer) · `docs/ENTITY-GLOSSARY.md` + `docs/GLOSSARY.md` (canon terms) · `docs/design-system/A13-TOKEN-VALUES.md` + `COMPONENT-STATE-TOKENS.md` + `DS-v1.2.0-DIGEST-AND-ALIGNMENT.md` · `docs/VERSIONS.md` · `docs/team/TEST-LOGINS.md` (pointer only) · the living prototype `scratchpad/lock-full-prototype.html` (artifact `1c9b0030`).
 
+### 0.4 Status legend (read this before treating any item as final)
+Every claim in this spec carries one of these states — **never mistake a provisional item for a shipped requirement**:
+| Tag | Means | How to treat it |
+|---|---|---|
+| **BUILT** / ✅ | verified in code today | safe to rely on; cite the file |
+| **TARGET** | designed, **not built** (honesty firewall §2.8) | build to it; never present as live to a user |
+| **OWED** | a deliverable another party must supply (Codex asset, counsel copy) — but scale values now have interim defaults (§5.11) | unblocked where a default exists; else waits |
+| **OPEN** | an owner ruling (price, ICP, gold/amber, tagline) | do not invent; surface to owner |
+| **PROPOSED** | reconstructed/suggested, awaiting owner ratification (e.g. the Q8 walk) | not binding until ratified |
+| **REJECTED** | a firewall-blocked idea logged so it can't return (§2.9) | never implement |
+The consolidated live register of what's BUILT vs OPEN/OWED is `docs/releases/DEPLOY-GAPS.md`; §18 is the owner-ruling list (priority-tiered, §18.0).
+
 ---
 
 ## 1. Overview & Product Definition
@@ -2983,6 +2995,15 @@ _Added 15 Jul (owner: "identify gaps — is GTM included?"). Pre-validation stag
 
 **Illustrative phased funnel (targets are directional, all OPEN):** Phase 0 concierge — ~10 artists → ~5 published → ~10 shares → ~3 views → **1 reaction target**; Phase 1 — instrument willingness-to-pay → **1 payment = Gate**; Phase 2 — scale the artist-led loop + venue/ticketing partnerships. Numbers are placeholders to shape the funnel, **not forecasts**.
 
+**Post-Gate B2B sales plays (hypotheses, added from review):**
+- **"Mandate LOCK" (demand-led supply):** pitch the booking directors of the top ~20 IL venues — *"stop reading 50 messy EPKs a week; ask artists to submit a LOCK Passport — it's free for you and shows verified draw instantly."* If a venue *requires* a Passport, supply-side adoption follows for free. The strongest post-Gate lever.
+- **Source-Confirmer → Roster conversion (B2B2C):** the confirmer's Done state (a real venue/promoter who just touched the product) carries a soft CTA — *"Want your artists to look this verified? Build a Roster on LOCK."* Turns the confirmation loop into a supply-side funnel.
+- **Retention triggers (via the email transport, §14.6):** stale-evidence re-engagement — *"Your Eventer draw evidence is expiring; re-sync to keep it fresh"* (about the artist's **own** data, firewall-safe); upgrade-intent recovery — an artist who hits an upsell trigger but doesn't create a payment reference gets a follow-up.
+
+> **Firewall catch (REJECTED, logged §2.9-adjacent):** a proposed "a buyer viewed your Passport 3× — email them" nudge **surfaces a buyer view-count to the artist**, which violates §2.5 (reaction-to-artist = method-safe text, never a count). Rejected. The only artist-facing buyer signal remains the method-safe availability-request text.
+
+**Leading indicators (operator-internal only, never per-person to a user):** Time-to-First-Confirmed-Claim · Claim-to-Confirm ratio · Source-Confirmer acceptance rate · **Passport-view→availability-request conversion** (the core PMF metric) · stale-Passport rate · the behavioural sequence that precedes an upgrade. These live on the operator dashboard (§8.12) as **product-event** aggregates — firewall-safe; never rendered as a score about a person.
+
 **OPEN (owner):** the beachhead ICP (ties to **B-1** — which buyer segment leads Gate 1; reviewer's sharpened candidate = *Israeli electronic/club/festival bookers + mid-tier representation offices who book unfamiliar acts*), rough TAM, channel priority + any budget, launch timing, and whether to run the pilot in one scene or across several.
 
 ### 16.B.12 Monetization roadmap (post-Gate)
@@ -3883,6 +3904,12 @@ Reserved: a **"Roster at scale" variant** for Representation (50+ artists — fi
 
 ### 19.5 Ecosystem, partnerships & defensibility (trigger: post-Gate growth)
 Reserved: **partnership/channel play** (festivals, ticketing platforms, management software, venues embedding Passports — needs the "Partner Theme"/white-label variant: token remap + logo injection, structurally ready via the 3-tier tokens §5.6); **competitive moat** (the firewall + method-verified evidence + the Source-Confirmer human anchor + per-Act non-transferable evidence are the defensibility thesis vs EPKs/CRMs — write the explicit moat doc when a competitor forces it). **OPEN:** partner strategy, white-label pricing.
+
+**Patent candidates (RESERVED — NOT legal advice; evaluate with an IL/PCT IP attorney before any disclosure).** Three mechanisms multiple reviews flagged as potentially defensible utility-patent territory. Logged so the option is preserved; **do not act without counsel**, and note software-patent bars are high:
+1. **Verification without composite scoring** — ingesting disparate public/private signals, assigning discrete provenance **method labels**, and rendering **bands + binaries** to a third party *while deliberately suppressing any composite score/rank*. The suppression is the novel step.
+2. **Asymmetric role-based rendering of one verified record** — a single DB record renders two materially different UIs/registers (private Radar shows gaps as invitations; public Passport shows verified strengths only, gaps hidden) from the same state, gated by `artist_approved` + RLS — no data duplication.
+3. **Consent-gated, revocable access delegation** — the `ArtistAccess` grant: time-bound, scope-limited, mutually revocable delegation letting a third party act for a primary entity without transferring data ownership or credentials.
+**OPEN (owner):** whether to spend on provisional filings pre-Gate (recommendation: defer to post-Gate unless a competitor or investor forces the timing — patents are slow and costly, and the *brand+network* moat is the near-term defence).
 
 ### 19.6 Canon-change & release process (maintainability as the team grows)
 How a spec/canon change is proposed → reviewed → merged: (1) a change is a **PR against `Hello-MNB/lock.show`** touching the spec + code together (lockstep, §0.2 rule 5); (2) the PR must pass the **`npm run verify` suite** (nav-contract · act-isolation · canon-drift · security-denial · **i18n-purity firewall lint** · registry · deltas · build) — the firewall check is mechanical, not a human judgment call; (3) a **design-critic pass** for any user-facing change (the no-Codex continuation model); (4) deploy via the **named release train** with the **SHA as rollback anchor** (`VERSIONS.md`, `DEPLOY-LOG.md`); (5) Q8 owner-walk before production (§13.7). This keeps canon changes safe and reviewable as the team scales. _(Reserved enhancement: a PR template that surfaces the firewall checklist inline.)_
