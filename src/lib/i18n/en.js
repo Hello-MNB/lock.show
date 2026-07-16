@@ -341,6 +341,8 @@ export const T = {
     activeSince: (y) => `Active since ${y}`,
     liveDraw: 'Live draw',
     drawCaption: 'FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT',
+    // §5.10 venue-context lines — index-aligned to BANDS.capacity. Room FIT, never a rank.
+    drawContext: ['Fills intimate rooms & lounges', 'Regularly fills mid-size clubs', 'Moves large-hall crowds', 'Plays festival-scale stages'],
     performance: 'Performance',
     community: 'Community',
     communityCaption: 'CONTEXTUAL — NOT DRAW EVIDENCE',
