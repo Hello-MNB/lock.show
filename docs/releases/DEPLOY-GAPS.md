@@ -212,3 +212,53 @@ _Firewall: no score/rank in roster/radar cards (counts are declared inbox/invent
 - **D3** retire `/producer` — a product decision: fully retire the shell, or reclassify those screens as Production. Affects where the producer persona lands.
 
 **P1 backlog (strong-launch, after wave-2):** Radar depth (S3) · Production board CTAs (PR1/PR2) · Admin cockpit tiles (A1–A3) · offline banner (U11) · consent-banner equal-weight + Manage (U5) · deletion purge job (U3) · GA4 dual-emit (M2) · is_demo exclusion (M3) · site HE wiring + webfont (L2/L3) · governed taxonomy (T1/T2) · marketing-site headers (S2p).
+
+---
+
+# IMPLEMENTATION PLAN — build the spec 100%, NO DRIFT (16 Jul 2026)
+
+Owner asked for a plan to implement `LOCK-PRODUCT-SPECIFICATION.md` (4,047 lines / §0–21) to 100% with zero drift. "No drift" = every line of code traces to a spec section, every change passes the mechanical firewall gate, nothing is built big-bang. This plan is the ordered execution layer over the spec; the live status register is the tables above.
+
+## PART A — THE ANTI-DRIFT OPERATING SYSTEM (how we work, every time)
+These 7 rules are the guardrails. Violating one *is* drift.
+1. **The spec is the single source of truth.** §20 (AI/code-agent guardrails) is the executable contract; `CLAUDE.md` wins on any conflict.
+2. **Atomic spec slices, never big-bang.** Never "build the Radar." Always "build §8.3 Planet Inspector bottom-sheet — component only, no DB." One slice = one PR = one spec section.
+3. **Every slice ends with `npm run verify` GREEN** (nav-contract · act-isolation · canon-drift · security-denial · **i18n-purity firewall lint** · registry · deltas · build). The firewall check is mechanical, not human judgment — this is what makes "no firewall drift" enforceable.
+4. **Design-critic pass on every user-facing change** — an independent grader scores the build against the exact spec section before merge (the no-Codex continuation model).
+5. **Reproduce-before-claiming.** Every UI slice gets a Playwright screenshot/interaction proof. Never trust a self-report of "done."
+6. **Canon-change process (§19.6).** Spec + code move in ONE lockstep PR; SHA = rollback anchor; the spec section number is in the commit message (traceability).
+7. **Status ladder, no silent completion:** OPEN → BUILDING → CODE-COMPLETE → VERIFIED → OWNER-ACCEPTED (this file is the register).
+
+## PART B — THE PHASED PLAN (ordered by the Gate + dependencies)
+
+### Phase 0 — Unblock (mostly OWNER; I do what I can now)
+Gate later phases. **OWNER must supply:** B-1 beachhead ICP · pilot price + annual % · gold/amber ruling · Supabase Pro (C-2, unblocks migrations 037+) · counsel session (L-1…L-9) · Resend key (Gate email) · Producer-shell ruling (D3) · canonical tagline · Codex logo/venue SVGs. **I do now (no owner input):** mirror §5.11 tokens into `tailwind.config.js`/`tokens.ts`; author migration 037 (`is_demo`) as a diff-first draft (owner applies); wire the 4 unwired analytics events.
+
+### Phase 1 — Port the approved prototype into the real `src/` app (the core build)
+The live app is the OLD dark build (`a874ab5`); the spec + prototype ③ are the target. Screen-by-screen, each an atomic slice + design-critic + Playwright:
+1. **DS foundation** — §5.11 tokens into code + §5.10 humanized-rendering renderer (pure function + test).
+2. **Artist canvas** (§7.7 one-canvas) — Radar (§8.2/§8.3/§17.A.2) · Passport multi-view **S6** (§8.4) · Requests (§8.13/§17.A.4) · Act-editor **D1** (✅ done) · Access (§8.5).
+3. **Buyer** — public Passport (§8.7) + availability request/receipt (§8.8) — highest firewall care.
+4. **Confirmer** — `/confirm/:token` refinements (§8.9).
+5. **Representation / Production / Admin** — cockpit + board + Gate tiles (§8.10–8.12).
+6. **Utility screens** — the 11 (§17.B): 404 (✅) · offline · consent-banner equal-weight · notifications page · etc.
+
+### Phase 2 — Close the P0 build gaps
+D2/D3 effective-role + producer-shell (needs your ruling) · Gate email (§14.6.5, needs Resend key) · is_demo exclusion (migration 037) · firewall-strip already removed (✅) · consent scope already canon (✅).
+
+### Phase 3 — Gate-readiness (the §21.7 non-negotiables)
+artist_approved (✅) · is_demo · deep-link durability (✅, rides the deploy) · Gate email · rollback rehearsal · firewall clean (✅) → then **your Q8 walk** on the frozen SHA.
+
+### Phase 4 — Gate pursuit
+Concierge first-10 (§16.B.11, you) · instrument the funnel · drive to **1 reaction + 1 pay**.
+
+### Phase 5 — Post-Gate (only after the Gate)
+Monetization ON (flip plan enforcement, prices) · growth-loop instrumentation (§16.B.13) · Hebrew launch (§15.3) · scale hardening (§13.5.6 bots/rate-limit, BFF, §19.2 DR/observability) · international (§19.1).
+
+## PART C — DIVISION OF LABOR
+- **I build solo (no input):** all of Phase 1 code, migration drafts, event wiring, the humanized renderer, utility screens, verify-green + Playwright proof on each.
+- **Needs an OWNER ruling before I build:** D3 producer-shell · monetization numbers · gold/amber · tagline · B-1 (shapes GTM, not the build).
+- **OWED by others (non-blocking to most of Phase 1):** Codex logo/venue SVGs (art only — §5.11 defaulted the values) · counsel L-1…L-9 · Resend key.
+
+## PART D — DEFINITION OF "100% DONE, NO DRIFT"
+Every §0–21 requirement is either: **VERIFIED** in code (verify-green + design-critic + Playwright), or explicitly **OWNER-ACCEPTED as deferred** (a logged OPEN/OWED with an owner sign-off) — nothing silently skipped. The firewall lint passes on every commit. The Version Map artifact reflects live phase status. When every row here is VERIFIED or OWNER-ACCEPTED, the spec is 100% implemented.
