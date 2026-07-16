@@ -10,6 +10,11 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 
 ## 🔑 TEST LOGINS (permanent — owner asked 15 Jul): docs/team/TEST-LOGINS.md · 5 accounts @gigproof.test · password Gigproof!2026 · seed = scripts/seed.mjs · login www.lock.show/app/login. NEVER put in shareable artifacts.
 
+## ✅ C-2 RESOLVED — Supabase Pro ENABLED (16 Jul, owner confirmed)
+- Structural migrations are no longer gated. **Migration 037 (is_demo) is ready for the owner to apply** (SQL editor paste — no CLI/DB creds in the build env, so I never touch live DB; owner applies via dashboard as always). Migration head was 035; 036 stays `.DRAFT` (needs its own sequenced dual-read rollout, NOT now).
+- **PAIRED SEQUENCE (must hold):** owner applies 037 → THEN I ship the server `.eq('is_demo', false)` Gate-metric filter. Never the filter first: live DB has no column until applied, so an early filter would error the spend/read path.
+- Also now unblocked by Pro: PITR/backups, connection pooling headroom, future depth migrations. No action beyond 037 required now.
+
 ## 🚀 IMPLEMENTATION STARTED — first 3 slices SHIPPED (16 Jul — owner: "Start the first 3 slices now")
 - **Slice 1 — DS foundation into code (§5.11):** `tailwind.config.js` gained the full `fontSize` scale (display/h1/h2/h3/body/secondary/chip/micro) + `borderRadius` input/button aliases; `src/tokens.ts` mirrors it via `export const type`. Builders now compose from tokens, never guess. Commit 835e699, verify-green.
 - **Slice 2 — humanized-band renderer (§5.10):** `src/lib/humanize.js` — pure `humanizeDrawBand(band, bands, ctx)` (index-aligned band→venue-context line; unknown→null, never invents) + `humanizeBinary(value, label)` (positive-only; false→null, never shown buyer-side). `scripts/test-humanize.mjs` 10/10 incl. a firewall property (every output is a known line, never a number). i18n `drawContext` array added EN/HE. Commit 91b8497, verify-green.
