@@ -89,8 +89,23 @@ export default {
         sans: ['"Heebo"', 'system-ui', 'sans-serif'],         // body/UI (Heebo covers Hebrew)
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'], // method labels · bands · dates
       },
+      // Type scale — spec §5.11 self-contained DS defaults (interim; Codex may refine).
+      // [size, { lineHeight, fontWeight, letterSpacing }]. Additive: named roles only,
+      // Tailwind's numeric sizes (text-sm/base/…) stay available.
+      fontSize: {
+        display: ['clamp(38px, 8vw, 72px)', { lineHeight: '1.05', fontWeight: '900' }], // hero (Frank Ruhl Libre)
+        h1:      ['clamp(26px, 4.5vw, 30px)', { lineHeight: '1.15', fontWeight: '700' }], // screen title
+        h2:      ['22px', { lineHeight: '1.2', fontWeight: '700' }],                       // section
+        h3:      ['18px', { lineHeight: '1.25', fontWeight: '600' }],                      // card title (Heebo)
+        body:    ['16px', { lineHeight: '1.5', fontWeight: '400' }],                       // floor — never below 16
+        secondary: ['14px', { lineHeight: '1.45', fontWeight: '400' }],
+        chip:    ['11px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '0.06em' }], // eyebrow · method label (mono, uppercase)
+        micro:   ['12px', { lineHeight: '1.3', fontWeight: '500' }],                       // dates
+      },
       borderRadius: {
-        // buttons 12px · rows 14px · cards 18–24px · chips 999px
+        // §5.11 scale: input 8 · button 10 · card 12 · panel 16 · hero 20 · sheet 22 (additive aliases)
+        input: '8px',
+        button: '10px',
         DEFAULT: '14px',
         sm: '12px',
         md: '14px',

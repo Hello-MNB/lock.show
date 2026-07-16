@@ -62,6 +62,18 @@ export const fontFamily = {
   mono: '"IBM Plex Mono", ui-monospace, monospace',         // method labels · bands · dates
 } as const
 
+// Type scale — spec §5.11 (mirrors tailwind.config `fontSize`). [size, lineHeight, weight].
+export const type = {
+  display:   { size: 'clamp(38px, 8vw, 72px)', lh: '1.05', weight: 900 },
+  h1:        { size: 'clamp(26px, 4.5vw, 30px)', lh: '1.15', weight: 700 },
+  h2:        { size: '22px', lh: '1.2', weight: 700 },
+  h3:        { size: '18px', lh: '1.25', weight: 600 },
+  body:      { size: '16px', lh: '1.5', weight: 400 },   // floor — never below 16
+  secondary: { size: '14px', lh: '1.45', weight: 400 },
+  chip:      { size: '11px', lh: '1.2', weight: 600 },   // uppercase · +0.06em (method labels/eyebrows)
+  micro:     { size: '12px', lh: '1.3', weight: 500 },   // dates
+} as const
+
 export const borderRadius = {
   button: '12px',
   input: '11px',
