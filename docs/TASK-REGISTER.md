@@ -302,7 +302,14 @@ The register is the ONLY work source. The loop runs continuously; the owner is i
 - **Every 10 waves:** deep pass — re-read changed spec sections end-to-end · architecture review (territories, file ownership, dependency direction) · SESSION-MEMORY refresh.
 
 **THE ANTI-DRIFT CHECKLIST (the autonomy proof, run + reported):**
-□ 10-inspector gate green · □ canon-drift in-sync (app==DB) · □ zero unnumbered work in commits · □ working tree committed+pushed · □ register NOW/BLOCKED = reality · □ every shipped µ-task carries a Team-D verdict · □ rule-12 cargo check ran on last merge · □ rule-11 boundary attestation (no real-data/email/money/live-DB actions without owner word) · □ docs synced (MEMORY · OWNER-PENDING · SITE-MANAGEMENT) · □ open debts listed honestly.
+□ 10-inspector gate green · □ canon-drift in-sync (app==DB) · □ zero unnumbered work in commits · □ working tree committed+pushed · □ register NOW/BLOCKED = reality · □ every shipped µ-task carries a Team-D verdict · □ rule-12 cargo check ran on last merge · □ rule-11 boundary attestation (no real-data/email/money/live-DB actions without owner word) · □ docs synced (MEMORY · OWNER-PENDING · SITE-MANAGEMENT · LESSONS) · □ open debts listed honestly · □ all prior-wave findings ROUTED (nothing produced-then-dropped).
+
+**PROCESS PATCHES (17 Jul hole-hunt — owner: "find the holes that permit drift"):**
+- **P-1 attribution:** wave-close commits are made PER TERRITORY (one commit per µ-task's files), and Team D verifiers receive the µ-task's explicit file-scope list — no more commingled-checkpoint archaeology.
+- **P-2 lessons injection:** `docs/LESSONS.md` (new ledger) is referenced in every workflow agent's brief — past failures become standing instructions, not memories.
+- **P-3 witness-debt gate:** when unwitnessed live screens exceed EIGHT, screen-building waves PAUSE (ops/infra waves may continue) until the owner witnesses — debt cannot compound silently.
+- **P-4 preview-first option:** app changes can ship to a PREVIEW deployment for owner testing before main when the change is owner-visible UX (the site already must, rule 12).
+- **Known holes accepted-open (honest):** L4 spec-conformance diffs not yet run for the Radar screens (T-03…T-06, queued Wave 4) · app-side rollback never rehearsed (T-27) · no production error-monitoring (§19.2, deliberately post-Gate) · bundle 538kB>500kB (perf pass queued) · B1 login-QA findings produced but not yet folded into T-01 (routing debt — Wave 3).
 
 **Cheap-agent allocation law:** builder low/medium ≤40–90k by µ-task class (measured baselines: QA 41k · audit 71k · build 50–80k) · verifier high ≤70k · wave overhead (E) ≤40k. Wave ceiling ≈ 500k. Hardware note: this 4-core box executes 2–3 agents concurrently; waves of 4–6 µ-tasks keep the pipeline full.
 
