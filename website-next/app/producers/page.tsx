@@ -444,6 +444,49 @@ export default function ProducersPage() {
         </div>
       </section>
 
+      {/* ── "NOT YOU?" LANE — cross-entity transition (SITE-NAVIGATION-SPEC law 5) ── */}
+      <section
+        style={{
+          background: 'var(--color-paper)',
+          borderTop: '1px solid var(--color-mist)',
+          padding: '2rem max(24px, 4vw)',
+          textAlign: 'center',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+            fontSize: '1rem',
+            color: 'var(--color-tally-onlight)',
+            lineHeight: 1.65,
+            margin: 0,
+          }}
+        >
+          Performing yourself?{' '}
+          <Link
+            href="/artists"
+            style={{
+              color: 'var(--color-ink)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            For artists
+          </Link>
+          {' '}· Booking talent?{' '}
+          <Link
+            href="/bookers"
+            style={{
+              color: 'var(--color-ink)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            For booking managers
+          </Link>
+        </p>
+      </section>
+
     </main>
   )
 }

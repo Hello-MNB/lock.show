@@ -939,6 +939,48 @@ export default function ArtistsPage() {
           </div>
         </div>
       </section>
+
+      {/* ── "NOT YOU?" LANE — cross-entity transition (SITE-NAVIGATION-SPEC law 5) ── */}
+      <section
+        style={{
+          background: 'var(--color-paper)',
+          borderTop: '1px solid #dde3d9',
+          padding: '2rem max(24px, 4vw)',
+          textAlign: 'center',
+        }}
+      >
+        <p
+          style={{
+            fontSize: '1rem',
+            color: 'var(--color-tally-onlight)',
+            lineHeight: 1.65,
+            margin: 0,
+          }}
+        >
+          Booking talent instead?{' '}
+          <Link
+            href="/bookers"
+            style={{
+              color: 'var(--color-ink)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            For booking managers
+          </Link>
+          {' '}· Running productions?{' '}
+          <Link
+            href="/producers"
+            style={{
+              color: 'var(--color-ink)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+            }}
+          >
+            For producers
+          </Link>
+        </p>
+      </section>
     </main>
   )
 }
