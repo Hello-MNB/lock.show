@@ -62,11 +62,6 @@ The front door: email+password, Google, forgot/reset, signup hand-off.
 
 ## BLOCKED — waiting on Maria (plain language)
 
-### T-15 · Apply migration 037 (`is_demo` flag) — §14.3.2
-The database change that separates test activity from real customer activity, so your Gate count ("1 real reaction + 1 real payment") is clean.
-- **State:** written, tested, pushed (`supabase/migrations/037_analytics_is_demo.sql`). Supabase Pro is enabled — nothing technical remains.
-- **What Maria does:** either paste the SQL I sent into Supabase → SQL Editor → Run, **or** reply "apply it" and I do it. After that I ship the paired server filter (never before — the order matters).
-
 ### T-10 (email half) · Gate email to the artist — §14.6.5
 When a booking manager reacts, the artist should get an email. The in-app notification works today; the email cannot exist until there is an email account to send from.
 - **What Maria does:** sign up at resend.com (free ≤3,000/month) → create an API key → put it in Vercel (I'll give the exact click-path when you have it). **Never paste the key in chat.**
@@ -192,6 +187,9 @@ Rule: teams never touch `main` — everything lands on the work branch, verify-g
 
 ## DONE — witnessed, with dates
 
+### T-15 · Migration 037 (`is_demo`) APPLIED to the live database — §14.3.2 *(non-screen)*
+All 8 applicable ✅. 17 Jul 2026. Owner said "apply it" → applied via the management API (HTTP 201) and verified: column present (boolean, default false) · backfill marked **43 seed/operator events demo, 3 stay real** · partial index created. The 3 real events belong to `shydaviddjnattaly@gmail.com` (signup+onboarding+login, 11 Jul) — flagged to the owner: real first user or team tester? Witnessed: live SQL verification (Claude). Follow-up lives in T-30 (Gate-metric read filter when admin tiles are built).
+
 ### T-12 · Design-system tokens into code — §5.11 *(non-screen: MOBILE/DESKTOP —)*
 All 8 applicable ✅. 16 Jul 2026. Type scale/radius/CTA paddings in `tailwind.config.js` + `tokens.ts`. Witnessed: verify suite + both builds green (Claude). Commit `835e699`.
 
@@ -208,4 +206,4 @@ All 8 applicable ✅. 17 Jul 2026, **live on production** (merges `b49d568`, `5e
 
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). Next number: **T-31**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Next number: **T-31**.

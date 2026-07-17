@@ -7,7 +7,6 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 
 | # | What | What you do (plain steps) | Unblocks |
 |---|---|---|---|
-| M-1 | **Apply migration 037** (`is_demo`) | Supabase → SQL Editor → paste the SQL I sent (or reply **"apply it"** and I do it) | Clean Gate numbers (T-15); admin tiles (T-11) |
 | M-2 | **Resend email account** | resend.com → sign up (free) → API Keys → Create → put the key in Vercel (I'll give the exact clicks; never paste it in chat) | Gate email to artists (T-10) |
 | M-3 | **Re-test the live fixes** | Refresh any app page · open your Passport link fresh · check "Sign in" in the site header · confirm the home screen no longer hangs (after next deploy) | Upgrades T-16 to owner-witnessed; closes your 4 findings |
 | M-4 | **Counsel sign-off L-1…L-9** | Send `docs/legal/` drafts to your lawyer; return their fixes | Legal launch gate (T-24) |
@@ -28,4 +27,7 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 | M-9 | Rename test domain off "gigproof" (`@lock.test`) | Say the word; purely cosmetic |
 | M-10 | Canonical tagline + 2nd market | One sentence each |
 
-_Resolved (kept for the record): ~~C-2 Supabase Pro~~ ✅ 16 Jul · ~~merge-to-main authorization for audit fixes~~ ✅ 17 Jul._
+## ❓ One small question for you (no rush)
+The database cleanup found **3 events that stay counted as REAL**: a signup + onboarding + login on 11 Jul by `shydaviddjnattaly@gmail.com`. If that's a team member testing, tell me and I'll mark it as test activity; if it's a real early user — congratulations, they stay counted.
+
+_Resolved (kept for the record): ~~C-2 Supabase Pro~~ ✅ 16 Jul · ~~merge-to-main authorization for audit fixes~~ ✅ 17 Jul · ~~M-1 migration 037~~ ✅ applied+verified 17 Jul._
