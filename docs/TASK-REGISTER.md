@@ -28,25 +28,26 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — the one task in progress
+## NOW — Wave 2 (dispatched 17 Jul, evening)
 
-### T-18 · Endless-skeleton hang fix + ship (with T-17) — §10.6 (no dead-ends) · §13.4.4
-Owner hit 17 Jul: `/artist/home` stuck on skeleton bars ("the screen disappears all the time").
-| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
-|---|---|---|---|---|---|---|---|
-| ✅ | — | ⚠️ | — | — | ✅ | — | ✅ |
-- **CODE ✅** — two layers: every data request now aborts at 15s (global), and the home screen has a 20s watchdog → both land on the existing error-retry screen. A skeleton can no longer be a dead-end. Honest note: the root hang can't be reproduced in my sandbox (live-DB browser access is blocked here) — the fix guarantees *recovery*, and **Maria confirms live** after deploy (OWNER-PENDING M-3).
+Four builds in disjoint territories + Team D verification each + Team E wave-close ship:
 
-### T-17 · Genre personalization: canon chips ↔ Radar scene rail — §8.2 (scene lens) · §8.6 · §2.7
-Owner directive 17 Jul: "genres = dropdown = the Radar filter — correlated, personalized."
-| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
-|---|---|---|---|---|---|---|---|
-| ✅ | ⚠️ | ⚠️ | ✅ | ⚠️ | ✅ | ⚠️ | ✅ |
-- **CODE ✅** — ONE canon vocabulary (`constants.GENRES`, 12 scenes) feeds BOTH the Act-editor chip picker (max 3, first = primary, legacy free-text preserved as a chip, EN+HE strings) AND a new "Your standing in" scene rail on the Radar that re-weights the gold ★ through the already-ratified `genreWeights` engine — additive emphasis only, never a grade (§2.7). Playwright-proven in demo. MOBILE/DESKTOP witness → Maria after deploy.
+| µ-task | Parent | Team | Detail | Budget |
+|---|---|---|---|---|
+| W2-1 | T-31 residue | A1 | `/artist/home` has TWO of its own primary CTAs (pre-existing, found by D-verify) — enforce exactly ONE (§10.2): the dock/inspector CTA law decides which keeps lime | ≤40k |
+| W2-2 | T-35 | A3 | Viewport-fit phase 1: measure page-scroll on every view @390×844 + @1360×900 → offender list; FIX the Radar home (owner's law: page never scrolls; long content lives in bounded internal panels) | ≤90k |
+| W2-3 | T-19 | C1 | Author the missing Hebrew: complete `radar.universe` + Radar-kit + scene-rail blocks in he.js (canon glossary §4 terms; method labels stay English §15.4) | ≤80k |
+| W2-4 | T-32 | C2 | Self-host fonts via @fontsource packages (Frank Ruhl Libre · Heebo · IBM Plex Mono) — remove the Google Fonts runtime dependency; local demo image replaces the Unsplash URL | ≤60k |
+| W2-V | rule 8 | D | Independent adversarial verify of each build | ≤70k× |
+| W2-S | ship | E | verify gate · embed+site rebuild · replica · deploy watch · live smoke | ≤40k |
 
 ---
 
-## NEXT-UP QUEUE HEAD (returns to NOW after the ship)
+## LIVE IN PRODUCTION — awaiting only the owner's eyes (M-3/M-5)
+
+**T-17** genre chips ↔ Radar scene rail · **T-18** hang fix (15s abort + 20s watchdog) · **T-34** share/deep-link repair · **T-31** 44px tap targets · **T-33** passport mobile rows · **T-21-part** consent banner. All Team-D-verified + live-smoked; the owner's witness upgrades them toward DONE (rule 4).
+
+## QUEUE HEAD
 
 ### T-01 · Login — §8.13 (shared screens) · §13.4.4 (auth engine) · §17.B.1
 The front door: email+password, Google, forgot/reset, signup hand-off.
@@ -66,8 +67,7 @@ The front door: email+password, Google, forgot/reset, signup hand-off.
 ## BLOCKED — waiting on Maria (plain language)
 
 ### T-10 (email half) · Gate email to the artist — §14.6.5
-When a booking manager reacts, the artist should get an email. The in-app notification works today; the email cannot exist until there is an email account to send from.
-- **What Maria does:** sign up at resend.com (free ≤3,000/month) → create an API key → put it in Vercel (I'll give the exact click-path when you have it). **Never paste the key in chat.**
+UNBLOCKED 17 Jul: Resend key stored ✓ · domain verified ✓ · test emails delivered ✓ (owner did M-2/M-11). Remaining work is MINE: the guarded server send-path (§14.6.5 bodies) — queued Wave 3, Team C2/F territory. Nothing waits on Maria here anymore.
 
 ### Witness requests (rule 4 — a human must look)
 - **T-01 Login** and **T-08 Public Passport**: Maria looks at 390px (phone) and 1360px (desktop) against the §10.2/§10.3 checklists — I will hand her a one-page checklist for each when the agent-side passes are done.
