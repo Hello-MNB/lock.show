@@ -1,607 +1,449 @@
-﻿// Producers / Source Confirmer ג€” rebuilt per Codex exact rebuild brief ֲ§5.4
-// (2026-07-14). This page is NOT a production workspace: it explains one-tap
-// source confirmation (׳׳׳©׳¨-׳׳§׳•׳¨). One link. One claim. No account.
-// Per ֲ§5.4 the hero is less cinematic: the production-warehouse webp is a
-// heavily-darkened subtle BACKGROUND (not the shared Hero image card), with
-// a CSS phone/WhatsApp confirmation-card mockup ג€” no real number anywhere.
-// The shared Hero component has no background-image mode, so the hero is
-// composed locally here (reported as a component gap).
-// ALL copy lives in content/producers.ts ({ en, he }); this page renders EN
-// for now ג€” locale wiring is a later wave and stays mechanical.
-
+import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { FinalCta } from '@/components/marketing/final-cta'
-import { Icon } from '@/components/marketing/icons'
-import { Section, SectionHeading } from '@/components/marketing/section'
-import { producersContent } from '@/content/producers'
-import { buildPageMetadata } from '@/lib/seo'
+export const metadata: Metadata = {
+  alternates: { canonical: '/producers' },
+  title: 'For Producers — 20 Seconds, No Account',
+  description:
+    'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',
+  openGraph: {
+    url: '/producers',
+    title: 'For Producers | LOCK',
+    description: 'You were there that night. Twenty seconds of your word turns one good show into something an artist can build on.',
+    type: 'website',
+  },
+}
 
-const t = producersContent.en
+const steps = [
+  'A WhatsApp lands: “hey — got 20 seconds?”',
+  'You tap the link. It opens right in your browser.',
+  'One show. The date, the venue, the crowd you remember.',
+  'You confirm — or correct what’s off. Your call.',
+  'Back to your production. We never chase you again.',
+]
 
-const BG_IMAGE = '/brand/lockshow-atmosphere-production-warehouse-v1.webp'
+const whyItMatters = [
+  {
+    title: 'You turn a story into a fact',
+    body: 'The artist can say the room was full. When the producer who ran the night says it, someone about to risk their name on a booking can actually believe it. That is the whole difference — and it takes you one tap.',
+  },
+  {
+    title: 'Your name, quoted exactly as given',
+    body: 'Your confirmation appears as what it is — “Confirmed by the producer who ran the show,” with your name and venue. It is never inflated, never anonymous, never turned into a number.',
+  },
+  {
+    title: 'Disagreeing is part of the deal',
+    body: 'If the estimate feels generous, say so. If you honestly can’t judge the draw from where you stood, skip it. Your yes only means something because you were free to say no.',
+  },
+  {
+    title: 'Nothing goes public without the artist',
+    body: 'You confirm; the artist decides what gets shown. And if you ever change your mind, you can withdraw your confirmation — your word stays yours.',
+  },
+]
 
-export const metadata = buildPageMetadata('sourceConfirmers')
+const ICON_PATHS: Record<string, string> = {
+  link:    '<path d="M8 12h8M13 9l3 3-3 3"/><path d="M10 5H5v14h5M14 5h5v14h-5"/>',
+  clip:    '<path d="M5 5h14v16H5zM8 3v4M16 3v4M5 9h14"/><path d="m9 15 2 2 4-4"/>',
+  check:   '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 8"/>',
+  lock:    '<path d="M6 10h12v11H6zM8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/><circle cx="12" cy="15" r="1.2"/>',
+}
 
-const MONO = 'var(--font-space-mono)'
-
-// ג”€ג”€ Phone / WhatsApp confirmation-card mockup (brief ֲ§5.4) ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-// Pure CSS mockup ג€” no real phone number, no real chat screenshot.
-
-function PhoneMockup() {
-  const p = t.phone
+function Icon({ name, size = 20 }: { name: string; size?: number }) {
   return (
-    <div
-      id="confirmation-example"
-      aria-label="Example of a one-tap source confirmation card"
-      style={{
-        width: 'min(340px, 100%)',
-        borderRadius: '36px',
-        background: '#0d110e',
-        border: '1px solid rgba(243,245,239,0.18)',
-        boxShadow: '0 32px 80px -28px rgba(0,0,0,0.85)',
-        padding: '0.9rem',
-        scrollMarginTop: '96px',
-      }}
-    >
-      <div
-        style={{
-          borderRadius: '28px',
-          overflow: 'hidden',
-          background: 'linear-gradient(180deg, #101511 0%, #0b0e0c 100%)',
-          border: '1px solid rgba(243,245,239,0.08)',
-        }}
-      >
-        {/* chat header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.6rem',
-            padding: '0.85rem 1rem',
-            borderBottom: '1px solid rgba(243,245,239,0.08)',
-          }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              width: '2rem',
-              height: '2rem',
-              borderRadius: '50%',
-              background: 'rgba(200,240,77,0.15)',
-              border: '1px solid rgba(200,240,77,0.3)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-stamp)',
-              flexShrink: 0,
-            }}
-          >
-            <Icon id="artist" size={15} />
-          </span>
-          <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                fontFamily: 'var(--font-archivo)',
-                fontSize: '0.85rem',
-                fontWeight: 800,
-                color: 'var(--color-paper)',
-                margin: 0,
-              }}
-            >
-              {p.sender}
-            </p>
-            <p
-              style={{
-                fontFamily: MONO,
-                fontSize: '0.56rem',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: 'rgba(243,245,239,0.45)',
-                margin: 0,
-              }}
-            >
-              {p.appLabel}
-            </p>
-          </div>
-        </div>
-
-        <div style={{ padding: '1rem' }}>
-          {/* incoming message bubble */}
-          <p
-            style={{
-              background: 'rgba(243,245,239,0.07)',
-              border: '1px solid rgba(243,245,239,0.08)',
-              borderRadius: '14px 14px 14px 4px',
-              padding: '0.7rem 0.85rem',
-              fontSize: '0.82rem',
-              lineHeight: 1.55,
-              color: 'rgba(243,245,239,0.85)',
-              margin: '0 0 0.8rem',
-            }}
-          >
-            {p.message}
-          </p>
-
-          {/* confirmation card */}
-          <div
-            style={{
-              background: 'rgba(10,13,11,0.6)',
-              border: '1px solid rgba(200,240,77,0.25)',
-              borderRadius: '16px',
-              padding: '0.9rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.65rem' }}>
-              <Icon id="lock" size={13} color="var(--color-stamp)" />
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: '0.58rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-stamp)',
-                }}
-              >
-                {p.claim.title}
-              </span>
-            </div>
-            <dl style={{ margin: '0 0 0.75rem', display: 'grid', gap: '0.35rem' }}>
-              {p.claim.rows.map((row) => (
-                <div key={row.label} style={{ display: 'flex', gap: '0.6rem' }}>
-                  <dt
-                    style={{
-                      fontFamily: MONO,
-                      fontSize: '0.6rem',
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(243,245,239,0.45)',
-                      minWidth: '3.2rem',
-                    }}
-                  >
-                    {row.label}
-                  </dt>
-                  <dd
-                    style={{
-                      fontSize: '0.78rem',
-                      color: 'rgba(243,245,239,0.85)',
-                      margin: 0,
-                    }}
-                  >
-                    {row.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <p
-              style={{
-                fontSize: '0.76rem',
-                lineHeight: 1.5,
-                color: 'rgba(243,245,239,0.65)',
-                margin: '0 0 0.75rem',
-              }}
-            >
-              {p.claim.question}
-            </p>
-            {/* confirm / correct / skip ג€” mockup buttons, not page CTAs */}
-            <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: '0.62rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-stamp)',
-                  background: 'rgba(200,240,77,0.12)',
-                  border: '1px solid rgba(200,240,77,0.4)',
-                  borderRadius: '999px',
-                  padding: '0.4rem 0.85rem',
-                }}
-              >
-                {p.actions.confirm}
-              </span>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: '0.62rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(243,245,239,0.8)',
-                  border: '1px solid rgba(243,245,239,0.25)',
-                  borderRadius: '999px',
-                  padding: '0.4rem 0.85rem',
-                }}
-              >
-                {p.actions.correct}
-              </span>
-              <span
-                style={{
-                  fontFamily: MONO,
-                  fontSize: '0.62rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(243,245,239,0.55)',
-                  border: '1px solid rgba(243,245,239,0.15)',
-                  borderRadius: '999px',
-                  padding: '0.4rem 0.85rem',
-                }}
-              >
-                {p.actions.skip}
-              </span>
-            </div>
-          </div>
-
-          <p
-            style={{
-              fontFamily: MONO,
-              fontSize: '0.58rem',
-              letterSpacing: '0.06em',
-              color: 'rgba(243,245,239,0.45)',
-              margin: '0.8rem 0 0',
-              textAlign: 'center',
-            }}
-          >
-            {p.footnote}
-          </p>
-        </div>
-      </div>
-    </div>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: ICON_PATHS[name] }}
+    />
   )
 }
 
-// ג”€ג”€ Page ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-
 export default function ProducersPage() {
   return (
-    <main data-accent="source">
-      {/* ג”€ג”€ HERO (brief ֲ§5.4): warehouse webp as heavily-darkened subtle
-             background + phone confirmation mockup ג”€ג”€ */}
+    <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
+
+      {/* ── HERO ─────────────────────────────────────────── */}
       <section
-        className="mk-hero"
         style={{
-          background: `linear-gradient(160deg, rgba(10,13,11,0.94) 0%, rgba(10,13,11,0.88) 55%, rgba(10,13,11,0.96) 100%), url('${BG_IMAGE}') center / cover no-repeat`,
+                    overflow: 'hidden',
+          minHeight: 'min(92svh, 880px)',
+          background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-producer-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        <div className="mk-container">
-          <div className="mk-hero-grid" style={{ alignItems: 'center' }}>
-            {/* Left: copy */}
-            <div>
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem' }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: 'inline-block',
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    background: 'var(--color-stamp)',
-                    boxShadow: '0 0 10px var(--color-stamp)',
-                    flexShrink: 0,
-                  }}
-                />
-                <p
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-stamp)',
-                    margin: 0,
-                  }}
-                >
-                  {t.hero.eyebrow}
-                </p>
-              </div>
-
-              <h1
-                style={{
-                  fontFamily: 'Georgia, "Times New Roman", serif',
-                  fontWeight: 400,
-                  fontSize: 'clamp(2.2rem, 4.6vw, 3.6rem)',
-                  lineHeight: 1.02,
-                  letterSpacing: '-0.04em',
-                  color: 'var(--color-paper)',
-                  margin: '0 0 1.4rem',
-                }}
-              >
-                {t.hero.h1}
-              </h1>
-
-              <p
-                style={{
-                  fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
-                  lineHeight: 1.7,
-                  color: 'rgba(243,245,239,0.7)',
-                  maxWidth: '480px',
-                  margin: '0 0 2rem',
-                }}
-              >
-                {t.hero.body}
-              </p>
-
-              <div
-                className="mk-cta-row"
-                style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}
-              >
-                <a href={t.hero.primaryCta.href} className="mk-btn mk-btn--primary">
-                  {t.hero.primaryCta.label}
-                  <Icon id="arrow" size={16} />
-                </a>
-                <Link href={t.hero.secondaryCta.href} className="mk-btn mk-btn--outline-dark">
-                  {t.hero.secondaryCta.label}
-                </Link>
-              </div>
-
-              <p
-                style={{
-                  fontFamily: MONO,
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.06em',
-                  color: 'rgba(243,245,239,0.55)',
-                  margin: 0,
-                }}
-              >
-                {t.hero.trustLine}
-              </p>
-            </div>
-
-            {/* Right: phone / WhatsApp confirmation-card mockup */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <PhoneMockup />
-            </div>
+        <div style={{ maxWidth: '640px', position: 'relative' }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-space-mono), monospace',
+              fontSize: '0.75rem',
+              letterSpacing: '0.14em',
+              color: 'rgba(243,245,239,0.72)',
+              textTransform: 'uppercase',
+              marginBottom: '1.75rem',
+            }}
+          >
+            FOR PRODUCERS
+          </p>
+          <h1
+            style={{
+              fontFamily: 'Georgia, "Times New Roman", serif',
+              fontSize: 'clamp(2.4rem, 5vw, 4rem)',
+              fontWeight: 400,
+              lineHeight: 0.96,
+              letterSpacing: '-0.055em',
+              color: 'var(--color-paper)',
+              marginBottom: '1.5rem',
+            }}
+          >
+            You know what happened that night.
+            <br />
+            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
+              Twenty seconds to say so.
+            </em>
+          </h1>
+          <p
+            style={{
+              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+              fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
+              lineHeight: 1.65,
+              color: 'rgba(243,245,239,0.78)',
+              maxWidth: '520px',
+              marginBottom: '2.25rem',
+            }}
+          >
+            An artist you booked is asking a small favor between professionals: open one link,
+            glance at one show, tap confirm — or correct it. No account, no app, nothing else
+            ever asked of you.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <Link
+              href="/passport/demo"
+              style={{
+                background: 'var(--color-stamp)',
+                color: 'var(--color-ink)',
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                padding: '0.95rem 1.75rem',
+                textDecoration: 'none',
+                borderRadius: '10px',
+                display: 'inline-block',
+              }}
+            >
+              SEE WHAT YOUR WORD BUILDS →
+            </Link>
+            <Link
+              href="/how-it-works"
+              style={{
+                border: '1px solid rgba(243,245,239,0.22)',
+                color: 'var(--color-paper)',
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                padding: '0.95rem 1.75rem',
+                textDecoration: 'none',
+                borderRadius: '10px',
+                display: 'inline-block',
+              }}
+            >
+              HOW IT WORKS
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ג”€ג”€ 1 ֲ· WHAT YOU SEE (brief ֲ§5.4) ג”€ג”€ */}
-      <Section tone="paper">
-        <SectionHeading eyebrow={t.see.eyebrow} title={t.see.title} body={t.see.body} />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 'clamp(1rem, 2vw, 1.5rem)',
-          }}
-        >
-          {t.see.cards.map((card, i) => {
-            const dark = i === 1 // card rhythm: paper ֲ· dark ֲ· paper
-            return (
+      {/* ── THE FAVOR ────────────────────────────────────── */}
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
+        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-space-mono), monospace',
+              fontSize: '0.75rem',
+              color: 'var(--color-tally-onlight)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginBottom: '0.5rem',
+            }}
+          >
+            THE FAVOR
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
+              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+              color: 'var(--color-ink)',
+              marginBottom: '2rem',
+            }}
+          >
+            One show. One tap. Done.
+          </h2>
+
+          <div
+            className="m-divide"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1px',
+              background: 'rgba(10,13,11,0.08)',
+              border: '1px solid rgba(10,13,11,0.08)',
+              marginBottom: '3rem',
+            }}
+          >
+            {[
+              {
+                icon: 'link',
+                title: 'A link lands in your WhatsApp',
+                body: 'From an artist you actually booked, about a night you actually ran. It opens in your browser — no account, no download, no password.',
+              },
+              {
+                icon: 'clip',
+                title: 'One show, the way you remember it',
+                body: 'The date, the venue, roughly how full the room was. You were standing in it — one look is all it takes.',
+              },
+              {
+                icon: 'check',
+                title: 'Say what you saw',
+                body: 'Looks right? Confirm. Numbers feel off? Correct them. Honestly can’t tell? Skip it. Every answer is a fair one.',
+              },
+              {
+                icon: 'lock',
+                title: 'And that really is it',
+                body: 'No follow-ups, no ongoing role, no inbox to manage. Change your mind later? You can withdraw your confirmation any time.',
+              },
+            ].map((item, i) => (
               <div
-                key={card.title}
-                className="mk-card"
+                key={i}
+                className="m-flat"
+                style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
+              >
+                <span style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(200,240,77,0.1)',
+                  color: 'var(--color-stamp-onlight)',
+                  marginBottom: '0.875rem',
+                }}>
+                  <Icon name={item.icon} size={18} />
+                </span>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-archivo), system-ui, sans-serif',
+                    fontSize: '1rem',
+                    color: 'var(--color-ink)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+                    fontSize: '1rem',
+                    color: 'var(--color-tally-onlight)',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Entity firewall callout — CRITICAL per CLAUDE.md */}
+          <div
+            style={{
+              border: '1px solid rgba(200,240,77,0.2)',
+              background: 'rgba(200,240,77,0.04)',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
+              borderRadius: '16px',
+            }}
+          >
+            <p
+              style={{
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.75rem',
+                color: 'var(--color-stamp-onlight)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: '0.5rem',
+              }}
+            >
+              PRODUCER ≠ BOOKING MANAGER
+            </p>
+            <p
+              style={{
+                fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+                fontSize: '1rem',
+                color: 'var(--color-tally-onlight)',
+                lineHeight: 1.6,
+              }}
+            >
+              You&apos;re the <strong style={{ color: 'var(--color-ink)' }}>producer</strong> who
+              ran that night and can vouch for it — the <strong style={{ color: 'var(--color-ink)' }}>booking
+              manager</strong> is the one deciding on the next one, and LOCK never mixes the two.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── WHY YOUR WORD MATTERS ────────────────────────── */}
+      <section
+        style={{
+          background: 'var(--color-paper)',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
+          borderTop: '1px solid var(--color-mist)',
+          borderBottom: '1px solid var(--color-mist)',
+        }}
+      >
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-space-mono), monospace',
+              fontSize: '0.75rem',
+              color: 'var(--color-tally-onlight)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginBottom: '0.5rem',
+            }}
+          >
+            WHY YOUR WORD MATTERS
+          </p>
+          <h2
+            style={{
+              fontFamily: 'var(--font-archivo), system-ui, sans-serif',
+              fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
+              color: 'var(--color-ink)',
+              marginBottom: '1.5rem',
+            }}
+          >
+            In this scene, your name carries weight.
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+            {whyItMatters.map((item, i) => (
+              <div
+                key={i}
                 style={{
-                  background: dark ? 'var(--color-forest)' : '#ffffff',
-                  border: dark
-                    ? '1px solid rgba(243,245,239,0.1)'
-                    : '1px solid rgba(10,13,11,0.1)',
-                  padding: 'clamp(1.5rem, 3vw, 2rem)',
+                  padding: '1.5rem 0',
+                  borderBottom: '1px solid var(--color-mist)',
                 }}
               >
                 <h3
                   style={{
-                    fontFamily: 'var(--font-archivo)',
-                    fontSize: '1.1rem',
-                    fontWeight: 800,
-                    lineHeight: 1.35,
-                    color: dark ? 'var(--color-paper)' : 'var(--color-ink)',
-                    margin: '0 0 0.7rem',
+                    fontFamily: 'var(--font-archivo), system-ui, sans-serif',
+                    fontSize: '1rem',
+                    color: 'var(--color-ink)',
+                    marginBottom: '0.4rem',
                   }}
                 >
-                  {card.title}
+                  {item.title}
                 </h3>
                 <p
                   style={{
-                    fontSize: '0.95rem',
+                    fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+                    fontSize: '1rem',
+                    color: 'var(--color-tally-onlight)',
                     lineHeight: 1.65,
-                    color: dark ? 'rgba(243,245,239,0.65)' : 'var(--color-tally-onlight)',
-                    margin: 0,
                   }}
                 >
-                  {card.body}
+                  {item.body}
                 </p>
               </div>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
 
-      {/* ג”€ג”€ 2 ֲ· CONFIRM / CORRECT / SKIP (brief ֲ§5.4) ג”€ג”€ */}
-      <Section tone="forest" narrow>
-        <SectionHeading
-          tone="forest"
-          eyebrow={t.answer.eyebrow}
-          title={t.answer.title}
-          body={t.answer.body}
-        />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 'clamp(0.75rem, 1.5vw, 1.25rem)',
-          }}
-        >
-          {t.answer.options.map((option) => (
-            <div
-              key={option.label}
-              className="mk-card"
+      {/* ── TWENTY SECONDS, START TO FINISH ──────────────── */}
+      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)', textAlign: 'center' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <div
+            style={{
+              background: 'var(--color-night)',
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
+              borderRadius: '16px',
+              marginBottom: '2rem',
+              textAlign: 'left',
+            }}
+          >
+            <p
               style={{
-                background: 'rgba(243,245,239,0.04)',
-                border: '1px solid rgba(243,245,239,0.12)',
-                padding: 'clamp(1.25rem, 2.5vw, 1.6rem)',
-                textAlign: 'center',
+                fontFamily: 'var(--font-space-mono), monospace',
+                fontSize: '0.75rem',
+                color: 'var(--color-stamp)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                marginBottom: '1rem',
               }}
             >
-              <span
-                aria-hidden="true"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '2.6rem',
-                  height: '2.6rem',
-                  borderRadius: '50%',
-                  background: 'rgba(200,240,77,0.1)',
-                  border: '1px solid rgba(200,240,77,0.3)',
-                  color: 'var(--color-stamp)',
-                  marginBottom: '0.8rem',
-                }}
-              >
-                <Icon id={option.icon} size={18} />
-              </span>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-archivo)',
-                  fontSize: '1rem',
-                  fontWeight: 800,
-                  color: 'var(--color-paper)',
-                  margin: '0 0 0.45rem',
-                }}
-              >
-                {option.label}
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.9rem',
-                  lineHeight: 1.55,
-                  color: 'rgba(243,245,239,0.65)',
-                  margin: 0,
-                }}
-              >
-                {option.body}
-              </p>
+              TWENTY SECONDS, START TO FINISH
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {steps.map((step) => (
+                <p
+                  key={step}
+                  style={{
+                    fontFamily: 'var(--font-space-mono), monospace',
+                    fontSize: '0.85rem',
+                    color: 'rgba(243,245,239,0.78)',
+                    letterSpacing: '0.02em',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {step}
+                </p>
+              ))}
             </div>
-          ))}
+          </div>
+          <p
+            style={{
+              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
+              fontSize: '1rem',
+              color: 'var(--color-tally-onlight)',
+              lineHeight: 1.6,
+              marginBottom: '1.5rem',
+            }}
+          >
+            Curious where those twenty seconds end up? Your name sits right on the show
+            you confirmed — nowhere else.
+          </p>
+          <Link
+            href="/passport/demo"
+            style={{
+              background: 'var(--color-stamp)',
+              color: 'var(--color-ink)',
+              fontFamily: 'var(--font-space-mono), monospace',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              padding: '0.95rem 1.75rem',
+              textDecoration: 'none',
+              borderRadius: '10px',
+              display: 'inline-block',
+            }}
+          >
+            SEE THE SAMPLE PASSPORT →
+          </Link>
         </div>
-      </Section>
+      </section>
 
-      {/* ג”€ג”€ 3 ֲ· WHAT DOES NOT HAPPEN (brief ֲ§5.4): no account, no dashboard,
-             no ongoing role ג”€ג”€ */}
-      <Section tone="paper">
-        <SectionHeading eyebrow={t.not.eyebrow} title={t.not.title} body={t.not.body} />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: 'clamp(1rem, 2vw, 1.5rem)',
-          }}
-        >
-          {t.not.cards.map((card) => (
-            <div
-              key={card.title}
-              className="mk-card"
-              style={{
-                background: '#ffffff',
-                border: '1px solid rgba(10,13,11,0.1)',
-                padding: 'clamp(1.5rem, 3vw, 2rem)',
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: 'var(--font-archivo)',
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  color: 'var(--color-ink)',
-                  margin: '0 0 0.6rem',
-                }}
-              >
-                {card.title}
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.95rem',
-                  lineHeight: 1.65,
-                  color: 'var(--color-tally-onlight)',
-                  margin: 0,
-                }}
-              >
-                {card.body}
-              </p>
-            </div>
-          ))}
-        </div>
-        <p
-          style={{
-            textAlign: 'center',
-            fontFamily: MONO,
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: 'var(--color-stamp-onlight)',
-            margin: '2rem 0 0',
-          }}
-        >
-          {t.not.closing}
-        </p>
-      </Section>
-
-      {/* ג”€ג”€ 4 ֲ· ARTIST STILL CONTROLS PUBLICATION (brief ֲ§5.4) ג”€ג”€ */}
-      <Section tone="ink">
-        <SectionHeading tone="ink" eyebrow={t.control.eyebrow} title={t.control.title} />
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 'clamp(1rem, 2vw, 1.5rem)',
-          }}
-        >
-          {t.control.cards.map((card) => (
-            <div
-              key={card.title}
-              className="mk-card"
-              style={{
-                background: 'rgba(243,245,239,0.04)',
-                border: '1px solid rgba(243,245,239,0.1)',
-                padding: 'clamp(1.5rem, 3vw, 2rem)',
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{ display: 'block', color: 'var(--color-stamp)', marginBottom: '0.7rem' }}
-              >
-                <Icon id="lock" size={18} />
-              </span>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-archivo)',
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  lineHeight: 1.35,
-                  color: 'var(--color-paper)',
-                  margin: '0 0 0.6rem',
-                }}
-              >
-                {card.title}
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.95rem',
-                  lineHeight: 1.65,
-                  color: 'rgba(243,245,239,0.65)',
-                  margin: 0,
-                }}
-              >
-                {card.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* ג”€ג”€ FINAL CTA ג”€ג”€ */}
-      <FinalCta
-        title={t.finalCta.title}
-        body={t.finalCta.body}
-        primaryCta={t.finalCta.primaryCta}
-        secondaryLink={t.finalCta.secondaryLink}
-      />
     </main>
   )
 }

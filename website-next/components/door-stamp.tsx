@@ -54,7 +54,7 @@ export function DoorStamp({
         textAnchor="middle"
         fill="currentColor"
       >
-        VERIFIED
+        מאומת · VERIFIED
       </text>
 
       {/* Bottom rule */}

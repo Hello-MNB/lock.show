@@ -1,7 +1,12 @@
-﻿import { APP_URL } from '@/lib/app-url'
-import { buildPageMetadata } from '@/lib/seo'
+﻿import type { Metadata } from 'next'
 
-export const metadata = buildPageMetadata('radar')
+export const metadata: Metadata = {
+  alternates: { canonical: '/radar' },
+  title: 'Artist Radar — Your Private Evidence Workspace',
+  description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
+}
+
+import { APP_URL } from '@/lib/app-url'
 
 const dimensions = [
   {
