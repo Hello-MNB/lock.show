@@ -9,6 +9,16 @@ import { ToastProvider } from './components/ui.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
 
+// Deep-link restore (§7.6): a dynamic route (/app/passport/:id …) opened fresh
+// on the static site host has no physical file, so the site's 404 bootstrap
+// bounces it here as /app/?dl=<original-path>. Restore it BEFORE the router
+// reads location. Same-origin paths only — a value not starting with a single
+// '/' (or starting '//', a protocol-relative URL) is discarded.
+{
+  const dl = new URLSearchParams(window.location.search).get('dl')
+  if (dl && /^\/(?!\/)/.test(dl)) window.history.replaceState(null, '', dl)
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     {/* BASE_URL: '/' standalone · '/app/' when embedded in the public website */}
