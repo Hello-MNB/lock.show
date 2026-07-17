@@ -18,7 +18,7 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 | M-5 | **Witness walks** (rule 4) | When I hand you a one-page checklist per screen: look at it on your phone (390px) and desktop, tick the boxes | MOBILE/DESKTOP ✅ on every screen task |
 | M-6 | **D3 ruling** | Decide: retire the `/producer` shell or fold it into Production | T-11 polish; nav cleanup |
 | M-7 | **Codex artwork** | Ask Codex for the logo + venue-icon files | Final visual polish (§5.9) |
-| M-8 | **Prices + annual %** | One sentence when ready (free-pilot holds until the Gate) | Plan enforcement (post-Gate) |
+| M-8 | **Prices + pilot-pay flag** | Second-pass audit finding: the artist "I've paid" screen is deployed but FLAG-OFF in production — the Gate journey is dormant until you (a) set the pilot price (earlier rec: ₪179) and (b) say "turn on the pay screen". Annual % can wait for post-Gate | Makes the Gate walkable for real (J5) |
 | M-15 | **GO for "site hygiene train"** | One word ("go") ships the NO-VISUAL-CHANGE fixes: dead advertised routes in llms.txt · footer/logo tap sizes · site security headers (T-41). Zero design risk; design changes wait for your M-13 taste-pick | Closes S0's factual bugs |
 | M-14 | **ADR-1: ONE canonical app address** | Decide: `app.lock.show` (recommended — cleaner, already fully secured) or `lock.show/app`. One sentence; I write the formal decision record + redirect plan | Ends the dual-origin ambiguity the PM audit flagged |
 
