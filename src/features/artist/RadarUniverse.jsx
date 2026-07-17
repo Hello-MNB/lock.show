@@ -84,10 +84,27 @@ function derivePlatformNodes(items = [], claims = []) {
   return [...byKey.values()]
 }
 
+// ── Breakpoint gate (Tailwind md, 768px) — CTA law (§10.2 / §8.2): the md+
+// next-move dock and the mobile next-step card are ONE logical CTA, so exactly
+// ONE of them may exist per view. CSS show/hide left BOTH .btn-primary nodes in
+// the DOM (T-31 residue); this hook lets each side render conditionally instead,
+// guaranteeing a single lime primary at any width (dock XOR mobile card).
+export function useFullStage() {
+  const [full, setFull] = useState(() => window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = (e) => setFull(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return full
+}
+
 export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
   const { T } = useLang()
   const S = T.radar.universe
   const nav = useNavigate()
+  const fullStage = useFullStage() // md+ ⇒ this component owns the ONE next-move CTA
   const [selected, setSelected] = useState(null)       // planet key → opens the ONE panel
   const [review, setReview] = useState(false)          // "Needs you" batch-review mode (inside the radar)
   const [filter, setFilter] = useState('needsYou')
@@ -360,7 +377,11 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   }
 
   return (
-    <div className="relative mb-5 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:mb-0 md:flex md:min-h-[min(82vh,780px)] md:flex-col md:justify-center md:p-8">
+    // Viewport law (T-35/§10.2): inside the dashboard's fixed-height column this
+    // panel FLEXES to the remaining height on md+ (min-h-0 + flex-1 instead of a
+    // fixed min-h) — the universe square below derives its size from this height,
+    // so the whole radar scales to fit rather than pushing the page past the fold.
+    <div className="relative shrink-0 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:flex md:min-h-0 md:flex-1 md:flex-col md:justify-center md:p-8">
       {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels).
           Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"
@@ -424,7 +445,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         /* ── THE UNIVERSE — always mounted, never reflows. Full-stage (md+):
               the same square grows to fill the taller canvas — orbit math is
               percentage-based so every node scales with it for free. ── */
-        <div className="relative mx-auto aspect-square max-w-[400px] md:w-[620px] md:max-w-[620px]">
+        /* md+: HEIGHT-driven square (h-full + aspect-square ⇒ width follows the
+              flexed panel height, capped at the original 620px) — orbit math is
+              percentage-based so every node scales with it for free. */
+        <div className="relative mx-auto aspect-square w-full max-w-[400px] md:h-full md:max-h-[620px] md:w-auto md:max-w-[620px]">
           {/* thin orbit rings — the quiet geometry of the night. A third,
               outermost hairline (md+) carries the platform ring below. */}
           <div className="absolute inset-[9%] rounded-full border border-line" aria-hidden />
@@ -528,9 +552,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
 
       {/* ── ONE next move — full-stage (md+) ONLY: floats bottom-start OVER
             the universe, like the prototype's .next card. Mobile keeps its
-            existing separate card below the radar (ArtistDashboard) unchanged
-            — this one stays hidden below md so nothing doubles up. ── */}
-      {!blossom && nextAction && (
+            separate card below the radar (ArtistDashboard), which renders only
+            below md — the fullStage gate keeps exactly ONE .btn-primary in the
+            DOM per view (CTA law §10.2/§8.2), never two hidden twins. ── */}
+      {fullStage && !blossom && nextAction && (
         <div className="relative z-10 hidden items-center justify-between gap-3 rounded-xl border border-gold/25 bg-surface/95 px-3 py-2.5 shadow-card backdrop-blur md:absolute md:bottom-8 md:start-8 md:flex md:w-[380px] md:max-w-[calc(100%-4rem)]">
           <div className="min-w-0">
             <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>

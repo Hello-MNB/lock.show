@@ -23,30 +23,36 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 8. **QA-before-report (owner directive 17 Jul):** every executed task is verified by an independent test agent (Team D) START-TO-END before it is reported to the owner. No self-reported "done."
 9. **Document links in every reply (owner directive 17 Jul):** every reply to the owner ends with clickable links to this register, OWNER-PENDING, and the spec (GitHub, work branch).
 10. **Micro-task work breakdown (owner directive 17 Jul):** the WORK BREAKDOWN section below decomposes every active task into per-team micro-tasks with precise budgets; progress is reported BY TASK NUMBER against it.
+11. **The permanence boundary (owner + external review, 17 Jul):** autonomy NEVER touches real people's data, sends real email, moves real money, or changes the live database. Each such act requires the owner's explicit per-instance word; where legality is the question, it is lawyer-gated (T-24). The email send-path ships FLAG-OFF until counsel signs. All autonomous building/testing runs on demo/seed fixtures. A µ-task that turns out to touch the boundary STOPS the loop and asks first.
+12. **The named-train law (site):** the marketing site NEVER ships as cargo of an app merge (17 Jul regression: unapproved branch-only redesign rode whole-branch merges into production). Site changes ship only on their own train, after the owner's TASTE approval of a preview. For the site, owner approval comes BEFORE production — L8 moves ahead of SHIP.
+13. **Token economy:** every wave report states its measured token cost; low-risk docs-only µ-tasks may skip L5 (Team D) at the orchestrator's discretion ONLY when no code changed; waves are sized to the owner's remaining plan budget — Gate-critical tasks first, heavy build programs (site S4-S8) deferred if the budget tightens.
 
 **Marks:** ✅ done · ⚠️ partial/unwitnessed (note says what's missing) · ❌ not built · — not applicable (non-screen task).
 
 ---
 
-## NOW — the one task in progress
+## NOW — Wave 2 (dispatched 17 Jul, evening)
 
-### T-18 · Endless-skeleton hang fix + ship (with T-17) — §10.6 (no dead-ends) · §13.4.4
-Owner hit 17 Jul: `/artist/home` stuck on skeleton bars ("the screen disappears all the time").
-| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
-|---|---|---|---|---|---|---|---|
-| ✅ | — | ⚠️ | — | — | ✅ | — | ✅ |
-- **CODE ✅** — two layers: every data request now aborts at 15s (global), and the home screen has a 20s watchdog → both land on the existing error-retry screen. A skeleton can no longer be a dead-end. Honest note: the root hang can't be reproduced in my sandbox (live-DB browser access is blocked here) — the fix guarantees *recovery*, and **Maria confirms live** after deploy (OWNER-PENDING M-3).
+Four builds in disjoint territories + Team D verification each + Team E wave-close ship:
 
-### T-17 · Genre personalization: canon chips ↔ Radar scene rail — §8.2 (scene lens) · §8.6 · §2.7
-Owner directive 17 Jul: "genres = dropdown = the Radar filter — correlated, personalized."
-| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
-|---|---|---|---|---|---|---|---|
-| ✅ | ⚠️ | ⚠️ | ✅ | ⚠️ | ✅ | ⚠️ | ✅ |
-- **CODE ✅** — ONE canon vocabulary (`constants.GENRES`, 12 scenes) feeds BOTH the Act-editor chip picker (max 3, first = primary, legacy free-text preserved as a chip, EN+HE strings) AND a new "Your standing in" scene rail on the Radar that re-weights the gold ★ through the already-ratified `genreWeights` engine — additive emphasis only, never a grade (§2.7). Playwright-proven in demo. MOBILE/DESKTOP witness → Maria after deploy.
+| µ-task | Parent | Team | Detail | Budget |
+|---|---|---|---|---|
+| W2-1 | T-31 residue | A1 | `/artist/home` has TWO of its own primary CTAs (pre-existing, found by D-verify) — enforce exactly ONE (§10.2): the dock/inspector CTA law decides which keeps lime | ≤40k |
+| W2-2 | T-35 | A3 | Viewport-fit phase 1: measure page-scroll on every view @390×844 + @1360×900 → offender list; FIX the Radar home (owner's law: page never scrolls; long content lives in bounded internal panels) | ≤90k |
+| W2-3 | T-19 | C1 | Author the missing Hebrew: complete `radar.universe` + Radar-kit + scene-rail blocks in he.js (canon glossary §4 terms; method labels stay English §15.4) | ≤80k |
+| W2-4 | T-32 | C2 | Self-host fonts via @fontsource packages (Frank Ruhl Libre · Heebo · IBM Plex Mono) — remove the Google Fonts runtime dependency; local demo image replaces the Unsplash URL | ≤60k |
+| W2-V | rule 8 | D | Independent adversarial verify of each build | ≤70k× |
+| W2-S | ship | E | verify gate · embed+site rebuild · replica · deploy watch · live smoke | ≤40k |
+
+**Wave 3 re-scope (rule 11):** email send-path = code only, feature-flag OFF until T-24 counsel sign-off; analytics = consent-gating code only, no new real-data collection pre-counsel.
 
 ---
 
-## NEXT-UP QUEUE HEAD (returns to NOW after the ship)
+## LIVE IN PRODUCTION — awaiting only the owner's eyes (M-3/M-5)
+
+**T-17** genre chips ↔ Radar scene rail · **T-18** hang fix (15s abort + 20s watchdog) · **T-34** share/deep-link repair · **T-31** 44px tap targets · **T-33** passport mobile rows · **T-21-part** consent banner. All Team-D-verified + live-smoked; the owner's witness upgrades them toward DONE (rule 4).
+
+## QUEUE HEAD
 
 ### T-01 · Login — §8.13 (shared screens) · §13.4.4 (auth engine) · §17.B.1
 The front door: email+password, Google, forgot/reset, signup hand-off.
@@ -66,8 +72,7 @@ The front door: email+password, Google, forgot/reset, signup hand-off.
 ## BLOCKED — waiting on Maria (plain language)
 
 ### T-10 (email half) · Gate email to the artist — §14.6.5
-When a booking manager reacts, the artist should get an email. The in-app notification works today; the email cannot exist until there is an email account to send from.
-- **What Maria does:** sign up at resend.com (free ≤3,000/month) → create an API key → put it in Vercel (I'll give the exact click-path when you have it). **Never paste the key in chat.**
+UNBLOCKED 17 Jul: Resend key stored ✓ · domain verified ✓ · test emails delivered ✓ (owner did M-2/M-11). Remaining work is MINE: the guarded server send-path (§14.6.5 bodies) — queued Wave 3, Team C2/F territory. Nothing waits on Maria here anymore.
 
 ### Witness requests (rule 4 — a human must look)
 - **T-01 Login** and **T-08 Public Passport**: Maria looks at 390px (phone) and 1360px (desktop) against the §10.2/§10.3 checklists — I will hand her a one-page checklist for each when the agent-side passes are done.
@@ -196,7 +201,13 @@ These are pre-Gate necessities that are not screens. Screen-style MOBILE/DESKTOP
 5. G updates docs at wave close, single writer — no doc races.
 6. Budgets: per-agent ceilings from the allocation table (measured: QA ≈41k · build ≈60-80k · verify ≈70k). An agent at its ceiling STOPS and reports partial.
 
-**Active now:** Wave 1 workflow IN FLIGHT (A1-tap-targets · A2-passport-rows · C3-banner→C2 territory · B1-real-login-QA · B2-witness-docs — each with its D verification) · T-36 nav agent running.
+**Wave 1 CLOSED (17 Jul):** 8 agents · 521k tokens · 3 builds, 3 independent SHIP verdicts → shipped to production:
+- **T-31 (A1):** 44px floor into the primitives (`.btn`/`.field` min-height; invisible 44px hit-overlay for chips via `.tap-target`) + shell stragglers (bell, language toggle, Settings, role picker, Act-editor EDIT buttons). D-verified 21/22 sampled targets clean; the 1 marginal case (center-star chip edge overlap, low severity) logged for A1's next pass.
+- **T-33 (A2):** passport evidence rows stack at 390px — title wraps, date on its own mono line; 14/14 rows assert-visible; desktop unchanged. D-verified.
+- **T-21-part (C3):** consent banner Accept demoted to equal-weight (§15.2) — zero primary CTAs added to any screen; banner is now a docked bar that RESERVES space (shrinks the scroll container) so it can never cover fields/CTAs; stacks above the passport CTA bar. D-verified.
+- **B1:** real-login-form QA executed (findings in wave transcript → T-01 closure input).
+- **B2:** `docs/qa/WITNESS-CHECKLISTS.md` written for the owner (M-5 unblocked).
+**New findings routed:** /artist/home has a PRE-EXISTING double-primary-CTA of its own (not the banner) → A1 next wave. Residency date renders bare ISO on mobile (cosmetic) → A2 backlog.
 
 ---
 
@@ -255,6 +266,36 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 
 ---
 
+## AUTONOMOUS OPERATING LOOP (owner directive 17 Jul: "build professional processes so you can run autonomous")
+
+The register is the ONLY work source. The loop runs continuously; the owner is interrupted only by (a) verified wave reports, (b) genuine spec/firewall decisions, (c) her named pending items.
+
+**THE TASK-CLOSURE LOOP** (every µ-task travels it; no silent ends — a µ-task may ONLY end as CLOSED-SHIPPED, CLOSED-BLOCKED(named blocker+owner), or RETURNED(rebuilt after a failed verdict)):
+
+1. **PICK** — next µ-tasks by wave order from WORK BREAKDOWN; only register-numbered work.
+2. **DECOMPOSE** — parent task → µ-tasks, each: one team, one file territory, one budget ceiling, one Definition-of-Done sentence.
+3. **SPEC-ADJACENT** — the builder's prompt names the exact spec sections; the builder reads them FIRST (build glued to the spec, never from memory).
+4. **BUILD** — cheapest sufficient agent (low effort default; medium for structural work; high reserved for Team D). Budget ceiling enforced: at the ceiling the agent stops and reports partial.
+5. **TEST — all levels, characterized** (the error-prevention ladder):
+   - **L0 static gates:** the 10-inspector verify suite (firewall lint · canon-drift · registry · deltas · security-denial · i18n purity · nav contract · act isolation · 2 builds) — every µ-task, every wave close.
+   - **L1 unit:** pure functions get a test file (pattern: scripts/test-humanize.mjs — includes a firewall property test).
+   - **L2 screen:** Playwright per changed screen — renders at 390×844 AND 1360×900, key assertion of the µ-task's DoD, screenshots archived to scratchpad/qa/.
+   - **L3 flow:** the affected user journey end-to-end (deep-link in → act → land), per the T-36 walk pattern.
+   - **L4 spec-conformance:** diff the result against the cited spec section's Definition-of-Done (the gap-diff pattern).
+   - **L5 adversarial (rule 8):** Team D independently reproduces the builder's proof, tries to BREAK it, checks territory discipline + guardrails → SHIP / DO-NOT-SHIP. DO-NOT-SHIP → the µ-task RETURNS to step 4 with the verifier's findings (max 2 returns, then escalate to owner).
+   - **L6 wave regression:** full L0 + spot L2/L3 on the integrated tree at wave close (Team E).
+   - **L7 live smoke:** post-deploy production URL checks (Team E) — a ship isn't closed until live answers correctly.
+   - **L8 human witness:** the owner's checklist walk (rule 4) — the only level that can flip MOBILE/DESKTOP to ✅.
+6. **SHIP** — wave-close: verify green → embed/site rebuild → owner-authorized main merge → deploy watch → L7 smoke.
+7. **CLOSE** — register status flips in the SAME commit as the ship; findings discovered en route are ROUTED (new µ-task with team + wave), never dropped.
+8. **REPORT** — one verified wave report to the owner (rule 8: post-verification only), with doc links (rule 9) + OWNER-PENDING refresh.
+9. **LOOP** — return to 1. Anti-drift audit (register-vs-reality) runs every 3 waves or on any owner challenge.
+
+**Cheap-agent allocation law:** builder low/medium ≤40–90k by µ-task class (measured baselines: QA 41k · audit 71k · build 50–80k) · verifier high ≤70k · wave overhead (E) ≤40k. Wave ceiling ≈ 500k. Hardware note: this 4-core box executes 2–3 agents concurrently; waves of 4–6 µ-tasks keep the pipeline full.
+
+
+---
+
 ## WORK BREAKDOWN — micro-tasks per team (precise allocations; owner directive 17 Jul)
 
 **Wave 1 (active).** Order chosen so the three worst Team-B findings (tiny buttons · banner double-CTA · clipped Passport rows) close together. Wave ceiling ≈ 400k tokens.
@@ -275,6 +316,24 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 **In flight now:** T-36 nav agent (≤60k, background) · Wave 1 dispatch next.
 
 
+### T-37 · Marketing-site rebrand program — §16.B.11 (GTM) · §5 (DS) · §4.5 (voice) · §19.7 (SEO)
+**Owner brief (17 Jul):** impressive brand design · per-page microcopy · deliberate CTAs · "NOT a tour of the system — a marketing site." Regression context: the unapproved wave-1..6 redesigns (the "many rounds on nothing") live in git history — S1 mines them for salvage, none auto-ships.
+**Team S (11th team) · territory `website-next/**` exclusive · governed by rule 12 (taste-gate BEFORE production).**
+
+| µ | What | Deliverable to owner | Budget |
+|---|---|---|---|
+| S1 | Brand & design directions: 2-3 static hero-page mockups from the app's own DS (§5 night/lime/gold + §5.11 paper variant) | preview screenshots → **owner picks (M-13)** | ≤90k |
+| S2 | Information architecture: page map + ONE job + ONE CTA per page | 1-page map in the register | ≤40k |
+| S3 | Per-page microcopy EN (localization-matrix: EN first, HE via matrix later) — headline · subhead · 3 proof points · CTA per page, voice law §4.5 | copy doc | ≤80k |
+| S4 | Homepage build in the chosen direction | Vercel preview URL → owner approves | ≤90k |
+| S5 | Entity pages (Artists · Bookers · Managers) | preview URL | ≤90k |
+| S6 | Supporting pages (How-it-works · Free pilot · Trust/Methodology) | preview URL | ≤80k |
+| S7 | CTA/conversion pass: one primary per page; join-pilot funnel; consent-gated events only (rule 11) | preview URL | ≤50k |
+| S8 | Site QA: L2 390/1360 · lexicon · contrast · asset/logo integrity | QA report | ≤50k |
+**Order:** S1 → owner taste-pick → S2‖S3 → S4 → owner preview-approve → S5‖S6‖S7 → S8 → Team D → ship on owner GO. Program cost ≈ 570k + verification.
+**State:** program approved-to-plan; S1+S2 dispatch after Wave 2 closes (budget-gated per rule 13).
+
+
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10 with roles/skills/territories + anti-collision schedule (owner directive). Next number: **T-37**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10. AUTONOMOUS OPERATING LOOP formalized (owner directive: run autonomous, all-level test ladder L0-L8, task-closure loop). T-37 site-rebrand program registered (Team S, rule 12 taste-gate). Rules 12-13 added. Next number: **T-38**.

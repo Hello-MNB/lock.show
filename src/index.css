@@ -1,3 +1,19 @@
+/* ── Self-hosted fonts (@fontsource) — no runtime fonts.googleapis.com ────
+   Each weight file bundles ALL subsets (hebrew + latin + …) via
+   unicode-range, so Hebrew coverage ships offline. Weights mirror the old
+   Google Fonts link: Heebo 400–800 (body/UI incl. font-extrabold),
+   Frank Ruhl Libre 400/700/900 (display serif), IBM Plex Mono 400/600. */
+@import '@fontsource/heebo/400.css';
+@import '@fontsource/heebo/500.css';
+@import '@fontsource/heebo/600.css';
+@import '@fontsource/heebo/700.css';
+@import '@fontsource/heebo/800.css';
+@import '@fontsource/frank-ruhl-libre/400.css';
+@import '@fontsource/frank-ruhl-libre/700.css';
+@import '@fontsource/frank-ruhl-libre/900.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
