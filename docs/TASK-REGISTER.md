@@ -32,7 +32,21 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — Wave 4 staging (T-44 pay-path head) · Wave 3 SHIPPED
+## NOW — WAVE 4 DISPATCHED (17 Jul, 8 µ-tasks · est ≤650k)
+
+| µ | Task | Team | Type |
+|---|---|---|---|
+| W4-1 | T-44 Gate pay-path: artist mark-paid verify + operator activate + Gate tiles | A1+F | build + D-verify |
+| W4-2 | T-46 DS-drift inspector (tokens sync · rogue-hex census · asset law) | A1 | build + D-verify |
+| W4-3 | T-47 component-styles registry, generated from code | G | build + D-verify |
+| W4-4 | T-03 Radar desktop gap-diff vs §8.2 DoD (read-only → build plan) | A1 | audit |
+| W4-5 | T-39 security-boundary matrix | G | docs |
+| W4-6 | T-42 risk register + T-43 retention-policy draft (lawyer pack) | G | docs |
+| W4-7 | T-45 reverse coverage sweep (every spec § → an owner) | G | audit |
+
+package.json verify-hook wiring for W4-2/W4-3 = orchestrator at wave close (single-writer, avoids territory collision).
+
+## Prior — Wave 3 SHIPPED
 
 **Wave 3 record (17 Jul, 725k, 6/6 SHIP):** T-01 login fixes `merged` (9 humane error keys EN+HE, 7 states) · T-35 p2 `merged` (/settings −1521px, /act/edit fit) · **T-38 ARCHITECTURE.md ✅ EXISTS** · **T-40 event registry ✅ generated-from-code + wired into verify** · T-25 email path built DARK (`EMAIL_ENABLED` unset; from-address at wiring = spec §14.6.5 `notifications@lock.show`) · T-41+hygiene built `in-code`, **HELD on main per rule 12 → one word (M-15) ships it**. Verifier security note → M-12 reinforced: rotate the key BEFORE any flag flip.
 
