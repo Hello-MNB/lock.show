@@ -261,6 +261,36 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 
 ---
 
+## AUTONOMOUS OPERATING LOOP (owner directive 17 Jul: "build professional processes so you can run autonomous")
+
+The register is the ONLY work source. The loop runs continuously; the owner is interrupted only by (a) verified wave reports, (b) genuine spec/firewall decisions, (c) her named pending items.
+
+**THE TASK-CLOSURE LOOP** (every µ-task travels it; no silent ends — a µ-task may ONLY end as CLOSED-SHIPPED, CLOSED-BLOCKED(named blocker+owner), or RETURNED(rebuilt after a failed verdict)):
+
+1. **PICK** — next µ-tasks by wave order from WORK BREAKDOWN; only register-numbered work.
+2. **DECOMPOSE** — parent task → µ-tasks, each: one team, one file territory, one budget ceiling, one Definition-of-Done sentence.
+3. **SPEC-ADJACENT** — the builder's prompt names the exact spec sections; the builder reads them FIRST (build glued to the spec, never from memory).
+4. **BUILD** — cheapest sufficient agent (low effort default; medium for structural work; high reserved for Team D). Budget ceiling enforced: at the ceiling the agent stops and reports partial.
+5. **TEST — all levels, characterized** (the error-prevention ladder):
+   - **L0 static gates:** the 10-inspector verify suite (firewall lint · canon-drift · registry · deltas · security-denial · i18n purity · nav contract · act isolation · 2 builds) — every µ-task, every wave close.
+   - **L1 unit:** pure functions get a test file (pattern: scripts/test-humanize.mjs — includes a firewall property test).
+   - **L2 screen:** Playwright per changed screen — renders at 390×844 AND 1360×900, key assertion of the µ-task's DoD, screenshots archived to scratchpad/qa/.
+   - **L3 flow:** the affected user journey end-to-end (deep-link in → act → land), per the T-36 walk pattern.
+   - **L4 spec-conformance:** diff the result against the cited spec section's Definition-of-Done (the gap-diff pattern).
+   - **L5 adversarial (rule 8):** Team D independently reproduces the builder's proof, tries to BREAK it, checks territory discipline + guardrails → SHIP / DO-NOT-SHIP. DO-NOT-SHIP → the µ-task RETURNS to step 4 with the verifier's findings (max 2 returns, then escalate to owner).
+   - **L6 wave regression:** full L0 + spot L2/L3 on the integrated tree at wave close (Team E).
+   - **L7 live smoke:** post-deploy production URL checks (Team E) — a ship isn't closed until live answers correctly.
+   - **L8 human witness:** the owner's checklist walk (rule 4) — the only level that can flip MOBILE/DESKTOP to ✅.
+6. **SHIP** — wave-close: verify green → embed/site rebuild → owner-authorized main merge → deploy watch → L7 smoke.
+7. **CLOSE** — register status flips in the SAME commit as the ship; findings discovered en route are ROUTED (new µ-task with team + wave), never dropped.
+8. **REPORT** — one verified wave report to the owner (rule 8: post-verification only), with doc links (rule 9) + OWNER-PENDING refresh.
+9. **LOOP** — return to 1. Anti-drift audit (register-vs-reality) runs every 3 waves or on any owner challenge.
+
+**Cheap-agent allocation law:** builder low/medium ≤40–90k by µ-task class (measured baselines: QA 41k · audit 71k · build 50–80k) · verifier high ≤70k · wave overhead (E) ≤40k. Wave ceiling ≈ 500k. Hardware note: this 4-core box executes 2–3 agents concurrently; waves of 4–6 µ-tasks keep the pipeline full.
+
+
+---
+
 ## WORK BREAKDOWN — micro-tasks per team (precise allocations; owner directive 17 Jul)
 
 **Wave 1 (active).** Order chosen so the three worst Team-B findings (tiny buttons · banner double-CTA · clipped Passport rows) close together. Wave ceiling ≈ 400k tokens.
@@ -283,4 +313,4 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10 with roles/skills/territories + anti-collision schedule (owner directive). Next number: **T-37**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10. AUTONOMOUS OPERATING LOOP formalized (owner directive: run autonomous, all-level test ladder L0-L8, task-closure loop). Next number: **T-37**.

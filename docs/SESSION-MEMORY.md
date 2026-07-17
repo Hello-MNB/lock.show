@@ -10,6 +10,12 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 
 ## 🔑 TEST LOGINS (permanent — owner asked 15 Jul): docs/team/TEST-LOGINS.md · 5 accounts @gigproof.test · password Gigproof!2026 · seed = scripts/seed.mjs · login www.lock.show/app/login. NEVER put in shareable artifacts.
 
+## 🤖 AUTONOMOUS MODE AUTHORIZED (17 Jul evening — owner: "build professional processes so you can run autonomous")
+- The AUTONOMOUS OPERATING LOOP is law, written in TASK-REGISTER.md: PICK→DECOMPOSE→SPEC-ADJACENT→BUILD(cheap agents)→TEST L0-L8→SHIP→CLOSE→REPORT→LOOP. Test ladder L0 static gates · L1 unit · L2 screen(390+1360) · L3 flow · L4 spec-conformance · L5 adversarial Team-D (rule 8, max 2 returns) · L6 wave regression · L7 live smoke · L8 owner witness.
+- Standing reply rules: rule 8 report-after-verification · rule 9 doc LINKS every reply (GitHub work-branch URLs) · rule 10 micro-breakdown maintained · OWNER-PENDING.md appended to every reply.
+- 10 teams w/ file territories (collision law); production = main only (owner-authorized merges); waves of 4-6 µ-tasks; measured budgets. Wave 1 shipped (tap targets/passport rows/banner). Wave 2 running (single-CTA · viewport-fit Radar · Hebrew radar block · self-hosted fonts).
+- Email FULLY LIVE (key in Vercel, lock.show verified in Resend, test to owner's Gmail delivered). Migration 037 APPLIED+verified. 13 keys backed up in Vercel vault. FIRST REAL USER: shydavid (techno/trance DJ).
+
 ## 🚢 DEPLOY PIPELINE TRUTH + OWNER-AUDIT FIXES SHIPPED LIVE (17 Jul)
 - **PIPELINE (never re-learn):** Vercel PRODUCTION builds ONLY from `main`; the deploy hooks build the claude/ branch as PREVIEWS (target=null). Shipping = owner-authorized merge → `git push origin main` → auto production deploy (~2 min). Site project prj_dUHnMaaTeg1ZeyyvEP93kVjOigCZ (lock-site), app prj_ANv5iiMz4a8CUYA3gyzn7kvIUfho (lock-app). Vercel envs are "sensitive" (write-only) — read the anon key via Supabase management API instead.
 - **CRITICAL LESSON:** `website-next/vercel.json` rewrites are IGNORED on the live deployment (Next static-export) — fe7f4f9's rewrite fix never worked. Working fix (browser-proven on a replica host): (1) embed-post.mjs writes physical fallbacks for ALL 29 static app routes; (2) `website-next/app/not-found.tsx` = warm site 404 + /app/* bounce to `/app/?dl=<path>`; (3) `src/main.jsx` restores ?dl= (same-origin only) before router mount → fresh-opened dynamic links (passport/:id, confirm/:token) land correctly.
