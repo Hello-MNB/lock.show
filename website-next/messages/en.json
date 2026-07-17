@@ -13,7 +13,7 @@
   },
   "footer": {
     "tagline": "Pre-booking proof for independent artists.",
-    "entityNotice": "BOOKING MANAGER ≠ PRODUCER ≠ ARTIST AGENT — DISTINCT ROLES, NEVER MERGED.",
+    "entityNotice": "אמרגן ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
     "firewallNotice": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE. Evidence, labelled by method.",
     "copyright": "© 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL",
     "privacy": "Privacy",
@@ -35,19 +35,19 @@
       "heading": "One platform, three different jobs",
       "sub": "A booking manager decides whether to book you. A producer ran the show you played. LOCK keeps those roles separate — so no one confirms their own claim.",
       "artist": {
-        "tag": "ARTIST",
+        "tag": "אמן · ARTIST",
         "title": "Build your proof profile",
         "body": "Collect evidence, invite producers to confirm a single claim, and publish a method-labelled Passport that speaks for you before the first call.",
         "cta": "FOR ARTISTS →"
       },
       "booker": {
-        "tag": "BOOKING MANAGER",
+        "tag": "אמרגן · BOOKING MANAGER",
         "title": "Evaluate before you risk your name",
         "body": "Read a Bookability Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing. Viewing is always free.",
         "cta": "FOR BOOKING MANAGERS →"
       },
       "producer": {
-        "tag": "PRODUCER",
+        "tag": "מפיק · PRODUCER",
         "title": "Confirm one claim, no account needed",
         "body": "Receive a bounded magic link, confirm a single claim you know first-hand, and done. Your confirmation is method-labelled on the Passport.",
         "cta": "FOR PRODUCERS →"

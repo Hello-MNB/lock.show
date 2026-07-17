@@ -1,726 +1,410 @@
-﻿// Passport demo ג€” rebuilt per Codex exact rebuild brief ֲ§6 (2026-07-14),
-// the highest-impact visual fix. The demo SELLS ARTIST PRESENCE FIRST,
-// then trust context. Desktop order: hero (scene tag ֲ· name ֲ· positioning ֲ·
-// genre pills ֲ· CTA) ג†’ Radar universe strip ג†’ media tiles ג†’ strongest
-// signals (3ג€“5 ONLY) ג†’ method-labels explanation ג†’ footer/disclaimer.
-// Mobile order: image ג†’ name+genre ג†’ first-screen CTA ג†’ fit line ג†’ radar
-// strip ג†’ top-3 signals ג†’ media ג†’ method ג†’ footer.
-//
-// PLACEHOLDER RULE (brief ֲ§6): a real Passport must use artist-approved
-// image/video only. This demo uses the Shidapu imagery copied from Drive
-// into public/brand/artist-types/ plus repo atmosphere shots as stand-ins.
-//
-// Firewall: bands + binaries with method labels ONLY ג€” never a count,
-// score, rank, percentile or prediction.
-// ALL copy lives in content/passport-demo.ts ({ en, he }); this page
-// renders EN ג€” locale wiring is a later wave and stays mechanical.
+﻿import type { Metadata } from 'next'
 
-import Link from 'next/link'
-
-import { Icon } from '@/components/marketing/icons'
-import { passportDemoContent } from '@/content/passport-demo'
-import { buildPageMetadata } from '@/lib/seo'
-
-const t = passportDemoContent.en
-
-const HERO_IMAGE = '/brand/artist-types/lockshow-artist-shidapu-goa-atmosphere-hero-v1.webp'
-const PORTRAIT_IMAGE =
-  '/brand/artist-types/lockshow-artist-shidapu-roy-sason-profile-official-v1.jpg'
-
-export const metadata = buildPageMetadata('passportDemo')
-
-// ג”€ג”€ Small building blocks ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-
-function MonoLabel({
-  children,
-  color = 'var(--color-stamp)',
-}: {
-  children: string
-  color?: string
-}) {
-  return (
-    <p
-      style={{
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.72rem',
-        fontWeight: 700,
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase',
-        color,
-        margin: '0 0 0.9rem',
-      }}
-    >
-      {children}
-    </p>
-  )
+export const metadata: Metadata = {
+  alternates: { canonical: '/passport/demo' },
+  title: 'Sample Passport — Verified Live Performance Evidence',
+  description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
-function MethodChip({ chip, onLight = false }: { chip: string; onLight?: boolean }) {
+import { APP_URL } from '@/lib/app-url'
+
+// --- Demo data: fictional artist "Dana Lev" ---
+
+const artist = {
+  name: 'Dana Lev',
+  nameHe: 'דנה לב',
+  genre: 'Singer-songwriter · Indie',
+  base: 'Tel Aviv',
+  since: '2019',
+}
+
+interface ProofUnitData {
+  claim: string
+  context: string
+  method: string
+  reviewed: string
+}
+
+const drawUnits: ProofUnitData[] = [
+  {
+    claim: '200–350',
+    context: 'Sold-out headline show · Barby, Tel Aviv',
+    method: 'TICKET EXPORT · REVIEWED',
+    reviewed: 'JAN 2025',
+  },
+  {
+    claim: '70–120',
+    context: 'Recurring Friday residency · Levontin 7, Tel Aviv',
+    method: 'PRODUCER-CONFIRMED',
+    reviewed: 'MAR 2025',
+  },
+  {
+    claim: '400–600',
+    context: 'Festival support slot · Meteor Festival, Galilee',
+    method: 'PRODUCER-CONFIRMED',
+    reviewed: 'AUG 2024',
+  },
+]
+
+const performanceUnits: ProofUnitData[] = [
+  {
+    claim: '6 years active',
+    context: 'Continuous live activity since 2019',
+    method: 'OPERATOR-REVIEWED',
+    reviewed: 'JAN 2025',
+  },
+  {
+    claim: 'Clubs · Festivals · Private events',
+    context: 'Tel Aviv · Haifa · Galilee · Jerusalem',
+    method: 'OPERATOR-REVIEWED',
+    reviewed: 'JAN 2025',
+  },
+]
+
+const communityUnits: ProofUnitData[] = [
+  {
+    claim: '4,200 followers',
+    context: 'Instagram @dana.lev.music — organic, no paid promotion',
+    method: 'PLATFORM DATA · REVIEWED',
+    reviewed: 'APR 2025',
+  },
+]
+
+const readinessUnits: ProofUnitData[] = [
+  {
+    claim: 'Self-managed',
+    context: 'No agency. Direct contact via Passport.',
+    method: 'OPERATOR-REVIEWED',
+    reviewed: 'JAN 2025',
+  },
+  {
+    claim: 'Full tech spec available',
+    context: 'Rider on request. PA + monitoring required.',
+    method: 'OPERATOR-REVIEWED',
+    reviewed: 'JAN 2025',
+  },
+]
+
+// ---- Sub-components (inline, no imports needed) ----
+
+function BandPill({ value }: { value: string }) {
   return (
-    <span
-      style={{
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.6rem',
-        fontWeight: 700,
-        letterSpacing: '0.09em',
-        textTransform: 'uppercase',
-        color: onLight ? 'var(--color-stamp-onlight)' : 'var(--color-stamp)',
-        background: onLight ? 'rgba(200,240,77,0.14)' : 'rgba(200,240,77,0.1)',
-        border: onLight ? '1px solid rgba(200,240,77,0.45)' : '1px solid rgba(200,240,77,0.3)',
-        borderRadius: '4px',
-        padding: '0.16rem 0.45rem',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {chip}
+    <span style={{
+      fontFamily: 'var(--font-space-mono)',
+      fontSize: '1.35rem',
+      fontWeight: 700,
+      color: 'var(--color-ink)',
+      letterSpacing: '-0.01em',
+    }}>
+      {value}
     </span>
   )
 }
 
-// ג”€ג”€ Page ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+function MethodLabel({ method, reviewed }: { method: string; reviewed: string }) {
+  return (
+    <p style={{
+      fontFamily: 'var(--font-space-mono)',
+      fontSize: '0.6rem',
+      letterSpacing: '0.12em',
+      color: 'var(--color-stamp-onlight)',
+      margin: '0 0 4px',
+      textTransform: 'uppercase',
+    }}>
+      {method} · REVIEWED {reviewed}
+    </p>
+  )
+}
+
+function ProofUnitBlock({ unit, isDrawUnit = false }: { unit: ProofUnitData; isDrawUnit?: boolean }) {
+  return (
+    <div style={{
+      padding: '16px 0',
+      borderBottom: '1px solid rgba(10,13,11,0.07)',
+    }}>
+      <MethodLabel method={unit.method} reviewed={unit.reviewed} />
+      {isDrawUnit ? (
+        <BandPill value={unit.claim} />
+      ) : (
+        <p style={{
+          fontFamily: 'var(--font-heebo)',
+          fontSize: '0.95rem',
+          fontWeight: 600,
+          color: 'var(--color-ink)',
+          margin: '2px 0 4px',
+        }}>{unit.claim}</p>
+      )}
+      <p style={{
+        fontFamily: 'var(--font-heebo)',
+        fontSize: '0.85rem',
+        color: 'var(--color-tally-onlight)',
+        margin: 0,
+        lineHeight: 1.5,
+      }}>{unit.context}</p>
+    </div>
+  )
+}
+
+function SectionHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <div style={{ marginBottom: '4px' }}>
+      <p style={{
+        fontFamily: 'var(--font-space-mono)',
+        fontSize: '0.65rem',
+        letterSpacing: '0.14em',
+        color: 'var(--color-tally-onlight)',
+        margin: '0 0 4px',
+        textTransform: 'uppercase',
+      }}>{label}</p>
+      <h2 style={{
+        fontFamily: 'var(--font-archivo)',
+        fontSize: '1.05rem',
+        letterSpacing: '-0.01em',
+        margin: 0,
+        color: 'var(--color-ink)',
+      }}>{title}</h2>
+    </div>
+  )
+}
 
 export default function PassportDemo() {
   return (
-    <main style={{ background: 'var(--color-ink)', color: 'var(--color-paper)' }}>
-      {/* ג”€ג”€ SAMPLE BANNER ג”€ג”€ */}
+    <div style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
+
+      {/* DEMO BANNER */}
+      <div style={{
+        backgroundColor: 'var(--color-stamp)',
+        color: 'var(--color-ink)',
+        textAlign: 'center',
+        padding: '10px 16px',
+        fontFamily: 'var(--font-space-mono)',
+        fontSize: '0.7rem',
+        letterSpacing: '0.1em',
+      }}>
+        SAMPLE PASSPORT — FICTIONAL ARTIST FOR ILLUSTRATION ONLY
+      </div>
+
+      {/* PASSPORT DOCUMENT — floats as a card on wide viewports, full-bleed on mobile */}
       <div
+        className="passport-doc"
         style={{
-          background: 'var(--color-stamp)',
+          backgroundColor: 'var(--color-paper)',
+          maxWidth: '560px',
+          margin: '0 auto',
+        }}
+      >
+
+      {/* PASSPORT HEADER */}
+      <div style={{
+        borderBottom: '3px solid var(--color-ink)',
+        padding: '32px 24px 24px',
+        maxWidth: '480px',
+        margin: '0 auto',
+      }}>
+        {/* LOCK stamp */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '24px',
+        }}>
+          <span style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.65rem',
+            letterSpacing: '0.14em',
+            color: 'var(--color-stamp-onlight)',
+            textTransform: 'uppercase',
+          }}>
+            LOCK · BOOKABILITY PASSPORT
+          </span>
+        </div>
+
+        {/* Artist identity */}
+        <h1 style={{
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontWeight: 400,
+          fontSize: 'clamp(1.75rem, 6vw, 2.5rem)',
+          letterSpacing: '-0.03em',
+          margin: '0 0 4px',
           color: 'var(--color-ink)',
-          textAlign: 'center',
-          padding: '10px 16px',
+          lineHeight: 1,
+        }}>{artist.name}</h1>
+        <p style={{
+          fontFamily: 'var(--font-heebo)',
+          fontSize: '0.85rem',
+          color: 'var(--color-tally-onlight)',
+          margin: '4px 0 12px',
+        }}>{artist.nameHe}</p>
+        <p style={{
           fontFamily: 'var(--font-space-mono)',
-          fontSize: '0.7rem',
-          fontWeight: 700,
+          fontSize: '0.65rem',
           letterSpacing: '0.1em',
-        }}
-      >
-        {t.banner}
+          color: 'var(--color-tally-onlight)',
+          margin: 0,
+        }}>
+          {artist.genre} · {artist.base} · Active since {artist.since}
+        </p>
       </div>
 
-      {/* ג”€ג”€ HERO ג€” artist presence first (brief ֲ§6) ג”€ג”€ */}
-      <section
-        style={{
-          background:
-            'radial-gradient(760px 500px at 82% 0%, rgba(200,240,77,0.09), transparent 60%), linear-gradient(165deg, var(--color-ink) 0%, var(--color-forest) 100%)',
-          padding: 'clamp(48px, 8vh, 96px) max(24px, 4vw) clamp(56px, 8vh, 96px)',
-        }}
-      >
-        <div className="mk-container pd-hero-grid">
-          {/* Left: identity */}
-          <div className="pd-hero-copy">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-              <span
-                aria-hidden="true"
-                style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  background: 'var(--color-stamp)',
-                  boxShadow: '0 0 10px var(--color-stamp)',
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-stamp)',
-                }}
-              >
-                {t.hero.sceneTag}
-              </span>
-            </div>
+      {/* PASSPORT BODY */}
+      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '0 24px 80px' }}>
 
-            <h1
-              style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                fontWeight: 400,
-                fontSize: 'clamp(3rem, 7vw, 5rem)',
-                lineHeight: 0.98,
-                letterSpacing: '-0.04em',
-                color: 'var(--color-paper)',
-                margin: '0 0 1rem',
-              }}
-            >
-              {t.hero.name}
-            </h1>
-
-            <p
-              style={{
-                fontSize: 'clamp(1.02rem, 1.9vw, 1.15rem)',
-                lineHeight: 1.6,
-                color: 'rgba(243,245,239,0.75)',
-                maxWidth: '460px',
-                margin: '0 0 1.4rem',
-              }}
-            >
-              {t.hero.positioning}
-            </p>
-
-            {/* Genre / event-fit pills */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '2rem' }}>
-              {t.hero.genrePills.map((pill) => (
-                <span
-                  key={pill}
-                  style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.68rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-paper)',
-                    border: '1px solid rgba(243,245,239,0.22)',
-                    borderRadius: '999px',
-                    padding: '0.34rem 0.75rem',
-                  }}
-                >
-                  {pill}
-                </span>
-              ))}
-            </div>
-
-            {/* CTA row ג€” first-screen on mobile; ONE lime CTA per viewport */}
-            <div
-              className="mk-cta-row"
-              style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}
-            >
-              <a href={t.hero.primaryCta.href} className="mk-btn mk-btn--primary">
-                {t.hero.primaryCta.label}
-                <Icon id="arrow" size={16} />
-              </a>
-              <a href={t.hero.secondaryCta.href} className="mk-btn mk-btn--outline-dark">
-                <Icon id="share" size={15} />
-                {t.hero.secondaryCta.label}
-              </a>
-            </div>
-
-            {/* One-line fit statement ג€” mobile wireframe slot (brief ֲ§6) */}
-            <p
-              className="pd-fit"
-              style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.75rem',
-                lineHeight: 1.6,
-                letterSpacing: '0.05em',
-                color: 'rgba(243,245,239,0.6)',
-                maxWidth: '440px',
-                margin: 0,
-              }}
-            >
-              {t.hero.fitLine}
-            </p>
-          </div>
-
-          {/* Right: large artist/atmosphere image + portrait inset */}
-          <div className="pd-hero-media">
-            <div
-              role="img"
-              aria-label={t.hero.imageAlt}
-              style={{
-                borderRadius: '32px',
-                overflow: 'hidden',
-                aspectRatio: '4 / 4.4',
-                maxHeight: '560px',
-                width: '100%',
-                position: 'relative',
-                border: '1px solid rgba(243,245,239,0.12)',
-                boxShadow: '0 32px 80px -28px rgba(0,0,0,0.8)',
-                background: `linear-gradient(200deg, rgba(10,13,11,0) 45%, rgba(10,13,11,0.55) 85%, rgba(10,13,11,0.8) 100%), url('${HERO_IMAGE}') center / cover no-repeat`,
-              }}
-            >
-              {/* Portrait inset ג€” identity anchor */}
-              <div
-                style={{
-                  position: 'absolute',
-                  insetInlineStart: '1.1rem',
-                  bottom: '1.1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.7rem',
-                  background: 'rgba(10,13,11,0.62)',
-                  border: '1px solid rgba(243,245,239,0.18)',
-                  borderRadius: '16px',
-                  padding: '0.55rem 0.9rem 0.55rem 0.55rem',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={PORTRAIT_IMAGE}
-                  alt={t.hero.portraitAlt}
-                  width={44}
-                  height={44}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '12px',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
-                <div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-archivo)',
-                      fontSize: '0.85rem',
-                      fontWeight: 800,
-                      color: 'var(--color-paper)',
-                    }}
-                  >
-                    {t.hero.name}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.56rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: 'var(--color-stamp)',
-                    }}
-                  >
-                    LOCK ֲ· PASSPORT
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* LIVE DRAW */}
+        <div style={{ paddingTop: '28px', marginBottom: '24px' }}>
+          <SectionHeader label="LIVE DRAW" title="Audience evidence from real events" />
+          <p style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.08em',
+            color: 'var(--color-tally-onlight)',
+            margin: '6px 0 0',
+          }}>
+            FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT
+          </p>
+          <div style={{ marginTop: '4px' }}>
+            {drawUnits.map((u, i) => (
+              <ProofUnitBlock key={i} unit={u} isDrawUnit />
+            ))}
           </div>
         </div>
-      </section>
 
-      {/* ג”€ג”€ FLOW ג€” orderable on mobile (radar ג†’ signals ג†’ media ג†’ method) ג”€ג”€ */}
-      <div className="pd-flow">
-        {/* ג”€ג”€ RADAR UNIVERSE STRIP ג€” 6 icons, trust context (brief ֲ§6) ג”€ג”€ */}
-        <section
-          className="pd-radar"
-          style={{
-            background: 'var(--color-forest)',
-            borderBlock: '1px solid rgba(243,245,239,0.08)',
-            padding: 'clamp(2.25rem, 4vw, 3.25rem) max(24px, 4vw)',
-          }}
-        >
-          <div className="mk-container" style={{ textAlign: 'center' }}>
-            <MonoLabel>{t.radarStrip.eyebrow}</MonoLabel>
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                gap: 'clamp(0.75rem, 2vw, 1.5rem)',
-                marginBottom: '1.1rem',
-              }}
-            >
-              {t.radarStrip.sources.map((s) => (
-                <span
-                  key={s.label}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: 'rgba(243,245,239,0.05)',
-                    border: '1px solid rgba(243,245,239,0.12)',
-                    borderRadius: '999px',
-                    padding: '0.45rem 0.9rem 0.45rem 0.5rem',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '50%',
-                      background: '#ffffff',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/brand/source-logos/${s.logo}`}
-                      alt=""
-                      width={16}
-                      height={16}
-                      style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                    />
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.66rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.07em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(243,245,239,0.75)',
-                    }}
-                  >
-                    {s.label}
-                  </span>
-                </span>
-              ))}
-            </div>
-            <p
-              style={{
-                fontSize: '0.9rem',
-                lineHeight: 1.6,
-                color: 'rgba(243,245,239,0.55)',
-                maxWidth: '560px',
-                margin: '0 auto',
-              }}
-            >
-              {t.radarStrip.caption}
-            </p>
+        {/* SEPARATOR */}
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
+
+        {/* LIVE PERFORMANCE */}
+        <div style={{ marginBottom: '24px' }}>
+          <SectionHeader label="PERFORMANCE" title="Track record" />
+          <div style={{ marginTop: '12px' }}>
+            {performanceUnits.map((u, i) => (
+              <ProofUnitBlock key={i} unit={u} />
+            ))}
           </div>
-        </section>
+        </div>
 
-        {/* ג”€ג”€ MEDIA TILES 3ג€“6 (brief ֲ§6) ג”€ג”€
-            Placeholder rule: real Passports use artist-approved imagery only ג€”
-            the two Shidapu assets are Drive-approved; the atmosphere tiles are
-            repo stand-ins for the demo. */}
-        <section
-          className="pd-media"
-          style={{ background: 'var(--color-ink)', padding: 'clamp(3rem, 6vw, 5rem) max(24px, 4vw)' }}
-        >
-          <div className="mk-container">
-            <MonoLabel>{t.media.eyebrow}</MonoLabel>
-            <div className="pd-media-grid">
-              {t.media.tiles.map((tile) => (
-                <figure
-                  key={tile.src}
-                  style={{
-                    margin: 0,
-                    position: 'relative',
-                    borderRadius: '24px',
-                    overflow: 'hidden',
-                    border: '1px solid rgba(243,245,239,0.1)',
-                    aspectRatio: '4 / 3',
-                    background: `linear-gradient(200deg, rgba(10,13,11,0) 55%, rgba(10,13,11,0.6) 100%), url('${tile.src}') center / cover no-repeat`,
-                  }}
-                  role="img"
-                  aria-label={tile.alt}
-                >
-                  <figcaption
-                    style={{
-                      position: 'absolute',
-                      insetInlineStart: '0.9rem',
-                      bottom: '0.8rem',
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.6rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      color: 'var(--color-paper)',
-                      background: 'rgba(10,13,11,0.55)',
-                      border: '1px solid rgba(243,245,239,0.2)',
-                      borderRadius: '999px',
-                      padding: '0.24rem 0.65rem',
-                      backdropFilter: 'blur(8px)',
-                      WebkitBackdropFilter: 'blur(8px)',
-                    }}
-                  >
-                    {tile.label}
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
-            <p
-              style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.66rem',
-                letterSpacing: '0.07em',
-                textTransform: 'uppercase',
-                color: 'rgba(243,245,239,0.45)',
-                margin: '1rem 0 0',
-              }}
-            >
-              {t.media.note}
-            </p>
-          </div>
-        </section>
+        {/* SEPARATOR */}
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
 
-        {/* ג”€ג”€ STRONGEST SIGNALS ג€” 3ג€“5 cards ONLY (brief ֲ§6) ג”€ג”€ */}
-        <section
-          className="pd-signals"
-          style={{
-            background: 'var(--color-paper)',
-            color: 'var(--color-ink)',
-            padding: 'clamp(3rem, 6vw, 5rem) max(24px, 4vw)',
-          }}
-        >
-          <div className="mk-container">
-            <MonoLabel color="var(--color-tally-onlight)">{t.signals.eyebrow}</MonoLabel>
-            <h2
-              style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                fontWeight: 400,
-                fontSize: 'clamp(1.6rem, 3.2vw, 2.3rem)',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.08,
-                color: 'var(--color-ink)',
-                margin: '0 0 0.6rem',
-              }}
-            >
-              {t.signals.title}
-            </h2>
-            <p
-              style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.64rem',
-                fontWeight: 700,
-                letterSpacing: '0.1em',
-                color: 'var(--color-tally-onlight)',
-                margin: '0 0 2rem',
-              }}
-            >
-              {t.signals.note}
-            </p>
-            <div
-              className="m-divide pd-signal-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: 'clamp(1rem, 2vw, 1.5rem)',
-              }}
-            >
-              {t.signals.cards.map((card, i) => (
-                <div
-                  key={card.claim}
-                  className={`mk-card m-flat${i >= 3 ? ' pd-signal-extra' : ''}`}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid rgba(10,13,11,0.1)',
-                    padding: 'clamp(1.4rem, 2.5vw, 1.8rem)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.65rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <MethodChip chip={card.method} onLight />
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.58rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.09em',
-                        color: 'var(--color-tally-onlight)',
-                      }}
-                    >
-                      REVIEWED {card.reviewed}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-archivo)',
-                      fontSize: '1.2rem',
-                      fontWeight: 800,
-                      lineHeight: 1.25,
-                      letterSpacing: '-0.01em',
-                      color: 'var(--color-ink)',
-                    }}
-                  >
-                    {card.claim}
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '0.9rem',
-                      lineHeight: 1.6,
-                      color: 'var(--color-tally-onlight)',
-                      margin: 0,
-                    }}
-                  >
-                    {card.context}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ג”€ג”€ METHOD-LABELS EXPLANATION (brief ֲ§6) ג”€ג”€ */}
-        <section
-          className="pd-method"
-          style={{
-            background: 'var(--color-forest)',
-            padding: 'clamp(3rem, 6vw, 5rem) max(24px, 4vw)',
-          }}
-        >
-          <div className="mk-container--narrow">
-            <MonoLabel>{t.method.eyebrow}</MonoLabel>
-            <h2
-              style={{
-                fontFamily: 'Georgia, "Times New Roman", serif',
-                fontWeight: 400,
-                fontSize: 'clamp(1.5rem, 3vw, 2.1rem)',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.1,
-                color: 'var(--color-paper)',
-                margin: '0 0 0.9rem',
-              }}
-            >
-              {t.method.title}
-            </h2>
-            <p
-              style={{
-                fontSize: '0.98rem',
-                lineHeight: 1.7,
-                color: 'rgba(243,245,239,0.65)',
-                margin: '0 0 2rem',
-                maxWidth: '620px',
-              }}
-            >
-              {t.method.body}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-              {t.method.items.map((item) => (
-                <div
-                  key={item.chip}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '0.9rem',
-                    flexWrap: 'wrap',
-                    borderBottom: '1px solid rgba(243,245,239,0.08)',
-                    paddingBottom: '0.9rem',
-                  }}
-                >
-                  <MethodChip chip={item.chip} />
-                  <span
-                    style={{
-                      fontSize: '0.9rem',
-                      lineHeight: 1.6,
-                      color: 'rgba(243,245,239,0.7)',
-                      flex: '1 1 260px',
-                    }}
-                  >
-                    {item.explanation}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </div>
-
-      {/* ג”€ג”€ PASSPORT FOOTER / FIREWALL DISCLAIMER (brief ֲ§6) ג”€ג”€ */}
-      <section
-        style={{
-          background: 'var(--color-ink)',
-          padding: 'clamp(2rem, 4vw, 3rem) max(24px, 4vw)',
-          borderTop: '1px solid rgba(243,245,239,0.08)',
-        }}
-      >
-        <div className="mk-container--narrow">
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.62rem',
-              letterSpacing: '0.08em',
-              lineHeight: 1.8,
-              color: 'rgba(243,245,239,0.5)',
-              margin: '0 0 0.6rem',
-            }}
-          >
-            {t.footer.disclaimer}
+        {/* COMMUNITY — contextual only */}
+        <div style={{ marginBottom: '24px' }}>
+          <SectionHeader label="COMMUNITY" title="Audience signals" />
+          <p style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.08em',
+            color: 'var(--color-tally-onlight)',
+            margin: '6px 0 0',
+          }}>
+            CONTEXTUAL — NOT DRAW EVIDENCE
           </p>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.62rem',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              color: 'var(--color-stamp)',
-              margin: 0,
-            }}
-          >
-            {t.footer.brand}
+          <div style={{ marginTop: '4px' }}>
+            {communityUnits.map((u, i) => (
+              <ProofUnitBlock key={i} unit={u} />
+            ))}
+          </div>
+        </div>
+
+        {/* SEPARATOR */}
+        <div style={{ height: '1px', backgroundColor: 'rgba(10,13,11,0.12)', margin: '4px 0 28px' }} />
+
+        {/* READINESS */}
+        <div style={{ marginBottom: '36px' }}>
+          <SectionHeader label="READINESS" title="Booking details" />
+          <div style={{ marginTop: '12px' }}>
+            {readinessUnits.map((u, i) => (
+              <ProofUnitBlock key={i} unit={u} />
+            ))}
+          </div>
+        </div>
+
+        {/* PASSPORT FOOTER — firewall notice */}
+        <div style={{
+          borderTop: '2px solid var(--color-ink)',
+          paddingTop: '20px',
+        }}>
+          <p style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.08em',
+            color: 'var(--color-tally-onlight)',
+            margin: '0 0 8px',
+            lineHeight: 1.7,
+          }}>
+            THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY.
+            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE.
+            EVERY CLAIM CARRIES ITS VERIFICATION METHOD AND DATE.
+            AUDIENCE DRAW IS SHOWN AS A BAND — NEVER AN EXACT FIGURE.
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.08em',
+            color: 'var(--color-stamp-onlight)',
+            margin: 0,
+          }}>
+            LOCK · lock.show
           </p>
         </div>
-      </section>
 
-      {/* ג”€ג”€ BUILD-YOURS BAND ג”€ג”€ */}
-      <section
-        style={{
-          background:
-            'radial-gradient(560px 320px at 50% 130%, rgba(200,240,77,0.1), transparent 65%), var(--color-forest)',
+        {/* CTA */}
+        <div style={{
+          marginTop: '40px',
+          padding: '24px',
+          backgroundColor: 'rgba(200,240,77,0.05)',
+          border: '1px solid rgba(200,240,77,0.2)',
+          borderRadius: 'var(--radius-sm)',
           textAlign: 'center',
-          padding: 'clamp(3rem, 6vw, 4.5rem) max(24px, 4vw)',
-          borderTop: '1px solid rgba(243,245,239,0.08)',
-        }}
-      >
-        <div className="mk-container--narrow">
-          <p
+        }}>
+          <p style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.65rem',
+            letterSpacing: '0.1em',
+            color: 'var(--color-stamp-onlight)',
+            margin: '0 0 8px',
+          }}>
+            READY TO BUILD YOURS?
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-heebo)',
+            fontSize: '0.9rem',
+            color: 'var(--color-tally-onlight)',
+            margin: '0 0 16px',
+            lineHeight: 1.5,
+          }}>
+            Build your own Passport. Get verified. Share with booking managers.
+          </p>
+          <a
+            href={`${APP_URL}/signup`}
             style={{
+              display: 'inline-block',
+              padding: '12px 28px',
+              backgroundColor: 'var(--color-stamp)',
+              color: 'var(--color-ink)',
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.68rem',
               fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'var(--color-stamp)',
-              margin: '0 0 0.7rem',
+              fontSize: '0.7rem',
+              letterSpacing: '0.08em',
+              textDecoration: 'none',
+              borderRadius: 'var(--radius-sm)',
             }}
           >
-            {t.build.label}
-          </p>
-          <p
-            style={{
-              fontSize: '0.98rem',
-              lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.7)',
-              maxWidth: '480px',
-              margin: '0 auto 1.5rem',
-            }}
-          >
-            {t.build.body}
-          </p>
-          <Link href={t.build.cta.href} className="mk-btn mk-btn--primary">
-            {t.build.cta.label}
-            <Icon id="arrow" size={16} />
-          </Link>
+            BUILD YOUR PASSPORT →
+          </a>
         </div>
-      </section>
+      </div>
+      </div>
 
-      {/* Local layout composition ג€” brief ֲ§6 wireframes. The shared Hero
-          component has no scene-tag/genre-pill/portrait-inset props, so the
-          Passport hero is composed here (gap reported to the caller). */}
       <style>{`
-        .pd-hero-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 1.02fr) minmax(320px, 0.92fr);
-          gap: clamp(2.5rem, 5vw, 4.5rem);
-          align-items: center;
-        }
-        .pd-fit { display: none; }
-        .pd-media-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: clamp(0.75rem, 1.5vw, 1.25rem);
-        }
-        @media (max-width: 1080px) {
-          .pd-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        @media (max-width: 960px) {
-          /* Mobile wireframe (brief ֲ§6): image ג†’ name+genre ג†’ CTA ג†’
-             fit line ג†’ radar strip ג†’ top-3 signals ג†’ media ג†’ method */
-          .pd-hero-grid { grid-template-columns: 1fr; gap: 1.75rem; }
-          .pd-hero-media { order: -1; }
-          .pd-fit { display: block; }
-          .pd-flow { display: flex; flex-direction: column; }
-          .pd-radar { order: 1; }
-          .pd-signals { order: 2; }
-          .pd-media { order: 3; }
-          .pd-method { order: 4; }
-        }
-        @media (max-width: 640px) {
-          .pd-media-grid { grid-template-columns: 1fr; }
-          .pd-signal-extra { display: none; } /* top-3 signals on mobile */
+        @media (min-width: 700px) {
+          .passport-doc {
+            margin-top: 48px;
+            margin-bottom: 64px;
+            border-radius: 20px;
+            box-shadow: 0 32px 80px -30px rgba(0,0,0,0.55);
+            border: 1px solid rgba(10,13,11,0.08);
+            overflow: hidden;
+          }
         }
       `}</style>
-    </main>
+    </div>
   )
 }
