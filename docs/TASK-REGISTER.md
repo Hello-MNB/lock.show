@@ -352,7 +352,13 @@ The register is the ONLY work source. The loop runs continuously; the owner is i
 | S7 | CTA/conversion pass: one primary per page; join-pilot funnel; consent-gated events only (rule 11) | preview URL | ≤50k |
 | S8 | Site QA: L2 390/1360 · lexicon · contrast · asset/logo integrity | QA report | ≤50k |
 **Order:** S0 audits → S1 → owner taste-pick → S2‖S3 → S4 → owner preview-approve → S5‖S6‖S7 → S8 → Team D → ship on owner GO. Program cost ≈ 570k + S0 ≈ 220k + verification.
-**State:** S0 AUDIT WAVE DISPATCHED 17 Jul (owner's expanded brief). Site ops doc created: `docs/SITE-MANAGEMENT.md` (version log · deploy truths · rule-12 pipeline · owner brand bar · Codex-DS absorption · housekeeping).
+**State:** S0 COMPLETE 17 Jul (5 agents · 438k · all reported). **Digest → S1 inputs:**
+- **Owner's instincts all VALIDATED by measurement:** font hierarchy broken (THREE different H2 systems across pages: sans-900 vs serif-400 vs sans-400) · container widths inconsistent (home sections 600–1100px vs subpages 1120 vs nav 1100 — no single grid) · lime over-used on home (401k px² incl. giant decorative blobs; 2 lime primaries in the first viewport) and as wallpaper on /producers · images missing on most pages (only home/artists/bookers have any).
+- **Content:** /artists and /bookers are EXCELLENT (pure single-audience voice, benefit-led — keep as the gold standard). Home: 3 different labels for the SAME signup CTA (P1); "The Design Principle" kicker = builder-speak; JSON-LD carries technical strings Google can surface.
+- **Broken facts:** `llms.txt` advertises /managers and /production — both 404 (routes don't exist; real route is /producers). Footer links 34px + logo 23px tap targets (<44). 
+- **Mobile:** all real pages PASS h-scroll/hero/stacking — the approved site is structurally mobile-sound.
+- **Infra:** legacy `website/` confirmed UNREFERENCED + undeployed → archive plan ready (no deletion without owner visibility). Vercel config audit archived in wave transcript.
+- **Routing:** hygiene fixes (llms.txt routes · footer/logo tap sizes) join T-41's named train — pending owner GO (M-15); design-level items (H2 unification · one grid · lime discipline · one CTA label · images) = S1 brief inputs for the taste-pick. Site ops doc created: `docs/SITE-MANAGEMENT.md` (version log · deploy truths · rule-12 pipeline · owner brand bar · Codex-DS absorption · housekeeping).
 
 **S0 audit µ-tasks (read-only, owner brief 17 Jul):**
 | µ | Audit | Criteria (owner's words operationalized) | Budget |
