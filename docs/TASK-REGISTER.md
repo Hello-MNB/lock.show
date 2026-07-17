@@ -32,7 +32,25 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — S0 site-audit wave (5 read-only agents) · Wave 3 staged
+## NOW — WAVE 4 DISPATCHED (17 Jul, 8 µ-tasks · est ≤650k)
+
+| µ | Task | Team | Type |
+|---|---|---|---|
+| W4-1 | T-44 Gate pay-path: artist mark-paid verify + operator activate + Gate tiles | A1+F | build + D-verify |
+| W4-2 | T-46 DS-drift inspector (tokens sync · rogue-hex census · asset law) | A1 | build + D-verify |
+| W4-3 | T-47 component-styles registry, generated from code | G | build + D-verify |
+| W4-4 | T-03 Radar desktop gap-diff vs §8.2 DoD (read-only → build plan) | A1 | audit |
+| W4-5 | T-39 security-boundary matrix | G | docs |
+| W4-6 | T-42 risk register + T-43 retention-policy draft (lawyer pack) | G | docs |
+| W4-7 | T-45 reverse coverage sweep (every spec § → an owner) | G | audit |
+
+package.json verify-hook wiring for W4-2/W4-3 = orchestrator at wave close (single-writer, avoids territory collision).
+
+## Prior — Wave 3 SHIPPED
+
+**Wave 3 record (17 Jul, 725k, 6/6 SHIP):** T-01 login fixes `merged` (9 humane error keys EN+HE, 7 states) · T-35 p2 `merged` (/settings −1521px, /act/edit fit) · **T-38 ARCHITECTURE.md ✅ EXISTS** · **T-40 event registry ✅ generated-from-code + wired into verify** · T-25 email path built DARK (`EMAIL_ENABLED` unset; from-address at wiring = spec §14.6.5 `notifications@lock.show`) · T-41+hygiene built `in-code`, **HELD on main per rule 12 → one word (M-15) ships it**. Verifier security note → M-12 reinforced: rotate the key BEFORE any flag flip.
+
+### Prior: S0 site-audit wave (5 read-only agents)
 
 _Wave 2 SHIPPED 17 Jul (4/4 Team-D SHIP, live-smoked: fonts self-hosted confirmed live — zero Google Fonts requests). The table below is kept as the shipped record:_
 
@@ -55,7 +73,16 @@ Four builds in disjoint territories + Team D verification each + Team E wave-clo
 
 ## LIVE IN PRODUCTION — awaiting only the owner's eyes (M-3/M-5)
 
-**T-17** genre chips ↔ Radar scene rail · **T-18** hang fix (15s abort + 20s watchdog) · **T-34** share/deep-link repair · **T-31** 44px tap targets · **T-33** passport mobile rows · **T-21-part** consent banner. All Team-D-verified + live-smoked; the owner's witness upgrades them toward DONE (rule 4).
+| # | Task | State | Evidence |
+|---|---|---|---|
+| T-17 | Genre chips ↔ Radar scene rail (§8.2/§8.6) | deployed-live | owner's own screenshot 17 Jul + demo Playwright |
+| T-18 | Skeleton-hang fix (§10.6/§13.4.4) | deployed-live | owner's screenshot shows Radar rendering; live probe 200 |
+| T-34 | Share/deep-link repair (§7.6) | deployed-live | Team D SHIP + live URL probes |
+| T-31 | 44px tap targets (§10.2/§5.7) | deployed-live | Team D SHIP (21/22 sampled) |
+| T-33 | Passport mobile rows (§8.7) | deployed-live | Team D SHIP (14/14 rows assert) |
+| T-21p | Consent banner equal-weight+docked (§15.2) | deployed-live | Team D SHIP |
+
+All await the owner's witness (rule 4) to progress toward DONE.
 
 ## QUEUE HEAD
 
@@ -398,6 +425,14 @@ One page, counsel-ready: what data · why · how long · deletion path (pairs wi
 One-time agent sweep: list every §0–21 sub-section → confirm each has an owning doc, a task number, or an explicit post-Gate/not-needed mark. Output: coverage table appended here; gaps become tasks. **Who:** Team G, Wave 4. ≤60k.
 
 
+### T-46 · DS-drift inspector (the mechanical cure for "constant design drift") — §5.6 (3-tier token control) · §5.11
+Owner observation 17 Jul: design drifts repeatedly. Root causes are structural: (1) `tailwind.config.js` and `src/tokens.ts` are kept in sync BY HAND (drift by design), (2) raw hex colors / arbitrary px values can enter components unchecked, (3) the SITE runs a separate styling world from the app DS. **Build:** `scripts/test-ds-drift.mjs` wired into verify — (a) parses tailwind.config + tokens.ts and FAILS on any value mismatch; (b) greps src/** for rogue hex colors and off-scale font sizes outside an allowlist (tokens files, index.css); (c) counts `.btn-primary` semantics unchanged. Like the firewall inspectors: the DS stops relying on discipline and becomes law. **Who:** Team A1 + G, Wave 4. ≤60k.
+
+
+### T-47 · Component styling registry — GENERATED from code — §5.8 (widget kit) · §5.6
+Owner directive 17 Jul: "styling documented for every component; hermetic, unambiguous in every development." Hand-written style docs drift (the "28" disease, design edition). **Build:** `scripts/generate-component-styles.mjs` → `docs/design-system/COMPONENT-STYLES.md` — parses `src/index.css` primitives (.btn/.btn-primary/.btn-ghost/.chip/.field/.card/.tap-target…) + `src/components/ui.jsx` widget exports (Wordmark, GpIcon, StatusChip, BottomSheet, PageShell, Field, EmptyState/ErrorState…) and emits per-component: class recipe · token dependencies · state set · usage law line. `--check` mode wired into verify (regenerate+diff, like T-40). Together with T-46 (token-sync + rogue-value inspector) and the ASSET-REGISTRY law, the DS becomes MECHANICALLY hermetic: styling truth is generated from code, assets have one source, and the gate fails on any deviation. **Who:** Team A1+G, Wave 4. ≤70k.
+
+
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10. AUTONOMOUS OPERATING LOOP formalized (owner directive: run autonomous, all-level test ladder L0-L8, task-closure loop). T-37 registered. Rules 12-13 added. 17 Jul hole-hunt: LESSONS.md + P-1..P-4; T-38 opened. PM-audit verification: canon 29 CONFIRMED live (auditor stale), app headers CONFIRMED deployed-live, spec copies IDENTICAL; 3-state labels adopted; T-39/T-40/T-41 opened; ADR-1 canonical origin → owner M-14. Cowork v2 audit adopted: DOCS-INDEX created (docs/INDEX.md) · ADR folder opened (ADR-0001 pending M-14) · T-42 risk register · T-43 retention policy. Cowork E-notes folded: E#1 pay-path → T-44 (the real catch) · E#2 confirmer screen VERIFIED BUILT (ProducerConfirm ceremony exists; T-36 walked /confirm/:token; witness queued with screen QA) · E#3 post-Gate deferrals confirmed correct (buyer→pay path needs none of §8.5/8.10/8.11 pre-Gate) · E#4 → T-45 reverse sweep · E#5 entity-artifact sync owner = Team G (INDEX). Owner ruling recorded: real payment provider = post-development; pilot pay = manual Bit path. Next number: **T-46**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10. AUTONOMOUS OPERATING LOOP formalized (owner directive: run autonomous, all-level test ladder L0-L8, task-closure loop). T-37 registered. Rules 12-13 added. 17 Jul hole-hunt: LESSONS.md + P-1..P-4; T-38 opened. PM-audit verification: canon 29 CONFIRMED live (auditor stale), app headers CONFIRMED deployed-live, spec copies IDENTICAL; 3-state labels adopted; T-39/T-40/T-41 opened; ADR-1 canonical origin → owner M-14. Cowork v2 audit adopted: DOCS-INDEX created (docs/INDEX.md) · ADR folder opened (ADR-0001 pending M-14) · T-42 risk register · T-43 retention policy. Cowork E-notes folded: E#1 pay-path → T-44 (the real catch) · E#2 confirmer screen VERIFIED BUILT (ProducerConfirm ceremony exists; T-36 walked /confirm/:token; witness queued with screen QA) · E#3 post-Gate deferrals confirmed correct (buyer→pay path needs none of §8.5/8.10/8.11 pre-Gate) · E#4 → T-45 reverse sweep · E#5 entity-artifact sync owner = Team G (INDEX). Owner ruling recorded: real payment provider = post-development; pilot pay = manual Bit path. T-46 DS-drift inspector + T-47 generated component-styles registry + ASSET-REGISTRY.md created (owner: hermetic design law). Next number: **T-48**.

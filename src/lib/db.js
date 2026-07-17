@@ -613,8 +613,29 @@ export async function adminSetPublished(id, published) {
 }
 
 // ── Entitlements (A8 Founding Passport, manual payment) ──────
+// W4-1 — DEMO walks the WHOLE pilot payment loop (none → "I've paid" pending →
+// operator activates), because the Gate's pay half must be RECORDABLE end-to-end.
+// State lives in localStorage (fixtures only, rule 11 — no DB, no network) so it
+// survives a reload and the demo persona switch artist → operator. No stored
+// state = no entitlement yet, so the offer form actually shows in DEMO.
+const DEMO_ENT_KEY = 'lock_demo_entitlement'
+function readDemoEnt() {
+  try {
+    const raw = localStorage.getItem(DEMO_ENT_KEY)
+    // merge over the fixture so display fields (stage name, email) stay present
+    return raw ? { ...demoEntitlement, ...JSON.parse(raw) } : null
+  } catch { return null }
+}
+function writeDemoEnt(patch) {
+  try {
+    let cur = {}
+    try { cur = JSON.parse(localStorage.getItem(DEMO_ENT_KEY)) || {} } catch { /* corrupt → restart */ }
+    localStorage.setItem(DEMO_ENT_KEY, JSON.stringify({ ...cur, ...patch }))
+  } catch { /* storage blocked — demo state simply won't persist */ }
+}
+
 export async function getEntitlement(artistId) {
-  if (DEMO) return demoEntitlement
+  if (DEMO) return readDemoEnt()
   const { data, error } = await supabase
     .from('entitlements')
     .select('id, status, kind, created_at, amount_note')
@@ -630,14 +651,14 @@ export async function getEntitlement(artistId) {
 // "GP-XXXX · ₪<amount> · Bit" so the operator can match the transfer in her Bit app.
 export async function createEntitlement(artistId, subjectId, amountNote) {
   if (DEMO) {
-    // DEMO has no server round-trip — mutate the shared fixture in place so the
-    // "pending" screen the artist sees next reflects what they just entered.
-    Object.assign(demoEntitlement, {
+    // DEMO has no server round-trip — persist the "I've paid" mark locally so
+    // the pending screen (and the operator's payments queue) reflects it.
+    writeDemoEnt({
       status: 'pending',
       created_at: new Date().toISOString(),
       ...(amountNote ? { amount_note: amountNote } : {}),
     })
-    return demoEntitlement
+    return readDemoEnt()
   }
   const insert = { artist_id: artistId, subject_id: subjectId, kind: 'founding_passport', status: 'pending' }
   if (amountNote) insert.amount_note = amountNote
@@ -649,7 +670,12 @@ export async function createEntitlement(artistId, subjectId, amountNote) {
 }
 
 export async function adminListPendingEntitlements() {
-  if (DEMO) return [demoEntitlement]
+  if (DEMO) {
+    // Only a reference the demo artist actually marked shows up — the operator
+    // queue mirrors the same local lifecycle (and empties after activation).
+    const e = readDemoEnt()
+    return e?.status === 'pending' ? [e] : []
+  }
   const { data, error } = await supabase
     .from('entitlements')
     // artist_id is needed by the P1-1 "payment activated" notification writer
@@ -674,7 +700,7 @@ export async function adminListPendingEntitlements() {
 }
 
 export async function adminActivateEntitlement(id) {
-  if (DEMO) return
+  if (DEMO) { writeDemoEnt({ status: 'active', activated_at: new Date().toISOString() }); return }
   const { error } = await supabase.from('entitlements')
     .update({ status: 'active', activated_at: new Date().toISOString() })
     .eq('id', id)

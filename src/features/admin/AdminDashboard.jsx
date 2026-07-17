@@ -6,6 +6,7 @@ import {
   adminListConsents, adminExportArtist, adminDeleteArtist, adminListAudit,
 } from '../../lib/db.js'
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
+import { fetchGateCounts } from './gateCounts.js'
 import { createNotification } from '../../lib/notifications.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import {
@@ -57,6 +58,20 @@ export default function AdminDashboard() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteReason, setDeleteReason] = useState('')
   const [busy, setBusy] = useState(false)
+  // W4-1 — Gate tiles (§1.6 · §14.4): whole-funnel PRODUCT-EVENT counts.
+  // Independent of the main load so a metrics hiccup never blanks the console —
+  // the tiles get their own loading / error / retry states.
+  const [gate, setGate] = useState({ loading: true, error: false, counts: null })
+
+  const loadGate = useCallback(async () => {
+    setGate((g) => ({ ...g, loading: true, error: false }))
+    try {
+      setGate({ loading: false, error: false, counts: await fetchGateCounts() })
+    } catch {
+      setGate({ loading: false, error: true, counts: null })
+    }
+  }, [])
+  useEffect(() => { loadGate() }, [loadGate])
 
   const load = useCallback(async () => {
     setLoading(true); setError(false)
@@ -102,6 +117,7 @@ export default function AdminDashboard() {
       // of the validation gate: one reacts AND one pays).
       logEvent(EVENTS.ENTITLEMENT_ACTIVATED, { artist_id: payment?.artist_id, entitlement_id: id })
       setPayments((prev) => prev.filter((p) => p.id !== id))
+      loadGate() // the verified-pay tile reflects the activation immediately
       // P1-1 — fire-and-forget: a notification hiccup must never undo the activation.
       if (payment?.artist_id) {
         createNotification({
@@ -157,8 +173,19 @@ export default function AdminDashboard() {
   const statusLabel = (s) =>
     s === 'replied' ? T.agency.statusReplied : s === 'closed' ? T.agency.statusClosed : T.agency.statusNew
 
-  const anchors = ['payments', 'upgrades', 'artists', 'requests', 'claims', 'consents', 'audit']
+  const anchors = ['gate', 'payments', 'upgrades', 'artists', 'requests', 'claims', 'consents', 'audit']
     .map((id) => [id, T.admin.anchors[id]])
+
+  // W4-1 Gate tiles — funnel order; each event stays its OWN number (§14.4.1:
+  // a payment reference is INTENT and never merges into the verified-paid tile;
+  // a passport view is context, NOT a reaction). Tags carry that meaning.
+  const gateTiles = [
+    { key: 'passport_view', label: T.admin.gateViews, tag: T.admin.gateTagContext },
+    { key: 'professional_reaction_submitted', label: T.admin.gateReactions, tag: T.admin.gateTagReaction },
+    { key: 'availability_request_created', label: T.admin.gateRequests, tag: T.admin.gateTagReaction },
+    { key: 'payment_reference_created', label: T.admin.gateRefs, tag: T.admin.gateTagIntent },
+    { key: 'entitlement_activated', label: T.admin.gateActivated, tag: T.admin.gateTagPaid },
+  ]
 
   return (
     <PageShell max="max-w-2xl">
@@ -189,6 +216,36 @@ export default function AdminDashboard() {
             <Stat n={requests.filter((r) => r.status === 'new').length} label={T.admin.statNew} tone="amber" />
             <Stat n={claims.length} label={T.admin.statClaims} />
           </div>
+
+          {/* W4-1 — GATE tiles (§1.6 · §14.4): PRODUCT-EVENT funnel counts.
+              Operator-facing ops numbers (firewall-allowed, §14.3) — never a
+              per-person score. Own loading/error states + retry. */}
+          <Section id="gate" title={T.admin.gateTitle}>
+            {gate.loading ? (
+              <div className="card py-5" role="status" aria-live="polite">
+                <div className="skeleton h-4 w-2/5" />
+                <span className="sr-only">{T.common.loading}</span>
+              </div>
+            ) : gate.error ? (
+              <div className="card py-4 text-center" role="alert">
+                <p className="text-sm text-ink">{T.admin.gateError}</p>
+                <button onClick={loadGate} className="btn-ghost mt-3 text-xs">{T.admin.gateRetry}</button>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+                  {gateTiles.map((t) => (
+                    <div key={t.key} data-testid={`gate-${t.key}`} className="card py-3 text-center">
+                      <p className="text-2xl font-extrabold text-ink" data-testid={`gate-${t.key}-n`}>{gate.counts?.[t.key] ?? 0}</p>
+                      <p className="mt-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted">{t.label}</p>
+                      <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-faint">{t.tag}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-faint">{T.admin.gateNote}</p>
+              </>
+            )}
+          </Section>
 
           {/* OP4 — SEC-01 compliance posture (read-only status) */}
           <SectionTitle>{T.admin.sec01Title}</SectionTitle>
