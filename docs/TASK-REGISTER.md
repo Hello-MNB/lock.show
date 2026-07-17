@@ -21,6 +21,8 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 6. Never mark DONE what was not witnessed running.
 7. Every task names its blocker and who unblocks it (owner = Maria · agent = Claude).
 8. **QA-before-report (owner directive 17 Jul):** every executed task is verified by an independent test agent (Team D) START-TO-END before it is reported to the owner. No self-reported "done."
+9. **Document links in every reply (owner directive 17 Jul):** every reply to the owner ends with clickable links to this register, OWNER-PENDING, and the spec (GitHub, work branch).
+10. **Micro-task work breakdown (owner directive 17 Jul):** the WORK BREAKDOWN section below decomposes every active task into per-team micro-tasks with precise budgets; progress is reported BY TASK NUMBER against it.
 
 **Marks:** ✅ done · ⚠️ partial/unwitnessed (note says what's missing) · ❌ not built · — not applicable (non-screen task).
 
@@ -245,6 +247,28 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 **State:** 🔨 agent dispatched 17 Jul. **Who:** Team A agent + Team D verify before ship (rule 8).
 
 
+---
+
+## WORK BREAKDOWN — micro-tasks per team (precise allocations; owner directive 17 Jul)
+
+**Wave 1 (active).** Order chosen so the three worst Team-B findings (tiny buttons · banner double-CTA · clipped Passport rows) close together. Wave ceiling ≈ 400k tokens.
+
+| µ-task | Parent | Team | What exactly | Budget | DoD (checked by Team D) |
+|---|---|---|---|---|---|
+| A1-diff | T-31 | A | From Team B evidence, list EVERY sub-44px control with file:line (primitives vs local overrides) | ≤40k | complete list, no fixes |
+| A1-fix | T-31 | A | Raise `.btn-*`, `.chip`, `.field`, icon-buttons to ≥44px in `src/index.css` + tokens; patch local stragglers | ≤60k | Playwright bbox sample ≥44px on 5 screens · verify green |
+| A2-fix | T-33 | A | Passport evidence rows @390px: stack date+venue under title — nothing clipped | ≤50k | 390px screenshot shows full date+venue on all rows |
+| C3-fix | T-21 | C | Consent banner: demote its Accept from `btn-primary` (kills the double-CTA on every screen) + never cover content/CTAs (dock it, equal-weight buttons §15.2) | ≤50k | one primary CTA per screen with banner open · nothing covered |
+| B1-qa | T-01 | B | QA the REAL login form (the sweep hit the demo picker): 7 field states + lexicon + nav @390/1360 | ≤50k | findings list + screenshots |
+| B2-docs | M-5 | B | One-page witness checklists for Maria (login · act-editor · radar · public passport · request) | ≤40k | docs/qa/WITNESS-*.md, plain language |
+| D-verify ×4 | rule 8 | D | Independent adversarial verify of A1/A2/C3/B1 | ≤70k each | SHIP / DO-NOT-SHIP per µ-task |
+| E-ship | wave | E | embed+site rebuild · replica test · deploy watch · live smoke | ≤40k | live URLs green, report to owner |
+
+**Wave 2 (queued, in order):** A3 T-35 viewport-fit (diff ≤30k + fix ≤60k/screen) · A4 = T-36 nav-agent follow-ups · C1 T-19 Hebrew kit block (≤80k) · C2 T-32 self-hosted fonts (≤60k) · B3 regression re-sweep (≤40k/screen).
+**Wave 3:** C4 T-23 GA4 (≤60k) · C5 T-26 bot protection (≤80k) · C6 T-22 purge job (≤80k) · T-03/T-04 Radar gap-diffs.
+**In flight now:** T-36 nav agent (≤60k, background) · Wave 1 dispatch next.
+
+
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Next number: **T-37**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added (doc links every reply · micro-task breakdown). WORK BREAKDOWN waves 1-3 allocated. Next number: **T-37**.
