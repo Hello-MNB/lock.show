@@ -18,10 +18,16 @@ export const ROLES = {
   OPERATOR: 'operator',
 }
 export const ROLE_VALUES = Object.values(ROLES)
-// Valid non-operator role values. NOTE: PRODUCER has NO self-signup UI card
-// (UserTypeSelect renders artist/agency/booker only; producers arrive via
-// accountless magic-link confirm) — it is a valid role, not a reachable signup.
-export const SIGNUP_ROLES = [ROLES.ARTIST, ROLES.BOOKER, ROLES.PRODUCER, ROLES.AGENCY]
+// Roles a person may SELF-SELECT at signup. PRODUCER deliberately excluded
+// (DS v1.6.0 audit): the Source Confirmer is an accountless magic-link task —
+// no signup, no dashboard, no workspace shell. It stays a valid ROLES value
+// for the legacy fallback path only, never a signup option.
+export const SIGNUP_ROLES = [ROLES.ARTIST, ROLES.BOOKER, ROLES.AGENCY]
+
+// FREE PILOT (canon G17): no payment CTA/screen at launch. Payments stay DORMANT
+// until the owner activates them post-Gate. Flag gates the /artist/offer route and
+// all payment links — "not linked from nav" is NOT a safe boundary (GPT A5/Codex P0).
+export const PAYMENTS_ENABLED = import.meta.env?.VITE_PAYMENTS_ENABLED === '1'
 
 // OAuth default ON since 8 Jul 2026 — the Google provider is ENABLED in the
 // Supabase dashboard (owner action). VITE_OAUTH_ENABLED=0 remains as the

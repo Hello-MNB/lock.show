@@ -1,0 +1,138 @@
+<title>LOCK — Flows per Entity</title>
+<style>
+:root{--bg:#f6f7f4;--card:#fff;--ink:#101311;--mut:#5c665e;--line:#e3e7e0;--acc:#2f6b3f;--lime:#c8f04d;--dark:#0a0d0b}
+@media (prefers-color-scheme:dark){:root{--bg:#0e120f;--card:#161b17;--ink:#eef2ec;--mut:#9aa79c;--line:#242b25;--acc:#8fd19e}}
+:root[data-theme="dark"]{--bg:#0e120f;--card:#161b17;--ink:#eef2ec;--mut:#9aa79c;--line:#242b25;--acc:#8fd19e}
+:root[data-theme="light"]{--bg:#f6f7f4;--card:#fff;--ink:#101311;--mut:#5c665e;--line:#e3e7e0;--acc:#2f6b3f}
+body{font-family:Manrope,system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;padding:20px;line-height:1.5}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}
+.tab.active{background:var(--dark);color:var(--lime);border-color:var(--dark)}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.step{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--line)}
+.step:last-child{border-bottom:none}
+.n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--dark);color:var(--lime);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+.s{font-size:14px}
+.s b{display:block}
+.s small{color:var(--mut)}
+.badge{display:inline-block;font-size:11px;font-weight:800;border-radius:6px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.live{background:#d9efe0;color:#1d5c31}.built{background:#dbe7fb;color:#1d4e89}.build{background:#fdeacc;color:#8a5a12}.qd{background:#eee;color:#666}
+@media (prefers-color-scheme:dark){.live{background:#1d3a28;color:#9fe0b4}.built{background:#1c2f4a;color:#a9c9f5}.build{background:#463315;color:#f2c98a}.qd{background:#2a2a2a;color:#aaa}}
+.meter{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.bar{display:flex;height:14px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bar div{height:100%}
+.legend{font-size:12px;color:var(--mut);margin-top:6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:700;font-size:12px}
+.scroll{overflow-x:auto}
+.now{border:2px solid var(--acc)}
+</style>
+<h1>LOCK — Flows per Entity</h1>
+<div class="sub">Built from the real app routes (code truth) · repo source: docs/FLOWS-PER-ENTITY.md · updated 13 Jul 2026 · artifact v4 · source: docs/FLOWS-PER-ENTITY.md · 🟢 LIVE now · 🔵 BUILT (ships with rel-07.13) · 🟠 IN BUILD (Claude, current batch) · ⏳ after preview</div>
+
+<div class="meter now">
+<b>Where CLAUDE CODE is right now</b>
+<div class="bar" style="margin-top:8px">
+<div style="width:62%;background:#3f8f5a" title="Built"></div>
+<div style="width:14%;background:#e5a83b" title="In build now"></div>
+<div style="width:24%;background:#c7ccc6" title="Remaining before PREVIEW-READY"></div>
+</div>
+<div class="legend">v5 (13 Jul night): G1–G8 CODE-COMPLETE (all product flows below incl. milestone journey now BUILT) · DB canon complete (29 events) · security wave G11–G15 REOPENED by adversarial audit — fixes in flight · deploy stays paused until the full register closes. Task progress only — never an artist metric.</div>
+</div>
+
+<div class="tabs" id="tabs">
+<button class="tab active" data-t="p1">🎤 Artist</button>
+<button class="tab" data-t="p2">💼 Manager/Agency</button>
+<button class="tab" data-t="p3">🎬 Production</button>
+<button class="tab" data-t="p4">🤝 Buyer</button>
+<button class="tab" data-t="p5">✅ Source Confirmer</button>
+<button class="tab" data-t="p6">🌐 Site visitor</button>
+<button class="tab" data-t="p8">👑 Admin (Maria)</button>
+<button class="tab" data-t="p7">🔍 Who checks what</button>
+</div>
+
+<section class="panel active" id="p1"><div class="card">
+<b>ARTIST — the core lane (NORTH STAR)</b><br><small class="sub">Entry: lock.show/artists → Join beta → app signup</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Light signup → onboarding <span class="badge built">BUILT</span></b><small>Role select, consent inline (no wall before first value)</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>Dashboard + next-best-action <span class="badge built">BUILT</span></b><small>The ladder: add proof → publish → share · genre guidance line</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>RADAR — milestone path + genre emphasis <span class="badge build">IN BUILD NOW</span></b><small>6 planets · 18 segments · M1–M8 journey milestones · which planets matter most in your genre (never a score)</small></div></div>
+<div class="step"><div class="n">4</div><div class="s"><b>Evidence capture → AI scan <span class="badge built">BUILT</span></b><small>Upload/link → per-evidence AI claim extraction. Deep multi-source scan + incremental rescans = FUTURE architecture, not built</small></div></div>
+<div class="step"><div class="n">5</div><div class="s"><b>Claim review <span class="badge built">BUILT</span></b><small>Approve / edit / send to Source Confirmer for verification</small></div></div>
+<div class="step"><div class="n">6</div><div class="s"><b>Passport — publish (FREE in pilot) <span class="badge built">BUILT</span></b><small>Artist view shows gaps (private) · Buyer view shows verified strengths only</small></div></div>
+<div class="step"><div class="n">7</div><div class="s"><b>Share link → buyer requests arrive <span class="badge built">BUILT</span></b><small>Requests inbox · this is the GATE: a real buyer reacts</small></div></div>
+<div class="step"><div class="n">8</div><div class="s"><b>Multi-Act <span class="badge built">BUILT</span></b><small>Second Act (e.g. techno alongside psytrance) starts empty — evidence never transfers</small></div></div>
+<div class="step"><div class="n">9</div><div class="s"><b>Access approvals in Settings <span class="badge built">BUILT</span></b><small>Artist approves/declines a manager's access request — the artist side of the consent handshake</small></div></div>
+<div class="step"><div class="n">💡</div><div class="s"><b>Payments: NONE in pilot — deliberate</b><small>Publish is free, no payment step exists (publish-wall ruled out). Milestone path M1–M8 = journey (✓/●/○), never a % or level; triggers no AI re-scan</small></div></div>
+</div></section>
+
+<section class="panel" id="p2"><div class="card">
+<b>ARTIST MANAGER / AGENCY (אמרגן — artist-side, NOT a buyer)</b><br><small class="sub">Entry: lock.show/managers (outreach link with ?src recorded) → waitlist or signup</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Outreach page → waitlist <span class="badge built">BUILT</span></b><small>Role + source page + your batch token recorded per signup</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>ArtistAccess handshake <span class="badge built">BUILT</span></b><small>Agency sends access request → artist approves in Settings → grant active → artist appears in roster. Consent required; either side revokes any time (grant ≠ ownership)</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>Agency dashboard — consented roster <span class="badge built">BUILT</span></b><small>Sees only artists with an ACTIVE grant (roster-grants, migration 032)</small></div></div>
+<div class="step"><div class="n">4</div><div class="s"><b>Requests inbox + roster radar feed <span class="badge built">BUILT</span></b><small>Requests touching their artists · radar overview of the roster</small></div></div>
+<div class="step"><div class="n">5</div><div class="s"><b>Team members <span class="badge live">LIVE</span></b><small>Booking-agent seats in the workspace</small></div></div>
+</div></section>
+
+<section class="panel" id="p3"><div class="card">
+<b>PRODUCTION OFFICE (משרד הפקה)</b><br><small class="sub">Entry: lock.show/production (outreach link with ?src) → waitlist or signup</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Outreach page → waitlist <span class="badge built">BUILT</span></b><small>Role production + source recorded</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>Production dashboard — events + requests <span class="badge built">BUILT</span></b><small>Request statuses: new / replied / closed (production-requests, 032)</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>Source-Confirmer duty <span class="badge built">BUILT</span></b><small>When an artist asks them to confirm a claim → one-screen confirm flow (tab 5)</small></div></div>
+<div class="step"><div class="n">💡</div><div class="s"><b>To BOOK an artist, production acts as a BUYER</b><small>Opens the artist's Passport link and sends an availability request (tab 4) — no separate outbound screen in this release</small></div></div>
+</div></section>
+
+<section class="panel" id="p4"><div class="card">
+<b>BUYER / מזמין הופעות (promoter · planner · corporate · PRIVATE person)</b><br><small class="sub">Entry: a shared Passport link — NO login, NO account, zero friction (deliberate)</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Public Passport <span class="badge live">LIVE</span></b><small>Verified strengths only · bands + binaries + method labels · never a score/rank</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>Availability request <span class="badge built">BUILT</span></b><small>Name/event/date → sent → artist's inbox. THE Gate metric.</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>Optional signup → saved passports <span class="badge built">BUILT</span></b><small>Booker home for repeat buyers</small></div></div>
+</div></section>
+
+<section class="panel" id="p5"><div class="card">
+<b>SOURCE CONFIRMER (מאשר-מקור — venue / festival / production confirming a claim)</b><br><small class="sub">Entry: email/WhatsApp link from the artist's claim — NO login</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Open link → see the ONE claim <span class="badge built">BUILT</span></b><small>Exact claim text, nothing else</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>Confirm / decline → done <span class="badge built">BUILT</span></b><small>Confirmation upgrades the evidence to 'verified' (method label)</small></div></div>
+</div></section>
+
+<section class="panel" id="p6"><div class="card">
+<b>SITE VISITOR (lock.show marketing site)</b><br><small class="sub">Entry: your outreach messages / social / search</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Audience page per entity <span class="badge live">LIVE</span></b><small>/artists /managers /production /bookers /producers /private-events</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>BETA waitlist form <span class="badge built">BUILT</span></b><small>Every signup records role + page + your ?src batch token → you see which message worked</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>Pricing UNPUBLISHED <span class="badge built">BUILT</span></b><small>/pricing redirects to /artists until post-Gate</small></div></div>
+</div></section>
+
+<section class="panel" id="p8"><div class="card">
+<b>ADMIN / OPERATOR — Maria (and later Eran, read-only)</b><br><small class="sub">Entry: app login → operator role → /admin · not in signup, granted by runbook only</small>
+<div class="step"><div class="n">1</div><div class="s"><b>Operator access <span class="badge live">LIVE</span></b><small>profiles.role='operator' → oversight read across the system; non-operators blocked</small></div></div>
+<div class="step"><div class="n">2</div><div class="s"><b>7 operations sections <span class="badge live">LIVE</span></b><small>Payments · Upgrades · Artists · Requests · Claims · Consents · Audit</small></div></div>
+<div class="step"><div class="n">3</div><div class="s"><b>Business cockpit <span class="badge qd">NEXT VERSION</span></b><small>Gate tile first (buyer reaction · payment intent · verified payment) · per-entity funnels · outreach attribution · publish freshness · "not instrumented" never shows as 0</small></div></div>
+<div class="step"><div class="n">4</div><div class="s"><b>Advisor mode (Eran) <span class="badge qd">WAITING</span></b><small>Read-only separation required before any grant (least-privilege); invitation only on Maria's word</small></div></div>
+<div class="step"><div class="n">💡</div><div class="s"><b>Firewall note</b><small>Admin counts = product usage for the OWNER's eyes only; never artist scores, never public</small></div></div>
+</div></section>
+
+<section class="panel" id="p7"><div class="card scroll">
+<b>Who verifies what on the PREVIEW (before any deploy)</b>
+<table>
+<tr><th>Checker</th><th>What they check</th><th>Trigger</th></tr>
+<tr><td><b>Cowork</b></td><td>Q1–Q8: every flow in tabs 1–6 end-to-end in a real browser + waitlist counters + 2 firewall watch-items</td><td>Maria's "preview go" (banked — fires automatically)</td></tr>
+<tr><td><b>Codex</b></td><td>Q4 design review: milestone language, genre emphasis, source badges, beta pages, mobile 360px, brand voice, firewall</td><td>Preview URL + screenshots</td></tr>
+<tr><td><b>CFRO</b></td><td>Business-case pass: monetization signal points across artist/buyer/site flows vs its v2.3 model</td><td>Validation pack (in Drive canon mirror) + preview URL</td></tr>
+<tr><td><b>GPT</b></td><td>Drift check: this flow map vs canon pack vs repo — flags any mismatch</td><td>Next sentinel run</td></tr>
+<tr><td><b>Maria (Q8)</b></td><td>Owner pass: walk the Artist flow + the Buyer flow on the preview like a stranger; approve or reject</td><td>My "READY FOR REASONED DEPLOY"</td></tr>
+</table>
+</div></section>
+
+<script>
+document.getElementById('tabs').addEventListener('click',function(e){
+  var b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active')});
+  b.classList.add('active');
+  document.getElementById(b.dataset.t).classList.add('active');
+});
+</script>

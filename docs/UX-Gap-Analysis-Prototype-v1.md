@@ -1,4 +1,11 @@
 # GIGPROOF — UX Gap Analysis: Prototype vs. Canon
+
+> **⚠️ SUPERSEDED / HISTORICAL (12 Jul 2026).** This brief predates the LOCK rename and the
+> entity-terminology correction. Where it labels the buyer persona "אמרגן" it is WRONG under
+> the ratified model: אמרגן = artist-side agent/office; the buyer is מזמין הופעות (see
+> docs/GLOSSARY.md v1.1 + docs/ENTITY-GLOSSARY.md). Kept for gap-history only — do not copy
+> its vocabulary.
+
 **Document type:** PM analysis brief for Codex  
 **Source:** Prototype audit (`ProductPrototype.jsx` + `SmartOnboardingFlow.jsx`)  
 **Canon refs:** B4-35.10, B4-35.20 (v2.4), B4-35.30 (v1.7), B4-35.60 (v1.8), CLAUDE.md  

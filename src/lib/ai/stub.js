@@ -30,6 +30,12 @@ const SOURCE_MAP = {
 }
 
 export class StubClaimProcessor {
+  // Truthful-provenance variant (G12): reports the ACTUAL execution path so the
+  // caller records extraction_method honestly. The stub is always 'mock'.
+  async labelWithMethod(ev) {
+    return { label: await this.label(ev), method: 'mock', aiFailed: false }
+  }
+
   async label(ev) {
     // 1) Band evidence: infer the specific signal; a public reference upgrades
     //    provenance from self-reported → supporting.

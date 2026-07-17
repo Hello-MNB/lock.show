@@ -1,0 +1,181 @@
+<title>LOCK Radar — Prototype v4 (momentum)</title>
+<style>
+  :root{
+    --ink:#0a0d0b;--forest:#18221a;--forest-2:#202c22;--paper:#f3f5ef;--mist:#c9d1c4;--slate:#94a08f;--faint:#5c655c;
+    --lime:#c8f04d;--gold:#f2c063;--amber:#e6b24e;--coral:#e8705a;
+    --line:rgba(243,245,239,.10);--line-2:rgba(243,245,239,.20);
+    --serif:Georgia,'Times New Roman',serif;--sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
+    --c-confirmed:var(--lime);--c-found:var(--gold);--c-review:var(--amber);--c-missing:var(--slate);
+  }
+  *{box-sizing:border-box}body{margin:0}
+  .wrap{color:var(--paper);font-family:var(--sans);min-height:100vh;padding:clamp(16px,3vw,34px);
+    background:radial-gradient(70% 50% at 50% -8%,rgba(242,192,99,.22),rgba(242,192,99,0) 60%),radial-gradient(120% 90% at 50% 4%,#1c2a1f 0%,#0c100c 55%,var(--ink) 100%)}
+  .inner{max-width:1120px;margin:0 auto}
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:var(--lime);display:grid;place-items:center;color:#12160a;font-weight:800;font-family:var(--mono)}
+  .brand h1{font-family:var(--serif);font-weight:400;font-size:22px;margin:0}
+  .brand .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin-top:2px}
+  .proto{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime);border:1px solid rgba(200,240,77,.4);border-radius:20px;padding:5px 11px;background:rgba(200,240,77,.09)}
+  .lede{color:var(--mist);font-size:14px;max-width:64ch;margin:4px 0 18px;line-height:1.5}.lede b{color:var(--paper)}
+  .stage{display:grid;grid-template-columns:1fr;gap:20px}
+  @media(min-width:900px){.stage{grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);align-items:start}}
+  .radar-card{background:linear-gradient(180deg,rgba(31,43,34,.5),rgba(10,13,10,.5));border:1px solid var(--line);border-radius:22px;padding:18px;position:relative;overflow:hidden}
+  .radar{position:relative;width:100%;max-width:540px;margin:0 auto;aspect-ratio:1/1}
+  .ring{position:absolute;inset:0;margin:auto;border:1px solid var(--line);border-radius:50%}
+  .ring.r1{width:36%;height:36%}.ring.r2{width:66%;height:66%}.ring.r3{width:96%;height:96%}
+  @media(prefers-reduced-motion:no-preference){.sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(242,192,99,.16),rgba(242,192,99,0) 24%,rgba(242,192,99,0) 100%);animation:spin 10s linear infinite;pointer-events:none}@keyframes spin{to{transform:rotate(360deg)}}}
+  .core{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:25%;height:25%;border-radius:50%;cursor:pointer;z-index:6;border:3px solid rgba(200,240,77,.6);
+    background:radial-gradient(circle at 40% 28%,#f2c063 0%,#b5602a 32%,#3a2320 70%);box-shadow:0 0 44px rgba(242,192,99,.4),inset 0 -14px 24px rgba(0,0,0,.5)}
+  .core .silh{position:absolute;inset:0;border-radius:50%;overflow:hidden}
+  .core .silh::after{content:"";position:absolute;left:50%;bottom:-6%;transform:translateX(-50%);width:52%;height:66%;background:#1a120e;border-radius:46% 46% 40% 40%;box-shadow:0 -18px 0 -4px #1a120e}
+  .core .silh::before{content:"";position:absolute;left:50%;top:14%;transform:translateX(-50%);width:30%;height:30%;background:#1a120e;border-radius:50%}
+  .core .act{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--slate);z-index:7}
+  .core .act b{color:var(--lime)}
+  .planet{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;cursor:pointer;z-index:4;border:2.5px solid var(--st,var(--slate));
+    transition:transform .18s,box-shadow .3s,filter .4s,border-color .4s;box-shadow:0 8px 22px rgba(0,0,0,.45);filter:saturate(var(--sat,.7)) brightness(var(--br,.8))}
+  .planet .scene{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:var(--bg)}
+  .planet .scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.55))}
+  .planet:hover,.planet:focus-visible{transform:scale(1.1);outline:none}
+  .planet.sel{transform:scale(1.12);box-shadow:0 0 0 3px var(--st),0 8px 22px rgba(0,0,0,.5)}
+  .planet.kick{animation:kick .7s ease-out}
+  @keyframes kick{0%{transform:scale(1)}35%{transform:scale(1.28);box-shadow:0 0 0 10px rgba(200,240,77,.28),0 0 40px rgba(200,240,77,.7)}100%{transform:scale(1.12)}}
+  .planet .nm{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:9px;letter-spacing:.03em;color:#fff;z-index:3;text-shadow:0 1px 3px #000}
+  .planet .dot{position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:var(--st);color:#12160a;font-size:11px;font-weight:800;display:grid;place-items:center;font-family:var(--mono);border:2.5px solid var(--ink);z-index:5}
+  .planet .logos{position:absolute;top:-6px;left:-6px;display:flex;z-index:5}
+  .planet .logos .lg{width:22px;height:22px;border-radius:6px;margin-right:-7px;border:2px solid var(--ink);box-shadow:0 2px 5px rgba(0,0,0,.5)}
+  .planet.next{animation:glow 2.4s ease-in-out infinite}
+  @keyframes glow{0%,100%{box-shadow:0 0 18px rgba(200,240,77,.3),0 8px 22px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 5px rgba(200,240,77,.22),0 0 34px rgba(200,240,77,.6),0 8px 22px rgba(0,0,0,.5)}}
+  @media(max-width:560px){.planet{width:64px;height:64px;margin:-32px 0 0 -32px}.planet .nm{display:none}.planet .logos .lg{width:16px;height:16px}}
+  .plat{position:absolute;width:34px;height:34px;border-radius:9px;left:50%;top:50%;margin:-17px 0 0 -17px;z-index:3;box-shadow:0 4px 12px rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.12)}
+  .panel{background:linear-gradient(180deg,var(--forest),#141c15);border:1px solid var(--line);border-radius:22px;padding:20px;min-height:380px;position:relative;overflow:hidden}
+  .banner{height:76px;margin:-20px -20px 14px;background:var(--pbg,#222);position:relative}
+  .banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,28,21,0),rgba(20,28,21,.9))}
+  .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:0}
+  .panel h2{font-family:var(--serif);font-weight:400;font-size:24px;margin:6px 0 2px}
+  .panel .sub{color:var(--mist);font-size:13.5px;margin:0 0 14px;line-height:1.5}
+  .rows{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .row{background:var(--forest-2);border:1px solid var(--line);border-left:3px solid var(--st);border-radius:12px;padding:11px 13px;transition:border-color .4s}
+  .row .head{display:grid;grid-template-columns:auto 1fr auto;gap:11px;align-items:center}
+  .row .lg{width:30px;height:30px;border-radius:8px;flex:none}
+  .row .g{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.05);color:var(--st);font-family:var(--mono);font-weight:800}
+  .row .t{font-size:13.5px;font-weight:700;color:var(--paper)}
+  .row .lab{font-size:11px;color:var(--st);font-family:var(--mono);margin-top:2px;font-weight:700}
+  .row .act{white-space:nowrap;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:7px 11px;border-radius:9px;cursor:pointer;border:none;background:var(--lime);color:#12160a}
+  .row .act.max{background:transparent;border:1px solid rgba(200,240,77,.4);color:var(--lime);cursor:default}
+  /* method ladder — discrete named steps, NOT a percentage bar */
+  .ladder{display:flex;gap:5px;margin-top:9px}
+  .ladder .step{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.09);transition:background .4s}
+  .ladder .step.on{background:var(--st)}
+  .ladder-labels{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--mono);font-size:8.5px;letter-spacing:.02em;color:var(--faint)}
+  .ladder-labels span.cur{color:var(--st)}
+  /* kick toast */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:50;opacity:0;pointer-events:none;
+    background:var(--lime);color:#12160a;font-family:var(--mono);font-weight:800;font-size:13px;letter-spacing:.02em;padding:12px 20px;border-radius:30px;box-shadow:0 12px 34px rgba(200,240,77,.4);transition:.35s}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .legend .l{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mist)}.legend .sw{width:12px;height:12px;border-radius:4px}
+  .firewall{margin-top:14px;font-family:var(--mono);font-size:10px;letter-spacing:.03em;color:var(--faint);text-align:center;line-height:1.7}.firewall b{color:var(--slate)}
+  .note{background:rgba(200,240,77,.07);border:1px solid rgba(200,240,77,.24);border-radius:14px;padding:14px 16px;margin-top:18px;font-size:13px;color:var(--mist);line-height:1.55}.note b{color:var(--paper)}
+</style>
+
+<div class="wrap"><div class="inner">
+  <header class="top">
+    <div class="brand"><div class="mark">◎</div><div><h1>Radar</h1><div class="tag">Every proof gives your career a kick</div></div></div>
+    <span class="proto">Prototype v4 · momentum</span>
+  </header>
+  <p class="lede">Not a number — a feeling of <b>momentum</b>. Add a proof and watch the planet <b>light up</b> and its label <b>climb the method ladder</b> (declared → linked → supported → confirmed). <b>Try it:</b> open a planet and press <b>Strengthen</b>. Still zero scores — just your career getting more provable.</p>
+  <div class="stage">
+    <div class="radar-card">
+      <div class="radar" id="radar" role="group" aria-label="Evidence radar">
+        <div class="sweep"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+        <button class="core" id="core" aria-label="switch Act"><span class="silh"></span><span class="act">◐ ACT · <b>PERLMAN</b> · switch ⇄</span></button>
+      </div>
+      <div class="legend">
+        <span class="l"><span class="sw" style="background:var(--c-confirmed)"></span>✓ Confirmed</span>
+        <span class="l"><span class="sw" style="background:var(--c-found)"></span>✦ Found</span>
+        <span class="l"><span class="sw" style="background:var(--c-review)"></span>? Needs you</span>
+        <span class="l"><span class="sw" style="background:var(--c-missing)"></span>+ Missing</span>
+      </div>
+      <p class="firewall"><b>No score · no %, no ranking.</b> Momentum shown as light + climbing method labels, never a number.</p>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+  <div class="note"><b>The idea you described, built:</b> each source sits on the 4-step <b>method ladder</b>. "Strengthen" moves it up a rung — the row's label climbs, the planet brightens and pulses a "kick," and a little banner cheers the win. Reaching <b>Producer-confirmed</b> is the biggest kick. It feels like leveling up your career — with not a single number that grades you.</div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+  const LOGO={
+    spotify:'<svg viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#1DB954"/><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M14 20c8-2.4 16-1.6 22 2"/><path d="M15 26c6.5-1.8 13-1.2 18 1.6"/><path d="M16 31.5c5-1.3 10-.9 14 1.2"/></g></svg>',
+    instagram:'<svg viewBox="0 0 48 48"><defs><radialGradient id="ig" cx="30%" cy="107%" r="130%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="48" height="48" rx="12" fill="url(#ig)"/><rect x="13" y="13" width="22" height="22" rx="7" fill="none" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="none" stroke="#fff" stroke-width="3"/><circle cx="32" cy="16" r="1.8" fill="#fff"/></svg>',
+    youtube:'<svg viewBox="0 0 48 48"><rect y="10" width="48" height="28" rx="8" fill="#FF0000"/><path d="M20 18l11 6-11 6z" fill="#fff"/></svg>',
+    tiktok:'<svg viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#000"/><path d="M27.7 12c.6 3.2 2.6 5.4 5.7 5.9v4.1c-1.9.1-3.7-.4-5.5-1.4v7.9a7.6 7.6 0 1 1-7.6-7.6c.4 0 .8 0 1.2.1v4.2a3.5 3.5 0 1 0 2.4 3.3V12z" fill="#fff"/></svg>',
+    facebook:'<svg viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#1877F2"/><path d="M27 48V30h5l1-6h-6v-3.5c0-1.7.5-2.9 3-2.9h3V12c-1.4-.2-2.9-.3-4.3-.3-4.6 0-7.7 2.8-7.7 7.9V24h-5v6h5v18z" fill="#fff"/></svg>',
+    apple:'<svg viewBox="0 0 48 48"><defs><linearGradient id="am" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa2d48"/></linearGradient></defs><rect width="48" height="48" rx="11" fill="url(#am)"/><path d="M28 13l-11 2.4v14.2a4.5 4.5 0 1 1-2.6-4V19l13-2.8z" fill="#fff"/></svg>',
+    soundcloud:'<svg viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="#FF5500"/><g fill="#fff"><rect x="12" y="22" width="2.4" height="10" rx="1"/><rect x="16" y="19" width="2.4" height="13" rx="1"/><rect x="20" y="17" width="2.4" height="15" rx="1"/><path d="M25 18c4-1 8 1.6 8.5 6 .3 0 .5-.1.8-.1 2.6 0 4.7 2 4.7 4.5S36.9 33 34.3 33H25z"/></g></svg>',
+  };
+  const SCENE={identity:'radial-gradient(circle at 42% 30%,#f2c063,#a85a2c 45%,#2a1c18)',music:'linear-gradient(140deg,#7b2ff7,#e0499a 55%,#f2762b)',live:'linear-gradient(160deg,#1a1030,#5a2ea6 40%,#e0a03a 105%)',audience:'radial-gradient(circle at 50% 20%,#ffd27a,#d64b7a 45%,#241026)',prokit:'linear-gradient(150deg,#2c3a2c,#59705a 60%,#c3ccbe)',proof:'linear-gradient(150deg,#ff8a3d,#e0455e 55%,#5a1e3a)'};
+  // method ladder: 0 missing · 1 declared · 2 linked · 3 supported · 4 confirmed(producer)
+  const LADDER=['Missing','Self-declared','Source-linked','Evidence-supported','Producer-confirmed'];
+  const LCOL=['var(--c-missing)','var(--c-review)','var(--c-found)','var(--lime)','var(--lime)'];
+  const GLYPH=['+','?','✦','✓','✓'];
+  function stateOf(lvl){return lvl<=0?'missing':lvl===1?'review':lvl===2?'found':'confirmed'}
+  const CV={confirmed:'var(--c-confirmed)',found:'var(--c-found)',review:'var(--c-review)',missing:'var(--c-missing)'};
+  const SLABEL={confirmed:'Confirmed',found:'Found',review:'Needs you',missing:'Missing'};
+
+  const DIMS=[
+    {key:'identity',label:'Identity',angle:-90,logos:[],sub:'Your face and name — the first impression.',
+      rows:[{t:'Stage name & city',lvl:4},{t:'Portrait photo',lvl:3},{t:'Genre',lvl:2}]},
+    {key:'music',label:'Music',angle:-30,logos:['spotify','apple'],sub:'Your sound — where a buyer hits play.',
+      rows:[{t:'Spotify artist',lvl:2,lg:'spotify'},{t:'Apple Music',lvl:2,lg:'apple'},{t:'SoundCloud',lvl:0,lg:'soundcloud'}]},
+    {key:'live',label:'Live Show',angle:30,logos:['youtube'],sub:'The stage — the heart of bookability.',
+      rows:[{t:'Performance video',lvl:1,lg:'youtube'},{t:'Past shows',lvl:0},{t:'Set length',lvl:0}]},
+    {key:'audience',label:'Audience',angle:90,logos:['instagram','tiktok','facebook'],sub:'Your community — shown as a band, never a raw count.',
+      rows:[{t:'Instagram',lvl:2,lg:'instagram'},{t:'TikTok',lvl:2,lg:'tiktok'},{t:'Facebook',lvl:0,lg:'facebook'}]},
+    {key:'prokit',label:'Pro Kit',angle:150,logos:[],sub:'The materials a manager expects.',
+      rows:[{t:'Rider',lvl:0},{t:'Press kit',lvl:0},{t:'Tech spec',lvl:0}]},
+    {key:'proof',label:'Career Proof',angle:210,next:true,logos:[],sub:'Method-labeled evidence — your strongest signal.',
+      rows:[{t:'Show awaiting confirm',lvl:1},{t:'Ticket export',lvl:0},{t:'Producer vouch',lvl:0}]},
+  ];
+  function dimState(d){return stateOf(Math.max(...d.rows.map(r=>r.lvl)))}
+
+  const radar=document.getElementById('radar');const toast=document.getElementById('toast');let cur='proof';
+  function svgUrl(s){return 'url("data:image/svg+xml,'+encodeURIComponent(s)+'")'}
+  function brightness(d){const avg=d.rows.reduce((a,r)=>a+r.lvl,0)/(d.rows.length*4);return{sat:(.55+avg*.6).toFixed(2),br:(.7+avg*.55).toFixed(2)}}
+  function place(){
+    const box=radar.getBoundingClientRect();const R=box.width*0.44;
+    DIMS.forEach(d=>{
+      const a=d.angle*Math.PI/180,x=Math.cos(a)*R,y=Math.sin(a)*R,st=CV[dimState(d)];
+      let el=document.getElementById('pl-'+d.key);
+      if(!el){el=document.createElement('button');el.className='planet'+(d.next?' next':'');el.id='pl-'+d.key;
+        const logos=d.logos.map(k=>`<span class="lg" style="background:${svgUrl(LOGO[k])};background-size:cover"></span>`).join('');
+        el.innerHTML=`<span class="scene" style="--bg:${SCENE[d.key]}"></span>${logos?`<span class="logos">${logos}</span>`:''}<span class="dot"></span><span class="nm">${d.label}</span>`;
+        el.addEventListener('click',()=>select(d.key));radar.appendChild(el);}
+      const b=brightness(d);el.style.setProperty('--st',st);el.style.setProperty('--sat',b.sat);el.style.setProperty('--br',b.br);
+      el.querySelector('.dot').textContent=GLYPH[Math.max(...d.rows.map(r=>r.lvl))];el.querySelector('.dot').style.background=st;
+      el.style.left=`calc(50% + ${x}px)`;el.style.top=`calc(50% + ${y}px)`;
+    });
+    const ring=['spotify','instagram','youtube','tiktok','apple','soundcloud'];const pr=box.width*0.31;
+    ring.forEach((k,i)=>{let el=document.getElementById('plat-'+i);const a=(-90+i*60)*Math.PI/180,x=Math.cos(a)*pr,y=Math.sin(a)*pr;
+      if(!el){el=document.createElement('div');el.className='plat';el.id='plat-'+i;el.style.background=svgUrl(LOGO[k]);el.style.backgroundSize='cover';radar.appendChild(el);}
+      el.style.left=`calc(50% + ${x}px)`;el.style.top=`calc(50% + ${y}px)`;});
+  }
+  function rowHtml(d,i){const r=d.rows[i];const st=CV[stateOf(r.lvl)];const media=r.lg?`<span class="lg" style="background:${svgUrl(LOGO[r.lg])};background-size:cover"></span>`:`<span class="g">${GLYPH[r.lvl]}</span>`;
+    const steps=[1,2,3,4].map(s=>`<div class="step ${r.lvl>=s?'on':''}"></div>`).join('');
+    const labels=['Declared','Linked','Supported','Confirmed'].map((l,j)=>`<span class="${r.lvl===j+1?'cur':''}">${l}</span>`).join('');
+    const btn=r.lvl>=4?`<button class="act max">✓ Max</button>`:`<button class="act" onclick="strengthen('${d.key}',${i})">Strengthen ↑</button>`;
+    return `<div class="row" style="--st:${st}" id="row-${d.key}-${i}"><div class="head">${media}<div><div class="t">${r.t}</div><div class="lab">${LADDER[r.lvl]}</div></div>${btn}</div>
+      <div class="ladder">${steps}</div><div class="ladder-labels">${labels}</div></div>`;}
+  function select(key){cur=key;const d=DIMS.find(x=>x.key===key);const st=CV[dimState(d)];
+    document.querySelectorAll('.planet').forEach(p=>p.classList.remove('sel'));document.getElementById('pl-'+key)?.classList.add('sel');
+    document.getElementById('panel').innerHTML=`<div class="banner" style="--pbg:${SCENE[key]}"></div>
+      <p class="eyebrow">Planet · ${d.label}</p><h2>${d.label}</h2><p class="sub">${d.sub}</p>
+      <div class="rows">${d.rows.map((r,i)=>rowHtml(d,i)).join('')}</div>`;}
+  window.strengthen=function(key,i){const d=DIMS.find(x=>x.key===key);const r=d.rows[i];if(r.lvl>=4)return;r.lvl++;
+    document.getElementById('row-'+key+'-'+i).outerHTML=rowHtml(d,i);
+    place();const pl=document.getElementById('pl-'+key);pl.classList.remove('kick');void pl.offsetWidth;pl.classList.add('kick');
+    const msg=r.lvl>=4?`⚡ Producer-confirmed — your strongest proof yet!`:`⚡ Career kick — ${r.t} is now ${LADDER[r.lvl]}`;
+    toast.textContent=msg;toast.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>toast.classList.remove('show'),2200);}
+  window.addEventListener('resize',place);place();select('live');
+</script>

@@ -1,0 +1,192 @@
+<title>How to Release a Version — LOCK</title>
+<style>
+  :root{
+    --paper:#f3f5ef; --ink:#0a0d0b; --forest:#18221a; --lime:#c8f04d;
+    --mist:#dde3d9; --slate:#687269; --muted:#5c655e;
+    --card:#ffffff; --line:rgba(10,13,11,.12); --line-soft:rgba(10,13,11,.07);
+    --lime-ink:#3f4d0a; --limebg:rgba(200,240,77,.16);
+    --shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 30px rgba(24,34,26,.08);
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#0f1510; --ink:#eef1e9; --forest:#18221a; --lime:#c8f04d;
+      --mist:#26302a; --slate:#96a094; --muted:#9aa596;
+      --card:#161d17; --line:rgba(243,245,239,.12); --line-soft:rgba(243,245,239,.06);
+      --lime-ink:#c8f04d; --limebg:rgba(200,240,77,.12);
+      --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#f3f5ef; --ink:#0a0d0b; --forest:#18221a; --mist:#dde3d9; --slate:#687269;
+    --muted:#5c655e; --card:#ffffff; --line:rgba(10,13,11,.12); --line-soft:rgba(10,13,11,.07);
+    --lime-ink:#3f4d0a; --limebg:rgba(200,240,77,.16);
+    --shadow:0 1px 0 rgba(255,255,255,.6), 0 10px 30px rgba(24,34,26,.08);
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1510; --ink:#eef1e9; --mist:#26302a; --slate:#96a094; --muted:#9aa596;
+    --card:#161d17; --line:rgba(243,245,239,.12); --line-soft:rgba(243,245,239,.06);
+    --lime-ink:#c8f04d; --limebg:rgba(200,240,77,.12);
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 34px rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0}
+  .wrap{background:var(--paper); color:var(--ink); font-family:var(--sans);
+    line-height:1.55; padding:clamp(22px,4vw,60px); min-height:100vh; -webkit-font-smoothing:antialiased}
+  .inner{max-width:1060px; margin:0 auto}
+
+  .eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--lime-ink); margin:0; font-weight:500}
+  h1{font-family:var(--serif); font-weight:400; font-size:clamp(30px,5.2vw,52px); line-height:1.03;
+    letter-spacing:-.015em; margin:12px 0 0; text-wrap:balance}
+  .sub{color:var(--muted); font-size:clamp(15px,1.7vw,18px); max-width:60ch; margin:16px 0 0}
+
+  .def{background:var(--forest); color:#eef1e9; border-radius:16px; padding:24px 26px; margin:30px 0 8px;
+    box-shadow:var(--shadow)}
+  .def p{margin:0; font-size:clamp(16px,2vw,19px); line-height:1.5}
+  .def .k{color:var(--lime); font-weight:700}
+  .def .mono{font-family:var(--mono); font-size:12.5px; color:#aeb8a8; letter-spacing:.02em; margin-top:12px; display:block}
+
+  .section-h{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--slate); margin:44px 0 18px; display:flex; align-items:center; gap:14px; font-weight:500}
+  .section-h::after{content:""; flex:1; height:1px; background:var(--line)}
+  .section-h .n{font-family:var(--serif); font-style:italic; font-size:18px; color:var(--ink); text-transform:none; letter-spacing:0}
+
+  /* ingredients grid */
+  .grid{display:grid; grid-template-columns:1fr; gap:14px}
+  @media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
+  @media(min-width:980px){.grid.g3{grid-template-columns:1fr 1fr 1fr}}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px;
+    box-shadow:var(--shadow)}
+  .card .tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--lime-ink); background:var(--limebg); padding:4px 8px; border-radius:6px; display:inline-block}
+  .card h3{font-family:var(--serif); font-weight:400; font-size:21px; margin:12px 0 6px; letter-spacing:-.01em}
+  .card p{margin:0; font-size:14px; color:var(--muted); line-height:1.5}
+  .card .ex{margin-top:10px; font-family:var(--mono); font-size:11.5px; color:var(--slate);
+    border-top:1px dashed var(--line); padding-top:9px}
+
+  /* flow timeline */
+  .flow{display:flex; flex-direction:column; gap:2px; counter-reset:step}
+  .step{display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start;
+    padding:16px 0; border-bottom:1px solid var(--line-soft)}
+  .step:last-child{border-bottom:none}
+  .step .num{counter-increment:step; font-family:var(--mono); font-weight:500; font-size:13px;
+    width:34px; height:34px; border-radius:50%; border:1.5px solid var(--line);
+    display:grid; place-items:center; color:var(--ink); background:var(--card)}
+  .step.key .num{background:var(--lime); border-color:var(--lime); color:#12160a; font-weight:700}
+  .step .num::before{content:counter(step,decimal-leading-zero)}
+  .step h4{margin:4px 0 4px; font-size:16.5px; font-weight:700; letter-spacing:-.01em}
+  .step p{margin:0; font-size:14px; color:var(--muted)}
+  .step .who{font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--slate); margin-top:6px; display:inline-block}
+  .step .who b{color:var(--lime-ink)}
+
+  /* roles + rollback split */
+  .split{display:grid; grid-template-columns:1fr; gap:14px}
+  @media(min-width:760px){.split{grid-template-columns:1fr 1fr}}
+  .rolelist{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:12px}
+  .rolelist li{display:grid; grid-template-columns:96px 1fr; gap:12px; font-size:14px}
+  .rolelist .r{font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--lime-ink); padding-top:2px}
+  .rolelist .d{color:var(--muted)}
+
+  .anchors{display:grid; grid-template-columns:1fr; gap:8px; margin-top:6px}
+  .anchors .a{display:grid; grid-template-columns:auto 1fr; gap:11px; font-size:13.5px; align-items:baseline}
+  .anchors .f{font-family:var(--mono); font-size:11px; color:var(--lime-ink); white-space:nowrap}
+  .anchors .a span:last-child{color:var(--muted)}
+
+  .callout{background:var(--limebg); border:1px solid rgba(200,240,77,.4); border-radius:14px;
+    padding:18px 20px; margin-top:14px}
+  .callout b{color:var(--ink)}
+  .callout p{margin:0; font-size:14.5px; color:var(--ink)}
+
+  .good{display:grid; grid-template-columns:1fr; gap:10px; margin-top:4px}
+  @media(min-width:680px){.good{grid-template-columns:1fr 1fr}}
+  .good .g{display:flex; gap:10px; align-items:flex-start; font-size:14px}
+  .good .g .m{color:var(--lime-ink); font-family:var(--mono); font-weight:700}
+  .good .g span:last-child{color:var(--muted)}
+  .good .g b{color:var(--ink); font-weight:700}
+
+  footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--line); color:var(--slate);
+    font-family:var(--mono); font-size:12px; line-height:1.7}
+</style>
+
+<div class="wrap"><div class="inner">
+
+  <p class="eyebrow">LOCK · Release Playbook</p>
+  <h1>How to release a version</h1>
+  <p class="sub">Shipping a version is not one button — it's a small, repeatable recipe. Learn the seven ingredients and the orderly flow once, and every release becomes calm, safe, and reversible.</p>
+
+  <div class="def">
+    <p>A <span class="k">version</span> is a <b>named, tested snapshot of the product that is live in production</b> — with a record of exactly what changed and proof that it works. Not "some code got pushed." A named thing you can point to, trust, and roll back to.</p>
+    <span class="mono">e.g. rel-2026.07.09 → "signup fix, navigation contract, official channels, design-system Step 1"</span>
+  </div>
+
+  <div class="section-h"><span class="n">What it's made of</span> — the seven ingredients</div>
+  <div class="grid g3">
+    <div class="card"><span class="tag">1 · Scope</span><h3>What's in it</h3><p>The decision of which fixes/features this version contains. Bounded and named — not "everything." You approve the scope.</p><div class="ex">owner decides · kept small</div></div>
+    <div class="card"><span class="tag">2 · Build</span><h3>The changes</h3><p>The code, built by architecture — single sources of truth, not ad-hoc patches. Where the actual work lives.</p><div class="ex">on the work branch</div></div>
+    <div class="card"><span class="tag">3 · Gate</span><h3>The proof it works</h3><p>Automated checks that must pass before anything ships: navigation test (34 journeys) + language purity + app build + demo build.</p><div class="ex">npm run verify · red = does not ship</div></div>
+    <div class="card"><span class="tag">4 · Name</span><h3>The version tag</h3><p>A label so "what's live" has a name you can return to or roll back to. Pre-launch we use dates.</p><div class="ex">rel-YYYY.MM.DD</div></div>
+    <div class="card"><span class="tag">5 · Deploy</span><h3>Going live</h3><p>Promoting to production — the moment lock.show / app.lock.show actually serve the new code.</p><div class="ex">main → production (auto)</div></div>
+    <div class="card"><span class="tag">6 · Verify</span><h3>Confirm it's live</h3><p>Checking the real site shows the change — "live," not just "pushed." The step people skip and regret.</p><div class="ex">fingerprints on the URL</div></div>
+    <div class="card" style="grid-column:1/-1"><span class="tag">7 · Record</span><h3>Write it down</h3><p>Add a row to the deploy log, update the state notes and the task board. This is the ingredient that means <b>nothing ever gets lost</b> between releases — the difference between order and chaos.</p><div class="ex">docs/DEPLOY-LOG.md · SESSION-MEMORY.md · TASK-STATUS-BOARD.md</div></div>
+  </div>
+
+  <div class="section-h"><span class="n">The orderly flow</span> — same seven steps, every time</div>
+  <div class="flow">
+    <div class="step"><div class="num"></div><div><h4>Decide the scope</h4><p>We agree what goes in this version (and what waits). Small and themed beats big and mixed.</p><span class="who">who: <b>you</b> approve · Claude proposes</span></div></div>
+    <div class="step"><div class="num"></div><div><h4>Build by architecture</h4><p>Claude writes the changes cleanly — one source of truth per concern, so the app stays coherent.</p><span class="who">who: <b>Claude</b></span></div></div>
+    <div class="step key"><div class="num"></div><div><h4>Pass the gate</h4><p>Run <span style="font-family:var(--mono);font-size:12.5px">npm run verify</span>. Everything green, or it does not ship. This is the guardrail that lets us move fast without fear.</p><span class="who">who: <b>Claude</b> · automated</span></div></div>
+    <div class="step key"><div class="num"></div><div><h4>Name it &amp; promote to production</h4><p>Tag the version and fast-forward <span style="font-family:var(--mono);font-size:12.5px">main</span>. Production builds from <span style="font-family:var(--mono);font-size:12.5px">main</span> automatically.</p><span class="who">who: <b>Claude</b> ships (standing rule) · Cowork for dashboard settings</span></div></div>
+    <div class="step"><div class="num"></div><div><h4>Confirm it's live</h4><p>Check the real site reflects the change. Only then is it "released," not just "pushed."</p><span class="who">who: <b>Claude</b> (+ you can glance)</span></div></div>
+    <div class="step"><div class="num"></div><div><h4>Record it</h4><p>Deploy log row + state notes + task board refreshed — the thread is never dropped.</p><span class="who">who: <b>Claude</b></span></div></div>
+    <div class="step"><div class="num"></div><div><h4>You review</h4><p>You look at the live result and either approve it or point at anything off. Then the next version begins.</p><span class="who">who: <b>you</b> — approver, not tester</span></div></div>
+  </div>
+
+  <div class="section-h"><span class="n">Who does what</span> &amp; the safety net</div>
+  <div class="split">
+    <div class="card">
+      <span class="tag">Roles</span>
+      <ul class="rolelist">
+        <li><span class="r">You</span><span class="d">Approve scope, review the finished version, own product / visual / legal / price calls.</span></li>
+        <li><span class="r">Claude</span><span class="d">Build, run the gate, promote, verify, record. The process architect.</span></li>
+        <li><span class="r">Cowork</span><span class="d">Dashboard actions I can't click — database migrations, Vercel settings.</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag">If something breaks</span>
+      <h3 style="margin-top:12px">Rollback in minutes</h3>
+      <p>Every version is a named tag, and Vercel keeps every past deployment. A bad release is never a crisis: re-point production to the previous deployment, or reset <span style="font-family:var(--mono);font-size:12px">main</span> to the last good tag and redeploy. <b style="color:var(--ink)">This is why we can ship small and often</b> — nothing is ever a one-way door.</p>
+    </div>
+  </div>
+
+  <div class="section-h"><span class="n">How you stay in control</span> — four anchors, nothing in your head</div>
+  <div class="card">
+    <div class="anchors">
+      <div class="a"><span class="f">SESSION-MEMORY.md</span><span>What is live right now.</span></div>
+      <div class="a"><span class="f">DEPLOY-LOG.md</span><span>Every version, in order — date, what shipped, verified?</span></div>
+      <div class="a"><span class="f">TASK-STATUS-BOARD.md</span><span>What's done, in progress, and pending — by priority.</span></div>
+      <div class="a"><span class="f">flow-map artifact</span><span>The whole product skeleton at a glance.</span></div>
+    </div>
+  </div>
+
+  <div class="callout"><p><b>The one thing still to switch on:</b> production auto-deploy from <span style="font-family:var(--mono);font-size:13px">main</span> (the Vercel "Production Branch = main" setting, on both projects). Until that's set, step 4 doesn't reliably reach production — it's the last piece that makes this whole flow trustworthy end-to-end.</p></div>
+
+  <div class="section-h"><span class="n">What makes a good version</span></div>
+  <div class="good">
+    <div class="g"><span class="m">→</span><span><b>Small &amp; frequent</b> beats big &amp; rare. Fewer things per version = easier to verify and roll back.</span></div>
+    <div class="g"><span class="m">→</span><span><b>One theme</b> per version. "The signup + nav release," not a grab-bag.</span></div>
+    <div class="g"><span class="m">→</span><span><b>Always green.</b> The gate is non-negotiable. A red gate never ships, no exceptions.</span></div>
+    <div class="g"><span class="m">→</span><span><b>Always recorded.</b> If it isn't in the deploy log, it didn't happen. That's how threads stay found.</span></div>
+  </div>
+
+  <footer>
+    LOCK Release Playbook · companion to docs/RELEASE-PROCESS.md &amp; docs/DEPLOY-LOG.md<br>
+    Trunk = main · Gate = npm run verify · Versions = rel-YYYY.MM.DD · Owner approves, Claude ships, Cowork clicks the dashboards.
+  </footer>
+
+</div></div>

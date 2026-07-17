@@ -9,10 +9,12 @@
  * ─────────────────────────────────────────────────────
  */
 
-/* ── SURFACES ─────────────────────────────────────── */
-/* --color-ink    : primary dark bg         → #0a0d0b  */
-/* --color-night  : dark panel / card bg    → #111612  */
-/* --color-paper  : light section bg        → #f3f5ef  */
+/* ── SURFACES (Design System v1.2.0) ──────────────── */
+/* --color-ink    : ink — primary text / darkest ground → #0a0d0b  */
+/* --color-forest : forest panel (= --color-night)      → #18221a  */
+/* --color-paper  : paper canvas — dominant workspace   → #f3f5ef  */
+/* --color-mist   : light neutral border/surface        → #dde3d9  */
+/* --color-slate  : neutral mid tone                    → #687269  */
 
 /* ── ACCENT ────────────────────────────────────────── */
 /* --color-stamp  : lime primary accent     → #c8f04d  */

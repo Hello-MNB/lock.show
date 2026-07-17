@@ -1,9 +1,17 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
-import { Loading } from './components/ui.jsx'
-import { ROLES } from './lib/constants.js'
+import { useLang } from './context/LangContext.jsx'
+import { Loading, PageShell, Wordmark } from './components/ui.jsx'
+import { ROLES, PAYMENTS_ENABLED } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
+import {
+  ROUTES,
+  homePathFor,
+  requireRoleRedirect,
+  requireAgencyRedirect,
+  requireProductionRedirect,
+} from './lib/navigation.js'
 
 import AppShell from './components/layout/AppShell.jsx'
 import SetupNotice from './features/setup/SetupNotice.jsx'
@@ -16,6 +24,7 @@ import ArtistDashboard from './features/artist/ArtistDashboard.jsx'
 import ArtistReadiness from './features/artist/ArtistReadiness.jsx'
 import ClaimReview from './features/artist/ClaimReview.jsx'
 import PassportSelf from './features/artist/PassportSelf.jsx'
+import ActEditor from './features/artist/ActEditor.jsx'
 import ArtistRequests from './features/artist/ArtistRequests.jsx'
 import OfferPayment from './features/artist/OfferPayment.jsx'
 import EvidenceCapture from './features/evidence/EvidenceCapture.jsx'
@@ -57,10 +66,9 @@ function RequireRole({ role: need, children }) {
   const { role, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
-  const ok = Array.isArray(need) ? need.includes(role) : role === need
-  if (!ok) return <Navigate to="/" replace />
+  const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
   return children
 }
 
@@ -76,10 +84,10 @@ function RequireAgency({ children }) {
   const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (isProducerWorkspace) return <Navigate to="/production" replace />
-  if (role === ROLES.AGENCY || isAgency) return children
-  return <Navigate to="/" replace />
+  const redirect = requireAgencyRedirect({ user, role, isAgency, isProducerWorkspace })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
+  return children
 }
 
 // Production-workspace gate — the counterpart of RequireAgency, gated on the
@@ -91,12 +99,10 @@ function RequireProduction({ children }) {
   const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (isProducerWorkspace) return children
-  // Not a production workspace but IS an agency-type one — send to the roster
-  // screen instead of a dead-end "/".
-  if (role === ROLES.AGENCY || isAgency) return <Navigate to="/agency" replace />
-  return <Navigate to="/" replace />
+  const redirect = requireProductionRedirect({ user, role, isAgency, isProducerWorkspace })
+  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect) return <Navigate to={redirect} replace />
+  return children
 }
 
 // Sends a logged-in user to the right home based on role. `role` is the
@@ -106,16 +112,30 @@ function RoleHome() {
   const { user, loading: authLoading } = useAuth()
   const { role, isProducerWorkspace, loading: orgLoading } = useOrg()
   if (authLoading || orgLoading) return <Loading />
-  if (!user) return <Navigate to="/login" replace />
-  if (!role) return <Navigate to={DEMO ? '/login' : '/select'} replace />
-  if (role === ROLES.OPERATOR) return <Navigate to="/admin" replace />
-  // A production-type workspace (027) lands on its own dashboard instead of
-  // the generic agency/roster screen, even though its functional_role also
-  // normalizes to ROLES.AGENCY — workspace_type is the real routing signal.
-  if (role === ROLES.AGENCY) return <Navigate to={isProducerWorkspace ? '/production' : '/agency'} replace />
-  if (role === ROLES.BOOKER) return <Navigate to="/discover" replace />
-  if (role === ROLES.PRODUCER) return <Navigate to="/producer/received" replace />
-  return <Navigate to="/artist/home" replace />
+  if (!user) return <Navigate to={ROUTES.login} replace />
+  // Single source of truth for role→home routing (src/lib/navigation.js), so a
+  // workspace switch lands on the NEW workspace's home and the contract test can
+  // prove every entity's landing.
+  return <Navigate to={homePathFor({ role, isProducerWorkspace, demo: DEMO })} replace />
+}
+
+// Warm 404 (spec §17.B.10). Replaces the old silent `Navigate to="/"` catch-all,
+// which hid broken links. "Back to my home" points at "/" → RoleHome routes a
+// logged-in user to their own home, and a logged-out one to /login — no dead-end.
+function NotFound() {
+  const { T } = useLang()
+  const e = T.errors
+  return (
+    <PageShell max="max-w-md">
+      <div className="card mt-16 text-center">
+        <div className="mb-5 flex justify-center"><Wordmark /></div>
+        <h1 className="font-display text-2xl text-ink">{e.notFoundTitle}</h1>
+        <p className="mt-2 text-muted">{e.notFoundBody}</p>
+        <Link to="/" className="btn-primary mt-6 inline-block">{e.notFoundHome}</Link>
+        <p className="mt-2 text-xs text-faint">{e.notFoundHomeHint}</p>
+      </div>
+    </PageShell>
+  )
 }
 
 export default function App() {
@@ -169,9 +189,14 @@ export default function App() {
             public passport surface (/passport/:id), the same reused pattern
             ArtistDashboard/ClaimReview already link out to. */}
         <Route path="/artist/passport" element={<RequireRole role={ROLES.ARTIST}><PassportSelf /></RequireRole>} />
+        {/* Act-Identity Editor (§8.6 / D1 fix) — edit stage_name/one_line/genre/
+            city/photo after onboarding. Reached from the Radar identity + Settings. */}
+        <Route path="/artist/act/edit" element={<RequireRole role={ROLES.ARTIST}><ActEditor /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
-        <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}><OfferPayment /></RequireRole>} />
+        {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
+            when payments are dormant — no payment surface reachable at launch. */}
+        <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}>{PAYMENTS_ENABLED ? <OfferPayment /> : <Navigate to="/artist/home" replace />}</RequireRole>} />
         <Route path="/evidence/:artistId" element={<RequireRole role={ROLES.ARTIST}><EvidenceCapture /></RequireRole>} />
 
         {/* manager/agency workspace */}
@@ -198,7 +223,7 @@ export default function App() {
         <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER}><ProducerReceivedPassports /></RequireRole>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   )

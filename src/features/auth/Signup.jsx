@@ -4,15 +4,18 @@ import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons, OrDivider } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { OAUTH_ENABLED } from '../../lib/constants.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
 import AuthScene from './AuthScene.jsx'
 
 export default function Signup() {
   const { T } = useLang()
-  const { signUp, signInWithOAuth, demo } = useAuth()
+  const { signUp, signIn, signInWithOAuth, demo } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
-  const [fullName, setFullName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const fullName = `${firstName} ${lastName}`.trim()
   const [email, setEmail] = useState(loc.state?.email || '')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,12 +37,37 @@ export default function Signup() {
     setLoading(true)
     try {
       const data = await signUp({ email, password, fullName })
-      if (!data.session) {
-        // Supabase requires email confirmation — user is not yet logged in.
-        setConfirmPending(true)
-      } else {
-        nav('/select')
+      // ALREADY-REGISTERED: Supabase anti-enumeration returns a user with an
+      // EMPTY identities array and no session for an email that already exists —
+      // no error, no session, so signup silently dead-ends (the exact confusion
+      // Maria hit: "sign up lands me on /login"). Detect it and send them to LOG
+      // IN with the email prefilled + a clear notice, instead of a dead end.
+      if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        nav('/login', { state: { email, notice: 'exists' } })
+        return
       }
+      // PKCE gotcha: with flowType:'pkce' (needed for Google OAuth), signUp
+      // returns session:null EVEN when the project auto-confirms emails
+      // (mailer_autoconfirm=true) — it defers the session to a code exchange.
+      // That dropped every email signup onto the "check your inbox" dead-end
+      // and back to /login (Maria, 9 Jul), despite no confirmation being
+      // required. When there's no session, try an immediate password sign-in:
+      //  • auto-confirm ON  → sign-in succeeds → straight into /select.
+      //  • confirmation ON  → sign-in throws "Email not confirmed" → we show
+      //    the real "check your inbox" screen. Correct in both worlds.
+      let session = data.session
+      if (!session) {
+        try {
+          const signedIn = await signIn({ email, password })
+          session = signedIn?.session ?? null
+        } catch {
+          /* genuine confirmation-required: fall through to confirmPending */
+        }
+      }
+      // CFRO surface attribution: which build converted — the lock.show/app
+      // embed (BASE_URL '/app/') or the standalone app.lock.show deploy.
+      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone' }); nav('/select') }
+      else setConfirmPending(true)
     } catch (err) {
       setError(err?.message?.includes('registered') ? T.signup.error : (err.message || T.common.error))
     } finally {
@@ -66,7 +94,7 @@ export default function Signup() {
   }
 
   return (
-    <AuthScene tagline="Your nights, made provable.">
+    <AuthScene tagline={T.authScene.taglineSignup}>
       <h1 className="mb-1 text-2xl font-bold text-ink">{T.signup.title}</h1>
       <p className="mb-6 text-sm text-muted">{T.signup.heroLine}</p>
       {(OAUTH_ENABLED || demo) && (
@@ -77,10 +105,16 @@ export default function Signup() {
       )}
       <form onSubmit={onSubmit}>
         <ErrorNote>{error}</ErrorNote>
-        <Field label={T.signup.name}>
-          <input className="field" placeholder="Your name"
-            value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={T.signup.firstName}>
+            <input className="field" placeholder={T.signup.firstNamePlaceholder} autoComplete="given-name"
+              value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+          </Field>
+          <Field label={T.signup.lastName}>
+            <input className="field" placeholder={T.signup.lastNamePlaceholder} autoComplete="family-name"
+              value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+          </Field>
+        </div>
         <Field label={T.signup.email}>
           <input className="field" type="email" dir="ltr" autoComplete="email"
             placeholder="you@stage.com"

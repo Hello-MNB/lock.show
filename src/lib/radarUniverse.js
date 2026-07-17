@@ -80,10 +80,12 @@ export const bandFromCount = (n) =>
 // An artist can live in several worlds (techno · trance · weddings · festivals…).
 // Worlds are TAGS that filter which nodes light up — pure subset, zero judgment,
 // never a position ("where do I stand" = evidence coverage per world, not rank).
+// The Hebrew literals below are venue/context CLASSIFIER patterns (matching an
+// artist's own text), NOT user-facing copy — they intentionally live in code. i18n-allow
 const CONTEXT_WORLDS = [
-  { key: 'club', match: /club|קלאב|מועדון|barby|kuli/i },
-  { key: 'festival', match: /festival|פסטיבל|midburn|stage/i },
-  { key: 'weddings', match: /wedding|חתונ|private|corporate|אירוע/i },
+  { key: 'club', match: /club|קלאב|מועדון|barby|kuli/i },       // i18n-allow
+  { key: 'festival', match: /festival|פסטיבל|midburn|stage/i },  // i18n-allow
+  { key: 'weddings', match: /wedding|חתונ|private|corporate|אירוע/i }, // i18n-allow
 ]
 
 export function deriveWorlds({ artist = {}, items = [] }) {

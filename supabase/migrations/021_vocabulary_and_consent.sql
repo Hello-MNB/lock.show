@@ -1,4 +1,19 @@
 -- ============================================================
+-- ⛔ FROZEN — DO NOT APPLY. NOT applied to the live DB (live = 001–020, 022–028).
+-- ============================================================
+-- Applying this file OR rebuilding the DB from migrations in order WILL BREAK
+-- the running app until the app is updated in lockstep. It drops the
+-- 'mirror-only' value (claims.visibility) and 'booker' (profiles.role) that the
+-- CURRENT code still writes:
+--   • src/lib/constants.js  VISIBILITY.MIRROR_ONLY='mirror-only', ROLES.BOOKER='booker'
+--   • src/lib/db.js         saveClaim writes visibility='mirror-only'
+--   • src/lib/orgs.js       bootstrap_personal_org default 'booker'; upsert profiles.role
+-- After 021, every AI-pipeline claim insert fails claims_visibility_check and the
+-- labeling loop silently stops writing (verified: DB audit 9 Jul 2026).
+-- Before this is EVER applied: either (a) update constants.js/db.js/orgs.js to the
+-- new vocabulary in the same change, or (b) re-add the legacy values as tolerated
+-- the way migration 027 did for role_assignment.functional_role.
+-- ============================================================
 -- GIGPROOF — migration 021: VOCABULARY & CONSENT ALIGNMENT
 --
 -- WHAT THIS DOES (plain language):

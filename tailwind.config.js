@@ -22,8 +22,10 @@ export default {
         faint: '#69716B',     // tertiary / placeholders
 
         // ── Accent & atmosphere ──
-        accent: '#BEE24E',        // lime — CTAs, verified cues. ALWAYS dark text (#12160A) on lime.
-        'accent-deep': '#9FD531', // lime gradient bottom / pressed
+        // Lime aligned to Design System v1.2.0 (docs/design-system): #c8f04d is
+        // THE single dominant action. ALWAYS dark text (--ink #0a0d0b) on lime.
+        accent: '#C8F04D',        // lime — CTAs, verified cues (DS v1.2.0 exact)
+        'accent-deep': '#AEDA36', // pressed / gradient bottom
         gold: '#F2C063',          // warm atmosphere, method labels, artist aura
         teal: '#46DCC2',          // developing state
         amber: '#E39A4B',         // needs-you state
@@ -48,6 +50,19 @@ export default {
         na: '#9AA29B',
         'na-bg': 'rgba(255,255,255,.05)',
 
+        // ── DS MAPPING LAYER (A9, rel-07.13) — audit-verified v1.6.5 values ──
+        // The PAPER task-surface family for the batch-by-batch migration
+        // (Surface Language Contract: paper for task surfaces, dark for
+        // media/proof moments). ADDITIVE ONLY: the legacy `paper/forest/card`
+        // aliases below stay dark until each screen batch migrates to ds-*.
+        // AA proof (DS v1.6.5): ds-paper/ds-forest = 14.91 · app bg/ink = 17.21.
+        'ds-paper': '#F3F5EF',   // DS color.paper — page canvas (task surfaces)
+        'ds-card': '#FFFFFF',    // DS white card
+        'ds-forest': '#18221A',  // DS color.forest — panels + display text on paper
+        'ds-ink': '#0A0D0B',     // DS ink on paper
+        'ds-mist': '#DDE3D9',    // DS hairlines on paper
+        'ds-slate': '#687269',   // DS secondary text on paper
+
         // ── LEGACY ALIASES (CODEX v1.2.0 light-theme names) ─────────────────
         // Remapped onto the dark palette so unrefactored screens still render
         // coherently dark. New/refactored code must use the tokens above.
@@ -55,7 +70,7 @@ export default {
         night: '#14181A',                // dark sections → surface
         forest: '#14181A',               // deep green panels → surface
         card: '#14181A',                 // white cards → surface
-        lime: '#BEE24E',                 // = accent
+        lime: '#C8F04D',                 // = accent (DS v1.2.0)
         'accent-700': '#9FD531',         // lime hover → accent-deep
         soft: '#F3F0E8',                 // was body text → ink
         mist: 'rgba(255,255,255,.08)',   // hairlines → line
@@ -74,8 +89,23 @@ export default {
         sans: ['"Heebo"', 'system-ui', 'sans-serif'],         // body/UI (Heebo covers Hebrew)
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'], // method labels · bands · dates
       },
+      // Type scale — spec §5.11 self-contained DS defaults (interim; Codex may refine).
+      // [size, { lineHeight, fontWeight, letterSpacing }]. Additive: named roles only,
+      // Tailwind's numeric sizes (text-sm/base/…) stay available.
+      fontSize: {
+        display: ['clamp(38px, 8vw, 72px)', { lineHeight: '1.05', fontWeight: '900' }], // hero (Frank Ruhl Libre)
+        h1:      ['clamp(26px, 4.5vw, 30px)', { lineHeight: '1.15', fontWeight: '700' }], // screen title
+        h2:      ['22px', { lineHeight: '1.2', fontWeight: '700' }],                       // section
+        h3:      ['18px', { lineHeight: '1.25', fontWeight: '600' }],                      // card title (Heebo)
+        body:    ['16px', { lineHeight: '1.5', fontWeight: '400' }],                       // floor — never below 16
+        secondary: ['14px', { lineHeight: '1.45', fontWeight: '400' }],
+        chip:    ['11px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '0.06em' }], // eyebrow · method label (mono, uppercase)
+        micro:   ['12px', { lineHeight: '1.3', fontWeight: '500' }],                       // dates
+      },
       borderRadius: {
-        // buttons 12px · rows 14px · cards 18–24px · chips 999px
+        // §5.11 scale: input 8 · button 10 · card 12 · panel 16 · hero 20 · sheet 22 (additive aliases)
+        input: '8px',
+        button: '10px',
         DEFAULT: '14px',
         sm: '12px',
         md: '14px',
@@ -87,7 +117,7 @@ export default {
       },
       boxShadow: {
         card: '0 24px 60px -24px rgba(0,0,0,.75)',
-        glow: '0 10px 26px -10px rgba(190,226,78,.5)',    // lime glow — THE one primary CTA per view
+        glow: '0 10px 26px -10px rgba(200,240,77,.5)',    // lime glow (DS v1.2.0) — THE one primary CTA per view
         'glow-gold': '0 0 12px 0 rgba(242,192,99,.22)',   // found-state edge — subtle, never loud
       },
       keyframes: {

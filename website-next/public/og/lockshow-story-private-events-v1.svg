@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW vertical story template - Private events</title>
+  <desc id="desc">Vertical social story template for private event clients.</desc>
+  <rect width="1080" height="1920" fill="#f3f5ef"/>
+  <rect x="70" y="92" width="940" height="1736" rx="46" fill="#ffffff" stroke="#d4dbd2"/>
+  <circle cx="822" cy="276" r="128" fill="#c8f04d"/>
+  <text x="112" y="190" fill="#718078" font-family="DM Mono, monospace" font-size="26" font-weight="700" letter-spacing="5">PRIVATE EVENTS</text>
+  <text x="112" y="506" fill="#18221a" font-family="Georgia, serif" font-size="108" letter-spacing="-6">The right</text>
+  <text x="112" y="626" fill="#18221a" font-family="Georgia, serif" font-size="108" letter-spacing="-6">artist should</text>
+  <text x="112" y="746" fill="#18221a" font-family="Georgia, serif" font-size="108" letter-spacing="-6">feel clear.</text>
+  <text x="118" y="888" fill="#526057" font-family="Manrope, Arial, sans-serif" font-size="42">Style, fit, trust and the next step — without industry jargon.</text>
+  <rect x="116" y="1210" width="382" height="94" rx="24" fill="#18221a"/>
+  <text x="168" y="1270" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="32" font-weight="900">View Passport</text>
+  <text x="112" y="1714" fill="#18221a" font-family="Manrope, Arial, sans-serif" font-size="34" font-weight="900">LOCK.SHOW</text>
+</svg>

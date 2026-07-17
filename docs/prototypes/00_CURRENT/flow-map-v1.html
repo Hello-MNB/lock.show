@@ -1,0 +1,337 @@
+<title>LOCK — User-Flow Architecture & Build Map</title>
+<style>
+  :root{
+    --ground:#0E0F0D; --surface:#16180F; --raise:#1E211A;
+    --line:rgba(243,240,232,.09); --line-2:rgba(243,240,232,.16);
+    --paper:#F3F0E8; --tally:#9AA394; --faint:#6B7266;
+    --lime:#BEE24E; --gold:#F2C063;
+    --built:#BEE24E; --partial:#E6B24E; --gap:#E8705A;
+    --built-bg:rgba(190,226,78,.10); --partial-bg:rgba(230,178,78,.10); --gap-bg:rgba(232,112,90,.11);
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.35);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --ground:#EFEBDF; --surface:#F6F3EA; --raise:#EAE5D6;
+      --line:rgba(20,22,15,.10); --line-2:rgba(20,22,15,.18);
+      --paper:#171A11; --tally:#5C6353; --faint:#8A9080;
+      --built:#5E8B12; --partial:#A9741A; --gap:#C24A32;
+      --built-bg:rgba(94,139,18,.10); --partial-bg:rgba(169,116,26,.10); --gap-bg:rgba(194,74,50,.10);
+      --shadow:0 1px 0 rgba(255,255,255,.6), 0 8px 24px rgba(60,55,40,.10);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0E0F0D; --surface:#16180F; --raise:#1E211A;
+    --line:rgba(243,240,232,.09); --line-2:rgba(243,240,232,.16);
+    --paper:#F3F0E8; --tally:#9AA394; --faint:#6B7266;
+    --built:#BEE24E; --partial:#E6B24E; --gap:#E8705A;
+    --built-bg:rgba(190,226,78,.10); --partial-bg:rgba(230,178,78,.10); --gap-bg:rgba(232,112,90,.11);
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"]{
+    --ground:#EFEBDF; --surface:#F6F3EA; --raise:#EAE5D6;
+    --line:rgba(20,22,15,.10); --line-2:rgba(20,22,15,.18);
+    --paper:#171A11; --tally:#5C6353; --faint:#8A9080;
+    --built:#5E8B12; --partial:#A9741A; --gap:#C24A32;
+    --built-bg:rgba(94,139,18,.10); --partial-bg:rgba(169,116,26,.10); --gap-bg:rgba(194,74,50,.10);
+    --shadow:0 1px 0 rgba(255,255,255,.6), 0 8px 24px rgba(60,55,40,.10);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0}
+  .wrap{
+    background:var(--ground); color:var(--paper); font-family:var(--sans);
+    min-height:100vh; padding:clamp(20px,4vw,56px);
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .inner{max-width:1180px; margin:0 auto}
+
+  .eyebrow{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--lime); margin:0}
+  h1{font-size:clamp(28px,4.5vw,46px); font-weight:800; letter-spacing:-.02em; line-height:1.02;
+    margin:10px 0 0; text-wrap:balance; color:var(--paper)}
+  .lede{color:var(--tally); font-size:clamp(15px,1.6vw,17px); max-width:64ch; margin:14px 0 0}
+  .meta{font-family:var(--mono); font-size:12px; color:var(--faint); margin-top:14px; letter-spacing:.02em}
+
+  /* legend + summary */
+  .board{display:grid; grid-template-columns:1fr; gap:18px; margin:30px 0 8px}
+  @media(min-width:820px){.board{grid-template-columns:1.35fr 1fr}}
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:20px 22px; box-shadow:var(--shadow)}
+  .panel h2{font-size:12px; font-family:var(--mono); letter-spacing:.14em; text-transform:uppercase;
+    color:var(--tally); margin:0 0 16px; font-weight:600}
+  .legend{display:flex; flex-direction:column; gap:12px}
+  .legend .row{display:flex; align-items:flex-start; gap:12px}
+  .dot{width:11px; height:11px; border-radius:3px; margin-top:5px; flex:none}
+  .legend b{font-size:14px; color:var(--paper); font-weight:700}
+  .legend span{font-size:13px; color:var(--tally)}
+  .counts{display:flex; gap:10px; flex-wrap:wrap}
+  .stat{flex:1 1 90px; background:var(--raise); border:1px solid var(--line); border-radius:12px;
+    padding:14px 12px; text-align:center}
+  .stat .n{font-size:30px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1}
+  .stat .l{font-size:11px; font-family:var(--mono); letter-spacing:.08em; text-transform:uppercase;
+    color:var(--tally); margin-top:7px; display:block}
+
+  /* entry funnel */
+  .band{margin:34px 0 10px}
+  .band-title{display:flex; align-items:baseline; gap:12px; margin:0 0 4px}
+  .band-title h2{font-size:19px; font-weight:800; letter-spacing:-.01em; margin:0; color:var(--paper)}
+  .band-title .he{font-family:var(--sans); font-size:14px; color:var(--tally); direction:rtl}
+  .band-sub{color:var(--tally); font-size:14px; margin:0 0 18px; max-width:70ch}
+
+  .funnel{display:flex; flex-wrap:wrap; align-items:stretch; gap:10px}
+  .step{flex:1 1 150px; background:var(--surface); border:1px solid var(--line-2); border-radius:13px;
+    padding:14px 15px; position:relative; min-width:0}
+  .step .rt{font-family:var(--mono); font-size:11.5px; color:var(--lime); letter-spacing:.02em}
+  .step .nm{font-weight:700; font-size:14.5px; margin:4px 0 3px; color:var(--paper)}
+  .step .ds{font-size:12.5px; color:var(--tally); line-height:1.45}
+  .step .arrow{position:absolute; right:-11px; top:50%; transform:translateY(-50%); z-index:2;
+    color:var(--faint); font-size:15px}
+  @media(max-width:640px){.step .arrow{display:none}}
+
+  /* entity grid */
+  .grid{display:grid; grid-template-columns:1fr; gap:18px; margin-top:14px}
+  @media(min-width:720px){.grid{grid-template-columns:1fr 1fr}}
+  @media(min-width:1080px){.grid.three{grid-template-columns:1fr 1fr 1fr}}
+  .entity{background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column}
+  .entity > header{border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:14px}
+  .entity h3{margin:0; font-size:17px; font-weight:800; letter-spacing:-.01em; color:var(--paper);
+    display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+  .entity h3 .he{font-size:14px; color:var(--gold); font-weight:600; direction:rtl}
+  .entity .route-to{font-family:var(--mono); font-size:11.5px; color:var(--tally); margin-top:7px;
+    display:block; letter-spacing:.01em}
+  .entity .route-to b{color:var(--lime); font-weight:600}
+
+  .pages{display:flex; flex-direction:column; gap:9px}
+  .page{display:grid; grid-template-columns:auto 1fr; gap:11px; align-items:start;
+    padding:10px 12px; background:var(--raise); border:1px solid var(--line);
+    border-left:3px solid var(--stripe,var(--line-2)); border-radius:10px}
+  .page.built{--stripe:var(--built)}
+  .page.partial{--stripe:var(--partial)}
+  .page.gap{--stripe:var(--gap)}
+  .chip{font-family:var(--mono); font-size:9.5px; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; padding:4px 7px; border-radius:6px; white-space:nowrap; margin-top:1px}
+  .chip.built{color:var(--built); background:var(--built-bg)}
+  .chip.partial{color:var(--partial); background:var(--partial-bg)}
+  .chip.gap{color:var(--gap); background:var(--gap-bg)}
+  .page .body{min-width:0}
+  .page .t{font-size:14px; font-weight:700; color:var(--paper); display:flex; gap:8px;
+    align-items:baseline; flex-wrap:wrap}
+  .page .t .rt{font-family:var(--mono); font-size:11px; color:var(--tally); font-weight:400}
+  .page .d{font-size:12.5px; color:var(--tally); margin-top:3px; line-height:1.45}
+  .page .note{font-size:12px; margin-top:5px; line-height:1.4; display:flex; gap:6px}
+  .page .note.partial{color:var(--partial)}
+  .page .note.gap{color:var(--gap)}
+  .page .note::before{content:"▸"; opacity:.8}
+
+  .section-h{font-size:12px; font-family:var(--mono); letter-spacing:.14em; text-transform:uppercase;
+    color:var(--tally); margin:38px 0 4px; font-weight:600; display:flex; align-items:center; gap:12px}
+  .section-h::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  /* gaps table */
+  .gaps{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;
+    box-shadow:var(--shadow); margin-top:14px}
+  .gscroll{overflow-x:auto}
+  table{border-collapse:collapse; width:100%; min-width:640px}
+  thead th{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--tally); text-align:left; padding:14px 16px; border-bottom:1px solid var(--line-2); font-weight:600}
+  tbody td{padding:13px 16px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  td .pri{font-family:var(--mono); font-weight:700; font-size:12px; padding:3px 8px; border-radius:6px;
+    background:var(--raise); color:var(--paper)}
+  td .pri.p0{color:var(--gap); background:var(--gap-bg)}
+  td .pri.p1{color:var(--partial); background:var(--partial-bg)}
+  td .pri.p2{color:var(--tally)}
+  td.g{font-weight:700; color:var(--paper)}
+  td .who{font-family:var(--mono); font-size:11px; color:var(--tally)}
+  .owner-me{color:var(--lime)}
+  .owner-you{color:var(--gold)}
+
+  footer{margin-top:40px; padding-top:20px; border-top:1px solid var(--line); color:var(--faint);
+    font-size:12.5px; line-height:1.6; font-family:var(--mono)}
+  .firewall{margin-top:14px; padding:14px 16px; border:1px dashed var(--line-2); border-radius:12px;
+    color:var(--tally); font-size:12.5px; background:var(--surface); font-family:var(--sans)}
+  .firewall b{color:var(--gap)}
+</style>
+
+<div class="wrap"><div class="inner">
+
+  <p class="eyebrow">LOCK · Operating Map</p>
+  <h1>User-Flow Architecture &amp; Build Map</h1>
+  <p class="lede">Every entity, every stage, every page — with what's on it and where the gaps are. Read from a single source: the live codebase (routes, screens) cross-checked against the task board. Nothing here is aspirational; a page is marked built only if the screen exists and works.</p>
+  <p class="meta">Verified from code · 9 July 2026 · app.lock.show + lock.show/app</p>
+
+  <div class="board">
+    <div class="panel">
+      <h2>Status legend</h2>
+      <div class="legend">
+        <div class="row"><span class="dot" style="background:var(--built)"></span><div><b>Built &amp; working</b> — <span>the screen exists, is wired to real data, and does its job today.</span></div></div>
+        <div class="row"><span class="dot" style="background:var(--partial)"></span><div><b>Partial</b> — <span>the screen exists but is a scaffold, degrades, or is unverified live (e.g. awaiting your test).</span></div></div>
+        <div class="row"><span class="dot" style="background:var(--gap)"></span><div><b>Gap</b> — <span>not built yet. The flow reaches here but the capability is missing.</span></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>At a glance</h2>
+      <div class="counts">
+        <div class="stat"><span class="n" style="color:var(--built)">31</span><span class="l">Screens built</span></div>
+        <div class="stat"><span class="n" style="color:var(--partial)">5</span><span class="l">Partial</span></div>
+        <div class="stat"><span class="n" style="color:var(--gap)">9</span><span class="l">Feature gaps</span></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--tally);margin:14px 0 0">The skeleton is complete — almost every screen exists. The gaps are depth features (notifications, discovery, multi-Act) and two live-tests, not missing pages.</p>
+    </div>
+  </div>
+
+  <!-- SHARED ENTRY -->
+  <div class="band">
+    <div class="band-title"><h2>Shared entry — everyone starts here</h2><span class="he">כניסה משותפת</span></div>
+    <p class="band-sub">One funnel for all entities. The marketing site sends people to sign up or log in; after auth, <b style="color:var(--paper)">"Who are you?"</b> assigns the role and routes each person to their own home. This is the seam that was breaking — now fixed.</p>
+    <div class="funnel">
+      <div class="step"><div class="rt">lock.show</div><div class="nm">Marketing site</div><div class="ds">Learn LOCK · CTAs to sign up / log in.</div><span class="arrow">→</span></div>
+      <div class="step"><div class="rt">/signup · /login</div><div class="nm">Create account / Sign in</div><div class="ds">Email + password or Google. Password reset available.</div><span class="arrow">→</span></div>
+      <div class="step"><div class="rt">/select</div><div class="nm">"Who are you?"</div><div class="ds">Pick Artist · Manager · Booker. Creates profile + workspace.</div><span class="arrow">→</span></div>
+      <div class="step"><div class="rt">RoleHome "/"</div><div class="nm">Routed to your home</div><div class="ds">Each role lands on its own dashboard automatically.</div></div>
+    </div>
+  </div>
+
+  <div class="section-h">Entities — each role's own flow</div>
+  <div class="grid">
+
+    <!-- ARTIST -->
+    <div class="entity">
+      <header>
+        <h3>Artist <span class="he">אמן</span></h3>
+        <span class="route-to">signs up → <b>/onboarding</b> → <b>/artist/home</b></span>
+      </header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Onboarding <span class="rt">/onboarding</span></div><div class="d">Name + a link → the radar universe builds itself. The 2-screen start.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Radar universe <span class="rt">RadarUniverse</span></div><div class="d">Evidence as a living map; nodes fill in place as proof is found.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Artist home <span class="rt">/artist/home</span></div><div class="d">Passport status, next actions, gaps to close (private view).</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Claim review <span class="rt">/artist/claims</span></div><div class="d">Review AI-extracted claims — approve, edit, or reject each.</div><div class="note partial">Real AI labeling needs one live test (key is in Vercel).</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Evidence capture <span class="rt">/evidence/:id</span></div><div class="d">Add a piece of evidence to an Act; method-labeled.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Readiness <span class="rt">/artist/readiness</span></div><div class="d">Private gaps view — what's missing before the passport is strong.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">My Passport <span class="rt">/artist/passport</span></div><div class="d">Opens the artist's own real public passport (buyer view).</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Requests <span class="rt">/artist/requests</span></div><div class="d">Availability requests that arrived from managers/bookers.</div></div></div>
+        <div class="page partial"><span class="chip partial">Partial</span><div class="body"><div class="t">Plan &amp; payment <span class="rt">/artist/offer</span></div><div class="d">Bit + reference-code activation. Mechanics work.</div><div class="note gap">Plan enforcement (gating by plan) not built yet.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Multi-Act switching</div><div class="d">One artist, several Acts (psytrance + techno), each its own passport.</div><div class="note gap">Tables exist since migration 020 — UI not built in-app.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">2-proof publish gate</div><div class="d">Public passport should require ≥2 proofs before it goes live.</div></div></div>
+      </div>
+    </div>
+
+    <!-- BOOKING MANAGER / BOOKER -->
+    <div class="entity">
+      <header>
+        <h3>Booking manager <span class="he">מזמין / מפיק אירוע</span></h3>
+        <span class="route-to">demand side · trust-receiver → <b>/discover</b></span>
+      </header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Booker home <span class="rt">/discover</span></div><div class="d">Paste the passport link you were sent → open it. One clean action.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Public Passport <span class="rt">/passport/:id</span></div><div class="d">Evaluate an unfamiliar artist on method-labeled evidence in 30 sec.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Request availability <span class="rt">/passport/:id/request</span></div><div class="d">Send an availability request straight from a passport.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Open discovery / marketplace</div><div class="d">Search artists you weren't sent — browse by value/genre.</div><div class="note gap">Deferred until after validation (by design).</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Value-vs-genre view</div><div class="d">Compare an artist's draw against genre norms.</div><div class="note gap">Needs genre taxonomy data filled + UI.</div></div></div>
+      </div>
+    </div>
+
+    <!-- AGENCY / ROSTER -->
+    <div class="entity">
+      <header>
+        <h3>Agency / Roster <span class="he">אמרגן · סוכנות</span></h3>
+        <span class="route-to">manages a roster → <b>/agency</b></span>
+      </header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Agency dashboard <span class="rt">/agency</span></div><div class="d">Roster overview — every artist's proof in one place.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Requests inbox <span class="rt">/agency/requests</span></div><div class="d">Incoming availability requests across the roster.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Radar feed <span class="rt">/agency/radar</span></div><div class="d">Roster radar — candidates and movement.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Representation workspace</div><div class="d">Roster as consented grants (artist approves being represented).</div><div class="note gap">Migration 027 applied ✅ — in-app build from prototype pending.</div></div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTION COMPANY -->
+    <div class="entity">
+      <header>
+        <h3>Production company <span class="he">חברת הפקה</span></h3>
+        <span class="route-to">workspace_type=producer → <b>/production</b></span>
+      </header>
+      <div class="pages">
+        <div class="page partial"><span class="chip partial">Partial</span><div class="body"><div class="t">Production dashboard <span class="rt">/production</span></div><div class="d">Team · Events · Requests for a production house (e.g. INSOMNIA TLV).</div><div class="note partial">Scaffolded — all three tabs share one component; not yet wired to real data.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Events &amp; lineup</div><div class="d">Real events, lineups, and the team behind them.</div><div class="note gap">gigs table exists, unused — needs build.</div></div></div>
+        <div class="page gap"><span class="chip gap">Gap</span><div class="body"><div class="t">Production requests</div><div class="d">Send/receive booking requests as a production house.</div><div class="note gap">Needs migration 029 (not yet written).</div></div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCER / CONFIRMER -->
+    <div class="entity">
+      <header>
+        <h3>Producer — confirmer <span class="he">מפיק מאשר</span></h3>
+        <span class="route-to">mostly no-login · magic link → <b>/confirm/:token</b></span>
+      </header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Confirm a claim <span class="rt">/confirm/:token</span></div><div class="d">One-time secure link, no account: Yes · Partly · No · Not the right person.</div><div class="note partial">Works on the app URL; the confirm ceremony is the producer's whole job.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Producer landing <span class="rt">/producer</span></div><div class="d">Explains the role for a producer who does log in — never orphaned.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Received passports <span class="rt">/producer/received</span></div><div class="d">Passports sent to this producer. (Was crashing — fixed 9 Jul.)</div></div></div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="entity">
+      <header>
+        <h3>Admin / Operator <span class="he">מפעיל</span></h3>
+        <span class="route-to">internal → <b>/admin</b></span>
+      </header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Admin dashboard <span class="rt">/admin</span></div><div class="d">Internal operations view — manage the platform.</div></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PUBLIC + ACCOUNT -->
+  <div class="section-h">Shared surfaces — reached across roles</div>
+  <div class="grid">
+    <div class="entity">
+      <header><h3>Public passport &amp; requests</h3><span class="route-to">the buyer-facing proof — no login needed</span></header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Public Passport <span class="rt">/passport/:id</span></div><div class="d">Verified strengths only, method labels, 30-second scan. The product's core artifact.</div><div class="note partial">2-proof publish gate still to add.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Availability request <span class="rt">/passport/:id/request</span></div><div class="d">Ask an artist about a date, from their passport.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Request sent <span class="rt">/passport/:id/sent</span></div><div class="d">Confirmation screen after a request goes out.</div></div></div>
+      </div>
+    </div>
+    <div class="entity">
+      <header><h3>Account &amp; organization</h3><span class="route-to">available to every logged-in person</span></header>
+      <div class="pages">
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Settings <span class="rt">/settings</span></div><div class="d">Profile, account, language.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Org settings · Members · Billing <span class="rt">/org/*</span></div><div class="d">Manage the workspace, invite members, upgrade, billing.</div></div></div>
+        <div class="page built"><span class="chip built">Built</span><div class="body"><div class="t">Accept invite <span class="rt">/invite/:token</span></div><div class="d">Join a workspace you were invited to.</div></div></div>
+        <div class="page partial"><span class="chip partial">Partial</span><div class="body"><div class="t">Workspace switcher <span class="rt">ContextSwitcher</span></div><div class="d">Switch between your Acts / workspaces.</div><div class="note partial">Visible; mobile trap fixed. Full screen-set swap still being finished.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CROSS-CUTTING GAPS -->
+  <div class="section-h">The gaps — what's not built yet, in priority order</div>
+  <div class="gaps"><div class="gscroll"><table>
+    <thead><tr><th>Pri</th><th>What's missing</th><th>Why it matters</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pri p0">P0</span></td><td class="g">Real AI labeling — live test</td><td>Prove the paste-link → evidence → method-label pipeline runs on the real key, not the stub.</td><td><span class="who owner-me">Claude + your 1 test</span></td></tr>
+      <tr><td><span class="pri p0">P0</span></td><td class="g">Google login + signup — live test</td><td>Code shipped &amp; fixed; needs your one clean run (clear cache first).</td><td><span class="who owner-you">You</span></td></tr>
+      <tr><td><span class="pri p0">P0</span></td><td class="g">Analytics M1 event writers</td><td>Measure the funnel + the Gate. Schema live (028); writers not wired.</td><td><span class="who owner-me">Claude</span></td></tr>
+      <tr><td><span class="pri p0">P0</span></td><td class="g">Legal counsel sign-off</td><td>HE drafts exist; need entity/ח.פ., city, refund, accessibility coordinator.</td><td><span class="who owner-you">You</span></td></tr>
+      <tr><td><span class="pri p1">P1</span></td><td class="g">Notifications</td><td>Confirmation arrived · payment activated · request received. Highest-value build.</td><td><span class="who owner-me">Claude</span></td></tr>
+      <tr><td><span class="pri p1">P1</span></td><td class="g">Deep discovery scan</td><td>Search an artist by name (HE/EN) to seed evidence. Tavily ready.</td><td><span class="who owner-me">Claude</span></td></tr>
+      <tr><td><span class="pri p1">P1</span></td><td class="g">Representation + Production workspaces</td><td>Finish the two workspace flows from prototype (027 applied).</td><td><span class="who owner-me">Claude</span></td></tr>
+      <tr><td><span class="pri p1">P1</span></td><td class="g">Hebrew localization pass</td><td>Every app + site string professional in HE, never mixed. Final pre-Hebrew-launch pass.</td><td><span class="who owner-me">Claude</span></td></tr>
+      <tr><td><span class="pri p2">P2</span></td><td class="g">Multi-Act · Share loop · Spotify · Value-vs-genre</td><td>Growth &amp; depth after launch — prototypes exist, in-app builds pending.</td><td><span class="who owner-me">Claude</span></td></tr>
+    </tbody>
+  </table></div></div>
+
+  <div class="firewall"><b>Canon firewall (never violated on any screen):</b> no score, percentile, rank, "bookability %", prediction, or gauge — anywhere. Draw shows only as bands + binaries with method labels. Streaming is secondary context. One Passport, shown in two views: Artist view (private, shows gaps) · Buyer view (public, verified strengths only).</div>
+
+  <footer>
+    Source: live routes in src/App.jsx + verified screen inventory (39 feature files) cross-checked with docs/TASK-STATUS-BOARD.md v2.3.<br>
+    Built &amp; working = screen exists and functions · Partial = scaffold / degrades / awaiting live test · Gap = not built.<br>
+    This map is the shared reference — when we finish a gap, its row moves up to built and the count changes.
+  </footer>
+
+</div></div>

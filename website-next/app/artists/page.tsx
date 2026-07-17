@@ -1,908 +1,441 @@
-import type { Metadata } from 'next'
-import Link from 'next/link'
+﻿// Artists ג€” rebuilt per Codex exact rebuild brief ֲ§5.2 (2026-07-14).
+// Goal: the artist feels SUPPORTED, not evaluated. No "build proof" as main
+// language, nothing implying the artist is being judged.
+// ALL copy lives in content/artists.ts ({ en, he }); this page renders EN
+// for now ג€” locale wiring is a later wave and stays mechanical.
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/artists' },
-  title: 'Prove You Draw a Crowd — Before the Call',
-  description:
-    'You played the gig. Now put proof in front of the booking manager before they ever call you — not a link, not a bio, evidence they can check.',
-  openGraph: {
-    url: '/artists',
-    title: 'For Artists | LOCK',
-    description:
-      'You played a great set. Now prove it — in a way a booking manager can trust.',
-    type: 'website',
-  },
-}
+import { Fragment } from 'react'
 
-import { APP_URL } from '@/lib/app-url'
+import { FinalCta } from '@/components/marketing/final-cta'
+import { FlowRow, FlowStep } from '@/components/marketing/flow-step'
+import { Hero } from '@/components/marketing/hero'
+import { Icon } from '@/components/marketing/icons'
+import { Section, SectionHeading } from '@/components/marketing/section'
+import { TrustBadge } from '@/components/marketing/trust-badge'
+import { artistsContent } from '@/content/artists'
+import { buildPageMetadata } from '@/lib/seo'
 
-const ICON_PATHS: Record<string, string> = {
-  arrow:
-    '<path d="M4 12h15M14 7l5 5-5 5"/>',
-  approved:
-    '<circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 8"/>',
-  radar:
-    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 3v9l6.5-6.5M12 12l5 3"/>',
-  passport:
-    '<path d="M5 3h14v18H5z"/><circle cx="12" cy="10" r="3"/><path d="M8 17c.7-2 2-3 4-3s3.3 1 4 3"/>',
-}
+const t = artistsContent.en
 
-function Icon({
-  id,
-  size = 18,
-  color = 'currentColor',
-}: {
-  id: string
-  size?: number
-  color?: string
-}) {
-  const paths = ICON_PATHS[id] ?? ''
+const HERO_IMAGE = '/brand/lockshow-atmosphere-artist-career-workspace-v1.webp'
+
+export const metadata = buildPageMetadata('artists')
+
+// ג”€ג”€ Floating Radar overlay on the hero image (brief ֲ§5.2 wireframe) ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+
+function RadarOverlayCard() {
+  const c = t.hero.radarCard
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      style={{ display: 'inline-block', flexShrink: 0, verticalAlign: 'middle' }}
-      dangerouslySetInnerHTML={{ __html: paths }}
-    />
-  )
-}
-
-function MethodBadge({ label }: { label: string }) {
-  return (
-    <span
+    <div
       style={{
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.6rem',
-        fontWeight: 700,
-        letterSpacing: '0.08em',
-        color: 'var(--color-stamp-onlight)',
-        background: 'rgba(200,240,77,0.08)',
-        border: '1px solid rgba(200,240,77,0.2)',
-        borderRadius: '2px',
-        padding: '0.15rem 0.4rem',
+        background: 'rgba(10,13,11,0.78)',
+        border: '1px solid rgba(243,245,239,0.16)',
+        borderRadius: '18px',
+        padding: '0.9rem 1.1rem',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        minWidth: '150px',
       }}
     >
-      {label}
-    </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.6rem' }}>
+        <Icon id="radar" size={14} color="var(--color-stamp)" />
+        <span
+          style={{
+            fontFamily: 'var(--font-space-mono)',
+            fontSize: '0.6rem',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--color-stamp)',
+          }}
+        >
+          {c.label}
+        </span>
+      </div>
+      {c.rows.map((row) => (
+        <div
+          key={row}
+          style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '0.22rem 0' }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              background: 'rgba(200,240,77,0.7)',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontFamily: 'var(--font-space-mono)',
+              fontSize: '0.68rem',
+              letterSpacing: '0.05em',
+              color: 'rgba(243,245,239,0.72)',
+            }}
+          >
+            {row}
+          </span>
+        </div>
+      ))}
+    </div>
   )
 }
 
-const painPoints = [
-  {
-    title: 'The manager loved your mix. Then nothing.',
-    body: "You have no way to prove you draw a crowd. A Spotify link shows you exist — it says nothing about what happens when you're in the room.",
-  },
-  {
-    title: "You've played 40 gigs. Nobody outside your network knows.",
-    body: 'Your live record lives in WhatsApp threads and memory. It\'s invisible to every booking manager who hasn\'t personally seen you play.',
-  },
-  {
-    title: 'An EPK is a sales pitch. They know it too.',
-    body: "Experienced booking managers have seen enough polished bios to stop trusting them. They need something with a third party's name on it.",
-  },
-]
-
-const steps = [
-  {
-    num: '01',
-    title: 'Log your evidence',
-    body: 'Add your gig history, platform data, and professional context. Everything stays private in your Artist Radar until you\'re ready.',
-  },
-  {
-    num: '02',
-    title: 'Send the producer a link',
-    body: 'One WhatsApp message. They confirm a single claim they know first-hand — no account, no ongoing access.',
-  },
-  {
-    num: '03',
-    title: 'Operator reviews and labels',
-    body: 'We review the evidence and apply the exact method label. No claim appears on your Passport without one.',
-  },
-  {
-    num: '04',
-    title: 'Publish your Passport',
-    body: 'One link. Send it before the call. The booking manager sees exactly what was verified — and how.',
-  },
-]
-
-const radarFeatures = [
-  'Every gig you\'ve logged, and whether it\'s been verified yet',
-  'Clear flags on what evidence is still missing',
-  'One-click links to invite a producer to confirm a show',
-  'Nothing public without your OK',
-]
-
-const passportFeatures = [
-  'Only claims that have been checked — and labelled with how',
-  'Audience size shown as a range, e.g. 200–350 — never one exact number',
-  'Every claim dated, so a manager knows how current it is',
-  'Free for booking managers to view, always',
-]
+// ג”€ג”€ Page ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
 
 export default function ArtistsPage() {
   return (
-    <main>
-      {/* ── HERO — floating dark card ──────────────────────────────────── */}
-      <section
-        className="persona-hero-artist"
-        style={{
-          margin: '28px max(24px, 4vw) 0',
-          border: '1px solid #2a362c',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          minHeight: '620px',
-          background: `
-            linear-gradient(180deg,
-              rgba(10,13,11,0.55) 0%,
-              rgba(10,13,11,0.86) 55%,
-              rgba(10,13,11,0.97) 100%
-            ),
-            url('/gigproof-persona-artist-v1.webp') center/cover no-repeat
-          `,
-          color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4.5rem)',
-        }}
-      >
-        {/* Lime ambient glow */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            width: '480px',
-            height: '480px',
-            borderRadius: '50%',
-            right: '-120px',
-            bottom: '-180px',
-            background: 'rgba(200,240,77,0.1)',
-            filter: 'blur(72px)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <div style={{ maxWidth: '640px', position: 'relative' }}>
-          {/* Eyebrow with pulsing dot */}
+    <main data-accent="artists">
+      {/* ג”€ג”€ HERO (brief ֲ§5.2): supported, not evaluated ג”€ג”€ */}
+      <Hero
+        eyebrow={t.hero.eyebrow}
+        title={t.hero.h1}
+        body={t.hero.body}
+        primaryCta={t.hero.primaryCta}
+        secondaryCta={t.hero.secondaryCta}
+        trustLine={t.hero.trustLine}
+        image={{ src: HERO_IMAGE, alt: t.hero.imageAlt }}
+        floatingBottom={<RadarOverlayCard />}
+        below={
           <div
             style={{
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
-              gap: '8px',
-              marginBottom: '1.75rem',
+              gap: '0.9rem',
             }}
           >
-            <span
-              className="pulse-dot"
-              style={{
-                display: 'inline-block',
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: 'var(--color-stamp)',
-                boxShadow: '0 0 10px var(--color-stamp)',
-                flexShrink: 0,
-              }}
+            {/* "Artist controls publication" badge (brief ֲ§5.2 Add) */}
+            <TrustBadge
+              methodLabel={t.hero.badge.methodLabel}
+              explanation={t.hero.badge.explanation}
+              visibility="private"
+              tone="dark"
             />
+            {/* "Start with one link" micro-step (brief ֲ§5.2 Add) */}
             <span
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
                 fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.65rem',
-                letterSpacing: '0.14em',
-                color: 'var(--color-stamp)',
+                fontSize: '0.72rem',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
+                color: 'rgba(243,245,239,0.7)',
               }}
             >
-              For Artists · לאמנים
+              <Icon id="link" size={14} color="var(--color-stamp)" />
+              {t.hero.microStep}
             </span>
           </div>
+        }
+      />
 
-          {/* H1 — Georgia serif, Codex standard */}
-          <h1
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(2.4rem, 5vw, 4rem)',
-              fontWeight: 400,
-              lineHeight: 0.96,
-              letterSpacing: '-0.055em',
-              color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
-            }}
-          >
-            You played a great set.
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              Nobody booked you.
-            </em>
-          </h1>
-
-          {/* Sub */}
-          <p
-            style={{
-              fontSize: 'clamp(0.9rem, 1.8vw, 1.05rem)',
-              lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.62)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
-            }}
-          >
-            You managed your own rider. Built your audience from scratch. And
-            when it matters most — a booking manager you&apos;ve never met,
-            deciding your next six months — all you can send is a link.
-            LOCK changes that.
-          </p>
-
-          {/* CTAs */}
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <a
-              href={`${APP_URL}/signup?role=artist`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
-                borderRadius: 'var(--radius-sm)',
-                textDecoration: 'none',
-              }}
-            >
-              BUILD YOUR PASSPORT
-              <Icon id="arrow" size={15} color="var(--color-ink)" />
-            </a>
-            <Link
-              href="/passport/demo"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                border: '1px solid rgba(243,245,239,0.22)',
-                color: 'var(--color-paper)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.9rem 1.75rem',
-                borderRadius: 'var(--radius-sm)',
-                textDecoration: 'none',
-              }}
-            >
-              SEE A SAMPLE
-            </Link>
-          </div>
-        </div>
-
-        <style>{`
-          @keyframes gp-pulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 8px #c8f04d; }
-            50%       { opacity: 0.55; box-shadow: 0 0 20px #c8f04d; }
-          }
-          .pulse-dot { animation: gp-pulse 2.4s ease-in-out infinite; }
-        `}</style>
-      </section>
-
-      {/* ── PAIN SECTION ──────────────────────────────────────────────── */}
-      <section
-        style={{
-          background: 'var(--color-night)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
-          borderTop: '1px solid #2a342d',
-          borderBottom: '1px solid #2a342d',
-        }}
-      >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-tally)',
-              textTransform: 'uppercase',
-              marginBottom: '1rem',
-            }}
-          >
-            THE PROBLEM
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.04em',
-              lineHeight: 1.08,
-              color: 'var(--color-paper)',
-              marginBottom: 'clamp(2rem, 5vw, 3.5rem)',
-              maxWidth: '600px',
-            }}
-          >
-            Every artist hits the same wall.
-          </h2>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '1px',
-              background: 'rgba(255,255,255,0.06)',
-            }}
-          >
-            {painPoints.map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  background: 'var(--color-night)',
-                  padding: 'clamp(1.5rem, 3vw, 2.25rem)',
-                }}
-              >
-                <div
-                  style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.55rem',
-                    letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.2)',
-                    textTransform: 'uppercase',
-                    marginBottom: '1rem',
-                  }}
-                >
-                  0{i + 1}
-                </div>
-                <h3
-                  style={{
-                    fontFamily: 'var(--font-archivo)',
-                    fontSize: 'clamp(0.95rem, 2vw, 1.1rem)',
-                    fontWeight: 700,
-                    color: 'var(--color-paper)',
-                    marginBottom: '0.75rem',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {p.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(243,245,239,0.55)',
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {p.body}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TWO TOOLS ─────────────────────────────────────────────────── */}
-      <section
-        style={{
-          background: 'var(--color-paper)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
-        }}
-      >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-tally-onlight)',
-              textTransform: 'uppercase',
-              marginBottom: '1rem',
-            }}
-          >
-            WHAT YOU GET
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.04em',
-              color: 'var(--color-ink)',
-              marginBottom: 'clamp(2rem, 5vw, 3.5rem)',
-            }}
-          >
-            Your proof. Your control.
-          </h2>
-
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '1.5rem',
-            }}
-          >
-            {/* Artist Radar */}
-            <div
-              style={{
-                border: '1px solid rgba(10,13,11,0.1)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'clamp(1.75rem, 3vw, 2.5rem)',
-                background: 'var(--color-paper)',
-              }}
-            >
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(10,13,11,0.05)',
-                  border: '1px solid rgba(10,13,11,0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <Icon id="radar" size={20} color="var(--color-ink)" />
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.6rem',
-                  letterSpacing: '0.12em',
-                  color: 'var(--color-tally-onlight)',
-                  textTransform: 'uppercase',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                PRIVATE · Only you see this
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-archivo)',
-                  fontSize: '1.2rem',
-                  fontWeight: 900,
-                  color: 'var(--color-ink)',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                Artist Radar
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--color-tally-onlight)',
-                  lineHeight: 1.65,
-                  marginBottom: '1.5rem',
-                }}
-              >
-                Your private workspace. See what evidence you have, what&apos;s
-                missing, and exactly what to do next. Nobody sees it unless you
-                choose to publish.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {radarFeatures.map((f) => (
-                  <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
-                      {f}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bookability Passport */}
-            <div
-              style={{
-                border: '1px solid rgba(10,13,11,0.1)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'clamp(1.75rem, 3vw, 2.5rem)',
-                background: 'var(--color-paper)',
-              }}
-            >
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(10,13,11,0.05)',
-                  border: '1px solid rgba(10,13,11,0.08)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '1.25rem',
-                }}
-              >
-                <Icon id="passport" size={20} color="var(--color-ink)" />
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-space-mono)',
-                  fontSize: '0.6rem',
-                  letterSpacing: '0.12em',
-                  color: 'var(--color-tally-onlight)',
-                  textTransform: 'uppercase',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                PUBLIC · With your explicit approval
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-archivo)',
-                  fontSize: '1.2rem',
-                  fontWeight: 900,
-                  color: 'var(--color-ink)',
-                  marginBottom: '0.75rem',
-                }}
-              >
-                Bookability Passport
-              </h3>
-              <p
-                style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--color-tally-onlight)',
-                  lineHeight: 1.65,
-                  marginBottom: '1.5rem',
-                }}
-              >
-                The view a booking manager sees — verified claims only, each
-                with a method label and review date. Nothing appears without
-                your approval. No scores. No rankings.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {passportFeatures.map((f) => (
-                  <div key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                    <Icon id="approved" size={14} color="rgba(10,13,11,0.35)" />
-                    <span style={{ fontSize: '0.82rem', color: 'var(--color-tally-onlight)', lineHeight: 1.4 }}>
-                      {f}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sample proof unit — shows how claims display */}
-          <div
-            style={{
-              marginTop: '2.5rem',
-              border: '1px solid rgba(10,13,11,0.08)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'clamp(1.5rem, 3vw, 2rem)',
-            }}
-          >
-            <p
-              style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.6rem',
-                letterSpacing: '0.1em',
-                color: 'var(--color-tally-onlight)',
-                textTransform: 'uppercase',
-                marginBottom: '1.25rem',
-              }}
-            >
-              Sample claim from a Passport — fictional artist
-            </p>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '1px',
-                background: 'rgba(10,13,11,0.06)',
-              }}
-            >
-              {[
-                {
-                  label: 'Audience Draw',
-                  value: '200–350',
-                  detail: 'Headline slot, Zappa Club TLV, Feb 2025',
-                  badge: 'TICKET EXPORT',
-                  date: 'REVIEWED MAR 2025',
-                },
-                {
-                  label: 'Gig',
-                  value: 'Barby — support slot',
-                  detail: 'Self-managed booking, Dec 2024',
-                  badge: 'PRODUCER-CONFIRMED',
-                  date: 'REVIEWED DEC 2024',
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  style={{
-                    background: 'var(--color-paper)',
-                    padding: '1.25rem 1.5rem',
-                    borderLeft: '2px solid var(--color-stamp)',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.55rem',
-                      letterSpacing: '0.1em',
-                      color: 'var(--color-tally-onlight)',
-                      textTransform: 'uppercase',
-                      marginBottom: '0.35rem',
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '1.25rem',
-                      fontWeight: 700,
-                      color: 'var(--color-ink)',
-                      marginBottom: '0.2rem',
-                    }}
-                  >
-                    {item.value}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '0.8rem',
-                      color: 'var(--color-tally-onlight)',
-                      marginBottom: '0.6rem',
-                    }}
-                  >
-                    {item.detail}
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <MethodBadge label={item.badge} />
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.58rem',
-                        color: 'var(--color-tally-onlight)',
-                        letterSpacing: '0.06em',
-                      }}
-                    >
-                      {item.date}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW VERIFICATION WORKS ────────────────────────────────────── */}
-      <section
-        style={{
-          background: 'var(--color-night)',
-          padding: 'clamp(3.5rem, 7vw, 5.5rem) max(24px, 4vw)',
-          borderTop: '1px solid #2a342d',
-          borderBottom: '1px solid #2a342d',
-        }}
-      >
-        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-stamp)',
-              textTransform: 'uppercase',
-              marginBottom: '1rem',
-            }}
-          >
-            HOW VERIFICATION WORKS
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(1.75rem, 4vw, 2.4rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.04em',
-              lineHeight: 1.08,
-              color: 'var(--color-paper)',
-              marginBottom: 'clamp(2.5rem, 5vw, 4rem)',
-            }}
-          >
-            From your first gig log to a booking manager&apos;s trust.
-          </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {steps.map((s, i, arr) => (
-              <div
-                key={s.num}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '44px 1fr',
-                  gap: '1.25rem',
-                  paddingBottom: i < arr.length - 1 ? '2rem' : '0',
-                }}
-              >
-                {/* Step indicator + connector */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      color: 'var(--color-stamp)',
-                      background: 'rgba(200,240,77,0.08)',
-                      border: '1px solid rgba(200,240,77,0.2)',
-                      borderRadius: 'var(--radius-sm)',
-                      width: '44px',
-                      height: '44px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {s.num}
-                  </div>
-                  {i < arr.length - 1 && (
-                    <div
-                      style={{
-                        flex: 1,
-                        width: '1px',
-                        background: 'rgba(200,240,77,0.15)',
-                        marginTop: '0.5rem',
-                      }}
-                    />
-                  )}
-                </div>
-
-                {/* Content */}
-                <div style={{ paddingTop: '0.5rem' }}>
-                  <h3
-                    style={{
-                      fontFamily: 'var(--font-archivo)',
-                      fontSize: '1rem',
-                      fontWeight: 700,
-                      color: 'var(--color-paper)',
-                      marginBottom: '0.4rem',
-                    }}
-                  >
-                    {s.title}
-                  </h3>
-                  <p
-                    style={{
-                      fontSize: '0.9rem',
-                      color: 'rgba(243,245,239,0.55)',
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    {s.body}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.62rem',
-              letterSpacing: '0.06em',
-              color: 'rgba(243,245,239,0.25)',
-              marginTop: '2.5rem',
-              lineHeight: 1.6,
-            }}
-          >
-            The producer (מפיק) confirms one claim through a link — no account,
-            no ongoing access. A booking manager (אמרגן) is a different role
-            entirely: they read the finished Passport and decide.
-          </p>
-        </div>
-      </section>
-
-      {/* ── CLOSING CTA ───────────────────────────────────────────────── */}
+      {/* ג”€ג”€ MINI-FLOW STRIP: One link ג†’ Radar ג†’ Passport ג†’ Share ג”€ג”€ */}
       <section
         style={{
           background: 'var(--color-ink)',
-          padding: 'clamp(4rem, 9vw, 7rem) max(24px, 4vw)',
-          textAlign: 'center',
+          borderTop: '1px solid rgba(243,245,239,0.08)',
+          borderBottom: '1px solid rgba(243,245,239,0.08)',
+          padding: '1.4rem max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-          <p
+        <div
+          className="mk-container"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            gap: '0.6rem 0.9rem',
+          }}
+        >
+          <span
             style={{
               fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.65rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-stamp)',
+              fontSize: '0.66rem',
+              letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              marginBottom: '1.5rem',
+              color: 'rgba(243,245,239,0.45)',
+              marginInlineEnd: '0.5rem',
             }}
           >
-            CLOSED BETA · ISRAEL
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.055em',
-              lineHeight: 0.96,
-              color: 'var(--color-paper)',
-              marginBottom: '1.75rem',
-            }}
-          >
-            Build the career
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              behind the spotlight.
-            </em>
-          </h2>
-          <p
-            style={{
-              fontSize: '1rem',
-              color: 'rgba(243,245,239,0.52)',
-              lineHeight: 1.7,
-              maxWidth: '400px',
-              margin: '0 auto 2.5rem',
-            }}
-          >
-            Early access is limited. Israeli artists only.
-            Free to build and publish. Momentum plan for those who want more — booking managers stay free, always.
-          </p>
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.75rem',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <a
-              href={`${APP_URL}/signup?role=artist`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 2rem',
-                borderRadius: 'var(--radius-sm)',
-                textDecoration: 'none',
-              }}
-            >
-              BUILD YOUR PASSPORT
-              <Icon id="arrow" size={15} color="var(--color-ink)" />
-            </a>
-            <Link
-              href="/passport/demo"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                border: '1px solid rgba(243,245,239,0.22)',
-                color: 'var(--color-paper)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 2rem',
-                borderRadius: 'var(--radius-sm)',
-                textDecoration: 'none',
-              }}
-            >
-              SEE A SAMPLE
-            </Link>
-          </div>
+            {t.miniFlow.eyebrow}
+          </span>
+          {t.miniFlow.chips.map((chip, i) => (
+            <Fragment key={chip}>
+              {i > 0 ? (
+                <span aria-hidden="true" style={{ color: 'rgba(243,245,239,0.35)' }}>
+                  <Icon id="arrow" size={13} />
+                </span>
+              ) : null}
+              <span
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.09em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-paper)',
+                  background: 'rgba(243,245,239,0.06)',
+                  border: '1px solid rgba(243,245,239,0.18)',
+                  borderRadius: '999px',
+                  padding: '0.35rem 0.85rem',
+                }}
+              >
+                {chip}
+              </span>
+            </Fragment>
+          ))}
         </div>
       </section>
+
+      {/* ג”€ג”€ 3 TENSION CARDS (brief ֲ§5.2) ג”€ג”€ */}
+      <Section tone="paper">
+        <SectionHeading eyebrow={t.tension.eyebrow} title={t.tension.title} />
+        <div
+          className="m-divide"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 'clamp(1rem, 2vw, 1.5rem)',
+          }}
+        >
+          {t.tension.cards.map((card, i) => {
+            const dark = i === 1 // card rhythm: paper ֲ· dark ֲ· paper
+            return (
+              <div
+                key={card.title}
+                className="mk-card m-flat"
+                style={{
+                  background: dark ? 'var(--color-forest)' : '#ffffff',
+                  border: dark
+                    ? '1px solid rgba(243,245,239,0.1)'
+                    : '1px solid rgba(10,13,11,0.1)',
+                  padding: 'clamp(1.5rem, 3vw, 2rem)',
+                }}
+              >
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-archivo)',
+                    fontSize: '1.1rem',
+                    fontWeight: 800,
+                    lineHeight: 1.35,
+                    color: dark ? 'var(--color-paper)' : 'var(--color-ink)',
+                    margin: '0 0 0.7rem',
+                  }}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: '0.95rem',
+                    lineHeight: 1.65,
+                    color: dark ? 'rgba(243,245,239,0.65)' : 'var(--color-tally-onlight)',
+                    margin: 0,
+                  }}
+                >
+                  {card.body}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      </Section>
+
+      {/* ג”€ג”€ TWO PRODUCT CARDS: private Radar / public Passport (brief ֲ§5.2) ג”€ג”€ */}
+      <Section tone="forest">
+        <SectionHeading tone="forest" eyebrow={t.products.eyebrow} title={t.products.title} />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: 'clamp(1.25rem, 2.5vw, 2rem)',
+            alignItems: 'stretch',
+          }}
+        >
+          {/* Radar ג€” dark card */}
+          <article
+            className="mk-card"
+            style={{
+              background: 'rgba(243,245,239,0.04)',
+              border: '1px solid rgba(243,245,239,0.12)',
+              padding: 'clamp(1.75rem, 3.5vw, 2.5rem)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
+              <Icon id="radar" size={22} color="var(--color-stamp)" />
+              <span
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.66rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-stamp)',
+                  border: '1px solid rgba(200,240,77,0.3)',
+                  borderRadius: '999px',
+                  padding: '0.2rem 0.65rem',
+                }}
+              >
+                {t.products.radar.label}
+              </span>
+            </div>
+            <h3
+              style={{
+                fontFamily: 'var(--font-archivo)',
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: 'var(--color-paper)',
+                margin: '0 0 0.6rem',
+              }}
+            >
+              {t.products.radar.title}
+            </h3>
+            <p
+              style={{
+                fontSize: '0.95rem',
+                lineHeight: 1.65,
+                color: 'rgba(243,245,239,0.65)',
+                margin: '0 0 1.25rem',
+              }}
+            >
+              {t.products.radar.body}
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.7rem' }}>
+              {t.products.radar.features.map((feature) => (
+                <li key={feature} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+                  <span style={{ marginTop: '2px', color: 'rgba(200,240,77,0.8)' }}>
+                    <Icon id="confirm" size={15} />
+                  </span>
+                  <span style={{ fontSize: '0.9rem', lineHeight: 1.55, color: 'rgba(243,245,239,0.75)' }}>
+                    {feature}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </article>
+
+          {/* Passport ג€” paper card */}
+          <article
+            className="mk-card"
+            style={{
+              background: '#ffffff',
+              border: '1px solid rgba(10,13,11,0.1)',
+              padding: 'clamp(1.75rem, 3.5vw, 2.5rem)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', marginBottom: '1rem' }}>
+              <Icon id="passport" size={22} color="var(--color-stamp-onlight)" />
+              <span
+                style={{
+                  fontFamily: 'var(--font-space-mono)',
+                  fontSize: '0.66rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-stamp-onlight)',
+                  border: '1px solid rgba(200,240,77,0.5)',
+                  borderRadius: '999px',
+                  padding: '0.2rem 0.65rem',
+                }}
+              >
+                {t.products.passport.label}
+              </span>
+            </div>
+            <h3
+              style={{
+                fontFamily: 'var(--font-archivo)',
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: 'var(--color-ink)',
+                margin: '0 0 0.6rem',
+              }}
+            >
+              {t.products.passport.title}
+            </h3>
+            <p
+              style={{
+                fontSize: '0.95rem',
+                lineHeight: 1.65,
+                color: 'var(--color-tally-onlight)',
+                margin: '0 0 1.25rem',
+              }}
+            >
+              {t.products.passport.body}
+            </p>
+            <ul
+              style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: '0 0 1.25rem',
+                display: 'grid',
+                gap: '0.7rem',
+              }}
+            >
+              {t.products.passport.features.map((feature) => (
+                <li key={feature} style={{ display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+                  <span style={{ marginTop: '2px', color: 'var(--color-stamp-onlight)' }}>
+                    <Icon id="confirm" size={15} />
+                  </span>
+                  <span style={{ fontSize: '0.9rem', lineHeight: 1.55, color: 'var(--color-ink)' }}>
+                    {feature}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {t.products.passport.methodChips.map((chip) => (
+                <span
+                  key={chip}
+                  style={{
+                    fontFamily: 'var(--font-space-mono)',
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-stamp-onlight)',
+                    background: 'rgba(200,240,77,0.12)',
+                    border: '1px solid rgba(200,240,77,0.4)',
+                    borderRadius: '4px',
+                    padding: '0.18rem 0.5rem',
+                  }}
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
+          </article>
+        </div>
+      </Section>
+
+      {/* ג”€ג”€ 4-STEP FLOW (brief ֲ§5.2) ג”€ג”€ */}
+      <Section tone="paper">
+        <SectionHeading eyebrow={t.flow.eyebrow} title={t.flow.title} />
+        <FlowRow cols={4}>
+          {t.flow.steps.map((step, i) => (
+            <FlowStep
+              key={step.verb}
+              number={String(i + 1).padStart(2, '0')}
+              verb={step.verb}
+              body={step.body}
+              icon={step.icon}
+              tone="light"
+            />
+          ))}
+        </FlowRow>
+      </Section>
+
+      {/* ג”€ג”€ FINAL CTA ג”€ג”€ */}
+      <FinalCta
+        title={t.finalCta.title}
+        body={t.finalCta.body}
+        primaryCta={t.finalCta.primaryCta}
+        secondaryLink={t.finalCta.secondaryLink}
+      />
     </main>
   )
 }

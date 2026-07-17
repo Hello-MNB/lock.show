@@ -34,6 +34,13 @@ export function getNavTabs(role, isAgency, T, isProducerWorkspace = false) {
     { key: 'received', label: n.received, to: '/producer/received', end: false },
     { key: 'account',  label: n.account,  to: '/settings',          end: true  },
   ]
+  // Booker (booking manager) — lands on /discover (open a Passport you were sent).
+  // Without this branch a booker fell through to the account-only fallback and
+  // could not navigate back to their own home. Two tabs: Passports · Account.
+  if (role === ROLES.BOOKER) return [
+    { key: 'discover', label: n.discover, to: '/discover', end: true },
+    { key: 'account',  label: n.account,  to: '/settings', end: true },
+  ]
   if (role === ROLES.OPERATOR) return [
     { key: 'admin',   label: n.admin,   to: '/admin',    end: true },
     { key: 'account', label: n.account, to: '/settings', end: true },
@@ -52,6 +59,8 @@ export function NavIcon({ name }) {
       return <svg {...p}><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     case 'passport':
       return <svg {...p}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><polyline points="9 12 11 14 15 10"/></svg>
+    case 'discover':
+      return <svg {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     case 'roster':
       return <svg {...p}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
     case 'requests':

@@ -22,9 +22,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/artists',       priority: 0.8,  changeFrequency: 'monthly' },
     { path: '/bookers',       priority: 0.8,  changeFrequency: 'monthly' },
     { path: '/producers',     priority: 0.8,  changeFrequency: 'monthly' },
+    { path: '/managers',      priority: 0.8,  changeFrequency: 'monthly' }, // S9 outreach — artist-side offices
+    { path: '/production',    priority: 0.8,  changeFrequency: 'monthly' }, // S9 outreach — production offices
     { path: '/how-it-works',  priority: 0.7,  changeFrequency: 'monthly' },
     { path: '/methodology',   priority: 0.7,  changeFrequency: 'monthly' },
-    { path: '/pricing',       priority: 0.6,  changeFrequency: 'monthly' },
+    // '/pricing' unpublished (owner, 12 Jul night — S8 beta focus; redirects to /artists)
     { path: '/radar',         priority: 0.5,  changeFrequency: 'monthly' },
     { path: '/faq',           priority: 0.5,  changeFrequency: 'monthly' },
     { path: '/contact',       priority: 0.5,  changeFrequency: 'monthly' },

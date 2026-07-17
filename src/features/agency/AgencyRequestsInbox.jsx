@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { listRequestsForAgency, updateRequestStatus } from '../../lib/db.js'
 import * as UI from '../../components/ui.jsx'
@@ -29,6 +29,12 @@ export default function AgencyRequestsInbox() {
   const [openId, setOpenId] = useState(null)       // one row expanded at a time
   const [confirmCloseId, setConfirmCloseId] = useState(null) // inline confirm chip, never a modal
   const [busyId, setBusyId] = useState(null)
+  // G4 (A5): the roster's "Reply to request" chip deep-links here BOUND to one
+  // artist (?artist=<id>) — filter to that artist and auto-open their newest
+  // 'new' request, so the action lands ON the thing to answer, not a pile.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const artistFilter = searchParams.get('artist') || ''
+  const autoOpened = useRef(false)
 
   async function load() {
     setError(false)
@@ -41,6 +47,15 @@ export default function AgencyRequestsInbox() {
     }
   }
   useEffect(() => { load() }, [user.id])
+
+  // Auto-open ONCE after load: the artist's first still-'new' request, else
+  // their most recent one — never re-fires after status changes/reloads.
+  useEffect(() => {
+    if (autoOpened.current || loading || !artistFilter) return
+    const mine = rows.filter((r) => r.artist_id === artistFilter)
+    const first = mine.find((r) => r.status === 'new') || mine[0]
+    if (first) { autoOpened.current = true; setOpenId(first.id) }
+  }, [loading, artistFilter, rows])
 
   async function setStatus(id, status) {
     setBusyId(id)
@@ -56,6 +71,9 @@ export default function AgencyRequestsInbox() {
   if (loading) return <Loading />
   if (error) return <PageShell><ErrorState title={T.agency.loadError} onRetry={() => { setLoading(true); load() }} /></PageShell>
 
+  const visible = artistFilter ? rows.filter((r) => r.artist_id === artistFilter) : rows
+  const filterName = artistFilter ? visible.find((r) => r.artists?.stage_name)?.artists?.stage_name || '' : ''
+
   return (
     <PageShell>
       <div className="flex items-center justify-end mb-6">
@@ -63,11 +81,24 @@ export default function AgencyRequestsInbox() {
       </div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.agency.requests}</h1>
 
-      {rows.length === 0 ? (
-        <EmptyState title={T.agency.requestsEmpty} />
+      {/* artist-bound view notice — a triage filter, never a rank */}
+      {artistFilter && (
+        <div className="mb-3 flex items-center gap-2">
+          <span className="chip border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">{T.agency.filteredForArtist(filterName)}</span>
+          <button type="button" className="text-xs text-muted underline hover:text-ink" onClick={() => setSearchParams({}, { replace: true })}>
+            {T.agency.showAllRequests}
+          </button>
+        </div>
+      )}
+
+      {visible.length === 0 ? (
+        <EmptyState title={T.agency.requestsEmpty}
+          action={artistFilter ? (
+            <button className="btn-ghost" onClick={() => setSearchParams({}, { replace: true })}>{T.agency.showAllRequests}</button>
+          ) : undefined} />
       ) : (
         <div className="space-y-3">
-          {rows.map((r) => {
+          {visible.map((r) => {
             const open = openId === r.id
             return (
               <div key={r.id} className={`card transition ${open ? 'border-accent' : ''}`}>

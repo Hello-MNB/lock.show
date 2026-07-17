@@ -17,7 +17,7 @@ export default function BookerHome() {
     const m = v.trim().match(/passport\/([0-9a-f-]{6,})/i)
     const id = m ? m[1] : v.trim()
     if (id) { nav(`/passport/${id}`); return }
-    setErr('Paste the passport link (or its ID) you received.')
+    setErr(T.booker.pasteError)
   }
 
   return (
@@ -30,7 +30,7 @@ export default function BookerHome() {
             className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_85%_-10%,rgba(242,192,99,.12)_0%,rgba(242,192,99,0)_55%)]" />
           <div className="relative">
             <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.14em] text-gold">
-              Booking manager
+              {T.booker.eyebrow}
             </p>
             <h1 className="mt-2 font-display text-[26px] font-bold leading-tight text-ink">
               {T.booker.title}
@@ -62,18 +62,12 @@ export default function BookerHome() {
 
         {/* ── SECONDARY — what a LOCK passport is (calm, professional) ── */}
         <div className="mt-4 rounded-[22px] border border-line bg-bg2 p-7">
-          <h2 className="font-display text-lg font-bold text-ink">What is a LOCK passport?</h2>
+          <h2 className="font-display text-lg font-bold text-ink">{T.booker.whatIsTitle}</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            A standardized evidence page an artist shares before you book them. Every claim
-            carries its verification method and review date, and audience draw is shown as a
-            band — never an exact figure, never a score.
+            {T.booker.whatIsBody}
           </p>
           <ul className="mt-4 grid gap-2.5">
-            {[
-              'Method-labeled claims — you see how each fact was verified',
-              'Draw as bands and binaries — no rankings, no predictions',
-              'Check availability in one tap, with no commitment',
-            ].map((line) => (
+            {T.booker.whatIsPoints.map((line) => (
               <li key={line} className="flex items-start gap-2.5 text-sm leading-relaxed text-muted">
                 <span aria-hidden="true" className="mt-0.5 text-accent">✓</span>
                 {line}
@@ -81,7 +75,7 @@ export default function BookerHome() {
             ))}
           </ul>
           <p className="mt-5 border-t border-line pt-4 font-mono text-[10px] uppercase tracking-[0.08em] text-faint">
-            LOCK shows evidence only — not a guarantee.
+            {T.authScene.disclaimer}
           </p>
         </div>
       </PageShell>

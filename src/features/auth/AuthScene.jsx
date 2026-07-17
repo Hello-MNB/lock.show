@@ -1,9 +1,14 @@
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
+import { useLang } from '../../context/LangContext.jsx'
 
 // Local auth-scene shell (auth feature only — not a shared component).
 // Cinematic split: warm artist photo on the left (hidden on mobile), the form
 // column on the right. One warm light, backstage intimacy — never a dashboard.
-export default function AuthScene({ children, tagline = 'The evidence behind the night.' }) {
+// LANGUAGE LAW: the left-panel copy is localized (no hardcoded EN in a HE view).
+// `tagline` may be overridden per screen (e.g. Signup); it defaults to the
+// localized authScene.tagline.
+export default function AuthScene({ children, tagline }) {
+  const { T } = useLang()
   return (
     <div className="flex min-h-full bg-bg">
       {/* left — warm live photo with a gradient veil (desktop only) */}
@@ -14,11 +19,11 @@ export default function AuthScene({ children, tagline = 'The evidence behind the
         <div className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-bg/25" />
         <div className="absolute bottom-10 left-10 right-16 max-w-md">
           <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
-            Pre-booking proof
+            {T.authScene.eyebrow}
           </p>
-          <p className="font-display text-3xl font-bold leading-tight text-ink">{tagline}</p>
+          <p className="font-display text-3xl font-bold leading-tight text-ink">{tagline || T.authScene.tagline}</p>
           <p className="mt-3 text-sm text-muted">
-            LOCK shows evidence only — not a guarantee.
+            {T.authScene.disclaimer}
           </p>
         </div>
       </div>

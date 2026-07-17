@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useLocation, Link } from 'react-router-dom'
-import { getArtist } from '../../lib/db.js'
+import { getArtist, getSharedWhatsApp } from '../../lib/db.js'
 import { PageShell, Wordmark } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
@@ -21,23 +21,26 @@ export default function RequestConfirmation() {
   const { id } = useParams()
   const loc = useLocation()
   const [artist, setArtist] = useState(null)
+  const [sharedWa, setSharedWa] = useState(null)
   const [settled, setSettled] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Artist fetch only powers the WhatsApp bonus CTA — on failure the page still
-  // confirms the sent request via router state, so swallow rather than break.
+  // Artist fetch powers the name; the WhatsApp CTA comes from a SEPARATE gated
+  // read (getSharedWhatsApp) that returns a number ONLY when the artist opted in
+  // (Settings → personal details). Both are best-effort — the page still confirms
+  // the sent request via router state, so swallow rather than break.
   useEffect(() => {
     let alive = true
-    getArtist(id)
-      .then((a) => { if (alive) setArtist(a) })
-      .catch(() => {})
-      .finally(() => { if (alive) setSettled(true) })
+    Promise.allSettled([
+      getArtist(id).then((a) => { if (alive) setArtist(a) }),
+      getSharedWhatsApp(id).then((wa) => { if (alive) setSharedWa(wa) }),
+    ]).finally(() => { if (alive) setSettled(true) })
     return () => { alive = false }
   }, [id])
 
   const artistName = artist?.stage_name || loc.state?.artist_name || T.request.theArtist
   const requesterName = loc.state?.requester_name || ''
-  const rawWa = artist?.whatsapp_number
+  const rawWa = sharedWa
   const waNumber = formatWaNumber(rawWa)
   const waMsg = encodeURIComponent(T.request.whatsappMsg(artistName, requesterName))
   const waUrl = waNumber ? `https://wa.me/${waNumber}?text=${waMsg}` : null
@@ -89,10 +92,10 @@ export default function RequestConfirmation() {
             /* no WhatsApp on file — still not a dead end */
             <div className="mt-6 rounded-[14px] border border-line bg-surface2 p-4 text-left">
               <p className="text-sm leading-relaxed text-ink">
-                {artistName} or their agency will get back to you using the details you sent.
+                {T.request.willGetBack(artistName)}
               </p>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Keep the passport link for your file — the evidence stays available there.
+                {T.request.keepLinkHint}
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <span dir="ltr" className="min-w-0 flex-1 truncate rounded-md border border-line bg-bg2 px-3 py-2 font-mono text-[11px] text-muted">
@@ -100,14 +103,14 @@ export default function RequestConfirmation() {
                 </span>
                 <button onClick={copyLink}
                   className="btn-ghost shrink-0 px-4 py-2 text-xs">
-                  {copied ? 'Copied ✓' : 'Copy link'}
+                  {copied ? T.producer.copied : T.producer.copyLink}
                 </button>
               </div>
             </div>
           )}
 
           <Link to={`/passport/${id}`} className="mt-5 inline-block text-sm text-muted transition hover:text-ink">
-            ← Back to the passport
+            ← {T.request.backToPassport}
           </Link>
         </div>
       </PageShell>

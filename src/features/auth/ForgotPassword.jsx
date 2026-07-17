@@ -17,8 +17,13 @@ export default function ForgotPassword() {
     setError('')
     setLoading(true)
     try {
+      // Respect the surface's base path ('/' standalone app.lock.show vs '/app/'
+      // under the site embed) — BASE_URL ends in '/', so this yields
+      // /reset-password or /app/reset-password. A bare '/reset-password' would
+      // 404 the recovery link on the embed surface.
+      const base = import.meta.env.BASE_URL || '/'
       const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}${base}reset-password`,
       })
       if (err) throw err
       setSent(true)

@@ -1,19 +1,24 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { ROLES, OAUTH_ENABLED } from '../../lib/constants.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import AuthScene from './AuthScene.jsx'
 
 export default function Login() {
   const { T } = useLang()
   const { signIn, signInWithOAuth, demo, setDemoRole } = useAuth()
   const nav = useNavigate()
-  const [email, setEmail] = useState('')
+  const loc = useLocation()
+  // Prefill the email + show a friendly notice when Signup redirected here
+  // because the account already exists (state.notice === 'exists').
+  const [email, setEmail] = useState(loc.state?.email || '')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const alreadyExists = loc.state?.notice === 'exists'
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -21,7 +26,12 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn({ email, password })
-      nav('/')
+      logEvent(EVENTS.LOGIN)
+      // Honor the return path RequireAuth/AcceptInvite stashed in state.from
+      // (deep link or /invite/:token) — otherwise every login dead-drops on "/"
+      // and invited teammates / bounced deep-links never reach where they meant
+      // to go. Falls back to RoleHome for a plain login.
+      nav(loc.state?.from || '/')
     } catch {
       setError(T.login.error)
     } finally {
@@ -60,8 +70,13 @@ export default function Login() {
   return (
     <AuthScene>
       <h1 className="mb-1 text-2xl font-bold text-ink">{T.login.title}</h1>
-      <p className="mb-6 text-sm text-muted">Sign in to your proof workspace.</p>
+      <p className="mb-6 text-sm text-muted">{T.login.heroLine}</p>
       <form onSubmit={onSubmit}>
+        {alreadyExists && (
+          <p className="mb-3 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-ink">
+            {T.login.alreadyExists}
+          </p>
+        )}
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.login.email}>
           <input className="field" type="email" dir="ltr" autoComplete="email"

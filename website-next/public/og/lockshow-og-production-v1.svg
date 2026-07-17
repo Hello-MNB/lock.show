@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW OG template - Event production</title>
+  <desc id="desc">Operational share image for solo producers, event planners, production teams and companies.</desc>
+  <rect width="1200" height="630" fill="#f3f5ef"/>
+  <rect x="62" y="58" width="1076" height="514" rx="36" fill="#18221a"/>
+  <rect x="104" y="114" width="326" height="360" rx="24" fill="#f3f5ef"/>
+  <rect x="128" y="148" width="132" height="16" rx="8" fill="#c8f04d"/>
+  <rect x="128" y="202" width="254" height="14" rx="7" fill="#526057"/>
+  <rect x="128" y="240" width="224" height="14" rx="7" fill="#526057"/>
+  <rect x="128" y="278" width="268" height="14" rx="7" fill="#526057"/>
+  <rect x="128" y="348" width="216" height="56" rx="14" fill="#ffffff" stroke="#d4dbd2"/>
+  <text x="470" y="132" fill="#c8f04d" font-family="DM Mono, monospace" font-size="18" font-weight="700" letter-spacing="3">EVENT PRODUCTION</text>
+  <text x="470" y="244" fill="#ffffff" font-family="Georgia, serif" font-size="75" letter-spacing="-4">Keep the lineup</text>
+  <text x="470" y="324" fill="#ffffff" font-family="Georgia, serif" font-size="75" letter-spacing="-4">execution-ready.</text>
+  <text x="474" y="398" fill="#aab5ac" font-family="Manrope, Arial, sans-serif" font-size="25">Workspace language for planners, producers, teams and companies — never confused with Source Confirmer.</text>
+  <text x="470" y="520" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="22" font-weight="900">LOCK.SHOW</text>
+</svg>

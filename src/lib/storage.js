@@ -1,5 +1,6 @@
 import { supabase } from './supabase.js'
 import { evidenceFileError } from './constants.js'
+import { DEMO } from './demo.js'
 
 // Upload a file to a bucket and return a usable URL.
 // public-media → public URL; evidence → signed (private) URL.
@@ -8,6 +9,13 @@ export async function uploadFile(bucket, userId, file) {
   if (bucket === 'evidence') {
     const bad = evidenceFileError(file)
     if (bad) throw new Error(bad === 'size' ? 'file-too-large' : 'file-type-unsupported')
+  }
+  // DEMO has no Supabase client (supabase === null) — without this guard the
+  // demo build white-screens the moment a file is chosen in Evidence Capture or
+  // the radar photo fill. Return a local object URL so the upload→preview→save
+  // flow works end-to-end against fixtures. (Validation above still applies.)
+  if (DEMO) {
+    return { path: `demo/${Date.now()}_${file.name.replace(/[^\w.\-]+/g, '_')}`, url: URL.createObjectURL(file) }
   }
   const safe = file.name.replace(/[^\w.\-]+/g, '_')
   const path = `${userId}/${Date.now()}_${safe}`

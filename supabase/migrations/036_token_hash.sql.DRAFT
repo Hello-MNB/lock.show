@@ -1,0 +1,69 @@
+-- ============================================================
+-- GIGPROOF — migration 036 DRAFT: hashed confirmation-token storage (G15-4).
+--
+-- ⚠ .DRAFT SUFFIX = DO NOT RUN. This file is deliberately named so no
+--   migration runner picks it up. Rename to 036_token_hash.sql (and split the
+--   DOWN section into 036_token_hash.down.sql, matching repo convention)
+--   ONLY when the rollout below is scheduled.
+--
+-- WHY: producer_confirmations.token is stored in PLAINTEXT today (migration
+-- 005). Anyone with read access to the table (a DB export, a leaked backup,
+-- an over-broad RLS grant) can replay every live magic link. Storing only
+-- sha256(token) makes a stolen table useless while the raw link in the
+-- producer's inbox keeps working.
+--
+-- README — ROLLOUT PLAN (dual-read window; each step independently safe):
+--   Step 1  Apply the UP section below: adds token_hash, backfills it from the
+--           existing raw tokens, unique-indexes it. Nothing reads it yet —
+--           zero behaviour change.
+--   Step 2  Deploy the server DUAL-READ: /api/confirm/:token computes
+--           h = sha256(token) and looks up token_hash = h FIRST, falling back
+--           to token = :token for any row the backfill missed (e.g. a row
+--           inserted by an old server instance between Step 1 and Step 2).
+--   Step 3  Deploy mint-side change: POST /api/request-confirmation stores
+--           token_hash ONLY (token column left NULL for new rows); the raw
+--           token still goes back to the artist once, in the JSON response.
+--   Step 4  After CONFIRM_TOKEN_TTL_DAYS (default 14) — i.e. once every
+--           raw-token row is expired anyway — run the SCRUB block: null out
+--           the remaining plaintext tokens and drop the fallback read.
+--   Rollback at any step = the DOWN section (only safe BEFORE Step 4's scrub;
+--   after the scrub the plaintext is gone by design and cannot be restored).
+-- ============================================================
+
+-- ─────────────────────────── UP ───────────────────────────
+
+-- sha256 via pgcrypto (pre-installed on Supabase; guard is idempotent).
+create extension if not exists pgcrypto;
+
+alter table public.producer_confirmations
+  add column if not exists token_hash text;
+
+-- Backfill: hash every existing raw token (hex-encoded sha256, matching the
+-- server's createHash('sha256').update(token).digest('hex')).
+update public.producer_confirmations
+   set token_hash = encode(digest(token, 'sha256'), 'hex')
+ where token_hash is null
+   and token is not null;
+
+-- One hash = one link. Unique like the raw token column it replaces.
+create unique index if not exists idx_pc_token_hash
+  on public.producer_confirmations (token_hash);
+
+-- Step 3 prerequisite: new rows carry only the hash, so token must accept NULL.
+alter table public.producer_confirmations
+  alter column token drop not null;
+
+-- ─────────────── SCRUB (run ONLY at Step 4, after the TTL window) ───────────
+-- update public.producer_confirmations set token = null where token is not null;
+-- -- Optional final hardening once nothing references it:
+-- -- alter table public.producer_confirmations drop column token;
+
+-- ────────────────────────── DOWN ──────────────────────────
+-- (Split into 036_token_hash.down.sql when promoting this draft.)
+-- Safe only BEFORE the Step-4 scrub — afterwards raw tokens no longer exist.
+-- NOTE: restoring NOT NULL fails while hash-only rows (token IS NULL, minted at
+-- Step 3) exist — delete or wait out those rows first, or skip that statement.
+--
+-- alter table public.producer_confirmations alter column token set not null;
+-- drop index if exists idx_pc_token_hash;
+-- alter table public.producer_confirmations drop column if exists token_hash;

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, upsertArtist, addProfileItem, addEvidence, processEvidence, hasConsent } from '../../lib/db.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { SOURCE_STATUS } from '../../lib/constants.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -82,11 +83,8 @@ export default function Onboarding() {
         setArtist(a)
         setF({ stage_name: a.stage_name || '', city: a.city || '' })
         try {
-          const [privacyOk, processingOk] = await Promise.all([
-            hasConsent(user.id, 'privacy-policy'),
-            hasConsent(user.id, 'data-processing'),
-          ])
-          setConsentAlready(privacyOk && processingOk)
+          // Canon scope is the single `privacy-processing` (migration 021 CHECK).
+          setConsentAlready(await hasConsent(user.id, 'privacy-processing'))
         } catch { setConsentAlready(false) }
       } catch (e) { setError(e.message) } finally { setLoading(false) }
     })()
@@ -141,6 +139,7 @@ export default function Onboarding() {
         } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
       }
       sessionStorage.removeItem(stepStorageKey(user.id))
+      logEvent(EVENTS.ONBOARDING_COMPLETE)
       nav('/artist/home', { state: { fromEntry: true } })
     } catch (err) {
       setError(err.message || T.common.error)
@@ -200,7 +199,7 @@ export default function Onboarding() {
             {linkPlatform && (
               <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
                 <PlatformLogo name={linkPlatform} size={15} className="text-gold" />
-                {linkPlatform.charAt(0).toUpperCase() + linkPlatform.slice(1)} recognized
+                {T.evidence.platformRecognized(linkPlatform.charAt(0).toUpperCase() + linkPlatform.slice(1))}
               </p>
             )}
             {/* the deferral promise — everything else is the Radar's job */}

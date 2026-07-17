@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW OG template - Private event clients</title>
+  <desc id="desc">Warm private event client share image. Use for weddings, family events and corporate clients.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3f5ef"/>
+      <stop offset="0.58" stop-color="#fff"/>
+      <stop offset="1" stop-color="#dfe7d9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="18%" r="62%">
+      <stop offset="0" stop-color="#c8f04d" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#c8f04d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="62" y="58" width="1076" height="514" rx="36" fill="#ffffff" stroke="#d4dbd2"/>
+  <circle cx="966" cy="166" r="92" fill="#18221a"/>
+  <path d="M944 164l17 17 39-48" fill="none" stroke="#c8f04d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="96" y="118" fill="#718078" font-family="DM Mono, monospace" font-size="18" font-weight="700" letter-spacing="3">PRIVATE EVENT CLIENT</text>
+  <text x="96" y="222" fill="#18221a" font-family="Georgia, serif" font-size="72" letter-spacing="-4">Choose the right feel</text>
+  <text x="96" y="300" fill="#18221a" font-family="Georgia, serif" font-size="72" letter-spacing="-4">with clear context.</text>
+  <text x="100" y="372" fill="#526057" font-family="Manrope, Arial, sans-serif" font-size="26">Artist-approved profile context for weddings, private events and corporate moments.</text>
+  <rect x="100" y="444" width="238" height="58" rx="14" fill="#c8f04d"/>
+  <text x="130" y="481" fill="#0a0d0b" font-family="Manrope, Arial, sans-serif" font-size="19" font-weight="800">View sample Passport</text>
+  <text x="96" y="536" fill="#18221a" font-family="Manrope, Arial, sans-serif" font-size="22" font-weight="900">LOCK.SHOW</text>
+  <text x="244" y="536" fill="#718078" font-family="DM Mono, monospace" font-size="14" font-weight="700">STYLE · FIT · TRUST · NEXT STEP</text>
+</svg>

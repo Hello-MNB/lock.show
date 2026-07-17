@@ -17,9 +17,10 @@ export const colors = {
   muted: '#98A19A',     // secondary text
   faint: '#69716B',     // tertiary / placeholders
 
-  // Accent & atmosphere — lime ALWAYS carries dark text
-  accent: '#BEE24E',
-  accentDeep: '#9FD531',
+  // Accent & atmosphere — lime ALWAYS carries dark text.
+  // Aligned to Design System v1.2.0 (docs/design-system): lime is #C8F04D.
+  accent: '#C8F04D',
+  accentDeep: '#AEDA36',
   onAccent: '#12160A',  // the ONLY text color allowed on lime
   gold: '#F2C063',      // warm atmosphere, method labels, artist aura
   teal: '#46DCC2',      // developing state
@@ -28,6 +29,15 @@ export const colors = {
   // Hairlines
   line: 'rgba(255,255,255,.08)',
   line2: 'rgba(255,255,255,.15)',
+
+  // DS mapping layer (A9, rel-07.13) — paper task-surface family, audit-verified
+  // v1.6.5 values (AA: paper/forest 14.91). Additive; mirrors tailwind.config.js ds-*.
+  dsPaper: '#F3F5EF',
+  dsCard: '#FFFFFF',
+  dsForest: '#18221A',
+  dsInk: '#0A0D0B',
+  dsMist: '#DDE3D9',
+  dsSlate: '#687269',
 } as const
 
 // The 5-state data-collection vocabulary (master-class §1) — fg on tinted bg,
@@ -50,6 +60,18 @@ export const fontFamily = {
   display: '"Frank Ruhl Libre", Georgia, serif',            // headings
   sans: '"Heebo", system-ui, sans-serif',                   // body/UI (covers Hebrew)
   mono: '"IBM Plex Mono", ui-monospace, monospace',         // method labels · bands · dates
+} as const
+
+// Type scale — spec §5.11 (mirrors tailwind.config `fontSize`). [size, lineHeight, weight].
+export const type = {
+  display:   { size: 'clamp(38px, 8vw, 72px)', lh: '1.05', weight: 900 },
+  h1:        { size: 'clamp(26px, 4.5vw, 30px)', lh: '1.15', weight: 700 },
+  h2:        { size: '22px', lh: '1.2', weight: 700 },
+  h3:        { size: '18px', lh: '1.25', weight: 600 },
+  body:      { size: '16px', lh: '1.5', weight: 400 },   // floor — never below 16
+  secondary: { size: '14px', lh: '1.45', weight: 400 },
+  chip:      { size: '11px', lh: '1.2', weight: 600 },   // uppercase · +0.06em (method labels/eyebrows)
+  micro:     { size: '12px', lh: '1.3', weight: 500 },   // dates
 } as const
 
 export const borderRadius = {

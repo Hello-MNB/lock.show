@@ -90,8 +90,8 @@ export default function ArtistRequests() {
                 {open && (
                   <div className="mt-3 border-t border-line pt-3 animate-fade-in">
                     <div className="space-y-1.5 text-sm">
-                      <DetailRow label="Requester" value={`${r.requester_name}${r.requester_org ? ` · ${r.requester_org}` : ''}`} />
-                      <DetailRow label="Event" value={`${r.event_date || T.agency.noDate} · ${r.location || '—'}`} mono />
+                      <DetailRow label={T.agency.requesterLabel} value={`${r.requester_name}${r.requester_org ? ` · ${r.requester_org}` : ''}`} />
+                      <DetailRow label={T.agency.eventLabel} value={`${r.event_date || T.agency.noDate} · ${r.location || '—'}`} mono />
                       {(r.capacity_band || r.budget_band) && (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {r.capacity_band && <BandPill>{T.agency.audience} {r.capacity_band}</BandPill>}
@@ -109,7 +109,7 @@ export default function ArtistRequests() {
                       {r.status !== 'closed' && (confirmCloseId === r.id ? (
                         // inline confirm chip — closing hides the request, so ask once, in place
                         <span className="inline-flex items-center gap-2 rounded-full border border-amber px-3 py-1.5 text-xs animate-fade-in">
-                          <span className="text-amber">Close this request?</span>
+                          <span className="text-amber">{T.agency.closeConfirm}</span>
                           <button className="font-bold text-amber underline" disabled={busyId === r.id}
                             onClick={() => setStatus(r.id, 'closed')}>{T.agency.markClosed}</button>
                           <button className="text-muted" onClick={() => setConfirmCloseId(null)}>{T.common.cancel}</button>

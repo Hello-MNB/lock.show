@@ -93,6 +93,27 @@ export const demoMembers = [
   { id: 'dm-self', org_role: 'owner', status: 'active', invited_email: null, person: { id: 'demo-user', email: 'demo@lock.test', get display_name() { return L('Shai Perlman', 'שי פרלמן') } } },
 ]
 
+// ── G3 (A2/N12) — demo counterpart of orgs.createWorkspace: pushes a NEW,
+// EMPTY membership into the mutable demoMemberships list (same in-memory
+// pattern as demoRequestArtistAccess) so the switcher shows it until reload.
+// Mirrors the real RPC's boundary exactly: nothing is copied — no evidence,
+// billing or ArtistAccess rows reference the new org id, so every screen in
+// the new workspace renders its honest empty state.
+let _dwSeq = 4
+export function demoCreateWorkspace(name, type) {
+  const id = `demo-org-${_dwSeq++}`
+  const workspace_type = type === 'production' ? 'producer' : type === 'agency' ? 'management' : 'artist'
+  const functional_role = type === 'artist' ? 'artist' : 'agency'
+  demoMemberships.push({
+    id: `dm-${id}`, org_role: 'owner', status: 'active', functional_role,
+    organization: {
+      id, name: (name || '').trim() || L('New workspace', 'סביבת עבודה חדשה'),
+      slug: null, plan: type === 'artist' ? 'solo' : 'agency', workspace_type,
+    },
+  })
+  return { ok: true, id }
+}
+
 // ── RADAR (Step 3) roster inputs — varied so the engine emits several rule types. ──
 export const demoRadarRecords = [
   {

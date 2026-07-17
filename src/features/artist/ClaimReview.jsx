@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport } from '../../lib/db.js'
+import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport, authHeaders } from '../../lib/db.js'
 import { VISIBILITY, SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
 import { PageShell, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
 import { MethodLabel, BandPill } from './proofBits.jsx'
@@ -12,10 +12,11 @@ import { DEMO } from '../../lib/demo.js'
 
 // Honest receipt destination — only confirmed verified/supporting passport-ok
 // claims actually reach the public Passport; everything else stays private.
-function destinationOf(claim) {
+// Localized via the radar.universe dictionary — never a hardcoded string.
+function destinationOf(claim, T) {
   const publicBound = claim?.visibility === VISIBILITY.PASSPORT_OK &&
     ['verified', 'supporting'].includes(claim?.verification_status)
-  return publicBound ? 'your Passport view' : 'your private record'
+  return publicBound ? T.radar.universe.destPassport : T.radar.universe.destPrivate
 }
 
 export default function ClaimReview() {
@@ -85,11 +86,12 @@ export default function ClaimReview() {
     setToggling(claim.id)
     try {
       await updateClaim(claim.id, { artist_approved: true })
+      logEvent(EVENTS.CLAIM_CONFIRMED, { claim_id: claim.id }) // pilot signal (A10)
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: true } : c))
       setBloomId(claim.id)
       setTimeout(() => setBloomId((cur) => (cur === claim.id ? null : cur)), 420)
       // The receipt names what was confirmed and where it now appears.
-      flashReceipt(`Added to ${destinationOf(claim)}: “${claim.public_wording || claim.value || human(claim.claim_type)}”`)
+      flashReceipt(T.claims.confirmReceipt(destinationOf(claim, T), claim.public_wording || claim.value || human(claim.claim_type)))
     } finally { setToggling(null) }
   }
 
@@ -208,7 +210,7 @@ export default function ClaimReview() {
             {artist.community_size_band && <DrawLine label={T.passport.drawCommunity} value={artist.community_size_band} T={T} />}
           </div>
           <p className="mt-2 text-xs text-muted">{T.claims.drawNote}</p>
-          <Link to="/onboarding" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
+          <Link to="/artist/home" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
         </div>
       )}
 
@@ -380,11 +382,14 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
     setReqBusy(true)
     try {
       const res = await fetch('/api/request-confirmation', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
         body: JSON.stringify({ claimId: claim.id, producerContact: email || null }),
       })
       const json = await res.json().catch(() => ({}))
-      if (res.ok && json.path) setLink(`${window.location.origin}${json.path}`)
+      if (res.ok && json.path) {
+        setLink(`${window.location.origin}${json.path}`)
+        logEvent(EVENTS.PRODUCER_CONFIRMATION_SENT, { claim_id: claim.id }) // pilot signal (A10)
+      }
       else setReqError(json.error || T.producer.serverOffline)
     } catch { setReqError(T.producer.serverOffline) } finally { setReqBusy(false) }
   }
@@ -453,7 +458,7 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
       {needsReview && !isFlagged && (
         <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
           <button
-            className="flex min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
+            className="flex min-h-[44px] min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
             onClick={() => onApprove(claim)} disabled={busy}
             aria-label={`${T.claims.approve}: ${claimTitle}`}>
             {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{T.claims.approve}: “{claimTitle}”</span></>}

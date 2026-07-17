@@ -1,16 +1,33 @@
 @import "tailwindcss";
 @import "../styles/design-system.css";
+@import "../styles/marketing.css";
 
 /* ─── LOCK Design Tokens — Codex Theme ─── */
 /* To retheme: edit values here + in design-system.css  */
+/* Aligned to Design System v1.2.0 (docs/design-system) — the four surfaces:
+   Paper canvas · White card · Forest panel · Media overlay. */
 @theme {
   /* Surfaces */
-  --color-paper:  #f3f5ef;   /* light section bg */
-  --color-ink:    #0a0d0b;   /* near-black, primary dark bg */
-  --color-night:  #111612;   /* dark panel */
+  --color-paper:  #f3f5ef;   /* paper canvas — dominant workspace bg (DS) */
+  --color-ink:    #0a0d0b;   /* near-black ink — primary text / darkest ground (DS) */
+  --color-forest: #18221a;   /* forest panel — dark editorial regions (DS) */
+  --color-night:  #18221a;   /* alias of forest (kept for existing usages) */
+  --color-mist:   #dde3d9;   /* mist — light neutral: borders, hairlines, nested light surface (DS) */
+  --color-slate:  #687269;   /* slate — neutral mid tone (DS) */
 
-  /* Accent — LIME (was purple #5B3FD6) */
+  /* Accent — LIME, the single dominant action (DS #c8f04d) */
   --color-stamp:  #c8f04d;
+
+  /* ── WAVE-6 secondary palette (SYNC §47 / Codex visual-architecture
+     correction). LAW: lime = action / live-signal ONLY; the warm and source
+     accents below are for ATMOSPHERE, never for CTAs. ── */
+  --color-amber-stage:  #D7A84A;   /* warm show-business accent */
+  --color-ember:        #9A5A2E;   /* deep warmth / live-room glow */
+  --color-smoke:        #202820;   /* secondary card surface (gray-green) */
+  --color-source-blue:  #6EA6A3;   /* source / platform accents only */
+  /* Readable on-paper variants (WCAG AA on the #f3f5ef canvas) */
+  --color-amber-onlight:       #8a5e10;   /* amber text/icon on paper (~5.1:1) */
+  --color-source-blue-onlight: #2f5b58;   /* source-blue text/icon on paper (~5.3:1) */
 
   /* Text */
   --color-tally:  #929b94;   /* muted / secondary — dark-bg contexts only */
@@ -18,9 +35,10 @@
   --color-stamp-onlight: #5c6e12;   /* lime text/icon on paper/light bg — WCAG AA (~5.2:1); lime itself is bg/border/CTA-only */
   --color-void:   #B23B2E;   /* error */
 
-  /* Typography — Manrope (body + display) · DM Mono (labels) */
+  /* Typography (DS) — Manrope (body) · Georgia serif (display headlines) · DM Mono (labels).
+     Georgia carries a serif fallback; the HE serif face is added in the Hebrew pass. */
   --font-family-body:    var(--font-heebo), Manrope, system-ui, sans-serif;
-  --font-family-display: var(--font-heebo), Manrope, system-ui, sans-serif;
+  --font-family-display: Georgia, 'Times New Roman', var(--font-heebo), serif;
   --font-family-mono:    var(--font-space-mono), 'DM Mono', monospace;
 
   /* Radius */
@@ -41,6 +59,24 @@ html {
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(900px 520px at 85% -10%, rgba(200, 240, 77, 0.06), transparent 62%),
+    radial-gradient(760px 480px at 6% 24%, rgba(215, 168, 74, 0.045), transparent 64%),
+    var(--color-night);
+  color: var(--color-ink);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  max-width: 100%;
 }
 
 /* ─── Interaction layer — ONE duration/easing site-wide ───────────────── */
@@ -110,5 +146,42 @@ details[open] .faq-glyph::before { content: '\2212'; }
 @media (max-width: 640px) {
   .persona-hero-artist {
     background-position: 0 0, 72% 30% !important;
+  }
+}
+
+/* ─── Mobile full-width editorial flow (owner directive) ─────────────────
+   ≤640px, boxed cards on paper sections flatten into open, full-width
+   blocks separated by hairlines — no borders, no boxes, maximum canvas.
+   Inline styles keep the desktop card look untouched; these !important
+   rules only act on small screens. */
+@media (max-width: 640px) {
+  .m-flat {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .m-flat-white {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .m-divide {
+    /* parent reset: the 1px-gap "hairline table" grids paint their lines
+       via a background + border on the parent — remove both, and stack
+       everything in one full-width column */
+    background: transparent !important;
+    border: none !important;
+    gap: 0 !important;
+    grid-template-columns: 1fr !important;
+  }
+  .m-divide > * + * {
+    border-top: 1px solid var(--color-mist);
+    margin-top: 1.75rem;
+    padding-top: 1.75rem;
   }
 }

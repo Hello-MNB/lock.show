@@ -19,6 +19,16 @@ export default defineConfig(({ mode }) => {
       react(),
       ...(embed ? [] : [VitePWA({
         registerType: 'autoUpdate',
+        // KILL SWITCH (9 Jul): the standalone app's service worker repeatedly
+        // trapped users (incl. Maria) on STALE cached code after a deploy — the
+        // signup fix, auth fixes, everything shipped but her browser kept serving
+        // the old app, so "after signup I land on /login" persisted no matter what
+        // we fixed. `selfDestroying` ships a worker that UNREGISTERS itself and
+        // purges all caches, un-trapping every already-installed client and
+        // guaranteeing fresh code from the network on every visit. Reliability >
+        // offline-install for a pre-launch tool. Re-enable a real PWA later only
+        // with a tested update flow.
+        selfDestroying: true,
         includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
         manifest: {
           name: 'LOCK',
@@ -41,6 +51,14 @@ export default defineConfig(({ mode }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,png,svg,woff2,woff,ttf}'],
           navigateFallback: '/index.html',
+          // Apply new versions IMMEDIATELY — without these, an installed PWA
+          // kept serving the OLD cached app for a full extra visit, trapping
+          // users (incl. Maria, 9 Jul) on stale code after every deploy.
+          // skipWaiting: the new SW activates at once; clientsClaim: it takes
+          // control of already-open tabs; cleanupOutdatedCaches: purge old.
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
         },
         devOptions: { enabled: false },
       })]),

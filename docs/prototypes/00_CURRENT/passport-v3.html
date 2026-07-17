@@ -1,0 +1,133 @@
+<title>LOCK Passport — Prototype v3 (mobile-first)</title>
+<style>
+  :root{
+    --ink:#0a0d0b;--forest:#161f18;--forest-2:#1e2a20;--paper:#f3f5ef;--mist:#c9d1c4;--slate:#94a08f;--faint:#5c655c;
+    --lime:#c8f04d;--gold:#f2c063;--amber:#e6b24e;
+    --line:rgba(243,245,239,.10);--line-2:rgba(243,245,239,.20);
+    --serif:Georgia,'Times New Roman',serif;--sans:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'DM Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}body{margin:0;background:var(--ink)}
+  /* mobile-first: full-width column, big touch targets; centers on wider screens */
+  .wrap{color:var(--paper);font-family:var(--sans);width:100%;max-width:560px;margin:0 auto;background:var(--ink);min-height:100vh}
+  @media(min-width:600px){.wrap{box-shadow:0 0 80px rgba(0,0,0,.6)}}
+
+  /* toggle */
+  .viewbar{position:sticky;top:0;z-index:20;display:flex;gap:6px;padding:10px;background:rgba(10,13,11,.92);backdrop-filter:blur(10px)}
+  .viewbar button{flex:1;font-family:var(--mono);font-size:12px;font-weight:700;padding:12px;border-radius:12px;border:1px solid var(--line-2);background:transparent;color:var(--mist);cursor:pointer;min-height:46px}
+  .viewbar button.on{background:var(--lime);color:#12160a;border-color:var(--lime)}
+
+  /* hero — image carries it, name overlaid, minimal text */
+  .hero{position:relative;aspect-ratio:4/5;max-height:62vh;display:flex;align-items:flex-end;overflow:hidden}
+  .hero .bg{position:absolute;inset:0;background:radial-gradient(60% 55% at 68% 14%,rgba(242,192,99,.55),rgba(242,192,99,0) 55%),linear-gradient(158deg,#241042,#7b2ff7 32%,#e0499a 60%,#f2762b 100%)}
+  .hero .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,13,11,0) 34%,rgba(10,13,11,.82) 82%,var(--ink) 100%)}
+  .hero .in{position:relative;z-index:2;padding:22px;width:100%}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(40px,12vw,58px);line-height:.96;letter-spacing:-.02em;margin:0}
+  .loc{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 8px}
+  .tagline{font-size:16px;color:#f6f3ea;margin:8px 0 14px;max-width:30ch}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+  .tag{background:rgba(243,245,239,.12);border:1px solid var(--line-2);color:#fff;font-size:12px;padding:6px 12px;border-radius:20px;font-weight:600}
+  .badges{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 11px;border-radius:20px;border:1px solid var(--st,var(--lime));color:var(--st,var(--lime));background:rgba(10,13,11,.4)}
+  .chip .d{width:7px;height:7px;border-radius:2px;background:var(--st,var(--lime))}
+
+  /* sticky CTA + tabs */
+  .cta{display:block;width:calc(100% - 24px);margin:12px;font-family:var(--mono);font-weight:800;font-size:14px;letter-spacing:.04em;padding:16px;border-radius:14px;border:none;background:var(--lime);color:#12160a;cursor:pointer;box-shadow:0 12px 30px -10px rgba(200,240,77,.6);min-height:52px}
+  .tabs{display:flex;gap:2px;overflow-x:auto;position:sticky;top:66px;z-index:10;background:var(--ink);padding:0 8px;border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tabs button{white-space:nowrap;font-family:var(--mono);font-size:12px;font-weight:700;padding:14px 14px;border:none;background:transparent;color:var(--slate);cursor:pointer;border-bottom:2.5px solid transparent;min-height:48px}
+  .tabs button.on{color:var(--paper);border-bottom-color:var(--lime)}
+
+  .panel{padding:16px 12px 24px}
+  .weyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin:2px 4px 14px}
+  /* proof card — image + fact + method label. nothing else. */
+  .proof{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;background:var(--forest-2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+  .proof .th{width:60px;height:60px;border-radius:12px;flex:none;background:var(--tbg,#333);background-size:cover!important}
+  .proof .t{font-size:15.5px;font-weight:700;color:var(--paper);line-height:1.2}
+  .proof .d{font-size:12.5px;color:var(--mist);margin-top:3px}
+  .proof .foot{margin-top:9px}
+  .band{display:flex;align-items:center;gap:10px;margin-top:6px}
+  .band .track{flex:1;max-width:150px;height:8px;border-radius:5px;background:rgba(255,255,255,.10);overflow:hidden}
+  .band .fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--lime));border-radius:5px}
+  .band .lbl{font-family:var(--mono);font-size:11px;color:var(--slate)}
+
+  footer{padding:8px 12px 28px}
+</style>
+
+<div class="wrap">
+  <div class="viewbar">
+    <button id="v-prod" class="on" onclick="setView('prod')">🎤 For Producers</button>
+    <button id="v-rep" onclick="setView('rep')">💼 For Agencies</button>
+  </div>
+
+  <section class="hero">
+    <div class="bg"></div>
+    <div class="in">
+      <p class="loc">Tel Aviv, IL</p>
+      <h1>DJ Perlman</h1>
+      <p class="tagline" id="tagline">The floor-filler you can actually vouch for.</p>
+      <div class="tags"><span class="tag">Psytrance</span><span class="tag">Melodic Techno</span><span class="tag">Festival</span><span class="tag">90–120 min</span></div>
+      <div class="badges">
+        <span class="chip" style="--st:var(--lime)"><span class="d"></span>Producer-confirmed ×3</span>
+        <span class="chip" style="--st:var(--gold)"><span class="d"></span>Source-linked ×6</span>
+      </div>
+    </div>
+  </section>
+
+  <button class="cta" id="cta">Request availability →</button>
+  <div class="tabs" id="tabs"></div>
+  <div class="panel" id="panel"></div>
+  <footer><button class="cta" id="footcta" style="width:100%;margin:0">Request availability →</button></footer>
+</div>
+
+<script>
+  const LOGO={
+    spotify:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#1DB954"/><g fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M14 20c8-2.4 16-1.6 22 2"/><path d="M15 26c6.5-1.8 13-1.2 18 1.6"/><path d="M16 31.5c5-1.3 10-.9 14 1.2"/></g></svg>',
+    apple:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><linearGradient id="am" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb5c74"/><stop offset="1" stop-color="#fa2d48"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#am)"/><path d="M28 13l-11 2.4v14.2a4.5 4.5 0 1 1-2.6-4V19l13-2.8z" fill="#fff"/></svg>',
+    youtube:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect y="10" width="48" height="28" rx="9" fill="#FF0000"/><path d="M20 18l11 6-11 6z" fill="#fff"/></svg>',
+    instagram:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><defs><radialGradient id="ig" cx="30%" cy="107%" r="130%"><stop offset="0%" stop-color="#fdf497"/><stop offset="45%" stop-color="#fd5949"/><stop offset="60%" stop-color="#d6249f"/><stop offset="90%" stop-color="#285AEB"/></radialGradient></defs><rect width="48" height="48" rx="13" fill="url(#ig)"/><rect x="13" y="13" width="22" height="22" rx="7" fill="none" stroke="#fff" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="none" stroke="#fff" stroke-width="3"/><circle cx="32" cy="16" r="1.8" fill="#fff"/></svg>',
+    tiktok:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="12" fill="#000"/><path d="M27.7 12c.6 3.2 2.6 5.4 5.7 5.9v4.1c-1.9.1-3.7-.4-5.5-1.4v7.9a7.6 7.6 0 1 1-7.6-7.6c.4 0 .8 0 1.2.1v4.2a3.5 3.5 0 1 0 2.4 3.3V12z" fill="#fff"/></svg>',
+  };
+  function u(s){return 'url("data:image/svg+xml,'+encodeURIComponent(s)+'")'}
+  const CV={lime:'var(--lime)',gold:'var(--gold)',amber:'var(--amber)'};
+  const logoTh=k=>({bg:u(LOGO[k])});const sceneTh=g=>({bg:g});
+
+  const WORLDS={
+    live:{tab:'Live Show',
+      rows:[{th:sceneTh('linear-gradient(160deg,#5a2ea6,#e0a03a)'),t:'Doof Festival — main stage',d:'2024',s:'Producer-confirmed',c:'lime'},
+            {th:sceneTh('linear-gradient(160deg,#241042,#e0499a)'),t:'The Block, Tel Aviv',d:'Headline night',s:'Producer-confirmed',c:'lime'},
+            {th:logoTh('youtube'),t:'Live set',d:'12-min performance video',s:'Source-linked',c:'gold'}]},
+    proof:{tab:'Career Proof',
+      rows:[{th:sceneTh('linear-gradient(160deg,#2c3a2c,#c8f04d)'),t:'Ticket export',d:'Sold-out club night',s:'Evidence-supported',c:'amber'},
+            {th:sceneTh('linear-gradient(160deg,#ff8a3d,#5a1e3a)'),t:'Producer vouch — Insomnia TLV',d:'Confirmed booking',s:'Producer-confirmed',c:'lime'}]},
+    music:{tab:'Music',
+      rows:[{th:logoTh('spotify'),t:'Spotify — official artist',d:'4 releases',s:'Source-linked',c:'gold'},
+            {th:logoTh('apple'),t:'Apple Music',d:'Full catalogue',s:'Source-linked',c:'gold'}]},
+    audience:{tab:'Audience',
+      rows:[{th:logoTh('instagram'),t:'Instagram',band:74,bl:'Large regional community',s:'Source-linked',c:'gold'},
+            {th:logoTh('tiktok'),t:'TikTok',band:58,bl:'Growing — mid band',s:'Source-linked',c:'gold'}]},
+  };
+  const ORDER={prod:['live','audience','music','proof'],rep:['proof','music','live','audience']};
+  const TAGLINE={prod:'The floor-filler you can actually vouch for.',rep:'A professional you’d be proud to represent.'};
+  const CTA={prod:'Request availability →',rep:'Start representation →'};
+
+  let view='prod',tab='live';
+  function setView(v){view=v;tab=ORDER[v][0];
+    document.getElementById('v-prod').classList.toggle('on',v==='prod');
+    document.getElementById('v-rep').classList.toggle('on',v==='rep');
+    document.getElementById('tagline').textContent=TAGLINE[v];
+    document.getElementById('cta').textContent=CTA[v];
+    document.getElementById('footcta').textContent=CTA[v];
+    renderTabs();renderPanel();}
+  function renderTabs(){document.getElementById('tabs').innerHTML=ORDER[view].map(k=>`<button class="${k===tab?'on':''}" onclick="setTab('${k}')">${WORLDS[k].tab}</button>`).join('');}
+  function setTab(k){tab=k;renderTabs();renderPanel();}
+  function renderPanel(){const w=WORLDS[tab];
+    const rows=w.rows.map(r=>{
+      const mid=r.band!=null
+        ?`<div class="band"><span class="track"><span class="fill" style="width:${r.band}%"></span></span><span class="lbl">${r.bl}</span></div>`
+        :`<div class="d">${r.d}</div>`;
+      return `<div class="proof"><span class="th" style="background:${r.th.bg}"></span>
+        <div><div class="t">${r.t}</div>${mid}<div class="foot"><span class="chip" style="--st:${CV[r.c]}"><span class="d"></span>${r.s}</span></div></div></div>`}).join('');
+    document.getElementById('panel').innerHTML=`<p class="weyebrow">${w.tab}</p>${rows}`;
+  }
+  setView('prod');
+</script>

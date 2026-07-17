@@ -1,6 +1,19 @@
-# LOCALIZATION MATRIX — GIGPROOF
+# LOCALIZATION MATRIX — LOCK
 
-**Version 1.0 · 8 Jul 2026 · Owner: Localization**
+**Version 1.1 · 9 Jul 2026 · Owner: Localization**
+
+## ▶ CURRENT MEASUREMENT (9 Jul 2026 — re-measured directly)
+
+| Surface | Metric | HE status | What blocks Hebrew launch |
+|---|---|---|---|
+| **App** (`src/lib/i18n`) | 858 EN leaf keys · 717 translated · **141 missing** | **83.6% covered** | Translate 141 keys (first: `signup.heroLine`, `dashboard.managePassport`, `readiness.*`, `claims.needsReview*`, `claims.approve`). Key-complete ≠ done: values must be professional HE, reviewed. |
+| **Site nav/consent** (`website-next/messages/*.json`) | 77 keys · 0 missing · **13 identical (untranslated)** | **83.1% genuinely translated** | Translate the 13 EN-identical values in `he.json`. |
+| **Site body prose** (`website-next/app/**/page.tsx`) | Hardcoded English in page components | **~0% — not wired to locale** | STRUCTURAL: marketing prose (home, artists, booking-managers, producers, pricing, contact, radar, passport/demo) is inline English, not read from the message system. Hebrew site adaptation requires moving this prose into the locale layer FIRST — this is the real site-HE gap, not the 13 strings above. |
+
+**Bottom line for HE launch:** the app is one focused translation pass (141 keys) from coverage; the marketing SITE needs a structural step (externalize page prose → locale) before it can be Hebrew at all. Firewall/method-label vocabulary stays per docs/GLOSSARY.md in both languages.
+
+---
+
 
 ## Owner's law (governs everything below)
 

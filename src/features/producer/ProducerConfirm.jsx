@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as UI from '../../components/ui.jsx'
 import { Wordmark, Loading, LanguageToggle } from '../../components/ui.jsx'
+import { useLang } from '../../context/LangContext.jsx'
 import { DEMO, demoConfirm } from '../../lib/demo.js'
 
 // P1 — Producer (מפיק) claim confirmation. No login; opened from a magic link.
@@ -32,6 +33,7 @@ const fmtDate = (d) => {
 }
 
 export default function ProducerConfirm() {
+  const { T } = useLang()
   const { token } = useParams()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null) // null | 'expired' | 'invalid'
@@ -91,10 +93,10 @@ export default function ProducerConfirm() {
         <div className="card text-center">
           <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface2 text-2xl text-muted" aria-hidden>⏱</span>
           <h1 className="mb-2 text-xl font-bold text-ink">
-            {error === 'expired' ? 'This link has expired' : 'This link is no longer active'}
+            {error === 'expired' ? T.producer.linkExpiredTitle : T.producer.linkInactiveTitle}
           </h1>
           <p className="text-sm text-muted">
-            Confirmation links are one-time and short-lived on purpose — ask the artist for a fresh one.
+            {T.producer.linkDeadBody}
           </p>
         </div>
         <Footnote />
@@ -109,25 +111,25 @@ export default function ProducerConfirm() {
     <Shell>
       {/* framing — one person, one statement */}
       <p className="mb-2 text-center font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
-        One-statement confirmation
+        {T.producer.oneStatementEyebrow}
       </p>
       <h1 className="mb-2 text-center text-2xl font-bold leading-snug text-ink">
-        {data.artistName} asked you to confirm one statement.
+        {T.producer.askedToConfirm(data.artistName)}
       </h1>
       <p className="mb-6 text-center text-sm text-muted">
-        No account needed. Your reply applies to this statement only.
+        {T.producer.noAccountNote}
       </p>
 
       <div className="card">
         {/* the claim — serif quote block, gold left border */}
         <blockquote className="mb-5 border-l-4 border-gold bg-surface2 py-4 pl-5 pr-4 rounded-r-xl">
           <p className="font-display text-lg leading-relaxed text-ink">“{data.claimText}”</p>
-          <p className="mt-2 text-xs text-faint">— submitted by {data.artistName}</p>
+          <p className="mt-2 text-xs text-faint">{T.producer.submittedBy(data.artistName)}</p>
         </blockquote>
 
         {sendError && (
           <p role="alert" className="mb-3 rounded-xl border border-amber/40 bg-amber/10 px-3 py-2 text-sm text-amber">
-            Couldn’t record your reply — check your connection and try again.
+            {T.producer.sendError}
           </p>
         )}
 
@@ -137,20 +139,20 @@ export default function ProducerConfirm() {
           <div className="grid gap-2">
             <button className="btn-primary w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'yes' })}>
-              Yes — this is accurate
+              {T.producer.confirmYes}
             </button>
             <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'partial' })}>
-              Partly right — needs a fix
+              {T.producer.confirmPartial}
             </button>
             <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'no' })}>
-              No — this isn’t accurate
+              {T.producer.confirmNo}
             </button>
             <button disabled={busy}
               className="min-h-[44px] w-full rounded-xl text-sm text-faint transition hover:text-muted"
               onClick={() => send({ response: 'wrong_person' })}>
-              I’m not the right person for this
+              {T.producer.confirmWrongPerson}
             </button>
           </div>
         )}
@@ -163,20 +165,21 @@ export default function ProducerConfirm() {
 
 // Distinct terminal states — the ceremony ends with a clear, human close.
 function Terminal({ data, when, busy, onRevoke }) {
+  const { T } = useLang()
   const canRevoke = data.response === 'yes' || data.response === 'partial'
   if (data.response === 'wrong_person') {
     return (
       <div className="text-center py-2">
-        <p className="mb-1 text-lg font-bold text-ink">Thanks — no action needed.</p>
-        <p className="text-sm text-muted">We won’t contact you again about this statement.</p>
+        <p className="mb-1 text-lg font-bold text-ink">{T.producer.wrongPersonTitle}</p>
+        <p className="text-sm text-muted">{T.producer.wrongPersonBody}</p>
       </div>
     )
   }
   if (data.response === 'no') {
     return (
       <div className="text-center py-2">
-        <p className="mb-1 text-lg font-bold text-ink">Noted — your answer was recorded.</p>
-        <p className="text-sm text-muted">This statement will not show as confirmed.</p>
+        <p className="mb-1 text-lg font-bold text-ink">{T.producer.noTitle}</p>
+        <p className="text-sm text-muted">{T.producer.noBody}</p>
       </div>
     )
   }
@@ -186,23 +189,21 @@ function Terminal({ data, when, busy, onRevoke }) {
       <div className="mb-3 flex items-center justify-center gap-2">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-accent text-base font-black text-[#12160A]" aria-hidden>✓</span>
         <p className="text-lg font-bold text-ink">
-          {data.response === 'yes' ? 'Confirmed' : 'Noted — partly right'}
+          {data.response === 'yes' ? T.producer.confirmedTitle : T.producer.partialTitle}
         </p>
       </div>
       <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
         {data.response === 'yes'
-          ? <MethodLabel variant="lime">★ Producer-confirmed</MethodLabel>
-          : <MethodLabel>✎ Sent back for a fix</MethodLabel>}
+          ? <MethodLabel variant="lime">★ {T.methodLabel['producer-confirmed']}</MethodLabel>
+          : <MethodLabel>✎ {T.producer.chipSentBack}</MethodLabel>}
         {when && <span className="font-mono text-[11px] text-faint">{fmtDate(when)}</span>}
       </div>
       <p className="mb-4 text-center text-sm text-muted">
-        {data.response === 'yes'
-          ? 'Your confirmation now appears on this one statement. You can revoke it at any time — nothing else changes.'
-          : 'We flagged this statement for the artist to fix. It will not show as producer-confirmed as it stands.'}
+        {data.response === 'yes' ? T.producer.confirmedBody : T.producer.partialBody}
       </p>
       {canRevoke && (
         <button className="btn-ghost w-full" onClick={onRevoke} disabled={busy}>
-          Revoke my confirmation
+          {T.producer.revoke}
         </button>
       )}
     </div>
@@ -223,10 +224,10 @@ function Shell({ children }) {
 }
 
 function Footnote() {
+  const { T } = useLang()
   return (
     <p className="mt-5 text-center text-[11px] leading-relaxed text-faint">
-      This confirmation refers to the specific statement above only — it is not a general
-      endorsement and never becomes a score. Your name is shown as you choose.
+      {T.producer.footnote}
     </p>
   )
 }

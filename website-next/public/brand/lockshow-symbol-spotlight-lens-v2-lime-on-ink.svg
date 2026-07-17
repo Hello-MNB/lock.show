@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" role="img" aria-labelledby="title desc">
+  <title id="title">LOCK.SHOW Spotlight Lens symbol on ink</title>
+  <desc id="desc">LOCK.SHOW spotlight lens symbol in lime on an ink background for app icons and dark brand surfaces.</desc>
+  <rect width="1000" height="1000" rx="220" fill="#0A0D0B"/>
+  <g fill="none" stroke="#C8F04D" stroke-linecap="round" stroke-linejoin="round" shape-rendering="geometricPrecision">
+    <path d="M500 122C710 122 878 290 878 500" stroke-width="78"/>
+    <path d="M878 500C878 710 710 878 500 878" stroke-width="78"/>
+    <path d="M500 878C290 878 122 710 122 500" stroke-width="78"/>
+    <path d="M122 500C122 290 290 122 500 122" stroke-width="78"/>
+    <path d="M260 500C318 354 404 282 500 282C596 282 682 354 740 500C682 646 596 718 500 718C404 718 318 646 260 500Z" stroke-width="64"/>
+    <path d="M500 282C570 370 570 630 500 718" stroke-width="58"/>
+    <path d="M500 500L704 314" stroke-width="58"/>
+  </g>
+  <circle cx="500" cy="500" r="70" fill="#C8F04D"/>
+</svg>

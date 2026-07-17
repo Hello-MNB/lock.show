@@ -55,6 +55,37 @@ export async function upsertArtist(artist) {
   return data
 }
 
+// Artist-controlled WhatsApp sharing (owner ruling 9 Jul). The artist sets their
+// number + opt-in in Settings; a booking manager only sees it after a request,
+// via the gated RPC below. whatsapp_number stays firewall-private (016).
+// Resilient to running BEFORE migration 029: if whatsapp_share doesn't exist yet
+// the update retries with just the number so Settings never hard-errors.
+export async function saveArtistWhatsApp(artistId, { number, share }) {
+  if (DEMO) return
+  const num = (number || '').trim() || null
+  const full = { id: artistId, whatsapp_number: num, whatsapp_share: !!share }
+  const { error } = await supabase.from('artists').update(full).eq('id', artistId)
+  if (!error) return
+  // Pre-029 fallback: unknown column whatsapp_share → save the number only.
+  if (/whatsapp_share|column .* does not exist|schema cache/i.test(error.message || '')) {
+    const { error: e2 } = await supabase.from('artists').update({ whatsapp_number: num }).eq('id', artistId)
+    if (e2) throw e2
+    return
+  }
+  throw error
+}
+
+// Buyer-facing gated read: returns the artist's WhatsApp ONLY if they published
+// and opted in (SECURITY DEFINER RPC, migration 029). Null on any error — a
+// missing RPC (pre-029) or block just means "no WhatsApp CTA", never a crash.
+export async function getSharedWhatsApp(artistId) {
+  if (DEMO) return demoArtist.whatsapp_number ?? null
+  if (!artistId) return null
+  const { data, error } = await supabase.rpc('get_shared_whatsapp', { p_artist_id: artistId })
+  if (error) return null
+  return data ?? null
+}
+
 // ── Act (multi-Act spine, migration 020) ────────────────────────────────────
 // Transition model: act.id === artists.id for the default Act, so the artist id
 // addresses the Act directly. Act-only fields (artist_goal, format, alias…)
@@ -89,6 +120,27 @@ export async function listActs(artistId) {
     .order('created_at', { ascending: true })
   if (error) throw error
   return data ?? []
+}
+
+// Create a SECOND (or third…) Act for the same Person (rel-07.13 A3/N12).
+// Canon: the new Act starts EMPTY — evidence is per-Act and never transfers.
+// person_id is resolved from the currently-active Act row (same resolution
+// path listActs uses), so a caller can never attach an Act to someone else.
+// Known transition gap (documented in switchAct): a non-default Act has no
+// matching `artists` row — artists-only fields stay honestly absent for it.
+export async function createAct(currentActId, { stage_name, genre = null }) {
+  if (DEMO) throw new Error('demo') // UI shows the friendly demo hint
+  const name = (stage_name || '').trim()
+  if (!name) throw new Error('stage name required')
+  const { data: mine, error: e1 } = await supabase.from('act').select('person_id').eq('id', currentActId).maybeSingle()
+  if (e1) throw e1
+  if (!mine?.person_id) throw new Error('active act has no person — cannot create')
+  const { data, error } = await supabase.from('act')
+    .insert({ person_id: mine.person_id, stage_name: name, genre, is_default: false })
+    .select('id, stage_name, genre, city, positioning, photo_url, is_default, created_at')
+    .single()
+  if (error) throw error
+  return data
 }
 
 // Switching Acts swaps the WHOLE evidence universe. Reads are act_id-scoped —
@@ -127,9 +179,14 @@ export async function listClaimsByArtists(artistIds) {
 
 export async function listAgencyArtists(userId) {
   if (DEMO) return [demoArtist, demoArtist2]
+  // G4 (A5) read model: each roster row carries the BOUNDED per-artist state the
+  // one next-best-action ladder derives from — `published` rides on artists.*,
+  // and the nested profile_items are limited to item_type + created_at (evidence
+  // presence/kind/age only, never content). FIREWALL: inputs to a rule; the UI
+  // renders action text, never a count/%/score.
   const { data, error } = await supabase
     .from('artists')
-    .select('*')
+    .select('*, profile_items(item_type, created_at)')
     .eq('created_by', userId)
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -237,6 +294,15 @@ export async function listRequestsForArtist(artistId) {
 // SAME deterministic canon stub CLIENT-SIDE, so evidence→claim→method-label works
 // with the anon key alone (no server, no secret). FIREWALL: bounded statuses +
 // bands + method-labels only — never a score/percentile/head-count.
+//
+// G12 static-deploy capability signal: the client stub is a DEPLOYMENT MODE,
+// not an error handler. It may run only when the build itself declares "no API
+// exists here" — VITE_NO_API=1, or the embed build (vite.config sets base
+// '/app/' exclusively in embed mode; the embed ships inside the static
+// website-next export, which has no /api function). `import.meta.env?.` keeps
+// this file importable outside Vite (constants.js precedent).
+const NO_API_DEPLOY =
+  import.meta.env?.VITE_NO_API === '1' || import.meta.env?.BASE_URL === '/app/'
 const _clientProcessor = new StubClaimProcessor()
 async function processEvidenceClientSide(artistId) {
   const { data: evidence, error } = await supabase
@@ -253,7 +319,12 @@ async function processEvidenceClientSide(artistId) {
       verification_status: labelled.status,
       verified_by: 'system', verified_at: new Date().toISOString(),
       visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
-      extraction_method: 'mock', model_version: 'mock-v1',
+      // G12 truthful provenance: this is the CLIENT stub path, so the stored
+      // method says exactly that. 'mock' is reserved for the server's keyless
+      // StubClaimProcessor; DEMO mode never reaches this insert (processEvidence
+      // returns fixtures first). claims.extraction_method is unconstrained text
+      // (001/schema.sql) — no CHECK migration needed for 'client_stub'.
+      extraction_method: 'client_stub', model_version: 'client-stub-v1',
       reason_code: labelled.reason || null,
     }
     const { data: inserted, error: cErr } = await supabase.from('claims').insert(claim).select().single()
@@ -264,17 +335,69 @@ async function processEvidenceClientSide(artistId) {
   return { processed: claims.length, ai: 'client-stub', claims }
 }
 
+// G11 client side — protected API routes need the caller's Supabase JWT.
+// Returns {} when there is no session (server then answers 401 and callers
+// fall back / surface it per their own contract).
+export async function authHeaders() {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const t = data?.session?.access_token
+    return t ? { Authorization: `Bearer ${t}` } : {}
+  } catch { return {} }
+}
+
+// Server errors that mean "the server DECIDED not to process" (auth, abuse
+// controls, budget, schema). Masking any of these with the client stub would
+// both defeat the control AND mislabel the result (G12+G14) — they must
+// surface as an error state, never as stub claims.
+const SERVER_REFUSAL_CODES = new Set([
+  'auth_required', 'forbidden', 'rate_limited', 'too_many_items',
+  'daily_limit_reached', 'monthly_budget_reached', 'field_too_long',
+])
+
 export async function processEvidence(artistId) {
   if (DEMO) return { processed: demoClaims.length, ai: 'demo', claims: demoClaims }
+  // Static/embed deploy declared at BUILD time (NO_API_DEPLOY above): there is
+  // no /api by design, so the client stub IS the processor — no fetch attempt.
+  if (NO_API_DEPLOY) return processEvidenceClientSide(artistId)
+  let res
   try {
-    const res = await fetch('/api/process-evidence', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    res = await fetch('/api/process-evidence', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
       body: JSON.stringify({ artistId }),
     })
-    const ct = res.headers.get('content-type') || ''
-    if (res.ok && ct.includes('application/json')) return await res.json()
-  } catch { /* no server (static deploy) — fall through to the client-side stub */ }
-  return processEvidenceClientSide(artistId)
+  } catch (e) {
+    // Network-unreachable (fetch rejects with TypeError before any response) —
+    // the ONLY runtime stub case. Anything stranger than that is not "offline",
+    // so it surfaces as the retryable error state instead of fake stub claims.
+    if (e instanceof TypeError) return processEvidenceClientSide(artistId)
+    const err = new Error(e?.message || 'network error')
+    err.code = 'server_refused'
+    throw err
+  }
+  const ct = res.headers.get('content-type') || ''
+  const body = ct.includes('application/json') ? await res.json().catch(() => null) : null
+  if (res.ok && body) return body
+  // G12+G14 refusal policy: a 401/403/429 or an explicit refusal code is a
+  // server DECISION — surface it (EvidenceCapture shows T.evidence.serverRefused),
+  // never run the client stub over it. SERVER_REFUSAL_CODES kept for the
+  // explicit enumeration even though every arrived failure now throws.
+  if (body && ([401, 403, 429].includes(res.status) || SERVER_REFUSAL_CODES.has(body.error))) {
+    const err = new Error(body.error || `server refused (${res.status})`)
+    err.code = 'server_refused'
+    err.status = res.status
+    throw err
+  }
+  // G12 (reopened 14 Jul): ANY response that arrived but isn't usable JSON —
+  // an HTML 404/500 error page, a proxy error, a truncated body — is a LIVE
+  // but FAILING server, never proof that no server exists. Auto-stubbing here
+  // turned outages into fake-successful claims. Throw the same retryable
+  // server-refusal error so the UI shows the retry state and evidence stays
+  // 'submitted'.
+  const err = new Error(body?.error || `server error (${res.status})`)
+  err.code = 'server_refused'
+  err.status = res.status
+  throw err
 }
 
 // ── Claims ─────────────────────────────────────────────── (extended)
@@ -299,6 +422,19 @@ export async function deleteClaim(id) {
   if (DEMO) return
   const { error } = await supabase.from('claims').delete().eq('id', id)
   if (error) throw error
+}
+
+// ── Milestone M7 input (Codex M7) — has THIS artist ever had a share link
+// created, per the localStorage analytics ring buffer (analytics.js KEY —
+// 'gigproof_events'). Works offline and on the static embed. HONESTY NOTE:
+// device-local only — a share made on another device won't be seen here; the
+// server-side share_link_created query is P1.
+export function hasShareEvent(artistId) {
+  if (DEMO) return true
+  try {
+    const events = JSON.parse(localStorage.getItem('gigproof_events') || '[]')
+    return events.some((e) => e?.name === 'share_link_created' && e?.props?.artist_id === artistId)
+  } catch { return false }
 }
 
 // ── Measurement (024) — a VIEW is not a REACTION; never merge them ──────────
@@ -359,6 +495,10 @@ export async function updateItemVisibility(id, visibility) {
 // buyer-safe columns only.
 export async function getPublicPassport(id) {
   if (DEMO) return demoPassportPayload
+  // Sample passport — the booker/login "see a sample" escape hatch. artists.id is
+  // a uuid, so 'demo-artist' would throw 22P02 on live and dead-end the one
+  // no-link-in-hand path (flow-gap B). Serve the canned demo payload instead.
+  if (id === 'demo-artist') return demoPassportPayload
   const artist = await getArtist(id) // null if not published (RLS hides it from anon)
   if (!artist || !artist.published) return { artist: null, items: [], claims: [] }
   // Two viewer classes, two firewalls (verified live 8 Jul):
@@ -377,7 +517,10 @@ export async function getPublicPassport(id) {
     .eq('artist_id', id)
   if (session) {
     itemsQ = itemsQ.eq('visibility', VISIBILITY.PASSPORT_OK)
-    claimsQ = claimsQ.eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES)
+    // artist_approved: the publish gate (031). An authenticated viewer's RLS shows
+    // ALL their claims, so we must exclude unreviewed ones explicitly — same rule
+    // the anon path gets from claims_public_read.
+    claimsQ = claimsQ.eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true)
   }
   const [itemsRes, claimsRes] = await Promise.all([
     itemsQ.order('item_date', { ascending: false, nullsFirst: false }),
@@ -399,7 +542,7 @@ async function buildPassportSnapshot(artistId) {
       .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
     supabase.from('claims')
       .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES),
+      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
   ])
   return { artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
 }

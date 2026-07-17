@@ -45,7 +45,7 @@ const content: LegalContent = {
         heading: 'דרכי פנייה בנושא נגישות',
         paragraphs: [
           'רכז/ת הנגישות: [שם]',
-          'אימייל: [אימייל] · טלפון: [___]',
+          'אימייל: support@lock.show · טלפון: [___]',
           'נשתדל לתת מענה בהקדם. תאריך עדכון אחרון: [___].',
         ],
       },
@@ -86,7 +86,7 @@ const content: LegalContent = {
         heading: 'Accessibility Contact',
         paragraphs: [
           'Accessibility coordinator: [name]',
-          'Email: [email] · Phone: [___]',
+          'Email: support@lock.show · Phone: [___]',
           'We aim to respond as soon as possible. Last updated: [___].',
         ],
       },

@@ -7,6 +7,7 @@ import {
 } from '../../lib/db.js'
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
 import { createNotification } from '../../lib/notifications.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import {
   PageShell, Loading, EmptyState, ErrorState, SourceLabel,
   BottomSheet,
@@ -30,11 +31,12 @@ function usePaged(items) {
 }
 
 function ShowMore({ paged, total }) {
+  const { T } = useLang()
   if (!paged.hasMore) return null
   return (
     <button onClick={paged.more}
       className="btn-ghost w-full text-sm">
-      Show more <span className="font-mono text-xs text-faint">({paged.slice.length}/{total})</span>
+      {T.admin.showMore} <span className="font-mono text-xs text-faint">({paged.slice.length}/{total})</span>
     </button>
   )
 }
@@ -96,12 +98,15 @@ export default function AdminDashboard() {
     try {
       const payment = payments.find((p) => p.id === id)
       await adminActivateEntitlement(id)
+      // GATE signal — someone PAID and the operator activated it (the second half
+      // of the validation gate: one reacts AND one pays).
+      logEvent(EVENTS.ENTITLEMENT_ACTIVATED, { artist_id: payment?.artist_id, entitlement_id: id })
       setPayments((prev) => prev.filter((p) => p.id !== id))
       // P1-1 — fire-and-forget: a notification hiccup must never undo the activation.
       if (payment?.artist_id) {
         createNotification({
           artistId: payment.artist_id,
-          type: 'payment_activated',
+          type: 'system', // G11 — /api/notify accepts a closed type enum; operator notices ride 'system'
           body: T.notifications.paymentActivated,
           link: '/artist/home',
         })
@@ -152,14 +157,12 @@ export default function AdminDashboard() {
   const statusLabel = (s) =>
     s === 'replied' ? T.agency.statusReplied : s === 'closed' ? T.agency.statusClosed : T.agency.statusNew
 
-  const anchors = [
-    ['payments', 'Payments'], ['upgrades', 'Upgrades'], ['artists', 'Artists'],
-    ['requests', 'Requests'], ['claims', 'Claims'], ['consents', 'Consents'], ['audit', 'Audit'],
-  ]
+  const anchors = ['payments', 'upgrades', 'artists', 'requests', 'claims', 'consents', 'audit']
+    .map((id) => [id, T.admin.anchors[id]])
 
   return (
     <PageShell max="max-w-2xl">
-      <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">Operator console</p>
+      <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">{T.admin.eyebrow}</p>
       <h1 className="mb-1 text-2xl font-bold text-ink">{T.admin.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.admin.subtitle}</p>
 
@@ -208,7 +211,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between gap-3">
                       <span className="truncate text-sm font-bold text-ink">{p.artists?.stage_name || '—'}</span>
                       <button onClick={() => activate(p.id)}
-                        className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
+                        className="btn-primary min-h-[44px] shrink-0 px-4 py-1.5 text-xs">
                         {T.admin.markActive}
                       </button>
                     </div>
@@ -235,7 +238,7 @@ export default function AdminDashboard() {
                   <div key={u.organization_id} className="card flex items-center justify-between gap-3 py-3">
                     <span className="truncate text-sm text-ink">{u.organization?.name || u.organization_id}</span>
                     <button onClick={() => approve(u.organization_id)}
-                      className="btn-primary min-h-[40px] shrink-0 px-4 py-1.5 text-xs">
+                      className="btn-primary min-h-[44px] shrink-0 px-4 py-1.5 text-xs">
                       {T.admin.approveUpgrade}
                     </button>
                   </div>
@@ -365,7 +368,7 @@ export default function AdminDashboard() {
           <>
             <p className="mb-1 text-sm font-medium text-ink">{deleteTarget.stage_name || deleteTarget.id}</p>
             <p className="mb-3 text-xs text-muted">{T.admin.deleteAuditNote}</p>
-            <label className="label" htmlFor="delete-reason">Reason (required — recorded in the audit log)</label>
+            <label className="label" htmlFor="delete-reason">{T.admin.deleteReasonLabel}</label>
             <input id="delete-reason" className="field mb-3" placeholder={T.admin.deleteReasonPlaceholder}
               value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} />
             <div className="flex gap-2">

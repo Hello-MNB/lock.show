@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, getEntitlement, createEntitlement } from '../../lib/db.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { PageShell, Loading, ErrorState, Spinner } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -47,6 +48,8 @@ export default function OfferPayment() {
     try {
       const refCode = paymentRefCode(artist.id)
       await createEntitlement(artist.id, user.id, `${refCode} · ₪${amount} · Bit`)
+      // GATE signal — willingness-to-pay: an artist created a payment reference.
+      logEvent(EVENTS.PAYMENT_REF_CREATED, { artist_id: artist.id })
       await load()
     } catch { setError(true) } finally { setBusy(false) }
   }

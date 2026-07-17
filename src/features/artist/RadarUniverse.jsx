@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, switchAct } from '../../lib/db.js'
+import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, switchAct, createAct } from '../../lib/db.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { uploadFile } from '../../lib/storage.js'
 import { BottomSheet, Spinner, GpIcon } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -8,6 +9,7 @@ import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
 import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount } from '../../lib/radarUniverse.js'
+import { primaryPlanets } from '../../lib/genreWeights.js'
 
 // ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
 // The Radar IS evidence collection (IA correction): claim review / batch
@@ -51,10 +53,11 @@ function sourceRef(node) {
 
 // Honest receipt destination: only verified/supporting + passport-ok claims
 // actually reach the public Passport; everything else stays private.
-function destinationOf(claim) {
+// Localized via the radar.universe dictionary (S) — never a hardcoded string.
+function destinationOf(claim, S) {
   const publicBound = claim?.visibility === VISIBILITY.PASSPORT_OK &&
     ['verified', 'supporting'].includes(claim?.verification_status)
-  return publicBound ? 'your Passport view' : 'your private record'
+  return publicBound ? S.destPassport : S.destPrivate
 }
 
 // ── Platform ring (META-FIELD LAW) — small nodes orbiting the universe, ONE
@@ -117,6 +120,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const [activeActId, setActiveActId] = useState(() => localStorage.getItem('gigproof_active_act') || artist.id)
   const [actSheet, setActSheet] = useState(false)
   const [actBusy, setActBusy] = useState(false)
+  const [newActName, setNewActName] = useState('') // + New Act inline form (A3/N12)
   const [actOverride, setActOverride] = useState(null) // { artist, items, claims } for a non-default Act
 
   useEffect(() => {
@@ -134,7 +138,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acts])
 
-  async function pickAct(id) {
+  async function pickAct(id, actRow = null) {
     const alreadyActive = id === artist.id ? !actOverride : activeActId === id && !!actOverride
     if (alreadyActive) { setActSheet(false); return }
     if (actBusy) return
@@ -144,7 +148,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         setActOverride(null) // back to the default Act — the prop-driven data
       } else {
         const res = await switchAct(id)
-        const a = acts.find((x) => x.id === id) || res.act || {}
+        const a = actRow || acts.find((x) => x.id === id) || res.act || {}
         setActOverride({
           act: res.act || a,
           items: res.items || [],
@@ -168,9 +172,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       }
       setActiveActId(id)
       localStorage.setItem('gigproof_active_act', id)
+      logEvent(EVENTS.ACT_SWITCHED, { act_id: id }) // pilot signal (A10)
       setActSheet(false)
       setSelected(null)
-      flash(S.actSwitch.switchedToast((acts.find((a) => a.id === id) || {}).stage_name || artist.stage_name))
+      flash(S.actSwitch.switchedToast((actRow || acts.find((a) => a.id === id) || {}).stage_name || artist.stage_name))
     } finally {
       setActBusy(false)
     }
@@ -182,6 +187,27 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     flashRef.current = setTimeout(() => setFlashMsg(''), 3200)
   }
 
+  // + New Act (rel-07.13 A3/N12) — creates an EMPTY second universe for the
+  // same Person and switches straight into it (canon: evidence never transfers).
+  async function createNewAct(e) {
+    e?.preventDefault?.()
+    const name = newActName.trim()
+    if (!name || actBusy) return
+    setActBusy(true)
+    try {
+      const row = await createAct(activeActId || artist.id, { stage_name: name })
+      logEvent(EVENTS.ACT_CREATED, { act_id: row.id }) // pilot signal (A10)
+      setActs((prev) => [...prev, row])
+      setNewActName('')
+      setActBusy(false)          // pickAct manages its own busy state
+      await pickAct(row.id, row) // lands inside the new, honestly-empty universe
+      flash(S.actSwitch.newActCreated(row.stage_name))
+    } catch (err) {
+      setActBusy(false)
+      flash(err?.message === 'demo' ? S.actSwitch.newActDemo : (err?.message || T.common.error))
+    }
+  }
+
   // Everything below derives from the ACTIVE act's data — swapped wholesale,
   // never merged, when a non-default Act is selected.
   const effArtist = actOverride?.artist || artist
@@ -190,6 +216,14 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const effAct = actOverride?.act || act
 
   const uni = useMemo(() => buildUniverse({ artist: effArtist, act: effAct, items: effItems, claims: effClaims, T }), [effArtist, effAct, effItems, effClaims, T])
+
+  // ── G2 genre emphasis (genreWeights) — ADDITIVE highlight ONLY. Primary
+  // planets for the ACTIVE Act's genre family gain a quiet concentric ring, a
+  // slight size lift and a method-safe wording label. Non-primary planets stay
+  // FULL-OPACITY and fully interactive (DEPLOY-GAPS testability rule — no
+  // dimming, no reordering). No genre/format signal → empty set → all equal.
+  // FIREWALL: never a weight, number, rank or % — a ring + words, nothing else.
+  const genrePrimary = useMemo(() => new Set(primaryPlanets(effAct, effArtist)), [effAct, effArtist])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
@@ -233,7 +267,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const FILTERS = [
     { key: 'all', label: S.filters.all },
     { key: 'needsYou', label: S.filters.needsYou, dot: foundClaims.length > 0 },
-    { key: 'ready', label: 'Ready' },
+    { key: 'ready', label: S.filters.ready },
   ]
   const matchesFilter = (n) =>
     (filter === 'all' ? true :
@@ -288,7 +322,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       const ids = new Set(list.map((n) => n.claim.id))
       onClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
       triggerBloom(list.map((n) => n.id))
-      flash(`${list.length} claims confirmed — each added to ${destinationOf(list[0].claim)}`)
+      flash(S.bulkConfirmed(list.length, destinationOf(list[0].claim, S)))
     } finally { setBulkBusy(false) }
   }
 
@@ -348,7 +382,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             onTagClick={() => setSelected('identity')} />
           <h3 className="font-display mt-5 text-xl font-bold text-ink">{S.blossomTitle}</h3>
           <p className="mx-auto mt-1.5 max-w-[300px] text-xs leading-relaxed text-muted">{S.blossomBody}</p>
-          <button className="btn-primary mt-4 px-4 py-2.5 text-xs" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
+          <button className="btn-primary mt-4 min-h-[44px] px-4 py-2.5 text-xs" onClick={() => nav(evidenceRoute)}>{S.blossomCta}</button>
         </div>
       ) : (
         /* ── THE UNIVERSE — always mounted, never reflows. Full-stage (md+):
@@ -373,13 +407,24 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             const dimmed = !info.nodes.some(matchesFilter) && (filter !== 'all' || world)
             const complete = info.state === 'established' && info.foundCount === 0 &&
               !info.nodes.some((n) => n.state === NODE.MISSING)
+            // G2 — genre-PRIMARY planet: additive ring + slight size + label.
+            // Never touches other planets' opacity, order or interactivity.
+            const primary = genrePrimary.has(p.key)
             return (
               <button key={p.key}
                 onClick={() => setSelected(p.key)}
                 style={{ left: `${x}%`, top: `${y}%` }}
+                data-genre-primary={primary || undefined}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
-                aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${complete ? ` · ${S.complete}` : ''}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 md:h-16 md:w-16 ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}${complete ? ` · ${S.complete}` : ''}`}>
+                <span className={`relative mx-auto grid place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${
+                  primary ? 'h-[60px] w-[60px] md:h-[68px] md:w-[68px]' : 'h-14 w-14 md:h-16 md:w-16'
+                } ${RING[info.state]} ${info.foundCount > 0 ? 'shadow-[0_0_16px_rgba(242,192,99,0.14)]' : ''}`}>
+                  {/* G2 genre-primary emphasis — a quiet SECOND concentric ring
+                      (shape, not color-only) in the gold register; additive only */}
+                  {primary && (
+                    <span aria-hidden className="absolute -inset-1.5 rounded-full border border-gold/40 shadow-[0_0_14px_rgba(242,192,99,0.10)]" />
+                  )}
                   <GpIcon id={p.icon} className="h-6 w-6 text-ink/90 md:h-7 md:w-7" />
                   {/* found — a small gold dot, not a badge shouting */}
                   {info.foundCount > 0 && (
@@ -393,6 +438,12 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight md:text-[9px]">
                   {S.planets[p.key]}
                 </span>
+                {/* G2 — method-safe wording label; words only, never a weight */}
+                {primary && (
+                  <span className="mt-0.5 block w-20 font-mono text-[7px] uppercase tracking-[0.08em] text-gold/75 leading-tight md:text-[8px]">
+                    {S.genrePrimary}
+                  </span>
+                )}
               </button>
             )
           })}
@@ -464,7 +515,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           <span className="flex min-w-0 items-center gap-2">
             <span aria-hidden className="mt-px h-2 w-2 shrink-0 rounded-full bg-accent" />
             <span className="min-w-0">
-              <span className="block font-semibold">Added to {destinationOf(undo.claim)}:</span>
+              <span className="block font-semibold">{S.addedTo(destinationOf(undo.claim, S))}</span>
               <span className="block truncate text-muted">“{undo.claim.value || human(undo.claim.claim_type)}”</span>
             </span>
           </span>
@@ -487,9 +538,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         {sel && (
           <div className="max-h-[65vh] overflow-y-auto pe-0.5">
             {batchable.length >= 2 && (
-              <button className="btn-primary mb-3 w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
-                aria-label={`Confirm all ${batchable.length} found claims shown below`}>
-                {bulkBusy ? <Spinner /> : `Confirm all ${batchable.length} below`}
+              <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
+                aria-label={S.confirmAllCta(batchable.length)}>
+                {bulkBusy ? <Spinner /> : S.confirmAllCta(batchable.length)}
               </button>
             )}
             <div className="space-y-2">
@@ -513,9 +564,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       <BottomSheet open={review && !selected} onClose={() => setReview(false)} title={S.filters.needsYou}>
         <div className="max-h-[65vh] overflow-y-auto pe-0.5">
           {foundClaims.length >= 2 && (
-            <button className="btn-primary mb-3 w-full py-2.5 text-xs" onClick={() => confirmMany(foundClaims.map((x) => x.node))} disabled={bulkBusy}
-              aria-label={`Confirm all ${foundClaims.length} found claims shown below`}>
-              {bulkBusy ? <Spinner /> : `Confirm all ${foundClaims.length} below`}
+            <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(foundClaims.map((x) => x.node))} disabled={bulkBusy}
+              aria-label={S.confirmAllCta(foundClaims.length)}>
+              {bulkBusy ? <Spinner /> : S.confirmAllCta(foundClaims.length)}
             </button>
           )}
           <div className="space-y-2">
@@ -527,7 +578,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 onSaved={() => flash(S.fill.savedInPlace)} />
             ))}
             {needsNodes.length === 0 && (
-              <p className="py-6 text-center text-xs text-muted">Nothing needs you right now.</p>
+              <p className="py-6 text-center text-xs text-muted">{S.nothingNeedsYou}</p>
             )}
           </div>
         </div>
@@ -559,7 +610,16 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           })}
           {acts.length === 0 && <p className="py-4 text-center text-xs text-muted">—</p>}
         </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-faint">{S.actSwitch.newActHint}</p>
+        <form onSubmit={createNewAct} className="mt-3 flex items-center gap-2">
+          <input className="field flex-1" maxLength={60} value={newActName}
+            placeholder={S.actSwitch.newActNamePh} aria-label={S.actSwitch.newActCta}
+            onChange={(e) => setNewActName(e.target.value)} disabled={actBusy} />
+          <button type="submit" disabled={actBusy || !newActName.trim()}
+            className="btn btn-primary shrink-0 text-sm disabled:opacity-50">
+            {S.actSwitch.newActCreate}
+          </button>
+        </form>
+        <p className="mt-2 text-[11px] leading-relaxed text-faint">{S.actSwitch.newActHint}</p>
       </BottomSheet>
     </div>
   )
@@ -609,10 +669,10 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
           <span className={`chip shrink-0 text-[10px] ${chip.c}`}>{chip.icon}</span>
         </div>
         <button
-          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
+          className="mt-2.5 flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2 text-xs font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
           onClick={onConfirm} disabled={busy}
-          aria-label={`Confirm: ${wording}`}>
-          {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">Confirm: “{wording}”</span></>}
+          aria-label={S.confirmNamed(wording)}>
+          {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{S.confirmNamed(wording)}</span></>}
         </button>
       </div>
     )
@@ -636,7 +696,7 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
           </button>
         )}
         <button
-          className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.08em] text-muted transition-colors hover:text-ink"
+          className="min-h-[44px] rounded-lg border border-line2 bg-surface2 px-3 font-mono text-[10px] uppercase tracking-[0.08em] text-muted transition-colors hover:bg-raise hover:text-ink"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}>
           {n.state === NODE.MISSING && n.fill ? S.addCta : S.whatItProves} {open ? '▴' : '▾'}
@@ -681,7 +741,7 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
   async function run(fn) {
     setBusy(true); setErr('')
     try { await fn(); onDone() }
-    catch (e) { setErr(e.message || 'error') }
+    catch (e) { setErr(e.message || T.common.error) }
     finally { setBusy(false) }
   }
 

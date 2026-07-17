@@ -1,7 +1,7 @@
 # LOCK
 
 > Pre-booking proof and risk-reduction tool for the live music industry.
-> Helps Israeli booking managers (אמרגנים) evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
+> Helps demand-side buyers — booking managers, promoters, event producers, planners, private and corporate clients (מזמיני הופעות) — evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
 > Formerly known as GIGPROOF, rebranded to LOCK in 2026 — same product, same team.
 
 ## What LOCK is
@@ -11,10 +11,10 @@ LOCK is a verification system for independent artists seeking to prove their liv
 ## Three actors
 
 - **Artist (אמן)** — builds and controls their own proof. Pays for the service. Uses the private Artist Radar workspace.
-- **Booking Manager (אמרגן)** — evaluates artists before booking. Free access. Views the public Passport.
+- **Booking Manager (מזמין הופעות)** — the demand side: venue/club booker, festival programmer, promoter, talent buyer, or a private/corporate event client. Evaluates artists before booking. Free access. Views the public Passport. (Distinct from an אמרגן — the artist-side agent/management office, which manages a roster inside LOCK.)
 - **Producer (מפיק)** — confirms a single claim via a bounded magic link. No account required.
 
-These three roles are distinct. Booking manager ≠ producer. They are never merged.
+These roles are distinct. Booking manager ≠ producer ≠ artist agent. They are never merged.
 
 ## Two surfaces
 
@@ -42,12 +42,14 @@ Every claim on a Passport carries a method label and reviewed date. Method label
 
 - https://lock.show/ — Homepage
 - https://lock.show/artists — For artists (אמן): how to build a Passport
-- https://lock.show/bookers — For booking managers (אמרגן): how to read a Passport
+- https://lock.show/bookers — For booking managers (מזמיני הופעות): how to read a Passport
 - https://lock.show/producers — For producers (מפיק): the magic-link confirmation flow
+- https://lock.show/managers — For artist managers/agencies (משרד אמרגנות): roster beta signup
+- https://lock.show/production — For production offices (משרד הפקה): production beta signup
 - https://lock.show/passport/demo — A sample Passport showing verified evidence
 - https://lock.show/how-it-works — Three players, seven steps
 - https://lock.show/methodology — How evidence is verified; method labels explained
-- https://lock.show/pricing — Free for booking managers; artist access by arrangement during beta
+- (Pricing page temporarily unpublished during the closed beta — access is by arrangement; booking managers always free)
 - https://lock.show/radar — The Artist Radar feature explained
 - https://lock.show/faq — Frequently asked questions
 - https://lock.show/contact — Contact form and information

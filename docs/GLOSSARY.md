@@ -1,5 +1,5 @@
 # LOCK — מילון מונחים / CANONICAL GLOSSARY
-**v1.0 · 8 Jul 2026 · Owner: Maria (R00) · BINDING for every agent, every document, every surface.**
+**v1.1 · 12 Jul 2026 · Owner: Maria (R00) · BINDING for every agent, every document, every surface.**
 Any text produced for LOCK — UI, marketing, legal, docs — MUST use these terms. A document that violates this glossary is REJECTED (R00 precedent: privacy v0.2, 8 Jul 2026).
 
 ## Product concepts
@@ -13,14 +13,27 @@ Any text produced for LOCK — UI, marketing, legal, docs — MUST use these ter
 | Method labels (universal tags) | TICKET EXPORT · PRODUCER-CONFIRMED · PLATFORM DATA · OPERATOR-REVIEWED · SELF-REPORTED | kept in English inside Hebrew text (deliberate universal-tag design) | translating them |
 
 ## Personas (entity truth — never blur)
-| Persona | EN | HE |
-|---|---|---|
-| Artist | artist | אמן |
-| Buyer | booking manager (NOT "booker" in new copy) | אמרגן |
-| Producer | producer | מפיק |
-| Representative | artist representative | נציג אמן |
-| Internal | operator | אופרטור |
-| Source Confirmer | source confirmer (capability, not a role — magic link, no account) | מאשר-מקור |
+
+**v1.1 CORRECTION (12 Jul, Codex DS v1.5.8 + code ruling BT-56–58): the buyer is NOT an אמרגן.**
+אמרגן = artist-side representation (booking agent / management office — the AGENCY workspace).
+The demand side (whoever requests/evaluates an artist) is a SEGMENTED family, never collapsed
+into show-business professionals:
+
+| Persona | EN | HE | Notes |
+|---|---|---|---|
+| Artist | artist | אמן | — |
+| **Artist-side agent / office** | manager office / agency | **אמרגן / משרד אמרגנות** | supply side. NOT a buyer. |
+| Professional entertainment buyer | booking manager (NOT "booker" in new copy) | מזמין הופעות / מנהל בוקינג / פרומוטר (per context) | venue, club, festival, promoter, talent buyer |
+| Private event client | private client / event host | לקוח פרטי / מזמין אירוע | wedding couple, family event — simple non-industry language: style, fit, trust, availability |
+| Corporate client | corporate client | לקוח עסקי | reliability, fit, invoice/logistics clarity |
+| Event planner | event planner | מתכנן אירועים | coordination, style/fit, availability, vendor context |
+| Event production (workspace) | production office / team | מפיק אירוע / צוות הפקה / חברת הפקה | solo OR team; executes event/logistics/lineup |
+| Representative | artist representative | נציג אמן | — |
+| Internal | operator | אופרטור | not a customer workspace, no public signup |
+| Source Confirmer | source confirmer (capability, not a role — magic link, no account) | **מאשר-מקור — RATIFIED as the only UI term (owner, 12 Jul)**; "מפיק מאשר" = historical alias, docs only | no signup, no dashboard, no workspace shell; not every source is a producer |
+
+**Forbidden blur:** buyer ≡ אמרגן (v1.0 error) · booker signup labeled מפיק · private clients addressed
+in industry jargon · Source Confirmer built/described as a workspace.
 
 ## Structural terms
 | Term | Meaning |
@@ -40,7 +53,7 @@ Any text produced for LOCK — UI, marketing, legal, docs — MUST use these ter
 | ARTIFACT-SUPPORTED | נתמך בראיה/מסמך/מקור | נתמך בראיות |
 | generic "verified" | — | **מאומת** (never generic; current repo has 10 occurrences → HE-pass fix list) |
 | Draw hero (public) | כוח בוקינג | עוצמת מכירה (INTERNAL ONLY — never in UI) |
-| Act | ⏳ NO locked HE term — R00 ruling pending; never invent one |
+| Act | de-facto live term = **אקט** (already shipped in app UI, he.js:710-715); formal R00 taste-ratification pending — never invent a THIRD term |
 
 ## Voice law
 Professional restraint; evidence-grade; show-business warmth without hype. NO emoji in UI/legal copy. No exclamation-mark salesiness. "check, don't trust". EN and HE each fully professional — never mixed in one view (LANGUAGE LAW, see LOCALIZATION-MATRIX.md).
@@ -52,4 +65,5 @@ Professional restraint; evidence-grade; show-business warmth without hype. NO em
 - Payment: Bit + reference code GP-XXXX, manual activation. Receipts: Green Invoice (pending signup).
 
 ## CHANGELOG
+- v1.1 (12 Jul 2026): Personas table corrected — buyer ≠ אמרגן (Codex DS v1.5.8 demand-side audit; matches code ruling BT-56–58 in `src/lib/constants.js`). Demand side segmented (pro buyer / private client / corporate / planner / production). אמרגן = artist-side only. HE demand-side terms pending Maria's final taste.
 - v1.0 (8 Jul 2026): Created after R00 rejected privacy v0.2 for glossary violations (דרכון, המראה, Netlify, false no-AI claim).

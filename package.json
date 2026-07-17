@@ -12,7 +12,15 @@
     "build:embed": "vite build --mode embed && node scripts/embed-post.mjs",
     "preview": "vite preview",
     "seed": "node scripts/seed.mjs",
-    "lint:i18n": "node scripts/i18n-purity.mjs"
+    "lint:i18n": "node scripts/i18n-purity.mjs",
+    "test:nav": "node scripts/nav-contract.test.mjs",
+    "test:isolation": "node scripts/test-act-isolation.mjs",
+    "test:canon": "node scripts/test-canon-drift.mjs",
+    "test:security": "node scripts/test-security-denial.mjs",
+    "test:guardrails": "node scripts/test-guardrails.mjs",
+    "validate:registry": "node scripts/validate-registry.mjs",
+    "validate:deltas": "node scripts/validate-deltas.mjs",
+    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && npm run build && npm run build:demo"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
@@ -28,6 +36,7 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.0.1",
+    "playwright": "^1.61.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "vite": "^5.4.8",
