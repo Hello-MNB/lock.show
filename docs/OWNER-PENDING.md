@@ -20,6 +20,7 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 | M-6 | **D3 ruling** | Decide: retire the `/producer` shell or fold it into Production | T-11 polish; nav cleanup |
 | M-7 | **Codex artwork** | Ask Codex for the logo + venue-icon files | Final visual polish (§5.9) |
 | M-8 | **Prices + annual %** | One sentence when ready (free-pilot holds until the Gate) | Plan enforcement (post-Gate) |
+| M-14 | **ADR-1: ONE canonical app address** | Decide: `app.lock.show` (recommended — cleaner, already fully secured) or `lock.show/app`. One sentence; I write the formal decision record + redirect plan | Ends the dual-origin ambiguity the PM audit flagged |
 
 ## 🟢 Optional / whenever
 
