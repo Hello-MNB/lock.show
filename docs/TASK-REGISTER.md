@@ -23,6 +23,7 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 8. **QA-before-report (owner directive 17 Jul):** every executed task is verified by an independent test agent (Team D) START-TO-END before it is reported to the owner. No self-reported "done."
 9. **Document links in every reply (owner directive 17 Jul):** every reply to the owner ends with clickable links to this register, OWNER-PENDING, and the spec (GitHub, work branch).
 10. **Micro-task work breakdown (owner directive 17 Jul):** the WORK BREAKDOWN section below decomposes every active task into per-team micro-tasks with precise budgets; progress is reported BY TASK NUMBER against it.
+11. **The permanence boundary (owner + external review, 17 Jul):** autonomy NEVER touches real people's data, sends real email, moves real money, or changes the live database. Each such act requires the owner's explicit per-instance word; where legality is the question, it is lawyer-gated (T-24). The email send-path ships FLAG-OFF until counsel signs. All autonomous building/testing runs on demo/seed fixtures. A µ-task that turns out to touch the boundary STOPS the loop and asks first.
 
 **Marks:** ✅ done · ⚠️ partial/unwitnessed (note says what's missing) · ❌ not built · — not applicable (non-screen task).
 
@@ -40,6 +41,8 @@ Four builds in disjoint territories + Team D verification each + Team E wave-clo
 | W2-4 | T-32 | C2 | Self-host fonts via @fontsource packages (Frank Ruhl Libre · Heebo · IBM Plex Mono) — remove the Google Fonts runtime dependency; local demo image replaces the Unsplash URL | ≤60k |
 | W2-V | rule 8 | D | Independent adversarial verify of each build | ≤70k× |
 | W2-S | ship | E | verify gate · embed+site rebuild · replica · deploy watch · live smoke | ≤40k |
+
+**Wave 3 re-scope (rule 11):** email send-path = code only, feature-flag OFF until T-24 counsel sign-off; analytics = consent-gating code only, no new real-data collection pre-counsel.
 
 ---
 
