@@ -330,8 +330,17 @@ The register is the ONLY work source. The loop runs continuously; the owner is i
 | S6 | Supporting pages (How-it-works · Free pilot · Trust/Methodology) | preview URL | ≤80k |
 | S7 | CTA/conversion pass: one primary per page; join-pilot funnel; consent-gated events only (rule 11) | preview URL | ≤50k |
 | S8 | Site QA: L2 390/1360 · lexicon · contrast · asset/logo integrity | QA report | ≤50k |
-**Order:** S1 → owner taste-pick → S2‖S3 → S4 → owner preview-approve → S5‖S6‖S7 → S8 → Team D → ship on owner GO. Program cost ≈ 570k + verification.
-**State:** program approved-to-plan; S1+S2 dispatch after Wave 2 closes (budget-gated per rule 13).
+**Order:** S0 audits → S1 → owner taste-pick → S2‖S3 → S4 → owner preview-approve → S5‖S6‖S7 → S8 → Team D → ship on owner GO. Program cost ≈ 570k + S0 ≈ 220k + verification.
+**State:** S0 AUDIT WAVE DISPATCHED 17 Jul (owner's expanded brief). Site ops doc created: `docs/SITE-MANAGEMENT.md` (version log · deploy truths · rule-12 pipeline · owner brand bar · Codex-DS absorption · housekeeping).
+
+**S0 audit µ-tasks (read-only, owner brief 17 Jul):**
+| µ | Audit | Criteria (owner's words operationalized) | Budget |
+|---|---|---|---|
+| S0-content | Content/messaging per page | marketing-human not technical · ONE audience per container, never mixed · CTA clarity | ≤50k |
+| S0-design | Brand as a super-brand | lime only where it should be · uniform font hierarchy · identical full-screen content width · image usage | ≤50k |
+| S0-mobile | Mobile-first conformance | 390px-first per page · no h-scroll · hero legibility | ≤45k |
+| S0-flows | Internal links + signup/login | every internal link valid · site→app entries work end-to-end · legal pages | ≤45k |
+| S0-infra | Repo folder order + Vercel professional config | legacy website/ archive plan (no silent deletions) · Vercel projects/settings/domains audit (read-only) | ≤40k |
 
 
 ## Register maintenance log
