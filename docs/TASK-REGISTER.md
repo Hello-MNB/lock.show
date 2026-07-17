@@ -171,26 +171,32 @@ These are pre-Gate necessities that are not screens. Screen-style MOBILE/DESKTOP
 
 ---
 
-## TEAMS — five development teams (owner directive 17 Jul: "5 teams, minimum tokens that allow work, procedures, NO DRIFT")
+## TEAMS — ten development teams (owner directive 17 Jul: roles · skills · work order · zero collisions)
 
-**Token allocation — measured minimums, not guesses** (basis: Team B's real sweep = ~41k tokens per screen-QA agent). Budgets are per-agent ceilings; an agent that needs more STOPS and reports instead of drifting.
+**Collision law (binding):** every team OWNS a named file territory. An agent needing a file outside its territory STOPS and reports — it never edits. Two teams are never scheduled into the same territory in the same wave. Read-only teams (B, D) may read everything, write nothing outside their own folders.
 
-| Team | Mandate | Tasks fed | Agent shape | Budget/agent | Budget/wave |
-|---|---|---|---|---|---|
-| **A · Screens-Build** | Gap-diff a screen vs its spec DoD, then close the gaps | T-02…T-07 · T-31 · T-33 | 1 differ + 1 fixer per screen · low/medium effort | ≤ 60k | ≤ 150k per screen |
-| **B · QA-Checklists** | §10.2/§10.3/LEXICON/INTERACT/NAV/A11Y passes; produce Maria's one-page witness checklists + 390/1360 screenshots | every screen task | 1 QA agent per screen · low effort | ≤ 50k | ≤ 250k per 5-screen sweep |
-| **C · Launch-Ops** | The non-screen A-Z: HE pass, a11y, utility screens, purge, GA4, bots, fonts | T-19…T-23 · T-26 · T-32 | 1 agent per task · low/medium | ≤ 80k | ≤ 200k per batch |
-| **D · Critic-Verify** | Rule 8: independent adversarial verification of EVERY task start-to-end; SHIP / DO-NOT-SHIP verdict | all teams' output | 1 verifier per task · high effort | ≤ 70k | — |
-| **E · Ship-Regression** | verify suite + embed/site builds + replica tests + deploy watch + live smoke after every production merge | every ship | 1 agent per ship · low | ≤ 40k | — |
+| Team | Role (what it does) | Skills (what its agents are told to be) | Owns (file territory) | Feeds on |
+|---|---|---|---|---|
+| **A1 · Artist screens** | Radar canvas, Planet Inspector, Act editor, artist requests | React+Tailwind, DS tokens §5.11, Radar spec §8.2/§8.3, firewall rendering | `src/features/artist/**` | T-03, T-05, T-06, artist half of T-31 |
+| **A2 · Buyer screens** | Public Passport, availability request, confirmer | §8.7-8.9, firewall-critical (buyer-facing = highest care), method labels §4.4 | `src/features/passport/**` | T-08, T-09, T-33 |
+| **A3 · Mobile experience** | §6 law 2: the separate 390px design — gestures, viewport-fit, bottom sheets | Touch UX, §10.2, §7.5, Radar-Focus §8.2-mobile | mobile variants of screens A1/A2 finished LAST wave (never same files same wave) | T-04, T-35 |
+| **B · QA & checklists** | 7-state field QA, §10 passes, screenshots, the owner's witness checklists | Playwright, §10.2-10.7, plain-language writing | `docs/qa/**` only (read-only elsewhere) | every screen task, M-5 |
+| **C1 · Hebrew & lexicon** | he.js completeness (Radar kit has NO Hebrew), RTL, §4 glossary conformance | HE native copy, §15.3/§15.4, voice law §4.5 | `src/lib/i18n/he.js` only | T-19, LEXICON points |
+| **C2 · Platform ops** | Self-hosted fonts, bot protection, purge job, GA4, headers | Vite/build, §13.5, §14.3, §15.1 | `index.html`, `public/**`, `server/**` (non-payload), `vercel.json` | T-32, T-26, T-22, T-23 |
+| **D · Critic-verify** | Rule 8: adversarial verification of EVERY µ-task; SHIP/DO-NOT-SHIP | Skeptic; reproduce-before-believing; firewall law §2/§10.1 | nothing (temp files only) | all builds |
+| **E · Ship & regression** | verify suite, embed/site rebuild, replica tests, deploy watch, live smoke | Release discipline §19.6, deploy pipeline truth (main-only production) | `website-next/public/app/**` (build output) | every wave end |
+| **F · Data & DB** | Migrations (diff-first, additive-only), RLS, Gate read-model, seed hygiene | SQL, §13.2, §14.3, migration law §20.B | `supabase/**`, Gate-metric reads in `server/` | T-30, future 038+ |
+| **G · Docs & governance** | Register/memory/pending upkeep, spec lockstep §19.6, release notes | Canon discipline, honest-status law §2.8 | `docs/**` (except docs/qa) | continuous |
 
-**Procedures (binding, NO DRIFT):**
-- **DEVELOP:** work exists ONLY as a numbered register task (no unnumbered work, ever) · one atomic task per agent · the agent reads the task's spec sections FIRST · all work on the work branch · `npm run verify` (10 inspectors) green before hand-off.
-- **TEST:** builder self-test with reproduction (Playwright/replica — screenshots or it didn't happen) → **Team D independent adversarial verification** of the whole flow start-to-end → explicit SHIP verdict. No task is reported on a self-test alone (rule 8).
-- **REPORT:** to the owner ONLY after Team D's verdict · plain language · evidence attached · register updated in the SAME commit · OWNER-PENDING refreshed and appended to every reply.
-- **SHIP:** production merges to `main` are owner-authorized only · Team E runs live smoke immediately after every deploy · owner gets the exact live URLs to re-test (M-3 pattern).
-- **BUDGET:** an agent hitting its ceiling stops and reports partial state — it never silently expands scope.
+**Work order (the anti-collision schedule):**
+1. Within a wave: builders run in PARALLEL only across different territories; D verifies each build as it lands (pipeline, no barrier); E ships once the wave's verdicts are all SHIP.
+2. A3 always works one wave BEHIND A1/A2 on any given screen (mobile pass follows the screen's build pass — never simultaneous).
+3. C1 (he.js) is always safe in parallel — nobody else may touch he.js.
+4. F never ships a read-model change in the same wave as the migration it depends on (apply → then filter).
+5. G updates docs at wave close, single writer — no doc races.
+6. Budgets: per-agent ceilings from the allocation table (measured: QA ≈41k · build ≈60-80k · verify ≈70k). An agent at its ceiling STOPS and reports partial.
 
-**Active now:** Team D verifying T-34 (share/deep-link repair) · Team B's first sweep folded (T-31/T-32/T-33).
+**Active now:** Wave 1 workflow IN FLIGHT (A1-tap-targets · A2-passport-rows · C3-banner→C2 territory · B1-real-login-QA · B2-witness-docs — each with its D verification) · T-36 nav agent running.
 
 ---
 
@@ -271,4 +277,4 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added (doc links every reply · micro-task breakdown). WORK BREAKDOWN waves 1-3 allocated. Next number: **T-37**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Resend live (key in Vercel, test email delivered); first REAL USER confirmed (shydavid, techno/trance DJ, 11 Jul). T-34 opened (share/deep-link repair — owner screenshot evidence). TEAMS restructured to FIVE with measured token budgets + binding NO-DRIFT procedures (owner directive). T-35 (viewport-fit) + T-36 (nav e2e) opened per owner directives. Standing rules 9-10 added. WORK BREAKDOWN waves 1-3 allocated. TEAMS scaled 5→10 with roles/skills/territories + anti-collision schedule (owner directive). Next number: **T-37**.
