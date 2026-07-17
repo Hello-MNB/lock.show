@@ -77,7 +77,7 @@ const en: ChromeContent = {
       { href: '/passport/demo', label: 'Passport demo' },
     ],
     cta: 'Join free pilot',
-    login: 'Log in',
+    login: 'Sign in',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
   },
