@@ -978,7 +978,7 @@ export const T = {
       viewPassport: 'View public Passport',
       notPublished: 'Passport not published yet',
       fill: {
-        save: 'Save — right here',
+        save: 'Save',
         invoiceYes: "Yes — I'm invoice-ready",
         eventTitle: 'Event / venue',
         eventDate: 'Date (optional)',

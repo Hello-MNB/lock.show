@@ -696,7 +696,7 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
           </button>
         )}
         <button
-          className="min-h-[36px] font-mono text-[10px] uppercase tracking-[0.08em] text-muted transition-colors hover:text-ink"
+          className="min-h-[44px] rounded-lg border border-line2 bg-surface2 px-3 font-mono text-[10px] uppercase tracking-[0.08em] text-muted transition-colors hover:bg-raise hover:text-ink"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}>
           {n.state === NODE.MISSING && n.fill ? S.addCta : S.whatItProves} {open ? '▴' : '▾'}
