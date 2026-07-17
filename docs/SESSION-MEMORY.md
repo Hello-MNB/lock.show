@@ -10,6 +10,12 @@ priority board (docs/TASK-STATUS-BOARD.md) + open pending-from-owner list.
 
 ## 🔑 TEST LOGINS (permanent — owner asked 15 Jul): docs/team/TEST-LOGINS.md · 5 accounts @gigproof.test · password Gigproof!2026 · seed = scripts/seed.mjs · login www.lock.show/app/login. NEVER put in shareable artifacts.
 
+## 📌 17 JUL EVENING — GOVERNANCE COMPLETE, WAVES RUNNING
+- Owner rulings: real payment provider = POST-development (pilot = manual Bit path, T-44) · autonomy granted under rules 8-13 (report-after-verify · doc links · breakdown · permanence boundary · named-train site law · token economy) · 10 teams w/ territories · anti-drift cadence + checklist (proof-of-autonomy).
+- Docs created 17 Jul: TASK-REGISTER (45 tasks) · OWNER-PENDING · SITE-MANAGEMENT (site version log; approved site RESTORED after unapproved-redesign cargo regression) · LESSONS (7 entries) · INDEX.md (docs-index control) · adr/ADR-0001 (canonical origin, pending M-14) · qa/WITNESS-CHECKLISTS.
+- Waves: W1 shipped (tap targets · passport rows · banner) · W2 shipped (single-CTA · viewport-fit Radar · Hebrew 185/185 · self-hosted fonts) · W3 RUNNING (login fixes · viewport p2 · ARCHITECTURE.md · event registry · email path FLAG-OFF · site hygiene in-code) · S0 site audit done (owner instincts validated: 3 H2 systems, no single grid, lime overuse, images missing; /artists+/bookers = gold standard).
+- Cowork PM audits verified: canon=29 CONFIRMED live · app headers deployed-live · spec copies identical · E#1 pay-path catch → T-44.
+
 ## 🤖 AUTONOMOUS MODE AUTHORIZED (17 Jul evening — owner: "build professional processes so you can run autonomous")
 - The AUTONOMOUS OPERATING LOOP is law, written in TASK-REGISTER.md: PICK→DECOMPOSE→SPEC-ADJACENT→BUILD(cheap agents)→TEST L0-L8→SHIP→CLOSE→REPORT→LOOP. Test ladder L0 static gates · L1 unit · L2 screen(390+1360) · L3 flow · L4 spec-conformance · L5 adversarial Team-D (rule 8, max 2 returns) · L6 wave regression · L7 live smoke · L8 owner witness.
 - Standing reply rules: rule 8 report-after-verification · rule 9 doc LINKS every reply (GitHub work-branch URLs) · rule 10 micro-breakdown maintained · OWNER-PENDING.md appended to every reply.

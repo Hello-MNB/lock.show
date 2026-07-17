@@ -1,0 +1,176 @@
+[
+  {
+    "name": "account_deleted",
+    "constant": "ACCOUNT_DELETED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "act_created",
+    "constant": "ACT_CREATED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "act_switched",
+    "constant": "ACT_SWITCHED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "availability_request_created",
+    "constant": "REQUEST_SENT",
+    "gateRelevant": true,
+    "surface": "app"
+  },
+  {
+    "name": "availability_request_responded",
+    "constant": "REQUEST_RESPONDED",
+    "gateRelevant": true,
+    "surface": "app"
+  },
+  {
+    "name": "claim_confirmed",
+    "constant": "CLAIM_CONFIRMED",
+    "gateRelevant": false,
+    "surface": "both"
+  },
+  {
+    "name": "claim_published",
+    "constant": "CLAIM_PUBLISHED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "consent_granted",
+    "constant": "CONSENT_ACCEPTED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "consent_withdrawn",
+    "constant": "CONSENT_WITHDRAWN",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "entitlement_activated",
+    "constant": "ENTITLEMENT_ACTIVATED",
+    "gateRelevant": true,
+    "surface": "app"
+  },
+  {
+    "name": "evidence_added",
+    "constant": "EVIDENCE_UPLOADED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "gig_evidence_refresh_completed",
+    "constant": "EVIDENCE_PROCESSED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "login",
+    "constant": "LOGIN",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "oauth_login",
+    "constant": "OAUTH_LOGIN",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "onboarding_completed",
+    "constant": "ONBOARDING_COMPLETE",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "onboarding_started",
+    "constant": "ONBOARDING_STARTED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "passport_published",
+    "constant": "PASSPORT_PUBLISHED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "passport_unpublished",
+    "constant": "PASSPORT_UNPUBLISHED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "passport_view",
+    "constant": "PASSPORT_VIEWED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "payment_reference_created",
+    "constant": "PAYMENT_REF_CREATED",
+    "gateRelevant": true,
+    "surface": "app"
+  },
+  {
+    "name": "producer_confirmation_received",
+    "constant": "PRODUCER_CONFIRMATION_RECEIVED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "producer_confirmation_sent",
+    "constant": "PRODUCER_CONFIRMATION_SENT",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "professional_reaction_submitted",
+    "constant": "PROFESSIONAL_REACTION",
+    "gateRelevant": true,
+    "surface": "both"
+  },
+  {
+    "name": "radar_opened",
+    "constant": "RADAR_OPENED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "share_link_created",
+    "constant": "SHARE_LINK_CREATED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "share_link_opened",
+    "constant": "SHARE_LINK_OPENED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "signup_completed",
+    "constant": "SIGNUP",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "signup_started",
+    "constant": "SIGNUP_STARTED",
+    "gateRelevant": false,
+    "surface": "app"
+  },
+  {
+    "name": "workspace_switched",
+    "constant": "WORKSPACE_SWITCHED",
+    "gateRelevant": false,
+    "surface": "app"
+  }
+]
