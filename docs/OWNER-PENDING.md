@@ -7,7 +7,7 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 
 | # | What | What you do (plain steps) | Unblocks |
 |---|---|---|---|
-| M-2 | **Resend email account** | resend.com → sign up (free) → API Keys → Create → put the key in Vercel (I'll give the exact clicks; never paste it in chat) | Gate email to artists (T-10) |
+| M-2 | **Resend — 2 final clicks** | Key received ✓ (send-only — good). Now: (a) my safety system needs YOUR word for the 2 remaining actions — reply **"send the test email"** (one email to your own inbox proving it works) and **"store the key in Vercel"** (so production can send); or do (b) yourself: Vercel → lock-app → Settings → Environment Variables → Add `RESEND_API_KEY` (Sensitive). ⚠️ The key was pasted in chat — after it's stored, rotate it in Resend (Revoke → new key → update Vercel). | Gate email (T-10/T-25) |
 | M-3 | **Re-test the live fixes** | Refresh any app page · open your Passport link fresh · check "Sign in" in the site header · confirm the home screen no longer hangs (after next deploy) | Upgrades T-16 to owner-witnessed; closes your 4 findings |
 | M-4 | **Counsel sign-off L-1…L-9** | Send `docs/legal/` drafts to your lawyer; return their fixes | Legal launch gate (T-24) |
 

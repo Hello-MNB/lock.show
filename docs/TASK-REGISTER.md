@@ -204,6 +204,19 @@ All 8 applicable ✅. 17 Jul 2026, **live on production** (merges `b49d568`, `5e
 
 ---
 
+## TEAM B QA SWEEP — findings folded (17 Jul, 5 screens · 5 agents · all reported)
+
+**Caveat:** agents ran the DEMO build, so "login" tested the demo role-picker, not the real credential form — T-01's real-form QA is still owed on the real build. Cross-cutting findings below apply everywhere.
+
+| # | New task | Spec | What Team B found | State |
+|---|---|---|---|---|
+| T-31 | **Mobile tap-target sweep** (the #1 systemic finding — on EVERY screen) | §10.2 · §5.7 (44px) | Act-editor EDIT buttons **30×17px** (⅓ of minimum!) · role-picker 42px · Radar filter chips 29px · bell 36px · zoom 28px · cookie buttons 36-38px · language toggle 26px. Fix belongs in the shared UI primitives so it lands everywhere at once. | ❌ → Team A next |
+| T-32 | **Self-hosted fonts + assets** | §5.7 · §13.5 | App loads fonts from Google's servers + a demo photo from Unsplash at runtime → console errors + wrong typography on any restricted network. Bundle the 3 fonts + local images. | ❌ → Team C |
+| T-33 | **Public-Passport mobile evidence rows** (wedge-critical) | §8.7 | At 390px all 14 evidence rows truncate: **date and venue fully clipped** — a buyer on a phone cannot see when or where any show happened. | ❌ → Team A, high priority |
+
+Attached to existing tasks: cookie banner steals the primary-CTA style + covers content/form fields on every screen at 390px → **T-21** (its evidence). Radar label collisions ("INSTAGRAM.CO" clip, "CENTRAL IN YOUR GENRE" overlapping the LIVE SHOW node) → **T-03/T-04** (their evidence). Login-screen notes → **T-01**.
+
+
 ## Register maintenance log
 - 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
-- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Next number: **T-31**.
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). T-15 applied+verified live (owner "apply it", 17 Jul) → moved to DONE. Team B QA sweep folded → T-31/T-32/T-33 opened. Next number: **T-34**.
