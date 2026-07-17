@@ -118,3 +118,18 @@ export function methodLabelFor({ method_label, verification_status, expires_at }
     default: return METHOD_LABELS.ARTIST_DECLARED
   }
 }
+
+// ── Canon genre/scene vocabulary (§8.2 scene lens · §2.7 guidance-never-grading) ──
+// ONE list feeds BOTH the Act-editor genre picker AND the Radar scene rail, so
+// the two can never drift apart (owner directive 17 Jul: "genres dropdown =
+// the Radar filter — correlated"). Stored on artists.genre as comma-joined EN
+// labels (the existing text column — no migration). The labels are chosen to
+// work with genreWeights.familyFor's bounded genre-text heuristic (e.g.
+// Psytrance/Trance → the festival family) so a scene pick re-weights the ★
+// emphasis through the SAME ratified engine — never a new scoring path.
+export const GENRES = [
+  'Melodic techno', 'Techno', 'House', 'Afro house', 'Deep house',
+  'Progressive', 'Psytrance', 'Trance', 'Mainstage EDM', 'Hip-Hop / R&B',
+  'Funk / Disco', 'Live electronic',
+]
+export const MAX_ACT_GENRES = 3

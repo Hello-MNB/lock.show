@@ -223,7 +223,25 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // FULL-OPACITY and fully interactive (DEPLOY-GAPS testability rule — no
   // dimming, no reordering). No genre/format signal → empty set → all equal.
   // FIREWALL: never a weight, number, rank or % — a ring + words, nothing else.
-  const genrePrimary = useMemo(() => new Set(primaryPlanets(effAct, effArtist)), [effAct, effArtist])
+  // ── Scene rail (§8.2 top-center · owner directive 17 Jul): the artist's OWN
+  // canon genres (Act-editor picker — same constants.GENRES vocabulary) become
+  // a "Your standing in" control. Picking a scene re-weights the ★ emphasis by
+  // feeding THAT genre alone through the ratified genreWeights engine — a
+  // reading lens on the same evidence, never a data change, never a grade.
+  const scenes = useMemo(
+    () => String(effArtist?.genre || '').split(',').map((s) => s.trim()).filter(Boolean),
+    [effArtist],
+  )
+  const [scene, setScene] = useState(null) // null = All (the full genre string)
+  const sceneAct = useMemo(
+    () => (scene ? { ...effAct, genre: scene } : effAct),
+    [scene, effAct],
+  )
+  const sceneArtist = useMemo(
+    () => (scene ? { ...effArtist, genre: scene } : effArtist),
+    [scene, effArtist],
+  )
+  const genrePrimary = useMemo(() => new Set(primaryPlanets(sceneAct, sceneArtist)), [sceneAct, sceneArtist])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
@@ -347,6 +365,24 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"
         style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.12), transparent 70%)' }} />
+
+      {/* Scene rail (§8.2 top-center) — shown only when the artist declared
+          genres; picking one re-weights the ★ through genreWeights (additive
+          emphasis only — never dims, never grades). */}
+      {scenes.length > 0 && (
+        <div className="relative z-10 mb-2 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:end-8 md:top-8 md:mb-0 md:pb-0"
+          role="tablist" aria-label={S.sceneLabel}>
+          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-faint">{S.sceneLabel}</span>
+          {[null, ...scenes].map((g) => (
+            <button key={g || 'all'} role="tab" aria-selected={scene === g} onClick={() => setScene(g)}
+              className={`shrink-0 rounded-full border px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
+                scene === g ? 'border-gold/60 bg-gold/10 text-gold' : 'border-transparent bg-surface2 text-muted hover:bg-raise'
+              }`}>
+              {g || S.sceneAll}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ONE control row: state lenses + worlds dropdown. Full-stage (md+): floats
           top-start over the universe, like the prototype's .rfilters strip. */}

@@ -648,6 +648,8 @@ export const T = {
       photo_url: 'קישור לתמונה',
       photo_urlHint: 'קישור ישיר לתמונה של האקט.',
     },
+    genrePickHint: 'בחר עד 3 — הראשון הוא הסצנה הראשית שלך. אלה הופכים למסנן הסצנות בראדאר.',
+    genreMax: 'עד שלוש סצנות — הסר אחת כדי להחליף.',
   },
   errors: {
     notFound: 'הדף לא נמצא.',
@@ -885,6 +887,8 @@ export const T = {
       // G2 genre-primary planet label — method-safe wording only (firewall:
       // never a weight, number, rank or %). Also read to screen readers.
       genrePrimary: "מרכזי בז'אנר שלך",
+      sceneLabel: 'המעמד שלך בסצנה',
+      sceneAll: 'הכל',
       // Named receipts + batch confirm — the confirm moment names WHAT and WHERE.
       destPassport: 'תצוגת הפספורט שלך',
       destPrivate: 'הרשומה הפרטית שלך',

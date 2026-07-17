@@ -27,6 +27,24 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ## NOW — the one task in progress
 
+### T-18 · Endless-skeleton hang fix + ship (with T-17) — §10.6 (no dead-ends) · §13.4.4
+Owner hit 17 Jul: `/artist/home` stuck on skeleton bars ("the screen disappears all the time").
+| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
+|---|---|---|---|---|---|---|---|
+| ✅ | — | ⚠️ | — | — | ✅ | — | ✅ |
+- **CODE ✅** — two layers: every data request now aborts at 15s (global), and the home screen has a 20s watchdog → both land on the existing error-retry screen. A skeleton can no longer be a dead-end. Honest note: the root hang can't be reproduced in my sandbox (live-DB browser access is blocked here) — the fix guarantees *recovery*, and **Maria confirms live** after deploy (OWNER-PENDING M-3).
+
+### T-17 · Genre personalization: canon chips ↔ Radar scene rail — §8.2 (scene lens) · §8.6 · §2.7
+Owner directive 17 Jul: "genres = dropdown = the Radar filter — correlated, personalized."
+| CODE | MOBILE | DESKTOP | LEXICON | INTERACT | NAV | A11Y | FIREWALL |
+|---|---|---|---|---|---|---|---|
+| ✅ | ⚠️ | ⚠️ | ✅ | ⚠️ | ✅ | ⚠️ | ✅ |
+- **CODE ✅** — ONE canon vocabulary (`constants.GENRES`, 12 scenes) feeds BOTH the Act-editor chip picker (max 3, first = primary, legacy free-text preserved as a chip, EN+HE strings) AND a new "Your standing in" scene rail on the Radar that re-weights the gold ★ through the already-ratified `genreWeights` engine — additive emphasis only, never a grade (§2.7). Playwright-proven in demo. MOBILE/DESKTOP witness → Maria after deploy.
+
+---
+
+## NEXT-UP QUEUE HEAD (returns to NOW after the ship)
+
 ### T-01 · Login — §8.13 (shared screens) · §13.4.4 (auth engine) · §17.B.1
 The front door: email+password, Google, forgot/reset, signup hand-off.
 
@@ -128,7 +146,47 @@ ONE computed next action with its "why" line (priority ladder per spec); scene �
 | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ✅ |
 - **CODE ⚠️** — operator export + basic admin exist; the Gate tiles (funnel counts — product-event numbers, allowed) are backlog. Gate metrics must read `is_demo=false` **after** T-15 applies. **Blocker:** T-15 (for clean numbers). **Who:** Claude.
 
-**Everything after T-11 is post-Gate and is deliberately NOT queued (owner directive).**
+**Everything after T-11 in the SCREEN queue is post-Gate and is deliberately NOT queued (owner directive).**
+
+---
+
+## LAUNCH A-Z — the non-screen tasks a FULL launch also needs (owner asked 17 Jul: "does the register cover A-Z?" — with this section, yes)
+
+These are pre-Gate necessities that are not screens. Screen-style MOBILE/DESKTOP marks apply only where noted.
+
+| # | Task | Spec | State | Blocker → who |
+|---|---|---|---|---|
+| T-19 | Hebrew pass: Radar-kit HE block (missing entirely — falls back to EN) + full app HE sweep | §15.3 · §15.4 | ❌ | none → Claude (Team C) |
+| T-20 | Accessibility sweep, app + site (contrast, keyboard, SR, reduced-motion) | §10.5 · §10.7 · §15.1 | ⚠️ partial | none → Claude (Team C), then Maria witnesses |
+| T-21 | Utility screens remainder: consent-banner equal-weight · offline banner · notifications page | §17.B | ⚠️ partial (404 ✅) | none → Claude (Team C) |
+| T-22 | Deletion / data-purge job (self-serve export exists; purge is owed) | §15.1.4 | ❌ | none → Claude (Team C) |
+| T-23 | GA4 dual-emit + Gate funnel instrumentation complete | §14.3 | ⚠️ partial | none → Claude (Team C) |
+| T-24 | Legal gate: counsel L-1…L-9, placeholders filled | §15.1 · §15.2 | ⛔ | **Maria M-4** (lawyer) |
+| T-25 | Gate email build (guarded send path, §14.6.5 bodies exist) | §14.6.5 | ⛔ | **Maria M-2** (Resend key) |
+| T-26 | Bot protection (Turnstile/hCaptcha on public forms) + durable rate limits | §13.5.6 | ❌ | none → Claude (Team C) |
+| T-27 | Rollback rehearsal + deploy-train QA on a frozen SHA | §19.6 · §21.7 | ❌ | none → Claude (Team D) |
+| T-28 | Q8 owner walk on the frozen SHA (the launch acceptance walk) | §21.7 | ⛔ | **Maria** (after T-27) |
+| T-29 | Concierge first-10 outreach kit (materials by Claude; outreach by Maria) | §16.B.11 | ❌ | shared |
+| T-30 | `is_demo=false` server filter on Gate metrics (ships only AFTER 037 applies) | §14.3.2 | ⛔ | **Maria M-1** (apply 037) |
+
+**Post-Gate (NOT queued, per directive):** monetization ON/prices · growth loops · international · platformization (§16.B.12-16, §19).
+
+---
+
+## TEAMS — the build machine (owner directive 17 Jul: "several teams, minimal budget per agent, including testing and fixing")
+
+Multi-agent teams run as orchestrated workflows. Budget discipline: default model, LOW reasoning effort for mechanical sweeps, higher effort ONLY for adversarial verification; ~1 agent per screen/task; every team's output passes the verify gate + firewall inspectors before merge.
+
+| Team | Mandate | Tasks fed | Shape (agents · effort) |
+|---|---|---|---|
+| **A · Screens** | Gap-diff each screen vs its spec DoD, then close gaps | T-02…T-07 | 1 gap-diff + 1 fixer per screen · low/medium |
+| **B · QA** | Run the §10.2/§10.3/LEXICON/INTERACT/NAV/A11Y passes per screen; produce Maria's one-page witness checklists + screenshots (390px + 1360px) | T-01, T-02, T-08, T-09 first | 1 QA agent per screen · low |
+| **C · Launch-ops** | The non-screen A-Z: HE pass, a11y, utility screens, purge, GA4, bots | T-19…T-23, T-26 | 1 agent per task · low/medium |
+| **D · Critic** | Adversarial verify of every A/B/C output: firewall, design law, reproduce-before-claiming | all | 1 verifier per batch · high |
+
+Rule: teams never touch `main` — everything lands on the work branch, verify-green, and ships only through the owner-authorized main pipeline.
+
+**Status: Team B launched 17 Jul (first QA sweep running).**
 
 ---
 
@@ -149,4 +207,5 @@ All 8 applicable ✅. 17 Jul 2026, **live on production** (merges `b49d568`, `5e
 ---
 
 ## Register maintenance log
-- 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers). Next number: **T-17**.
+- 2026-07-17 · Register created from real state; T-01…T-16 assigned (T-01…T-11 = owner's build order; T-12…T-16 = pre-register work needing permanent numbers).
+- 2026-07-17 (later) · Owner: "does this cover A-Z for full launch?" → LAUNCH A-Z section added (T-19…T-30). Owner: "set up teams" → TEAMS section; Team B launched. T-17 (genre↔scene correlation) + T-18 (skeleton-hang fix) built, verify-green, in NOW awaiting ship. `docs/OWNER-PENDING.md` created — appears at the end of every reply (standing directive). Next number: **T-31**.

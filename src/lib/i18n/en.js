@@ -665,6 +665,8 @@ export const T = {
       photo_url: 'Photo link',
       photo_urlHint: 'A direct link to a photo of the Act.',
     },
+    genrePickHint: 'Pick up to 3 — the first is your primary scene. These become the scene filter on your Radar.',
+    genreMax: 'Three scenes max — remove one to switch.',
   },
   errors: {
     notFound: 'Page not found.',
@@ -967,6 +969,8 @@ export const T = {
       // G2 genre-primary planet label — method-safe wording only (firewall:
       // never a weight, number, rank or %). Also read to screen readers.
       genrePrimary: 'Central in your genre',
+      sceneLabel: 'Your standing in',
+      sceneAll: 'All',
       filters: { needsYou: 'Needs you', found: '✦ Found', missing: '+ Missing', confirmed: '✓ Confirmed', all: 'All', ready: 'Ready' },
       allWorlds: 'All worlds',
       worldsHint: 'Your content worlds — tap to see that world only',

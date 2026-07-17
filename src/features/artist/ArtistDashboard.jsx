@@ -165,7 +165,19 @@ export default function ArtistDashboard() {
       setLoading(false)
     }
   }
-  useEffect(() => { load() }, [user.id])
+  // Watchdog (owner hit 17 Jul): if load() neither finishes nor fails within
+  // 20s (a hang before any fetch even starts — e.g. a stalled auth lock in a
+  // many-tab browser), stop the skeleton and show the error-retry state. The
+  // 15s per-request abort in supabase.js covers in-flight hangs; this covers
+  // the rest. A skeleton must never be a dead-end (§10.6).
+  useEffect(() => {
+    let done = false
+    const watchdog = setTimeout(() => {
+      if (!done) { setLoadError(true); setLoading(false) }
+    }, 20_000)
+    load().finally(() => { done = true; clearTimeout(watchdog) })
+    return () => clearTimeout(watchdog)
+  }, [user.id])
   useEffect(() => () => clearTimeout(copiedTimer.current), [])
 
   // G7 — the artist's SHARE action (the ladder's share step, DEPLOY-GAPS G7).

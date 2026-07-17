@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { getMyArtist, upsertArtist } from '../../lib/db.js'
 import { PageShell, Field, ErrorNote, Spinner } from '../../components/ui.jsx'
+import { GENRES, MAX_ACT_GENRES } from '../../lib/constants.js'
 
 // ── Act-Identity Editor (spec §8.6 / §17.A.10) — resolves D1: the artist's
 // identity (stage_name / one_line / genre / city / photo) was set once at
@@ -17,10 +18,55 @@ import { PageShell, Field, ErrorNote, Spinner } from '../../components/ui.jsx'
 const FIELDS = [
   { key: 'stage_name', max: 80 },
   { key: 'one_line', max: 120 },
-  { key: 'genre', max: 60 },
+  { key: 'genre', max: 60, type: 'genres' },
   { key: 'city', max: 60 },
   { key: 'photo_url', max: 400, type: 'url' },
 ]
+
+// ── Genre chip picker (owner directive 17 Jul: dropdown, not free text, and the
+// SAME vocabulary as the Radar scene rail — constants.GENRES feeds both).
+// Stored comma-joined on artists.genre (existing text column). Up to
+// MAX_ACT_GENRES picks, first pick = the primary scene. A legacy free-text
+// value that isn't in the canon list is preserved as its own removable chip —
+// never silently discarded.
+function GenrePicker({ value, onChange, T }) {
+  const f = T.actEditor
+  const chosen = value ? value.split(',').map((s) => s.trim()).filter(Boolean) : []
+  const isOn = (g) => chosen.some((c) => c.toLowerCase() === g.toLowerCase())
+  const custom = chosen.filter((c) => !GENRES.some((g) => g.toLowerCase() === c.toLowerCase()))
+  function toggle(g) {
+    const next = isOn(g)
+      ? chosen.filter((c) => c.toLowerCase() !== g.toLowerCase())
+      : chosen.length < MAX_ACT_GENRES ? [...chosen, g] : chosen
+    onChange(next.join(', '))
+  }
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2" role="group" aria-label={f.fields.genre}>
+        {GENRES.map((g) => (
+          <button key={g} type="button" onClick={() => toggle(g)} aria-pressed={isOn(g)}
+            disabled={!isOn(g) && chosen.length >= MAX_ACT_GENRES}
+            className={`min-h-[44px] rounded-full border px-4 font-mono text-[11px] transition-colors ${
+              isOn(g)
+                ? 'border-accent/60 bg-accent/12 font-bold text-accent'
+                : 'border-line2 bg-surface2 text-ink/85 hover:bg-raise disabled:opacity-40'
+            }`}>
+            {isOn(g) && '✓ '}{g}
+          </button>
+        ))}
+        {custom.map((c) => (
+          <button key={c} type="button" onClick={() => toggle(c)} aria-pressed
+            className="min-h-[44px] rounded-full border border-gold/50 bg-gold/10 px-4 font-mono text-[11px] font-bold text-gold">
+            ✓ {c}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-[11px] text-muted">
+        {chosen.length >= MAX_ACT_GENRES ? f.genreMax : f.genrePickHint}
+      </p>
+    </div>
+  )
+}
 
 function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
   const f = T.actEditor
@@ -78,16 +124,20 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
           {mode === 'editing' && (
             <div className="mt-2">
               <Field hint={hint}>
-                <input
-                  ref={inputRef}
-                  type={type}
-                  maxLength={max}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') cancel() }}
-                  dir={type === 'url' ? 'ltr' : undefined}
-                  className="field w-full"
-                />
+                {type === 'genres' ? (
+                  <GenrePicker value={draft} onChange={setDraft} T={T} />
+                ) : (
+                  <input
+                    ref={inputRef}
+                    type={type}
+                    maxLength={max}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') cancel() }}
+                    dir={type === 'url' ? 'ltr' : undefined}
+                    className="field w-full"
+                  />
+                )}
               </Field>
               <div className="mt-2 flex gap-2">
                 <button type="button" className="btn-primary" onClick={() => commit()}>{f.save}</button>
