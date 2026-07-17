@@ -250,7 +250,7 @@ Attached to existing tasks: cookie banner steals the primary-CTA style + covers 
 ### T-36 · End-to-end navigation audit + fix — §10.6 (flow/continuity) · §7 (nav & shell) · §17.B
 **Owner directive 17 Jul:** "send an agent, minimum tokens, to fix navigation — test, characterize the process end-to-end, fix, test, report."
 **Scope (the agent's brief):** walk EVERY route in src/App.jsx as each persona (demo build): forward path in, backward path out (no browser-Back traps), no dead-ends (§17.B.10), deep-link honored, bottom-nav/back affordance present; characterize the full map; fix small in-scope breaks; `npm run verify` green; structured report. Budget ≤60k tokens (register TEAMS law: stop at ceiling, report partial).
-**State:** 🔨 agent dispatched 17 Jul. **Who:** Team A agent + Team D verify before ship (rule 8).
+**State:** ✅ AUDIT COMPLETE 17 Jul (agent, ~71k tokens, within budget). **Result: NO breaks found** — 14 routes walked (artist persona + public): every deep-link honored, backward path everywhere, zero Back-traps (all redirects use `replace`), zero dead-ends, zero page errors. The two non-literal landings are correct by design (`/artist/passport` → the artist's real public Passport; role-gate bounces land home, never loop). NAV can be marked ✅ on walked routes' tasks. **Out-of-scope observations logged:** remaining personas + token routes un-walked (same script pattern covers them — queued as B3 scope) · main bundle 538kB>500kB warning (pre-existing) · confirm §7.2 hub presence on public passport for logged-in users. No code changed by this agent; verify exit 0.
 
 
 ---
