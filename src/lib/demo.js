@@ -33,7 +33,7 @@ export const demoArtist = {
   get genre() { return L('Underground Techno', 'טכנו אנדרגראונד') },
   get city() { return L('Tel Aviv', 'תל אביב') },
   get one_line() { return L('Underground techno built for long-form journeys — extended and five-hour sets, midnight to sunrise', 'טכנו אנדרגראונד של מסעות ארוכים — סטים מורחבים של עד חמש שעות, מחצות עד הזריחה') },
-  photo_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80',
+  photo_url: '/assets/demo-artist-techno.jpg',
   get regions() { return L('Tel Aviv · Center', 'תל אביב · מרכז') },
   get set_length() { return L('Extended — up to 5 hours', 'מורחב — עד 5 שעות') },
   // Legal/invoicing structure not documented (real gap) — null, never a fake "yes".
@@ -211,7 +211,7 @@ export const demoActs = [
     get genre() { return L('Underground Techno', 'טכנו אנדרגראונד') },
     get city() { return L('Tel Aviv', 'תל אביב') },
     get positioning() { return L('Underground techno · resident @ INSOMNIA TLV', 'טכנו אנדרגראונד · תושב קבע ב-INSOMNIA TLV') },
-    photo_url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80',
+    photo_url: '/assets/demo-artist-techno.jpg',
   },
   {
     id: DEMO_ACT_PSY_ID, person_id: 'demo-user', is_default: false,
@@ -219,7 +219,7 @@ export const demoActs = [
     get genre() { return L('Psytrance', 'פסיטראנס') },
     get city() { return L('Tel Aviv', 'תל אביב') },
     get positioning() { return L('A newer side-project — forest-floor sets, just getting started', 'פרויקט צדדי חדש — סטים ביער, רק בהתחלה') },
-    photo_url: 'https://images.unsplash.com/photo-1518972734183-1e4f5b6b0b1b?w=800&q=80',
+    photo_url: '/assets/gigproof-persona-artist-v1.webp',
   },
 ]
 
