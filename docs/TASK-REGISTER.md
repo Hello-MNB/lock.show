@@ -31,7 +31,11 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — Wave 2 (dispatched 17 Jul, evening)
+## NOW — S0 site-audit wave (5 read-only agents) · Wave 3 staged
+
+_Wave 2 SHIPPED 17 Jul (4/4 Team-D SHIP, live-smoked: fonts self-hosted confirmed live — zero Google Fonts requests). The table below is kept as the shipped record:_
+
+### Shipped Wave 2 record
 
 Four builds in disjoint territories + Team D verification each + Team E wave-close ship:
 
@@ -289,7 +293,16 @@ The register is the ONLY work source. The loop runs continuously; the owner is i
 6. **SHIP** — wave-close: verify green → embed/site rebuild → owner-authorized main merge → deploy watch → L7 smoke.
 7. **CLOSE** — register status flips in the SAME commit as the ship; findings discovered en route are ROUTED (new µ-task with team + wave), never dropped.
 8. **REPORT** — one verified wave report to the owner (rule 8: post-verification only), with doc links (rule 9) + OWNER-PENDING refresh.
-9. **LOOP** — return to 1. Anti-drift audit (register-vs-reality) runs every 3 waves or on any owner challenge.
+9. **LOOP** — return to 1.
+
+**SPEC-RETURN & ANTI-DRIFT CADENCE (owner directive 17 Jul — "prove the autonomy is justified"):**
+- **Every µ-task:** the builder reads its cited spec sections BEFORE code (loop step 3) + guardrails pass.
+- **Every wave close:** full 10-inspector gate · rule-12 cargo check on the merge diff · register statuses synced in the ship commit.
+- **Every 3 waves, ANY owner challenge, or ANY regression:** the full ANTI-DRIFT CHECKLIST below, reported to the owner as a checklist with evidence.
+- **Every 10 waves:** deep pass — re-read changed spec sections end-to-end · architecture review (territories, file ownership, dependency direction) · SESSION-MEMORY refresh.
+
+**THE ANTI-DRIFT CHECKLIST (the autonomy proof, run + reported):**
+□ 10-inspector gate green · □ canon-drift in-sync (app==DB) · □ zero unnumbered work in commits · □ working tree committed+pushed · □ register NOW/BLOCKED = reality · □ every shipped µ-task carries a Team-D verdict · □ rule-12 cargo check ran on last merge · □ rule-11 boundary attestation (no real-data/email/money/live-DB actions without owner word) · □ docs synced (MEMORY · OWNER-PENDING · SITE-MANAGEMENT) · □ open debts listed honestly.
 
 **Cheap-agent allocation law:** builder low/medium ≤40–90k by µ-task class (measured baselines: QA 41k · audit 71k · build 50–80k) · verifier high ≤70k · wave overhead (E) ≤40k. Wave ceiling ≈ 500k. Hardware note: this 4-core box executes 2–3 agents concurrently; waves of 4–6 µ-tasks keep the pipeline full.
 
