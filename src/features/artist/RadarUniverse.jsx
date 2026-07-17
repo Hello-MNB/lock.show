@@ -377,7 +377,11 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   }
 
   return (
-    <div className="relative mb-5 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:mb-0 md:flex md:min-h-[min(82vh,780px)] md:flex-col md:justify-center md:p-8">
+    // Viewport law (T-35/§10.2): inside the dashboard's fixed-height column this
+    // panel FLEXES to the remaining height on md+ (min-h-0 + flex-1 instead of a
+    // fixed min-h) — the universe square below derives its size from this height,
+    // so the whole radar scales to fit rather than pushing the page past the fold.
+    <div className="relative shrink-0 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:flex md:min-h-0 md:flex-1 md:flex-col md:justify-center md:p-8">
       {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels).
           Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"
@@ -441,7 +445,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         /* ── THE UNIVERSE — always mounted, never reflows. Full-stage (md+):
               the same square grows to fill the taller canvas — orbit math is
               percentage-based so every node scales with it for free. ── */
-        <div className="relative mx-auto aspect-square max-w-[400px] md:w-[620px] md:max-w-[620px]">
+        /* md+: HEIGHT-driven square (h-full + aspect-square ⇒ width follows the
+              flexed panel height, capped at the original 620px) — orbit math is
+              percentage-based so every node scales with it for free. */
+        <div className="relative mx-auto aspect-square w-full max-w-[400px] md:h-full md:max-h-[620px] md:w-auto md:max-w-[620px]">
           {/* thin orbit rings — the quiet geometry of the night. A third,
               outermost hairline (md+) carries the platform ring below. */}
           <div className="absolute inset-[9%] rounded-full border border-line" aria-hidden />
