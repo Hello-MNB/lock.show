@@ -96,7 +96,7 @@ export default function OfferPayment() {
           <span aria-hidden className="relative mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-line2 text-xl text-ink/80">✓</span>
           <h1 className="font-display relative mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{O.pendingTitle}</h1>
           {paidOn && (
-            <p className="relative mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">Payment confirmation received · {paidOn}</p>
+            <p className="relative mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-muted">{O.receivedOn} · {paidOn}</p>
           )}
           {ent?.amount_note && (
             <p dir="ltr" className="relative mb-2 font-mono text-sm font-bold text-ink">{ent.amount_note}</p>
@@ -120,7 +120,7 @@ export default function OfferPayment() {
             <div className="mb-3 flex items-center gap-2">
               <span dir="ltr" className="font-mono text-lg font-bold text-ink">{BIT_NUMBER}</span>
               <button type="button" onClick={copyBit} className="btn-ghost shrink-0 px-3 py-1.5 text-xs">
-                {copied ? 'Copied ✓' : O.copyBit}
+                {copied ? O.copiedBit : O.copyBit}
               </button>
             </div>
 
