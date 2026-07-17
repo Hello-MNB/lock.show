@@ -32,7 +32,11 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — S0 site-audit wave (5 read-only agents) · Wave 3 staged
+## NOW — Wave 4 staging (T-44 pay-path head) · Wave 3 SHIPPED
+
+**Wave 3 record (17 Jul, 725k, 6/6 SHIP):** T-01 login fixes `merged` (9 humane error keys EN+HE, 7 states) · T-35 p2 `merged` (/settings −1521px, /act/edit fit) · **T-38 ARCHITECTURE.md ✅ EXISTS** · **T-40 event registry ✅ generated-from-code + wired into verify** · T-25 email path built DARK (`EMAIL_ENABLED` unset; from-address at wiring = spec §14.6.5 `notifications@lock.show`) · T-41+hygiene built `in-code`, **HELD on main per rule 12 → one word (M-15) ships it**. Verifier security note → M-12 reinforced: rotate the key BEFORE any flag flip.
+
+### Prior: S0 site-audit wave (5 read-only agents)
 
 _Wave 2 SHIPPED 17 Jul (4/4 Team-D SHIP, live-smoked: fonts self-hosted confirmed live — zero Google Fonts requests). The table below is kept as the shipped record:_
 
