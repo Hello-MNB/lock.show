@@ -59,7 +59,16 @@ Four builds in disjoint territories + Team D verification each + Team E wave-clo
 
 ## LIVE IN PRODUCTION — awaiting only the owner's eyes (M-3/M-5)
 
-**T-17** genre chips ↔ Radar scene rail · **T-18** hang fix (15s abort + 20s watchdog) · **T-34** share/deep-link repair · **T-31** 44px tap targets · **T-33** passport mobile rows · **T-21-part** consent banner. All Team-D-verified + live-smoked; the owner's witness upgrades them toward DONE (rule 4).
+| # | Task | State | Evidence |
+|---|---|---|---|
+| T-17 | Genre chips ↔ Radar scene rail (§8.2/§8.6) | deployed-live | owner's own screenshot 17 Jul + demo Playwright |
+| T-18 | Skeleton-hang fix (§10.6/§13.4.4) | deployed-live | owner's screenshot shows Radar rendering; live probe 200 |
+| T-34 | Share/deep-link repair (§7.6) | deployed-live | Team D SHIP + live URL probes |
+| T-31 | 44px tap targets (§10.2/§5.7) | deployed-live | Team D SHIP (21/22 sampled) |
+| T-33 | Passport mobile rows (§8.7) | deployed-live | Team D SHIP (14/14 rows assert) |
+| T-21p | Consent banner equal-weight+docked (§15.2) | deployed-live | Team D SHIP |
+
+All await the owner's witness (rule 4) to progress toward DONE.
 
 ## QUEUE HEAD
 
