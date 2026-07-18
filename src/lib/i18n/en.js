@@ -539,7 +539,7 @@ export const T = {
     showMore: 'Show more',
     // W4-1 — Gate tiles (§1.6 · §14.4): whole-funnel product-event counts.
     gateTitle: 'Gate — product events',
-    gateNote: 'Whole-funnel product-event counts for the validation gate — never about a single person. A payment reference is intent only; a payment counts only once the operator activates it. Seed/test accounts are not yet excluded.',
+    gateNote: 'Whole-funnel product-event counts for the validation gate — never about a single person. A payment reference is intent only; a payment counts only once the operator activates it. Seed and test-account activity is excluded from these counts.',
     gateViews: 'Passport views',
     gateReactions: 'Professional reactions',
     gateRequests: 'Availability requests',

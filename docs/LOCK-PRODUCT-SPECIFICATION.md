@@ -23,7 +23,7 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-rev
 - **9. AI / Scan Intelligence** — built vs target; discovery step; locale-awareness; provider fallback
 - **10. QA / Acceptance** — mobile-first, desktop, per-field DoD, contrast, firewall scan
 - **11. Current State & Living References**
-- **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–036); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
+- **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–037); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
 - **14. Measurement, Payments & Notifications** — the 29-event analytics canon; measurement architecture; demo/test exclusion; the Gate measurement; free-pilot payments; transactional-email catalog
 - **15. Legal, Consent & Localization** — legal docs & status; Amendment-13/GDPR consent framework; Consent Mode v2; `consent_records`; localization architecture + RTL rules; the delivered Hebrew string set; legal placeholders (L-1…L-9) + HE ratification list (H-1…H-7)
 - **16. Taxonomy & Business** — taxonomies (EN·HE); goals; the Gate; business model; business case; unit economics; **GTM approach; monetization roadmap (plans-by-customer · monthly/annual-discounted billing · smart-upsell architecture); growth loops; risk register; trust & safety / IP; post-Gate roadmap**; owner-decision list
@@ -965,7 +965,7 @@ All motion respects `prefers-reduced-motion`; menu a11y (haspopup/expanded/contr
 - **App (app.lock.show):** live at `a874ab5` (rel-2026.07.10, incl. the firewall hotfix) — the **OLD dark build**; it does **not** yet reflect the prototype. The next app step is to implement the approved prototype into the real React app (`src/`) as an RC, then Q8, then production.
 - **Site (lock.show):** live at the Codex homepage narrative rebuild (DS v1.6.25); homepage done, inner pages pending the same architecture pass. Site is served by manual alias-promote from a Codex feature branch (governance note: not yet from `main`).
 - **Embed (lock.show/app):** mirrors the app release; every app release must rebuild the embed (`build:embed`) or the two surfaces skew.
-- **DB:** applied through ~035 (Cowork-verified); migration 021 is FROZEN (do not apply). Diff before creating 019+/036+; never recreate existing tables.
+- **DB:** applied through **037** (`is_demo`, owner-applied + verified 17 Jul; 036 stays `.DRAFT`); migration 021 is FROZEN (do not apply). Diff before creating ≥038; never recreate existing tables.
 
 ### 11.2 The prototype is the behavioral ground-truth
 The interactive prototype (`scratchpad/lock-full-prototype.html`, artifact **`1c9b0030`**) is COMPLETE and owner-approved-in-iteration: engaging Radar + signal spec, consolidated ≤2-step nav hub + branding, discover→confirm planet drill-in, the Radar Inspector, onboarding narrative EN+HE locale-aware, multi-view Passport, Requests, Access, the unified switcher, and the light theme with dark Radar/Passport islands. **It is the behavioral ground-truth; this document is the written law.** When a nuance is ambiguous here, open the prototype.
@@ -1076,7 +1076,7 @@ There are **two** live data paths, by design, because the pilot must run even wi
 
 ### 13.2 Data model — the real DB schema
 
-Source of truth: `supabase/migrations/001…035` (+ `036…DRAFT`), and the consolidated
+Source of truth: `supabase/migrations/001…037` (036 = `.DRAFT`), and the consolidated
 `supabase/apply_to_supabase.sql`. Postgres schema `public`. All tables carry RLS.
 
 #### 13.2.1 Migration map
@@ -1119,13 +1119,14 @@ Source of truth: `supabase/migrations/001…035` (+ `036…DRAFT`), and the cons
 | **034** | `event_canon_unpublish` | **analytics_event CHECK = app CANON exactly: 29 event names** (file=DB=app, reconciled) | applied ✓ (**the analytics CHECK head**) |
 | 035 | `create_workspace` | `create_workspace()` RPC (second/additional workspace) | applied ✓ |
 | 036 | `token_hash.sql.DRAFT` | Hashed producer-token storage (G15-4) — dual-read rollout plan | **DRAFT — deliberately not runnable** (`.DRAFT` suffix; `token` still plaintext, migration 005) |
+| **037** | `analytics_is_demo` | `is_demo boolean` on `analytics_event` + conservative backfill (seed `@gigproof.test` actors + operator rows; anonymous public views stay real) + partial index for the operator read path (§14.3.2) | **applied ✓ 17 Jul** (owner-applied, backfill verified: 43 demo / 3 real; paired `.down.sql`) |
 
-**Live migration head (per `docs/VERSIONS.md`, 13–15 Jul 2026):** **035**. 021 is permanently
-skipped/frozen; 036 is a draft. Every migration file has a paired `NNN_*.down.sql` from 019
-onward. Migrations ship **alone**, applied+verified before dependent code (`BRANCHING-MODEL.md`
-hard-gate 4).
+**Live migration head (per `docs/VERSIONS.md`):** **037** (applied 17 Jul). 021 is permanently
+skipped/frozen; 036 is a draft (out of sequence by design). Every migration file has a paired
+`NNN_*.down.sql` from 019 onward. Migrations ship **alone**, applied+verified before dependent
+code (`BRANCHING-MODEL.md` hard-gate 4).
 
-> **Diff before authoring 037+** — do not recreate existing tables. Structural renames (e.g.
+> **Diff before authoring ≥038** — do not recreate existing tables. Structural renames (e.g.
 > workspace_type `producer`→`production`, folding 021's vocabulary) are gated on Supabase Pro
 > backups being ON before any destructive change (`rel-2026.07.13-PLAN.md` §4b item 4).
 
@@ -1643,7 +1644,7 @@ a real Passport AND one pays** — measured, not required, pre-launch.
 | Ref | Type | Item |
 |---|---|---|
 | 13.1.1 / 13.4.4 | OWED | CI embed-sync hash gate (or single-canonical-bundle redirect) to kill embed/standalone skew |
-| 13.2.1 | OPEN | 037+ authoring: fold 021 vocabulary + workspace_type rename — gated on Pro backups |
+| 13.2.1 | OPEN | ≥038 authoring: fold 021 vocabulary + workspace_type rename — gated on Pro backups (Pro ✅ 16 Jul; still needs its own sequenced rollout) |
 | 13.2.2 | OPEN | Live consent-scope vocabulary is the pre-021 set until 021 (or equivalent) lands |
 | 13.4.2 | OWED | Org invite-token expiry (producer tokens have a 14-day TTL; invite tokens do not) |
 | 13.4.2 / 13.5.5 | OWED | Producer token hashing (036 is a DRAFT; tokens are plaintext today) |
@@ -1824,20 +1825,15 @@ Two distinct populations must be kept out of business metrics; they are excluded
 
 `export const DEMO = import.meta.env.VITE_DEMO === '1'` (`src/lib/demo.js`). The analytics writer short-circuits before any DB insert: `persist()` returns immediately if `DEMO` is true (`analytics.js:55`). **A demo build (`vite build --mode demo`) never writes a single `analytics_event` row.** Demo fixtures (PERLMAN et al., `demo@lock.test`) therefore cannot pollute metrics — they exist only in-memory. This is airtight.
 
-#### 14.3.2 Seed / `@gigproof.test` accounts — **NOT yet excluded (OWED)**
+#### 14.3.2 Seed / `@gigproof.test` accounts — **excluded via `is_demo` (BUILT — 037 applied 17 Jul + Gate-tile read filter 18 Jul)**
 
-The 5 seed personas (`artist@`, `booker@`, `producer@`, `agency@`, `operator@gigproof.test`, password `Gigproof!2026`, `scripts/seed.mjs`) are **real Supabase auth users on the live DB**. When they act, `DEMO` is false, so their events **do persist** to `analytics_event`. There is currently **no `is_demo` / `environment` column on `analytics_event`** (024/028/034 schema has none). Consequences:
+The 5 seed personas (`artist@`, `booker@`, `producer@`, `agency@`, `operator@gigproof.test`, password `Gigproof!2026`, `scripts/seed.mjs`) are **real Supabase auth users on the live DB**. When they act, `DEMO` is false, so their events **do persist** to `analytics_event`. The three-part design is now delivered:
 
-- The friends-cohort pilot (`PILOT-MEASUREMENT-MAP`) can rely on demo exclusion _only_ because the cohort uses real accounts, not the demo build — but seed-account noise is not filtered.
-- `ADMIN-PANEL-SPEC §E.8` explicitly flags this: _"verify which events actually carry … `is_demo`; absent key → metric marked **unavailable**, never silently estimated."_
+1. ✅ **BUILT — migration 037** (`is_demo boolean not null default false` on `analytics_event`; owner-applied + verified 17 Jul): conservative backfill marked seed/`@gigproof.test` actors + operator-role rows as demo (verified 43 demo / 3 real); anonymous public passport views deliberately stay `is_demo=false` — a real anonymous view IS real demand context. Partial index serves the operator read path.
+2. ✅ **BUILT — Gate-tile read filter** (`gateCounts.js` adds `.eq('is_demo', false)`; 18 Jul): the operator Gate tiles count **outside activity only**, and the section note discloses the exclusion ("Seed and test-account activity is excluded from these counts", EN+HE).
+3. **Remaining delta (small, honest):** the disclosure today is a **section-level note** over the Gate tiles, not the per-tile "demo-excluded" badge `ADMIN-PANEL-SPEC` sketched; and non-Gate admin numbers (artists/requests/claims lists) count rows, not analytics events — they are inventories, not demand metrics, and carry no exclusion claim. Per-tile badges remain a polish item, not a Gate blocker.
 
-**OWED design (the admin "demo-excluded" badge).** To make the exclusion real and honest:
-
-1. Add an `is_demo boolean` (or `environment text`) to `analytics_event` (additive migration ≥ 036) — set true when the actor is a seed/`@gigproof.test`/operator-seed account, or derive it in the read model from `profiles`/email domain.
-2. The read model filters `is_demo = false` for business counts and **discloses the exclusion status** in its response envelope (`§E.7`).
-3. Every admin metric tile renders a consistent **"demo-excluded" badge** (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT §Admin`, `ADMIN-PANEL-SPEC`). If the flag is absent for an event, that metric shows **"unavailable,"** not a possibly-contaminated number.
-
-Until (1) ships, "demo-excluded" can only be asserted for demo-build data, not for seed accounts — state this limitation on any tile that claims exclusion.
+New demo actors must be created through the seed script (so backfill/convention marks them) — an ad-hoc test account created outside `scripts/seed.mjs` would count as real until marked.
 
 ---
 
@@ -1863,7 +1859,7 @@ Layered defenses, strongest first:
 1. **Published-artist gate (server + RLS).** `POST /api/availability-request` rejects any request unless `artists.published = true` (`server/index.js:609–613`); `passport_view_event` anon-insert RLS also requires a published artist (024). A reaction can only attach to a real, published Passport.
 2. **View ≠ reaction (P0-5).** The two are separate tables/events and must never be merged; a Gate half requires the reaction event, not a view.
 3. **Demo build emits nothing** (§14.3.1) — a demo reaction never reaches the DB.
-4. **Seed exclusion (OWED, §14.3.2).** A reaction originating from a seed/`@gigproof.test` actor is still real in the DB today; the `is_demo` flag + read-model filter is required before the Gate tile can claim "**this was a genuine outside buyer.**" Until then, the operator must manually confirm the reacting party is not a seed/team account.
+4. **Seed exclusion (✅ BUILT, §14.3.2).** The `is_demo` flag (037, applied 17 Jul) + the Gate-tile read filter (`gateCounts.js`, 18 Jul) exclude seed/`@gigproof.test`/operator activity — the Gate tiles now count outside activity only. Residual operator diligence: before *declaring* the Gate met, still eyeball that the reacting party is a genuinely unknown outside buyer (the flag guards known seed actors; it cannot classify a teammate's personal account created outside the seed script).
 
 > **Gate honesty rule:** the Gate is declared met **only** when a `professional_reaction_submitted` / `availability_request_created` from a non-demo, non-seed buyer coincides with an `entitlement_activated` — both surviving §14.3 exclusion. Intent (`payment_reference_created`) never satisfies the pay half.
 
@@ -1980,8 +1976,8 @@ _Transport still OWED (Resend key). The **spec is complete** — these bodies ar
 | 14.1.3 | Populate `session_id` / `passport_version_id` / `act_id` on the client writer (per-Passport/Act/anon funnels) | OWED | Med |
 | 14.2.1 | Register + emit GA4 custom dimensions `surface/route_name/actor_role/auth_state/environment` | OWED | High |
 | 14.2.2 | Build the GA4 dual-emit layer for the 5 pilot milestones (`gtag()` on grant) | OWED | High |
-| 14.3.2 | Add `is_demo`/`environment` to `analytics_event` (or read-model derivation) + read-model exclusion + admin "demo-excluded" badge | OWED | High (Gate integrity) |
-| 14.4.2 | Seed/`@gigproof.test` exclusion must land before the Gate can be declared "genuine outside buyer" | OWED | High |
+| 14.3.2 | ~~Add `is_demo` to `analytics_event` + read-model exclusion~~ ✅ **BUILT** (037 applied 17 Jul; Gate-tile filter + disclosure note 18 Jul). Remaining polish: per-tile "demo-excluded" badge | ✅ done (badge = polish) | was High (Gate integrity) — closed |
+| 14.4.2 | ~~Seed/`@gigproof.test` exclusion before the Gate can be declared "genuine outside buyer"~~ ✅ **BUILT** (same delivery; §14.4 rule 4 keeps the operator eyeball) | ✅ done | was High — closed |
 | 14.5.3 | Receipts, tax invoice (חשבונית), payment ledger/reconciliation view, refund flow | OWED | Post-Gate |
 | 14.5.3 | Price / ICP | OPEN | Locked only after Gate |
 | 14.6.2 | **Availability-request email/WhatsApp to the artist on `request_received`** (Gate reaction reaches the artist off-app) | OWED | High |
@@ -3272,9 +3268,9 @@ Everything this section could not close because it requires Maria's ruling:
    fill (55 subtypes / 32 DJ specializations from the Google Sheet; Registry B is empty). **OPEN / OWED.**
 3. **`comedian-host` / `corporate-ceremony` reachability** — RESOLVED in the spec: `act.format` now
    carries `comedian-host` + `ceremony-act` (§16.A.2), which resolve deterministically to both families.
-   Remaining to implement: the CHECK-widening migration (036+, diff-first) + `familyFor()` cases +
+   Remaining to implement: the CHECK-widening migration (≥038, diff-first — §16.A.6.a) + `familyFor()` cases +
    **owner ratification of the HE labels (T-1)**. **OPEN only on the HE-label ratification.**
-4. **Migration authorization** for the bilingual reference tables (author as 036+, diff-first; respect
+4. **Migration authorization** for the bilingual reference tables (author as ≥038, diff-first — §16.A.6.a; respect
    FROZEN 021 / `mirror-only`). **OPEN (migration approval is owner's per CLAUDE.md).**
 5. **Hebrew word for "Act"** — de-facto live term is אקט; formal taste-ratification still pending
    (SESSION-MEMORY pending list). **OPEN.**
@@ -3960,7 +3956,7 @@ Marked so they are never mistaken for settled. **OPEN** = an owner ruling; **OWE
 The full lists below, grouped by when they must be resolved so effort stays on the Gate:
 
 - **① PRE-GATE MUST-HAVES** (block a real buyer reaching a real Passport, or block trust): legal package L-1…L-9 + Terms/Privacy/Accessibility publish · the Gate availability→artist **email** (N2/N3) · **D1** Act-editor (done ✅) + **S6** Passport multi-view + **D2/D3** effective-role/producer-shell · consent-scope bug (done ✅) · app security headers (done ✅) · **B-1** beachhead entity/ICP ruling · pilot **price** (needed only at the pay-moment of the Gate).
-- **② POST-GATE** (turn on once the Gate is proven): self-serve billing + receipts/invoices/tax (§14.5, §19.3) · plan-enforcement flip + monetization numbers (G-2) · GA4 dual-emit + is_demo + growth-loop instrumentation (§16.B.13, G-3) · target deep-scan + intelligence-at-scale controls (§9.7) · Hebrew launch (~141-key pass + site prose).
+- **② POST-GATE** (turn on once the Gate is proven): self-serve billing + receipts/invoices/tax (§14.5, §19.3) · plan-enforcement flip + monetization numbers (G-2) · GA4 dual-emit + growth-loop instrumentation (§16.B.13, G-3; is_demo ✅ done 17–18 Jul) · target deep-scan + intelligence-at-scale controls (§9.7) · Hebrew launch (~141-key pass + site prose).
 - **③ NICE-TO-HAVE / RESERVED** (do not build pre-Gate — see §19): international-expansion framework · agency-group hierarchy (E5) · white-label/partner themes · sharding/replicas/DR · high-volume Radar mode · competitive-moat doc · full LTV/CAC model.
 
 _Everything in the tables below carries its own tier implicitly via this grouping; when in doubt, ask "does this block the Gate?" — if no, it is ② or ③._
@@ -3989,7 +3985,7 @@ Assembling the deep build spec surfaced additional decisions that only the owner
 |---|---|---|---|
 | L-1…L-9 | **Legal placeholders** — controller legal name · business ח.פ. number · postal address · jurisdiction city · refund policy · accessibility-coordinator name/phone/date · DPO/EU-representative question · concrete retention periods · Terms-HE "Mirror" re-alignment | OPEN (owner + counsel) | blocks Terms/Privacy/Accessibility publication. Full table in §15.1. |
 | — | **Consent Mode v2 scope** | RESOLVED → build | ruling recorded: **basic, default = denied** before any analytics fires (§15.2). Listed here so the ruling is visible, not re-opened. |
-| T-1 | **Genre-family HE labels** — comedian-host & corporate-ceremony (MC/עורך אירוע) are now in the taxonomy (§16.A.1/§16.A.2, reachable from `act.format`); their **Hebrew labels are proposed, pending owner ratification** | OPEN (owner taxonomy) | families are first-class in the spec; ratify HE wording + authorize the CHECK-widening migration (036+). |
+| T-1 | **Genre-family HE labels** — comedian-host & corporate-ceremony (MC/עורך אירוע) are now in the taxonomy (§16.A.1/§16.A.2, reachable from `act.format`); their **Hebrew labels are proposed, pending owner ratification** | OPEN (owner taxonomy) | families are first-class in the spec; ratify HE wording + authorize the CHECK-widening migration (≥038, §16.A.6.a). |
 | — | **027/028 applied-state confirmation** | OPEN (owner confirm) | VERSIONS records head 035 but no explicit "027/028 applied ✓"; 030/031 imply they are live. One-line confirmation requested (§13.2). |
 | B-2 | **Billing model** — self-serve checkout vs operator-approved upgrade request | OPEN (owner) | today it is an operator-approved request; no price/ICP locked pre-Gate (§17.B.7). |
 | G-1 | **Beachhead ICP + GTM** — which buyer segment leads Gate 1; channel priority; launch scope (one scene vs many) | OPEN (owner) | frameworks in §16.B.11; ties to B-1. |
@@ -4101,7 +4097,7 @@ An AI coding agent (Claude Code / Cursor) suffers context-window dilution — it
 - Method-label chips render in **English even inside Hebrew UI** (by design, §15.4).
 
 **E · How to drive the agent (atomic spec slices, not "build the app").**
-- Good: *"Read §13.2 + §14.3.2. Write migration 037 adding `is_demo` to `analytics_event` with a down-migration. Do not touch the frontend."*
+- Good: *"Read §13.2 + §16.A.6.a. Write migration 038 creating the `genre_scene` reference table with a down-migration. Do not touch the frontend."*
 - Good: *"Read §8.3 + §17.A.2. Build the Planet Inspector bottom-sheet with the confirm-bloom motion. Do not wire the DB yet."*
 - Good: *"Read §5.10. Add the humanized draw-band renderer: input a stored band, output the venue-context line + kept band + method chip. Pure function + unit test; no ranked ladder."*
 - Good: *"Read §17.A.2.e only. Implement the `bloom .42s` confirm animation on an existing node; reduced-motion → instant opacity. No other changes."*
@@ -4170,7 +4166,7 @@ The single "does it pass in practice, not just on paper?" view. Live truth in `d
 | # | Non-negotiable | State |
 |---|---|---|
 | 1 | `artist_approved` firewall on every read path | ✅ BUILT (§13.5.2) |
-| 2 | Demo/seed exclusion from Gate metrics (`is_demo`) | ⚠️ OWED (migration 037, §14.3.2) |
+| 2 | Demo/seed exclusion from Gate metrics (`is_demo`) | ✅ BUILT (037 applied 17 Jul + Gate-tile filter 18 Jul, §14.3.2) |
 | 3 | Deep-link reload durability (no reset on refresh) | ✅ fix in `vercel.json` (§13.4.4) — rides the candidate deploy |
 | 4 | Off-app Gate email to the artist | ⚠️ OWED (Resend key, §14.6.5) |
 | 5 | Rollback anchor verified (SHA) | ✅ practice (§13.6); rehearse before Q8 |

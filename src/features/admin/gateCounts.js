@@ -49,6 +49,9 @@ function demoCounts() {
 // → { passport_view: n, ... } — one head-count query per Gate event.
 // Throws on any query error so the console can show a real, retryable error
 // state instead of a silently-wrong zero (ADMIN-PANEL-SPEC: never estimate).
+// is_demo=false (migration 037, applied 17 Jul): seed/@gigproof.test/operator
+// activity is excluded — a Gate tile may only ever count outside demand
+// (§14.3.2; 037's own header mandates this filter before counts are trusted).
 export async function fetchGateCounts() {
   if (DEMO) return demoCounts()
   const pairs = await Promise.all(GATE_EVENTS.map(async (name) => {
@@ -56,6 +59,7 @@ export async function fetchGateCounts() {
       .from('analytics_event')
       .select('id', { count: 'exact', head: true })
       .eq('event_name', name)
+      .eq('is_demo', false)
     if (error) throw error
     return [name, count ?? 0]
   }))
