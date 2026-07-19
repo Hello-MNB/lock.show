@@ -48,10 +48,27 @@ export async function getArtist(id) {
   return data
 }
 
+// Identity fields shared by the artists row and the Act row (artists column →
+// act column; `one_line` lives as `positioning` on the Act). Per the entity
+// canon the ACT owns identity; the artists columns are the legacy home for the
+// default Act (migration 020: act.id === artists.id).
+const ACT_IDENTITY_FIELDS = { stage_name: 'stage_name', city: 'city', photo_url: 'photo_url', genre: 'genre', one_line: 'positioning' }
+
 export async function upsertArtist(artist) {
   if (DEMO) return { ...demoArtist, ...artist }
   const { data, error } = await supabase.from('artists').upsert(artist).select().single()
   if (error) throw error
+  // T-63(a) — owner ruling 18 Jul: identity edits MIRROR to the default Act on
+  // write. Without this, onboarding/artist-path edits update artists.* while
+  // the Act keeps the old identity → two truthful surfaces disagree ("MG" vs
+  // "Maya Vale"). Best-effort: the mirror must never fail the primary write.
+  try {
+    const mirror = {}
+    for (const [from, to] of Object.entries(ACT_IDENTITY_FIELDS)) if (artist[from] !== undefined) mirror[to] = artist[from]
+    if (data?.id && Object.keys(mirror).length) {
+      await supabase.from('act').update(mirror).eq('id', data.id)
+    }
+  } catch { /* mirror is best-effort — artists row is already saved */ }
   return data
 }
 

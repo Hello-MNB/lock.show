@@ -105,6 +105,24 @@ function nodeWorlds({ artist, text = '' }) {
   return w
 }
 
+// N4 (T-65, §5.10 own-history frame — owner R00 law): additive counts of the
+// artist's OWN recent confirmations. One of the ONLY two legal improvement
+// frames (scene-standard / own-past). Never a %, never a peer comparison —
+// "since {month}: N new confirmations" is a fact about the artist's own past.
+// Positive-only: returns null when there is nothing new (no zero-shaming).
+export function ownHistory(claims = [], days = 60) {
+  const cutoff = Date.now() - days * 86_400_000
+  let n = 0
+  let earliest = null
+  for (const c of claims) {
+    const t = c.reviewed_at || c.updated_at || c.created_at
+    if (!c.artist_approved || !t) continue
+    const d = new Date(t).getTime()
+    if (Number.isFinite(d) && d >= cutoff) { n += 1; if (!earliest || d < earliest) earliest = d }
+  }
+  return n > 0 ? { n, since: new Date(earliest) } : null
+}
+
 // Build the whole universe. Returns { planets: {key → {nodes, state, foundCount}}, foundTotal }
 // `act` carries the Act-level fields (artist_goal — migration 020); optional so
 // callers without an Act loaded keep working (the goal node simply won't show).
@@ -153,59 +171,62 @@ export function buildUniverse({ artist = {}, act = null, items = [], claims = []
   //    Onboarding no longer collects these (owner order, 8 Jul — entry is
   //    stage name + city + one link only): every field the old wizard asked
   //    for lives HERE as a quiet fillable node. A gap is an invitation. ──
+  // N2 (T-65, §8.3 node law): every field node carries whyKey → the i18n
+  // "why a buyer cares" line (S.why[whyKey]), sourced from the registry rows
+  // (docs/registry/F1.csv / §16.A.5b). Rendered artist-private only (N5 test).
   const idBits = [
-    { ok: !!artist.photo_url, label: S.src.photo, fill: { kind: 'photo', field: 'photo_url' } },
-    { ok: !!artist.one_line, label: S.src.positioning, fill: { kind: 'text', field: 'one_line', max: 120 } },
-    { ok: !!artist.genre, label: S.src.genre, fill: { kind: 'text', field: 'genre' } },
+    { ok: !!artist.photo_url, label: S.src.photo, why: 'photo', fill: { kind: 'photo', field: 'photo_url' } },
+    { ok: !!artist.one_line, label: S.src.positioning, why: 'positioning', fill: { kind: 'text', field: 'one_line', max: 120 } },
+    { ok: !!artist.genre, label: S.src.genre, why: 'genre', fill: { kind: 'text', field: 'genre' } },
   ]
   // Goal (Act-level, canon A4): guidance data — it prioritizes evidence paths,
   // never changes what is true. Only offered when the caller loaded the Act.
-  if (act) idBits.push({ ok: !!act.artist_goal, label: S.src.goal, fill: { kind: 'goal' } })
+  if (act) idBits.push({ ok: !!act.artist_goal, label: S.src.goal, why: 'goal', fill: { kind: 'goal' } })
   for (const b of idBits) push('identity', b.ok
-    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace }
-    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill })
+    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace, why: b.why }
+    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill, why: b.why })
 
   const kitBits = [
-    { ok: !!artist.set_length, label: S.src.setLength, fill: { kind: 'text', field: 'set_length', placeholder: '90 min' } },
-    { ok: !!artist.regions, label: S.src.regions, fill: { kind: 'text', field: 'regions' } },
-    { ok: !!artist.rider_url, label: S.src.rider, fill: { kind: 'url', field: 'rider_url' } },
-    { ok: artist.invoice_ready === true, label: S.src.invoice, fill: { kind: 'boolean', field: 'invoice_ready' } },
-    { ok: !!artist.whatsapp_number, label: S.src.whatsapp, fill: { kind: 'text', field: 'whatsapp_number', placeholder: '05…' } },
+    { ok: !!artist.set_length, label: S.src.setLength, why: 'setLength', fill: { kind: 'text', field: 'set_length', placeholder: '90 min' } },
+    { ok: !!artist.regions, label: S.src.regions, why: 'regions', fill: { kind: 'text', field: 'regions' } },
+    { ok: !!artist.rider_url, label: S.src.rider, why: 'rider', fill: { kind: 'url', field: 'rider_url' } },
+    { ok: artist.invoice_ready === true, label: S.src.invoice, why: 'invoice', fill: { kind: 'boolean', field: 'invoice_ready' } },
+    { ok: !!artist.whatsapp_number, label: S.src.whatsapp, why: 'whatsapp', fill: { kind: 'text', field: 'whatsapp_number', placeholder: '05…' } },
   ]
   for (const b of kitBits) push('prokit', b.ok
-    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace }
-    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill })
+    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace, why: b.why }
+    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill, why: b.why })
 
   // ── draw bands (firewall: bands + booleans ONLY — deferred from the old
   //    onboarding StepDraw). Career Proof carries them; a ticket export in the
   //    evidence flow stays the stronger path for the same facts. ──
   const drawBits = [
-    { ok: !!artist.lineup_frequency_band, label: S.src.freqBand, fill: { kind: 'band', field: 'lineup_frequency_band', set: 'frequency' } },
-    { ok: artist.sells_tickets != null, label: S.src.sellsTickets, fill: { kind: 'yesno', field: 'sells_tickets' } },
-    { ok: !!artist.price_band, label: S.src.priceBand, fill: { kind: 'band', field: 'price_band', set: 'price' } },
+    { ok: !!artist.lineup_frequency_band, label: S.src.freqBand, why: 'freqBand', fill: { kind: 'band', field: 'lineup_frequency_band', set: 'frequency' } },
+    { ok: artist.sells_tickets != null, label: S.src.sellsTickets, why: 'sellsTickets', fill: { kind: 'yesno', field: 'sells_tickets' } },
+    { ok: !!artist.price_band, label: S.src.priceBand, why: 'priceBand', fill: { kind: 'band', field: 'price_band', set: 'price' } },
   ]
   for (const b of drawBits) push('proof', b.ok
-    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace }
-    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill })
+    ? { state: NODE.CONFIRMED, label: b.label, sub: S.inPlace, why: b.why }
+    : { state: NODE.MISSING, label: b.label, sub: S.addIt, fill: b.fill, why: b.why })
 
   // Community size — always offered (deferred from onboarding): the integer
   // stays working-only; only the derived band goes anywhere (firewall).
   push('audience', artist.community_size_band
-    ? { state: NODE.CONFIRMED, label: S.src.community, sub: S.inPlace }
-    : { state: NODE.MISSING, label: S.src.community, sub: S.addIt, fill: { kind: 'number' } })
+    ? { state: NODE.CONFIRMED, label: S.src.community, sub: S.inPlace, why: 'community' }
+    : { state: NODE.MISSING, label: S.src.community, sub: S.addIt, fill: { kind: 'number' }, why: 'community' })
 
   // ── experience items → Live/Proof presence ──
   const exp = items.filter((i) => i.item_type !== 'link')
   if (exp.length > 0) {
-    push('live', { state: NODE.CONFIRMED, label: S.src.trackRecord, sub: T.radar.onRecord(exp.length) })
+    push('live', { state: NODE.CONFIRMED, label: S.src.trackRecord, sub: T.radar.onRecord(exp.length), why: 'trackRecord' })
   } else {
-    push('live', { state: NODE.MISSING, label: S.src.trackRecord, sub: S.addIt, fill: { kind: 'event' } })
+    push('live', { state: NODE.MISSING, label: S.src.trackRecord, sub: S.addIt, fill: { kind: 'event' }, why: 'trackRecord' })
   }
 
   // ── curated missing suggestions (spec source inventory) when a planet has
   //    no real signal yet (claims/links — field nodes don't count) ──
-  if (!musicHadSignal) push('music', { state: NODE.MISSING, label: S.src.streaming, sub: S.addIt, fill: { kind: 'link' } })
-  if (!nodes.proof.some((n) => n.claim)) push('proof', { state: NODE.MISSING, label: S.src.ticketExport, sub: S.addIt, evidence: true }) // needs the evidence+consent flow
+  if (!musicHadSignal) push('music', { state: NODE.MISSING, label: S.src.streaming, sub: S.addIt, fill: { kind: 'link' }, why: 'streaming' })
+  if (!nodes.proof.some((n) => n.claim)) push('proof', { state: NODE.MISSING, label: S.src.ticketExport, sub: S.addIt, evidence: true, why: 'ticketExport' }) // needs the evidence+consent flow
 
   // ── planet rollup: bounded state, never a number ──
   const planets = {}

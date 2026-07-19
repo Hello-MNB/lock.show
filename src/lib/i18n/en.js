@@ -1011,6 +1011,40 @@ export const T = {
       genrePrimary: 'Central in your genre',
       sceneLabel: 'Your standing in',
       sceneAll: 'All',
+      // T-62 — the visible label on the lens rail (vs the scene rail above).
+      filtersLabel: 'Show',
+      // N3 (T-65, §8.3) — scene-aware coaching, Layer 1. Scene-standard facts
+      // ONLY ("in {scene}, X matters") — never a peer comparison (§2.9).
+      coachIn: (scene) => `In ${scene},`,
+      coach: {
+        identity: 'your story is the first thing a booker reads — a sharp one-liner and a real press photo carry the first impression.',
+        music: 'a checkable catalogue lets a booker hear you in one tap — streaming proves your sound, not your draw.',
+        live: 'live-room proof matters more than follower count — lineups, footage and real dates are where a booker decides.',
+        audience: 'an owned, reachable community weighs more than raw follower numbers — a room you can activate yourself.',
+        prokit: 'a frictionless kit gets you booked — rider, regions and invoicing answer "can this night just work?"',
+        proof: 'third-party confirmation outranks any self-claim — a ticket export or a producer vouch is the strongest word.',
+      },
+      // N4 (T-65, §5.10) — own-history frame: additive, the artist vs their own past.
+      historyLine: (n, month) => `Since ${month}: ${n} new ${n === 1 ? 'confirmation' : 'confirmations'}`,
+      // N2 (T-65, §16.A.5b) — why a buyer cares, per field (registry-informed).
+      why: {
+        photo: 'A booker builds the flyer around your photo — no photo, no flyer slot.',
+        positioning: 'One line is what gets repeated when someone recommends you.',
+        genre: 'Your scene decides which buyers even open your Passport.',
+        goal: 'Your goal shapes which proof the Radar chases first — it never changes what is true.',
+        setLength: 'A club programs by slot — knowing your set length makes you plannable.',
+        regions: 'Buyers filter by region first — where you travel decides who can book you.',
+        rider: 'A rider on file is why the night does not break at soundcheck.',
+        invoice: 'An invoice-ready artist clears the venue back office in one step.',
+        whatsapp: 'A direct line closes date questions in minutes, not days.',
+        freqBand: 'Regular lineups tell a booker your draw is repeatable, not a one-off.',
+        sellsTickets: 'Selling under your own name is demand the buyer does not have to create.',
+        priceBand: 'A price band up front saves both sides the awkward first call.',
+        community: 'A private room you own and can activate — demand that does not depend on the venue’s marketing.',
+        trackRecord: 'Past nights that really happened are the fastest trust a buyer can check.',
+        streaming: 'A live catalogue link answers "what do they sound like?" before anyone asks.',
+        ticketExport: 'A ticket export is the only proof of paid demand — the strongest card you can hold.',
+      },
       filters: { needsYou: 'Needs you', found: '✦ Found', missing: '+ Missing', confirmed: '✓ Confirmed', all: 'All', ready: 'Ready' },
       allWorlds: 'All worlds',
       worldsHint: 'Your content worlds — tap to see that world only',
