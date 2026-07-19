@@ -1,6 +1,12 @@
 # HOW TO BUILD A TASK — the permanent decomposition + self-verify method
 _Owner-ordered governance (R00, 18 Jul 2026). Why: T-59 (naked bands) · T-61 (truncated captions) · T-62 (unlabeled rail) · the history-line × scene-rail collision all reached the owner's phone because verify checked SEMANTICS (score? canon term?) but never SPACE (fit? overlap? cut-off?). The owner's eye is the FINAL gate, not the first line of defense. This file makes fit-defects the builder's job._
 
+## PART 0 — THE FOUNDATION LAW (owner standing principle, 18 Jul)
+
+**Progress must never outrun the foundation.** Taxonomy, terminology, entities, needs, messaging, and the DESIGN SYSTEM are the ground truth and stay complete and current in the core docs. When the build gets ahead of the spec, STOP and backfill the spec from what was built; the owner ratifies; only then is it foundation. A capability that exists in code but not in the spec is a **drift risk, not a feature**. "If the foundation is firm, we can always improve."
+
+**The gap-detection rule (run BEFORE building any screen):** check that the screen's taxonomy, terminology, entities, messaging, and design-system tokens are fully specced in the core docs. If ANY is missing or would have to be invented to proceed, **STOP and flag it as a foundation gap for owner ratification — never fill a spec gap with an invention. A gap filled by guessing is where AI drifts.** (Exhibits: G-8 milestone ladder, G-9 history-line slot, G-10 mobile scene rail — all built before specced, all backfilled 18 Jul.)
+
 ## PART 1 — Task decomposition (every task, no exceptions)
 
 1. **NAME THE TASK:** one T-number · one spec section cited · one done-sentence. If the done-sentence doesn't fit one line, it is TWO tasks — split.

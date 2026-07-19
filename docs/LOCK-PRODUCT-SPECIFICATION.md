@@ -235,6 +235,20 @@ Binding for every UI string, page, doc, and DS component. A surface that violate
 | Evidence display | method-labeled evidence; **bands + binaries with method labels** | ראיות מתויגות-שיטה | any score/percentile/rank/gauge/prediction |
 | Proof unit | Proof Unit | יחידת הוכחה | — |
 
+#### 4.1a Milestone waypoints (G-8, 18 Jul — canon terminology from the built i18n; HE **ratify: R00**)
+The artist journey's eight waypoint NAMES are canon terms (the codes `M1–M8` are internal only and never render):
+| # | EN (locked) | HE (built — ratify: R00) |
+|---|---|---|
+| M1 | Arrived | הגעת |
+| M2 | First light | אור ראשון |
+| M3 | Radar alive | הרדאר חי |
+| M4 | Focused | ממוקד |
+| M5 | Backed | מגובה |
+| M6 | Published | הפספורט בחוץ |
+| M7 | In the market | נראה בשוק |
+| M8 | Answered | תגובה ראשונה |
+State words: done · "you are here" · ahead (הושלם · אתה כאן · בהמשך). Lighting conditions + render law: §8.2. Firewall: names + own step states only — no %, no grade, no comparison.
+
 ### 4.2 Personas / entities
 | Persona | EN | HE | Notes |
 |---|---|---|---|
@@ -634,7 +648,20 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 **Supporting components:**
 - **Constellation threads** — one thread center↔each planet, coloured by live state (amber=Needs you, teal=Developing, lime=Ready, faint=Locked); confirmed threads glow and flow energy inward (growth made visible). Firewall: colour is a state only; geometry is fixed by planet angle, identical for every artist — it grades nothing.
 - **Platform ring** ("Where your proof comes from") — one tile per platform **actually detected in this Act's data**; connected = full colour + lime dot, not-yet = greyed + one "+ connect". Per-source hover meaning in plain language (Instagram = "your lineup listings & community", Spotify = "your streaming catalogue", Eventer/Tickchak/Go-Out = your Israeli ticketed events / ticket sales / event listings, etc.). Caption stays honest: "5 sources connected · buyers check these to verify you. A wider automatic scan is in development." META-FIELD LAW: never an invented count/follower number.
-- **Milestone journey M1–M8** (optional frame; the prototype shows a compact version) — named waypoints **Arrived → First light → Radar alive → Focused → Backed → Published → In market → Answered** mapping to the analytics funnel; a "N of 8 milestones" count-up. Firewall: named waypoints + the artist's OWN step count — no %, no bar-as-grade, no peer comparison.
+- **Milestone journey M1–M8 (G-8 backfill from the build, 18 Jul — ratify: R00).** The full ladder as BUILT (`ArtistDashboard.jsx:MilestoneStrip`; names = §4.1a canon, EN+HE from i18n):
+  | # | Waypoint (EN · HE) | Lights when (the real state) |
+  |---|---|---|
+  | M1 | Arrived · הגעת | always (the artist exists) |
+  | M2 | First light · אור ראשון | first evidence item exists |
+  | M3 | Radar alive · הרדאר חי | the claim pipeline produced its first claim |
+  | M4 | Focused · ממוקד | photo + ≥1 link + ≥3 track-record items |
+  | M5 | Backed · מגובה | ≥1 claim verified/supporting |
+  | M6 | Published · הפספורט בחוץ | public Passport live (`artist.published`) |
+  | M7 | In the market · נראה בשוק | published AND (a share link created OR any buyer request arrived) — reachable without M8 |
+  | M8 | Answered · תגובה ראשונה | a real availability request exists |
+  **Render:** one horizontally-scrollable row on mobile (bounded internal panel, §10.2 viewport law), wrapping on md+; dot states done (filled) / current (ringed, "you are here") / ahead (hollow), each with an accessible state label. **Firewall (restated as law):** named waypoints + the artist's OWN step states only — never a %, never a bar-as-grade, never a peer comparison; `M1–M8` codes never appear on screen (§5.10).
+- **The own-history line (G-9 backfill from the build, 18 Jul — ratify: R00).** "Since {month}: N new confirmations" (`ownHistory()`, §5.10 own-history frame). **Slot:** desktop (md+) = the stage's **bottom-end corner** — the four stage corners each own ONE tenant: scene rail top-center/end · lens rail top-start · next-move card bottom-start · history line bottom-end (the D3 collision law: one tenant per corner, asserted by the L1 overlap check); mobile = an in-flow mono line above the control row, never absolute. **Data:** the artist's OWN confirmed claims in the last ~60 days (`reviewed_at/updated_at`), additive and positive-only — renders nothing when nothing is new. **Firewall:** an own-history count, never a rate, never versus anyone (§2.9); count-based per §5.10 (a % stays behind R-11).
+- **Mobile scene rail (G-10 backfill from the build, 18 Jul — ratify: R00; §6 law 2 — designed, not shrunk).** At ≤ md the scene rail leaves the stage and becomes an **in-flow, horizontally-scrollable chip row** above the universe (visible label "Your standing in", then All + one chip per declared scene), `overflow-x-auto`, every chip a ≥44px touch target (`.tap-target`), no wrap, no absolute positioning — which is WHY the D3 collision cannot occur on mobile: nothing floats over the stage at ≤ md; the stage's corner-tenant system is a desktop-only geometry. Scene pick behavior identical to desktop (a reading lens, never a data change, §2.7/G2).
 - **Lenses** (the "Show" rail): **All · Needs my review · Ready to publish** — a focus filter that dims off-lens planets to ~22% (reversible), never removes them. "Needs my review" is the review entry.
 
 **INTERACTIONS.** Scene switch (`pickScene`) re-weights which planets carry the ★ (a reading lens on the SAME evidence — never a data change). Lens/filter (`pickFilter`) dims/highlights. Tap a planet (`openPlanet`) selects it → inspector + orbiting source logos. `nextStep` from the bottom dock jumps to the computed next-best action's planet/target. The **next-best-step engine** computes ONE action from real planet state (priority: a genre-primary planet in Needs-you with found items → any planet with found items → a locked planet's unlock → all-lit → publish → else add the missing proof), each carrying a `why` line; firewall-safe (action + reason only).
