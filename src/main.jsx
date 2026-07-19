@@ -7,6 +7,7 @@ import { OrgProvider } from './context/OrgContext.jsx'
 import { LangProvider } from './context/LangContext.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { captureFirstTouch } from './lib/analytics.js'
 import './index.css'
 
 // Deep-link restore (§7.6): a dynamic route (/app/passport/:id …) opened fresh
@@ -18,6 +19,11 @@ import './index.css'
   const dl = new URLSearchParams(window.location.search).get('dl')
   if (dl && /^\/(?!\/)/.test(dl)) window.history.replaceState(null, '', dl)
 }
+
+// First-touch attribution (audit T-55) — capture utm_*/referrer/landing ONCE
+// per browser, BEFORE the router strips the query. Attached to
+// signup_completed (Signup.jsx) so acquisition is attributable first-party.
+captureFirstTouch()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

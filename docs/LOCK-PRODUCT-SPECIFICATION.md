@@ -1,7 +1,7 @@
 # LOCK — PRODUCT SPECIFICATION
 
 **The single source of truth for building the LOCK product.**
-_Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-review pass 16 Jul, **Radar-universe / taxonomy pass 17 Jul** (owner R00 order: §8.2 two-jobs + 8-family emphasis · §8.3 coaching lines · §16.A Registry B + WhatsApp-group source + migration structure · §18 OWED/OPEN incl. R-10), **universe-coverage pass 18 Jul (T-54, from `docs/UNIVERSE-GAP-REPORT.md`: §8.2 registry-driven nodes target · §5.10 count-based progress vocabulary · §8.7 Proof-Unit/proof-story/content-classes target · §16.A.5b Registry-B reality [F1.csv] · §18.2 R-11 + M-17)** · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §16.B.11–16 = strategy (GTM · monetization · growth · risk · trust&safety) · §18 = open rulings (priority-tiered) · §19 = scaling & future-readiness (reserved, post-Gate)._
+_Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-review pass 16 Jul, **Radar-universe / taxonomy pass 17 Jul** (owner R00 order: §8.2 two-jobs + 8-family emphasis · §8.3 coaching lines · §16.A Registry B + WhatsApp-group source + migration structure · §18 OWED/OPEN incl. R-10), **universe-coverage pass 18 Jul (T-54, from `docs/UNIVERSE-GAP-REPORT.md`: §8.2 registry-driven nodes target · §5.10 count-based progress vocabulary · §8.7 Proof-Unit/proof-story/content-classes target · §16.A.5b Registry-B reality [F1.csv] · §18.2 R-11 + M-17)**, **measurement audit 18 Jul (T-55: §21.1 per-family status · §14.1.5 what-fires · §14.1.4 GA4 evidence-surface scope-out · §8.12 built-vs-pending tiles)** · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §16.B.11–16 = strategy (GTM · monetization · growth · risk · trust&safety) · §18 = open rulings (priority-tiered) · §19 = scaling & future-readiness (reserved, post-Gate)._
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
@@ -886,6 +886,15 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 **FIREWALL.** Funnel = the user's OWN product milestones (counts of events), never a grade of any artist. Demo-excluded badge consistent. Intent ≠ revenue.
 
 **DEFINITION OF DONE.** Gate hero tiles with exact source events; visual funnel (counts only) with source/timeframe/demo-excluded stated; AI-cost with budget-left/alert; publish freshness (stale vs unpublished); risk tile; internal-only.
+
+**BUILT-vs-PENDING per tile (audit T-55 · 18 Jul 2026 — updated in place):**
+| Cockpit element | Status | Source events |
+|---|---|---|
+| Gate tiles ×5 (views · reactions · requests · intent · verified-pay) | ✅ **BUILT, live source events**, demo-excluded (T-52 filter) | all FIRING except intent (dormant behind the pay flag, M-8 — fires on flip) |
+| **Retention tiles ×2** (returning accounts · repeat Passport opens) | ✅ **BUILT (T-55, owner priority)** — `fetchRetention()`, demo-excluded, own load/error/retry | `login` (incl. `session-restore`) · `passport_view` + `return_visit` — FIRING |
+| Stat counts (artists · published · requests · claims) | ✅ BUILT | table reads (inventories, not demand metrics) |
+| Pilot funnel bar (signup → … → availability_request) | ⏳ PENDING build — its source events mostly FIRE already (§14.1.5); wiring only | canon events |
+| AI-cost ledger · publish-freshness · risk tile | ⏳ PENDING build | server refresh-quota data exists; tiles not rendered |
 
 ---
 
@@ -1782,6 +1791,29 @@ Legend — **Sink**: `DB` = in CANON, persists to `analytics_event`; **Key?**: �
 | Read path | Bounded read models (`admin_business_overview` RPC, SECURITY DEFINER + operator check) — client never free-queries raw analytics | Google Analytics UI / GSC |
 
 **Rule:** the business is measured from Supabase; GA4 exists to attribute _acquisition_ (which channel produced signups) and nothing more. The two are never reconciled row-for-row — they answer different questions.
+
+**Evidence-surface scope-out (owner ruling 18 Jul, audit T-55 — BUILT):** GA4 never loads while the
+viewer is on an evidence surface — `/passport/*`, `/confirm/*`, or evidence routes. Both consent
+banners guard the load (`ConsentBanner.jsx` app-side; `consent-banner.tsx` site-side for the
+404-bounce moment, riding the M-15 train): consent is still recorded, the pixel simply waits for a
+non-evidence route. No third-party pixel touches a Passport, confirm ceremony, or evidence screen.
+
+#### 14.1.5 What actually fires (measurement status — audit T-55 · 18 Jul 2026)
+
+The funnel as it MEASURES today (per §2.8 this corrects any implication that all 29 events flow):
+
+| Stage | Status |
+|---|---|
+| Site | GA4 page views only, consent-gated (defaults denied). No custom site events. |
+| Site→app bridge | **FIRING (wired T-55)** — first-touch `utm_*` + referrer + landing path (+ `?s=1` share marker) captured once per browser at app open (`captureFirstTouch()`, first-party localStorage), attached to `signup_completed`. |
+| App entry | `signup_completed` · `login` · `onboarding_completed` FIRING (live rows verified). Unwired canon names: `signup_started`, `oauth_login`, `onboarding_started`, `consent_granted/withdrawn`. |
+| Build | FIRING: `evidence_added` · `claim_confirmed` · `gig_evidence_refresh_completed` · `passport_published/unpublished` · `act_created/switched` · `workspace_switched` · `producer_confirmation_sent`. Unwired: `claim_published`, `producer_confirmation_received` (server writes `claim_confirmed` on producer-yes — naming mismatch, recorded). |
+| Distribution | `share_link_created` / `share_link_opened` FIRING; share→signup join now computable via first-touch attribution. |
+| The Gate | `passport_view` (+ first-party `return_visit` marker) · `professional_reaction_submitted` · `availability_request_created` — **FIRING**. |
+| Payment | `payment_reference_created` WIRED-BUT-DORMANT (behind `VITE_PAYMENTS_ENABLED`, OFF by owner ruling until M-8 pricing; fires the moment the flag flips) · `entitlement_activated` WIRED live (operator activate) · `availability_request_responded` unwired. |
+| Retention | **FIRING (wired T-55 — the owner's named gap)**: restored sessions emit `login {via:'session-restore', returning:true}` once per tab-session (first-party seen-marker); manual logins carry `returning`; repeat buyer opens carry `return_visit`. Operator read model: `fetchRetention()` → §8.12 retention tiles (returning accounts = distinct real accounts on >1 calendar day · repeat Passport opens). `account_deleted` unwired. |
+
+_Demo integrity: demo builds persist nothing; live operator reads filter `is_demo=false` (037 + T-52)._
 
 ---
 
@@ -4153,6 +4185,20 @@ Multiple reviews converged on one frame: LOCK is not a *page* system, it is a *s
 | **Conversion (the Gate)** | real demand + payment | `availability_request_created`, `entitlement_activated` | the Gate; the reaction returns to the artist as **method-safe text only** (§2.5) |
 | **Retention** | freshness / re-engagement | staleness (`expires_at`), re-login | drives re-sync invitations about the artist's **own** data |
 | **Growth** | viral distribution | `share_link_created` → `share_link_opened` → `signup_completed` | operator K-factor metric; never surfaced per-person |
+
+**Measurement status per family (audit T-55 · 18 Jul 2026 — honest BUILT-vs-TARGET per §2.8; updated in place, no side document):**
+| Family | Status today |
+|---|---|
+| Identity | **FIRING** — `signup_completed` (now with first-touch attribution) · `login` · `onboarding_completed` · `evidence_added` persist live. Edges still unwired: `signup_started`, `oauth_login`, `onboarding_started`, `consent_granted/withdrawn` (canon names, no call site). |
+| Intent | **FIRING** — `evidence_added`, `share_link_created`. |
+| Trust | **FIRING** — `claim_confirmed` (client + server on producer-yes), `producer_confirmation_sent`. ⚠️ `producer_confirmation_received` never fires — the server writes `claim_confirmed` on that path instead (vocabulary mismatch, recorded; reconcile at the next canon migration). |
+| Readiness | Measured from data fields (binaries), not events — by design; nothing to fire. |
+| Relationship | **NOT-WIRED** — no analytics event exists for ArtistAccess grants; `invite_member` (named in the table above) is not in the 29-event canon. Wiring requires a canon-widening migration — owner-gated. |
+| Conversion (Gate) | **FIRING** — `passport_view` (now with the first-party `return_visit` marker) · `professional_reaction_submitted` (server-authored, deduped) · `availability_request_created` · `entitlement_activated` (operator control, live-capable). `payment_reference_created` is **WIRED-BUT-DORMANT**: fully functional behind `VITE_PAYMENTS_ENABLED`, which stays OFF by owner ruling (18 Jul) until the pricing decision (M-8) — it fires the moment the flag flips, no further build needed. `availability_request_responded` — unwired. |
+| Retention | **FIRING (wired 18 Jul, T-55 — was the owner's named gap)** — restored sessions now emit `login {via:'session-restore', returning:true}` once per tab-session via a first-party seen-marker; manual logins carry `via:'password', returning`; `passport_view` carries `return_visit` for repeat buyer opens. Operator read: §8.12 retention tiles. Staleness re-sync (`expires_at`-driven prompts) remains data-driven, not yet an event. |
+| Growth | **FIRING + now linkable** — `share_link_created` → `share_link_opened` → `signup_completed`: signup now carries first-touch attribution (utm_* · referrer · landing path · `shared` marker), so the share→signup join is computable first-party. K-factor read model itself still TARGET. |
+
+**Site + bridge status (same audit):** site GA4 = consent-gated page views only, zero custom events; the site→app bridge is **FIRING** (first-touch utm/referrer/landing captured once per browser at app open, attached to `signup_completed`). **GA4 is scoped OUT of evidence surfaces** (owner ruling 18 Jul): it never loads while the viewer is on `/passport/*`, `/confirm/*`, or evidence routes — app and site banners both guard (§14.1.4).
 
 ### 21.2 Signal → action decision system (signal · threshold · action · downstream)
 The rule that keeps this firewall-safe: an action derived from a signal is **either** an operator-internal metric **or** a method-safe user prompt — never a number about a person shown to a person.

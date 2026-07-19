@@ -52,6 +52,44 @@ function demoCounts() {
 // is_demo=false (migration 037, applied 17 Jul): seed/@gigproof.test/operator
 // activity is excluded — a Gate tile may only ever count outside demand
 // (§14.3.2; 037's own header mandates this filter before counts are trusted).
+// Retention read (audit T-55, §8.12 / §21.1 Retention family). Two counts:
+//   returningAccounts — distinct real accounts with canon `login` events on
+//     MORE THAN ONE calendar day (manual logins AND restored sessions, which
+//     now fire login{via:'session-restore'}).
+//   repeatPassportOpens — passport_view rows carrying the first-party
+//     return_visit marker (same browser came back; no viewer identity).
+// FIREWALL: counts of PRODUCT EVENTS on the operator surface only — never a
+// per-person number on any artist/buyer surface (§2.5, §21.0).
+export async function fetchRetention() {
+  if (DEMO) return { returningAccounts: 2, repeatPassportOpens: 4 }
+  const { data, error } = await supabase
+    .from('analytics_event')
+    .select('actor_user_id, created_at')
+    .eq('event_name', 'login')
+    .eq('is_demo', false)
+    .not('actor_user_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(2000)
+  if (error) throw error
+  const daysByActor = new Map()
+  for (const r of data || []) {
+    const day = String(r.created_at).slice(0, 10)
+    const s = daysByActor.get(r.actor_user_id) || new Set()
+    s.add(day)
+    daysByActor.set(r.actor_user_id, s)
+  }
+  let returningAccounts = 0
+  for (const s of daysByActor.values()) if (s.size > 1) returningAccounts += 1
+  const { count, error: e2 } = await supabase
+    .from('analytics_event')
+    .select('id', { count: 'exact', head: true })
+    .eq('event_name', 'passport_view')
+    .eq('is_demo', false)
+    .eq('properties->>return_visit', 'true')
+  if (e2) throw e2
+  return { returningAccounts, repeatPassportOpens: count ?? 0 }
+}
+
 export async function fetchGateCounts() {
   if (DEMO) return demoCounts()
   const pairs = await Promise.all(GATE_EVENTS.map(async (name) => {

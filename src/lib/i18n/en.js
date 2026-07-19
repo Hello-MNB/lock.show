@@ -551,6 +551,13 @@ export const T = {
     gateTagPaid: 'verified payment',
     gateError: 'Event counts failed to load.',
     gateRetry: 'Retry',
+    // T-55 — retention tiles (§21.1 Retention): the returning-customer signal.
+    retTitle: 'Retention — coming back',
+    retReturning: 'Returning accounts',
+    retReturningTag: 'back on a later day · login',
+    retRepeat: 'Repeat Passport opens',
+    retRepeatTag: 'same browser returned · passport_view',
+    retNote: 'Accounts seen on more than one day, and Passport pages reopened by a returning browser. Counts of product events only — no identity, never shown to artists or buyers. Seed and test-account activity is excluded.',
     anchors: {
       gate: 'Gate',
       payments: 'Payments',

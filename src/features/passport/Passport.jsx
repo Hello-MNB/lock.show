@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Wordmark, BottomSheet, PageShell } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { getPublicPassport, recordPassportView, recordProfessionalReaction } from '../../lib/db.js'
-import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 import { deriveSections, PassportSkeleton } from './passportKit.jsx'
 import PassportBookingView from './PassportBookingView.jsx'
 import PassportRepView from './PassportRepView.jsx'
@@ -67,7 +67,9 @@ export default function Passport() {
         // so the GATE funnel only ever counts real published passports.
         if (id !== 'demo-artist') {
           recordPassportView(id) // measurement, never blocks
-          logEvent(EVENTS.PASSPORT_VIEWED, { artist_id: id })
+          // return_visit: first-party per-browser marker (audit T-55) — a
+          // repeat buyer open, no viewer identity, never shown per-person.
+          logEvent(EVENTS.PASSPORT_VIEWED, { artist_id: id, return_visit: isReturnVisit('passport') || undefined })
           // G7 — this visit arrived via a shared link (?s=1): log the share
           // open once, on a REAL successfully-loaded passport only.
           if (sp.get('s') === '1' && !shareOpenLogged.current) {
