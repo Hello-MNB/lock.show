@@ -20,6 +20,7 @@ _Rule: new information goes ONLY to its owning doc. Two docs claiming one truth 
 | Decisions | docs/adr/ (ADR-xxxx files) | Maria decides / Claude records | NEW — ADR-1 pending M-14 |
 | Universe coverage gaps (Radar/Passport vs registry) | docs/UNIVERSE-GAP-REPORT.md (T-53) | Claude researches / Maria rules (R-11, T-49, registry schema) | current — decision material |
 | Task method + self-verify ladder (L0–L5, fit law) | docs/HOW-TO-BUILD-A-TASK.md (T-66) | Claude (owner-ordered governance) | current — binding on every task |
+| Per-screen witness-readiness standard | docs/SCREEN-BUILD-CHECKLIST.md (T-67) + spec §7.7.a map | Claude (owner-ordered governance) | current — every screen passes it before witness |
 | Architecture map | ARCHITECTURE.md | Team G | ❌ T-38 (Wave 3) |
 | Security boundaries | SECURITY-BOUNDARY-MATRIX.md | Team G | ❌ T-39 |
 | Risk register (current) | docs/RISK-REGISTER.md | Claude + Maria | ❌ T-42 |

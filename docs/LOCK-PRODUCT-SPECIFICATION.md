@@ -525,6 +525,22 @@ The direction: **each workspace is one primary canvas**, with everything else fo
 
 **Guardrails (so consolidation helps, not hurts):** never merge two genuinely distinct *jobs* onto one canvas just to cut a route; keep **one primary CTA at a time** (law 3) even inside a tabbed canvas; a tab is not a screen — the canvas keeps a single "what's next." The reviewer's ~67% route-reduction figure is an *estimate of direction*, not a target to hit blindly. **Priority:** Artist first (highest-traffic; D1/inline pieces already exist), then Representation/Production as their depth is built.
 
+#### 7.7.a — THE ENTITY→SCREEN MAP (T-67, 18 Jul — the binding one-view of every entity's screen system)
+
+Each entity: its ONE main canvas · the interactive ENGINE that canvas runs · every secondary screen with its nav path in AND back (§10.6 no-dead-end) · the signals it must fire (§21.1/§14.1.5). Build tasks cite this row + the screen's §8/§17.B section; a screen not on this map is a flagged ruling, never an invention.
+
+| Entity (§3.4) | Main canvas | The interactive ENGINE | Secondary screens (path in → back) | Nav shell (§7.1–7.5) | Signals (§21.1) |
+|---|---|---|---|---|---|
+| **ARTIST** | Radar canvas `/artist/home` (§8.2) | **Radar + Planet Inspector** (§8.2/§8.3): planets → panel → confirm/fill → coaching (N2–N4) | Passport preview §8.4 (nav tab → back via nav) · Requests §8.13 (tab) · Access §8.5 (hub → back) · Act editor §8.6 (Radar EDIT → inline, returns in place) · Evidence §8.13 (planet panel → back to Radar) · Onboarding §8.1 (entry-only → lands Radar) | chrome §7.1 · hub §7.2 · nav Radar·Passport·Requests (§7.3) · bottom-nav §7.5 | Identity+Intent+Trust (build events) · Retention (`login`/restore) — §14.1.5 FIRING |
+| **REPRESENTATION** | Roster cockpit `/representation/roster` (§8.10) | **Roster action cards**: per-artist what-changed · why · ONE bound action | Requests inbox `/reqs` · Roster Radar `/radar` · Team `/team` (all §8.10 — nav tabs → back via nav) | nav Roster·Requests·Radar·Team (§7.3) | Relationship (grants — ⚠ NOT-WIRED §21.1) + Conversion (request handling) |
+| **PRODUCTION** | Events board `/production/events` (§8.11) | **Lineup-slot board**: time-ordered slots, one CTA per slot; books via Buyer path | Requests `/reqs` · Workspace `/workspace` (§8.11, tabs → back) · Passport (Buyer mode) §8.7 → back via history | nav Events·Requests·Workspace (§7.3) | Conversion (`availability_request_created` as buyer) |
+| **BUYER (public)** | Public Passport `/passport/:id` (§8.7) — no login, no shell | **Persona toggle + proof cards + ONE sticky CTA** → availability request §8.8 (in-page → receipt → back to Passport) | Signed-in `/discover` (§8.13 — ⚠ THIN, flagged) | public mode: Passport·Availability (§7.3); deep-links §7.6 | Conversion (`passport_view`+`return_visit` · reaction · request) — FIRING |
+| **SOURCE-CONFIRMER** | `/confirm/:token` single card (§8.9) — accountless | **One-minute confirm ceremony**: yes / partial / no / wrong-person | none by design (no shell; exit = done screen) | confirm mode §7.3 | Trust (`claim_confirmed` server-side) — FIRING |
+| **OPERATOR** | Admin cockpit `/admin` (§8.12) | **Gate + Retention tiles + queues** (payments · claims · consents · audit) | anchor-scrolled sections in one page (§8.12) → sticky section nav | internal only | reads ALL families; fires none |
+| **UTILITY (cross-entity)** | — | — | signup/login/reset §17.B.1–3 · invite §17.B.4 · settings §17.B.5 · org/team §17.B.6 · billing §17.B.7 · consent §17.B.8 · notifications §17.B.9 · 404/error §17.B.10 · skeletons §17.B.11 | per §17.B each carries its own entry/exit | Identity (auth events) + Retention (§14.1.5) |
+
+**FLAGGED THIN (owner ruling before build — not invented here):** (1) **Representation secondaries** — `/reqs`·`/radar`·`/team` are one-liners in §8.10; the recovered AG1–AG4 canon (B4-35.50: invitation/grant states · request statuses · team capability matrix) is the natural fill — needs owner adoption before deepening; (2) **Production creation flows** — event/slot creation UI is TARGET (§8.11 note), states exist only as names; (3) **Buyer signed-in home `/discover`** — one line in §8.13; (4) **Roster mini-Radar** (`/representation/radar`) — named, never spec'd. Each is a queue task on ruling, per HOW-TO-BUILD-A-TASK.
+
 ---
 
 ## 8. Per-Screen Specification (THE CORE)
