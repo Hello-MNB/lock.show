@@ -18,6 +18,7 @@ _Rule: new information goes ONLY to its owning doc. Two docs claiming one truth 
 | DB truth | supabase/migrations/ + GIGPROOF-DB-STRUCTURE.md | Team F (owner applies) | current |
 | Measurement canon | spec §14 + src/lib/analytics.js (code) → docs/registry/events.json (T-40) | Team F | current / T-40 pending |
 | Decisions | docs/adr/ (ADR-xxxx files) | Maria decides / Claude records | NEW — ADR-1 pending M-14 |
+| Universe coverage gaps (Radar/Passport vs registry) | docs/UNIVERSE-GAP-REPORT.md (T-53) | Claude researches / Maria rules (R-11, T-49, registry schema) | current — decision material |
 | Architecture map | ARCHITECTURE.md | Team G | ❌ T-38 (Wave 3) |
 | Security boundaries | SECURITY-BOUNDARY-MATRIX.md | Team G | ❌ T-39 |
 | Risk register (current) | docs/RISK-REGISTER.md | Claude + Maria | ❌ T-42 |
