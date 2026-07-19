@@ -155,11 +155,28 @@ const artistFiles = walk(join(ROOT, 'src', 'features', 'artist'), ['.jsx', '.js'
 for (const f of artistFiles) scanFile(f, stripJs, REACT_COUNT)
 okline(`scanned ${artistFiles.length} artist-facing files`)
 
+// ── 6. TWO-VIEW FIREWALL (N5 / T-65, owner R00 law 18 Jul) ───────────────────
+// The Radar (private) shows gaps + coaching; the Passport (buyer) shows
+// STRENGTHS ONLY — the coaching vocabulary must be ABSENT from every
+// buyer-facing surface: no coaching lines, no why-a-buyer-cares keys, no
+// own-history frame, no gap language in the Passport DOM or payload.
+console.log('[6] two-view firewall: coaching/gap vocabulary absent from buyer surfaces')
+const COACH_VOCAB = [
+  { re: /\bcoachIn\b/, label: 'coaching composer on a buyer surface' },
+  { re: /\bhistoryLine\b/, label: 'own-history frame on a buyer surface' },
+  { re: /universe\.(why|coach)\b/, label: 'radar-private why/coach keys on a buyer surface' },
+  { re: /\bS\.why\[|\bS\.coach\[/, label: 'why/coach lookup on a buyer surface' },
+  { re: /\bprivate-gaps|gapsBar|privateGap/i, label: 'gap component on a buyer surface' },
+]
+const buyerFiles = [...walk(join(ROOT, 'src', 'features', 'passport'), ['.jsx', '.js']), join(ROOT, 'server', 'index.js')]
+for (const f of buyerFiles) scanFile(f, stripJs, COACH_VOCAB)
+okline(`scanned ${buyerFiles.length} buyer-facing files (passport/** + server payload)`)
+
 // ── verdict ──────────────────────────────────────────────────────────────────
 console.log('')
 if (violations) {
   console.log(`✗ GUARDRAILS: ${violations} violation(s) — a §20 firewall rule was broken.`)
   process.exit(1)
 }
-console.log('✓ GUARDRAILS: all 5 §20 inspectors pass (person-score · retired-word · destructive-migration · internal-confidence · reaction-as-number).')
+console.log('✓ GUARDRAILS: all 6 §20 inspectors pass (person-score · retired-word · destructive-migration · internal-confidence · reaction-as-number · two-view).')
 process.exit(0)

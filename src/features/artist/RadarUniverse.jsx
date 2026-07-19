@@ -8,7 +8,7 @@ import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
-import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount } from '../../lib/radarUniverse.js'
+import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount, ownHistory } from '../../lib/radarUniverse.js'
 import { primaryPlanets } from '../../lib/genreWeights.js'
 
 // ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
@@ -271,6 +271,11 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const genrePrimaryList = useMemo(() => primaryPlanets(sceneAct, sceneArtist), [sceneAct, sceneArtist])
   const genrePrimary = useMemo(() => new Set(genrePrimaryList), [genrePrimaryList])
   const genreLabelPlanet = genrePrimaryList[0] || null
+  // N3 — the scene named in coaching lines: the picked scene chip, else the
+  // artist's first declared scene. No declared scene → null → no coaching (G2).
+  const coachScene = scene || scenes[0] || null
+  // N4 — own-history frame (§5.10): the artist's own recent confirmations.
+  const history = useMemo(() => ownHistory(effClaims), [effClaims])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
@@ -417,9 +422,21 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         </div>
       )}
 
+      {/* N4 (T-65, §5.10) — the OWN-HISTORY line: additive, positive-only,
+          the artist against their own past. Renders only when something new
+          exists; never a %, never a comparison. Artist-private (N5 test). */}
+      {history && (
+        <p className="relative z-10 mb-2 font-mono text-[10px] uppercase tracking-[0.08em] text-gold/80 md:absolute md:end-8 md:top-8 md:mb-0">
+          {S.historyLine(history.n, history.since.toLocaleDateString(undefined, { month: 'long' }))}
+        </p>
+      )}
+
       {/* ONE control row: state lenses + worlds dropdown. Full-stage (md+): floats
           top-start over the universe, like the prototype's .rfilters strip. */}
-      <div className="relative z-10 mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:start-8 md:top-8 md:mb-0 md:w-auto md:pb-0" role="tablist" aria-label="radar filters">
+      <div className="relative z-10 mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:start-8 md:top-8 md:mb-0 md:w-auto md:pb-0" role="tablist" aria-label={S.filtersLabel}>
+        {/* T-62: the lens rail carries a visible label, same pattern as the
+            scene rail — an artist must be able to tell the two rows apart. */}
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-faint">{S.filtersLabel}</span>
         {FILTERS.map((f) => (
           <button key={f.key} role="tab" aria-selected={filter === f.key} onClick={() => pickFilter(f.key)}
             className={`tap-target relative flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] transition-colors ${
@@ -559,7 +576,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                   )
                 })()}
                 {!isConnect && (
-                  <span className="block max-w-[72px] truncate font-mono text-[7px] uppercase tracking-[0.06em] text-faint">
+                  /* T-61 (L-8 fit law): captions WRAP to two centered lines —
+                     truncation on the flagship face is forbidden; the longest
+                     method label ("PRODUCER-CONFIRMED") must read in full. */
+                  <span className="line-clamp-2 block max-w-[96px] whitespace-normal break-words text-center font-mono text-[7px] uppercase leading-tight tracking-[0.06em] text-faint">
                     {pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value}
                   </span>
                 )}
@@ -617,6 +637,16 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       <BottomSheet open={!!selected} onClose={() => setSelected(null)} title={selected ? S.planets[selected] : ''}>
         {sel && (
           <div className="max-h-[65vh] overflow-y-auto pe-0.5">
+            {/* N3 (T-65, §8.3) — the COACHING LINE, Inspector Layer 1: names the
+                artist's actual scene + why this dimension matters there. Scene-
+                standard framing ONLY (a fact about the scene, never about peers);
+                G2 — no genre signal → no line. Artist-private (N5 test). */}
+            {coachScene && S.coach?.[selected] && (
+              <p className="mb-3 text-xs leading-relaxed text-muted">
+                <span className="font-semibold text-ink">{S.coachIn(coachScene)}</span>{' '}
+                {S.coach[selected]}
+              </p>
+            )}
             {batchable.length >= 2 && (
               <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
                 aria-label={S.confirmAllCta(batchable.length)}>
@@ -768,6 +798,13 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
         </span>
         <span className={`chip shrink-0 text-[10px] ${chip.c}`}>{chip.icon}</span>
       </div>
+
+      {/* N2 (T-65, §8.3 node law) — why a buyer cares, per field, from the
+          registry (§16.A.5b). The buyer's reasoning next to the ask is what
+          turns a form field into coaching. Artist-private only (N5 test). */}
+      {n.why && S.why?.[n.why] && (
+        <p className="mt-1.5 text-[11px] leading-relaxed text-faint">{S.why[n.why]}</p>
+      )}
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {n.state === NODE.MISSING && !n.fill && n.evidence && (

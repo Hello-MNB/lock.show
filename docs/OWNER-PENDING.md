@@ -9,12 +9,13 @@ Each item: what it is → what you do → what it unblocks. Sorted by impact._
 |---|---|---|---|
 | M-12 | **Rotate the Resend key** (hygiene) | The key was pasted in chat. After everything works: Resend → API Keys → Revoke → create new (send-only) → Vercel → lock-app → Environment Variables → edit `RESEND_API_KEY`. | closes the exposure |
 | M-3 | **Re-test the live fixes** | Refresh any app page · open your Passport link fresh · does the home screen ever hang? · tap the small controls on your phone | Upgrades 8 live fixes to owner-witnessed |
-| M-4 | **Counsel sign-off L-1…L-9** | Send `docs/legal/` drafts to your lawyer; return their fixes | Legal launch gate (T-24) |
+
 
 ## 🟡 Needed soon (not blocking today's build)
 
 | # | What | What you do | Unblocks |
 |---|---|---|---|
+| M-4 | **Counsel review L-1…L-9 — IN PROGRESS, PARALLEL, NON-BLOCKING (R00 ruling 18 Jul)** | Counsel is reviewing; the published drafts + built Amendment-13 consent flow carry the beta meanwhile. The signed final rides in when counsel responds | Final legal polish — blocks nothing in Phase N and does not block real-artist beta onboarding |
 | M-5 | **Witness walks** (rule 4) | When I hand you a one-page checklist per screen: look at it on your phone (390px) and desktop, tick the boxes | MOBILE/DESKTOP ✅ on every screen task |
 | M-6 | **D3 ruling** | Decide: retire the `/producer` shell or fold it into Production | T-11 polish; nav cleanup |
 | M-7 | **Codex artwork** | Ask Codex for the logo + venue-icon files | Final visual polish (§5.9) |
