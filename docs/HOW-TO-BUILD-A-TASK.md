@@ -41,7 +41,19 @@ MOBILE and DESKTOP go green **only after the OWNER witnesses** — unchanged. Bu
 
 > **The standard:** A screen reaches the owner's witness walk only after L0–L5 are green and I have described the rendered result myself. Fit-defects (truncation, overlap, cut-off, horizontal scroll) are MY job to catch, not the owner's. The owner confirms taste and warmth; I guarantee it fits and functions.
 
-## PART 4 — Automation status
+## PART 4 — THE CLOSE-OUT SELF-AUDIT (standing rule, owner 18 Jul — run at the END of EVERY task, autonomously)
+
+Drift enters two ways: the build does something the spec doesn't say, or the build defines something the spec never receives. `verify` catches neither — it checks semantics, not spec-fidelity. So every task CLOSES with a **SPEC-FIDELITY REPORT** before anything is marked witness-ready:
+
+1. **FORWARD CHECK — build matches spec.** For each screen/behavior built: quote the governing spec section and confirm the build matches it (taxonomy, terminology, entity view, messaging, DS tokens). Any mismatch = a defect; fix or flag before witness.
+2. **BACKWARD CHECK — spec captures build.** Anything DEFINED to proceed (a term, a state name, a placement, a token, a copy string that became vocabulary) must be WRITTEN INTO the core docs — spec §, §4 glossary for terms, the design-system doc for tokens. Lives only in code → foundation gap: backfill in place, mark **ratify: R00**. A capability in code but not in the spec is drift, not a feature (Part 0).
+3. **CONTRADICTION CHECK — the spec agrees with itself.** Scan the touched sections for internal contradictions the change created or exposed (exhibit: "Milestone journey M1–M8" vs "never M1–M8 on screen" — internal codes vs display names; clarified in one line so a future session doesn't "fix" it wrongly). Resolve in one line, in place.
+4. **FOUNDATION-COMPLETENESS CHECK — the five pillars.** Taxonomy · terminology · entities · needs/messaging · design system: none may be THINNER after the task than before it. If the build advanced past a pillar, the pillar updates in the SAME task (or is stop-and-flagged where the update needs an owner/Codex ruling). The foundation never lags the build.
+5. **REPORT** — plain language: what matched, what was backfilled, what contradictions were found and how resolved, what needs R00 ratification. If everything matched: say so explicitly — "forward clean, backward clean, no contradictions."
+
+Autonomy boundary: run this without being asked; fix forward mismatches and backfill backward gaps autonomously (marked ratify: R00); STOP and flag anything needing an owner ruling, a migration, a production merge, real non-seed data, or the payment flag.
+
+## PART 5 — Automation status
 
 **L1 is AUTOMATED** (`scripts/test-fit.mjs`, wired into `npm run verify`): the repo's build environment carries Playwright + Chromium, and the DEMO build renders every core screen from fixtures with no network — so truncation/overlap/h-scroll/tap/CTA assertions run headlessly on every verify, failing the build exactly like a score-defect. Live-data screens additionally get a manual L1 pass (the same assertions over the live-backed local run) before witness handoff, because demo fixtures cannot reproduce every live data shape (the history-line collision only appears when recent confirmations exist).
 
