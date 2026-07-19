@@ -32,7 +32,11 @@ _Created 17 Jul 2026 from the real, witnessed state of the product — not from 
 
 ---
 
-## NOW — PHASE-N TRAIN SHIPPED 18 Jul (2nd train of the day) — LIVE-VERIFIED BOTH SURFACES
+## NOW — DAY-1 TRAIN SHIPPED 18 Jul (3rd train of the day) — LIVE-VERIFIED BOTH SURFACES
+
+**Ship record (owner "ship them"):** main merge `534606a` + embed → push `669b970`. **Live-verified:** app.lock.show `index-DW8JAc3W.js` + embed `index-BVRJUysA.js` both carry the D3 (history bottom-end) + D4 (tap-target sweep) fingerprints — no skew. Ships: T-66 fit fixes · T-68 D1–D5 · T-69 foundation backfills (G-8/G-9/G-10 + §4.1a canon + foundation law). Quarantine held (4 site files stay on branch). **MOBILE/DESKTOP marks: still awaiting the owner's witness word** (rule 4) — she has the live build to walk now.
+
+## Prior — PHASE-N TRAIN SHIPPED 18 Jul (2nd train of the day) — LIVE-VERIFIED BOTH SURFACES
 
 **Ship record:** main merge `d30e74f` + embed `3f2fab8` → single push trigger. **Live-verified (L-7):** app.lock.show bundle `index-BQIX2P5b.js` carries N2 ("night does not break at soundcheck", "paid demand") · N3 ("live-room proof") · N4 EN+HE ("מאז", "אישורים חדשים") · T-61/T-62 ("Show"/"הצג") · prior-train strings intact. **Embed `index-RY69YSvd.js` (lock.show/app) carries Phase-N too — no surface skew.** Rule-12 quarantine held again (4 site files stay on branch). Labels: T-61 · T-62 · T-63(a) · N2–N5 all **deployed-live**. **MOBILE/DESKTOP marks stay "awaiting owner witness"** (rule 4) — the owner's phone walk of the 4-item batch is the open step; probe-poll false-negative lesson: long template strings split in minified bundles — fingerprint with short literals.
 
