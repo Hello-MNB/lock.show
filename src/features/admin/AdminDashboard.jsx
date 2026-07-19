@@ -6,7 +6,7 @@ import {
   adminListConsents, adminExportArtist, adminDeleteArtist, adminListAudit,
 } from '../../lib/db.js'
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
-import { fetchGateCounts } from './gateCounts.js'
+import { fetchGateCounts, fetchRetention } from './gateCounts.js'
 import { createNotification } from '../../lib/notifications.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import {
@@ -72,6 +72,20 @@ export default function AdminDashboard() {
     }
   }, [])
   useEffect(() => { loadGate() }, [loadGate])
+
+  // T-55 — retention tiles (§21.1 Retention family, owner priority 18 Jul):
+  // returning accounts + repeat Passport opens. Same isolation contract as the
+  // Gate tiles: own state, a metrics hiccup never blanks the console.
+  const [ret, setRet] = useState({ loading: true, error: false, counts: null })
+  const loadRet = useCallback(async () => {
+    setRet((r) => ({ ...r, loading: true, error: false }))
+    try {
+      setRet({ loading: false, error: false, counts: await fetchRetention() })
+    } catch {
+      setRet({ loading: false, error: true, counts: null })
+    }
+  }, [])
+  useEffect(() => { loadRet() }, [loadRet])
 
   const load = useCallback(async () => {
     setLoading(true); setError(false)
@@ -243,6 +257,37 @@ export default function AdminDashboard() {
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-faint">{T.admin.gateNote}</p>
+              </>
+            )}
+
+            {/* T-55 — RETENTION tiles: the returning-customer signal (§21.1).
+                Counts of product events, demo-excluded — never per-person. */}
+            <p className="mb-2 mt-5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{T.admin.retTitle}</p>
+            {ret.loading ? (
+              <div className="card py-4" role="status" aria-live="polite">
+                <div className="skeleton h-4 w-1/3" />
+                <span className="sr-only">{T.common.loading}</span>
+              </div>
+            ) : ret.error ? (
+              <div className="card py-4 text-center" role="alert">
+                <p className="text-sm text-ink">{T.admin.gateError}</p>
+                <button onClick={loadRet} className="btn-ghost mt-3 text-xs">{T.admin.gateRetry}</button>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+                  <div data-testid="ret-returning" className="card py-3 text-center">
+                    <p className="text-2xl font-extrabold text-ink">{ret.counts?.returningAccounts ?? 0}</p>
+                    <p className="mt-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted">{T.admin.retReturning}</p>
+                    <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-faint">{T.admin.retReturningTag}</p>
+                  </div>
+                  <div data-testid="ret-repeat" className="card py-3 text-center">
+                    <p className="text-2xl font-extrabold text-ink">{ret.counts?.repeatPassportOpens ?? 0}</p>
+                    <p className="mt-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted">{T.admin.retRepeat}</p>
+                    <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-faint">{T.admin.retRepeatTag}</p>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-faint">{T.admin.retNote}</p>
               </>
             )}
           </Section>

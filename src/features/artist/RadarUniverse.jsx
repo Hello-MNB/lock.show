@@ -79,7 +79,13 @@ function derivePlatformNodes(items = [], claims = []) {
     if (!platform) continue
     const prev = byKey.get(platform)
     if (prev?.fromClaim) continue // first real claim wins — richer than a bare host
-    byKey.set(platform, { key: platform, platform, value: c.value || human(c.claim_type), fromClaim: true })
+    // T-59 (owner firewall catch, 18 Jul): NEVER the claim VALUE on the ring —
+    // a draw-band value is a band, and a band never floats as a naked number
+    // on the face (§5.10). The ring shows only WHERE proof comes from: the
+    // caption is the method label (provenance word), rendered via i18n at the
+    // call site. The band itself lives in the planet panel, paired with its
+    // method chip + room-fit line as spec'd.
+    byKey.set(platform, { key: platform, platform, method: c.method_label || c.source_type, fromClaim: true })
   }
   return [...byKey.values()]
 }
@@ -258,7 +264,13 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     () => (scene ? { ...effArtist, genre: scene } : effArtist),
     [scene, effArtist],
   )
-  const genrePrimary = useMemo(() => new Set(primaryPlanets(sceneAct, sceneArtist)), [sceneAct, sceneArtist])
+  // T-60 (owner ruling 18 Jul): the ring + ★ mark ALL primary planets, but the
+  // "Central in your genre" TEXT renders on the family's FIRST-priority planet
+  // only — three identical labels read louder than guidance. The other primaries
+  // keep the wording in their aria-label (accessibility unchanged).
+  const genrePrimaryList = useMemo(() => primaryPlanets(sceneAct, sceneArtist), [sceneAct, sceneArtist])
+  const genrePrimary = useMemo(() => new Set(genrePrimaryList), [genrePrimaryList])
+  const genreLabelPlanet = genrePrimaryList[0] || null
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
   const evidenceRoute = `/evidence/${artist.id}`
 
@@ -498,8 +510,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight md:text-[9px]">
                   {S.planets[p.key]}
                 </span>
-                {/* G2 — method-safe wording label; words only, never a weight */}
-                {primary && (
+                {/* G2 — method-safe wording label; words only, never a weight.
+                    T-60: text on the FIRST-priority planet only (ring+★ still
+                    mark every primary; the rest keep the wording in aria). */}
+                {primary && p.key === genreLabelPlanet && (
                   <span className="mt-0.5 block w-20 font-mono text-[7px] uppercase tracking-[0.08em] text-gold/75 leading-tight md:text-[8px]">
                     {S.genrePrimary}
                   </span>
@@ -532,16 +546,21 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                     className="tap-target grid h-7 w-7 place-items-center rounded-full border border-dashed border-line2 bg-surface2 text-faint transition-colors hover:border-line2 hover:text-ink">
                     <span aria-hidden className="text-xs font-bold leading-none">+</span>
                   </button>
-                ) : (
-                  <span aria-label={S.platformNodeAria(pn.value)} title={pn.value}
-                    className="relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
-                    <PlatformLogo name={pn.platform} size={16} />
-                    <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg2" />
-                  </span>
-                )}
+                ) : (() => {
+                  // T-59: link nodes caption their host; claim nodes caption
+                  // their METHOD LABEL (provenance word) — never the value.
+                  const caption = pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value
+                  return (
+                    <span aria-label={S.platformNodeAria(caption)} title={caption}
+                      className="relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
+                      <PlatformLogo name={pn.platform} size={16} />
+                      <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg2" />
+                    </span>
+                  )
+                })()}
                 {!isConnect && (
                   <span className="block max-w-[72px] truncate font-mono text-[7px] uppercase tracking-[0.06em] text-faint">
-                    {pn.value}
+                    {pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value}
                   </span>
                 )}
               </div>

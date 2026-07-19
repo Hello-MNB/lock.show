@@ -27,7 +27,18 @@ function storeChoice(value) {
   }
 }
 
+// §14.1.4 first-party rule (owner ruling 18 Jul, audit T-55): NO third-party
+// pixel on any evidence surface — public Passport, confirm ceremony, evidence
+// screens. GA4 must never load while the viewer is ON one of these routes:
+// consent is still recorded, the load simply waits for a non-evidence route
+// (the next app open elsewhere). Matches both standalone and /app/ embed paths.
+const EVIDENCE_SURFACE = /(^|\/)(passport|confirm|evidence)(\/|$)/
+function onEvidenceSurface() {
+  return EVIDENCE_SURFACE.test(window.location.pathname)
+}
+
 function loadGA() {
+  if (onEvidenceSurface()) return
   if (document.getElementById('ga4-src')) return
   window.gtag('consent', 'update', { analytics_storage: 'granted' })
   const s = document.createElement('script')

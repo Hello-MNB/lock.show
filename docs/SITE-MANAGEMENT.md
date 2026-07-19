@@ -19,6 +19,11 @@ _Owner-ordered 17 Jul 2026 ("document site management professionally, including 
 - **The restore trap:** `git checkout <old> -- dir` does NOT delete newer-only files → mixed-tree type errors (hit twice on 17 Jul). Exact-state restore = `git rm -rqf dir && git checkout <old> -- dir`, then re-apply keepers.
 - Rollback: exact-state restore to the last version-log anchor, keep the keepers (rescue 404, rewrites, embed), push main; a failed Vercel build leaves the previous deploy live (safe).
 
+## 2b. TRIGGER LAW (T-50 P1, 17 Jul — binding)
+- **Production deploys are triggered by `git push origin main` ONLY.** The deploy hooks are for EXPLICIT preview builds and must never be fired alongside a main push (duplicates → CANCELED noise → owner failure-emails).
+- Team E records every production ship here: sha · state · smoke result (the deploy log lives in the register's wave records).
+- KNOWN NOISE SOURCE until T-50 P2 ships: every work-branch push auto-builds previews of BOTH projects; mid-surgery branch states produce legitimate-looking failure emails. P2 (preview-skip when website-next unchanged) rides the M-15 hygiene train.
+
 ## 3. Ship pipeline for ANY site change (rule 12)
 1. Build on the work branch (Team S territory only).
 2. Preview deployment (deploy hook) → owner gets the preview URL.
@@ -35,6 +40,7 @@ _Owner-ordered 17 Jul 2026 ("document site management professionally, including 
 - **Mobile-first:** designed at 390px first; no horizontal scroll; hero legible; images weighted for phones.
 - **Images:** every major section carries a real, on-brand image (no dark empty containers).
 - **Everything works:** internal links · signup/login entries into the app · legal pages — zero dead ends.
+- **Container-contrast law (owner, 17 Jul — S1 round 1 REJECTED on this):** a container sitting on another container MUST visibly contrast with it — alternate section grounds (dark ↔ light rhythm), elevated cards with real shadow/border separation, explicit tonal steps between nesting levels. Tone-on-tone stacking (dark box on dark box, paper on paper without elevation) is FORBIDDEN. Every mockup ships with a section-rhythm map proving the alternation.
 
 ## 5. Codex DS absorption (owner: "take Codex's DS to you")
 Canonical DS inputs now owned in-repo: `docs/design-system/A13-TOKEN-VALUES.md` · `COMPONENT-STATE-TOKENS.md` · DS digests · `docs/CODEX-DESIGN-BRIEF.md` · `docs/CODEX-TOKEN-COMPLETION-MAP.md` · §5.11 of the spec (self-contained defaults). Team S builds ONLY from these + the spec — no Drive dependency. Gaps still OWED by Codex: logo/venue SVGs (M-7).

@@ -64,6 +64,46 @@ async function persist(name, props) {
   } catch { /* best-effort — a measurement write must never surface to the user */ }
 }
 
+// ── First-touch attribution — the site→app first-party bridge (audit T-55) ──
+// Captured ONCE per browser at first app open: utm_* params + referrer +
+// landing path (+ the ?s=1 share marker, G7). Attached to signup_completed so
+// a signup is attributable to the site page / campaign / share link that
+// produced it. First-party localStorage only — no cookie, no third-party call.
+const ATTRIB_KEY = 'gigproof_attrib'
+export function captureFirstTouch() {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage.getItem(ATTRIB_KEY)) return
+    const p = new URLSearchParams(window.location.search)
+    const attrib = {}
+    for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+      const v = p.get(k)
+      if (v) attrib[k] = v.slice(0, 100)
+    }
+    if (document.referrer) attrib.referrer = document.referrer.slice(0, 200)
+    attrib.landing = window.location.pathname.slice(0, 200)
+    if (p.get('s') === '1') attrib.shared = true
+    attrib.at = new Date().toISOString()
+    localStorage.setItem(ATTRIB_KEY, JSON.stringify(attrib))
+  } catch { /* storage blocked — attribution is best-effort */ }
+}
+export function getFirstTouch() {
+  try { return JSON.parse(localStorage.getItem(ATTRIB_KEY) || 'null') || {} } catch { return {} }
+}
+
+// ── Return-visit marker (retention signal, audit T-55) ──────────────────────
+// A first-party per-browser boolean: was this surface seen before? Marks the
+// surface as seen and returns the PREVIOUS state. Carries no identity and is
+// never surfaced as a per-person number — the operator read model counts
+// product events only.
+export function isReturnVisit(surface) {
+  try {
+    const k = `gigproof_seen_${surface}`
+    const seen = !!localStorage.getItem(k)
+    localStorage.setItem(k, '1')
+    return seen
+  } catch { return false }
+}
+
 // Event names. Values in CANON persist to analytics_event; the rest are dev-only.
 export const EVENTS = {
   // ── funnel top ──

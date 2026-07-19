@@ -4,7 +4,7 @@ import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { ROLES, OAUTH_ENABLED } from '../../lib/constants.js'
-import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 import AuthScene from './AuthScene.jsx'
 import { classifyAuthError, EMAIL_SHAPE } from './authError.js'
 
@@ -42,7 +42,9 @@ export default function Login() {
     setLoading(true)
     try {
       await signIn({ email, password })
-      logEvent(EVENTS.LOGIN)
+      // returning = this browser has held a session before (first-party
+      // seen-marker, audit T-55) — the retention read model counts on it.
+      logEvent(EVENTS.LOGIN, { via: 'password', returning: isReturnVisit('app') || undefined })
       // Honor the return path RequireAuth/AcceptInvite stashed in state.from
       // (deep link or /invite/:token) — otherwise every login dead-drops on "/"
       // and invited teammates / bounced deep-links never reach where they meant

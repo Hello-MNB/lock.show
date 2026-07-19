@@ -1,7 +1,7 @@
 # LOCK — PRODUCT SPECIFICATION
 
 **The single source of truth for building the LOCK product.**
-_Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-review pass 16 Jul · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §16.B.11–16 = strategy (GTM · monetization · growth · risk · trust&safety) · §18 = open rulings (priority-tiered) · §19 = scaling & future-readiness (reserved, post-Gate)._
+_Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-review pass 16 Jul, **Radar-universe / taxonomy pass 17 Jul** (owner R00 order: §8.2 two-jobs + 8-family emphasis · §8.3 coaching lines · §16.A Registry B + WhatsApp-group source + migration structure · §18 OWED/OPEN incl. R-10), **universe-coverage pass 18 Jul (T-54, from `docs/UNIVERSE-GAP-REPORT.md`: §8.2 registry-driven nodes target · §5.10 count-based progress vocabulary · §8.7 Proof-Unit/proof-story/content-classes target · §16.A.5b Registry-B reality [F1.csv] · §18.2 R-11 + M-17)**, **measurement audit 18 Jul (T-55: §21.1 per-family status · §14.1.5 what-fires · §14.1.4 GA4 evidence-surface scope-out · §8.12 built-vs-pending tiles)** · Firewall-safe · Repo doc (shareable — contains no credentials or secrets) · §§1–11 = product/design law · §§13–17 = deep build spec (engineering · measurement · legal/localization · taxonomy/business · interactivity/utility-screens) · §16.B.11–16 = strategy (GTM · monetization · growth · risk · trust&safety) · §18 = open rulings (priority-tiered) · §19 = scaling & future-readiness (reserved, post-Gate)._
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
@@ -23,7 +23,7 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-rev
 - **9. AI / Scan Intelligence** — built vs target; discovery step; locale-awareness; provider fallback
 - **10. QA / Acceptance** — mobile-first, desktop, per-field DoD, contrast, firewall scan
 - **11. Current State & Living References**
-- **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–036); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
+- **13. Engineering & Architecture** — system surfaces & trust boundaries; the real DB schema (migrations 001–037); API/RPC contracts; the `buildSafePayload` claim-safe contract; auth/sessions; RLS + server-enforced firewall; DB ops / deploy / rollback; Q8 production-readiness gate
 - **14. Measurement, Payments & Notifications** — the 29-event analytics canon; measurement architecture; demo/test exclusion; the Gate measurement; free-pilot payments; transactional-email catalog
 - **15. Legal, Consent & Localization** — legal docs & status; Amendment-13/GDPR consent framework; Consent Mode v2; `consent_records`; localization architecture + RTL rules; the delivered Hebrew string set; legal placeholders (L-1…L-9) + HE ratification list (H-1…H-7)
 - **16. Taxonomy & Business** — taxonomies (EN·HE); goals; the Gate; business model; business case; unit economics; **GTM approach; monetization roadmap (plans-by-customer · monthly/annual-discounted billing · smart-upsell architecture); growth loops; risk register; trust & safety / IP; post-Gate roadmap**; owner-decision list
@@ -410,6 +410,13 @@ Rules: the human line **describes room fit, never ranks the artist**; always pai
 1. **Lime discipline** — solid lime = an actionable **button only**. A *confirmed status* uses a **lime outline / lime text**, never a solid-lime fill, so a buyer/artist never taps a status chip thinking it's a CTA. (Protects law 3's one-CTA clarity.)
 2. **Private vs public border** — private/draft items render with a **dashed border**, public items with a **solid** border — a global, wordless signal reinforcing "always show private/public" (law 6).
 
+**Progress vocabulary (count-based — the richer artist-private progress language, 18 Jul).** The owner's finding: bounded words alone make progress displays feel castrated. The fix inside current canon — the artist's OWN progress may render with **counts of their own items**, which are already allowed (the "N of 8 milestones" precedent, §8.2):
+- **X-of-Y counts** — "6 of 8 confirmed", "3 of 5 planets ready", "2 items waiting for you here".
+- **Discrete-step progress rings/bars** — a ring that fills by *steps* (one step per confirmed item), labeled with the count ("6 of 8"), NEVER labeled or stored as a percentage.
+- **Per-planet tallies** in the Inspector — "confirmed 4 · found 2 · to add 3" (the artist's own items on their private Radar).
+- Named waypoints (M-names) + the count-up, as already specified.
+Rules: artist-private surfaces only; denominators exclude N/A fields (N/A ≠ gap, §16.A.5b); never comparative, never a quality read, never buyer-facing. **A completion *percentage* remains rejected (§2.9) unless the owner rules R-11 (§18.2) to allow the artist-private variant — this vocabulary needs no such ruling.**
+
 **Firewall guardrails on this whole layer:** no ranked ladder; no numeric grade; no negative state on a buyer face; the band/binary stays the stored truth; every human line pairs with provenance. Warmth is a **wording + visual** change, never a data change.
 
 ### 5.11 Self-contained DS defaults — the repo does NOT depend on Codex's Drive
@@ -526,7 +533,13 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 
 ---
 
-### 8.1 Onboarding (`/onboarding`) — the discover→confirm narrative (TARGET 3-step; BUILT 2-step)
+### 8.1 Onboarding (`/onboarding`) — the discover→confirm narrative (BUILT 3-step as of 18 Jul, T-58 — reveal ships the REAL-data version; the animated multi-source scan moment stays TARGET)
+
+> **T-58 provenance note (18 Jul):** step 3 "Here's what we found" is now BUILT in its honest form —
+> it reveals the artist's actually-captured link as a ✦ found signal with the §2.8 honest-scope line
+> ("a wider multi-source auto-scan is in development"), never an invented tally. The full animated
+> Step-2 scan + multi-source found-grid below remains the TARGET experience, unlocked by the real
+> deep-scan (§9). With no link given, the flow completes from step 2 — a reveal never fabricates.
 
 **PURPOSE.** Turn a cold artist into a live Passport-in-progress with the least possible effort: the artist gives only the basics; LOCK discovers the public footprint; the artist confirms. "You don't build from scratch — you approve what we found." Warm conversion copy, never technical. EN + HE, locale-aware.
 
@@ -557,6 +570,14 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 
 **PURPOSE.** The artist's private, living picture of their own professional proof — six dimensions a booking manager weighs — where LOCK shows what it *found* on public sources and the artist *confirms* what's really theirs, one tap at a time. It is where evidence is reviewed and confirmed; it is **not** a dashboard, and buyers never see it. Two readings for every component: **Artist read** = "what's strong, what still needs me, what to do next" (gaps are invitations); **Buyer relevance** = the same signal, once confirmed + method-labeled, becomes a checkable strength on the public Passport.
 
+**THE TWO JOBS (owner R00, 16 Jul — canon).** "The Radar's purpose is to COLLECT information — with AI scanners and bots — about the artist's UNIVERSE, and to help the artist IMPROVE that universe. The startup's meaning is PRE-BOOKING." The Radar therefore has **two jobs, both first-class**, and a Radar build that delivers only the first has failed the spec:
+1. **COLLECT** — discover the artist's public universe (scanners + the artist's own additions) and let the artist confirm what's really theirs.
+2. **UPGRADE** — actively help the artist *improve* that universe: every planet state produces guidance (the coaching line §8.3, the next-best-move dock, the fill widgets) that names the one thing worth strengthening and why a buyer cares. **A Radar that only collects is a form. A form is not the product.**
+
+**The loop (the screen's core mechanic, running continuously):**
+`scan → ✦ found → artist confirms ✓ → LOCK advises what to strengthen → artist adds it → scan again`
+Each pass around the loop makes the universe more provable; the loop never ends, it only slows as planets reach Ready. Every stage is already specified: scan = §9 (honesty per §2.8 below) · ✦ found = node states · confirm = the Inspector §8.3 · advise = coaching line + next-best-step engine · add = inline fill widgets · re-scan = incremental re-scan (TARGET, §9).
+
 **DESKTOP layout — the 4-zone canvas** (`.radar-work`):
 - **TOP-CENTER · scene lens** (`.rwscene`) — a segmented control ("Your standing in" + Melodic / Progressive / Afro / All). It **never overlays the act card**.
 - **LEFT · Act identity + privacy + lens** (`identityCol`) — round photo, "Your Act", stage name; a privacy line ("Private to you — nothing is public until you approve it." / when published: "Some strengths are public on your Passport — you approved them."); a "Show" lens rail (All · Needs my review · Ready to publish).
@@ -577,6 +598,21 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 | **Professional Kit** | book you without friction (binaries + bands) | set length, regions, technical rider, invoice-ready, contact | techno |
 | **Career Proof** | third-party proof that outranks a self-claim | producer-confirmed rebookings, press mentions, draw claims, "ask a producer to confirm" | afro |
 
+**EIGHT RADARS — one geometry, family-derived emphasis (the family→planet model).** The six planets and their fixed orbit are identical for every artist — but there is not one Radar, **there are EIGHT: same six planets, different emphasis per `genre_family`** (`genreWeights.js:GENRE_FAMILIES`, reference table §16.A.1.a). The family decides which planets carry the ★/gold-ring emphasis, the order the next-best-step engine walks candidates, and the scene named in the coaching line (§8.3). The full model, verbatim from code:
+
+| `genre_family` | PRIMARY planets (emphasis + ★) | SECONDARY | The buyer logic behind it |
+|---|---|---|---|
+| `dj-club` | live · audience · prokit | proof · identity | a club booker asks: crowd, room, frictionless night |
+| `dj-festival` | music · live · proof | audience · identity | a festival curator asks: sound, stage history, third-party proof |
+| `open-format` | prokit · live · proof | audience · identity | an events buyer asks: reliability, range, references |
+| `live-band` | live · prokit · proof | audience · identity | a band is booked on show + logistics + references |
+| `original-artist` | music · identity · live | proof · audience | an original act leads with the music and the story |
+| `live-electronic` | music · live · identity | prokit · proof | a live act leads with the sound and the performance |
+| `comedian-host` | live · identity · prokit | proof · audience | a host is booked on stage presence + persona + reliability |
+| `corporate-ceremony` | prokit · proof · live | identity · music | a corporate buyer asks: zero surprises, references, delivery |
+
+**Family-derived, all four:** planet **emphasis order** (`planetEmphasisOrder`) · the **★ / gold ring** (`isPrimaryPlanet`) · the **next-best-step** candidate order · the **coaching line** wording (§8.3). Family resolution is format-led (`familyFor()`: `act.format` decides; genre text only refines the DJ split — the `FESTIVAL_HINT` heuristic is TEMPORARY until the `genre_scene` FK ships, §16.A.1.b/§16.A.6). **FIREWALL (§2.7):** this is INTERNAL prioritization only — it renders exclusively as the i18n guidance wording `radar.genreFocus` ("A useful place to focus in your genre: …") and `genrePrimary` ("Central in your genre"), never a weight, number, rank, %, leaderboard, or buyer-facing weakness. **The G2 guard stays absolute:** no genre/format signal → no family → no emphasis at all — every planet renders equal; a missing genre never produces a guessed emphasis.
+
 **Planet states (bounded rollup — never a count on the face):** **Needs you** (something found is waiting to confirm, OR still empty) · **Developing** (some confirmed, gaps remain) · **Ready** (confirmed, no gaps) · **Locked / "Not needed yet"** (Professional Kit stays locked until Live Show is backed — a sequencing hook, not a judgement). Node marks: ✓ (settled) · ✦ (found dot) · ? / + . Each planet also shows its **plain-language state word** under it (Ready · Developing · Needs you · Not needed yet). Genre-primary planets carry a second gold ring + a ★ and a topline; additive only (non-primary planets keep full opacity/interactivity/order).
 
 **Supporting components:**
@@ -588,6 +624,10 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 **INTERACTIONS.** Scene switch (`pickScene`) re-weights which planets carry the ★ (a reading lens on the SAME evidence — never a data change). Lens/filter (`pickFilter`) dims/highlights. Tap a planet (`openPlanet`) selects it → inspector + orbiting source logos. `nextStep` from the bottom dock jumps to the computed next-best action's planet/target. The **next-best-step engine** computes ONE action from real planet state (priority: a genre-primary planet in Needs-you with found items → any planet with found items → a locked planet's unlock → all-lit → publish → else add the missing proof), each carrying a `why` line; firewall-safe (action + reason only).
 
 **EXACT MICROCOPY (samples).** Scene "Your standing in" · lens "All / Needs my review / Ready to publish" · privacy "Private to you — nothing is public until you approve it." · dock eyebrow "Your next move" · sample dock title "Confirm your live-draw proof" + why "One tap turns what we found into a strength on your Passport. Nothing goes public until you say so." + CTA "Continue →". State words: Ready · Developing · Needs you · Not needed yet.
+
+**REGISTRY-DRIVEN NODES (TARGET — the universe-coverage law, 18 Jul).** The planets' node lists above are the BUILT state: ~20 hand-derived nodes (audit D4: "hand-built for the DJ case"). The TARGET is that **every planet derives its nodes from the field registry `docs/registry/F1.csv`** (483 rows · 376 fields · all 18 evidence segments mapped to the 6 planets, per-field `visibility`, `applicability`, freshness, consent, method ceiling; family deltas in `F2-F6-DELTAS.csv`). Rules: (1) the 18 segments render as **node groups inside their planet** (e.g. proof carries Ticketing/Draw · Booking Market · Reputation · Network · Career History as labeled clusters) — no seventh planet; (2) a field appears only when applicable for the artist's family (R/C; **N/A = never shown, never asked, never counted** — §16.A.5b); (3) the registry's `next_action_rule`/`gap_rule` columns feed the coaching layer (§8.3) so recommendations are registry-driven, not hand-coded; (4) content classes the registry adds that the buyer-visible universe must eventually reach: releases & labels · press · testimonials & reliability confirmations · career timeline & milestones · collaborations · brand/visual assets · structured video (gateway clip / full-set) · owned-community channels beyond one band. Wiring order and the ≥038 migration are owner-authorized builds (§16.A.6.a); until wired, this paragraph is TARGET and the hand-built nodes are the honest BUILT state.
+
+**SCANNER HONESTY (§2.8 applied to this screen).** The COLLECT job must never overstate what the scanner is. **BUILT today:** per-evidence Anthropic claim extraction — the artist supplies an item, LOCK extracts and method-labels claims from it. **TARGET (not built):** the multi-source deep scan at onboarding (≈$1 target cost) + cheap automatic incremental re-scans that keep the universe fresh without the artist asking. Wherever the Radar shows or implies scanning (the platform ring caption, the found-tally, empty-scan states), the honest-scope line ships verbatim: **"A wider multi-source auto-scan is in development."** Copy may present the intended discovery experience as vision, but a ✦ found item always states how it was actually found, and no surface claims automatic scanning that did not run. No business case may price or assume the target scan until it is implemented and its cost measured (CLAUDE.md).
 
 **FIREWALL.** Bands + binaries + method labels only. No score/rank/%/gauge/headcount/leaderboard. The sweep is thematic, not a gauge. Scene ★ is guidance, never grading; no signal → no emphasis. The found count appears only inside panel copy ("we found 2 things here"), never as a grading badge on the face.
 
@@ -604,9 +644,27 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 **Planet states surfaced in the inspector:** Found (✦, waiting) · Needs-you · Ready · Private · Published (public on Passport) · Locked / Not-needed-yet. The status chip reads one of: **"Still private"** (default — "Still private. It only helps your Passport after you approve it.") · **"Ready on your Passport"** (public — "This proof is ready. Want to see how a buyer will read it?") · **"Not needed yet"** (locked — "This isn't needed yet — it opens once your live draw is backed.").
 
 **The 3 layers** (desktop right-rail; mobile bottom-sheet):
-1. **Layer 1 · Meaning** — one short, scene-aware line: "In {Scene}, {why this dimension matters}." (e.g. "In Melodic Techno, live-room proof matters more than follower count.")
+1. **Layer 1 · Meaning — the COACHING LINE (the UPGRADE job's voice, full spec below)** — one short, scene-aware line: "In {Scene}, {why this dimension matters}." (e.g. "In Melodic Techno, live-room proof matters more than follower count.")
+
+   **The coaching line (owner R00 — canonical example, verbatim):**
+   > *"In techno, your Instagram CONTENT matters more than your follower count. Your reels are where a booker decides. Worth strengthening."*
+
+   **Rules (all binding):**
+   - **Names the scene** — the artist's actual declared scene ("In techno…"), never a generic "in your genre". No scene signal → no coaching line (G2, §2.7) — the layer falls back to the neutral dimension meaning.
+   - **ONE thing** — a single concrete item worth strengthening, never a list, never a second clause of homework.
+   - **Says why a buyer cares** — the line carries the buyer's reasoning ("your reels are where a booker decides"), sourced from the node's `why_a_buyer_cares` key (below / §16.A.5b).
+   - **Warm, coach voice** (§4.5 / §6.8) — an invitation ("Worth strengthening"), never "weak / missing / behind".
+   - **Derived, never stored** — computed at render time from Registry B applicability (§16.A.5b) + the planet's live state + the family emphasis (§8.2). It is wording over existing bounded state; no coaching text, rating, or judgment is ever persisted.
+   - **Renders in Inspector Layer 1** — this extends the existing Meaning layer; it is NOT a new surface, panel, or notification.
+
+   **Firewall pair (the line every builder checks against §2.1):**
+   - ✅ ALLOWED — *"In techno, content carries more weight than follower count."* (a fact about the scene)
+   - ❌ FORBIDDEN — *"Your content is better than most techno acts."* (a peer comparison — a rank in words)
+   A coaching line may state what the scene weighs; it may never state where the artist stands relative to anyone else.
 2. **Layer 2 · Found proof** — a brief human summary of what LOCK found ("LOCK found fourteen lineup listings under your name and six Resident Advisor bookings.") + the **source-logo ring** (each row = source mark + a **human source line**: **"from your Instagram"** for own accounts, **"from …"** for third-party listings — the raw "Source-linked" label is de-technicalised here while the Passport keeps canon vocabulary) + a per-row tag (Confirmed / Found / Needs you) + the status chip.
 3. **Layer 3 · Next action** — the **single primary CTA** + an optional quiet secondary. CTA is computed: if found items exist → "Review your {dimension}" (`confirmTop`) with a secondary "Not mine / later" (`dismissTop`); if locked → "Confirm your live draw first"; if public-ready → "Preview on Passport"; if only empty → the add-source label ("Add a ticket export", etc.); else "Preview on Passport".
+
+**Every node carries `why_a_buyer_cares` (per-field, i18n key — the UPGRADE job at node level).** Each evidence field in Registry B (§16.A.5b) declares a `why_a_buyer_cares` i18n key; the Inspector surfaces it on the node's row/peek so the artist always sees the buyer's reasoning next to the ask — this is what turns a form field into coaching. Examples of the register: WhatsApp group → *"a private room the artist owns and can activate — demand that does not depend on the venue's marketing"* · ticket export → *"the only proof of paid demand"* · technical rider → *"why the night doesn't break"*. Always an i18n key (localizes, never hardcoded), always about **why the buyer cares** — never about how the artist compares.
 
 **Source-logo ring / orbit behavior.** On select, source logos **orbit the selected planet in place** (percent geometry, fanned inward toward the star, ~84° spread, emerging with a stagger unless reduced-motion). Confirmed logos carry a ✓; a confirm "blooms" at the planet centre with a small celebration (`justLockLogo`). Tap/long-press a logo → its method + human source line. Locked Kit shows no orbiting evidence.
 
@@ -729,6 +787,14 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 
 **FIREWALL.** Verified strengths only; draw as bands, readiness as binaries, each with a method label; no gap; no score/rank/prediction. **Remove the `.fwstrip` footer** (U33 — the prototype's leftover strip is a violation; §2.2). Peer bands are **not** shown buyer-side unless method-safe and requested.
 
+**UNIVERSE TRANSLATION (TARGET — the owner's 18 Jul ruling frame + old-canon recovery; awaiting the T-49 taste brief before design).** The owner's diagnosis stands as law: *the Passport must translate the Radar universe — everything confirmed and improved — to other people; today it reads as a headcount output because only draw bands + a community band are wired.* The recovered canon (B4-35.50 A15/A11 + the lens structure of the superseded Universal-Passport vision — structure adopted, its scores/predictions remain REJECTED §2.9):
+1. **Proof Unit anatomy (atomic law):** every Passport item = **claim + context + method label + reviewed date** — never a bare number/band row. (§8.7's proof cards already carry this; it becomes the rule for ALL content classes below.)
+2. **The 30-second proof story (section hierarchy):** identity → attributed-draw Proof Units → track record → **catalogue & releases** → **audience context** → **booking/admin readiness** → **supported references (testimonials · reliability confirmations · press)** → one sticky CTA. Sections render only when supported content exists (RENDER LAW) — an empty class disappears, it never shows as a gap.
+3. **Content classes to wire** (all documented passport-eligible in `docs/registry/F1.csv`; ~84 of 96 eligible fields unreached today): releases & label credits · gateway live clip / full-set video · press & career milestones · testimonials & published reviews · reliability confirmations (rebook / invited-back) · industry affiliations · brand assets (press photo set) — each as method-labeled Proof Units, never as self-authored EPK prose. **This is the not-an-EPK answer: same content classes, provenance on every item.**
+4. **Per-viewer lenses:** the four faces (U22) upgrade from re-ORDERING to per-viewer **selection + language** — the buyer face leads with risk-relief ("carries a room, shows up like a pro"), the representation face with trajectory, private/corporate with warm non-industry safety. Same evidence pool, translated — never four documents.
+5. **Minimum credible-Passport gate (publish law):** publishable only with ≥2 supported Proof Units, at least one live-demand/commercial; identity + bio + media + streaming context alone are never publishable. Server-enforced at publish.
+6. **Interactivity depth (buyer side):** the professional action set widens beyond one request — check availability · request price/details (commercial) · save privately · forward to decision-maker · future fit · request specific proof (diagnostic) · not-fit (close) — every action a recorded ProfessionalReaction, only commercial actions create an availability request; plus per-Proof-Unit source-peek, incorrect-information report, and a no-guarantee route. Reaction-to-artist stays method-safe text (§2.5).
+
 **DEFINITION OF DONE.** First viewport answers fit·trust·readiness·availability; no-login; persona toggle changes copy + CTA; source-peek on proof units; sticky/compact availability CTA; non-pro readable; no firewall strip; no score/rank.
 
 ---
@@ -827,6 +893,15 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 
 **DEFINITION OF DONE.** Gate hero tiles with exact source events; visual funnel (counts only) with source/timeframe/demo-excluded stated; AI-cost with budget-left/alert; publish freshness (stale vs unpublished); risk tile; internal-only.
 
+**BUILT-vs-PENDING per tile (audit T-55 · 18 Jul 2026 — updated in place):**
+| Cockpit element | Status | Source events |
+|---|---|---|
+| Gate tiles ×5 (views · reactions · requests · intent · verified-pay) | ✅ **BUILT, live source events**, demo-excluded (T-52 filter) | all FIRING except intent (dormant behind the pay flag, M-8 — fires on flip) |
+| **Retention tiles ×2** (returning accounts · repeat Passport opens) | ✅ **BUILT (T-55, owner priority)** — `fetchRetention()`, demo-excluded, own load/error/retry | `login` (incl. `session-restore`) · `passport_view` + `return_visit` — FIRING |
+| Stat counts (artists · published · requests · claims) | ✅ BUILT | table reads (inventories, not demand metrics) |
+| Pilot funnel bar (signup → … → availability_request) | ⏳ PENDING build — its source events mostly FIRE already (§14.1.5); wiring only | canon events |
+| AI-cost ledger · publish-freshness · risk tile | ⏳ PENDING build | server refresh-quota data exists; tiles not rendered |
+
 ---
 
 ### 8.13 Shared / supporting screens
@@ -922,7 +997,7 @@ All motion respects `prefers-reduced-motion`; menu a11y (haspopup/expanded/contr
 - **App (app.lock.show):** live at `a874ab5` (rel-2026.07.10, incl. the firewall hotfix) — the **OLD dark build**; it does **not** yet reflect the prototype. The next app step is to implement the approved prototype into the real React app (`src/`) as an RC, then Q8, then production.
 - **Site (lock.show):** live at the Codex homepage narrative rebuild (DS v1.6.25); homepage done, inner pages pending the same architecture pass. Site is served by manual alias-promote from a Codex feature branch (governance note: not yet from `main`).
 - **Embed (lock.show/app):** mirrors the app release; every app release must rebuild the embed (`build:embed`) or the two surfaces skew.
-- **DB:** applied through ~035 (Cowork-verified); migration 021 is FROZEN (do not apply). Diff before creating 019+/036+; never recreate existing tables.
+- **DB:** applied through **037** (`is_demo`, owner-applied + verified 17 Jul; 036 stays `.DRAFT`); migration 021 is FROZEN (do not apply). Diff before creating ≥038; never recreate existing tables.
 
 ### 11.2 The prototype is the behavioral ground-truth
 The interactive prototype (`scratchpad/lock-full-prototype.html`, artifact **`1c9b0030`**) is COMPLETE and owner-approved-in-iteration: engaging Radar + signal spec, consolidated ≤2-step nav hub + branding, discover→confirm planet drill-in, the Radar Inspector, onboarding narrative EN+HE locale-aware, multi-view Passport, Requests, Access, the unified switcher, and the light theme with dark Radar/Passport islands. **It is the behavioral ground-truth; this document is the written law.** When a nuance is ambiguous here, open the prototype.
@@ -1033,7 +1108,7 @@ There are **two** live data paths, by design, because the pilot must run even wi
 
 ### 13.2 Data model — the real DB schema
 
-Source of truth: `supabase/migrations/001…035` (+ `036…DRAFT`), and the consolidated
+Source of truth: `supabase/migrations/001…037` (036 = `.DRAFT`), and the consolidated
 `supabase/apply_to_supabase.sql`. Postgres schema `public`. All tables carry RLS.
 
 #### 13.2.1 Migration map
@@ -1076,13 +1151,14 @@ Source of truth: `supabase/migrations/001…035` (+ `036…DRAFT`), and the cons
 | **034** | `event_canon_unpublish` | **analytics_event CHECK = app CANON exactly: 29 event names** (file=DB=app, reconciled) | applied ✓ (**the analytics CHECK head**) |
 | 035 | `create_workspace` | `create_workspace()` RPC (second/additional workspace) | applied ✓ |
 | 036 | `token_hash.sql.DRAFT` | Hashed producer-token storage (G15-4) — dual-read rollout plan | **DRAFT — deliberately not runnable** (`.DRAFT` suffix; `token` still plaintext, migration 005) |
+| **037** | `analytics_is_demo` | `is_demo boolean` on `analytics_event` + conservative backfill (seed `@gigproof.test` actors + operator rows; anonymous public views stay real) + partial index for the operator read path (§14.3.2) | **applied ✓ 17 Jul** (owner-applied, backfill verified: 43 demo / 3 real; paired `.down.sql`) |
 
-**Live migration head (per `docs/VERSIONS.md`, 13–15 Jul 2026):** **035**. 021 is permanently
-skipped/frozen; 036 is a draft. Every migration file has a paired `NNN_*.down.sql` from 019
-onward. Migrations ship **alone**, applied+verified before dependent code (`BRANCHING-MODEL.md`
-hard-gate 4).
+**Live migration head (per `docs/VERSIONS.md`):** **037** (applied 17 Jul). 021 is permanently
+skipped/frozen; 036 is a draft (out of sequence by design). Every migration file has a paired
+`NNN_*.down.sql` from 019 onward. Migrations ship **alone**, applied+verified before dependent
+code (`BRANCHING-MODEL.md` hard-gate 4).
 
-> **Diff before authoring 037+** — do not recreate existing tables. Structural renames (e.g.
+> **Diff before authoring ≥038** — do not recreate existing tables. Structural renames (e.g.
 > workspace_type `producer`→`production`, folding 021's vocabulary) are gated on Supabase Pro
 > backups being ON before any destructive change (`rel-2026.07.13-PLAN.md` §4b item 4).
 
@@ -1600,7 +1676,7 @@ a real Passport AND one pays** — measured, not required, pre-launch.
 | Ref | Type | Item |
 |---|---|---|
 | 13.1.1 / 13.4.4 | OWED | CI embed-sync hash gate (or single-canonical-bundle redirect) to kill embed/standalone skew |
-| 13.2.1 | OPEN | 037+ authoring: fold 021 vocabulary + workspace_type rename — gated on Pro backups |
+| 13.2.1 | OPEN | ≥038 authoring: fold 021 vocabulary + workspace_type rename — gated on Pro backups (Pro ✅ 16 Jul; still needs its own sequenced rollout) |
 | 13.2.2 | OPEN | Live consent-scope vocabulary is the pre-021 set until 021 (or equivalent) lands |
 | 13.4.2 | OWED | Org invite-token expiry (producer tokens have a 14-day TTL; invite tokens do not) |
 | 13.4.2 / 13.5.5 | OWED | Producer token hashing (036 is a DRAFT; tokens are plaintext today) |
@@ -1722,6 +1798,29 @@ Legend — **Sink**: `DB` = in CANON, persists to `analytics_event`; **Key?**: �
 
 **Rule:** the business is measured from Supabase; GA4 exists to attribute _acquisition_ (which channel produced signups) and nothing more. The two are never reconciled row-for-row — they answer different questions.
 
+**Evidence-surface scope-out (owner ruling 18 Jul, audit T-55 — BUILT):** GA4 never loads while the
+viewer is on an evidence surface — `/passport/*`, `/confirm/*`, or evidence routes. Both consent
+banners guard the load (`ConsentBanner.jsx` app-side; `consent-banner.tsx` site-side for the
+404-bounce moment, riding the M-15 train): consent is still recorded, the pixel simply waits for a
+non-evidence route. No third-party pixel touches a Passport, confirm ceremony, or evidence screen.
+
+#### 14.1.5 What actually fires (measurement status — audit T-55 · 18 Jul 2026)
+
+The funnel as it MEASURES today (per §2.8 this corrects any implication that all 29 events flow):
+
+| Stage | Status |
+|---|---|
+| Site | GA4 page views only, consent-gated (defaults denied). No custom site events. |
+| Site→app bridge | **FIRING (wired T-55)** — first-touch `utm_*` + referrer + landing path (+ `?s=1` share marker) captured once per browser at app open (`captureFirstTouch()`, first-party localStorage), attached to `signup_completed`. |
+| App entry | `signup_completed` · `login` · `onboarding_completed` FIRING (live rows verified). Unwired canon names: `signup_started`, `oauth_login`, `onboarding_started`, `consent_granted/withdrawn`. |
+| Build | FIRING: `evidence_added` · `claim_confirmed` · `gig_evidence_refresh_completed` · `passport_published/unpublished` · `act_created/switched` · `workspace_switched` · `producer_confirmation_sent`. Unwired: `claim_published`, `producer_confirmation_received` (server writes `claim_confirmed` on producer-yes — naming mismatch, recorded). |
+| Distribution | `share_link_created` / `share_link_opened` FIRING; share→signup join now computable via first-touch attribution. |
+| The Gate | `passport_view` (+ first-party `return_visit` marker) · `professional_reaction_submitted` · `availability_request_created` — **FIRING**. |
+| Payment | `payment_reference_created` WIRED-BUT-DORMANT (behind `VITE_PAYMENTS_ENABLED`, OFF by owner ruling until M-8 pricing; fires the moment the flag flips) · `entitlement_activated` WIRED live (operator activate) · `availability_request_responded` unwired. |
+| Retention | **FIRING (wired T-55 — the owner's named gap)**: restored sessions emit `login {via:'session-restore', returning:true}` once per tab-session (first-party seen-marker); manual logins carry `returning`; repeat buyer opens carry `return_visit`. Operator read model: `fetchRetention()` → §8.12 retention tiles (returning accounts = distinct real accounts on >1 calendar day · repeat Passport opens). `account_deleted` unwired. |
+
+_Demo integrity: demo builds persist nothing; live operator reads filter `is_demo=false` (037 + T-52)._
+
 ---
 
 ### 14.2 Measurement architecture
@@ -1781,20 +1880,15 @@ Two distinct populations must be kept out of business metrics; they are excluded
 
 `export const DEMO = import.meta.env.VITE_DEMO === '1'` (`src/lib/demo.js`). The analytics writer short-circuits before any DB insert: `persist()` returns immediately if `DEMO` is true (`analytics.js:55`). **A demo build (`vite build --mode demo`) never writes a single `analytics_event` row.** Demo fixtures (PERLMAN et al., `demo@lock.test`) therefore cannot pollute metrics — they exist only in-memory. This is airtight.
 
-#### 14.3.2 Seed / `@gigproof.test` accounts — **NOT yet excluded (OWED)**
+#### 14.3.2 Seed / `@gigproof.test` accounts — **excluded via `is_demo` (BUILT — 037 applied 17 Jul + Gate-tile read filter 18 Jul)**
 
-The 5 seed personas (`artist@`, `booker@`, `producer@`, `agency@`, `operator@gigproof.test`, password `Gigproof!2026`, `scripts/seed.mjs`) are **real Supabase auth users on the live DB**. When they act, `DEMO` is false, so their events **do persist** to `analytics_event`. There is currently **no `is_demo` / `environment` column on `analytics_event`** (024/028/034 schema has none). Consequences:
+The 5 seed personas (`artist@`, `booker@`, `producer@`, `agency@`, `operator@gigproof.test`, password `Gigproof!2026`, `scripts/seed.mjs`) are **real Supabase auth users on the live DB**. When they act, `DEMO` is false, so their events **do persist** to `analytics_event`. The three-part design is now delivered:
 
-- The friends-cohort pilot (`PILOT-MEASUREMENT-MAP`) can rely on demo exclusion _only_ because the cohort uses real accounts, not the demo build — but seed-account noise is not filtered.
-- `ADMIN-PANEL-SPEC §E.8` explicitly flags this: _"verify which events actually carry … `is_demo`; absent key → metric marked **unavailable**, never silently estimated."_
+1. ✅ **BUILT — migration 037** (`is_demo boolean not null default false` on `analytics_event`; owner-applied + verified 17 Jul): conservative backfill marked seed/`@gigproof.test` actors + operator-role rows as demo (verified 43 demo / 3 real); anonymous public passport views deliberately stay `is_demo=false` — a real anonymous view IS real demand context. Partial index serves the operator read path.
+2. ✅ **BUILT — Gate-tile read filter** (`gateCounts.js` adds `.eq('is_demo', false)`; 18 Jul): the operator Gate tiles count **outside activity only**, and the section note discloses the exclusion ("Seed and test-account activity is excluded from these counts", EN+HE).
+3. **Remaining delta (small, honest):** the disclosure today is a **section-level note** over the Gate tiles, not the per-tile "demo-excluded" badge `ADMIN-PANEL-SPEC` sketched; and non-Gate admin numbers (artists/requests/claims lists) count rows, not analytics events — they are inventories, not demand metrics, and carry no exclusion claim. Per-tile badges remain a polish item, not a Gate blocker.
 
-**OWED design (the admin "demo-excluded" badge).** To make the exclusion real and honest:
-
-1. Add an `is_demo boolean` (or `environment text`) to `analytics_event` (additive migration ≥ 036) — set true when the actor is a seed/`@gigproof.test`/operator-seed account, or derive it in the read model from `profiles`/email domain.
-2. The read model filters `is_demo = false` for business counts and **discloses the exclusion status** in its response envelope (`§E.7`).
-3. Every admin metric tile renders a consistent **"demo-excluded" badge** (`ENTITY-STRUCTURE-AND-SMART-SCREENS-AUDIT §Admin`, `ADMIN-PANEL-SPEC`). If the flag is absent for an event, that metric shows **"unavailable,"** not a possibly-contaminated number.
-
-Until (1) ships, "demo-excluded" can only be asserted for demo-build data, not for seed accounts — state this limitation on any tile that claims exclusion.
+New demo actors must be created through the seed script (so backfill/convention marks them) — an ad-hoc test account created outside `scripts/seed.mjs` would count as real until marked.
 
 ---
 
@@ -1820,7 +1914,7 @@ Layered defenses, strongest first:
 1. **Published-artist gate (server + RLS).** `POST /api/availability-request` rejects any request unless `artists.published = true` (`server/index.js:609–613`); `passport_view_event` anon-insert RLS also requires a published artist (024). A reaction can only attach to a real, published Passport.
 2. **View ≠ reaction (P0-5).** The two are separate tables/events and must never be merged; a Gate half requires the reaction event, not a view.
 3. **Demo build emits nothing** (§14.3.1) — a demo reaction never reaches the DB.
-4. **Seed exclusion (OWED, §14.3.2).** A reaction originating from a seed/`@gigproof.test` actor is still real in the DB today; the `is_demo` flag + read-model filter is required before the Gate tile can claim "**this was a genuine outside buyer.**" Until then, the operator must manually confirm the reacting party is not a seed/team account.
+4. **Seed exclusion (✅ BUILT, §14.3.2).** The `is_demo` flag (037, applied 17 Jul) + the Gate-tile read filter (`gateCounts.js`, 18 Jul) exclude seed/`@gigproof.test`/operator activity — the Gate tiles now count outside activity only. Residual operator diligence: before *declaring* the Gate met, still eyeball that the reacting party is a genuinely unknown outside buyer (the flag guards known seed actors; it cannot classify a teammate's personal account created outside the seed script).
 
 > **Gate honesty rule:** the Gate is declared met **only** when a `professional_reaction_submitted` / `availability_request_created` from a non-demo, non-seed buyer coincides with an `entitlement_activated` — both surviving §14.3 exclusion. Intent (`payment_reference_created`) never satisfies the pay half.
 
@@ -1937,8 +2031,8 @@ _Transport still OWED (Resend key). The **spec is complete** — these bodies ar
 | 14.1.3 | Populate `session_id` / `passport_version_id` / `act_id` on the client writer (per-Passport/Act/anon funnels) | OWED | Med |
 | 14.2.1 | Register + emit GA4 custom dimensions `surface/route_name/actor_role/auth_state/environment` | OWED | High |
 | 14.2.2 | Build the GA4 dual-emit layer for the 5 pilot milestones (`gtag()` on grant) | OWED | High |
-| 14.3.2 | Add `is_demo`/`environment` to `analytics_event` (or read-model derivation) + read-model exclusion + admin "demo-excluded" badge | OWED | High (Gate integrity) |
-| 14.4.2 | Seed/`@gigproof.test` exclusion must land before the Gate can be declared "genuine outside buyer" | OWED | High |
+| 14.3.2 | ~~Add `is_demo` to `analytics_event` + read-model exclusion~~ ✅ **BUILT** (037 applied 17 Jul; Gate-tile filter + disclosure note 18 Jul). Remaining polish: per-tile "demo-excluded" badge | ✅ done (badge = polish) | was High (Gate integrity) — closed |
+| 14.4.2 | ~~Seed/`@gigproof.test` exclusion before the Gate can be declared "genuine outside buyer"~~ ✅ **BUILT** (same delivery; §14.4 rule 4 keeps the operator eyeball) | ✅ done | was High — closed |
 | 14.5.3 | Receipts, tax invoice (חשבונית), payment ledger/reconciliation view, refund flow | OWED | Post-Gate |
 | 14.5.3 | Price / ICP | OPEN | Locked only after Gate |
 | 14.6.2 | **Availability-request email/WhatsApp to the artist on `request_received`** (Gate reaction reaches the artist off-app) | OWED | High |
@@ -2443,11 +2537,12 @@ migration would create so that genre, format, venue/region, method/status, and s
 free text and start being governed enums with EN + HE labels. Part A is the taxonomy. Part B captures
 the documented business model and clearly flags what still needs the owner.
 
-**Migration note:** the migration head is already past 029 (VERSIONS.md: applied 032/033/034/035; 021
-FROZEN). The historical "029" label from the taxonomy audit is superseded — **these reference tables
-should be authored as a NEW migration (036+), diffed against existing tables first (CLAUDE.md rule),
-never recreating existing tables.** Wherever this section says "migration 029" it means "the bilingual
-reference-table migration, now 036+."
+**Migration note (updated 17 Jul):** the migration head is already past 029 (VERSIONS.md; 021 FROZEN;
+**037 `is_demo` applied 17 Jul; 036 stays `.DRAFT`** with its own rollout). The historical "029" label
+from the taxonomy audit is superseded — **these reference tables should be authored as a NEW migration
+(next free number ≥038), diffed against existing tables first (CLAUDE.md rule), never recreating
+existing tables.** Wherever this section says "migration 029" or "036+" it means "the bilingual
+reference-table migration, structure specified in §16.A.6.a."
 
 ---
 
@@ -2732,10 +2827,20 @@ are the canon `PROVES` map (`radarUniverse.js:PROVES`, shown verbatim at the con
 | `facebook` | Facebook | פייסבוק | `audience` | Community / events footprint | |
 | `twitter-x` | X (Twitter) | X (טוויטר) | `audience` | Community footprint | |
 | `telegram` | Telegram | טלגרם | `audience` | Community channel | |
+| `whatsapp-group` | WhatsApp group | קבוצת וואטסאפ | `audience` | A private room the artist owns and can activate — demand that does not depend on the venue's marketing | ✅ |
 | `eventer` | Eventer | אוונטר | `proof` | IL ticketing — ticket export / settlement = real sourced draw | ✅ |
 | `tickchak` | Tickchak | טיקצ'אק | `proof` | IL ticketing — ticket export / settlement | ✅ |
 | `go-out` | Go-Out | גו-אאוט | `proof` | IL events/ticketing — event history / ticket export | ✅ |
 
+> **`whatsapp-group` (NEW, 17 Jul — owner R00):** the deliberately Israeli-first audience source — a
+> WhatsApp group the artist owns is *activatable demand independent of the venue's marketing*, which is
+> exactly what an Israeli buyer weighs. Firewall handling is identical to every audience source: the
+> group size surfaces **only as a BAND via `bandFromCount`** (the integer stays working-only, never
+> shown); provenance is `source_type='self-band'` (artist-declared band) or `'self-reported'`, whose
+> canon `PROVES` honesty lines ship verbatim — *"Your own declaration, shown as a band"* / *"Nothing
+> beyond your declaration — strengthen with a source"* (`radarUniverse.js:PROVES`). Never a member
+> count, never upgraded provenance without a real source.
+>
 > **Firewall guards baked into the model:**
 > - Streaming (`music` planet) is **secondary context** by canon — a footprint that "does not establish
 >   local ticket demand" (`PROVES['public-profile'].notProves`). It never becomes a draw claim.
@@ -2752,10 +2857,62 @@ are the canon `PROVES` map (`radarUniverse.js:PROVES`, shown verbatim at the con
 
 ---
 
+### 16.A.5b Registry B — the field-applicability registry (NEW, 17 Jul — fills the empty "Registry B" contract)
+
+**What it is.** The registry that answers, per evidence field × per genre family: *does this field apply,
+and why does a buyer care?* Registry B is what makes the eight-family Radar (§8.2) and the coaching
+line (§8.3) **data-driven instead of hand-coded** — `radarUniverse.js` today hand-builds the DJ case
+(audit D4); when Registry B is wired, the same code reads applicability instead.
+
+> **REALITY CORRECTION (18 Jul, T-53 research):** the 8-Jul audit's "Registry B tab is empty" is
+> **stale** — a field-grain registry EXISTS in-repo: **`docs/registry/F1.csv`** (483 rows · 376 fields ·
+> 18 segments → 6 planets · per-field visibility/applicability/freshness/consent) + `F2-F6-DELTAS.csv`
+> (337 family deltas). What remains true: the **DB** still has no representation (no `field_id`,
+> free-text `claim_type` — the ≥038 migration, §16.A.6.a). **Four schema variants now compete** (F1.csv
+> 15-col · the Sheet's B01–B24 24-col · its 14-col sample header · this section's 5-col conceptual
+> core) — unification is owner ruling **M-17** (§18.2). Recommendation on record: F1.csv's 15 columns
+> as the working base + `next_action_rule` · `freshness gap_rule` · `why_a_buyer_cares` adopted from
+> B01–B24; this section's 5 columns remain the conceptual contract every variant must express.
+
+**Schema (the five columns, canon):**
+
+| Column | Type / values | Meaning |
+|---|---|---|
+| `field_id` | PK, `lower-kebab` code (e.g. `ticket_export`, `technical_rider`, `whatsapp_group`) | the frozen evidence-field identifier — the end of free-text `claim_type` |
+| `genre_family` | FK → `genre_family.id` (§16.A.1.a) | one row per field × family |
+| `applicability` | **`R` / `C` / `O` / `N`** — Required / Common / Optional / Not-applicable | how this family's buyers weigh the field |
+| `planet_key` | one of `identity · music · live · audience · prokit · proof` | which planet the field's node lives on |
+| `why_a_buyer_cares` | **i18n key** (never raw text) | the buyer's reasoning, surfaced on the node + in the coaching line (§8.3) |
+
+**THE `N` RULE (binding):** `N` = **never shown, never asked, never counted as a gap.** A field marked
+`N` for the artist's family simply does not exist on their Radar — it is not a greyed row, not a
+"not applicable" chip, not a private gap. (An `instruments` ask on a club DJ's Radar is noise; noise
+erodes the coach's credibility.)
+
+**Worked examples (the seed rows — the register the full fill follows):**
+
+| `field_id` | Applicability by family | Why a buyer cares (register of the i18n value) |
+|---|---|---|
+| `instruments` | `live-band`: **C** · `dj-club`: **N** | a band's instrumentation shapes the booking; a club DJ is never asked |
+| `technical_rider` | `live-band`: **R** · `corporate-ceremony`: **R** · `dj-club`: **C** | why the night doesn't break |
+| `ticket_export` | **every family: R** | the only proof of paid demand |
+| `beatport_presence` | `dj-festival`: **C** · `corporate-ceremony`: **N** | scene presence where the scene checks it; meaningless to a corporate buyer |
+| `set_length_range` | `dj-club`: **C** · `original-artist`: **O** | a club programs by slot; an original act is booked for the show |
+
+**Rules:** the full family-by-family fill is **OWED from the Google Sheet / owner R00** (§18) — structure
+proceeds now, content lands when the sheet fill is ratified; every `why_a_buyer_cares` value is an i18n
+key (EN + HE, HE proposed until owner signs); applicability describes **what buyers in that family weigh —
+never how a specific artist performs** (it is per-family metadata, not per-artist data; nothing here
+scores anyone); the G2 guard inherits — no family signal → no applicability read → the neutral all-equal
+Radar.
+
+---
+
 ### 16.A.6 Migration & implementation note (Part A summary)
 
 All six taxonomies above should land as **bilingual DB reference tables** in one migration
-(historically called "029 bilingual reference tables"; author now as **036+**, diff-first). Proposed set:
+(historically called "029 bilingual reference tables"; author now as the **next free number ≥038**,
+diff-first — full structure in §16.A.6.a). Proposed set:
 
 | Table | Replaces (free text today) | Keyed by |
 |---|---|---|
@@ -2766,12 +2923,45 @@ All six taxonomies above should land as **bilingual DB reference tables** in one
 | `venue_type` | `radarUniverse.CONTEXT_WORLDS` regexes | code |
 | `room_size_band` | (none — new) | code |
 | `source_platform` | `linkPlanet()` regex routing | code → planet + source_type |
+| `registry_b` (field applicability, §16.A.5b) | `claims.claim_type` free text + hand-coded `radarUniverse.js` field lists | (`field_id`, `genre_family`) composite |
 | method/status enums | `constants.js` (already bounded) | keep as CHECK or promote to lookup |
 
 Common column shape: `id` (PK) · `en_label` · `he_label` · `sort_order` · `active`, plus the mapping
 FKs noted per table. **Rules:** frozen code identifiers stay frozen (§0.2 rule 5); every user-facing
 label resolves through i18n keys, never hardcoded; the G2 guard (no signal → no emphasis) must survive
 the migration; `mirror-only` is not dropped while 021 is FROZEN.
+
+#### 16.A.6.a — The taxonomy migration STRUCTURE (specified 17 Jul — **spec only: this migration is NOT authored and NOT run by this task**)
+
+The concrete shape the migration set takes when authorized. Migration head is past 035 (037 applied
+17 Jul; 036 stays `.DRAFT` with its own dual-read rollout) — so the taxonomy set is **authored as the
+next free number ≥038, diff-first against migrations 001–037 (CLAUDE.md rule), never recreating an
+existing table**, additive-only (no `DROP` in an UP migration — §20 inspector 3 enforces this).
+
+**Step 1 — reference tables (all NEW; nothing exists yet — audit D1 confirmed zero taxonomy representation in the DB):**
+- `genre_family` — `id` PK · `en_label` · `he_label` · `sort_order` · `active` · the primary/secondary planet arrays (or a child `family_planet` table: `family_id` FK · `planet_key` · `tier ('primary'|'secondary')` · `rank`). Seed = the 8 rows of §16.A.1.a (mirrors `genreWeights.js`).
+- `genre_scene` — `id` PK · `en_label` · `he_label` · `family_id` FK→`genre_family` · `sort_order` · `active`. Seed = §16.A.1.b; extensible without code changes.
+- `act_format` — `id` PK · `en_label` · `he_label` · `default_family_id` FK→`genre_family` · `sort_order` · `active`. Seed = §16.A.2 (9 values; includes `comedian-host`, `ceremony-act` — the CHECK-widening rides here).
+- `il_region` · `venue_type` · `room_size_band` — common shape, seeds §16.A.3.
+- `source_platform` — §16.A.5 shape incl. `planet_key` · `signal_note_key` (i18n key) · `is_israeli` · `source_type` · `active`. Seed includes `whatsapp-group`.
+- `evidence_field` — `field_id` PK · `en_label` · `he_label` · `planet_key` · `active` (the field registry that ends free-text `claim_type`).
+- `registry_b` — `field_id` FK→`evidence_field` · `genre_family` FK→`genre_family` · `applicability CHECK (applicability IN ('R','C','O','N'))` · `why_buyer_cares_key` (i18n key) · PK (`field_id`,`genre_family`) — §16.A.5b.
+
+**Step 2 — wiring columns on EXISTING tables (additive, nullable, dual-read):**
+- `act`: add nullable `scene_id` FK→`genre_scene` (+ keep free-text `genre` during transition; code reads FK-first, falls back to text) · `format` stays, its CHECK widened or FK'd to `act_format`.
+- `artist`: `regions` free text → join table `act_region` (`act_id` · `region_id`), old string retained during transition.
+- `claims`: add nullable `field_id` FK→`evidence_field`; `claim_type` free text retained until backfill completes.
+
+**Step 3 — seeds vs OWED content:** the migration ships with the spec's seed rows only. The **full
+Registry B fill + the full scene/subtype/instrument lists (6 families · 55 subtypes · 32 DJ
+specializations · 42 instruments · 121 legacy labels) are OWED from the Google Sheet via owner R00**
+(§18) — the structure lands first and empty-but-governed beats full-but-free-text; content arrives as
+data inserts, not schema changes.
+
+**Rollout rules:** paired `.down.sql` per migration · dual-read in code (FK-first, free-text fallback)
+until backfill is verified · `familyFor()`'s `FESTIVAL_HINT` heuristic retires only after `scene_id`
+is live and backfilled · G2 guard proven unchanged in the same PR (`test:guardrails` + Radar
+conformance) · owner applies via SQL editor as always — **the build agent never touches the live DB.**
 
 ---
 
@@ -3141,9 +3331,9 @@ Everything this section could not close because it requires Maria's ruling:
    fill (55 subtypes / 32 DJ specializations from the Google Sheet; Registry B is empty). **OPEN / OWED.**
 3. **`comedian-host` / `corporate-ceremony` reachability** — RESOLVED in the spec: `act.format` now
    carries `comedian-host` + `ceremony-act` (§16.A.2), which resolve deterministically to both families.
-   Remaining to implement: the CHECK-widening migration (036+, diff-first) + `familyFor()` cases +
+   Remaining to implement: the CHECK-widening migration (≥038, diff-first — §16.A.6.a) + `familyFor()` cases +
    **owner ratification of the HE labels (T-1)**. **OPEN only on the HE-label ratification.**
-4. **Migration authorization** for the bilingual reference tables (author as 036+, diff-first; respect
+4. **Migration authorization** for the bilingual reference tables (author as ≥038, diff-first — §16.A.6.a; respect
    FROZEN 021 / `mirror-only`). **OPEN (migration approval is owner's per CLAUDE.md).**
 5. **Hebrew word for "Act"** — de-facto live term is אקט; formal taste-ratification still pending
    (SESSION-MEMORY pending list). **OPEN.**
@@ -3829,7 +4019,7 @@ Marked so they are never mistaken for settled. **OPEN** = an owner ruling; **OWE
 The full lists below, grouped by when they must be resolved so effort stays on the Gate:
 
 - **① PRE-GATE MUST-HAVES** (block a real buyer reaching a real Passport, or block trust): legal package L-1…L-9 + Terms/Privacy/Accessibility publish · the Gate availability→artist **email** (N2/N3) · **D1** Act-editor (done ✅) + **S6** Passport multi-view + **D2/D3** effective-role/producer-shell · consent-scope bug (done ✅) · app security headers (done ✅) · **B-1** beachhead entity/ICP ruling · pilot **price** (needed only at the pay-moment of the Gate).
-- **② POST-GATE** (turn on once the Gate is proven): self-serve billing + receipts/invoices/tax (§14.5, §19.3) · plan-enforcement flip + monetization numbers (G-2) · GA4 dual-emit + is_demo + growth-loop instrumentation (§16.B.13, G-3) · target deep-scan + intelligence-at-scale controls (§9.7) · Hebrew launch (~141-key pass + site prose).
+- **② POST-GATE** (turn on once the Gate is proven): self-serve billing + receipts/invoices/tax (§14.5, §19.3) · plan-enforcement flip + monetization numbers (G-2) · GA4 dual-emit + growth-loop instrumentation (§16.B.13, G-3; is_demo ✅ done 17–18 Jul) · target deep-scan + intelligence-at-scale controls (§9.7) · Hebrew launch (~141-key pass + site prose).
 - **③ NICE-TO-HAVE / RESERVED** (do not build pre-Gate — see §19): international-expansion framework · agency-group hierarchy (E5) · white-label/partner themes · sharding/replicas/DR · high-volume Radar mode · competitive-moat doc · full LTV/CAC model.
 
 _Everything in the tables below carries its own tier implicitly via this grouping; when in doubt, ask "does this block the Gate?" — if no, it is ② or ③._
@@ -3858,13 +4048,24 @@ Assembling the deep build spec surfaced additional decisions that only the owner
 |---|---|---|---|
 | L-1…L-9 | **Legal placeholders** — controller legal name · business ח.פ. number · postal address · jurisdiction city · refund policy · accessibility-coordinator name/phone/date · DPO/EU-representative question · concrete retention periods · Terms-HE "Mirror" re-alignment | OPEN (owner + counsel) | blocks Terms/Privacy/Accessibility publication. Full table in §15.1. |
 | — | **Consent Mode v2 scope** | RESOLVED → build | ruling recorded: **basic, default = denied** before any analytics fires (§15.2). Listed here so the ruling is visible, not re-opened. |
-| T-1 | **Genre-family HE labels** — comedian-host & corporate-ceremony (MC/עורך אירוע) are now in the taxonomy (§16.A.1/§16.A.2, reachable from `act.format`); their **Hebrew labels are proposed, pending owner ratification** | OPEN (owner taxonomy) | families are first-class in the spec; ratify HE wording + authorize the CHECK-widening migration (036+). |
+| T-1 | **Genre-family HE labels** — comedian-host & corporate-ceremony (MC/עורך אירוע) are now in the taxonomy (§16.A.1/§16.A.2, reachable from `act.format`); their **Hebrew labels are proposed, pending owner ratification** | OPEN (owner taxonomy) | families are first-class in the spec; ratify HE wording + authorize the CHECK-widening migration (≥038, §16.A.6.a). |
 | — | **027/028 applied-state confirmation** | OPEN (owner confirm) | VERSIONS records head 035 but no explicit "027/028 applied ✓"; 030/031 imply they are live. One-line confirmation requested (§13.2). |
 | B-2 | **Billing model** — self-serve checkout vs operator-approved upgrade request | OPEN (owner) | today it is an operator-approved request; no price/ICP locked pre-Gate (§17.B.7). |
 | G-1 | **Beachhead ICP + GTM** — which buyer segment leads Gate 1; channel priority; launch scope (one scene vs many) | OPEN (owner) | frameworks in §16.B.11; ties to B-1. |
 | G-2 | **Monetization numbers** — all prices, Momentum/Roster feature boundaries, monthly vs annual, trial length, when to flip enforcement | OPEN (owner) | ladder structure fixed in §16.B.12; numbers deferred to Gate evidence. |
 | G-3 | **Growth-loop to instrument first** (rec: Loop 1, artist-led) | OPEN (owner) | loops in §16.B.13; measurement OWED (ties to GA4 dual-emit §14). |
 | G-4 | **Trust & safety rulings** — dispute/takedown flow, identity-verification bar, IP/content-rights ToS clauses (counsel) | OPEN (owner + counsel) | §16.B.15; IP clauses currently absent from legal drafts. |
+
+### 18.2 Radar-universe / taxonomy pass records (17 Jul — owner R00 order)
+
+| # | Item | Type | Notes / where |
+|---|---|---|---|
+| — | **Taxonomy Sheet content** — the full Registry B fill + full scene/subtype lists (6 families · 55 subtypes · 32 DJ specializations · 42 instruments · 121 legacy labels) live only in the Google Sheet | **OWED (owner R00)** | The **structure may proceed without it** — §16.A.5b schema + §16.A.6.a migration structure are specified; content lands later as data inserts, never schema changes. |
+| — | **HE labels across all §16.A tables + Registry B `why_a_buyer_cares` HE values** | OPEN (owner) | Every HE label in §16.A (incl. `whatsapp-group` = קבוצת וואטסאפ) is a **proposed seed only — R00 owns Hebrew**; nothing is canon until she signs it. |
+| R-10 | **Does "asset value" language require a method label?** — when the Radar/coaching layer describes something the artist owns as an asset (e.g. the WhatsApp group as "a private room the artist owns and can activate") | OPEN (owner) — **R16 reads YES** | Working read until ruled: any asset-value statement surfaces as a **band + method label** per §5.10 (warm wording over bounded, provenance-labeled truth — e.g. band via `bandFromCount` + `Self-declared`), never an unlabeled asset claim. If the ruling lands NO, only the label placement changes — never toward a number. |
+| R-11 | **Artist-private completion % — allow or keep rejected?** (owner 18 Jul: "the % restriction is too sweeping — it castrates displays; it can be a matter of terminology") | OPEN (owner) | The count-based progress vocabulary (§5.10) ships regardless — same expressiveness, no ruling needed. R-11 decides ONLY: may the artist's own private checklist ALSO render as a % ("80% of applicable items confirmed")? If YES: artist-private only · self-progress only (N/A excluded) · never per-planet quality · never buyer-facing · never comparative — and §2.9, the Codex DS forbidden list, and the §20 inspector are amended in lockstep. Buyer-facing person-numbers/comparisons stay ABSOLUTE either way (§2.1 untouched). |
+| M-17 | **Universe/registry rulings** — (a) ONE Registry-B schema (rec in §16.A.5b); (b) ONE certainty ladder (Claims-Schema 4-door for claim certainty vs the 10-value extraction-provenance set — rec: both, as two different fields); (c) the Sheet's 4 open R00 decisions (family build order · is F6 in scope pre-Gate · does "secondary family" exist · promote radar_segments to a governed tab) | OPEN (owner) | Unlocks the field-grain fill, the ≥038 taxonomy migration (§16.A.6.a) and registry-driven Radar (§8.2 TARGET). Full analysis: `docs/UNIVERSE-GAP-REPORT.md` §5–6. |
+| — | **Education/training absent from the entire universe model** (Sheet + F1.csv both lack it; only DF12 Workshop/Clinic exists as a delivery format) | OPEN (owner taxonomy) | Decide whether artist education/training joins the taxonomy (likely Identity or Creative Quality segment) — flagged by T-53; do not invent placement. |
 
 **Two engineering bugs found while grounding (build-fix, NOT owner decisions — flagged for the board):**
 1. ✅ **FIXED (15 Jul, wave-1) — rationale corrected 16 Jul:** `ConsentLegal.jsx` `recordPrivacyConsent` wrote the pre-021 legacy scope names. The live DB has **no scope CHECK** (021 FROZEN, §13.2.1), so those writes were **not** actually rejected — but the code now writes the canon `privacy-processing` (write + read paths) as the **forward-compatible** choice for when the canon-scope constraint lands (§15.2.3, §13.2).
@@ -3962,7 +4163,7 @@ An AI coding agent (Claude Code / Cursor) suffers context-window dilution — it
 - Method-label chips render in **English even inside Hebrew UI** (by design, §15.4).
 
 **E · How to drive the agent (atomic spec slices, not "build the app").**
-- Good: *"Read §13.2 + §14.3.2. Write migration 037 adding `is_demo` to `analytics_event` with a down-migration. Do not touch the frontend."*
+- Good: *"Read §13.2 + §16.A.6.a. Write migration 038 creating the `genre_scene` reference table with a down-migration. Do not touch the frontend."*
 - Good: *"Read §8.3 + §17.A.2. Build the Planet Inspector bottom-sheet with the confirm-bloom motion. Do not wire the DB yet."*
 - Good: *"Read §5.10. Add the humanized draw-band renderer: input a stored band, output the venue-context line + kept band + method chip. Pure function + unit test; no ranked ladder."*
 - Good: *"Read §17.A.2.e only. Implement the `bloom .42s` confirm animation on an existing node; reduced-motion → instant opacity. No other changes."*
@@ -3990,6 +4191,20 @@ Multiple reviews converged on one frame: LOCK is not a *page* system, it is a *s
 | **Conversion (the Gate)** | real demand + payment | `availability_request_created`, `entitlement_activated` | the Gate; the reaction returns to the artist as **method-safe text only** (§2.5) |
 | **Retention** | freshness / re-engagement | staleness (`expires_at`), re-login | drives re-sync invitations about the artist's **own** data |
 | **Growth** | viral distribution | `share_link_created` → `share_link_opened` → `signup_completed` | operator K-factor metric; never surfaced per-person |
+
+**Measurement status per family (audit T-55 · 18 Jul 2026 — honest BUILT-vs-TARGET per §2.8; updated in place, no side document):**
+| Family | Status today |
+|---|---|
+| Identity | **FIRING** — `signup_completed` (now with first-touch attribution) · `login` · `onboarding_completed` · `evidence_added` persist live. Edges still unwired: `signup_started`, `oauth_login`, `onboarding_started`, `consent_granted/withdrawn` (canon names, no call site). |
+| Intent | **FIRING** — `evidence_added`, `share_link_created`. |
+| Trust | **FIRING** — `claim_confirmed` (client + server on producer-yes), `producer_confirmation_sent`. ⚠️ `producer_confirmation_received` never fires — the server writes `claim_confirmed` on that path instead (vocabulary mismatch, recorded; reconcile at the next canon migration). |
+| Readiness | Measured from data fields (binaries), not events — by design; nothing to fire. |
+| Relationship | **NOT-WIRED** — no analytics event exists for ArtistAccess grants; `invite_member` (named in the table above) is not in the 29-event canon. Wiring requires a canon-widening migration — owner-gated. |
+| Conversion (Gate) | **FIRING** — `passport_view` (now with the first-party `return_visit` marker) · `professional_reaction_submitted` (server-authored, deduped) · `availability_request_created` · `entitlement_activated` (operator control, live-capable). `payment_reference_created` is **WIRED-BUT-DORMANT**: fully functional behind `VITE_PAYMENTS_ENABLED`, which stays OFF by owner ruling (18 Jul) until the pricing decision (M-8) — it fires the moment the flag flips, no further build needed. `availability_request_responded` — unwired. |
+| Retention | **FIRING (wired 18 Jul, T-55 — was the owner's named gap)** — restored sessions now emit `login {via:'session-restore', returning:true}` once per tab-session via a first-party seen-marker; manual logins carry `via:'password', returning`; `passport_view` carries `return_visit` for repeat buyer opens. Operator read: §8.12 retention tiles. Staleness re-sync (`expires_at`-driven prompts) remains data-driven, not yet an event. |
+| Growth | **FIRING + now linkable** — `share_link_created` → `share_link_opened` → `signup_completed`: signup now carries first-touch attribution (utm_* · referrer · landing path · `shared` marker), so the share→signup join is computable first-party. K-factor read model itself still TARGET. |
+
+**Site + bridge status (same audit):** site GA4 = consent-gated page views only, zero custom events; the site→app bridge is **FIRING** (first-touch utm/referrer/landing captured once per browser at app open, attached to `signup_completed`). **GA4 is scoped OUT of evidence surfaces** (owner ruling 18 Jul): it never loads while the viewer is on `/passport/*`, `/confirm/*`, or evidence routes — app and site banners both guard (§14.1.4).
 
 ### 21.2 Signal → action decision system (signal · threshold · action · downstream)
 The rule that keeps this firewall-safe: an action derived from a signal is **either** an operator-internal metric **or** a method-safe user prompt — never a number about a person shown to a person.
@@ -4031,7 +4246,7 @@ The single "does it pass in practice, not just on paper?" view. Live truth in `d
 | # | Non-negotiable | State |
 |---|---|---|
 | 1 | `artist_approved` firewall on every read path | ✅ BUILT (§13.5.2) |
-| 2 | Demo/seed exclusion from Gate metrics (`is_demo`) | ⚠️ OWED (migration 037, §14.3.2) |
+| 2 | Demo/seed exclusion from Gate metrics (`is_demo`) | ✅ BUILT (037 applied 17 Jul + Gate-tile filter 18 Jul, §14.3.2) |
 | 3 | Deep-link reload durability (no reset on refresh) | ✅ fix in `vercel.json` (§13.4.4) — rides the candidate deploy |
 | 4 | Off-app Gate email to the artist | ⚠️ OWED (Resend key, §14.6.5) |
 | 5 | Rollback anchor verified (SHA) | ✅ practice (§13.6); rehearse before Q8 |

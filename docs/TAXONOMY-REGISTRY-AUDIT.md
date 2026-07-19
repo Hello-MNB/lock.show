@@ -2,6 +2,12 @@
 **Date:** 8 July 2026 · **Verifier:** Claude (docs-first audit, full workbook download)
 **Subject:** Google Sheet `B4-20.50 — Artist Taxonomy Registry` v1.1 (modified 2 Jul) + companion brief v1.1 (7 Jul)
 
+> ⚠️ **PARTIALLY STALE (correction 18 Jul 2026, T-53):** finding **G1 "Registry B tab is empty" no longer
+> describes the repo state** — a field-grain registry exists in-repo as `docs/registry/F1.csv` (483 rows ·
+> 376 fields · 18 segments) + `F2-F6-DELTAS.csv`. Still true: D1 (DB has no `field_id`), G4 (certainty-ladder
+> conflict), and the Sheet-side hygiene items. Current analysis: `docs/UNIVERSE-GAP-REPORT.md` (T-53); rulings
+> pending: M-17. This file is retained as the 8-Jul audit of record.
+
 ## VERIFIED ✅ (checked against the actual workbook, all 22 tabs)
 | Check | Result |
 |---|---|

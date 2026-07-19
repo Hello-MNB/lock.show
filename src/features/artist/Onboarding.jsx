@@ -25,7 +25,10 @@ import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
 // evidence-mirror for a pasted source (a pasted source is evidence, not just
 // a bookmark — the AI pipeline labels it and the Radar shows the result).
 
-const STEPS = 2
+// T-58 (§8.1): 3 steps — basics → strongest link → the "here's what we found"
+// reveal (the payoff moment). With no link given there is nothing found, so the
+// flow honestly completes from step 2 (the reveal never invents findings).
+const STEPS = 3
 
 // Refresh mid-entry must resume, not restart — the step position (never the
 // field data, which is saved server-side per-step) is mirrored to
@@ -117,9 +120,11 @@ export default function Onboarding() {
     } finally { setSaving(false) }
   }
 
-  // Screen 2 → Radar. If a strongest link was pasted it is saved as a profile
-  // link AND mirrored into the AI claim pipeline (fire-and-forget), so the
-  // Radar's "we're scanning" moment lands with a real found-node, not a promise.
+  // Screen 2 → the reveal (T-58). If a strongest link was pasted it is saved as
+  // a profile link AND mirrored into the AI claim pipeline (fire-and-forget), so
+  // the Radar's "we're scanning" moment lands with a real found-node, not a
+  // promise. With a link saved, step 3 shows what was really captured; with no
+  // link there is nothing found, so the flow completes honestly right here.
   async function startRadar(e) {
     e?.preventDefault?.()
     setSaving(true); setError('')
@@ -137,14 +142,23 @@ export default function Onboarding() {
           })
           processEvidence(artist.id).catch(() => { /* radar retries on next visit */ })
         } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
+        setSaving(false)
+        setStep(3) // the payoff: show what was captured before landing on the Radar
+        return
       }
-      sessionStorage.removeItem(stepStorageKey(user.id))
-      logEvent(EVENTS.ONBOARDING_COMPLETE)
-      nav('/artist/home', { state: { fromEntry: true } })
+      finish()
     } catch (err) {
       setError(err.message || T.common.error)
       setSaving(false)
     }
+  }
+
+  // Reveal → Radar (the completion path — one place, fired from step 2 no-link
+  // or the step-3 CTA).
+  function finish() {
+    sessionStorage.removeItem(stepStorageKey(user.id))
+    logEvent(EVENTS.ONBOARDING_COMPLETE)
+    nav('/artist/home', { state: { fromEntry: true } })
   }
 
   if (loading) return <Loading />
@@ -214,6 +228,32 @@ export default function Onboarding() {
             </button>
           </div>
         </form>
+      )}
+
+      {/* T-58 · Step 3 — the "here's what we found" reveal (§8.1). REAL data
+          only: the link the artist just gave, shown as the ✦ found node it now
+          is. Never an invented finding, never a fake tally (§2.8). */}
+      {step === 3 && (
+        <div>
+          <div className="card">
+            <h2 className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.revealTitle}</h2>
+            <p className="mb-4 text-xs text-muted">{T.onboarding.revealSub}</p>
+            <div className="flex items-center gap-3 rounded-xl border border-gold/30 bg-surface2 px-3 py-2.5">
+              {linkPlatform && <PlatformLogo name={linkPlatform} size={18} className="shrink-0 text-gold" />}
+              <div className="min-w-0 flex-1">
+                <p dir="ltr" className="truncate text-sm font-semibold text-ink">{link.trim()}</p>
+                <p className="text-[11px] text-muted">{T.onboarding.revealRowSub}</p>
+              </div>
+              <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-gold">✦ {T.onboarding.revealFound}</span>
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-faint">{T.onboarding.revealScope}</p>
+          </div>
+          <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
+            <button type="button" className="btn-primary w-full" onClick={finish}>
+              {T.onboarding.revealCta}
+            </button>
+          </div>
+        </div>
       )}
     </PageShell>
   )

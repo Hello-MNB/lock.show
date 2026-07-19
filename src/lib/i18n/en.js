@@ -201,7 +201,14 @@ export const T = {
   onboarding: {
     // ── Minimum viable entry (owner order, 8 Jul): 2 screens, 4 fields.
     // The Radar collects everything else — these keys carry that promise.
-    entryStepLabels: ['Who you are', 'Strongest link'],
+    entryStepLabels: ['Who you are', 'Strongest link', 'What we found'],
+    // T-58 — step 3, the reveal (§8.1). Real captured data only, never a tally.
+    revealTitle: "Here's what we found",
+    revealSub: 'Your link is in — captured as a found signal, waiting in your Radar. From here it’s simple: you confirm what’s really yours. Nothing is published until you say so.',
+    revealRowSub: 'Public profile — captured just now',
+    revealFound: 'Found',
+    revealScope: 'We start from the link you gave. A wider multi-source auto-scan is in development — your Radar collects the rest with you, at your pace.',
+    revealCta: 'Open my Radar & confirm →',
     entryTitle: 'Your name on the flyer',
     entryHint: 'Two quick questions and your Radar takes over — it collects everything else with you, at your pace.',
     entryOptional: 'optional',
@@ -539,7 +546,7 @@ export const T = {
     showMore: 'Show more',
     // W4-1 — Gate tiles (§1.6 · §14.4): whole-funnel product-event counts.
     gateTitle: 'Gate — product events',
-    gateNote: 'Whole-funnel product-event counts for the validation gate — never about a single person. A payment reference is intent only; a payment counts only once the operator activates it. Seed/test accounts are not yet excluded.',
+    gateNote: 'Whole-funnel product-event counts for the validation gate — never about a single person. A payment reference is intent only; a payment counts only once the operator activates it. Seed and test-account activity is excluded from these counts.',
     gateViews: 'Passport views',
     gateReactions: 'Professional reactions',
     gateRequests: 'Availability requests',
@@ -551,6 +558,13 @@ export const T = {
     gateTagPaid: 'verified payment',
     gateError: 'Event counts failed to load.',
     gateRetry: 'Retry',
+    // T-55 — retention tiles (§21.1 Retention): the returning-customer signal.
+    retTitle: 'Retention — coming back',
+    retReturning: 'Returning accounts',
+    retReturningTag: 'back on a later day · login',
+    retRepeat: 'Repeat Passport opens',
+    retRepeatTag: 'same browser returned · passport_view',
+    retNote: 'Accounts seen on more than one day, and Passport pages reopened by a returning browser. Counts of product events only — no identity, never shown to artists or buyers. Seed and test-account activity is excluded.',
     anchors: {
       gate: 'Gate',
       payments: 'Payments',

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { supabase, isConfigured } from '../../lib/supabase.js'
 import { getProfile } from '../../lib/db.js'
 import { DEMO } from '../../lib/demo.js'
+import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 
 const AuthCtx = createContext(null)
 export const useAuth = () => useContext(AuthCtx)
@@ -78,6 +79,18 @@ function RealAuthProvider({ children }) {
       try {
         const { data } = await supabase.auth.getSession()
         setSession(data.session)
+        // Retention signal (audit T-55): a RESTORED session is the most common
+        // "returning customer" path and previously fired nothing — making
+        // returns invisible. Fire one canon `login` per browser tab-session,
+        // only when this browser held a session before (first-party marker).
+        if (data.session?.user) {
+          try {
+            if (!sessionStorage.getItem('gp_return_logged')) {
+              sessionStorage.setItem('gp_return_logged', '1')
+              if (isReturnVisit('app')) logEvent(EVENTS.LOGIN, { via: 'session-restore', returning: true })
+            }
+          } catch { /* best-effort — measurement never blocks auth */ }
+        }
         // AWAIT the profile: `loading` must cover the ROLE too, or every hard
         // reload races RequireRole/RoleHome with role=null and bounces the user
         // to /select ("Who are you?") — the exact broken-refresh Maria hit.

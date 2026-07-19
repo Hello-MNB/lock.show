@@ -4,7 +4,7 @@ import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons, OrDivider } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { OAUTH_ENABLED } from '../../lib/constants.js'
-import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { logEvent, EVENTS, getFirstTouch } from '../../lib/analytics.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
 import AuthScene from './AuthScene.jsx'
 
@@ -66,7 +66,10 @@ export default function Signup() {
       }
       // CFRO surface attribution: which build converted — the lock.show/app
       // embed (BASE_URL '/app/') or the standalone app.lock.show deploy.
-      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone' }); nav('/select') }
+      // + first-touch attribution (audit T-55): utm_*/referrer/landing captured
+      // at first app open (main.jsx) — makes the signup traceable to the site
+      // page / campaign / share link that produced it. First-party only.
+      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone', ...getFirstTouch() }); nav('/select') }
       else setConfirmPending(true)
     } catch (err) {
       setError(err?.message?.includes('registered') ? T.signup.error : (err.message || T.common.error))
