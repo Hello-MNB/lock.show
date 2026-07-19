@@ -75,7 +75,7 @@ export default function ArtistRequests() {
               <div key={r.id} className={`card transition ${open ? 'border-accent' : ''}`}>
                 {/* collapsed row — one tap opens the detail in place (no drawer, no modal) */}
                 <button type="button" onClick={() => toggle(r.id)} aria-expanded={open}
-                  className="flex w-full items-center justify-between gap-2 text-start">
+                  className="flex min-h-[44px] w-full items-center justify-between gap-2 text-start">
                   <div className="min-w-0">
                     <p className="truncate font-bold text-ink">{r.requester_name}{r.requester_org ? ` · ${r.requester_org}` : ''}</p>
                     <p className="truncate text-xs text-muted"><span className="font-mono">{r.event_date || T.agency.noDate}</span></p>

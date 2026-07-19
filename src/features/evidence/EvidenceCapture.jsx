@@ -164,7 +164,7 @@ export default function EvidenceCapture() {
     return (
       <PageShell>
         <div className="mb-6 flex items-center justify-end">
-          <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+          <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
         </div>
         <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
         <ErrorNote>{error}</ErrorNote>
@@ -184,7 +184,7 @@ export default function EvidenceCapture() {
   return (
     <PageShell>
       <div className="mb-6 flex items-center justify-end">
-        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+        <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.evidence.subtitle}</p>
@@ -331,11 +331,11 @@ export default function EvidenceCapture() {
           <ul className="space-y-2">
             {evidence.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
-                <span className="flex min-w-0 items-center gap-1.5 truncate text-ink/90">
+                <span className="flex min-w-0 items-center gap-1.5 text-ink/90">
                   {detectPlatform(e.public_url || e.source_type) && (
                     <PlatformLogo name={detectPlatform(e.public_url || e.source_type)} size={14} className="shrink-0 text-muted" />
                   )}
-                  <span className="min-w-0 truncate">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
+                  <span className="min-w-0 leading-snug">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
                 </span>
                 <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
                   {e.status === 'processed' ? T.evidence.processed : T.evidence.pending}
@@ -372,7 +372,7 @@ export default function EvidenceCapture() {
           <ul className="space-y-2">
             {claims.map((c) => (
               <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
-                <span className="min-w-0 truncate text-ink/90">{c.value || c.claim_type}</span>
+                <span className="min-w-0 leading-snug text-ink/90">{c.value || c.claim_type}</span>
                 <SourceLabel status={c.verification_status} methodLabel={c.method_label} expiresAt={c.expires_at} />
               </li>
             ))}

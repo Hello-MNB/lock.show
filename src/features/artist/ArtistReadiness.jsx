@@ -89,7 +89,7 @@ export default function ArtistReadiness() {
   return (
     <PageShell>
       <div className="mb-6 flex items-center justify-end">
-        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+        <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.readiness.title}</h1>
       <p className="mb-4 text-sm text-muted">{T.readiness.subtitle}</p>
