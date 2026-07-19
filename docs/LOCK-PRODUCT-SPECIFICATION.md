@@ -418,7 +418,7 @@ Rules: the human line **describes room fit, never ranks the artist**; always pai
 
 **Method label → canon chip + human sub-text.** Keep the English canon chip (the moat, §4.4); add a one-line human explainer on the buyer face / on source-peek: `★ Producer-confirmed` → *"verified by an industry peer who worked with them — this claim only."* (Source-peek detail = §8.7 B6 / §17.A.6.)
 
-**Status words → warm invitations** (already the voice law §4.5/§6.8): "ready to support" / "growing" / "needs your touch" — never "weak/missing/not assessable." **Dates → "Fresh proof · July 2026"** / "added this month," not "Reviewed 12/05/2026." **Milestones** render as named waypoints ("First light" … "Ready for market"), **never `M1–M8`** on screen (§8.2).
+**Status words → warm invitations** (already the voice law §4.5/§6.8): "ready to support" / "growing" / "needs your touch" — never "weak/missing/not assessable." **Dates → "Fresh proof · July 2026"** / "added this month," not "Reviewed 12/05/2026." **Milestones** render as named waypoints ("First light" … "Ready for market"), **never `M1–M8`** on screen — `M1–M8` are internal spec/analytics codes (§4.1a names are the only display form; §8.2 agrees).
 
 **Two visual-grammar rules (adopted from review):**
 1. **Lime discipline** — solid lime = an actionable **button only**. A *confirmed status* uses a **lime outline / lime text**, never a solid-lime fill, so a buyer/artist never taps a status chip thinking it's a CTA. (Protects law 3's one-CTA clarity.)
@@ -460,6 +460,8 @@ The audit's top drift point: values marked "OWED by Codex (Drive)" (§5.9) are u
 Solid-lime is **buttons only** (a confirmed *status* uses lime **outline/text** — §5.10). One primary per view (law 3).
 **Light-card token (task surfaces):** bg `ds-card #FFFFFF` · border `1px ds-mist #DDE3D9` · radius 12 · padding 16–20 · text `ds-forest #18221A`.
 **Motion tokens:** the 5 easings + duration ladder + reduced-motion contract are DEFINED in §17.0 (derived from the prototype) — also no longer owed.
+
+**G-DS · Radar effect-layer tokens — DOCUMENTED-IN-CODE-ONLY (currency audit T-69/T-70, 18 Jul — ratify: R00).** The Artist screens use an effect vocabulary that exists in `src/index.css` + `tailwind.config.js` but NOT yet in `docs/design-system/`: `glow-found` (✦ gold discovery pulse) · `bloom-confirm` (~420ms confirm bloom) · `shadow-glow-gold` · `dark-island` (the Radar stage ground) · constellation-thread state colors (amber=needs-you · teal=developing · lime=ready) · sonar/sweep/starfield motion · `shadow-card` (partially documented) · `tap-target` (documented once). Present-and-current in the DS docs: all color/spacing/type tokens (gold·teal·amber·na-bg, lime discipline), node marks ✓✦?+, dashed=private/solid=public. **Ruling needed (R00/Codex lane): adopt the as-built values into the DS doc (mechanical transcription from index.css — no invention) or assign to Codex.** Until adopted, `index.css` is the working source of these values; the generated COMPONENT-STYLES registry also does not yet cover feature components (generator-scope gap, same ruling).
 
 **Still genuinely OWED (assets, not blockers):** the **master logo SVG** and **real venue logos** (Barby/Block/Sunset) — until delivered, use the existing wordmark component + neutral text placeholders; and the **gold/amber ruling** (§5.4, interim = neutral mist). These are asset/owner items; no *code value* is blocked by them.
 
@@ -971,7 +973,7 @@ Discovery adapts to the artist's **country and the languages spoken there** (det
 - **TARGET (RAD5, roadmap):** true peer/industry **bands** ("what does a techno DJ at your stage usually show?") as **bands + method labels only, never a rank/percentile.** Nothing compares an artist to a peer cohort today; firewall-review required before any cohort context renders, and **never buyer-side** unless method-safe and requested.
 
 ### 9.4 Pillar (c) — RECOMMENDATIONS (reasoned next-best-action)
-- **BUILT:** the rule-based next-best-action engine (`pickNextAction` / `nextBestStep`) derives ONE clearest move from real state, each carrying a `why`; the milestone journey M1–M8 frames progress (no %, no bar-as-grade).
+- **BUILT:** the rule-based next-best-action engine (`pickNextAction` / `nextBestStep`) derives ONE clearest move from real state, each carrying a `why`; the milestone journey M1–M8 frames progress (no %, no bar-as-grade; `M1–M8` = internal codes — the screen shows only the §4.1a names).
 - **TARGET:** reasoned, evidence-linked recommendations that cite the scan + comparison ("*found a Selector listing — confirm it to fill your Proof planet, which buyers in techno weigh first*"). Partly reachable by extending the built engine.
 
 ### 9.5 Provider fallback + firewall preservation
