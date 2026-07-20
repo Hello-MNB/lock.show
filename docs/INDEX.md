@@ -13,6 +13,7 @@ enforces.
 | Repo rulebook | CLAUDE.md | Maria | current |
 | Tasks · teams · loop · cadence | docs/TASK-REGISTER.md | Claude | current |
 | Owner queue | docs/OWNER-PENDING.md | Claude | current |
+| Free-pilot launch plan (modules to Gate 1) | docs/LOCK-Launch-Plan-To-Gate.md | Maria (rulings) / Claude (text) | current — the pilot spine |
 | Session continuity | docs/SESSION-MEMORY.md | Claude | current |
 | Failure→rule ledger | docs/LESSONS.md | Claude | current |
 | Site ops + site versions | docs/SITE-MANAGEMENT.md | Claude (Team S/G) | current |
