@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { getMyArtist, upsertArtist } from '../../lib/db.js'
+import { getMyArtist, upsertArtist, getMyAct, updateAct, listActs, createAct } from '../../lib/db.js'
 import { PageShell, Field, ErrorNote, Spinner } from '../../components/ui.jsx'
 import { GENRES, MAX_ACT_GENRES } from '../../lib/constants.js'
 
@@ -12,16 +12,32 @@ import { GENRES, MAX_ACT_GENRES } from '../../lib/constants.js'
 // saves ONE field at a time (§17.A.10 field-level save), with the full state set:
 // display → editing → saving → saved(+undo) → error. Firewall-safe: pure
 // identity text, no score/rank/band anywhere on this surface.
+//
+// MULTI-ACT (T-A5, 20 Jul, §MULTI-ACT/§8.6): the spec's Act chips row (current
+// Act + "＋ Second act") was built at the Radar's center-star (RadarUniverse.jsx)
+// but never here, even though §8.6 explicitly calls for it on THIS screen too.
+// Added below, reusing the exact same data calls (listActs/createAct) and the
+// SAME localStorage key (`gigproof_active_act`) the Radar reads, so picking an
+// Act here and picking one on the Radar stay the ONE shared selection — never
+// two disagreeing "current Act" states. A non-default Act has no `artists` row
+// (real-DB depth gap, documented in db.js/switchAct) — its identity fields live
+// on `act.*` only (one_line → act.positioning) — see identityValue/saveField.
 
-// The editable identity fields, in reading order. All live on `artists` and are
-// passport-ok (public), so each carries the "buyers see this" note.
+// The editable identity fields, in reading order. stage_name/one_line/genre/
+// city/photo_url are passport-ok (public) on both the default Act (artists row,
+// mirrored to act.* on save — db.js upsertArtist) and a non-default Act (act.*
+// directly). `format` lives ONLY on `act.*` — never on `artists` — regardless
+// of which Act is active (genreWeights.js familyFor's bounded vocabulary).
 const FIELDS = [
   { key: 'stage_name', max: 80 },
-  { key: 'one_line', max: 120 },
+  { key: 'one_line', max: 120, type: 'textarea' },
   { key: 'genre', max: 60, type: 'genres' },
+  { key: 'format', type: 'format' },
   { key: 'city', max: 60 },
   { key: 'photo_url', max: 400, type: 'url' },
 ]
+
+const FORMAT_VALUES = ['dj-set', 'live-set', 'duo', 'band', 'open-format', 'vocalist', 'other']
 
 // ── Genre chip picker (owner directive 17 Jul: dropdown, not free text, and the
 // SAME vocabulary as the Radar scene rail — constants.GENRES feeds both).
@@ -68,6 +84,29 @@ function GenrePicker({ value, onChange, T }) {
   )
 }
 
+// ── Format picker (single-select chips, same visual grammar as GenrePicker) —
+// bounded vocabulary genreWeights.familyFor reads (§8.2 family table). No
+// signal → no chip lit → the G2 guard already used by the Radar's ★ emphasis
+// stays untouched (an unset format never invents a guessed family).
+function FormatPicker({ value, onChange, T }) {
+  const f = T.actEditor
+  return (
+    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={f.fields.format}>
+      {FORMAT_VALUES.map((v) => (
+        <button key={v} type="button" role="radio" aria-checked={value === v}
+          onClick={() => onChange(value === v ? '' : v)}
+          className={`min-h-[44px] rounded-full border px-4 font-mono text-[11px] transition-colors ${
+            value === v
+              ? 'border-accent/60 bg-accent/12 font-bold text-accent'
+              : 'border-line2 bg-surface2 text-ink/85 hover:bg-raise'
+          }`}>
+          {value === v && '✓ '}{f.formatOptions[v]}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
   const f = T.actEditor
   const label = f.fields[fieldKey]
@@ -79,7 +118,10 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
   const savedTimer = useRef(null)
 
   useEffect(() => () => clearTimeout(savedTimer.current), [])
-  useEffect(() => { if (mode === 'editing') inputRef.current?.focus() }, [mode])
+  useEffect(() => { if (mode === 'editing' && (type === 'text' || type === 'url' || type === 'textarea')) inputRef.current?.focus() }, [mode, type])
+  // The active Act can change out from under an open row (chip switch) — reset
+  // to the freshly-loaded value rather than silently keep editing stale text.
+  useEffect(() => { if (mode === 'display') { setDraft(value || ''); setPrev(value || '') } }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function begin() { setDraft(value || ''); setPrev(value || ''); setMode('editing') }
   function cancel() { setDraft(value || ''); setMode('display') }
@@ -105,6 +147,7 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
   }
 
   const shown = value?.trim() ? value : null
+  const formatShown = type === 'format' && shown ? (f.formatOptions[shown] || shown) : shown
 
   return (
     <div className="border-b border-line py-4 last:border-0">
@@ -117,7 +160,7 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
 
           {mode !== 'editing' && (
             <p className={`mt-1 break-words text-sm ${shown ? 'text-ink' : 'italic text-faint'}`}>
-              {shown || f.empty}
+              {formatShown || f.empty}
             </p>
           )}
 
@@ -126,6 +169,24 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
               <Field hint={hint}>
                 {type === 'genres' ? (
                   <GenrePicker value={draft} onChange={setDraft} T={T} />
+                ) : type === 'format' ? (
+                  <FormatPicker value={draft} onChange={setDraft} T={T} />
+                ) : type === 'textarea' ? (
+                  <>
+                    <textarea
+                      ref={inputRef}
+                      maxLength={max}
+                      rows={2}
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') cancel() }}
+                      className="field w-full resize-none"
+                    />
+                    {/* live char counter (§8.6 DoD: "120-char, live counter") */}
+                    <p className={`mt-1 text-end font-mono text-[10px] ${draft.length >= max ? 'text-amber' : 'text-faint'}`}>
+                      {draft.length}/{max}
+                    </p>
+                  </>
                 ) : (
                   <input
                     ref={inputRef}
@@ -171,11 +232,81 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
   )
 }
 
+// Identity fields shared by the artists row and the Act row — mirrors db.js's
+// own ACT_IDENTITY_FIELDS map (kept local: this screen must read/write it in
+// BOTH directions, db.js's copy only ever writes artists → act one-way).
+const ACT_IDENTITY_COLS = { stage_name: 'stage_name', city: 'city', photo_url: 'photo_url', genre: 'genre', one_line: 'positioning' }
+
+// ── Act chips row (§8.6 "Act chips (current Act + '＋ Second act')") — the
+// SAME switch/create mechanics as the Radar's center-star (RadarUniverse.jsx),
+// deliberately NOT re-implemented as a fork: same localStorage key, same
+// listActs/createAct calls, so the "current Act" here and on the Radar are
+// ALWAYS the one shared selection, never two independent memories of it.
+function ActChips({ acts, activeActId, onPick, T, busy }) {
+  const f = T.actEditor
+  const S = T.radar.actSwitch
+  const [adding, setAdding] = useState(false)
+  const [name, setName] = useState('')
+  const [err, setErr] = useState('')
+
+  async function submit(e) {
+    e?.preventDefault?.()
+    const clean = name.trim()
+    if (!clean) return
+    setErr('')
+    try {
+      await onPick.create(clean)
+      setName('')
+      setAdding(false)
+    } catch (e2) {
+      setErr(e2?.message === 'demo' ? S.newActDemo : (e2?.message || T.common.error))
+    }
+  }
+
+  return (
+    <div className="mb-4">
+      <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{f.actsLabel}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        {acts.map((a) => (
+          <button key={a.id} type="button" onClick={() => onPick.switch(a.id, a)} disabled={busy}
+            aria-pressed={activeActId === a.id}
+            className={`tap-target rounded-full border px-3.5 py-1.5 font-mono text-[11px] font-semibold transition-colors ${
+              activeActId === a.id
+                ? 'border-accent/60 bg-accent/12 text-accent'
+                : 'border-line2 bg-surface2 text-ink/85 hover:bg-raise'
+            }`}>
+            {activeActId === a.id && '✓ '}{a.stage_name || f.untitledAct}
+          </button>
+        ))}
+        {!adding && (
+          <button type="button" onClick={() => setAdding(true)} disabled={busy}
+            className="tap-target rounded-full border border-dashed border-line2 px-3.5 py-1.5 font-mono text-[11px] font-semibold text-muted hover:border-accent/50 hover:text-accent">
+            {S.newActCta}
+          </button>
+        )}
+      </div>
+      {adding && (
+        <form onSubmit={submit} className="mt-2 flex flex-wrap items-center gap-2">
+          <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
+            placeholder={S.newActNamePh} className="field min-w-[200px] flex-1" />
+          <button type="submit" className="btn-primary min-h-[40px] px-3 py-1.5 text-xs" disabled={!name.trim() || busy}>{S.newActCreate}</button>
+          <button type="button" className="btn-ghost min-h-[40px] px-3 py-1.5 text-xs" onClick={() => { setAdding(false); setErr('') }}>{T.common.cancel}</button>
+          <p className="w-full text-[11px] text-muted">{err || S.newActHint}</p>
+        </form>
+      )}
+    </div>
+  )
+}
+
 export default function ActEditor() {
   const { user } = useAuth()
   const { T } = useLang()
   const f = T.actEditor
   const [artist, setArtist] = useState(null)
+  const [act, setAct] = useState(null)
+  const [acts, setActs] = useState([])
+  const [activeActId, setActiveActId] = useState(null)
+  const [actBusy, setActBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadErr, setLoadErr] = useState('')
 
@@ -184,17 +315,80 @@ export default function ActEditor() {
       try {
         const a = await getMyArtist(user.id)
         setArtist(a || {})
+        const initial = localStorage.getItem('gigproof_active_act') || a?.id
+        setActiveActId(initial)
+        const [rows, actRow] = await Promise.all([
+          a?.id ? listActs(a.id) : Promise.resolve([]),
+          initial ? getMyAct(initial) : Promise.resolve(null),
+        ])
+        setActs(rows || [])
+        setAct(actRow)
       } catch (e) { setLoadErr(e.message) }
       finally { setLoading(false) }
     })()
   }, [user.id])
 
+  const isDefaultAct = activeActId === artist?.id
+
+  // Reads: the DEFAULT Act's identity is canonical on `artists` (existing
+  // behaviour, unchanged); a NON-default Act's identity lives on `act.*` only
+  // (real-DB depth gap, documented in db.js/switchAct — draw/kit fields stay
+  // honestly absent for it, out of scope for this identity-only screen).
+  function identityValue(key) {
+    if (key === 'format') return act?.format || ''
+    if (isDefaultAct) return artist?.[key] || ''
+    const col = ACT_IDENTITY_COLS[key]
+    return act?.[col] ?? ''
+  }
+
   // Field-level save (§17.A.10). Persists ONE field, keeps the id, and updates
   // local state so the row reflects the saved value without a full reload.
   async function saveField(key, val) {
-    const patch = { id: artist.id, created_by: user.id, [key]: val || null }
-    const saved = await upsertArtist(patch)
-    setArtist((cur) => ({ ...cur, ...saved, [key]: val || null }))
+    if (key === 'format') {
+      const saved = await updateAct(activeActId, { format: val || null })
+      setAct((cur) => ({ ...cur, ...saved }))
+      return
+    }
+    if (isDefaultAct) {
+      const patch = { id: artist.id, created_by: user.id, [key]: val || null }
+      const saved = await upsertArtist(patch)
+      setArtist((cur) => ({ ...cur, ...saved, [key]: val || null }))
+      // upsertArtist mirrors identity → the act row server-side (db.js T-63a);
+      // mirror the SAME patch locally so a following format-tab read (which
+      // hits `act` directly) doesn't show stale identity text.
+      const col = ACT_IDENTITY_COLS[key]
+      if (col) setAct((cur) => (cur ? { ...cur, [col]: val || null } : cur))
+    } else {
+      const col = ACT_IDENTITY_COLS[key]
+      const saved = await updateAct(activeActId, { [col]: val || null })
+      setAct((cur) => ({ ...cur, ...saved }))
+      setActs((cur) => cur.map((a) => (a.id === activeActId ? { ...a, [col]: val || null } : a)))
+    }
+  }
+
+  async function switchAct(id, actRow) {
+    if (id === activeActId || actBusy) return
+    setActBusy(true)
+    try {
+      const row = actRow || acts.find((a) => a.id === id) || await getMyAct(id)
+      setAct(row)
+      setActiveActId(id)
+      localStorage.setItem('gigproof_active_act', id)
+    } finally {
+      setActBusy(false)
+    }
+  }
+
+  async function createNewAct(name) {
+    if (actBusy) return
+    setActBusy(true)
+    try {
+      const row = await createAct(activeActId || artist.id, { stage_name: name })
+      setActs((prev) => [...prev, row])
+      await switchAct(row.id, row)
+    } finally {
+      setActBusy(false)
+    }
   }
 
   if (loading) return <PageShell><div className="mt-16 flex justify-center"><Spinner /></div></PageShell>
@@ -215,19 +409,32 @@ export default function ActEditor() {
         </div>
 
         <div className="mt-4 min-h-0 flex-1 overflow-y-auto pb-4">
+          {acts.length > 0 && (
+            <ActChips acts={acts} activeActId={activeActId} busy={actBusy} T={T}
+              onPick={{ switch: switchAct, create: createNewAct }} />
+          )}
+
           <div className="card">
             {FIELDS.map((fl) => (
               <InlineEditRow
-                key={fl.key}
+                key={`${activeActId}:${fl.key}`}
                 fieldKey={fl.key}
                 type={fl.type || 'text'}
                 max={fl.max}
-                value={artist?.[fl.key] || ''}
+                value={identityValue(fl.key)}
                 onSave={saveField}
                 T={T}
               />
             ))}
           </div>
+
+          {/* "Who can act for you" card (§8.6 layout) — links to the dedicated
+              §8.5 Access screen rather than duplicating its content here. */}
+          <Link to="/artist/access" className="card mt-4 block transition hover:bg-raise">
+            <p className="text-sm font-semibold text-ink">{f.accessCardTitle}</p>
+            <p className="mt-1 text-xs text-muted">{f.accessCardBody}</p>
+            <p className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.07em] text-accent">{f.accessCardCta} →</p>
+          </Link>
         </div>
       </div>
     </div>

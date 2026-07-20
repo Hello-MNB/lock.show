@@ -345,6 +345,38 @@ export async function revokeArtistAccess(id) {
   return { ok: true }
 }
 
+// ── Artist-INITIATED invite (§8.5 "Invite someone" — TARGET, not yet wired).
+// Every migration to date (008/027/030) only built the AGENCY-initiated half
+// of the handshake (an org requests access to an artist it already has the
+// id/link for → the artist approves/declines via respond_to_access_request
+// above). The spec's ArtistAccess screen (§8.5) additionally wants the artist
+// to be able to invite a specific manager directly — the REVERSE direction —
+// which has no RPC, no table flag, and no counterpart "accept" UI anywhere in
+// the app yet (confirmed: neither this file nor any screen calls anything
+// resembling it). Rather than fabricate a working feature ahead of real
+// architecture (CLAUDE.md), this fails SOFT exactly like createWorkspace/
+// request_artist_access above — {ok:false} today, and the UI renders an
+// honest "not available yet" state instead of a silent no-op or a fake
+// success. The moment a real `invite_artist_representative` RPC ships
+// (owner-approved migration, artist_access needs an `invited_email` column +
+// a manager-side "accept" flow to be end-to-end), this function goes live
+// with NO caller-side change required.
+const ARTIST_INVITE_NOTE =
+  '[artist_access] no artist-initiated invite RPC exists yet (target: invite_artist_representative) — the §8.5 "Invite someone" CTA fails soft until a migration + manager-side accept flow ship.'
+export async function inviteArtistRepresentative(artistId, email, scope = ['view']) {
+  if (DEMO) return { ok: false, reason: 'not-available' }
+  try {
+    const { data, error } = await supabase.rpc('invite_artist_representative', {
+      p_artist: artistId, p_email: email, p_scope: scope,
+    })
+    if (error) throw error
+    return { ok: true, id: data }
+  } catch (error) {
+    if (isPreMigration027(error)) { console.warn(ARTIST_INVITE_NOTE); return { ok: false, reason: 'not-available' } }
+    throw error
+  }
+}
+
 // ── Migration-032 RPCs (rel-07.13 A6+A7) — roster-from-grants + production inbox ──
 // Both return null (not []) when 032 is not applied yet, so screens can render
 // their honest needs-state gap instead of a fake empty state. 42883 = undefined

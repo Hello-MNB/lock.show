@@ -557,7 +557,7 @@ Each entity: its ONE main canvas · the interactive ENGINE that canvas runs · e
 
 | Entity (§3.4) | Main canvas | The interactive ENGINE | Secondary screens (path in → back) | Nav shell (§7.1–7.5) | Signals (§21.1) |
 |---|---|---|---|---|---|
-| **ARTIST** | Radar canvas `/artist/home` (§8.2) | **Radar + Planet Inspector** (§8.2/§8.3): planets → panel → confirm/fill → coaching (N2–N4) | Passport preview §8.4 (nav tab → back via nav) · Requests §8.13 (tab) · Access §8.5 (hub → back) · Act editor §8.6 (Radar EDIT → inline, returns in place) · Evidence §8.13 (planet panel → back to Radar) · Onboarding §8.1 (entry-only → lands Radar) | chrome §7.1 · hub §7.2 · nav Radar·Passport·Requests (§7.3) · bottom-nav §7.5 | Identity+Intent+Trust (build events) · Retention (`login`/restore) — §14.1.5 FIRING |
+| **ARTIST** | Radar canvas `/artist/home` (§8.2) | **Radar + Planet Inspector** (§8.2/§8.3): planets → panel → confirm/fill → coaching (N2–N4) | Passport preview §8.4 (nav tab → back via nav) · Requests §17.A.4 (tab — the decision cockpit; the old §8.13 cite was stale, corrected 21 Jul) · Access §8.5 (hub → back) · Act editor §8.6 (Radar EDIT → inline, returns in place) · Evidence §8.13 (planet panel → back to Radar) · Onboarding §8.1 (entry-only → lands Radar) | chrome §7.1 · hub §7.2 · nav Radar·Passport·Requests (§7.3) · bottom-nav §7.5 | Identity+Intent+Trust (build events) · Retention (`login`/restore) — §14.1.5 FIRING |
 | **REPRESENTATION** | Roster cockpit `/representation/roster` (§8.10) | **Roster action cards**: per-artist what-changed · why · ONE bound action | Requests inbox `/reqs` · Roster Radar `/radar` · Team `/team` (all §8.10 — nav tabs → back via nav) | nav Roster·Requests·Radar·Team (§7.3) | Relationship (grants — ⚠ NOT-WIRED §21.1) + Conversion (request handling) |
 | **PRODUCTION** | Events board `/production/events` (§8.11) | **Lineup-slot board**: time-ordered slots, one CTA per slot; books via Buyer path | Requests `/reqs` · Workspace `/workspace` (§8.11, tabs → back) · Passport (Buyer mode) §8.7 → back via history | nav Events·Requests·Workspace (§7.3) | Conversion (`availability_request_created` as buyer) |
 | **BUYER (public)** | Public Passport `/passport/:id` (§8.7) — no login, no shell | **Persona toggle + proof cards + ONE sticky CTA** → availability request §8.8 (in-page → receipt → back to Passport) | Signed-in `/discover` (§8.13 — ⚠ THIN, flagged) | public mode: Passport·Availability (§7.3); deep-links §7.6 | Conversion (`passport_view`+`return_visit` · reaction · request) — FIRING |
@@ -4348,6 +4348,10 @@ These are the screens the prototype never drew — the plumbing that a real prod
 Shared tokens (light): paper `#F3F5EF` · white card `#FFFFFF` · forest panel `#18221A` · ink text `#0A0D0B` · slate muted `#687269` · lime CTA `#C8F04D` · mist border `#DDE3D9`. `OWED` — exact card border/elevation, radius scale (`--r`, `--r2`), light-card muted/faint, and CTA primary/secondary/ghost paddings + the 44px rule's exact values live only in DS v1.6.25 (Drive) — fill from `LOCKSHOW_Design_System_CURRENT.html`.
 
 ---
+
+
+#### 17.A.4.b · Artist Readiness (`/artist/readiness`) — BACKFILL FROM BUILD (A2, 21 Jul — ratify: R00)
+Private, one job: four axes (Proof of draw · Professional experience · Presence & links · Booking readiness), each a bounded StatusChip (strong/developing/missing/not-assessable — never a number), plus ONE dominant "next step" card naming the single most-impactful missing move (weakest actionable axis) or a warm all-covered message. Reached via the dashboard quick-link; exits via an explicit back-link to `/artist/home`. Firewall: the internal `weight` value is computed but NEVER rendered (guardrail inspector 1 enforces).
 
 ### 17.B.1 · Signup
 
