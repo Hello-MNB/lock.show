@@ -1,6 +1,6 @@
 import {
   PassportHero, PersonaToggle, PassportFooter,
-  DrawSection, PerformanceSection, ReadinessSection, ContextSection,
+  DrawSection, PerformanceSection, ReadinessSection, ContextSection, ProofStory,
 } from './passportKit.jsx'
 
 // ── Passport · PRODUCTION VIEW — for a stage manager / technical producer
@@ -17,6 +17,7 @@ export default function PassportProductionView({ artist, data, T, persona, onPer
       </PassportHero>
 
       <main className="mx-auto max-w-[720px] px-5 sm:px-8">
+        <ProofStory artist={artist} data={data} T={T} />
         <ReadinessSection data={data} artist={artist} T={T} label={T.passport.productionReadiness} />
         <DrawSection data={data} T={T} label={T.passport.proofTitle} />
         <PerformanceSection data={data} T={T} label={T.passport.performance} />

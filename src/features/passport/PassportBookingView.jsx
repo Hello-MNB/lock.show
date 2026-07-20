@@ -1,6 +1,6 @@
 import {
   PassportHero, PersonaToggle, PassportFooter,
-  DrawSection, PerformanceSection, ReadinessSection, ContextSection,
+  DrawSection, PerformanceSection, ReadinessSection, ContextSection, ProofStory,
 } from './passportKit.jsx'
 
 // ── Passport · BOOKING VIEW — for a venue / event booker deciding whether to
@@ -15,7 +15,11 @@ export default function PassportBookingView({ artist, data, T, persona, onPerson
       </PassportHero>
 
       <main className="mx-auto max-w-[720px] px-5 sm:px-8">
-        <DrawSection data={data} T={T} label={T.passport.proofTitle} />
+        <ProofStory artist={artist} data={data} T={T} />
+        {/* P-5 · this is the ONLY face whose lead section is Draw — heroRoom
+            wires the Room Grammar hero picture to the draw unit's hero
+            position here only (other faces keep the standard unit). */}
+        <DrawSection data={data} T={T} label={T.passport.proofTitle} heroRoom />
         <PerformanceSection data={data} T={T} label={T.passport.performance} />
         <ReadinessSection data={data} artist={artist} T={T} />
         <ContextSection data={data} artist={artist} T={T} />

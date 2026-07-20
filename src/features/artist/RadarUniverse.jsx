@@ -29,6 +29,19 @@ const RING = {
   established: 'border-accent/50',
   developing: 'border-teal/50',
   needs: 'border-amber/60',
+  // R-2 (T-82) — locked is a sequencing hook, never shame styling: a quiet,
+  // low-contrast ring, no warning/red register.
+  locked: 'border-line/40',
+}
+// R-3 (T-82, §8.2 constellation threads) — one thread center↔planet, coloured
+// by the SAME live-state vocabulary as RING above (amber/teal/lime/faint).
+// Geometry is fixed by planet angle, identical for every artist — colour is a
+// state only, it grades nothing.
+const THREAD_STROKE = {
+  needs: '#E39A4B',       // amber
+  developing: '#46DCC2',  // teal
+  established: '#C8F04D', // lime
+  locked: '#69716B',      // faint — muted text color, not a warning color
 }
 // Bounded state chips — low-saturation tints (≤10% alpha), text does the work.
 const NODE_CHIP = {
@@ -106,11 +119,35 @@ export function useFullStage() {
   return full
 }
 
+// R-1 (T-82, §8.2 mobile "Radar Focus") — instant states, no transition, when
+// the visitor has asked the OS for reduced motion. Same matchMedia pattern as
+// useFullStage above.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const onChange = (e) => setReduced(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return reduced
+}
+
+// Shared planet position math (percent-of-stage) — ONE source of truth reused
+// by the planet buttons AND the R-3 constellation-thread SVG layer, so the
+// thread endpoints can never drift from the actual planet markers.
+const PLANET_ORBIT_PCT = 41
+function planetXY(angle, radius = PLANET_ORBIT_PCT) {
+  const rad = (angle * Math.PI) / 180
+  return { x: 50 + radius * Math.cos(rad), y: 50 + radius * Math.sin(rad) }
+}
+
 export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
   const { T } = useLang()
   const S = T.radar.universe
   const nav = useNavigate()
   const fullStage = useFullStage() // md+ ⇒ this component owns the ONE next-move CTA
+  const reduceMotion = usePrefersReducedMotion() // R-1 — instant states, no transition
   const [selected, setSelected] = useState(null)       // planet key → opens the ONE panel
   const [review, setReview] = useState(false)          // "Needs you" batch-review mode (inside the radar)
   const [filter, setFilter] = useState('needsYou')
@@ -131,6 +168,57 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     setTimeout(() => {
       setBloomIds((prev) => { const next = new Set(prev); list.forEach((id) => next.delete(id)); return next })
     }, 420)
+  }
+
+  // R-1(c) — long-press method peek: a transient overlay reusing the EXACT
+  // method-label wording already rendered elsewhere (never new information),
+  // for a platform-ring tile or a source row. Auto-dismisses ~1.8s.
+  const [peek, setPeek] = useState('')
+  const peekRef = useRef(null)
+  function showPeek(text) {
+    if (!text) return
+    clearTimeout(peekRef.current)
+    setPeek(text)
+    peekRef.current = setTimeout(() => setPeek(''), 1800)
+  }
+  // Long-press bookkeeping for the platform-ring tiles (list-rendered, so a
+  // Map keyed by node key rather than one hook call per item — hooks cannot
+  // live inside .map()). PlanetRow (a real component instance per row) uses
+  // its own useRef instead — see below.
+  const ringLongPress = useRef(new Map())
+  function longPressHandlers(key, text) {
+    if (!ringLongPress.current.has(key)) ringLongPress.current.set(key, { timer: null, fired: false })
+    const st = ringLongPress.current.get(key)
+    const start = () => { st.fired = false; clearTimeout(st.timer); st.timer = setTimeout(() => { st.fired = true; showPeek(text) }, 500) }
+    const clear = () => clearTimeout(st.timer)
+    const guardClick = (e) => { if (st.fired) { e.preventDefault(); e.stopPropagation(); st.fired = false } }
+    return {
+      onTouchStart: start, onTouchEnd: clear, onTouchMove: clear, onTouchCancel: clear,
+      onMouseDown: start, onMouseUp: clear, onMouseLeave: clear,
+      onClickCapture: guardClick, onContextMenu: (e) => e.preventDefault(),
+    }
+  }
+
+  // R-1(b) — swipe left/right cycles the focused planet (only while one is
+  // selected; the stage otherwise has no pan gesture). ~48px horizontal
+  // threshold with a vertical-drift guard (|dy| < |dx|).
+  const swipeStart = useRef(null)
+  function onStageTouchStart(e) {
+    if (!selected || !e.touches?.length) return
+    swipeStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  function onStageTouchEnd(e) {
+    if (!selected || !swipeStart.current || !e.changedTouches?.length) return
+    const dx = e.changedTouches[0].clientX - swipeStart.current.x
+    const dy = e.changedTouches[0].clientY - swipeStart.current.y
+    swipeStart.current = null
+    if (Math.abs(dy) >= Math.abs(dx) || Math.abs(dx) < 48) return
+    cyclePlanet(dx < 0 ? 1 : -1) // swipe left → next, swipe right → prev
+  }
+  function cyclePlanet(dir) {
+    const idx = PLANETS.findIndex((p) => p.key === selected)
+    if (idx === -1) return
+    setSelected(PLANETS[(idx + dir + PLANETS.length) % PLANETS.length].key)
   }
 
   // ── Multi-Act switch — lives at the radar CENTER-STAR (Design Spec §MULTI-ACT).
@@ -395,7 +483,15 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     S, T,
     onEvidence: goEvidence,
     artist: effArtist, onArtistChange, onActChange, onItemsRefresh, onClaimsChange,
+    onPeek: showPeek, // R-1(c) — long-press method peek on a source row
   }
+
+  // R-4 (T-82, §8.2 4-zone) — the right-rail inspector holds the ONE primary
+  // CTA whenever it is showing one, so the floating next-move dock (below)
+  // must not render a SECOND .btn-primary at the same time (CTA law).
+  const railHoldsCTA = fullStage && !!sel && (
+    (selected === 'prokit' && sel.state === 'locked') || batchable.length >= 2
+  )
 
   return (
     // Viewport law (T-35/§10.2): inside the dashboard's fixed-height column this
@@ -468,10 +564,15 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         )}
       </div>
 
+      {/* R-4 (T-82, §8.2 4-zone) — md+: the stage and the persistent right-rail
+            inspector sit side by side. Nothing here changes when no planet is
+            selected (the rail simply doesn't render) — no layout jump on load. */}
+      <div className="relative md:flex md:min-h-0 md:flex-1 md:items-stretch md:gap-5">
+      <div className="relative md:min-h-0 md:min-w-0 md:flex-1">
       {blossom ? (
         <div className="relative py-10 text-center">
           <CenterStar artist={effArtist} T={T} S={S} dim
-            onOpenSwitch={() => setActSheet(true)}
+            onOpenSwitch={() => (selected ? setSelected(null) : setActSheet(true))}
             onTagClick={() => setSelected('identity')} />
           <h3 className="font-display mt-5 text-xl font-bold text-ink">{S.blossomTitle}</h3>
           <p className="mx-auto mt-1.5 max-w-[300px] text-xs leading-relaxed text-muted">{S.blossomBody}</p>
@@ -484,23 +585,55 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         /* md+: HEIGHT-driven square (h-full + aspect-square ⇒ width follows the
               flexed panel height, capped at the original 620px) — orbit math is
               percentage-based so every node scales with it for free. */
-        <div className="relative mx-auto aspect-square w-full max-w-[400px] md:h-full md:max-h-[620px] md:w-auto md:max-w-[620px]">
+        <div className="relative mx-auto aspect-square w-full max-w-[400px] md:h-full md:max-h-[620px] md:w-auto md:max-w-[min(620px,100%)]"
+          onTouchStart={onStageTouchStart} onTouchEnd={onStageTouchEnd}>
           {/* thin orbit rings — the quiet geometry of the night. A third,
               outermost hairline (md+) carries the platform ring below. */}
           <div className="absolute inset-[9%] rounded-full border border-line" aria-hidden />
           <div className="absolute inset-[27%] rounded-full border border-line" aria-hidden />
           <div className="absolute inset-[4%] hidden rounded-full border border-line/60 md:block" aria-hidden />
+
+          {/* R-3 (T-82, §8.2 constellation threads) — one thread center↔each
+              planet, coloured by live state only; geometry is fixed by the
+              SAME planet angle used for the markers below (planetXY) — it
+              grades nothing. Behind the planets, above the orbit rings. */}
+          <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <filter id="radarThreadGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="0.6" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            {PLANETS.map((p) => {
+              const { x, y } = planetXY(p.angle)
+              const st = uni.planets[p.key].state
+              return (
+                <line key={p.key} x1="50" y1="50" x2={x} y2={y}
+                  stroke={THREAD_STROKE[st] || THREAD_STROKE.developing}
+                  strokeWidth={1} vectorEffect="non-scaling-stroke"
+                  opacity={st === 'locked' ? 0.12 : 0.32}
+                  filter={st === 'established' ? 'url(#radarThreadGlow)' : undefined}
+                  className={reduceMotion ? undefined : 'transition-opacity duration-500'} />
+              )
+            })}
+          </svg>
+
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <CenterStar artist={effArtist} T={T} S={S}
-              onOpenSwitch={() => setActSheet(true)}
+              onOpenSwitch={() => (selected ? setSelected(null) : setActSheet(true))}
               onTagClick={() => setSelected('identity')} />
           </div>
           {PLANETS.map((p) => {
             const info = uni.planets[p.key]
-            const rad = (p.angle * Math.PI) / 180
-            const x = 50 + 41 * Math.cos(rad)
-            const y = 50 + 41 * Math.sin(rad)
-            const dimmed = !info.nodes.some(matchesFilter) && (filter !== 'all' || world)
+            const { x, y } = planetXY(p.angle)
+            // R-1(a) — focus state: while a planet is selected, everything
+            // else (incl. the platform ring below) fades to ~40%, never gone
+            // (opacity only — pointer-events stay live). Without a selection,
+            // the existing filter-driven dim still applies.
+            const filterDimmed = !info.nodes.some(matchesFilter) && (filter !== 'all' || world)
+            const isFocused = selected === p.key
+            const dimmed = selected ? !isFocused : filterDimmed
+            const opacityClass = dimmed ? (selected ? 'opacity-40' : 'opacity-25') : 'opacity-100'
             const complete = info.state === 'established' && info.foundCount === 0 &&
               !info.nodes.some((n) => n.state === NODE.MISSING)
             // G2 — genre-PRIMARY planet: additive ring + slight size + label.
@@ -511,7 +644,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 onClick={() => setSelected(p.key)}
                 style={{ left: `${x}%`, top: `${y}%` }}
                 data-genre-primary={primary || undefined}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
+                className={`absolute -translate-x-1/2 -translate-y-1/2 text-center ${reduceMotion ? '' : 'transition-all duration-300'} ${opacityClass} ${isFocused ? 'scale-110' : ''}`}
                 aria-label={`${S.planets[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}${complete ? ` · ${S.complete}` : ''}`}>
                 <span className={`relative mx-auto grid place-items-center rounded-full border bg-surface2 transition-transform hover:scale-105 ${
                   primary ? 'h-[60px] w-[60px] md:h-[68px] md:w-[68px]' : 'h-14 w-14 md:h-16 md:w-16'
@@ -521,7 +654,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                   {primary && (
                     <span aria-hidden className="absolute -inset-1.5 rounded-full border border-gold/40 shadow-[0_0_14px_rgba(242,192,99,0.10)]" />
                   )}
-                  <GpIcon id={p.icon} className="h-6 w-6 text-ink/90 md:h-7 md:w-7" />
+                  <GpIcon id={p.icon} className={`h-6 w-6 text-ink/90 md:h-7 md:w-7 ${info.state === 'locked' ? 'opacity-50' : ''}`} />
                   {/* found — a small gold dot, not a badge shouting */}
                   {info.foundCount > 0 && (
                     <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-gold ring-2 ring-bg2" />
@@ -529,6 +662,13 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                   {/* accomplishment — deliberately quiet: a small settled ✓ */}
                   {complete && (
                     <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-[rgba(190,226,78,0.10)] text-[8px] text-[#CBEE72] ring-1 ring-bg2">✓</span>
+                  )}
+                  {/* R-2 (T-82) — locked is a sequencing hook, never shame: a
+                      small quiet lock mark, no red/warning register. */}
+                  {info.state === 'locked' && (
+                    <span aria-hidden className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-na-bg text-faint ring-1 ring-bg2">
+                      <GpIcon id="gp-lock" className="h-2.5 w-2.5" />
+                    </span>
                   )}
                 </span>
                 <span className="mt-1.5 block w-20 font-mono text-[8px] uppercase tracking-[0.08em] text-faint leading-tight md:text-[9px]">
@@ -545,6 +685,16 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
               </button>
             )
           })}
+
+          {/* R-1(c) — long-press method peek, transient overlay (auto-dismiss
+              ~1.8s), reusing the exact wording already rendered elsewhere. */}
+          {peek && (
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-1 z-20 flex justify-center">
+              <span className="rounded-full border border-gold/40 bg-surface/95 px-3 py-1 text-center font-mono text-[9px] uppercase tracking-[0.08em] text-gold shadow-card">
+                {peek}
+              </span>
+            </div>
+          )}
 
           {/* ── PLATFORM RING (META-FIELD LAW) — one small muted node per REAL
                 detected platform (a profile_items link or a claim), showing the
@@ -563,7 +713,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             const isConnect = pn.key === 'connect'
             return (
               <div key={pn.key} style={{ left: `${x}%`, top: `${y}%` }}
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1">
+                className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 ${selected ? 'opacity-40' : 'opacity-100'} ${reduceMotion ? '' : 'transition-opacity duration-300'}`}>
                 {isConnect ? (
                   <button type="button" onClick={goEvidence}
                     aria-label={S.platformConnectAria} title={S.platformConnectAria}
@@ -575,11 +725,14 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                   // their METHOD LABEL (provenance word) — never the value.
                   const caption = pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value
                   return (
-                    <span aria-label={S.platformNodeAria(caption)} title={caption}
+                    // R-1(c) — long-press (touch ~500ms / mouse-down hold) peeks
+                    // the same method-label caption already rendered below it.
+                    <button type="button" aria-label={S.platformNodeAria(caption)} title={caption}
+                      {...longPressHandlers(pn.key, caption)}
                       className="relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
                       <PlatformLogo name={pn.platform} size={16} />
                       <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg2" />
-                    </span>
+                    </button>
                   )
                 })()}
                 {!isConnect && (
@@ -595,13 +748,44 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           })}
         </div>
       )}
+      </div>
+
+      {/* R-4 (T-82, §8.2 4-zone "RIGHT · the persistent Planet Inspector") —
+            md+ only, and only while a planet is selected (collapses back to
+            nothing otherwise — no layout jump on the default/no-selection
+            view, which renders byte-identical to before this task). Mobile
+            keeps the BottomSheet below exactly as-is. Same panel content
+            (PlanetPanelContent) as the sheet — no forked copy. */}
+      {fullStage && sel && (
+        <aside aria-label={S.planets[selected]} className="relative hidden shrink-0 flex-col rounded-2xl border border-line bg-surface2/60 p-4 md:flex md:w-[300px] md:min-h-0">
+          <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
+            <h2 className="font-display text-sm font-bold text-ink">{S.planets[selected]}</h2>
+            <button type="button" onClick={() => setSelected(null)}
+              className="tap-target shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-muted hover:text-ink">
+              {S.backToUniverse}
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto pe-0.5">
+            <PlanetPanelContent
+              selected={selected} sel={sel} S={S} T={T} coachScene={coachScene}
+              batchable={batchable} bulkBusy={bulkBusy} onConfirmMany={confirmMany}
+              panelNodes={panelNodes} rowProps={rowProps} confirming={confirming} bloomIds={bloomIds}
+              confirmNode={confirm} onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)}
+              onGoLive={() => setSelected('live')} />
+          </div>
+        </aside>
+      )}
+      </div>
 
       {/* ── ONE next move — full-stage (md+) ONLY: floats bottom-start OVER
             the universe, like the prototype's .next card. Mobile keeps its
             separate card below the radar (ArtistDashboard), which renders only
             below md — the fullStage gate keeps exactly ONE .btn-primary in the
-            DOM per view (CTA law §10.2/§8.2), never two hidden twins. ── */}
-      {fullStage && !blossom && nextAction && (
+            DOM per view (CTA law §10.2/§8.2), never two hidden twins.
+            R-4 — when the right rail is open AND holds a CTA (batch-confirm
+            or the locked-prokit CTA), this dock hides entirely so exactly ONE
+            .btn-primary ever renders (rail closed ⇒ dock returns). ── */}
+      {fullStage && !blossom && nextAction && !railHoldsCTA && (
         <div className="relative z-10 hidden items-center justify-between gap-3 rounded-xl border border-gold/25 bg-surface/95 px-3 py-2.5 shadow-card backdrop-blur md:absolute md:bottom-8 md:start-8 md:flex md:w-[380px] md:max-w-[calc(100%-4rem)]">
           <div className="min-w-0">
             <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>
@@ -649,38 +833,19 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         </div>
       )}
 
-      {/* ── PLANET PANEL — drill-in. Confirm + honesty text INLINE per row. ── */}
-      <BottomSheet open={!!selected} onClose={() => setSelected(null)} title={selected ? S.planets[selected] : ''}>
+      {/* ── PLANET PANEL — drill-in. Confirm + honesty text INLINE per row.
+            R-4: md+ owns the persistent right-rail (rendered above, beside
+            the stage) instead — this BottomSheet is mobile-only so the panel
+            never shows twice (and never doubles a .btn-primary). ── */}
+      <BottomSheet open={!!selected && !fullStage} onClose={() => setSelected(null)} title={selected ? S.planets[selected] : ''}>
         {sel && (
           <div className="max-h-[65vh] overflow-y-auto pe-0.5">
-            {/* N3 (T-65, §8.3) — the COACHING LINE, Inspector Layer 1: names the
-                artist's actual scene + why this dimension matters there. Scene-
-                standard framing ONLY (a fact about the scene, never about peers);
-                G2 — no genre signal → no line. Artist-private (N5 test). */}
-            {coachScene && S.coach?.[selected] && (
-              <p className="mb-3 text-xs leading-relaxed text-muted">
-                <span className="font-semibold text-ink">{S.coachIn(coachScene)}</span>{' '}
-                {S.coach[selected]}
-              </p>
-            )}
-            {batchable.length >= 2 && (
-              <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => confirmMany(batchable)} disabled={bulkBusy}
-                aria-label={S.confirmAllCta(batchable.length)}>
-                {bulkBusy ? <Spinner /> : S.confirmAllCta(batchable.length)}
-              </button>
-            )}
-            <div className="space-y-2">
-              {panelNodes.map((n) => (
-                <PlanetRow key={n.id} node={n} planet={selected} {...rowProps}
-                  busy={confirming === n.id}
-                  bloom={bloomIds.has(n.id)}
-                  onConfirm={() => confirm(n)}
-                  onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)} />
-              ))}
-              {panelNodes.length === 0 && (
-                <p className="py-6 text-center font-mono text-[10px] text-muted">—</p>
-              )}
-            </div>
+            <PlanetPanelContent
+              selected={selected} sel={sel} S={S} T={T} coachScene={coachScene}
+              batchable={batchable} bulkBusy={bulkBusy} onConfirmMany={confirmMany}
+              panelNodes={panelNodes} rowProps={rowProps} confirming={confirming} bloomIds={bloomIds}
+              confirmNode={confirm} onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)}
+              onGoLive={() => setSelected('live')} />
           </div>
         )}
       </BottomSheet>
@@ -751,13 +916,68 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   )
 }
 
+// ── R-4 (T-82, §8.2 4-zone) — the ONE planet-inspector body, shared verbatim
+// between the mobile BottomSheet and the md+ persistent right rail so the two
+// surfaces can never drift apart. R-2 locked-prokit panel lives here too, so
+// both surfaces show the same "Not needed yet" chip + single CTA.
+function PlanetPanelContent({ selected, sel, S, T, coachScene, batchable, bulkBusy, onConfirmMany, panelNodes, rowProps, confirming, bloomIds, confirmNode, onSaved, onGoLive }) {
+  if (!sel) return null
+
+  // R-2 — Professional Kit stays locked until the Act's live draw is backed;
+  // a sequencing hook, never shame styling. ONE CTA, routes to the live planet.
+  if (selected === 'prokit' && sel.state === 'locked') {
+    return (
+      <div className="py-6 text-center">
+        <span className="chip mx-auto mb-3 inline-flex bg-na-bg text-[10px] text-muted">{S.state.locked}</span>
+        <p className="mx-auto max-w-[260px] text-xs leading-relaxed text-muted">{S.lockedChip}</p>
+        <button className="btn-primary mt-4 min-h-[44px] px-4 py-2.5 text-xs" onClick={onGoLive}>
+          {S.lockedCta}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* N3 (T-65, §8.3) — the COACHING LINE, Inspector Layer 1: names the
+          artist's actual scene + why this dimension matters there. Scene-
+          standard framing ONLY (a fact about the scene, never about peers);
+          G2 — no genre signal → no line. Artist-private (N5 test). */}
+      {coachScene && S.coach?.[selected] && (
+        <p className="mb-3 text-xs leading-relaxed text-muted">
+          <span className="font-semibold text-ink">{S.coachIn(coachScene)}</span>{' '}
+          {S.coach[selected]}
+        </p>
+      )}
+      {batchable.length >= 2 && (
+        <button className="btn-primary mb-3 min-h-[44px] w-full py-2.5 text-xs" onClick={() => onConfirmMany(batchable)} disabled={bulkBusy}
+          aria-label={S.confirmAllCta(batchable.length)}>
+          {bulkBusy ? <Spinner /> : S.confirmAllCta(batchable.length)}
+        </button>
+      )}
+      <div className="space-y-2">
+        {panelNodes.map((n) => (
+          <PlanetRow key={n.id} node={n} planet={selected} {...rowProps}
+            busy={confirming === n.id}
+            bloom={bloomIds.has(n.id)}
+            onConfirm={() => confirmNode(n)}
+            onSaved={onSaved} />
+        ))}
+        {panelNodes.length === 0 && (
+          <p className="py-6 text-center font-mono text-[10px] text-muted">—</p>
+        )}
+      </div>
+    </>
+  )
+}
+
 // ── One source row inside a panel ─────────────────────────────────────────────
 // EVIDENCE INTEGRITY: an actionable (found/review) claim row shows, BEFORE the
 // button — (1) the exact claim wording, (2) the concrete source (method label +
 // identifiable reference), (3) the honest proves / doesn't-prove line. The
 // button names what it confirms. Non-claim rows keep the inline expander +
 // in-place fill form. Never a second modal above the panel.
-function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, artist, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onSaved }) {
+function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, artist, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onSaved, onPeek }) {
   const [open, setOpen] = useState(false)
   const chip = NODE_CHIP[n.state]
   const actionable = (n.state === NODE.FOUND || n.state === NODE.REVIEW) && !!n.claim
@@ -765,6 +985,27 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
   const methodKey = c ? methodLabelFor({ method_label: c.method_label, verification_status: c.verification_status, expires_at: c.expires_at }) : null
   const ref = sourceRef(n)
   const wording = c ? (c.value || human(c.claim_type)) : n.label
+
+  // R-1(c) — long-press (~500ms touch / mouse-down hold) on this source row
+  // peeks the SAME method-label text already rendered in the chip below —
+  // no new information, just a quick-glance affordance. Must not also fire
+  // the row's normal click (the confirm button), guarded via capture phase.
+  const lpTimer = useRef(null)
+  const lpFired = useRef(false)
+  function lpStart() {
+    if (!actionable) return
+    lpFired.current = false
+    clearTimeout(lpTimer.current)
+    const text = T.methodLabel[methodKey] || human(methodKey)
+    lpTimer.current = setTimeout(() => { lpFired.current = true; onPeek?.(text) }, 500)
+  }
+  function lpClear() { clearTimeout(lpTimer.current) }
+  function lpGuardClick(e) { if (lpFired.current) { e.preventDefault(); e.stopPropagation(); lpFired.current = false } }
+  const longPressRowProps = actionable ? {
+    onTouchStart: lpStart, onTouchEnd: lpClear, onTouchMove: lpClear, onTouchCancel: lpClear,
+    onMouseDown: lpStart, onMouseUp: lpClear, onMouseLeave: lpClear,
+    onClickCapture: lpGuardClick, onContextMenu: (e) => e.preventDefault(),
+  } : {}
 
   // Recognized platform first (link URL, or the claim's source_type / label —
   // covers non-link sources like a ticket export or a WhatsApp field); falls
@@ -776,7 +1017,8 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
 
   if (actionable) {
     return (
-      <div className={`rounded-xl border border-line bg-surface2 px-3 py-3 transition ${busy ? 'opacity-60' : ''} ${bloom ? 'bloom-confirm' : ''}`}>
+      <div {...longPressRowProps}
+        className={`rounded-xl border border-line bg-surface2 px-3 py-3 transition ${busy ? 'opacity-60' : ''} ${bloom ? 'bloom-confirm' : ''}`}>
         <div className="flex items-start gap-3">
           {icon}
           <div className="min-w-0 flex-1">

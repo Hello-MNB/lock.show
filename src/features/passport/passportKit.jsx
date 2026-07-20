@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
+import { SOURCE_STATUS, METHOD_LABELS, methodLabelFor } from '../../lib/constants.js'
 import { humanizeDrawBand, humanizeBinary, humanizeReviewDate } from '../../lib/humanize.js'
+import { RoomGrammar } from './RoomGrammar.jsx'
 
 // ── passportKit — the SHARED, firewall-safe rendering + derivation layer for the
 // public Passport. The two buyer personas (Booking view · Representation view)
@@ -60,15 +61,69 @@ export function BandPill({ value }) {
   )
 }
 
-// Proof Unit — LOCK's visual signature: claim 19px bold → context muted →
-// footer [BandPill · MethodLabel · reviewed date]. Card, no gauge.
-// §5.10 warmth layer: when `contextLine` is given (a room-fit sentence for a
-// draw band, e.g. "Moves large-hall crowds"), it becomes the headline claim
-// and the raw band drops to a still-visible BandPill in the footer — the
-// band is never hidden, only no longer the loudest thing on the card. Dates
-// render as "Fresh proof · July 2026" (recent) or "Verified · July 2026"
-// (older), never a raw dd/mm/yyyy stamp.
-export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine }) {
+// ── P-3 provenance-forward source line — derives a HUMAN source-identity
+// sentence from a claim's real source_type/method_label fields (never a new
+// data source; see src/types.ts Claim.source_type + demo.js for the real
+// values this switches on: 'ticket-export' | 'settlement' | 'screenshot' |
+// 'public-profile' | 'producer-vouch' | 'self-band' | 'self-reported' |
+// null). Four display buckets per spec §5.10: branded-platform / document /
+// entity / declared. A brand is named ONLY when detectPlatform recognizes it
+// from the claim's own value/source_type text (same detector RadarUniverse
+// already uses at derivePlatformNodes) — never guessed.
+const PLATFORM_NAMES = { // i18n-allow — brand proper nouns, shown as-is in both locales (matches PlatformLogo's own untranslated names)
+  spotify: 'Spotify', soundcloud: 'SoundCloud', instagram: 'Instagram', facebook: 'Facebook',
+  youtube: 'YouTube', tiktok: 'TikTok', whatsapp: 'WhatsApp', telegram: 'Telegram',
+  applemusic: 'Apple Music', beatport: 'Beatport', bandcamp: 'Bandcamp',
+}
+
+function sourceKindOf({ source_type, method_label } = {}) {
+  if (method_label === METHOD_LABELS.PRODUCER_CONFIRMED || source_type === 'producer-vouch') return 'entity'
+  if (['ticket-export', 'settlement', 'screenshot'].includes(source_type)) return 'document'
+  if (source_type === 'public-profile') return 'branded-platform'
+  return 'declared' // self-band · self-reported · no source_type (artist-level draw bands)
+}
+
+// The source ICON identifies the source only (never a strength signal — the
+// method chip carries that). detectPlatform already resolves 'ticket-export'
+// → the ticket mark and 'producer-vouch' → the venue mark, and falls back to
+// its own generic link glyph (inline SVG, never fetched) when nothing
+// matches — that fallback IS this rule's "text-badge fallback".
+function sourceIconOf({ source_type, value } = {}) {
+  return detectPlatform(value) || detectPlatform(source_type) || null
+}
+
+function sourceLineFor(c, T) {
+  const kind = sourceKindOf(c)
+  if (kind === 'entity') return T.passport.sourceEntity || 'Producer-confirmed by an industry peer'
+  if (kind === 'document') {
+    const byType = {
+      'ticket-export': T.passport.sourceTicketExport || 'From an uploaded ticket export',
+      settlement: T.passport.sourceSettlement || 'From a settlement record',
+      screenshot: T.passport.sourceScreenshot || 'From an uploaded document',
+    }
+    return byType[c.source_type] || (T.passport.sourceScreenshot || 'From an uploaded document')
+  }
+  if (kind === 'branded-platform') {
+    const platform = sourceIconOf(c)
+    const name = platform && PLATFORM_NAMES[platform]
+    return name
+      ? (T.passport.sourceBrandedPlatform ? T.passport.sourceBrandedPlatform(name) : `From their ${name}`)
+      : (T.passport.sourceProfile || 'From their public profile')
+  }
+  return T.passport.sourceDeclared || 'Artist-declared'
+}
+
+// Proof Unit — LOCK's visual signature. §5.10 provenance-forward order (P-3):
+// source identity (human line + method chip) LEADS → claim text (contextLine
+// warm-lead when present, per P-1) → band/value + reviewed date, quiet mono,
+// last. §5.10 warmth layer: when `contextLine` is given (a room-fit sentence
+// for a draw band, e.g. "Moves large-hall crowds"), it becomes the headline
+// claim in display type and the raw band drops to a still-visible BandPill
+// in the footer — the band is never hidden, only no longer the loudest thing
+// on the card. Dates render as "Fresh proof · July 2026" (recent, quiet lime
+// chip) or "Verified · July 2026" (older, neutral), never a raw dd/mm/yyyy
+// stamp and never red/warning styling for a stale claim (P-4).
+export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine, sourceType, sourceValue }) {
   const { lang } = useLang()
   const claimIsBand = isBand(claim)
   const reviewed = humanizeReviewDate(reviewedAt, { lang })
@@ -80,19 +135,26 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
       ? (T.passport.dateFresh ? T.passport.dateFresh(reviewed.monthYear) : reviewed.monthYear)
       : (T.passport.dateVerified ? T.passport.dateVerified(reviewed.monthYear) : reviewed.monthYear)
   )
+  const srcInfo = { source_type: sourceType ?? null, value: sourceValue ?? null, method_label: methodLabel }
   return (
     <article className="rounded-[18px] border border-line bg-surface p-5 shadow-card">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line2 text-muted">
+          <PlatformLogo name={sourceIconOf(srcInfo)} size={14} />
+        </span>
+        <span className="text-[12.5px] font-medium text-muted">{sourceLineFor(srcInfo, T)}</span>
+        <span className="ml-auto"><MethodLabel status={status} methodLabel={methodLabel} /></span>
+      </div>
       {contextLine
-        ? <p className="text-[19px] font-bold leading-snug text-ink">{contextLine}</p>
+        ? <p className="font-display text-[19px] font-bold leading-snug text-ink">{contextLine}</p>
         : claimIsBand
           ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
           : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
       {context && context !== claim && <p className="mt-1 text-sm text-muted">{context}</p>}
-      <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+      <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-line pt-3 font-mono">
         {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
-        <MethodLabel status={status} methodLabel={methodLabel} />
         {reviewedLabel && (
-          <span className="ml-auto text-[10px] text-faint">
+          <span className={`ml-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
             {reviewedLabel}
           </span>
         )}
@@ -157,61 +219,112 @@ export function deriveSections(artist, items, claims, T) {
 // ── Section blocks — each returns null when it has nothing verified, so the
 // public face never renders "missing" (RENDER LAW). Personas order these. ─────
 
+// Pure list-builder factored out of DrawSection so the P-2 proof-story strip
+// can read the same "first/strongest draw proof" WITHOUT duplicating the
+// firewall-sensitive safe-extraction logic (flow-gap I: a claim with no safe
+// public form must render nothing, in the ledger OR the strip). Order:
+// claims (already strongest-first from deriveSections) then artist-level
+// draw bands. `fromClaim` marks a claims-table row — used by the P-5 Room
+// Grammar hero gate, which may only fire for an actual confirmed draw claim,
+// never a raw self-reported artist band.
+export function drawProofUnits(data, T, BANDS, contextLines) {
+  const lines = contextLines || T.passport.drawContext
+  const fromClaims = data.drawClaims
+    // FIREWALL: the draw headline may ONLY be the buyer-safe wording, a band,
+    // or a band-SHAPED value. Raw `value` can carry an exact headcount
+    // ("Drew 450 people") — a claim with no safe form renders nothing here
+    // (flow-gap I: safety must not depend on the pipeline always filling
+    // public_wording/public_band).
+    .map((c) => ({ c, safe: c.public_wording || c.public_band || (isBand(c.value) ? c.value : null) }))
+    .filter(({ safe }) => safe)
+    .map(({ c, safe }) => {
+      const band = bandOf(c)
+      return {
+        key: c.id,
+        claim: safe,
+        context: prettyType(c.claim_type),
+        band,
+        contextLine: humanizeDrawBand(band, BANDS.capacity, lines),
+        status: c.verification_status,
+        methodLabel: c.method_label,
+        reviewedAt: c.verified_at,
+        sourceType: c.source_type,
+        sourceValue: c.value,
+        fromClaim: true,
+      }
+    })
+  const fromBands = data.drawBands.map((b, i) => {
+    // Only surface the raw band as a separate pill when a human line has
+    // actually replaced it as the headline — otherwise it stays the
+    // headline itself, unchanged from the non-warm rendering.
+    const contextLine = humanizeDrawBand(b.value, BANDS.capacity, lines)
+    return {
+      key: `band-${i}`,
+      claim: b.value,
+      context: b.ctx,
+      band: contextLine ? b.value : undefined,
+      contextLine,
+      status: 'self-reported',
+      methodLabel: undefined,
+      reviewedAt: undefined,
+      sourceType: null,
+      sourceValue: null,
+      fromClaim: false,
+    }
+  })
+  return [...fromClaims, ...fromBands]
+}
+
 // Proof of draw — the hero evidence block (labels configurable per persona).
 // §5.10 warmth layer: `contextLines` (defaults to T.passport.drawContext, the
 // industry room-fit register) lets a persona swap in an alternate register —
 // e.g. the Private & corporate face passes T.passport.drawContextPrivate
 // ("Comfortable for 100–300 guests") — WITHOUT touching a single fact: the
 // underlying band is looked up unchanged, only the sentence over it differs.
-export function DrawSection({ data, T, label, contextLines }) {
+// `heroRoom` (P-5, Booking face only — see PassportBookingView) lets the
+// FIRST draw proof unit render as the Room Grammar hero picture instead of a
+// standard card, but ONLY when that first unit is an actual confirmed draw
+// claim carrying one of the four canonical capacity bands verbatim — a
+// free-form band (or no claims at all) always falls back to the standard
+// unit, never a guessed nearest room (§5.10 honesty-on-fallback).
+export function DrawSection({ data, T, label, contextLines, heroRoom = false }) {
   const { BANDS } = useLang()
   if (!data.hasDraw) return null
-  const lines = contextLines || T.passport.drawContext
+  const units = drawProofUnits(data, T, BANDS, contextLines)
+  const first = units[0]
+  const showRoomGrammar = heroRoom && !!first?.fromClaim && BANDS.capacity.includes(first.band)
+  const rest = showRoomGrammar ? units.slice(1) : units
   return (
     <PassportSection label={label || T.passport.proofTitle} caption={T.passport.drawCaption}>
       <div className="grid gap-3">
-        {/* FIREWALL: the draw headline may ONLY be the buyer-safe wording, a band,
-            or a band-SHAPED value. Raw `value` can carry an exact headcount
-            ("Drew 450 people") — a claim with no safe form renders nothing here
-            (flow-gap I: safety must not depend on the pipeline always filling
-            public_wording/public_band). */}
-        {data.drawClaims
-          .map((c) => ({ c, safe: c.public_wording || c.public_band || (isBand(c.value) ? c.value : null) }))
-          .filter(({ safe }) => safe)
-          .map(({ c, safe }) => {
-            const band = bandOf(c)
-            const contextLine = humanizeDrawBand(band, BANDS.capacity, lines)
-            return (
-              <ProofUnit
-                key={c.id}
-                claim={safe}
-                context={prettyType(c.claim_type)}
-                band={band}
-                contextLine={contextLine}
-                status={c.verification_status}
-                methodLabel={c.method_label}
-                reviewedAt={c.verified_at}
-                T={T}
-              />
-            )
-          })}
-        {data.drawBands.map((b, i) => {
-          // Only surface the raw band as a separate pill when a human line has
-          // actually replaced it as the headline — otherwise it stays the
-          // headline itself, unchanged from the non-warm rendering.
-          const contextLine = humanizeDrawBand(b.value, BANDS.capacity, lines)
-          return (
-            <ProofUnit
-              key={`band-${i}`}
-              claim={b.value}
-              context={b.ctx}
-              band={contextLine ? b.value : undefined}
-              contextLine={contextLine}
-              status="self-reported"
-              T={T}
-            />
-          )
-        })}
+        {showRoomGrammar && (
+          <RoomGrammar
+            band={first.band}
+            contextLine={first.contextLine}
+            badge={
+              <>
+                <BandPill value={first.band} />
+                <MethodLabel status={first.status} methodLabel={first.methodLabel} />
+              </>
+            }
+            T={T}
+          />
+        )}
+        {rest.map((u) => (
+          <ProofUnit
+            key={u.key}
+            claim={u.claim}
+            context={u.context}
+            band={u.band}
+            contextLine={u.contextLine}
+            status={u.status}
+            methodLabel={u.methodLabel}
+            reviewedAt={u.reviewedAt}
+            sourceType={u.sourceType}
+            sourceValue={u.sourceValue}
+            T={T}
+          />
+        ))}
       </div>
     </PassportSection>
   )
@@ -299,6 +412,58 @@ export function ContextSection({ data, artist, T, title }) {
           ))}
         </div>
       )}
+    </section>
+  )
+}
+
+// ── P-2 · The 30-second proof story (spec §8.7) — a compact, fixed-order
+// 3-beat strip ABOVE the evidence ledger, shared by all four faces. It reuses
+// facts already derived above — it invents nothing and reorders nothing: (1)
+// who they are — the hero's own name + one-line positioning; (2) what's
+// proven — the strongest draw proof unit (drawProofUnits[0], same firewall-
+// safe extraction the ledger itself uses); (3) who vouches — the strongest
+// producer-confirmed claim, ONLY when one is actually on file (RENDER LAW —
+// never an empty promise). Order is fixed 1→2→3, never a ranking.
+export function ProofStory({ artist, data, T }) {
+  const { BANDS } = useLang()
+  const lead = drawProofUnits(data, T, BANDS)[0]
+  const vouchClaim = data.drawClaims[0]?.method_label === METHOD_LABELS.PRODUCER_CONFIRMED ? data.drawClaims[0] : null
+  const vouchSafe = vouchClaim && (vouchClaim.public_wording || vouchClaim.public_band || (isBand(vouchClaim.value) ? vouchClaim.value : null))
+  const positioning = artist.one_line || [artist.genre, artist.city].filter(Boolean).join(' · ')
+  if (!lead && !vouchSafe && !positioning) return null
+  return (
+    <section className="mt-8 rounded-[18px] border border-line bg-surface2/60 px-5 py-4">
+      <ol className="space-y-3">
+        <li className="flex items-start gap-3">
+          <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-faint">01</span>
+          <div className="min-w-0">
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{T.passport.storyWho || 'Who they are'}</p>
+            <p className="mt-0.5 font-display text-[15px] font-semibold leading-snug text-ink">
+              {artist.stage_name}{positioning ? ` — ${positioning}` : ''}
+            </p>
+          </div>
+        </li>
+        {lead && (
+          <li className="flex items-start gap-3 border-t border-line pt-3">
+            <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-faint">02</span>
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{T.passport.storyProven || "What's proven"}</p>
+              <p className="mt-0.5 text-[15px] font-semibold leading-snug text-ink">{lead.contextLine || lead.claim}</p>
+              <div className="mt-1.5"><MethodLabel status={lead.status} methodLabel={lead.methodLabel} /></div>
+            </div>
+          </li>
+        )}
+        {vouchSafe && (
+          <li className="flex items-start gap-3 border-t border-line pt-3">
+            <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-faint">03</span>
+            <div className="min-w-0">
+              <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{T.passport.storyVouches || 'Who vouches'}</p>
+              <p className="mt-0.5 text-[15px] font-semibold leading-snug text-ink">{vouchSafe}</p>
+              <div className="mt-1.5"><MethodLabel status={vouchClaim.verification_status} methodLabel={vouchClaim.method_label} /></div>
+            </div>
+          </li>
+        )}
+      </ol>
     </section>
   )
 }
