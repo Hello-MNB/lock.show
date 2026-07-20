@@ -53,14 +53,17 @@ export function RoomGrammar({ band, contextLine, badge, T }) {
   if (idx < 0) return null // honesty on fallback — never a guessed nearest room
 
   return (
-    <article className="rounded-[18px] border border-line bg-surface p-5 shadow-card">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    // V1 (owner witness-fix 20 Jul, §6 law 7): mobile padding/room-box height
+    // trimmed so this hero card (when it fires) fits the same fold budget as
+    // the standard ProofUnit card next to it — md+ keeps the original p-5/h-24.
+    <article className="rounded-[18px] border border-line bg-surface p-4 shadow-card sm:p-5">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         {ROOMS.map((room, i) => {
           const lit = i === idx
           return (
             <div key={room.key} className="flex flex-col items-center gap-2" aria-hidden={lit ? undefined : 'true'}>
               <div
-                className={`relative flex h-24 w-full items-center justify-center overflow-hidden rounded-lg border ${
+                className={`relative flex h-20 w-full items-center justify-center overflow-hidden rounded-lg border sm:h-24 ${
                   lit ? 'border-accent/50 bg-bg2' : 'border-line2'
                 }`}
               >

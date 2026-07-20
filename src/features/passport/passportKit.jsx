@@ -137,8 +137,14 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
   )
   const srcInfo = { source_type: sourceType ?? null, value: sourceValue ?? null, method_label: methodLabel }
   return (
-    <article className="rounded-[18px] border border-line bg-surface p-5 shadow-card">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    // V1 (owner witness-fix 20 Jul, §6 law 7): trimmed padding/gaps on mobile
+    // only — at 360×780 the first card's bottom edge dipped ~25px into the
+    // sticky CTA bar's zone (measured: CTA bar top=686px, card bottom=711px)
+    // after the hero/strip compression above; this alone recovers the
+    // difference so the whole first proof card clears the CTA bar. md+
+    // keeps the original p-5/mb-3/mt-3.5/pt-3 rhythm unchanged.
+    <article className="rounded-[18px] border border-line bg-surface p-4 shadow-card sm:p-5">
+      <div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-3">
         <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line2 text-muted">
           <PlatformLogo name={sourceIconOf(srcInfo)} size={14} />
         </span>
@@ -151,7 +157,7 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
           ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
           : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
       {context && context !== claim && <p className="mt-1 text-sm text-muted">{context}</p>}
-      <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-line pt-3 font-mono">
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5 font-mono sm:mt-3.5 sm:pt-3">
         {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
         {reviewedLabel && (
           <span className={`ml-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
@@ -170,7 +176,7 @@ export function PassportSection({ label, caption, children }) {
     // tablet only (md+ keeps the original 40px rhythm unchanged) as part of
     // the hero-fold compression; this is spacing only, no section is removed
     // or reordered.
-    <section className="mt-6 sm:mt-8 md:mt-10">
+    <section className="mt-6 sm:mt-8 md:mt-9">
       <h2 className="font-display text-[22px] font-bold text-ink">{label}</h2>
       {caption && (
         <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{caption}</p>
@@ -447,7 +453,7 @@ export function ProofStory({ artist, data, T, contextLines }) {
   // method label text, just laid out on one line instead of three.
   const leadMethodKey = lead ? methodLabelFor({ method_label: lead.methodLabel, verification_status: lead.status }) : null
   return (
-    <section className="mt-4 rounded-[18px] border border-line bg-surface2/60 px-4 py-3 sm:mt-6 sm:px-5 sm:py-4 md:mt-8">
+    <section className="mt-4 rounded-[18px] border border-line bg-surface2/60 px-4 py-3 sm:mt-6 sm:px-5 sm:py-4 md:mt-7">
       {/* compact single-line spine — mobile only */}
       <p className="text-[13px] leading-snug text-ink sm:hidden">
         <span className="font-display font-semibold">{artist.stage_name}</span>
@@ -512,7 +518,7 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
           shorter band so identity + the first proof card can share one
           screen. */}
       {artist.photo_url && photoOk ? (
-        <div className="relative h-[32vh] min-h-[210px] max-h-[380px] w-full overflow-hidden sm:h-[40vh] sm:min-h-[300px] sm:max-h-[480px] md:h-[46vh] md:min-h-[340px] md:max-h-[540px]">
+        <div className="relative h-[32vh] min-h-[210px] max-h-[380px] w-full overflow-hidden sm:h-[38vh] sm:min-h-[290px] sm:max-h-[460px] md:h-[38vh] md:min-h-[300px] md:max-h-[460px]">
           <img
             src={artist.photo_url}
             alt={artist.stage_name}
