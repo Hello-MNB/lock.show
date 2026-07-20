@@ -34,7 +34,7 @@ Every app/site release row also records **which DS version it implements** (desi
 | Track | Version | Where | State |
 |---|---|---|---|
 | DS | **v1.6.20 (Codex)** — CURRENT authority | Drive 00_CURRENT | owner-directed; v1.2.0 remains the historical site base |
-| DB | applied: 032 (verified) · 033 · **034 ✓ in effect (DB CHECK = app CANON = 29 events, Cowork-verified SYNC §29; repo file regenerated as-applied)** · **035 ✓ (Cowork-verified, SYNC §28 — G3 unblocked)** · **037 ✓ `is_demo` (owner-applied 17 Jul 2026, backfill verified 43 demo / 3 real; 036 stays `.DRAFT` out of sequence)**; 021 FROZEN | Supabase qexfndiyallwqhhzeerd | **head = 037**; next free number ≥038 (taxonomy set specified in spec §16.A.6.a — not authored); structural renames: no number until authored, after Supabase Pro backups |
+| DB | applied: 032 (verified) · 033 · **034 ✓ in effect (DB CHECK = app CANON = 29 events, Cowork-verified SYNC §29; repo file regenerated as-applied)** · **035 ✓ (Cowork-verified, SYNC §28 — G3 unblocked)** · **037 ✓ `is_demo` (owner-applied 17 Jul 2026, backfill verified 43 demo / 3 real; 036 stays `.DRAFT` out of sequence)** · **039 ✓ taxonomy/Registry-B spine (owner-applied 20 Jul 2026, verified: `genre_family` count = 8)**; 021 FROZEN; **038 authored NOT applied (C6 deferred by R00 20 Jul)** | Supabase qexfndiyallwqhhzeerd | **head = 039 applied** (038 skipped-pending); next free number ≥040, diff-first |
 | Infra | previews OFF (one-time preview hook for this train) · smart build-skip · OAuth published | 6f5ce8e | operational |
 
 ### Known governance notes
