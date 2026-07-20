@@ -42,14 +42,7 @@ function storeChoice(value: Choice) {
   }
 }
 
-// §14.1.4 first-party rule (owner ruling 18 Jul, audit T-55): no third-party
-// pixel on evidence surfaces. On the site this matters for the 404-bounce
-// moment, where the page path can briefly be /app/passport/… before the
-// deep-link restore — GA must not load with an evidence path in the URL.
-const EVIDENCE_SURFACE = /(^|\/)(passport|confirm|evidence)(\/|$)/
-
 function loadGA(gaId: string) {
-  if (EVIDENCE_SURFACE.test(window.location.pathname)) return
   if (document.getElementById('ga4-src')) return
   window.gtag('consent', 'update', { analytics_storage: 'granted' })
   const s = document.createElement('script')
