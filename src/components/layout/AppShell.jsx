@@ -2,6 +2,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { LanguageToggle } from '../ui.jsx'
+import BuildStamp from '../BuildStamp.jsx'
 import BottomNav from './BottomNav.jsx'
 import SideNav from './SideNav.jsx'
 import NotificationBell from './NotificationBell.jsx'
@@ -23,9 +24,15 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-bg">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar. Already `fixed` (a positioning context on its own —
+          no extra `relative` needed), so the build stamp can overlay its
+          bottom edge without fighting SideNav's own `h-full` flex column. */}
       <aside className="hidden md:flex fixed start-0 top-0 bottom-0 w-[248px] flex-col bg-bg2 border-e border-line z-30">
         <SideNav />
+        {/* Build stamp (W-2#5) — quiet, bottom of the ONE persistent chrome
+            column so it's on every authenticated screen without adding new
+            chrome anywhere else. */}
+        <BuildStamp className="absolute inset-x-0 bottom-0 px-5 pb-4" />
       </aside>
 
       {/* Top bar — the ONE shared header: language toggle, notification bell,

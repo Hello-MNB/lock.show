@@ -40,6 +40,7 @@ export const T = {
     tagline: 'The evidence behind the night.',
     taglineSignup: 'Your nights, made provable.',
     disclaimer: 'LOCK shows evidence only — not a guarantee.',
+    homeAria: 'LOCK — go to home',
   },
   login: {
     title: 'Welcome back',

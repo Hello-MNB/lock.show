@@ -5,6 +5,7 @@ import { upsertProfile, requestAccountDeletion, hasConsent, recordConsentScope, 
 import { listIncomingAccessRequests, respondToAccessRequest, revokeArtistAccess } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
 import { Field, ErrorNote, LanguageToggle, BottomSheet, Spinner, useToast } from '../../components/ui.jsx'
+import BuildStamp from '../../components/BuildStamp.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
 import ContextSwitcher from '../org/ContextSwitcher.jsx'
@@ -448,6 +449,10 @@ export default function Settings() {
         <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{T.settings.betaBadge}</span>
         <span>LOCK v1</span>
       </div>
+      {/* Build stamp (W-2#5) — Settings is reachable from every role/breakpoint
+          (header link), so it's the one guaranteed mobile home for this too —
+          the desktop sidebar stamp (AppShell.jsx) doesn't render on mobile. */}
+      <BuildStamp className="mt-1 flex justify-center" />
 
         </div>
       </div>

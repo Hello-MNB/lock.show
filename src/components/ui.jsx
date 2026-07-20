@@ -396,9 +396,12 @@ export function PlatformMark({ platform, size = 'h-7 w-7' }) {
 }
 
 export function Wordmark({ className = '' }) {
-  // LOCK wordmark: lime "L" square (30px, rounded) + wordmark
+  // LOCK wordmark: lime "L" square (30px, rounded) + wordmark.
+  // dir="ltr" LOCKS the icon-before-text order — a brand lockup is never
+  // mirrored by locale (RTL/Hebrew previously reversed this flex row to
+  // "LOCK [L]", scrambling the mark; the icon must always lead the text).
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div dir="ltr" className={`flex items-center gap-2 ${className}`}>
       <span className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-accent font-display text-[15px] font-black text-bg" aria-hidden>
         L
       </span>

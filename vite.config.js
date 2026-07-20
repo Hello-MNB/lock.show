@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
 
 // Local dev: web on 5173, AI/api on 8787. /api/* is proxied to the local server.
 // VitePWA adds an installable manifest + a service worker (offline app-shell).
@@ -11,10 +12,35 @@ import { VitePWA } from 'vite-plugin-pwa'
 // PWA is OFF in embed — a service worker under the marketing origin would cache
 // the app with root-scoped fallbacks and serve stale shells. The standalone
 // build (dedicated Vercel project, app.lock.show) keeps the PWA.
+//
+// BUILD STAMP (W-2#5, owner directive) — every screen quietly shows
+// {PREVIEW|LIVE} · {sha7} · {date} so anyone looking at a live screen can tell
+// which build they're on. Vercel sets VERCEL_GIT_COMMIT_SHA on every deploy
+// (preview + production alike); a local `vite build` has no such env var, so
+// fall back to the checked-out commit via `git rev-parse HEAD` — and to 'dev'
+// if that also fails (e.g. a shallow checkout/sandbox with no .git).
+function resolveBuildSha() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA
+  try {
+    return execSync('git rev-parse HEAD', { cwd: import.meta.dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim()
+  } catch {
+    return 'dev'
+  }
+}
+
 export default defineConfig(({ mode }) => {
   const embed = mode === 'embed'
   return {
     base: embed ? '/app/' : '/',
+    define: {
+      // Baked in at build time (not runtime env — a static deploy has no
+      // server to read process.env from). JSON.stringify so each expands to a
+      // JS string literal at every `__BUILD_SHA__` / `__BUILD_TIME__` call site.
+      __BUILD_SHA__: JSON.stringify(resolveBuildSha()),
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    },
     plugins: [
       react(),
       ...(embed ? [] : [VitePWA({

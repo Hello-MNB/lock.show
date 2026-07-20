@@ -40,6 +40,7 @@ export const T = {
     tagline: 'העדות שמאחורי הופעה.',
     taglineSignup: 'ההופעות שלך — עם הוכחה.',
     disclaimer: 'LOCK מציג עדויות בלבד — לא ערובה.',
+    homeAria: 'LOCK — מעבר לדף הבית',
   },
   login: {
     title: 'ברוכים השבים',
