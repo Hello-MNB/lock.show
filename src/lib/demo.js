@@ -67,16 +67,16 @@ export const demoArtist2 = {
 }
 
 // ── Org-first model (Step 2) fixtures — MULTI-HAT: one person, two workspaces.
-// demo-org   = Shai's personal solo workspace (the PERLMAN artist identity).
-// demo-org-2 = INSOMNIA TLV, his event-production brand (closest existing enum is
+// demo-org   = Maya's personal solo workspace (the Maya Vale artist identity).
+// demo-org-2 = INSOMNIA TLV, her event-production brand (closest existing enum is
 // plan 'agency' — the schema has no dedicated "production brand" org type). ──
-export const demoOrg = { id: 'demo-org', get name() { return L('Shai Perlman', 'שי פרלמן') }, slug: 'shai-perlman', plan: 'solo', workspace_type: 'artist', created_by: 'demo-user', created_at: '2026-01-01T00:00:00Z' }
+export const demoOrg = { id: 'demo-org', get name() { return L('Maya Vale', 'Maya Vale') }, slug: 'maya-vale', plan: 'solo', workspace_type: 'artist', created_by: 'demo-user', created_at: '2026-01-01T00:00:00Z' }
 export const demoSubscription = { id: 'demo-sub', organization_id: 'demo-org', plan: 'solo', seats_included: 3, seats_used: 1, status: 'active', current_period_end: null }
 // `functional_role` mirrors role_assignment.functional_role (migration 008) —
 // the ACTIVE membership's functional_role is what OrgContext now derives the
 // effective nav/routing role from (canon ROUND 4: switching workspace recomputes
 // role), not a single global profile role. Two real hats on one demo person:
-// Shai's own artist workspace, and his INSOMNIA TLV production/booking brand.
+// Maya's own artist workspace, and her INSOMNIA TLV production/booking brand.
 // `organization.workspace_type` (migration 027) is the SEPARATE axis that picks
 // the production nav set (Team·Events·Requests) over the generic agency roster
 // screen — INSOMNIA TLV is a production company (it runs its own events and
@@ -87,12 +87,12 @@ export const demoSubscription = { id: 'demo-sub', organization_id: 'demo-org', p
 // (AgencyDashboard) has its own real demo coverage, separate from — and not
 // shadowed by — INSOMNIA's production dashboard.
 export const demoMemberships = [
-  { id: 'dm-self', org_role: 'owner', status: 'active', functional_role: 'artist', organization: { id: 'demo-org', get name() { return L('Shai Perlman', 'שי פרלמן') }, slug: 'shai-perlman', plan: 'solo', workspace_type: 'artist' } },
+  { id: 'dm-self', org_role: 'owner', status: 'active', functional_role: 'artist', organization: { id: 'demo-org', get name() { return L('Maya Vale', 'Maya Vale') }, slug: 'maya-vale', plan: 'solo', workspace_type: 'artist' } },
   { id: 'dm-2', org_role: 'owner', status: 'active', functional_role: 'agency', organization: { id: 'demo-org-2', name: 'INSOMNIA TLV', slug: 'insomnia-tlv', plan: 'agency', workspace_type: 'producer' } },
   { id: 'dm-3', org_role: 'owner', status: 'active', functional_role: 'agency', get organization() { return { id: 'demo-org-3', get name() { return L('Golan Artist Management', 'ניהול אמנים גולן') }, slug: 'golan-management', plan: 'agency', workspace_type: 'management' } } },
 ]
 export const demoMembers = [
-  { id: 'dm-self', org_role: 'owner', status: 'active', invited_email: null, person: { id: 'demo-user', email: 'demo@lock.test', get display_name() { return L('Shai Perlman', 'שי פרלמן') } } },
+  { id: 'dm-self', org_role: 'owner', status: 'active', invited_email: null, person: { id: 'demo-user', email: 'demo@lock.test', get display_name() { return L('Maya Vale', 'Maya Vale') } } },
 ]
 
 // ── G3 (A2/N12) — demo counterpart of orgs.createWorkspace: pushes a NEW,
@@ -119,7 +119,7 @@ export function demoCreateWorkspace(name, type) {
 // ── RADAR (Step 3) roster inputs — varied so the engine emits several rule types. ──
 export const demoRadarRecords = [
   {
-    artist: { id: 'demo-artist', stage_name: 'PERLMAN', published: true },
+    artist: { id: 'demo-artist', stage_name: 'Maya Vale', published: true },
     claims: [
       { claim_type: 'residency', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, expires_at: null },
       { claim_type: 'sells-tickets', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, expires_at: null },
@@ -154,11 +154,11 @@ export const demoUpgradeRequests = [
   { organization_id: 'demo-org-2', plan: 'solo', seats_included: 1, status: 'trialing', organization: { name: 'INSOMNIA TLV' } },
 ]
 
-// ── Profile items — PERLMAN's public track record. Numbered INSOMNIA TLV nights
+// ── Profile items — Maya Vale's public track record. Numbered INSOMNIA TLV nights
 // carry their real listed dates (Selector / GO-OUT / Gagarin archive). ──
 export const demoItems = [
-  { id: 'di1', artist_id: DEMO_ARTIST_ID, item_type: 'link', title: 'SoundCloud', public_url: 'https://soundcloud.com/shai-perlman', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
-  { id: 'di2', artist_id: DEMO_ARTIST_ID, item_type: 'link', title: 'Instagram', public_url: 'https://instagram.com/shaiperlman', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
+  { id: 'di1', artist_id: DEMO_ARTIST_ID, item_type: 'link', title: 'SoundCloud', public_url: 'https://soundcloud.com/maya-vale', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
+  { id: 'di2', artist_id: DEMO_ARTIST_ID, item_type: 'link', title: 'Instagram', public_url: 'https://instagram.com/mayavale', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
   { id: 'di3', artist_id: DEMO_ARTIST_ID, item_type: 'residency', get title() { return L('Resident headline DJ — INSOMNIA TLV @ Gagarin, Tel Aviv', 'DJ הבית — INSOMNIA TLV @ Gagarin, תל אביב') }, item_date: '2024-08-01', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
   // Self-produced numbered series (each date from the public listing):
   { id: 'di4', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('INSOMNIA TLV 4 — Gagarin, extended set', 'INSOMNIA TLV 4 — Gagarin, סט מורחב') }, item_date: '2024-09-26', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
@@ -170,7 +170,7 @@ export const demoItems = [
   { id: 'di10', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('INSOMNIA TLV #19 "Girl Power" — Gagarin', 'INSOMNIA TLV #19 "Girl Power" — Gagarin') }, item_date: '2026-05-15', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
   { id: 'di11', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('INSOMNIA TLV #20 "See You in the Dark" — Gagarin', 'INSOMNIA TLV #20 "See You in the Dark" — Gagarin') }, item_date: '2026-06-05', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
   { id: 'di12', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('INSOMNIA TLV #21 "Black Jack" — Gagarin (upcoming)', 'INSOMNIA TLV #21 "Black Jack" — Gagarin (בקרוב)') }, item_date: '2026-07-10', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
-  { id: 'di13', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('"Underground By Perlman" all-nighter — own sub-brand', 'אול-נייטר "Underground By Perlman" — תת-מותג עצמאי') }, item_date: '2026-01-22', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
+  { id: 'di13', artist_id: DEMO_ARTIST_ID, item_type: 'self_produced_event', get title() { return L('"Underground By Vale" all-nighter — own sub-brand', 'אול-נייטר "Underground By Vale" — תת-מותג עצמאי') }, item_date: '2026-01-22', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
   // Guest gigs outside his own brand (third-party listings):
   { id: 'di14', artist_id: DEMO_ARTIST_ID, item_type: 'event', get title() { return L('Guest set — Art Club "Weekend" (02:00–04:00)', 'סט אורח — Art Club "Weekend"‏ (02:00–04:00)') }, item_date: '2023-12-21', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
   { id: 'di15', artist_id: DEMO_ARTIST_ID, item_type: 'lineup', get title() { return L('Cappella "Kabbalat Shabbat" — w/ Yehuda White', 'Cappella "קבלת שבת" — עם יהודה וייט') }, item_date: '2025-01-17', source_status: 'public-verified', visibility: 'passport-ok', public_url: null },
@@ -187,7 +187,7 @@ export const demoItems = [
 export const demoClaims = [
   { id: 'dc1', artist_id: DEMO_ARTIST_ID, claim_type: 'residency', get value() { return L('Resident headline DJ at INSOMNIA TLV (Gagarin, Tel Aviv)', 'DJ הבית של INSOMNIA TLV (Gagarin, תל אביב)') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'numbered event listings #4–#21', expires_at: null },
   { id: 'dc2', artist_id: DEMO_ARTIST_ID, claim_type: 'self-produced-events', get value() { return L('Produced 10+ recurring techno nights since Aug 2024', 'הפיק 10+ ערבי טכנו קבועים מאז אוגוסט 2024') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'numbered series at one venue — producer-confirmable', expires_at: null },
-  { id: 'dc3', artist_id: DEMO_ARTIST_ID, claim_type: 'set-format', get value() { return L('Performs extended and 5-hour sets', 'מופיע בסטים מורחבים של עד 5 שעות') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'official event pages — "PERLMAN EXTENDED SET"', expires_at: null },
+  { id: 'dc3', artist_id: DEMO_ARTIST_ID, claim_type: 'set-format', get value() { return L('Performs extended and 5-hour sets', 'מופיע בסטים מורחבים של עד 5 שעות') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'official event pages — "VALE EXTENDED SET"', expires_at: null },
   { id: 'dc4', artist_id: DEMO_ARTIST_ID, claim_type: 'recorded-sets', get value() { return L('8 live sets on SoundCloud (2023–2025)', '8 סטים חיים ב-SoundCloud (2023–2025)') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'time-stamped public uploads', expires_at: null },
   { id: 'dc5', artist_id: DEMO_ARTIST_ID, claim_type: 'guest-gigs', get value() { return L('Guest DJ outside own brand — Art Club, Cappella', 'DJ אורח מחוץ למותג — Art Club, Cappella') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: '3 third-party listings', expires_at: null },
   { id: 'dc6', artist_id: DEMO_ARTIST_ID, claim_type: 'professional-role', get value() { return L('Owner & lead producer of INSOMNIA TLV', 'בעלים ומפיק ראשי של INSOMNIA TLV') }, source_type: 'public-profile', verification_status: 'supporting', visibility: 'passport-ok', method_label: null, reason_code: 'IG bios + GO-OUT organizer listing', expires_at: null },
@@ -199,7 +199,7 @@ export const demoClaims = [
 // ── Acts (multi-Act spine, migration 020) — DEMO fixtures ────────────────────
 // Canon: one Person may hold several Acts (e.g. a psytrance Act + a techno
 // Act), each with its OWN Passport and its OWN evidence, per-Act
-// non-transferable. PERLMAN's default (techno) Act reuses artists.id
+// non-transferable. Maya Vale's default (techno) Act reuses artists.id
 // (migration 020's transition rule: act.id === artists.id for the default
 // Act) — the psytrance Act below is a genuinely SEPARATE act row, same person,
 // with its own (much newer, much lighter) evidence universe. Switching never
@@ -209,7 +209,7 @@ const DEMO_ACT_PSY_ID = 'demo-act-psy'
 export const demoActs = [
   {
     id: DEMO_ARTIST_ID, person_id: 'demo-user', is_default: true,
-    stage_name: 'PERLMAN',
+    stage_name: 'Maya Vale',
     get genre() { return L('Underground Techno', 'טכנו אנדרגראונד') },
     get city() { return L('Tel Aviv', 'תל אביב') },
     get positioning() { return L('Underground techno · resident @ INSOMNIA TLV', 'טכנו אנדרגראונד · תושב קבע ב-INSOMNIA TLV') },
@@ -217,7 +217,7 @@ export const demoActs = [
   },
   {
     id: DEMO_ACT_PSY_ID, person_id: 'demo-user', is_default: false,
-    get stage_name() { return L('PERLMAN PSY', 'פרלמן פסיי') },
+    get stage_name() { return L('VALE PSY', 'VALE PSY') },
     get genre() { return L('Psytrance', 'פסיטראנס') },
     get city() { return L('Tel Aviv', 'תל אביב') },
     get positioning() { return L('A newer side-project — forest-floor sets, just getting started', 'פרויקט צדדי חדש — סטים ביער, רק בהתחלה') },
@@ -230,7 +230,7 @@ export const demoActs = [
 // (so the radar isn't the pre-evidence blossom screen); nothing else is
 // confirmed yet — every other node stays an honest "needs you" invitation.
 export const demoItemsPsy = [
-  { id: 'dip1', artist_id: DEMO_ACT_PSY_ID, act_id: DEMO_ACT_PSY_ID, item_type: 'link', title: 'SoundCloud', public_url: 'https://soundcloud.com/perlman-psy', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
+  { id: 'dip1', artist_id: DEMO_ACT_PSY_ID, act_id: DEMO_ACT_PSY_ID, item_type: 'link', title: 'SoundCloud', public_url: 'https://soundcloud.com/vale-psy', source_status: 'public-verified', visibility: 'passport-ok', item_date: null },
 ]
 export const demoClaimsPsy = []
 
@@ -247,12 +247,12 @@ export function demoSwitchAct(actId) {
 // ── Evidence uploads — only what really exists: public links. No ticket export
 // yet (evidence candidate #8 stays pending until a Selector/GO-OUT export lands). ──
 export const demoEvidence = [
-  { id: 'de1', artist_id: DEMO_ARTIST_ID, evidence_type: 'link', source_type: 'public-profile', value: 'soundcloud.com/shai-perlman — 8 live sets', status: 'processed', uploaded_at: '2026-03-01T00:00:00Z' },
+  { id: 'de1', artist_id: DEMO_ARTIST_ID, evidence_type: 'link', source_type: 'public-profile', value: 'soundcloud.com/maya-vale — 8 live sets', status: 'processed', uploaded_at: '2026-03-01T00:00:00Z' },
   { id: 'de2', artist_id: DEMO_ARTIST_ID, evidence_type: 'link', source_type: 'public-profile', value: 'selector.org.il — INSOMNIA TLV listings', status: 'submitted', uploaded_at: '2026-03-02T00:00:00Z' },
 ]
 
 export const demoRequests = [
-  { id: 'dr1', artist_id: DEMO_ARTIST_ID, get requester_name() { return L('Maya Golan', 'מאיה גולן') }, get requester_org() { return L('The Block TLV', 'דה בלוק תל אביב') }, event_date: '2026-08-21', get event_type() { return L('Club night', 'מסיבת מועדון') }, get location() { return L('Tel Aviv', 'תל אביב') }, capacity_band: '300–800', budget_band: '₪8,000–20,000', get message() { return L('Saw the INSOMNIA nights at Gagarin — looking for an extended closing set for our main room, midnight to close', 'ראינו את ערבי INSOMNIA ב-Gagarin — מחפשים סט סגירה מורחב למיין רום, מחצות עד סגירה') }, status: 'new', created_date: '2026-06-20T00:00:00Z', artists: { stage_name: 'PERLMAN' } },
+  { id: 'dr1', artist_id: DEMO_ARTIST_ID, get requester_name() { return L('Maya Golan', 'מאיה גולן') }, get requester_org() { return L('The Block TLV', 'דה בלוק תל אביב') }, event_date: '2026-08-21', get event_type() { return L('Club night', 'מסיבת מועדון') }, get location() { return L('Tel Aviv', 'תל אביב') }, capacity_band: '300–800', budget_band: '₪8,000–20,000', get message() { return L('Saw the INSOMNIA nights at Gagarin — looking for an extended closing set for our main room, midnight to close', 'ראינו את ערבי INSOMNIA ב-Gagarin — מחפשים סט סגירה מורחב למיין רום, מחצות עד סגירה') }, status: 'new', created_date: '2026-06-20T00:00:00Z', artists: { stage_name: 'Maya Vale' } },
   { id: 'dr2', artist_id: 'demo-artist-2', get requester_name() { return L('Yoav Ben-David', 'יואב בן-דוד') }, get requester_org() { return L('InDNegev Festival', 'פסטיבל אינדנגב') }, event_date: '2026-09-05', get event_type() { return L('Festival', 'פסטיבל') }, get location() { return L('Mitzpe Ramon', 'מצפה רמון') }, capacity_band: '800+', budget_band: '₪20,000+', get message() { return L('Sunset set', 'סט שקיעה') }, status: 'new', created_date: '2026-06-22T00:00:00Z', artists: { get stage_name() { return L('Idan Raz', 'עידן רז') } } },
 ]
 
