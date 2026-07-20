@@ -429,6 +429,11 @@ export function ContextSection({ data, artist, T, title }) {
 }
 
 // ── P-2 · The 30-second proof story (spec §8.7) — a compact, fixed-order
+// Owner witness verdict (21 Jul): stored genre strings may carry a trailing
+// comma ("melodic techno, trance,") — trim trailing separators at RENDER so
+// joins never show ", ·". Display-only; the stored value is untouched.
+const cleanGenre = (g) => (g || '').replace(/[,\s]+$/, '') || null
+
 // 3-beat strip ABOVE the evidence ledger, shared by all four faces. It reuses
 // facts already derived above — it invents nothing and reorders nothing: (1)
 // who they are — the hero's own name + one-line positioning; (2) what's
@@ -439,9 +444,13 @@ export function ContextSection({ data, artist, T, title }) {
 export function ProofStory({ artist, data, T, contextLines }) {
   const { BANDS } = useLang()
   const lead = drawProofUnits(data, T, BANDS, contextLines)[0]
-  const vouchClaim = data.drawClaims[0]?.method_label === METHOD_LABELS.PRODUCER_CONFIRMED ? data.drawClaims[0] : null
+  // Owner witness verdict (21 Jul): beat 03 must never REPEAT beat 02 — when
+  // the lead claim is itself the producer-confirmed one, a distinct voucher is
+  // sought among the OTHER claims; none distinct → beat 03 is absent (RENDER
+  // LAW: a beat renders only when real, non-duplicate data backs it).
+  const vouchClaim = data.drawClaims.find((c, i) => i > 0 && c.method_label === METHOD_LABELS.PRODUCER_CONFIRMED) || null
   const vouchSafe = vouchClaim && (vouchClaim.public_wording || vouchClaim.public_band || (isBand(vouchClaim.value) ? vouchClaim.value : null))
-  const positioning = artist.one_line || [artist.genre, artist.city].filter(Boolean).join(' · ')
+  const positioning = artist.one_line || [cleanGenre(artist.genre), artist.city].filter(Boolean).join(' · ')
   if (!lead && !vouchSafe && !positioning) return null
   // V1 (owner witness-fix 20 Jul, §6 law 7 Passport fold): at 360×780 the
   // full 3-beat list alone measured ~225px — with the hero above it, the
@@ -516,7 +525,7 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
   // a session exists; RoleHome ("/") already resolves to the right workspace
   // for any role, same pattern the org/* screens use.
   const { user } = useAuth() || {}
-  const eyebrow = [artist.genre, artist.city].filter(Boolean).join(' · ')
+  const eyebrow = [cleanGenre(artist.genre), artist.city].filter(Boolean).join(' · ')
   return (
     <header className="relative">
       {/* V1 (owner witness-fix 20 Jul, §6 law 7 Passport fold): measured at
