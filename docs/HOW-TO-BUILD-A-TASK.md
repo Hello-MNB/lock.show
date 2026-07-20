@@ -124,3 +124,14 @@ R00 reads Half 2 and says which tasks enter work. Only released tasks are built.
 **Max-parallel law:** default to the MOST teams that share zero files, every wave — the cap is collision, not caution. Before each wave: map candidate tasks to file territories; every zero-overlap set dispatches at once; only shared-writer or hard-dependency tasks sequence; shared components build solo FIRST. Report per wave: how many teams ran parallel and why any task sequenced. "Can we go faster?" is answered either "yes — dispatching N teams" or "no — these share files X; here's why."
 
 **The witness-backlog honesty note:** if the true bottleneck is the WITNESS/RULING queue rather than build capacity, say so plainly at wave close: "build is ahead; N tasks are 100% built awaiting your witness — that pass is the fastest way forward, not more teams." Never add parallel teams to mask a witness backlog — that stacks more unwitnessed work.
+
+## PART 11 — THE STANDING REPORT FOOTER (format lock, owner 21 Jul — every report, no exceptions)
+
+Inconsistent reporting IS drift. Every report ends with ALL six, in this order — an empty section says so explicitly, never omitted:
+1. **BUILD STATE** — fresh PREVIEW URL + login + the on-screen SHA stamp ("PREVIEW · <sha>") · PRODUCTION status (what's live + SHA + date, plainly) · the gap in one line (what a merge would ship).
+2. **THE COMPLETION METRIC** — %BUILT and %VERIFIED, overall + per active task, + the honest gap line. Never skipped, even if unchanged.
+3. **PARALLELISM** — teams running/ran, why any sequenced ("no teams running — witness-gated" counts).
+4. **AWAITING YOU** — the CURRENT list only; ruled/built items move out immediately (the stale-reminder problem).
+5. **HOLDS** — what is NOT happening until the owner's word.
+6. **THE TARGET FOOTER** — always last: "🎯 The target: Gate 1 — a real artist uses the app, a real client sees their profile and reacts, one pays." + 1–3 sentences on how this report's work advances it.
+Cite the same SHA the owner sees on the build stamp — one version truth.
