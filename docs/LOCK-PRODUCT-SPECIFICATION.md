@@ -2927,11 +2927,21 @@ line (§8.3) **data-driven instead of hand-coded** — `radarUniverse.js` today 
 > **stale** — a field-grain registry EXISTS in-repo: **`docs/registry/F1.csv`** (483 rows · 376 fields ·
 > 18 segments → 6 planets · per-field visibility/applicability/freshness/consent) + `F2-F6-DELTAS.csv`
 > (337 family deltas). What remains true: the **DB** still has no representation (no `field_id`,
-> free-text `claim_type` — the ≥038 migration, §16.A.6.a). **Four schema variants now compete** (F1.csv
-> 15-col · the Sheet's B01–B24 24-col · its 14-col sample header · this section's 5-col conceptual
-> core) — unification is owner ruling **M-17** (§18.2). Recommendation on record: F1.csv's 15 columns
-> as the working base + `next_action_rule` · `freshness gap_rule` · `why_a_buyer_cares` adopted from
-> B01–B24; this section's 5 columns remain the conceptual contract every variant must express.
+> free-text `claim_type`) until the taxonomy migration is applied.
+>
+> **M-17 RULED (R00, 20 Jul) — the schema competition is OVER:** (a) **the ONE Registry-B schema =
+> `docs/registry/F1.csv`'s 15 columns** (+ `next_action_rule` · `freshness_window` · `why_a_buyer_cares`
+> adopted from B01–B24); the Sheet's 24-col and 14-col variants are retired as sources; this section's
+> 5 columns remain the conceptual contract F1.csv expresses. (b) **Certainty = TWO separate fields**:
+> `claims.verification_status` (the live 4-value claim door, unchanged) + extraction **provenance**
+> (internal-only metadata, never rendered — same law as `internal_confidence`, §13.5/§21.6).
+> (c) **The four taxonomy sub-calls:** ① family build order = **`dj-club` first** (the pilot cohort) ·
+> ② the F6 delta family = **out of scope pre-Gate** (stays staged in F2-F6-DELTAS.csv) · ③ **one family
+> per Act** — secondary-family support deferred; a multi-genre artist's canon answer is a second Act
+> (MULTI-ACT law) · ④ the `radar_segments` Sheet tab **folds into F1.csv** and retires (one source of
+> truth; F1's 18 segments are machine-validated on every `verify`).
+> **The migration implementing this is AUTHORED as `supabase/migrations/039_taxonomy_registry.sql`
+> (+ paired down) — owner-gated, NOT applied; R00 approves and applies it herself.**
 
 **Schema (the five columns, canon):**
 
