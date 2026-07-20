@@ -424,7 +424,7 @@ export default function HomePage() {
                   marginBottom: '0.2rem',
                 }}
               >
-                Lior Noy
+                Maya Vale
               </div>
               <div
                 style={{
@@ -436,7 +436,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                Electronic · Tel Aviv
+                Underground Techno · Tel Aviv
               </div>
 
               {/* Audience draw */}

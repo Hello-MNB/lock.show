@@ -958,14 +958,15 @@ surfaces (the canonical display-name law above).
   `artists.stage_name` value on the seed organization; subject of the T-63 dual-write sync bug,
   fix-on-owner-word) and `shydavid` (the product's first real signed-up user). Real-account values
   are real-account values, not personas — this ruling touches naming of DEMO content only.
-- **Known code gap (reported here, not fixed — out of docs territory):** `src/lib/demo.js` — the
-  in-app offline-demo fixture module — still carries the retired "Shai Perlman"/"PERLMAN" identity
-  throughout (stage name, org slug, evidence items, notifications, confirmations — ~30 reference
-  sites as of this pass). It has not yet been renamed to Maya Vale; that is a `src/lib/demo.js`
-  build task, not a doc change.
-- **Known site gap (reported here, not fixed):** the marketing site hero mock
-  (`website-next/app/page.tsx`) still renders the sample name "Lior Noy" (pre-dates this ruling).
-  Flagged for the site-build task to rename to Maya Vale.
+- **Code gap CLOSED (TEAM P-POLISH, 21 Jul, this pass):** `src/lib/demo.js` — the in-app
+  offline-demo fixture module — carried the retired "Shai Perlman"/"PERLMAN" identity throughout
+  (stage name, org slug, evidence items, notifications, confirmations — ~30 reference sites). It
+  has now been renamed to **Maya Vale** app-wide (genre/city/story unchanged — Underground Techno,
+  Tel Aviv, the INSOMNIA TLV @ Gagarin record); only the identity/brand strings changed.
+- **Site gap CLOSED (TEAM P-POLISH, 21 Jul, this pass):** the marketing site hero mock
+  (`website-next/app/page.tsx:427`) rendered the sample name "Lior Noy" (pre-dates this ruling). It
+  now renders **Maya Vale**, with the adjacent genre line updated to "Underground Techno · Tel
+  Aviv" to match.
 
 ### 8.5 Artist Access — "Who can act for you" (`/artist/access`) (U31)
 

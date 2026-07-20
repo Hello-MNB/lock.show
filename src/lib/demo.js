@@ -298,7 +298,7 @@ export const demoNotifications = [
 let _daaSeq = 3
 export const demoAccessRequests = [
   {
-    id: 'daa1', artist_id: DEMO_ARTIST_ID, get artist_stage_name() { return 'PERLMAN' },
+    id: 'daa1', artist_id: DEMO_ARTIST_ID, get artist_stage_name() { return 'Maya Vale' },
     organization_id: 'demo-org-3', get organization_name() { return L('Golan Artist Management', 'ניהול אמנים גולן') },
     scope: ['view'], territory: null, status: 'pending', consent_at: null,
     expires_at: null, created_at: '2026-07-01T00:00:00Z',
@@ -346,7 +346,7 @@ export function demoRevokeArtistAccess(id) {
 
 // ── PRODUCTION WORKSPACE (organization.workspace_type='producer', migration 027)
 // fixtures — INSOMNIA TLV's own `gigs` (008 + 023 gig-depth) rows. Two real
-// events from PERLMAN's own numbered series (matches demoItems di11/di12):
+// events from Maya Vale's own numbered series (matches demoItems di11/di12):
 // #20 already ran (closeout done — the Gig Evidence Refresh loop), #21 is
 // upcoming with a second lineup slot (Idan Raz, guest support) so the
 // grouped-into-events view has a real multi-slot lineup to show. ──
@@ -355,13 +355,13 @@ export const demoOrgGigs = [
     id: 'gig1', artist_id: DEMO_ARTIST_ID, get title() { return L('INSOMNIA TLV #20 "See You in the Dark"', 'INSOMNIA TLV #20 "See You in the Dark"') },
     event_date: '2026-06-05', venue: 'Gagarin', get city() { return L('Tel Aviv', 'תל אביב') },
     status: 'settled', role_at_event: 'headliner', audience_band: '300-600', closeout_status: 'completed',
-    artist: { stage_name: 'PERLMAN' },
+    artist: { stage_name: 'Maya Vale' },
   },
   {
     id: 'gig2', artist_id: DEMO_ARTIST_ID, get title() { return L('INSOMNIA TLV #21 "Black Jack"', 'INSOMNIA TLV #21 "Black Jack"') },
     event_date: '2026-07-10', venue: 'Gagarin', get city() { return L('Tel Aviv', 'תל אביב') },
     status: 'confirmed', role_at_event: 'headliner', audience_band: 'unknown', closeout_status: 'pending',
-    artist: { stage_name: 'PERLMAN' },
+    artist: { stage_name: 'Maya Vale' },
   },
   {
     id: 'gig3', artist_id: 'demo-artist-2', get title() { return L('INSOMNIA TLV #21 "Black Jack"', 'INSOMNIA TLV #21 "Black Jack"') },
