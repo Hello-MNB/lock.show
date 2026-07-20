@@ -360,8 +360,8 @@ export default function Methodology() {
               What is always true about every public claim.
             </h2>
             <p style={{ color: 'var(--color-tally-onlight)', fontSize: '1rem', lineHeight: 1.65, marginBottom: 'clamp(2rem, 5vw, 3rem)' }}>
-              This isn't fine print — it's the whole point. If a claim can't
-              meet these, it simply doesn't make the cut.
+              This isn&apos;t fine print — it&apos;s the whole point. If a claim can&apos;t
+              meet these, it simply doesn&apos;t make the cut.
             </p>
           </div>
 
