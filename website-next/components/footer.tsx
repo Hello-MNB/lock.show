@@ -24,13 +24,8 @@ function ConsentPrefsButton({ label }: { label: string }) {
       }}
       style={{
         display: 'block',
-        // 44px tap target: padding grows the hit area, negative margins keep
-        // the visual rhythm identical (2px top gap preserved: 2 - 6.6 = -4.6)
-        marginTop: '-4.6px',
-        marginBottom: '-6.6px',
-        marginLeft: '-8px',
-        marginRight: '-8px',
-        padding: '13px 8px',
+        marginTop: '2px',
+        padding: '0.4rem 0',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
@@ -125,11 +120,7 @@ export function Footer() {
                 letterSpacing: '0.06em',
                 color: 'var(--color-paper)',
                 textDecoration: 'none',
-                // 44px tap target: stamp renders 23px tall (size 36 × 130/200),
-                // +11px padding = 45px hit box; negative margins keep the
-                // visual position and the 6px gap to the tagline unchanged
-                padding: '11px 8px',
-                margin: '-11px -8px -5px',
+                marginBottom: '6px',
               }}
             >
               <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
@@ -194,9 +185,7 @@ export function Footer() {
                         color: 'rgba(243,245,239,0.7)',
                         textDecoration: 'none',
                         display: 'inline-block',
-                        padding: '13px 8px',
-                      margin: '-6.6px -8px',
-                      minWidth: '44px',
+                        padding: '0.4rem 0',
                       }}
                     >
                       {label}
@@ -233,9 +222,7 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '13px 8px',
-                      margin: '-6.6px -8px',
-                      minWidth: '44px',
+                      padding: '0.4rem 0',
                     }}
                   >
                     {label}
@@ -272,9 +259,7 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '13px 8px',
-                      margin: '-6.6px -8px',
-                      minWidth: '44px',
+                      padding: '0.4rem 0',
                     }}
                   >
                     {label}
@@ -292,9 +277,7 @@ export function Footer() {
                     color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
                     display: 'inline-block',
-                    padding: '13px 8px',
-                      margin: '-6.6px -8px',
-                      minWidth: '44px',
+                    padding: '0.4rem 0',
                   }}
                 >
                   WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
@@ -310,9 +293,7 @@ export function Footer() {
                     color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
                     display: 'inline-block',
-                    padding: '13px 8px',
-                      margin: '-6.6px -8px',
-                      minWidth: '44px',
+                    padding: '0.4rem 0',
                   }}
                 >
                   {EMAILS.hello}
@@ -370,9 +351,7 @@ export function Footer() {
               color: 'rgba(243,245,239,0.7)',
               textDecoration: 'none',
               display: 'inline-block',
-              padding: '15px 8px',
-              margin: '-7px -8px',
-              minWidth: '44px',
+              padding: '0.5rem 0',
             }}
           >
             CONTACT

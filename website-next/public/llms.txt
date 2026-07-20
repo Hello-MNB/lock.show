@@ -44,6 +44,8 @@ Every claim on a Passport carries a method label and reviewed date. Method label
 - https://lock.show/artists — For artists (אמן): how to build a Passport
 - https://lock.show/bookers — For booking managers (מזמיני הופעות): how to read a Passport
 - https://lock.show/producers — For producers (מפיק): the magic-link confirmation flow
+- https://lock.show/managers — For artist managers/agencies (משרד אמרגנות): roster beta signup
+- https://lock.show/production — For production offices (משרד הפקה): production beta signup
 - https://lock.show/passport/demo — A sample Passport showing verified evidence
 - https://lock.show/how-it-works — Three players, seven steps
 - https://lock.show/methodology — How evidence is verified; method labels explained

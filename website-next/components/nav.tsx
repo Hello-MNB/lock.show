@@ -116,11 +116,6 @@ export function Nav() {
             color: 'var(--color-paper)',
             textDecoration: 'none',
             flexShrink: 0,
-            // 44px tap target: stamp renders 23px tall (size 36 × 130/200),
-            // +11px padding = 45px hit box; negative margins keep the visual
-            // position unchanged inside the 64px nav bar
-            padding: '11px 8px',
-            margin: '-11px -8px',
           }}
           aria-label="LOCK home"
         >
