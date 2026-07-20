@@ -19,11 +19,12 @@
     "test:security": "node scripts/test-security-denial.mjs",
     "test:guardrails": "node scripts/test-guardrails.mjs",
     "test:ds": "node scripts/test-ds-drift.mjs",
+    "test:states": "node scripts/test-widget-states.mjs",
     "check:styles": "node scripts/generate-component-styles.mjs --check",
     "validate:registry": "node scripts/validate-registry.mjs",
     "validate:deltas": "node scripts/validate-deltas.mjs",
     "registry:events": "node scripts/generate-event-registry.mjs",
-    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run test:ds && npm run check:styles && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:fit",
+    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run test:ds && npm run test:states && npm run check:styles && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:fit",
     "test:fit": "node scripts/test-fit.mjs"
   },
   "dependencies": {

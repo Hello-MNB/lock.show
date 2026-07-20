@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, switchAct, createAct } from '../../lib/db.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
@@ -75,20 +75,76 @@ const SHELF_CHIP = {
 }
 const SHELF_DOT = { established: 'bg-good', developing: 'bg-dev', needs: 'bg-need', locked: 'bg-faint' }
 
-// ── Shelf sentence (§8.2 RADAR FACE RULING #2) — "ONE honest sentence each
-// (derive from the planet's live state via the §5.10 warm words + its
-// found/confirmed counts as own-item counts only)". Never a hand-written
-// per-artist line, never a %, never a comparison — just the planet's own
-// state word (S.state[...], rendered separately as the chip) plus a count of
-// its OWN items, the same "N of 8" precedent already legal on this private
-// surface (§5.10 progress vocabulary).
-function shelfLine(info, S) {
-  if (info.state === 'locked') return S.lockedChip
-  const confirmed = info.nodes.filter((n) => n.state === NODE.CONFIRMED).length
-  const missing = info.nodes.filter((n) => n.state === NODE.MISSING).length
-  if (info.foundCount > 0) return S.shelf.needsLine(info.foundCount)
-  if (confirmed > 0 && missing === 0) return S.shelf.readyLine(confirmed)
-  return S.shelf.developingLine(confirmed, missing)
+// ── THE 10-STATE PROOF-WIDGET MACHINE (T-90 build law · spec §5.8 full state
+// set) — every one of the six shelf cards IS a widget and renders exclusively
+// through this machine. The canon set, exactly ten, machine-checked by
+// scripts/test-widget-states.mjs (a missing state FAILS the build):
+//   8 CONTENT states (what the widget's data is doing right now):
+//     empty · loading · found · needs-user · ready · error · not-mine · saved
+//   2 DISPLAY states (how the widget is currently laid out — T-90 names both
+//     widths; on desktop "mobile-expanded" is the inline right-rail grow):
+//     mobile-collapsed · mobile-expanded
+// FIREWALL: every line below is a bounded state word or a count of the
+// artist's OWN items (§5.10 progress vocabulary) — never a %, never a rank.
+export const WIDGET_STATES = Object.freeze({
+  EMPTY: 'empty',
+  LOADING: 'loading',
+  FOUND: 'found',
+  NEEDS_USER: 'needs-user',
+  READY: 'ready',
+  ERROR: 'error',
+  NOT_MINE: 'not-mine',
+  SAVED: 'saved',
+  MOBILE_COLLAPSED: 'mobile-collapsed',
+  MOBILE_EXPANDED: 'mobile-expanded',
+})
+
+// Own-item counts for one planet — the §5.10 "N of 8" precedent, artist-private.
+export function widgetCounts(info) {
+  const ns = info.nodes
+  const confirmed = ns.filter((n) => n.state === NODE.CONFIRMED).length
+  const found = ns.filter((n) => n.state === NODE.FOUND).length
+  const review = ns.filter((n) => n.state === NODE.REVIEW).length
+  const disputed = ns.filter((n) => n.state === NODE.REVIEW && n.claim?.status === 'disputed').length
+  const missing = ns.filter((n) => n.state === NODE.MISSING).length
+  return { confirmed, found, review, disputed, missing, open: missing + (review - disputed) }
+}
+
+// The derivation: live planet data + this widget's transient flags → ONE of
+// the 8 content states. Rule-based only — nothing stored, nothing scored.
+export function deriveWidgetState(info, { busy = false, error = false, saved = false } = {}) {
+  if (error) return WIDGET_STATES.ERROR       // a save/confirm here failed — invite a retry
+  if (busy) return WIDGET_STATES.LOADING      // a confirm/save is in flight right now
+  if (saved) return WIDGET_STATES.SAVED       // just landed — brief named receipt window
+  const c = widgetCounts(info)
+  if (info.state === 'locked') return WIDGET_STATES.EMPTY // "Not needed yet" — the quiet empty variant
+  if (c.found > 0) return WIDGET_STATES.FOUND // ✦ LOCK found something — waiting for the artist
+  if (c.disputed > 0 && c.confirmed === 0) return WIDGET_STATES.NOT_MINE // flagged "not mine" — recorded, never deleted
+  if (c.confirmed === 0 && c.review === 0) return WIDGET_STATES.EMPTY // only invitations here so far
+  if (c.open === 0 && c.confirmed > 0) return WIDGET_STATES.READY // confirmed, no gaps
+  return WIDGET_STATES.NEEDS_USER             // partly confirmed — gaps remain as invitations
+}
+
+// ── The render map — ONE entry per canon state, no state renders outside it.
+// Content entries return the card's one honest sentence (+ tone); the two
+// display entries return the widget's whole surface (collapsed card / the
+// expanded in-place body shared by the mobile sheet AND the desktop rail).
+const WIDGET_RENDER = {
+  [WIDGET_STATES.EMPTY]: ({ info, S }) => ({
+    line: info.state === 'locked' ? S.lockedChip : S.widget.emptyLine, cls: 'text-muted' }),
+  [WIDGET_STATES.LOADING]: ({ S }) => ({ line: S.widget.loadingLine, cls: 'text-muted', spin: true }),
+  [WIDGET_STATES.FOUND]: ({ info, S }) => ({ line: S.shelf.needsLine(info.foundCount), cls: 'text-gold' }),
+  [WIDGET_STATES.NEEDS_USER]: ({ counts, S }) => ({ line: S.shelf.developingLine(counts.confirmed, counts.open), cls: 'text-muted' }),
+  [WIDGET_STATES.READY]: ({ counts, S }) => ({ line: S.shelf.readyLine(counts.confirmed), cls: 'text-muted' }),
+  [WIDGET_STATES.ERROR]: ({ S }) => ({ line: S.widget.errorLine, cls: 'text-need' }),
+  [WIDGET_STATES.NOT_MINE]: ({ S }) => ({ line: S.widget.notMineLine, cls: 'text-faint' }),
+  [WIDGET_STATES.SAVED]: ({ S }) => ({ line: S.widget.savedLine, cls: 'text-good' }),
+  [WIDGET_STATES.MOBILE_COLLAPSED]: (ctx) => <ProofWidgetCard {...ctx} />,
+  [WIDGET_STATES.MOBILE_EXPANDED]: (ctx) => <ProofWidgetExpanded {...ctx} />,
+}
+export function renderWidgetState(state, ctx) {
+  const r = WIDGET_RENDER[state]
+  return r ? r(ctx) : null
 }
 
 // ── Ambient atmosphere (§8.2 RADAR FACE RULING #3, owner design-sprint pick
@@ -97,23 +153,32 @@ function shelfLine(info, S) {
 // rendering of the SAME geometry (orbit rings + the R-3 state-coloured
 // threads, planetXY-derived so it can never drift from the real planet
 // angles) at low opacity — no planet icons, no captions, no tap targets.
+// The R-3 constellation-thread layer — the ONE inline SVG literal this file
+// carries (asset-law budget: allowlisted for exactly one), shared by the
+// ambient atmosphere AND the full-universe view so the two can never drift.
+function ThreadLayer({ uni, lockedOpacity = 0.12, opacity = 0.4 }) {
+  return (
+    <svg aria-hidden className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+      {PLANETS.map((p) => {
+        const { x, y } = planetXY(p.angle)
+        const st = uni.planets[p.key].state
+        return (
+          <line key={p.key} x1="50" y1="50" x2={x} y2={y} stroke="currentColor" strokeWidth={1}
+            vectorEffect="non-scaling-stroke" opacity={st === 'locked' ? lockedOpacity : opacity}
+            className={THREAD_STROKE[st] || THREAD_STROKE.developing} />
+        )
+      })}
+    </svg>
+  )
+}
+
 function AmbientUniverse({ uni }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.14]">
       <div className="relative aspect-square w-[150%] max-w-[820px] shrink-0 sm:w-[115%]">
         <div className="absolute inset-[9%] rounded-full border border-line" />
         <div className="absolute inset-[27%] rounded-full border border-line" />
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {PLANETS.map((p) => {
-            const { x, y } = planetXY(p.angle)
-            const st = uni.planets[p.key].state
-            return (
-              <line key={p.key} x1="50" y1="50" x2={x} y2={y} stroke="currentColor" strokeWidth={1}
-                vectorEffect="non-scaling-stroke" opacity={st === 'locked' ? 0.12 : 0.4}
-                className={THREAD_STROKE[st] || THREAD_STROKE.developing} />
-            )
-          })}
-        </svg>
+        <ThreadLayer uni={uni} />
       </div>
     </div>
   )
@@ -170,6 +235,27 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const [world, setWorld] = useState(null)             // world tag filter (null = all)
   const [confirming, setConfirming] = useState(null)   // node id mid-confirm
   const [bulkBusy, setBulkBusy] = useState(false)
+  // ── T-90 widget-machine transient flags, per planet key: a failed save
+  // (error state, cleared on reopen), a just-landed save (saved state, ~2.4s
+  // named-receipt window). Node ids are `${planet}-…`, so the planet of any
+  // node is recoverable without threading a prop through every call site.
+  const planetOfNode = (n) => String(n?.id || '').split('-')[0]
+  const [wErr, setWErr] = useState(() => ({}))
+  const [wSaved, setWSaved] = useState(() => ({}))
+  const savedTimers = useRef({})
+  useEffect(() => () => Object.values(savedTimers.current).forEach(clearTimeout), [])
+  function markSaved(planet) {
+    if (!planet) return
+    setWErr((e) => (e[planet] ? { ...e, [planet]: false } : e))
+    setWSaved((s) => ({ ...s, [planet]: true }))
+    clearTimeout(savedTimers.current[planet])
+    savedTimers.current[planet] = setTimeout(() => setWSaved((s) => ({ ...s, [planet]: false })), 2400)
+  }
+  function markError(planet) { if (planet) setWErr((e) => ({ ...e, [planet]: true })) }
+  // ── T-90 RADAR RULING B — the full radial universe opens on an explicit
+  // tap (secondary affordance, never the primary CTA); the ambient radial
+  // behind Home stays faint + non-interactive (§8.2 ruling #3).
+  const [universeOpen, setUniverseOpen] = useState(false)
   const [undo, setUndo] = useState(null)               // { claim } → named receipt + undo
   const [flashMsg, setFlashMsg] = useState('')
   const undoRef = useRef(null)
@@ -401,12 +487,19 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     if (focusSignal > 0 && focusPlanet) { setReview(false); setSelected(focusPlanet) }
   }, [focusSignal, focusPlanet])
 
-  // lock body scroll while a panel is open (mobile flawlessness)
+  // lock body scroll while a panel (or the full universe view) is open
   useEffect(() => {
-    const open = !!selected || review
+    const open = !!selected || review || universeOpen
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
-  }, [selected, review])
+  }, [selected, review, universeOpen])
+
+  // T-90 widget machine — opening a widget clears its error flag (the retry
+  // invitation was taken; the panel's own rows carry live state from here).
+  useEffect(() => {
+    if (selected && wErr[selected]) setWErr((e) => ({ ...e, [selected]: false }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected])
 
   // Three calm lenses: All · Needs you · Ready (bounded words)
   const FILTERS = [
@@ -439,9 +532,14 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       await updateClaim(c.id, { artist_approved: true })
       onClaimsChange((prev) => prev.map((x) => x.id === c.id ? { ...x, artist_approved: true } : x))
       triggerBloom(node.id)
+      markSaved(planetOfNode(node)) // T-90 widget machine — the saved state's receipt window
       clearTimeout(undoRef.current)
       setUndo({ claim: c })
       undoRef.current = setTimeout(() => setUndo(null), 7000)
+    } catch {
+      // T-90 widget machine — the widget itself turns to its error state
+      // (a warm retry invitation on the card), never a silent unhandled throw.
+      markError(planetOfNode(node))
     } finally { setConfirming(null) }
   }
   async function undoConfirm() {
@@ -456,6 +554,12 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
 
   const sel = selected ? uni.planets[selected] : null
   const batchable = sel ? sel.nodes.filter((n) => n.state === NODE.FOUND && n.claim) : []
+  // T-90 widget machine — which widget is mid-work right now (loading state):
+  // a single confirm carries its planet in the node id; a bulk confirm always
+  // runs on the currently-open widget.
+  const busyPlanet = confirming ? String(confirming).split('-')[0] : bulkBusy ? selected : null
+  // T-90 RULING C — the quiet progress count: the artist's OWN ready rooms.
+  const readyRooms = PLANETS.filter((p) => uni.planets[p.key].state === 'established').length
 
   // Confirm a set of found claims — each row is fully shown above the button.
   async function confirmMany(nodesToConfirm) {
@@ -467,7 +571,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       const ids = new Set(list.map((n) => n.claim.id))
       onClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
       triggerBloom(list.map((n) => n.id))
+      markSaved(planetOfNode(list[0])) // T-90 widget machine — saved receipt on the touched widget
       flash(S.bulkConfirmed(list.length, destinationOf(list[0].claim, S)))
+    } catch {
+      markError(planetOfNode(list[0])) // T-90 widget machine — error state, warm retry on the card
     } finally { setBulkBusy(false) }
   }
 
@@ -509,7 +616,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     // flex-grow nothing to distribute, collapsing the shelf to 0px. A real
     // height forces the shelf — a "long ledger" (§6 law 7 exception) — to
     // scroll WITHIN this panel instead of ever pushing the page itself.
-    <div className="relative flex h-[70vh] shrink-0 flex-col overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:h-auto md:min-h-0 md:flex-1 md:p-6">
+    <div className="relative flex h-[70vh] shrink-0 flex-col overflow-hidden rounded-3xl border border-line bg-bg2 p-3 sm:p-5 md:h-auto md:min-h-0 md:flex-1 md:p-6">
       {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels). */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"
         style={{ background: 'radial-gradient(60% 100% at 50% 0%, rgba(242,192,99,0.12), transparent 70%)' }} />
@@ -552,10 +659,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           {/* Identity — the Act-switch trigger (Design Spec §MULTI-ACT), now a
               small top-of-card row (chrome minimal, ruling point 4) instead of
               the old center-of-universe star. */}
-          <div className="relative z-10 mb-1 flex shrink-0 items-center">
+          <div className="relative z-10 mb-1 flex shrink-0 items-center justify-between gap-2">
             <button type="button" onClick={() => (selected ? setSelected(null) : setActSheet(true))}
               aria-haspopup="dialog" aria-label={S?.actSwitch?.switchAria}
-              className="tap-target -m-1 flex items-center gap-2.5 rounded-xl p-1 text-start transition-opacity hover:opacity-90">
+              className="tap-target -m-1 flex min-w-0 items-center gap-2.5 rounded-xl p-1 text-start transition-opacity hover:opacity-90">
               {effArtist.photo_url
                 ? <img src={effArtist.photo_url} alt="" className="h-8 w-8 shrink-0 rounded-full border border-gold/60 object-cover" />
                 : <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-gold/60 bg-surface2 font-display text-xs text-ink">{(effArtist.stage_name || '★').slice(0, 1)}</span>}
@@ -564,8 +671,21 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                   {effArtist.stage_name || S.you}
                   <span aria-hidden className="text-[10px] text-faint">▾</span>
                 </span>
-                {effArtist.genre && <span className="block truncate text-[11px] text-muted">{effArtist.genre}</span>}
+                {/* L1 fit law: WRAPS, never truncates — the universe entry now
+                    shares this row, so a long genre must fold, not clip. */}
+                {effArtist.genre && <span className="block text-[11px] leading-snug text-muted">{effArtist.genre}</span>}
               </span>
+            </button>
+            {/* T-90 RADAR RULING B — the explicit "Open Radar universe" entry:
+                a quiet secondary (mono ghost, never .btn-primary — the coach
+                card below keeps the screen's ONE primary, §6 law 3). */}
+            <button type="button" onClick={() => setUniverseOpen(true)}
+              aria-haspopup="dialog"
+              className="tap-target flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-muted transition-colors hover:border-line2 hover:text-ink">
+              <span aria-hidden className="grid h-3.5 w-3.5 place-items-center">
+                <span className="block h-3 w-3 rounded-full border border-current opacity-80" />
+              </span>
+              {S.openUniverse}
             </button>
           </div>
           {/* N4 (T-65, §5.10) — the own-history line: additive, positive-only,
@@ -582,7 +702,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
               share a single horizontally-scrollable row instead of two
               absolutely-positioned rails, so nothing floats over the
               Inspector (the old corner-collision fix is no longer needed). */}
-          <div className="relative z-10 mb-3 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label={S.filtersLabel}>
+          <div className="relative z-10 mb-2 flex shrink-0 items-center gap-1.5 overflow-x-auto pb-1 md:mb-3" role="tablist" aria-label={S.filtersLabel}>
             {scenes.length > 0 && (
               <>
                 <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{S.sceneLabel}</span>
@@ -631,70 +751,86 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 one CTA, every width (panelHoldsCTA below keeps the CTA count
                 at exactly one, §6 law 3). ── */}
           {nextAction && (
-            <div className="relative z-10 mx-auto mb-2.5 w-full max-w-xl shrink-0 rounded-2xl border border-line2 bg-surface2/70 px-5 py-3 text-center shadow-card sm:px-7 sm:py-3.5">
-              <span className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-gold">
+            <div className="relative z-10 mx-auto mb-2 w-full max-w-xl shrink-0 rounded-2xl border border-line2 bg-surface2/70 px-4 py-2.5 text-center shadow-card sm:mb-2.5 sm:px-7 sm:py-3">
+              <span className="mb-1.5 inline-flex items-center gap-1.5 rounded-full border border-gold/25 bg-gold/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-gold sm:mb-2">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-gold" />
                 {T.radar.coachEyebrow}
               </span>
               {/* §8.3 Layer-1 voice, reused verbatim: names the artist's real
                   scene + why this dimension matters there; no scene signal →
                   the neutral fallback (G2 guard — identical rule to the
-                  Inspector's own coaching line, §8.3). */}
-              <p className="font-display mx-auto max-w-lg text-base font-bold leading-snug text-ink sm:text-xl">
+                  Inspector's own coaching line, §8.3). Mobile sizes are one
+                  notch tighter so the shelf below keeps real height (§6 law 2:
+                  mobile designed, never shrunk — the copy never clips). */}
+              <p className="font-display mx-auto max-w-lg text-[15px] font-bold leading-snug text-ink sm:text-lg">
                 {coachScene && coachTargetPlanet && S.coach?.[coachTargetPlanet]
                   ? <>{S.coachIn(coachScene)} {S.coach[coachTargetPlanet]}</>
                   : T.radar.nextMove}
               </p>
-              <p className="mx-auto mt-1.5 max-w-md text-sm font-semibold text-ink/90">{nextAction.title}</p>
+              <p className="mx-auto mt-1 max-w-md text-[13px] font-semibold text-ink/90 sm:mt-1.5 sm:text-sm">{nextAction.title}</p>
               {nextAction.why && (
-                <p className="mx-auto mt-1 max-w-md text-[12px] leading-relaxed text-muted">
+                <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-muted sm:text-[12px]">
                   {nextAction.why}
                   {nextAction.time != null && <span className="text-faint"> {T.radar.timeHint(nextAction.time)}</span>}
                 </p>
               )}
               {!panelHoldsCTA && (nextAction.to || nextAction.planet) && (
-                <button className="btn-primary mt-2.5 px-6 py-2 text-sm" onClick={() => onNextAction?.(nextAction)}>
+                <button className="btn-primary mt-2 px-6 py-2 text-sm sm:mt-2.5" onClick={() => onNextAction?.(nextAction)}>
                   {T.common.continue}
                 </button>
               )}
             </div>
           )}
 
-          {/* ── THE RADAR FACE RULING #2 — the calm shelf: six dimension cards
-                with the PLAIN display names from the ruling + ONE honest
-                sentence each (shelfLine — derived from live state + own-item
-                counts only, never hand-written per artist). Tap a card →
-                opens the EXISTING Inspector (desktop rail / mobile sheet,
-                §8.3 content unchanged). A long shelf scrolls WITHIN this
-                bounded region (§6 law 7) rather than the page. ── */}
-          <p className="relative z-10 mb-1.5 shrink-0 text-center font-mono text-[10px] uppercase tracking-[0.08em] text-faint">{S.shelf.label}</p>
-          <div className="relative z-10 min-h-0 flex-1 overflow-y-auto pe-0.5">
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-3 md:gap-2 lg:grid-cols-6">
+          {/* ── T-90 RADAR RULING C — the quiet progress widget: a count of
+                the artist's OWN ready rooms + six discrete dots (§5.10 count
+                vocabulary — steps, never a bar-as-gauge, never a %). ── */}
+          <div className="relative z-10 mb-1 flex shrink-0 items-center justify-center gap-2 md:mb-1.5"
+            aria-label={S.progress.roomsAria(readyRooms, PLANETS.length)}>
+            <span aria-hidden className="flex items-center gap-1">
+              {PLANETS.map((p) => (
+                <span key={p.key} className={`h-1.5 w-1.5 rounded-full ${
+                  uni.planets[p.key].state === 'established' ? 'bg-accent' : 'border border-line2'}`} />
+              ))}
+            </span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-faint">
+              {S.progress.rooms(readyRooms, PLANETS.length)}
+            </p>
+          </div>
+
+          {/* ── THE RADAR FACE RULING #2 + T-90 — the calm shelf is six true
+                WIDGETS, each rendered ONLY through the 10-state machine
+                (deriveWidgetState → renderWidgetState; the collapsed card is
+                the machine's mobile-collapsed path). Tap a widget → INLINE
+                expand (mobile bottom-sheet / desktop rail — the machine's
+                mobile-expanded path), never a route. A long shelf scrolls
+                WITHIN this bounded region (§6 law 7), never the page. ── */}
+          {/* Mobile = a literal horizontal SHELF (§8.2 ruling #2 wording; the
+              milestone-strip precedent for a bounded, h-scrollable internal
+              panel) so all six widgets stay visible+tappable below the coach
+              card in one viewport; md+ = the grid inside a contained-scroll
+              region as before. */}
+          <div className="relative z-10 min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-1 pe-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-0">
+            {/* Rail open (md+) → fewer, wider columns; the extra rows scroll
+                inside this bounded region (§6 law 7 contained-scroll). */}
+            <div className={`flex items-stretch gap-1.5 md:grid md:gap-2 ${fullStage && sel ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-6'}`}>
               {PLANETS.map((p) => {
                 const info = uni.planets[p.key]
-                const dimmed = !info.nodes.some(matchesFilter) && (filter !== 'all' || world)
-                const isSelected = selected === p.key
-                const primary = genrePrimary.has(p.key)
+                const counts = widgetCounts(info)
+                const contentState = deriveWidgetState(info, {
+                  busy: busyPlanet === p.key, error: !!wErr[p.key], saved: !!wSaved[p.key],
+                })
                 return (
-                  <button key={p.key} type="button" onClick={() => setSelected(p.key)}
-                    aria-label={`${S.shelf.names[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}`}
-                    className={`flex items-center gap-2.5 rounded-2xl border bg-surface px-3.5 py-2 text-start transition-opacity md:flex-col md:items-start md:gap-1.5 md:py-2.5 ${
-                      dimmed ? 'opacity-40' : 'opacity-100'} ${isSelected ? 'border-line2 ring-1 ring-gold/30' : 'border-line'}`}>
-                    <span aria-hidden className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-line bg-surface2 ${info.state === 'locked' ? 'opacity-60' : ''}`}>
-                      <GpIcon id={p.icon} className="h-4 w-4 text-ink/80" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5">
-                        <span className="font-display text-sm font-bold text-ink">{S.shelf.names[p.key]}</span>
-                        {primary && <span aria-hidden className="text-[10px] text-gold">★</span>}
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-snug text-muted">{shelfLine(info, S)}</span>
-                      <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold ${SHELF_CHIP[info.state]}`}>
-                        <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${SHELF_DOT[info.state]}`} />
-                        {S.state[info.state]}
-                      </span>
-                    </span>
-                  </button>
+                  <Fragment key={p.key}>
+                    {renderWidgetState(WIDGET_STATES.MOBILE_COLLAPSED, {
+                      p, info, S,
+                      body: renderWidgetState(contentState, { info, counts, S }),
+                      primary: genrePrimary.has(p.key),
+                      isSelected: selected === p.key,
+                      dimmed: !info.nodes.some(matchesFilter) && (filter !== 'all' || world),
+                      onOpen: () => setSelected(p.key),
+                    })}
+                  </Fragment>
                 )
               })}
             </div>
@@ -709,21 +845,28 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             view). Mobile keeps the BottomSheet below exactly as-is. Same
             panel content (PlanetPanelContent) as the sheet — no forked copy. */}
       {fullStage && sel && (
-        <aside aria-label={S.planets[selected]} className="relative hidden shrink-0 flex-col rounded-2xl border border-line bg-surface2/60 px-4 pb-4 pt-4 md:flex md:w-[300px] md:min-h-0">
+        <aside aria-label={S.shelf.names[selected]} className="relative hidden shrink-0 flex-col rounded-2xl border border-line bg-surface2/60 px-4 pb-4 pt-4 md:flex md:w-[300px] md:min-h-0">
           <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
-            <h2 className="font-display text-sm font-bold text-ink">{S.planets[selected]}</h2>
+            {/* T-90 — the expanded widget carries the SAME plain name the
+                artist tapped on the shelf (one vocabulary, never a technical
+                rename mid-gesture). */}
+            <h2 className="font-display text-sm font-bold text-ink">{S.shelf.names[selected]}</h2>
             <button type="button" onClick={() => setSelected(null)}
               className="tap-target shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-muted hover:text-ink">
               {S.backToUniverse}
             </button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto pe-0.5">
-            <PlanetPanelContent
-              selected={selected} sel={sel} S={S} T={T} coachScene={coachScene}
-              batchable={batchable} bulkBusy={bulkBusy} onConfirmMany={confirmMany}
-              panelNodes={panelNodes} rowProps={rowProps} confirming={confirming} bloomIds={bloomIds}
-              confirmNode={confirm} onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)}
-              onGoLive={() => setSelected('live')} />
+            {/* T-90 — the machine's mobile-expanded path IS the desktop inline
+                grow too (§5.8: one expanded body, two widths, never forked). */}
+            {renderWidgetState(WIDGET_STATES.MOBILE_EXPANDED, {
+              selected, sel, S, T, coachScene,
+              batchable, bulkBusy, onConfirmMany: confirmMany,
+              panelNodes, rowProps, confirming, bloomIds,
+              confirmNode: confirm,
+              onSaved: (undoFn) => { markSaved(selected); flash(S.fill.savedInPlace, undoFn) },
+              onGoLive: () => setSelected('live'),
+            })}
           </div>
         </aside>
       )}
@@ -767,15 +910,19 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             R-4: md+ owns the persistent right-rail (rendered above, beside
             the stage) instead — this BottomSheet is mobile-only so the panel
             never shows twice (and never doubles a .btn-primary). ── */}
-      <BottomSheet open={!!selected && !fullStage} onClose={() => setSelected(null)} title={selected ? S.planets[selected] : ''}>
+      <BottomSheet open={!!selected && !fullStage} onClose={() => setSelected(null)} title={selected ? S.shelf.names[selected] : ''}>
         {sel && (
           <div className="max-h-[65vh] overflow-y-auto pe-0.5">
-            <PlanetPanelContent
-              selected={selected} sel={sel} S={S} T={T} coachScene={coachScene}
-              batchable={batchable} bulkBusy={bulkBusy} onConfirmMany={confirmMany}
-              panelNodes={panelNodes} rowProps={rowProps} confirming={confirming} bloomIds={bloomIds}
-              confirmNode={confirm} onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)}
-              onGoLive={() => setSelected('live')} />
+            {/* T-90 — the machine's mobile-expanded path, in the reused
+                BottomSheet (never a route, never a forked panel copy). */}
+            {renderWidgetState(WIDGET_STATES.MOBILE_EXPANDED, {
+              selected, sel, S, T, coachScene,
+              batchable, bulkBusy, onConfirmMany: confirmMany,
+              panelNodes, rowProps, confirming, bloomIds,
+              confirmNode: confirm,
+              onSaved: (undoFn) => { markSaved(selected); flash(S.fill.savedInPlace, undoFn) },
+              onGoLive: () => setSelected('live'),
+            })}
           </div>
         )}
       </BottomSheet>
@@ -796,7 +943,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 busy={confirming === n.id}
                 bloom={bloomIds.has(n.id)}
                 onConfirm={() => confirm(n)}
-                onSaved={(undoFn) => flash(S.fill.savedInPlace, undoFn)} />
+                onSaved={(undoFn) => { markSaved(planet); flash(S.fill.savedInPlace, undoFn) }} />
             ))}
             {needsNodes.length === 0 && (
               <p className="py-6 text-center text-xs text-muted">{S.nothingNeedsYou}</p>
@@ -804,6 +951,62 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           </div>
         </div>
       </BottomSheet>
+
+      {/* ── T-90 RADAR RULING B — the full Radar universe (the radial/planet
+            world), opened ONLY by the explicit header tap. Same geometry as
+            the ambient layer (planetXY — the two can never drift), full
+            opacity, rooms tappable: tapping one closes this view and opens
+            that widget's expanded body in place. Kept reachable, not
+            redesigned in this step (step 2 of the T-90 build order). ── */}
+      {universeOpen && (
+        <div role="dialog" aria-modal="true" aria-label={S.universeTitle}
+          className="fixed inset-0 z-[95] flex flex-col overflow-hidden bg-bg p-4 sm:p-6">
+          <div className="flex shrink-0 items-start justify-between gap-2">
+            <div>
+              <h2 className="font-display text-base font-bold text-ink">{S.universeTitle}</h2>
+              <p className="mt-0.5 text-xs text-muted">{S.universeHint}</p>
+            </div>
+            <button type="button" onClick={() => setUniverseOpen(false)} aria-label={S.closeUniverse}
+              className="tap-target px-2 text-2xl leading-none text-muted hover:text-ink">×</button>
+          </div>
+          <div className="relative min-h-0 flex-1">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative aspect-square w-full" style={{ maxWidth: 'min(560px, 72vh)' }}>
+                <div aria-hidden className="absolute inset-[9%] rounded-full border border-line" />
+                <div aria-hidden className="absolute inset-[27%] rounded-full border border-line" />
+                <ThreadLayer uni={uni} lockedOpacity={0.2} opacity={0.55} />
+                {/* center star — the Act itself (stage_name only, one-name law) */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                  {effArtist.photo_url
+                    ? <img src={effArtist.photo_url} alt="" className="mx-auto h-14 w-14 rounded-full border border-gold/60 object-cover" />
+                    : <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-gold/60 bg-surface2 font-display text-lg text-ink">{(effArtist.stage_name || '★').slice(0, 1)}</span>}
+                  <p className="font-display mt-1.5 text-sm font-bold text-ink">{effArtist.stage_name || S.you}</p>
+                </div>
+                {PLANETS.map((p) => {
+                  const { x, y } = planetXY(p.angle)
+                  const info = uni.planets[p.key]
+                  const primary = genrePrimary.has(p.key)
+                  return (
+                    <button key={p.key} type="button"
+                      onClick={() => { setUniverseOpen(false); setSelected(p.key) }}
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                      aria-label={`${S.shelf.names[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}`}
+                      className="tap-target absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1">
+                      <span className={`grid h-11 w-11 place-items-center rounded-full border bg-surface ${primary ? 'border-gold/50' : 'border-line2'} ${info.state === 'locked' ? 'opacity-60' : ''}`}>
+                        <GpIcon id={p.icon} className="h-5 w-5 text-ink/80" />
+                      </span>
+                      <span className="flex items-center gap-1 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.06em] text-muted">
+                        <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${SHELF_DOT[info.state]}`} />
+                        {S.shelf.names[p.key]}{primary && <span aria-hidden className="text-gold"> ★</span>}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── ACT SWITCH — center-star only (Design Spec §MULTI-ACT). One Person,
             several Acts; picking one swaps the whole universe above — never a
@@ -844,6 +1047,44 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       </BottomSheet>
     </div>
   )
+}
+
+// ── T-90 · the widget's COLLAPSED surface (the machine's mobile-collapsed
+// path — on desktop the same card is the shelf's resting face). One icon, the
+// plain room name, ONE honest sentence (from the current content state's
+// render entry), the bounded state chip. Tap → inline expand, never a route.
+function ProofWidgetCard({ p, info, S, body, primary, isSelected, dimmed, onOpen }) {
+  return (
+    <button type="button" onClick={onOpen} aria-expanded={isSelected}
+      aria-label={`${S.shelf.names[p.key]} — ${S.state[info.state]}${primary ? ` · ${S.genrePrimary}` : ''}`}
+      className={`flex w-[176px] shrink-0 flex-col items-start gap-1 rounded-2xl border bg-surface px-3 py-1.5 text-start transition-opacity md:w-auto md:shrink md:px-3.5 md:py-2 ${
+        dimmed ? 'opacity-40' : 'opacity-100'} ${isSelected ? 'border-line2 ring-1 ring-gold/30' : 'border-line'}`}>
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border border-line bg-surface2 ${info.state === 'locked' ? 'opacity-60' : ''}`}>
+          <GpIcon id={p.icon} className="h-3 w-3 text-ink/80" />
+        </span>
+        <span className="font-display whitespace-nowrap text-[13px] font-bold leading-tight text-ink">{S.shelf.names[p.key]}</span>
+        {primary && <span aria-hidden className="text-[10px] text-gold">★</span>}
+      </span>
+      <span className="min-w-0">
+        <span className={`block text-[11px] leading-snug md:text-xs ${body?.cls || 'text-muted'}`}>
+          {body?.spin && <Spinner className="me-1.5 !h-3 !w-3 align-[-2px]" />}
+          {body?.line}
+        </span>
+        <span className={`mt-1 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold md:text-[11px] ${SHELF_CHIP[info.state]}`}>
+          <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${SHELF_DOT[info.state]}`} />
+          {S.state[info.state]}
+        </span>
+      </span>
+    </button>
+  )
+}
+
+// ── T-90 · the widget's EXPANDED surface (the machine's mobile-expanded path;
+// on desktop the identical body grows inline in the right rail). It IS the
+// §8.3 Inspector content — one shared body, never a forked copy.
+function ProofWidgetExpanded(props) {
+  return <PlanetPanelContent {...props} />
 }
 
 // ── R-4 (T-82, §8.2 4-zone) — the ONE planet-inspector body, shared verbatim

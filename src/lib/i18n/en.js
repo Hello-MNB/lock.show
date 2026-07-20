@@ -1233,6 +1233,27 @@ export const T = {
         openEvidence: 'Open evidence capture (consent applies)',
       },
       state: { established: 'Ready to support', developing: 'Growing', needs: 'Needs your touch', locked: 'Not needed yet' },
+      // T-90 · the 10-state proof-widget machine (§5.8 full state set) — the
+      // transient/edge-state lines. Warm invitations only (§5.10), never a
+      // failure verdict, never a % or score.
+      widget: {
+        emptyLine: 'Nothing here yet — your first piece opens this room.',
+        loadingLine: 'Saving…',
+        errorLine: 'That didn’t save — open the room and try again.',
+        notMineLine: 'Marked as not yours — kept off your Passport.',
+        savedLine: 'Saved — right in place.',
+      },
+      // T-90 RULING C · quiet progress (§5.10 count vocabulary): a count of
+      // the artist's OWN rooms, discrete dots — never a bar-as-gauge, never a %.
+      progress: {
+        rooms: (n, total) => `${n} of ${total} rooms ready`,
+        roomsAria: (n, total) => `${n} of ${total} rooms ready — a count of your own rooms`,
+      },
+      // T-90 RULING B · the explicit entry to the full radial universe view.
+      openUniverse: 'Open Radar universe',
+      universeTitle: 'Your Radar universe',
+      universeHint: 'Every room around your star — tap one to step inside.',
+      closeUniverse: 'Close the universe view',
       // §8.2 RADAR FACE RULING #2 (21 Jul) — the calm shelf: PLAIN display
       // names (internal planet keys stay frozen, §0.2) + ONE honest sentence
       // each, derived from live state + the artist's OWN found/confirmed/
