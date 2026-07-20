@@ -65,3 +65,11 @@ e.g. narrative copy + the sample card carrying the chips. Every such block on th
 a defect to rewrite in the content pass; final wording = owner-approved copy, never invented.
 Per-page CONTENT אפיון is mandatory: each page's spec names its sections, each section's ONE
 message, its register (warm/human), and what trust content it carries in which FORM.
+
+**ABSOLUTE PROHIBITION (owner verbatim, 21 Jul — supreme over every artifact):** "אני אוסרת תוכן טכני"
+— the owner FORBIDS technical content on any marketing or user-facing surface. This binds not only
+live pages but EVERY artifact shown to anyone: mockups, prototypes, previews, screenshots, exports.
+A design artifact that carries technical-register text (the banned banner class, spec vocabulary,
+mono-caps rule strips) is DEFECTIVE ON ARRIVAL and may not be presented. Exhibit: the m13-c mockup
+series carried the retired footer banner because it was built from pre-rewrite live copy — mockups
+must always be built from the CURRENT approved copy, never from whatever the live site still shows.
