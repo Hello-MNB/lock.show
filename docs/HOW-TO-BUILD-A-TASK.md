@@ -89,3 +89,15 @@ A non-dev item is either **advanced by the agent** or **reduced to a one-line ow
 4. **WHY it matters** — what breaks or stays blocked if skipped.
 
 **An owner task without all four parts is not ready to hand her.** For decisions (not actions), the same discipline collapses to: the single concrete choice + the recommendation + the reason — "pick A or B; I recommend A because X" — never an open-ended "pending". Keys/secrets: steps run in the provider's UI (Vercel/Resend/etc.), and a secret value never appears in chat, in a commit, or in a client bundle.
+
+## PART 8 — THE FIXED SHAPE OF EVERY TASK (standing rule, owner 20 Jul — five parts, always present)
+
+_Why: a task without a success definition and a completeness checklist is where drift and gaps enter — "done" gets declared on partial work. Every task — owner→agent, or agent-decomposed — carries all five, explicitly:_
+
+1. **SUCCESS FORMULA** — what makes THIS task genuinely succeed, not merely compile. One to three lines naming the real outcome. (Exemplar, site hero: "succeeds when the right visitor knows in 5 seconds which door is theirs and wants to click it — not when the section merely renders.") **The formula is the bar; "it builds" is not the bar.**
+2. **COMPLETENESS CHECKLIST** — the parameters that make the task WHOLE, tailored to the task, drawn from the standing dimensions: navigation · interactivity · content/lexicon (EN+HE) · fit (360 & 1360) · interaction states · a11y · firewall · signals · design-system tokens · entry/auth if relevant. List only the ones that apply, each as a checkable line.
+3. **PARAMETER AUDIT (BEFORE building)** — audit the task's parameters against the core docs at HEAD: taxonomy, terminology, entities, messaging, design-system tokens, and every checklist item — each marked **present / thin / missing**. MISSING or THIN → STOP and backfill the spec in place (mark `ratify: R00`) — never fill a spec gap with invention (Part 0). The audit output is part of the report.
+4. **BUILD + SELF-VERIFY** — build to the formula and checklist; run L0–L5 with reported fit numbers + the Part-4 close-out foundation audit (forward/backward/contradiction/completeness). MOBILE/DESKTOP stay awaiting-owner-witness (Part 3).
+5. **REPORT AGAINST THE PARAMETERS** — the close-out report walks EACH parameter: the success formula (met? evidence), each checklist line (pass/fail), the parameter audit (present/backfilled per item), and where every change was DOCUMENTED in the core docs (file+line+SHA — prove-don't-claim, Part 4.5). **A report that says "done" without walking the parameters is not accepted.**
+
+**THE DOCUMENTATION RULE (critical):** everything a task defines or backfills is documented **in the core docs, IN PLACE, never as a new or duplicate document** (docs/INDEX.md is the owning-doc map: one domain → one owning doc). The only new files ever created are named standing checklists (e.g. SCREEN-BUILD-CHECKLIST) — and once they exist they are updated in place, never re-created. About to create a doc that resembles an existing one? **STOP — update the existing one.**
