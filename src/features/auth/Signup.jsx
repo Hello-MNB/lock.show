@@ -7,6 +7,7 @@ import { OAUTH_ENABLED } from '../../lib/constants.js'
 import { logEvent, EVENTS, getFirstTouch } from '../../lib/analytics.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
 import AuthScene from './AuthScene.jsx'
+import { classifyAuthError, EMAIL_SHAPE } from './authError.js'
 
 export default function Signup() {
   const { T } = useLang()
@@ -21,6 +22,23 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmPending, setConfirmPending] = useState(false)
+  // Per-field i18n validation (§10.4 empty/typing/invalid states; mirrors the
+  // same fix Login.jsx already carries — B1 finding 4): native English-only
+  // browser bubbles never show (form is noValidate below); empty/invalid
+  // feedback comes from these i18n keys in the active language instead.
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  function validate() {
+    const fe = {}
+    if (!firstName.trim()) fe.firstName = T.signup.firstNameRequired
+    if (!lastName.trim()) fe.lastName = T.signup.lastNameRequired
+    if (!email.trim()) fe.email = T.signup.emailRequired
+    else if (!EMAIL_SHAPE.test(email.trim())) fe.email = T.signup.emailInvalid
+    if (!password) fe.password = T.signup.passwordRequired
+    else if (password.length < 6) fe.password = T.signup.passwordTooShort
+    setFieldErrors(fe)
+    return Object.keys(fe).length === 0
+  }
 
   // Persona-page handoff (cross-funnel seam): the website's /artists page
   // links here as `/signup?role=artist`. Stash the hint in sessionStorage —
@@ -34,6 +52,7 @@ export default function Signup() {
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
+    if (!validate()) return
     setLoading(true)
     try {
       const data = await signUp({ email, password, fullName })
@@ -72,7 +91,16 @@ export default function Signup() {
       if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone', ...getFirstTouch() }); nav('/select') }
       else setConfirmPending(true)
     } catch (err) {
-      setError(err?.message?.includes('registered') ? T.signup.error : (err.message || T.common.error))
+      // U8 / lexicon law (§17.B.1 STATES, matching Login's classifyAuthError
+      // treatment): the raw Supabase/fetch error text must never reach the
+      // screen. A dropped connection through the corporate/VPN/proxy layer
+      // surfaced literally as "Failed to fetch" here before this fix (found
+      // live against the real project) — classify it like Login does instead.
+      if (err?.message?.includes('registered')) setError(T.signup.error)
+      else {
+        const kind = classifyAuthError(err)
+        setError(kind === 'errorNetwork' ? T.signup.errorNetwork : kind === 'errorRateLimited' ? T.signup.errorRateLimited : T.common.error)
+      }
     } finally {
       setLoading(false)
     }
@@ -106,27 +134,36 @@ export default function Signup() {
           <OrDivider />
         </>
       )}
-      <form onSubmit={onSubmit}>
+      {/* noValidate: validation feedback is ours (i18n, both languages) — the
+          browser's native English-only bubbles never show (mirrors Login.jsx,
+          B1 finding 4). */}
+      <form onSubmit={onSubmit} noValidate>
         <ErrorNote>{error}</ErrorNote>
         <div className="grid grid-cols-2 gap-3">
-          <Field label={T.signup.firstName}>
+          <Field label={T.signup.firstName} error={fieldErrors.firstName}>
             <input className="field" placeholder={T.signup.firstNamePlaceholder} autoComplete="given-name"
-              value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+              aria-invalid={!!fieldErrors.firstName}
+              value={firstName}
+              onChange={(e) => { setFirstName(e.target.value); if (fieldErrors.firstName) setFieldErrors((f) => ({ ...f, firstName: undefined })) }} />
           </Field>
-          <Field label={T.signup.lastName}>
+          <Field label={T.signup.lastName} error={fieldErrors.lastName}>
             <input className="field" placeholder={T.signup.lastNamePlaceholder} autoComplete="family-name"
-              value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+              aria-invalid={!!fieldErrors.lastName}
+              value={lastName}
+              onChange={(e) => { setLastName(e.target.value); if (fieldErrors.lastName) setFieldErrors((f) => ({ ...f, lastName: undefined })) }} />
           </Field>
         </div>
-        <Field label={T.signup.email}>
+        <Field label={T.signup.email} error={fieldErrors.email}>
           <input className="field" type="email" dir="ltr" autoComplete="email"
-            placeholder="you@stage.com"
-            value={email} onChange={(e) => setEmail(e.target.value)} required />
+            placeholder="you@stage.com" aria-invalid={!!fieldErrors.email}
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: undefined })) }} />
         </Field>
-        <Field label={T.signup.password} hint={T.common.minChars}>
+        <Field label={T.signup.password} hint={T.common.minChars} error={fieldErrors.password}>
           <input className="field" type="password" autoComplete="new-password" minLength={6}
-            placeholder="••••••••"
-            value={password} onChange={(e) => setPassword(e.target.value)} required />
+            placeholder="••••••••" aria-invalid={!!fieldErrors.password}
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: undefined })) }} />
         </Field>
         <button className="btn-primary w-full" disabled={loading}>
           {loading ? <><Spinner /> {T.common.loading}</> : T.signup.cta}
