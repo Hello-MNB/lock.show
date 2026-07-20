@@ -256,7 +256,7 @@ export const demoRequests = [
   { id: 'dr2', artist_id: 'demo-artist-2', get requester_name() { return L('Yoav Ben-David', 'יואב בן-דוד') }, get requester_org() { return L('InDNegev Festival', 'פסטיבל אינדנגב') }, event_date: '2026-09-05', get event_type() { return L('Festival', 'פסטיבל') }, get location() { return L('Mitzpe Ramon', 'מצפה רמון') }, capacity_band: '800+', budget_band: '₪20,000+', get message() { return L('Sunset set', 'סט שקיעה') }, status: 'new', created_date: '2026-06-22T00:00:00Z', artists: { get stage_name() { return L('Idan Raz', 'עידן רז') } } },
 ]
 
-export const demoEntitlement = { id: 'dent1', status: 'pending', kind: 'founding_passport', amount_note: 'GP-DEMO · ₪199 · Bit', created_at: '2026-06-25T00:00:00Z', subject_id: 'demo-user', subject_email: 'demo@lock.test', artists: { stage_name: 'PERLMAN' } }
+export const demoEntitlement = { id: 'dent1', status: 'pending', kind: 'founding_passport', amount_note: 'GP-DEMO · ₪199 · Bit', created_at: '2026-06-25T00:00:00Z', subject_id: 'demo-user', subject_email: 'demo@lock.test', artists: { stage_name: 'Maya Vale' } }
 
 // The shape the public Passport (/api/passport) returns — getters so the language
 // is resolved at access time (not frozen at module load).
@@ -266,15 +266,15 @@ export const demoPassportPayload = {
   get claims() { return demoClaims.filter((c) => c.visibility === 'passport-ok' && ['verified', 'supporting'].includes(c.verification_status)) },
 }
 
-// Producer confirm (P1) fixture — the counterparty (Gagarin TLV) sees PERLMAN's
+// Producer confirm (P1) fixture — the counterparty (Gagarin TLV) sees Maya Vale's
 // producer-confirmable claim, still unanswered (response: null).
-export const demoConfirm = { get claimText() { return L('Produced 10+ recurring INSOMNIA TLV techno nights at Gagarin since Aug 2024', 'הפיק 10+ ערבי טכנו קבועים של INSOMNIA TLV ב-Gagarin מאז אוגוסט 2024') }, artistName: 'PERLMAN', response: null, revoked: false, responded: false }
+export const demoConfirm = { get claimText() { return L('Produced 10+ recurring INSOMNIA TLV techno nights at Gagarin since Aug 2024', 'הפיק 10+ ערבי טכנו קבועים של INSOMNIA TLV ב-Gagarin מאז אוגוסט 2024') }, artistName: 'Maya Vale', response: null, revoked: false, responded: false }
 
-// O4 invite-info fixture (used by orgs.getInviteInfo in demo) — Shai inviting a
-// team member into his INSOMNIA TLV production workspace.
-export const demoInviteInfo = { org_name: 'INSOMNIA TLV', get inviter_name() { return L('Shai Perlman', 'שי פרלמן') }, org_role: 'member', invited_email: null }
+// O4 invite-info fixture (used by orgs.getInviteInfo in demo) — Maya inviting a
+// team member into her INSOMNIA TLV production workspace.
+export const demoInviteInfo = { org_name: 'INSOMNIA TLV', get inviter_name() { return L('Maya Vale', 'Maya Vale') }, org_role: 'member', invited_email: null }
 
-// P1-1 in-app notifications (migration 002 table) — three realistic PERLMAN
+// P1-1 in-app notifications (migration 002 table) — three realistic Maya Vale
 // events, one per writer: a new booking request, a producer confirmation, and
 // a passport publish. Bodies are pre-authored bilingual TEXT (matching the real
 // schema: `body text not null`, no structured params) — never a score/count.
@@ -285,10 +285,10 @@ export const demoNotifications = [
 ]
 
 // ── artist_access consent handshake (migration 027 target) — DEMO fixture.
-// Seeded with ONE realistic three-hat case (ENTITY-SPEC-ORG §6.1): Shai's own
+// Seeded with ONE realistic three-hat case (ENTITY-SPEC-ORG §6.1): Maya's own
 // representation workspace (Golan Artist Management / demo-org-3, a genuine
 // management-type org — NOT INSOMNIA, which is production-type) has requested
-// access to Shai's own artist (PERLMAN / demo-artist) — "same grant, same
+// access to Maya's own artist (Maya Vale / demo-artist) — "same grant, same
 // scopes, same revocability" as any other roster member, no special-case
 // "it's me" path. A second, already-active grant with a fuller scope set
 // (upload+share) and a territory/expiry shows the roster-row chip display
