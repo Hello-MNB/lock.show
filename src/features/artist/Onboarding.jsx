@@ -267,7 +267,7 @@ export default function Onboarding() {
       {step === 2 && (
         <form onSubmit={startRadar}>
           <div className="card">
-            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink outline-none">{T.onboarding.entryLinkTitle}</h2>
+            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.entryLinkTitle}</h2>
             <p className="mb-4 text-xs text-muted">{T.onboarding.entryLinkHint}</p>
             <Field label={`${T.onboarding.linkPlaceholder} (${T.onboarding.entryOptional})`}
               error={linkInvalid ? T.onboarding.linkInvalid : ''}>
@@ -305,7 +305,7 @@ export default function Onboarding() {
       {step === 3 && (
         <div>
           <div className="card">
-            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink outline-none">{T.onboarding.revealTitle}</h2>
+            <h2 ref={stepHeadingRef} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.revealTitle}</h2>
             <p className="mb-4 text-xs text-muted">{T.onboarding.revealSub}</p>
             <div className="flex items-center gap-3 rounded-xl border border-gold/30 bg-surface2 px-3 py-2.5">
               {revealPlatform && <PlatformLogo name={revealPlatform} size={18} className="shrink-0 text-gold" />}
