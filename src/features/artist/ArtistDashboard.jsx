@@ -417,32 +417,10 @@ export default function ArtistDashboard() {
             when tight, the page itself never does. ── */}
       <div className="mt-3 min-h-0 flex-1 overflow-y-auto md:max-h-[34vh] md:flex-none">
 
-        {/* ── ONE dominant next step — the coach's single clearest move. Mobile
-              only (docked first so it stays in first view): on the full-stage
-              (md+) this same card floats over the universe itself
-              (RadarUniverse's internal next-action overlay), so this card
-              renders ONLY below md — one .btn-primary per view. ── */}
-        {!fullStage && (
-        <div className="mb-3 rounded-2xl border border-line bg-surface p-4 shadow-card md:hidden">
-          <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted">{T.radar.nextActionEyebrow}</p>
-          <p className="font-display text-base font-bold tracking-[-0.01em] text-ink">{nextAction.title}</p>
-          {/* T-9x (owner verdict 21 Jul): why + time hint read as ONE coach's
-              sentence — the time hint used to sit on its own all-caps mono
-              row, a metadata tag bolted under the reason instead of part of
-              it; folded in as a quiet trailing clause of the same paragraph. */}
-          {nextAction.why && (
-            <p className="mt-1 text-xs leading-relaxed text-muted">
-              {nextAction.why}
-              {nextAction.time != null && <span className="text-faint"> {T.radar.timeHint(nextAction.time)}</span>}
-            </p>
-          )}
-          {(nextAction.to || nextAction.planet) && (
-            <button className="btn-primary mt-2.5 w-full sm:w-auto" onClick={() => runNextAction(nextAction)}>
-              {T.common.continue}
-            </button>
-          )}
-        </div>
-        )}
+        {/* §8.2 RADAR FACE RULING (21 Jul) — the coach card now lives INSIDE
+            RadarUniverse itself, at every width (it replaces both this card's
+            old mobile-only rendering here AND the old md+ floating dock) —
+            one coach, one CTA, everywhere. Nothing duplicated here anymore. */}
 
         <div className="md:flex md:items-start md:justify-between md:gap-6">
           <div className="min-w-0 md:flex-1">
