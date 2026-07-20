@@ -23,10 +23,18 @@ function LocaleToggle() {
   const { locale, setLocale } = useLocale()
   const next: Locale = locale === 'en' ? 'he' : 'en'
   const label = locale === 'en' ? 'עב' : 'EN'
+  // Honest scope (T-84, 20 Jul): this toggle switches menu, footer, and
+  // cookie-banner copy only — page content stays in English. aria-label +
+  // title say so explicitly rather than implying a full-site translation.
+  const scopedLabel =
+    locale === 'en'
+      ? 'Show menu and footer in Hebrew (page content stays in English)'
+      : 'Show menu and footer in English'
   return (
     <button
       onClick={() => setLocale(next)}
-      aria-label={locale === 'en' ? 'Switch to Hebrew' : 'Switch to English'}
+      aria-label={scopedLabel}
+      title={scopedLabel}
       style={{
         fontFamily: 'var(--font-space-mono)',
         fontSize: '0.75rem',

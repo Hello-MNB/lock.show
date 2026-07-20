@@ -775,6 +775,16 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 ---
 
+**THE CANONICAL DISPLAY-NAME LAW (witness-fix W-1, owner 20 Jul — ratify: R00).** ONE name per
+artist, app-wide: **`artists.stage_name` is the single display-name source for every product
+surface** (Radar center, Passport hero, requests, rosters, admin lists, receipts). Account/person
+names (auth email, `person.display_name`, "Maria Test"-class signup values) NEVER render on product
+surfaces — they are login identity, not stage identity. Initials chips derive from `stage_name`
+only. The T-63(a) act mirror keeps `act` identity synced FROM the artist record; readers still read
+`artists.stage_name` (one read path, no fallback chains to account fields). A surface showing any
+other name field is a defect. Demo fixtures carry their own fixture stage names (e.g. "Maya Vale") —
+demo-only, never mixed into real-account surfaces.
+
 ### 8.5 Artist Access — "Who can act for you" (`/artist/access`) (U31)
 
 **PURPOSE.** Surface the ArtistAccess grant in the artist UI: the artist grants a trusted manager/representative scoped, revocable help with bookings — **never** handing over the account, **never** ownership.
