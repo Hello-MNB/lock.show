@@ -24,11 +24,11 @@ export default function ArtistReadiness() {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
-    (async () => {
-     try {
+  async function load() {
+    setLoadError(false)
+    try {
       const a = await getMyArtist(user.id)
-      if (!a) { setLoading(false); return }
+      if (!a) { setData(null); setLoading(false); return }
       const items = await listProfileItems(a.id)
       const claims = await listClaims(a.id)
       const exp = items.filter((i) => !['link'].includes(i.item_type))
@@ -67,18 +67,21 @@ export default function ArtistReadiness() {
       // single most-impactful next action = weakest axis that still has a real move
       const weakest = axes.filter((x) => x.actionable).sort((x, y) => x.weight - y.weight)[0]
       setData({ a, axes, nextAction: weakest ? weakest.next : R.nextAllCovered })
-      setLoading(false)
-     } catch {
+    } catch {
       setLoadError(true)
+    } finally {
       setLoading(false)
-     }
-    })()
-  }, [user.id, T])
+    }
+  }
+  useEffect(() => { load() }, [user.id, T])
 
   if (loading) return <Loading />
   if (loadError) return (
+    // T-A2 (20 Jul): retry now re-fetches in place — was a full
+    // `window.location.reload()`, a heavier reset than every other screen's
+    // ErrorState (ArtistRequests/AgencyRequestsInbox both just re-call load()).
     <PageShell>
-      <ErrorState title={T.common.error} onRetry={() => { setLoading(true); setLoadError(false); window.location.reload() }} /></PageShell>
+      <ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   )
   if (!data) return (
     <PageShell>
