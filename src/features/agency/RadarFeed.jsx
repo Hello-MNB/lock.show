@@ -125,7 +125,7 @@ export default function RadarFeed() {
                         {sig.evidenceBasis && <span className="text-xs text-muted truncate">{T.radar.basisLabel}: {sig.evidenceBasis}</span>}
                       </div>
                       <button onClick={() => nav(actionRoute(sig))}
-                        className="chip bg-accent text-[#12160A] text-xs font-bold shrink-0 min-h-[36px] px-3">
+                        className="chip bg-accent text-[#12160A] text-xs font-bold shrink-0 min-h-[44px] px-3">
                         {T.radar.action[sig.actionType]}
                       </button>
                     </div>

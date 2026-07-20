@@ -3,6 +3,7 @@ import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
+import { humanizeDrawBand, humanizeBinary, humanizeReviewDate } from '../../lib/humanize.js'
 
 // ── passportKit — the SHARED, firewall-safe rendering + derivation layer for the
 // public Passport. The two buyer personas (Booking view · Representation view)
@@ -15,18 +16,34 @@ export const isBand = (v = '') => /^[\d,.]+\s*[–-]\s*[\d,.]+/.test(String(v).t
 
 // ── Proof primitives ────────────────────────────────────────────────────────
 // Method label: mono uppercase, gold on transparent; producer-confirmed in lime.
+// §5.10 warmth layer: a one-line human sub-text peeks in on hover/focus (mouse
+// hover AND keyboard focus AND a tap on touch, via :focus-within) — the canon
+// mono chip never changes, this is a PEEK, not a rewrite of the chip itself.
 export function MethodLabel({ status, methodLabel, expiresAt }) {
   const { T } = useLang()
   const key = methodLabelFor({ method_label: methodLabel, verification_status: status, expires_at: expiresAt })
   const lime = key === 'producer-confirmed'
+  const hint = T.methodLabelHint?.[key]
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-[3px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] ${
-        lime ? 'border-accent/70 text-accent' : 'border-gold/50 text-gold'
-      }`}
-    >
-      <span aria-hidden="true">{lime ? '★' : '✓'}</span>
-      {T.methodLabel[key]}
+    <span className="group/method tap-target relative inline-flex">
+      <span
+        tabIndex={hint ? 0 : undefined}
+        title={hint || undefined}
+        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-[3px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] outline-none ${
+          lime ? 'border-accent/70 text-accent' : 'border-gold/50 text-gold'
+        }`}
+      >
+        <span aria-hidden="true">{lime ? '★' : '✓'}</span>
+        {T.methodLabel[key]}
+      </span>
+      {hint && (
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 w-max max-w-[220px] -translate-x-1/2 rounded-md border border-line2 bg-surface2 px-2.5 py-1.5 text-[11px] font-normal normal-case leading-snug tracking-normal text-muted opacity-0 shadow-card transition group-hover/method:opacity-100 group-focus-within/method:opacity-100"
+        >
+          {hint}
+        </span>
+      )}
     </span>
   )
 }
@@ -45,21 +62,31 @@ export function BandPill({ value }) {
 
 // Proof Unit — LOCK's visual signature: claim 19px bold → context muted →
 // footer [BandPill · MethodLabel · reviewed date]. Card, no gauge.
-export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T }) {
-  const reviewed = reviewedAt ? new Date(reviewedAt).toLocaleDateString('en-GB') : null
+// §5.10 warmth layer: when `contextLine` is given (a room-fit sentence for a
+// draw band, e.g. "Moves large-hall crowds"), it becomes the headline claim
+// and the raw band drops to a still-visible BandPill in the footer — the
+// band is never hidden, only no longer the loudest thing on the card. Dates
+// render as "Fresh proof · July 2026" (recent) or "Verified · July 2026"
+// (older), never a raw dd/mm/yyyy stamp.
+export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine }) {
+  const { lang } = useLang()
   const claimIsBand = isBand(claim)
+  const reviewed = humanizeReviewDate(reviewedAt, { lang })
+  const reviewedLabel = reviewed && (reviewed.isFresh ? T.passport.dateFresh(reviewed.monthYear) : T.passport.dateVerified(reviewed.monthYear))
   return (
     <article className="rounded-[18px] border border-line bg-surface p-5 shadow-card">
-      {claimIsBand
-        ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
-        : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
+      {contextLine
+        ? <p className="text-[19px] font-bold leading-snug text-ink">{contextLine}</p>
+        : claimIsBand
+          ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
+          : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
       {context && context !== claim && <p className="mt-1 text-sm text-muted">{context}</p>}
       <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-        {band && !claimIsBand && <BandPill value={band} />}
+        {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
         <MethodLabel status={status} methodLabel={methodLabel} />
-        {reviewed && (
-          <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.08em] text-faint">
-            {T.passport.reviewedShort(reviewed)}
+        {reviewedLabel && (
+          <span className="ml-auto text-[10px] text-faint">
+            {reviewedLabel}
           </span>
         )}
       </div>
@@ -102,7 +129,10 @@ export function deriveSections(artist, items, claims, T) {
     (order[a.method_label] ?? vOrder[a.verification_status] ?? 3) - (order[b.method_label] ?? vOrder[b.verification_status] ?? 3))
   const drawBands = [
     artist.lineup_frequency_band && { value: artist.lineup_frequency_band, ctx: T.passport.drawFrequency },
-    artist.sells_tickets != null && { value: artist.sells_tickets ? T.common.yes : T.common.no, ctx: T.passport.drawSellsTickets },
+    // Binary → positive capability only (§5.10 / two-view law): a buyer sees
+    // "Sells tickets" when true; sells_tickets === false is a gap and must
+    // stay ABSENT from the buyer-facing DOM, never rendered as "No".
+    artist.sells_tickets === true && { value: T.common.yes, ctx: T.passport.drawSellsTickets },
     artist.price_band && { value: artist.price_band, ctx: T.passport.drawPrice },
   ].filter(Boolean)
 
@@ -121,8 +151,15 @@ export function deriveSections(artist, items, claims, T) {
 // public face never renders "missing" (RENDER LAW). Personas order these. ─────
 
 // Proof of draw — the hero evidence block (labels configurable per persona).
-export function DrawSection({ data, T, label }) {
+// §5.10 warmth layer: `contextLines` (defaults to T.passport.drawContext, the
+// industry room-fit register) lets a persona swap in an alternate register —
+// e.g. the Private & corporate face passes T.passport.drawContextPrivate
+// ("Comfortable for 100–300 guests") — WITHOUT touching a single fact: the
+// underlying band is looked up unchanged, only the sentence over it differs.
+export function DrawSection({ data, T, label, contextLines }) {
+  const { BANDS } = useLang()
   if (!data.hasDraw) return null
+  const lines = contextLines || T.passport.drawContext
   return (
     <PassportSection label={label || T.passport.proofTitle} caption={T.passport.drawCaption}>
       <div className="grid gap-3">
@@ -134,21 +171,40 @@ export function DrawSection({ data, T, label }) {
         {data.drawClaims
           .map((c) => ({ c, safe: c.public_wording || c.public_band || (isBand(c.value) ? c.value : null) }))
           .filter(({ safe }) => safe)
-          .map(({ c, safe }) => (
-          <ProofUnit
-            key={c.id}
-            claim={safe}
-            context={prettyType(c.claim_type)}
-            band={bandOf(c)}
-            status={c.verification_status}
-            methodLabel={c.method_label}
-            reviewedAt={c.verified_at}
-            T={T}
-          />
-        ))}
-        {data.drawBands.map((b, i) => (
-          <ProofUnit key={`band-${i}`} claim={b.value} context={b.ctx} status="self-reported" T={T} />
-        ))}
+          .map(({ c, safe }) => {
+            const band = bandOf(c)
+            const contextLine = humanizeDrawBand(band, BANDS.capacity, lines)
+            return (
+              <ProofUnit
+                key={c.id}
+                claim={safe}
+                context={prettyType(c.claim_type)}
+                band={band}
+                contextLine={contextLine}
+                status={c.verification_status}
+                methodLabel={c.method_label}
+                reviewedAt={c.verified_at}
+                T={T}
+              />
+            )
+          })}
+        {data.drawBands.map((b, i) => {
+          // Only surface the raw band as a separate pill when a human line has
+          // actually replaced it as the headline — otherwise it stays the
+          // headline itself, unchanged from the non-warm rendering.
+          const contextLine = humanizeDrawBand(b.value, BANDS.capacity, lines)
+          return (
+            <ProofUnit
+              key={`band-${i}`}
+              claim={b.value}
+              context={b.ctx}
+              band={contextLine ? b.value : undefined}
+              contextLine={contextLine}
+              status="self-reported"
+              T={T}
+            />
+          )
+        })}
       </div>
     </PassportSection>
   )
@@ -180,14 +236,27 @@ export function PerformanceSection({ data, T, label }) {
   )
 }
 
-export function ReadinessSection({ data, artist, T }) {
+// §5.10 warmth layer: `variant="private"` swaps the three chips to a
+// NON-industry register ("60–90 min performance" / "Available in Center,
+// North" / "Invoicing handled") — same three facts, different words for a
+// buyer with no scene background. When all three land true for that variant,
+// the whole section relabels to the spec's own example, "Turnkey booking"
+// (spec §5.10: "a cluster of trues can read as Turnkey · booking-ready").
+export function ReadinessSection({ data, artist, T, label, variant = 'industry' }) {
   if (!data.hasReadiness) return null
+  const isPrivate = variant === 'private'
+  const invoiceLabel = humanizeBinary(artist.invoice_ready, isPrivate ? T.passport.privateInvoiceLabel : T.passport.invoiceLabel)
+  const turnkey = isPrivate && artist.set_length && artist.regions && artist.invoice_ready
   return (
-    <PassportSection label={T.passport.readiness}>
+    <PassportSection label={turnkey ? T.passport.readinessTurnkey : (label || T.passport.readiness)}>
       <div className="flex flex-wrap gap-2">
-        {artist.set_length && <ReadyChip>{T.passport.setLabel}: {artist.set_length}</ReadyChip>}
-        {artist.regions && <ReadyChip>{T.passport.regionsLabel}: {artist.regions}</ReadyChip>}
-        {artist.invoice_ready && <ReadyChip>{T.passport.invoiceLabel}</ReadyChip>}
+        {artist.set_length && (
+          <ReadyChip>{isPrivate ? T.passport.privateSetLabel(artist.set_length) : `${T.passport.setLabel}: ${artist.set_length}`}</ReadyChip>
+        )}
+        {artist.regions && (
+          <ReadyChip>{isPrivate ? T.passport.privateRegionsLabel(artist.regions) : `${T.passport.regionsLabel}: ${artist.regions}`}</ReadyChip>
+        )}
+        {invoiceLabel && <ReadyChip>{invoiceLabel}</ReadyChip>}
       </div>
     </PassportSection>
   )
@@ -215,7 +284,7 @@ export function ContextSection({ data, artist, T, title }) {
           {data.links.map((l) => (
             <a
               key={l.id} href={l.public_url} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted transition hover:border-line2 hover:text-ink"
+              className="tap-target inline-flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted transition hover:border-line2 hover:text-ink"
             >
               <PlatformLogo name={detectPlatform(l.public_url)} size={16} />
               {hostOf(l.public_url)} ↗
@@ -277,21 +346,30 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
 }
 
 // ── Persona toggle — self-selected by whoever opens the link (the passport is
-// public, no login). Booking a show ⇄ Representing. ──────────────────────────
+// public, no login). §8.4 · four faces, ONE switcher chip pattern, ONE evidence
+// pool: Booking a show ⇄ Representing ⇄ Production ⇄ Private & corporate — a
+// face only re-orders and re-languages the SAME facts, never a different one.
+// overflow-x-auto (not wrap) keeps the single-pill segmented-control look on
+// narrow phones instead of breaking it onto two rows.
 export function PersonaToggle({ persona, onChange, T }) {
   const opts = [
     ['booking', T.passport.personaBooking],
     ['rep', T.passport.personaRep],
+    ['production', T.passport.personaProduction],
+    ['private', T.passport.personaPrivate],
   ]
   return (
-    <div role="tablist" aria-label="Passport view" className="inline-flex rounded-full border border-line bg-surface p-1">
+    <div
+      role="tablist" aria-label="Passport view"
+      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border border-line bg-surface p-1"
+    >
       {opts.map(([key, label]) => {
         const on = persona === key
         return (
           <button
             key={key} role="tab" aria-selected={on}
             onClick={() => onChange(key)}
-            className={`min-h-[40px] rounded-full px-4 text-[13px] font-semibold transition ${
+            className={`tap-target min-h-[40px] shrink-0 rounded-full px-4 text-[13px] font-semibold transition ${
               on ? 'bg-accent text-ink shadow-[0_6px_18px_-8px_rgba(190,226,78,.7)]' : 'text-muted hover:text-ink'
             }`}
           >
@@ -309,7 +387,7 @@ export function PassportFooter() {
   // Honesty is shown by the shape of the evidence (bands, method labels, remove-empty), not printed.
   return (
     <footer className="mt-12 border-t border-line pt-5 pb-2">
-      <Link to="/" className="inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
+      <Link to="/" className="tap-target inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
         LOCK · lock.show
       </Link>
     </footer>

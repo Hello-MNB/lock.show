@@ -57,8 +57,14 @@ export default function ProducerConfirm() {
         // Distinguish WHY the link is dead — never show a raw error. Four warm,
         // safe outcomes: expired (time-based), used (a one-time link already
         // spent), revoked (the artist cancelled it), or invalid (anything else,
-        // including a mistyped/unknown token). Heuristic on status + body text
-        // since the exact server error shape may vary.
+        // including a mistyped/unknown token). Verified against server/index.js
+        // (GET/POST /api/confirm/:token): the server sends 404=invalid and
+        // 410 {error:'link_expired'}=expired ONLY. Used/revoked links come back
+        // 200 with {responded, revoked} payload flags and render below — a used
+        // link shows its recorded receipt; a revoked link re-opens the ceremony
+        // (the server's deliberate re-confirmation path). The 409/'used' and
+        // 403/'revoked' branches here are unreachable defense — keep them, but
+        // do not expect them to fire.
         let kind = 'invalid'
         try {
           const body = await res.text()
