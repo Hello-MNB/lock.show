@@ -424,9 +424,9 @@ export function ContextSection({ data, artist, T, title }) {
 // safe extraction the ledger itself uses); (3) who vouches — the strongest
 // producer-confirmed claim, ONLY when one is actually on file (RENDER LAW —
 // never an empty promise). Order is fixed 1→2→3, never a ranking.
-export function ProofStory({ artist, data, T }) {
+export function ProofStory({ artist, data, T, contextLines }) {
   const { BANDS } = useLang()
-  const lead = drawProofUnits(data, T, BANDS)[0]
+  const lead = drawProofUnits(data, T, BANDS, contextLines)[0]
   const vouchClaim = data.drawClaims[0]?.method_label === METHOD_LABELS.PRODUCER_CONFIRMED ? data.drawClaims[0] : null
   const vouchSafe = vouchClaim && (vouchClaim.public_wording || vouchClaim.public_band || (isBand(vouchClaim.value) ? vouchClaim.value : null))
   const positioning = artist.one_line || [artist.genre, artist.city].filter(Boolean).join(' · ')

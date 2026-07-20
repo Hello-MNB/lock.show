@@ -19,7 +19,7 @@ export default function PassportPrivateView({ artist, data, T, persona, onPerson
       </PassportHero>
 
       <main className="mx-auto max-w-[720px] px-5 sm:px-8">
-        <ProofStory artist={artist} data={data} T={T} />
+        <ProofStory artist={artist} data={data} T={T} contextLines={T.passport.drawContextPrivate} />
         <ReadinessSection data={data} artist={artist} T={T} label={T.passport.privateReadiness} variant="private" />
         <DrawSection data={data} T={T} label={T.passport.privateProofTitle} contextLines={T.passport.drawContextPrivate} />
         <PerformanceSection data={data} T={T} label={T.passport.privatePerformance} />

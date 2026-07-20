@@ -101,3 +101,18 @@ _Why: a task without a success definition and a completeness checklist is where 
 5. **REPORT AGAINST THE PARAMETERS** — the close-out report walks EACH parameter: the success formula (met? evidence), each checklist line (pass/fail), the parameter audit (present/backfilled per item), and where every change was DOCUMENTED in the core docs (file+line+SHA — prove-don't-claim, Part 4.5). **A report that says "done" without walking the parameters is not accepted.**
 
 **THE DOCUMENTATION RULE (critical):** everything a task defines or backfills is documented **in the core docs, IN PLACE, never as a new or duplicate document** (docs/INDEX.md is the owning-doc map: one domain → one owning doc). The only new files ever created are named standing checklists (e.g. SCREEN-BUILD-CHECKLIST) — and once they exist they are updated in place, never re-created. About to create a doc that resembles an existing one? **STOP — update the existing one.**
+
+## PART 9 — WAVE CLOSE = DONE-REPORT + FORWARD-LAYOUT (standing rule, owner 20 Jul)
+
+Every wave-close report has TWO halves; nothing new starts until R00 releases from Half 2.
+
+**HALF 1 — WHAT WAS DONE (against the parameters, per Part 8):** each completed task walks its success formula (met? evidence) · checklist lines (pass/fail) · fit numbers · what was documented where (file+line+SHA, prove-don't-claim) · witness status (MOBILE/DESKTOP stay awaiting-owner-witness).
+
+**HALF 2 — WHAT ENTERS WORK NEXT (the forward layout R00 approves from):** a table of next candidate tasks, ordered by correct build architecture (foundations + shared pieces first, dependents after, parallelizable sets grouped). Each row carries: task + T-number + parent entity/wave · build-order rank + why (what must precede it, what it unblocks) · architecture fit (file territory; parallel-to vs must-sequence-after) · **SPEC STATUS** · the task's own success formula + completeness checklist (Part-8 shape) · what R00 must do to release it (approve / ratify / rule / nothing).
+
+**THE SPEC-COMPLETENESS GATE (per task, before it can enter work):**
+- **SPEC-COMPLETE** at HEAD → ready to dispatch on R00's word.
+- **NEEDS-SPEC** → the spec-first pass runs FIRST (audit parameters, backfill in place, mark `ratify: R00`, prove file+line+SHA), R00 is shown, THEN build. **Never build a task whose parameters aren't fully specified.**
+- **OWNER-GATED** → name the exact ruling it waits on; do not build.
+
+R00 reads Half 2 and says which tasks enter work. Only released tasks are built.

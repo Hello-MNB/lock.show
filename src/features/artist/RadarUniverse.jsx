@@ -37,11 +37,12 @@ const RING = {
 // by the SAME live-state vocabulary as RING above (amber/teal/lime/faint).
 // Geometry is fixed by planet angle, identical for every artist — colour is a
 // state only, it grades nothing.
+// Token CLASSES, never literal hexes (§5.6) — the <line> strokes currentColor.
 const THREAD_STROKE = {
-  needs: '#E39A4B',       // amber
-  developing: '#46DCC2',  // teal
-  established: '#C8F04D', // lime
-  locked: '#69716B',      // faint — muted text color, not a warning color
+  needs: 'text-amber',
+  developing: 'text-teal',
+  established: 'text-accent',
+  locked: 'text-faint', // muted, not a warning color
 }
 // Bounded state chips — low-saturation tints (≤10% alpha), text does the work.
 const NODE_CHIP = {
@@ -609,11 +610,11 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
               const st = uni.planets[p.key].state
               return (
                 <line key={p.key} x1="50" y1="50" x2={x} y2={y}
-                  stroke={THREAD_STROKE[st] || THREAD_STROKE.developing}
+                  stroke="currentColor"
                   strokeWidth={1} vectorEffect="non-scaling-stroke"
                   opacity={st === 'locked' ? 0.12 : 0.32}
                   filter={st === 'established' ? 'url(#radarThreadGlow)' : undefined}
-                  className={reduceMotion ? undefined : 'transition-opacity duration-500'} />
+                  className={`${THREAD_STROKE[st] || THREAD_STROKE.developing}${reduceMotion ? '' : ' transition-opacity duration-500'}`} />
               )
             })}
           </svg>
@@ -729,7 +730,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                     // the same method-label caption already rendered below it.
                     <button type="button" aria-label={S.platformNodeAria(caption)} title={caption}
                       {...longPressHandlers(pn.key, caption)}
-                      className="relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
+                      className="tap-target relative grid h-7 w-7 place-items-center rounded-full border border-gold/35 bg-surface2 text-ink/75 shadow-glow-gold">
                       <PlatformLogo name={pn.platform} size={16} />
                       <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold ring-2 ring-bg2" />
                     </button>

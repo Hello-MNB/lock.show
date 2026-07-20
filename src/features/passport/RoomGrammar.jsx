@@ -65,11 +65,11 @@ export function RoomGrammar({ band, contextLine, badge, T }) {
                 }`}
               >
                 {lit && (
-                  <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                  <svg className="absolute inset-0 h-full w-full text-accent" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                     <defs>
                       <linearGradient id="room-grammar-light" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#C8F04D" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="#C8F04D" stopOpacity="0" />
+                        <stop offset="0%" stopColor="currentColor" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
                       </linearGradient>
                     </defs>
                     <polygon points="50,0 14,100 86,100" fill="url(#room-grammar-light)" />

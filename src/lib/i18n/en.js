@@ -413,6 +413,24 @@ export const T = {
     // Index-aligned to BANDS.capacity like drawContext above — room FIT for a
     // private event, never a rank (§5.10 firewall).
     drawContextPrivate: ['Comfortable for intimate gatherings', 'Comfortable for 100–300 guests', 'Handles large private events with ease', 'Built for large-scale celebrations'],
+    // ── T-83 Passport v2 — 30-second proof story (§8.7) ──
+    storyWho: 'Who they are',
+    storyProven: "What's proven",
+    storyVouches: 'Who vouches',
+    // ── T-83 — provenance-forward source lines (§5.10 pairing rule; the
+    //    display type derives from source_type/method — logo never = quality) ──
+    sourceBrandedPlatform: (name) => `From their ${name}`,
+    sourceProfile: 'From their public profile',
+    sourceTicketExport: 'From an uploaded ticket export',
+    sourceSettlement: 'From a settlement record',
+    sourceScreenshot: 'From an uploaded document',
+    sourceEntity: 'Producer-confirmed by an industry peer',
+    sourceDeclared: 'Artist-declared',
+    // ── T-83 — ROOM GRAMMAR names (§5.10, fixed venue-type order — never a ladder) ──
+    roomLounge: 'Lounge',
+    roomClub: 'Club',
+    roomHall: 'Hall',
+    roomFestival: 'Festival stage',
   },
   request: {
     title: (name) => `Availability check — ${name}`,
@@ -1131,7 +1149,10 @@ export const T = {
         numberInvalid: 'A whole number above zero — just the count.',
         openEvidence: 'Open evidence capture (consent applies)',
       },
-      state: { established: 'Established', developing: 'Developing', needs: 'Needs you' },
+      state: { established: 'Established', developing: 'Developing', needs: 'Needs you', locked: 'Not needed yet' },
+      // R-2 (T-82, §8.2 L648) — locked Professional Kit: a sequencing hook, never a judgement.
+      lockedChip: 'Not needed yet — it opens once your live draw is backed',
+      lockedCta: 'Confirm your live draw first',
       you: 'You',
       // Act-switch at the center-star (Design Spec §MULTI-ACT) — switching Acts
       // swaps the whole radar universe (identity + evidence), never merges them.

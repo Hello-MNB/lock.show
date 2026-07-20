@@ -59,7 +59,9 @@ const linkPlanet = (url = '') => {
   return 'identity'
 }
 
-const claimPlanet = (c) => {
+// Exported for R-5 (§8.2 L669): the NBA walks the family emphasis order over
+// pending claims' planets — the mapping must be THIS one, never a duplicate.
+export const claimPlanet = (c) => {
   const t = `${c.claim_type || ''} ${c.source_type || ''}`
   if (/community/.test(t)) return 'audience'
   if (/frequency|lineup/.test(t)) return 'live'

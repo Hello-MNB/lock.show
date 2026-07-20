@@ -6,7 +6,8 @@ import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } fro
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { isPrimaryPlanet, primaryPlanets } from '../../lib/genreWeights.js'
+import { isPrimaryPlanet, primaryPlanets, planetEmphasisOrder } from '../../lib/genreWeights.js'
+import { claimPlanet } from '../../lib/radarUniverse.js'
 import { PAYMENTS_ENABLED } from '../../lib/constants.js'
 import RadarUniverse, { useFullStage } from './RadarUniverse.jsx'
 import { appUrl } from '../../lib/appUrl.js'
@@ -34,7 +35,7 @@ function withGenreNote(action, act, artist, T) {
 // refresh instead of another share (freshness is a TIME state, never quality).
 const FRESHNESS_DAYS = 90
 
-function pickNextAction(artist, items, claims, T, openRequests = 0) {
+function pickNextAction(artist, items, claims, T, openRequests = 0, act = null) {
   const A = T.radar.nextActions
   const links = items.filter((i) => i.item_type === 'link')
   const exp = items.filter((i) => i.item_type !== 'link')
@@ -42,7 +43,16 @@ function pickNextAction(artist, items, claims, T, openRequests = 0) {
   const supported = claims.filter((c) => ['verified', 'supporting'].includes(c.verification_status))
   const evidenceRoute = `/evidence/${artist.id}`
 
-  if (pending.length > 0) return { ...A.reviewClaims, to: '/artist/claims' }
+  if (pending.length > 0) {
+    // R-5 (T-82, §8.2 L669): walk the FAMILY EMPHASIS order over the planets
+    // holding found items — the genre-primary planet in Needs-you is reviewed
+    // first; focusing its panel is §8.3's "Review your {dimension}" action.
+    // Internal prioritization only (§2.7): renders as focus, never a number.
+    const pendingPlanets = new Set(pending.map(claimPlanet))
+    const target = planetEmphasisOrder(act, artist).find((p) => pendingPlanets.has(p))
+    if (target) return { ...A.reviewClaims, planet: target }
+    return { ...A.reviewClaims, to: '/artist/claims' }
+  }
   if (supported.length === 0) return { ...A.draw, to: evidenceRoute }
   if (!artist.photo_url) return { ...A.photo, planet: 'identity' } // deferred field → radar fill, in place
   if (links.length === 0) return { ...A.links, to: evidenceRoute }
@@ -306,7 +316,7 @@ export default function ArtistDashboard() {
     )
   }
 
-  const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs), act, artist, T)
+  const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs, act), act, artist, T)
 
   // G2 — genre emphasis guidance: the first two planets buyers weigh in this
   // artist's genre family. Names only, joined for one wording-only line.

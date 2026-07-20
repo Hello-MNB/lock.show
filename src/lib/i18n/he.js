@@ -409,6 +409,23 @@ export const T = {
     privateInvoiceLabel: 'חשבונית מסודרת — בלי כאב ראש של ניירת',
     // מיושר לאינדקסים של BANDS.capacity כמו drawContext — התאמת חלל לאירוע פרטי, לעולם לא דירוג (§5.10).
     drawContextPrivate: ['נוח לאירועים אינטימיים', 'נוח ל-100–300 אורחים', 'מתמודד בקלות עם אירועים פרטיים גדולים', 'בנוי לחגיגות בקנה מידה גדול'],
+    // ── T-83 פספורט v2 — סיפור ההוכחה של 30 השניות (§8.7) ──
+    storyWho: 'מי הם',
+    storyProven: 'מה מוכח',
+    storyVouches: 'מי מעיד',
+    // ── T-83 — שורות מקור מובילות (§5.10; לוגו לעולם לא = איכות) ──
+    sourceBrandedPlatform: (name) => `מתוך ה-${name} שלהם`,
+    sourceProfile: 'מתוך הפרופיל הציבורי שלהם',
+    sourceTicketExport: 'מתוך ייצוא כרטיסים שהועלה',
+    sourceSettlement: 'מתוך דו"ח התחשבנות',
+    sourceScreenshot: 'מתוך מסמך שהועלה',
+    sourceEntity: 'אושר על ידי מפיק עמית בענף',
+    sourceDeclared: 'בהצהרת האמן',
+    // ── T-83 — שמות החללים (§5.10, סדר קבוע לפי סוג מקום — לעולם לא סולם) ──
+    roomLounge: "לאונג'",
+    roomClub: 'קלאב',
+    roomHall: 'אולם',
+    roomFestival: 'במת פסטיבל',
   },
   request: {
     title: (name) => `בדיקת זמינות — ${name}`,
@@ -1103,7 +1120,10 @@ export const T = {
         numberInvalid: 'מספר שלם מעל אפס — רק הכמות.',
         openEvidence: 'פתח לכידת ראיות (בכפוף להסכמה)',
       },
-      state: { established: 'מבוסס', developing: 'מתפתח', needs: 'דורש אותך' },
+      state: { established: 'מבוסס', developing: 'מתפתח', needs: 'דורש אותך', locked: 'לא נדרש עדיין' },
+      // R-2 (T-82, §8.2 L648) — כלי מקצועי נעול: שלב ברצף, לעולם לא שיפוט.
+      lockedChip: 'לא נדרש עדיין — זה נפתח ברגע שההוכחה החיה שלך מגובה',
+      lockedCta: 'אשר קודם את ההוכחה החיה שלך',
       you: 'אתה',
       // Act-switch at the center-star (Design Spec §MULTI-ACT) — switching Acts
       // swaps the whole radar universe (identity + evidence), never merges them.

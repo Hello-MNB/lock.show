@@ -207,6 +207,12 @@ const ASSET_ALLOWLIST = new Map([
   ['src/features/auth/Signup.jsx|svg', 1], // password-visibility icon — belongs in GpIcon sprite
   ['src/features/passport/RequestConfirmation.jsx|svg', 1], // decorative check glyph — belongs in GpIcon sprite
   ['src/features/auth/AuthScene.jsx|img-static', 1], // /assets/gigproof-live-hero.webp — not an ASSET-REGISTRY row; register or replace
+  // T-82/T-83 (20 Jul) — PRINCIPLED, not TODO-debt: DYNAMIC data-driven SVG
+  // that cannot be a static registry asset. Both registered in
+  // docs/design-system/ASSET-REGISTRY.md (component-owned graphics section);
+  // colors are token classes / currentColor only (checked by (b) above).
+  ['src/features/artist/RadarUniverse.jsx|svg', 1], // R-3 constellation threads — geometry derived per-render from planet state
+  ['src/features/passport/RoomGrammar.jsx|svg', 5], // §5.10 ROOM GRAMMAR (ratify: R00): 4 line-art room silhouettes + the band-driven light cone
 ])
 
 function checkAssetLaw(relPath, content, report) {
