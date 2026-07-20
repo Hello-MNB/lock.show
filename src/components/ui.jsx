@@ -1,4 +1,4 @@
-import { useState, useCallback, createContext, useContext } from 'react'
+import { useState, useRef, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useLang } from '../context/LangContext.jsx'
 import { STATUS, methodLabelFor, OAUTH_FACEBOOK_ENABLED } from '../lib/constants.js'
@@ -11,14 +11,40 @@ import { STATUS, methodLabelFor, OAUTH_FACEBOOK_ENABLED } from '../lib/constants
 // switching impossible on mobile. The portal makes `fixed inset-0` mean the
 // real viewport regardless of where the sheet is mounted.
 export function BottomSheet({ open, onClose, title, children }) {
+  // Pull-down-to-close (§8.2 L620 / §8.3 MOBILE "Radar Focus" — R-1, 20 Jul):
+  // drag the grab handle / header area down past the threshold → close. The
+  // sheet follows the finger (translateY) for direct-manipulation feel; a
+  // release short of the threshold springs back. Scroll inside the sheet body
+  // is untouched — the drag zone is ONLY the handle + header.
+  const [dragY, setDragY] = useState(0)
+  const dragStart = useRef(null)
+  const onDragStart = (e) => { dragStart.current = e.touches ? e.touches[0].clientY : e.clientY }
+  const onDragMove = (e) => {
+    if (dragStart.current == null) return
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - dragStart.current
+    if (y > 0) setDragY(y)
+  }
+  const onDragEnd = () => {
+    const shouldClose = dragY > 80
+    dragStart.current = null
+    setDragY(0)
+    if (shouldClose) onClose?.()
+  }
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-bg/70" onClick={onClose} />
       <div className="relative w-full sm:max-w-sm bg-surface border-t sm:border border-line2 rounded-t-2xl sm:rounded-2xl p-5 shadow-card"
-        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
+        style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))', transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragY ? 'none' : 'transform 160ms ease-out' }}>
+        {/* grab handle — the sheet's pull-down affordance (mobile only visually, harmless on sm+) */}
+        <div className="absolute inset-x-0 -top-0 flex h-6 cursor-grab touch-none items-start justify-center pt-2 sm:hidden"
+          onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd}
+          onPointerDown={onDragStart} onPointerMove={onDragMove} onPointerUp={onDragEnd} aria-hidden="true">
+          <span className="h-1 w-9 rounded-full bg-line2" />
+        </div>
         {title && (
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex items-center justify-between pt-2 sm:pt-0"
+            onTouchStart={onDragStart} onTouchMove={onDragMove} onTouchEnd={onDragEnd}>
             <h2 className="font-bold text-ink">{title}</h2>
             <button onClick={onClose} aria-label="close" className="tap-target text-muted hover:text-ink text-2xl leading-none min-h-[44px] px-2">×</button>
           </div>

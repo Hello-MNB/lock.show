@@ -412,6 +412,14 @@ The recurring UX critique: a raw band ("300–800") or a binary ("invoice_ready 
 | ~1,000+ | "Plays festival-scale stages" |
 Rules: the human line **describes room fit, never ranks the artist**; always pair with the band (kept visible) + a method label; **the tiers are NOT an ordered "better→worse" ladder** — a lounge act is not "lower" than a festival act, just a different room. *(This is why §2.1 stays as-is: the moment these become a ranked ladder or replace the band, they are a rank — forbidden.)*
 
+**The ROOM GRAMMAR — the draw unit's hero visual (owner-picked concept 3, 20 Jul — ratify: R00).** The four canonical bands may render as four **room silhouettes side-by-side** — Lounge · Club · Hall · Festival stage — with the artist's room **lit by a stage-light cone**; the band value + its method chip sit on/under the light; the §5.10 human line leads beneath. Binding grammar rules:
+1. **Side-by-side, equal footprint, fixed venue-type order** — the rooms are DIFFERENT ROOMS, never a size-progression, never a stacked/growing bar, never left-to-right "growth" framing. Equal visual weight for the unlit rooms (quiet outlines — rooms, not failures; no grey-to-shame, no red).
+2. **One room lit** — the artist's stored band lights exactly its room. The light carries the truth: band value visible + method chip adjacent. The picture IS the band; it adds no information the band doesn't hold.
+3. **Canonical bands only, honesty on fallback** — the room grammar fires ONLY when the confirmed, passport-ok draw claim carries one of the four canonical bands. A free-form band (e.g. "220–340") falls back to warm-line-over-band with NO room lit — never a guessed nearest room.
+4. **Buyer-facing draw presentation only** — never an artist-private gap display (an unlit room must never read as "what you lack"; artist-side coaching stays §8.2/§8.3 vocabulary).
+5. **A11y/aria** = the band + method label in words ("150–500 · Evidence-supported") — never "bigger/better/level".
+6. **Firewall check (the two questions):** the room is the same stored band drawn as a picture — not a number about a person; four rooms side-by-side under rule 1 — not a peer comparison, not a ladder. Any render that breaks rule 1 (progression framing) IS a rank and is forbidden.
+
 **Binary → positive capability (negatives NEVER shown buyer-side).**
 - true → an active, warm trait: `✓ Issues formal tax invoices` · `✓ Stage-ready technical rider on file`. A cluster of trues can read as **"Turnkey · booking-ready."**
 - false/missing → **absent from the buyer Passport entirely** (gaps are never shown to a buyer, §8.7). "Admin needed / Not ready" states may appear **only on the artist's private Radar**, and there only as a warm invitation ("Unlock Turnkey — buyers book faster when docs are on file"), never a red "Not Ready" verdict.
