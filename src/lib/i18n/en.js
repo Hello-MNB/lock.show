@@ -829,8 +829,9 @@ export const T = {
       photo_url: 'Photo link',
       photo_urlHint: 'A direct link to a photo of the Act.',
       format: 'Act format',
-      formatHint: 'How you perform — shapes which proof matters most on your Radar. Guidance only, never a grade.',
+      formatHint: 'How you perform — shapes which proof matters most on your Radar. Internal guidance only: never shown to buyers, never a grade.',
     },
+    internalNote: 'Internal — Radar guidance only',
     genrePickHint: 'Pick up to 3 — the first is your primary scene. These become the scene filter on your Radar.',
     genreMax: 'Three scenes max — remove one to switch.',
     formatOptions: {
@@ -1426,6 +1427,45 @@ export const T = {
     approveCta: 'Approve & grant access',
     declineConfirm: (org) => `Decline ${org}'s request?`,
     migrationNote: 'This feature needs a database update (migration 027) to fully activate.',
+  },
+  // The dedicated Artist Access screen (spec §8.5, `/artist/access`, U31) —
+  // "Who can act for you". Reads/writes the SAME artist_access rows as
+  // `representation` above (this is the full-fidelity, own-route surface;
+  // the Settings accordion is the compact one) — copy is deliberately its
+  // own set so this screen's human-sentence tone doesn't have to fit inside
+  // Settings' denser accordion phrasing.
+  artistAccess: {
+    back: 'Back',
+    title: 'Who can act for you',
+    subtitle: "People you've allowed to help with bookings. This never hands over your account — you decide what they can do, and you can end it anytime.",
+    inviteCta: 'Invite someone',
+    unknownOrg: 'Someone',
+    activePill: 'Active',
+    pendingPill: 'Pending',
+    endedPill: 'Ended',
+    since: (date) => `Active · since ${date}`,
+    wantsAccess: 'Wants to help — review to approve',
+    endedNote: 'No longer has access',
+    approve: 'Approve',
+    decline: 'Decline',
+    changeScopes: 'Change what they can do',
+    saveScopes: 'Save changes',
+    endAccess: 'End access',
+    endedToast: (org) => `${org || 'Their'} access ended`,
+    undo: 'Undo',
+    emptyTitle: 'No one has access yet.',
+    emptyBody: 'Invite a manager you trust to help handle date requests.',
+    approveTitle: 'Approve access',
+    approveScopeHint: 'Choose what this person may do. You can change or end this at any time.',
+    approveCta: 'Approve',
+    inviteTitle: 'Invite someone to help',
+    inviteBody: 'Share your Passport link with a manager you trust. Once they request access from their workspace, you can approve it here — you decide exactly what they can do.',
+    inviteCopyLink: 'Copy my Passport link',
+    inviteLinkCopied: 'Link copied',
+    inviteEmailLabel: 'Or invite by email (coming soon)',
+    inviteEmailSubmit: 'Send invite',
+    inviteSent: (email) => `Invite queued for ${email}`,
+    inviteComingSoon: "Direct email invites aren't live yet — for now, share your link above and approve their request here once it arrives.",
   },
   // Production-company workspace (organization.workspace_type='producer', 027) —
   // a DIFFERENT concept from the individual claim-confirmer producer role.

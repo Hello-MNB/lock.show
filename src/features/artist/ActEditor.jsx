@@ -155,7 +155,17 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-ink">{label}</span>
-            <span className="rounded-full bg-accent/12 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.07em] text-accent">{f.publicNote}</span>
+            {/* FIREWALL (§8.2/genreWeights.js): act.format is INTERNAL
+                prioritization only — it feeds the family→planet emphasis and
+                is never rendered on a buyer surface. Every other identity
+                field here IS passport-ok, so only this row swaps the
+                "buyers see this" chip for an honest internal-only note —
+                never implying a buyer sees this text or word. */}
+            {type === 'format' ? (
+              <span className="rounded-full bg-gold/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.07em] text-gold">{f.internalNote}</span>
+            ) : (
+              <span className="rounded-full bg-accent/12 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.07em] text-accent">{f.publicNote}</span>
+            )}
           </div>
 
           {mode !== 'editing' && (
@@ -244,7 +254,7 @@ const ACT_IDENTITY_COLS = { stage_name: 'stage_name', city: 'city', photo_url: '
 // ALWAYS the one shared selection, never two independent memories of it.
 function ActChips({ acts, activeActId, onPick, T, busy }) {
   const f = T.actEditor
-  const S = T.radar.actSwitch
+  const S = T.radar.universe.actSwitch
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [err, setErr] = useState('')

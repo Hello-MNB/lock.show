@@ -110,6 +110,13 @@ function RepresentationSection({ T, toast }) {
   return (
     <div>
       <p className="mb-3 text-xs text-muted">{T.representation.subtitle}</p>
+      {/* §8.5 DoD: "reachable from the account hub AND from the Account
+          screen" — this accordion IS the compact account-screen path; the
+          dedicated full-fidelity /artist/access screen (own route, own back
+          button, richer copy) is one tap from here rather than duplicated. */}
+      <Link to="/artist/access" className="mb-3 inline-block font-mono text-[10.5px] font-bold uppercase tracking-[0.07em] text-accent hover:underline">
+        {T.artistAccess.title} →
+      </Link>
       {loading ? (
         <p className="text-xs text-muted">{T.common.loading}</p>
       ) : requests.length === 0 ? (

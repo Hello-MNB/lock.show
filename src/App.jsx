@@ -25,6 +25,7 @@ import ArtistReadiness from './features/artist/ArtistReadiness.jsx'
 import ClaimReview from './features/artist/ClaimReview.jsx'
 import PassportSelf from './features/artist/PassportSelf.jsx'
 import ActEditor from './features/artist/ActEditor.jsx'
+import ArtistAccess from './features/artist/ArtistAccess.jsx'
 import ArtistRequests from './features/artist/ArtistRequests.jsx'
 import OfferPayment from './features/artist/OfferPayment.jsx'
 import EvidenceCapture from './features/evidence/EvidenceCapture.jsx'
@@ -192,6 +193,7 @@ export default function App() {
             (ArtistDashboard "Edit ›" link) and Settings → Your Act identity
             section (added — was promised here but missing until this fix). */}
         <Route path="/artist/act/edit" element={<RequireRole role={ROLES.ARTIST}><ActEditor /></RequireRole>} />
+        <Route path="/artist/access" element={<RequireRole role={ROLES.ARTIST}><ArtistAccess /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
         {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
