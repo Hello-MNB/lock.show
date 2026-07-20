@@ -38,11 +38,18 @@ export default function Passport() {
   // flavour to a stage manager, or the private flavour to a corporate planner).
   const rawView = sp.get('view')
   const persona = VIEW_KEYS.includes(rawView) ? rawView : 'booking'
-  const setPersona = (p) => setSp((prev) => {
-    const next = new URLSearchParams(prev)
-    if (VIEW_KEYS.includes(p)) next.set('view', p); else next.delete('view')
-    return next
-  }, { replace: true })
+  // persona_toggled (§14.1.6, R00 — pending 040) — fires only on an ACTUAL
+  // switch (destination differs from the currently active face); a re-click
+  // of the already-active tab is a no-op, never a toggle.
+  const setPersona = (p) => {
+    const to = VIEW_KEYS.includes(p) ? p : 'booking'
+    if (to !== persona) logEvent(EVENTS.PERSONA_TOGGLED, { artist_id: id, to })
+    setSp((prev) => {
+      const next = new URLSearchParams(prev)
+      if (VIEW_KEYS.includes(p)) next.set('view', p); else next.delete('view')
+      return next
+    }, { replace: true })
+  }
 
   // 'loading' | 'ready' | 'unpublished' | 'notfound' | 'error'
   const [view, setView] = useState('loading')
@@ -79,7 +86,9 @@ export default function Passport() {
           recordPassportView(id) // measurement, never blocks
           // return_visit: first-party per-browser marker (audit T-55) — a
           // repeat buyer open, no viewer identity, never shown per-person.
-          logEvent(EVENTS.PASSPORT_VIEWED, { artist_id: id, return_visit: isReturnVisit('passport') || undefined })
+          // face (§14.1.6, R00 — pending 040): which of the four §8.4 faces
+          // rendered at open — id/role/context only, never a count.
+          logEvent(EVENTS.PASSPORT_VIEWED, { artist_id: id, face: persona, return_visit: isReturnVisit('passport') || undefined })
           // G7 — this visit arrived via a shared link (?s=1): log the share
           // open once, on a REAL successfully-loaded passport only.
           if (sp.get('s') === '1' && !shareOpenLogged.current) {

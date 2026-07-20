@@ -239,7 +239,7 @@ export default function ArtistsPage() {
           {/* CTAs */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?role=artist`}
+              href={`${APP_URL}/signup?role=artist&utm_source=site&utm_campaign=artists&utm_content=hero`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -898,7 +898,7 @@ export default function ArtistsPage() {
             }}
           >
             <a
-              href={`${APP_URL}/signup?role=artist`}
+              href={`${APP_URL}/signup?role=artist&utm_source=site&utm_campaign=artists&utm_content=final`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

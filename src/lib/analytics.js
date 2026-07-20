@@ -20,7 +20,7 @@ const KEY = 'gigproof_events'
 const MAX_EVENTS = 100
 
 // The canonical event vocabulary — MUST match analytics_event's event_name CHECK
-// (024 + 028). Anything here persists to the DB; anything else is dev-only.
+// (024 + 028 + 040). Anything here persists to the DB; anything else is dev-only.
 const CANON = new Set([
   // 024 originals
   'passport_view', 'professional_reaction_submitted', 'availability_request_created',
@@ -34,6 +34,12 @@ const CANON = new Set([
   'onboarding_started', 'onboarding_completed', 'radar_opened', 'evidence_added',
   'claim_confirmed', 'act_created', 'act_switched', 'workspace_switched',
   'payment_reference_created', 'availability_request_responded',
+  // 040 buyer-funnel additions (spec §14.1.6, ratify R00 — pending):
+  // requires migration 040 (CHECK widened, AUTHORED NOT APPLIED); before it
+  // is applied, inserts fail the DB CHECK harmlessly → localStorage only,
+  // same degrade path as passport_unpublished before 034.
+  'proof_unit_expanded', 'method_label_peeked', 'persona_toggled',
+  'availability_request_started',
 ])
 
 export function logEvent(name, props = {}) {
@@ -139,8 +145,13 @@ export const EVENTS = {
   // ── the GATE (react + pay) ──
   PASSPORT_VIEWED: 'passport_view',
   REQUEST_SENT: 'availability_request_created',
+  REQUEST_STARTED: 'availability_request_started', // §14.1.6 (R00, pending 040)
   REQUEST_RESPONDED: 'availability_request_responded',
   PROFESSIONAL_REACTION: 'professional_reaction_submitted',
+  // ── buyer-funnel mid-Passport engagement (§14.1.6, R00 — pending 040) ──
+  PROOF_UNIT_EXPANDED: 'proof_unit_expanded',
+  METHOD_LABEL_PEEKED: 'method_label_peeked',
+  PERSONA_TOGGLED: 'persona_toggled',
   PAYMENT_REF_CREATED: 'payment_reference_created',
   ENTITLEMENT_ACTIVATED: 'entitlement_activated',
   PRODUCER_CONFIRMATION_SENT: 'producer_confirmation_sent',

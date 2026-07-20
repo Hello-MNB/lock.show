@@ -41,6 +41,13 @@ export default function ProducerConfirm() {
   const [data, setData] = useState(null)
   const [busy, setBusy] = useState(false)
   const [pendingKind, setPendingKind] = useState(null) // which action is in-flight: 'yes'|'partial'|'no'|'wrong_person'|'revoke'
+  // §8.9 correction box (owner brief, 21 Jul): choosing "partly right" reveals a
+  // small bounded inline field ("what needs correcting?") sent WITH the partial
+  // response, instead of a bare partial reply with no way to say what to fix.
+  const [partialOpen, setPartialOpen] = useState(false)
+  const [correctionText, setCorrectionText] = useState('')
+  const [submittedCorrection, setSubmittedCorrection] = useState('') // survives the post-send load() refetch (server does not echo it back yet — see send())
+  const CORRECTION_MAX = 200
 
   async function load() {
     // DEMO build: zero network, always. Every /confirm/:token route renders the
@@ -86,8 +93,21 @@ export default function ProducerConfirm() {
     if (busy) return
     setSendError(false)
     const kind = body.revoke ? 'revoke' : body.response
+    // NOTE (server-field finding, verified server/index.js:772-852): POST
+    // /api/confirm/:token destructures only { response, revoke } from req.body
+    // — an extra `correction` key is dropped harmlessly (no schema validation,
+    // plain express.json()), never causes a 400/500. It is sent below so the
+    // wire contract is ready, but nothing server-side persists it yet — the
+    // producer_confirmations table (migration 005) has no `correction` column
+    // and the POST handler never reads req.body.correction. Kept client-side
+    // (submittedCorrection) so THIS ceremony's own receipt can show it; a
+    // follow-up migration + server write is owed to persist it for the artist's
+    // Claim-review screen to read back (flagged, not built this pass).
     if (DEMO) {
+      if (body.correction) setSubmittedCorrection(body.correction)
+      if (body.revoke) setSubmittedCorrection('')
       setData((d) => ({ ...d, response: body.revoke ? d.response : body.response, revoked: !!body.revoke, responded: !body.revoke, respondedAt: new Date().toISOString() }))
+      if (!body.revoke) { setPartialOpen(false); setCorrectionText('') }
       return
     }
     setBusy(true); setPendingKind(kind)
@@ -97,9 +117,14 @@ export default function ProducerConfirm() {
         body: JSON.stringify(body),
       })
       if (!res.ok) throw new Error('failed')
+      if (body.correction) setSubmittedCorrection(body.correction)
+      if (body.revoke) setSubmittedCorrection('')
       await load()
+      if (!body.revoke) { setPartialOpen(false); setCorrectionText('') }
     } catch {
       // Reply failed — keep the ceremony on screen so the producer can retry.
+      // Deliberately does NOT clear partialOpen/correctionText — nothing typed
+      // is lost on a failed send (§8.9 STATES: "the ceremony stays on screen").
       setSendError(true)
     } finally { setBusy(false); setPendingKind(null) }
   }
@@ -163,26 +188,70 @@ export default function ProducerConfirm() {
         )}
 
         {answered ? (
-          <Terminal data={data} when={when} busy={busy} revoking={pendingKind === 'revoke'} onRevoke={() => send({ revoke: true })} />
+          <Terminal data={data} when={when} busy={busy} revoking={pendingKind === 'revoke'} onRevoke={() => send({ revoke: true })} correction={submittedCorrection} />
         ) : (
           <div className="grid gap-2">
-            <button className="btn-primary w-full min-h-[48px]" disabled={busy}
-              onClick={() => send({ response: 'yes' })}>
-              {pendingKind === 'yes' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmYes}
-            </button>
-            <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
-              onClick={() => send({ response: 'partial' })}>
-              {pendingKind === 'partial' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmPartial}
-            </button>
-            <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
-              onClick={() => send({ response: 'no' })}>
-              {pendingKind === 'no' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmNo}
-            </button>
-            <button disabled={busy}
-              className="min-h-[44px] w-full rounded-xl text-sm text-faint transition hover:text-muted"
-              onClick={() => send({ response: 'wrong_person' })}>
-              {pendingKind === 'wrong_person' ? <span className="inline-flex items-center gap-2"><Spinner className="h-3.5 w-3.5" /> {T.common.loading}</span> : T.producer.confirmWrongPerson}
-            </button>
+            {/* Correction box open: one focus at a time — the other three
+                choices step aside (same "single decision" ceremony law as the
+                rest of this screen) until the producer sends or cancels. */}
+            {!partialOpen && (
+              <button className="btn-primary w-full min-h-[48px]" disabled={busy}
+                onClick={() => send({ response: 'yes' })}>
+                {pendingKind === 'yes' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmYes}
+              </button>
+            )}
+
+            {partialOpen ? (
+              <div className="rounded-xl border border-line bg-surface2 p-3">
+                <label htmlFor="pc-correction" className="mb-1 block text-sm font-semibold text-ink">
+                  {T.producer.partialCorrectionLabel}
+                </label>
+                <p className="mb-2 text-xs text-muted">{T.producer.partialCorrectionHelper}</p>
+                <textarea
+                  id="pc-correction"
+                  rows={3}
+                  maxLength={CORRECTION_MAX}
+                  value={correctionText}
+                  disabled={busy}
+                  placeholder={T.producer.partialCorrectionPlaceholder}
+                  onChange={(e) => setCorrectionText(e.target.value)}
+                  className="field w-full resize-none"
+                />
+                <p className={`mt-1 text-end font-mono text-[10px] ${correctionText.length >= CORRECTION_MAX ? 'text-amber' : 'text-faint'}`}>
+                  {correctionText.length}/{CORRECTION_MAX}
+                </p>
+                <div className="mt-2 grid gap-2">
+                  <button className="btn-primary w-full min-h-[48px]" disabled={busy}
+                    onClick={() => send({ response: 'partial', ...(correctionText.trim() ? { correction: correctionText.trim() } : {}) })}>
+                    {pendingKind === 'partial' ? <><Spinner /> {T.common.loading}</> : T.producer.partialCorrectionSend}
+                  </button>
+                  <button disabled={busy}
+                    className="min-h-[44px] w-full rounded-xl text-sm text-faint transition hover:text-muted"
+                    onClick={() => { setPartialOpen(false); setCorrectionText('') }}>
+                    {T.producer.partialCorrectionCancel}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
+                onClick={() => setPartialOpen(true)}>
+                {T.producer.confirmPartial}
+              </button>
+            )}
+
+            {!partialOpen && (
+              <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
+                onClick={() => send({ response: 'no' })}>
+                {pendingKind === 'no' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmNo}
+              </button>
+            )}
+            {!partialOpen && (
+              <button disabled={busy}
+                className="min-h-[44px] w-full rounded-xl text-sm text-faint transition hover:text-muted"
+                onClick={() => send({ response: 'wrong_person' })}>
+                {pendingKind === 'wrong_person' ? <span className="inline-flex items-center gap-2"><Spinner className="h-3.5 w-3.5" /> {T.common.loading}</span> : T.producer.confirmWrongPerson}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -195,7 +264,7 @@ export default function ProducerConfirm() {
 // Distinct terminal states — the ceremony ends with a clear, human close.
 // Every branch is a "submitted receipt": what was recorded, bounded, plus a
 // closing exit line — no dead ends.
-function Terminal({ data, when, busy, revoking, onRevoke }) {
+function Terminal({ data, when, busy, revoking, onRevoke, correction }) {
   const { T } = useLang()
   const canRevoke = data.response === 'yes' || data.response === 'partial'
   if (data.response === 'wrong_person') {
@@ -231,9 +300,16 @@ function Terminal({ data, when, busy, revoking, onRevoke }) {
           : <MethodLabel>✎ {T.producer.chipSentBack}</MethodLabel>}
         {when && <span className="font-mono text-[11px] text-faint">{fmtDate(when)}</span>}
       </div>
-      <p className="mb-4 text-center text-sm text-muted">
-        {data.response === 'yes' ? T.producer.confirmedBody : T.producer.partialBody}
+      <p className={`text-center text-sm text-muted ${data.response === 'partial' && correction ? 'mb-2' : 'mb-4'}`}>
+        {data.response === 'yes'
+          ? T.producer.confirmedBody
+          : (correction ? T.producer.partialBodyWithCorrection : T.producer.partialBody)}
       </p>
+      {data.response === 'partial' && correction && (
+        <blockquote className="mb-4 rounded-r-xl border-l-4 border-gold/60 bg-surface2 px-3 py-2 text-start text-sm italic text-ink">
+          “{correction}”
+        </blockquote>
+      )}
       {canRevoke && (
         <button className="btn-ghost w-full" onClick={onRevoke} disabled={busy}>
           {revoking ? <><Spinner /> {T.common.loading}</> : T.producer.revoke}

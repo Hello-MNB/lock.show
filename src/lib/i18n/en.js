@@ -181,6 +181,14 @@ export const T = {
     chipSentBack: 'Sent back for a fix',
     confirmedBody: 'Your confirmation now appears on this one statement. You can revoke it at any time — nothing else changes.',
     partialBody: 'We flagged this statement for the artist to fix. It will not show as producer-confirmed as it stands.',
+    // ── §8.9 inline correction box (owner brief, 21 Jul) — revealed only after
+    // "Partly right — needs a fix" is tapped; sent WITH the partial response. ──
+    partialCorrectionLabel: 'What needs correcting? (optional)',
+    partialCorrectionHelper: 'A short note helps the artist fix the wording faster.',
+    partialCorrectionPlaceholder: 'e.g. the city is wrong — it was Haifa, not Tel Aviv',
+    partialCorrectionSend: 'Send — mark as partly right',
+    partialCorrectionCancel: 'Never mind',
+    partialBodyWithCorrection: 'Recorded with your correction — the artist will fix the wording.',
     footnote: 'This confirmation refers to the specific statement above only — it is not a general endorsement and never becomes a score. Your name is shown as you choose.',
   },
   offer: {

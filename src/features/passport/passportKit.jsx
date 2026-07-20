@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -7,6 +7,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { SOURCE_STATUS, METHOD_LABELS, methodLabelFor } from '../../lib/constants.js'
 import { humanizeDrawBand, humanizeBinary, humanizeReviewDate } from '../../lib/humanize.js'
 import { RoomGrammar } from './RoomGrammar.jsx'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 
 // ── passportKit — the SHARED, firewall-safe rendering + derivation layer for the
 // public Passport. The two buyer personas (Booking view · Representation view)
@@ -64,17 +65,33 @@ export function explorerCopy(T, lang) {
 }
 
 // ── Proof primitives ────────────────────────────────────────────────────────
+// method_label_peeked (§14.1.6, R00 — pending 040): a per-browser-tab, module-
+// scoped dedupe set (resets on reload = a new visit, deliberately NOT
+// persisted) so the peek fires once per claim per visit, never a per-render
+// re-fire on hover flicker.
+const peekedLabelKeys = new Set()
+
 // Method label: mono uppercase, gold on transparent; producer-confirmed in lime.
 // §5.10 warmth layer: a one-line human sub-text peeks in on hover/focus (mouse
 // hover AND keyboard focus AND a tap on touch, via :focus-within) — the canon
 // mono chip never changes, this is a PEEK, not a rewrite of the chip itself.
-export function MethodLabel({ status, methodLabel, expiresAt }) {
+export function MethodLabel({ status, methodLabel, expiresAt, claimKey }) {
   const { T } = useLang()
+  const { id: artistId } = useParams()
   const key = methodLabelFor({ method_label: methodLabel, verification_status: status, expires_at: expiresAt })
   const lime = key === 'producer-confirmed'
   const hint = T.methodLabelHint?.[key]
+  // Fall back to a status+label composite when the caller doesn't pass a
+  // stable per-claim key (only the proof-card callers do) — still dedupes
+  // correctly for the common single-claim call sites.
+  const dedupeKey = `${artistId ?? ''}:${claimKey ?? `${key}`}`
+  function firePeek() {
+    if (!hint || peekedLabelKeys.has(dedupeKey)) return
+    peekedLabelKeys.add(dedupeKey)
+    logEvent(EVENTS.METHOD_LABEL_PEEKED, { artist_id: artistId, claim_key: claimKey ?? key })
+  }
   return (
-    <span className="group/method tap-target relative inline-flex">
+    <span className="group/method tap-target relative inline-flex" onMouseEnter={firePeek} onFocus={firePeek}>
       <span
         tabIndex={hint ? 0 : undefined}
         title={hint || undefined}
@@ -179,7 +196,7 @@ function sourceLineFor(c, T) {
 // false so today's always-expanded rendering is the exact same output as
 // before this change. Collapsed = source icon + one-line headline + method
 // chip only (no band/date row, per spec); expanded = the full card, unchanged.
-export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine, sourceType, sourceValue, expandable = false, expanded = true, onToggle }) {
+export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine, sourceType, sourceValue, expandable = false, expanded = true, onToggle, claimKey }) {
   const { lang } = useLang()
   const claimIsBand = isBand(claim)
   const reviewed = humanizeReviewDate(reviewedAt, { lang })
@@ -217,7 +234,7 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
         {expanded
           ? <span className="min-w-0 flex-1 text-[12.5px] font-medium text-muted">{sourceLineFor(srcInfo, T)}</span>
           : <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">{headline}</span>}
-        <MethodLabel status={status} methodLabel={methodLabel} />
+        <MethodLabel status={status} methodLabel={methodLabel} claimKey={claimKey} />
         {expandable && (
           <span aria-hidden="true" className={`ms-0.5 shrink-0 text-faint transition-transform ${expanded ? 'rotate-180' : ''}`}>⌄</span>
         )}
@@ -375,6 +392,7 @@ export function drawProofUnits(data, T, BANDS, contextLines) {
 // unit, never a guessed nearest room (§5.10 honesty-on-fallback).
 export function DrawSection({ data, T, label, contextLines, heroRoom = false }) {
   const { BANDS } = useLang()
+  const { id: artistId } = useParams()
   // §8.7 item 3 — single-open accordion, scoped to THIS chapter instance (a
   // fresh DrawSection mounts per chapter/persona, so this never leaks state
   // across chapters or faces). `null` defers to the "first item open" default
@@ -421,9 +439,16 @@ export function DrawSection({ data, T, label, contextLines, heroRoom = false }) 
             sourceType={u.sourceType}
             sourceValue={u.sourceValue}
             T={T}
+            claimKey={u.key}
             expandable={canCollapse}
             expanded={!canCollapse || activeKey === u.key}
-            onToggle={() => setOpenKey(activeKey === u.key ? null : u.key)}
+            onToggle={() => {
+              const opening = activeKey !== u.key
+              setOpenKey(activeKey === u.key ? null : u.key)
+              // proof_unit_expanded (§14.1.6, R00 — pending 040): only the
+              // collapsed→expanded transition, never the collapse.
+              if (opening) logEvent(EVENTS.PROOF_UNIT_EXPANDED, { artist_id: artistId, claim_key: u.key })
+            }}
           />
         ))}
       </div>

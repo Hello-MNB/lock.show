@@ -2349,7 +2349,7 @@ Legend — **Sink**: `DB` = in CANON, persists to `analytics_event`; **Key?**: �
 | 18 | `workspace_switched` | Active workspace (org) is switched | Membership | |
 | 19 | `share_link_created` | Artist copies/creates a tagged share link | Share link | |
 | 20 | `share_link_opened` | A public Passport is reached via a `?s=1` link (once per visit) | Share link | |
-| 21 | `passport_view` | A published Passport is **opened** (NOT a reaction — P0-5) | Passport version | |
+| 21 | `passport_view` | A published Passport is **opened** (NOT a reaction — P0-5); **R00 (pending, §14.1.6)** gains a `face` prop | Passport version | |
 | 22 | `availability_request_created` | Booking manager submits the availability-request form | Availability request | ✅ **Gate ½** |
 | 23 | `availability_request_responded` | Artist replies to a request | Availability request | |
 | 24 | `professional_reaction_submitted` | A qualified buyer submits a professional reaction | Professional reaction | ✅ **Gate signal** |
@@ -2406,6 +2406,89 @@ The funnel as it MEASURES today (per §2.8 this corrects any implication that al
 | Retention | **FIRING (wired T-55 — the owner's named gap)**: restored sessions emit `login {via:'session-restore', returning:true}` once per tab-session (first-party seen-marker); manual logins carry `returning`; repeat buyer opens carry `return_visit`. Operator read model: `fetchRetention()` → §8.12 retention tiles (returning accounts = distinct real accounts on >1 calendar day · repeat Passport opens). `account_deleted` unwired. |
 
 _Demo integrity: demo builds persist nothing; live operator reads filter `is_demo=false` (037 + T-52)._
+
+#### 14.1.6 EXTENSION — buyer-funnel events (Launch-Plan Module 3, owner word 21 Jul; ratify: **R00**)
+
+Closes the gap between the Gate's two bookends (`passport_view` → `availability_request_created`,
+§14.1.2 rows 21–22): today nothing is captured **between** a buyer opening a Passport and
+submitting the availability-request form, so mid-funnel drop-off (which face they read, whether
+they opened a proof card, whether they read a method label, whether they started the form and
+abandoned it) is invisible to the operator cockpit. This section is the spec-first definition;
+§14.1.2 row 21 above already carries the pointer back here. All five items are gated behind
+migration 040 (§14.1.6.6) — **AUTHORED NOT APPLIED** — so nothing here is BUILT-persisting until
+the owner applies it (§2.8 honesty firewall: this whole subsection is TARGET-pending-apply, not
+BUILT).
+
+**Honest-minimal choice (per the owner's own framing):** rather than a duplicate `passport_opened`
+event sitting beside `passport_view`, the existing `passport_view` (row 21) gains a `face` prop —
+a face is which of the four §8.4 personas (`booking|rep|production|private`) rendered at open, not
+a new trigger boundary. The other four items below are genuinely new trigger boundaries with no
+existing event to extend.
+
+1. **`passport_view` + `face` prop (extends row 21, not a new event)**
+   - Trigger boundary: unchanged — a published Passport's load-success branch (`Passport.jsx:79-82`).
+   - Subject persona: Buyer.
+   - Props added: `face` — one of `booking|rep|production|private` (the `?view=` persona active at
+     open); id/role/context only, never a count or score.
+   - §21.4 row completed: the **Buyer** row ("opens Passport, sends request" → appears "receipt +
+     method-safe text") — makes *which face* a buyer landed on visible operator-side.
+   - Visibility: cockpit-only (`analytics_event`, operator-only SELECT); never returns to the artist.
+
+2. **`proof_unit_expanded`** (NEW)
+   - Trigger boundary: a collapsible proof card (`passportKit.jsx` `ProofUnit`, the §8.7 item-3
+     tap-to-expand accordion) transitions **collapsed → expanded** by tap. Fires only on the
+     opening transition, never on collapse.
+   - Subject persona: Buyer.
+   - Props: `artist_id`, `claim_key` (the unit's existing stable key — a claim id or `band-N` —
+     never the claim's text/value/band itself).
+   - §21.4 row completed: Buyer row — the mid-funnel engagement step between "opens Passport" and
+     "sends request."
+   - Visibility: cockpit-only; never returns to the artist as a count (§2.5).
+
+3. **`method_label_peeked`** (NEW)
+   - Trigger boundary: the method-label hint (`passportKit.jsx` `MethodLabel`, the §5.10 warmth-
+     layer peek-in-on-hover/focus) is revealed via focus or hover/tap — fired **once per claim per
+     visit** (an in-memory, module-scoped dedupe; resets on page reload = a new visit, deliberately
+     not persisted).
+   - Subject persona: Buyer.
+   - Props: `artist_id`, `claim_key`.
+   - §21.4 row completed: Buyer row — proof of trust-vocabulary engagement (never the label's
+     meaning, never a score — §2.6).
+   - Visibility: cockpit-only.
+
+4. **`persona_toggled`** (NEW)
+   - Trigger boundary: `PersonaToggle`'s `onChange` resolves to a persona different from the one
+     currently active (`Passport.jsx` `setPersona`); a click that re-selects the already-active
+     face is a no-op, not a toggle.
+   - Subject persona: Buyer.
+   - Props: `artist_id`, `to` (destination face).
+   - §21.4 row completed: Buyer row — which face the buyer chose to move to (§8.4 four faces).
+   - Visibility: cockpit-only.
+
+5. **`availability_request_started`** (NEW)
+   - Trigger boundary: the **first** field interaction (first `onChange`) on the availability-
+     request form (`AvailabilityRequest.jsx` `set()`), fired once per form visit.
+   - Subject persona: Buyer (booking manager).
+   - Props: `artist_id`.
+   - §21.4 row completed: Buyer row "sends request" — completes the funnel-half that
+     `availability_request_created` (row 22, the "submitted" half) does not cover; this is the
+     "began" half.
+   - Visibility: cockpit-only.
+
+6. **Migration.** `supabase/migrations/040_buyer_funnel_events.sql` + `.down.sql` — widens the
+   `analytics_event_event_name_check` (same ALTER pattern as 034) to add the 4 new names above
+   (the `face` prop needs no schema change — `properties` is already `jsonb`). Header: **AUTHORED
+   NOT APPLIED, owner applies.** Until applied, the 4 new names persist to `localStorage` only
+   (sink 1) — the DB insert (sink 2) fails the CHECK and is swallowed by `persist()`'s existing
+   best-effort try/catch (`analytics.js:70`), exactly the `passport_unpublished`-before-034
+   precedent (§14.1.1).
+
+**Firewall compliance (§2, checked against every prop above):** every prop is an id, a role, or a
+bounded enum value (`face`, `to`) — never a count, percentage, rank, or score about a person.
+Nothing here returns to the artist; all five are operator/cockpit-only (§14.1.6 items 1–5,
+"Visibility"), consistent with §2.5 (reaction insight to the artist is method-safe text only) and
+§21.2 (an action derived from a signal is operator-internal or a method-safe prompt, never a
+number about a person shown to a person).
 
 ---
 
