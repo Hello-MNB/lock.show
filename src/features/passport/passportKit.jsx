@@ -43,23 +43,10 @@ const EXPLORER_FALLBACK = {
     end: "That's everything verified so far.",
     liveAnnounce: (label, n, total) => `Now viewing: ${label}, ${n} of ${total}`,
   },
-  he: {
-    railLabel: 'פרקי ההוכחה',
-    jumpTo: (label) => `עבור אל ${label}`,
-    next: (label) => `הבא: ${label}`,
-    prev: (label) => `חזרה: ${label}`,
-    progress: (n, total) => `${n} מתוך ${total}`,
-    swipeHint: 'החליקו או הקישו כדי לראות עוד',
-    expandAria: 'הצג פרטים מלאים',
-    collapseAria: 'הסתר פרטים',
-    showMore: (n) => `הצג עוד ${n}`,
-    end: 'אלה כל הממצאים המאומתים עד כה.',
-    liveAnnounce: (label, n, total) => `מוצג כעת: ${label}, ${n} מתוך ${total}`,
-  },
 }
 
 export function explorerCopy(T, lang) {
-  const shim = EXPLORER_FALLBACK[lang] || EXPLORER_FALLBACK.en
+  const shim = EXPLORER_FALLBACK.en // real strings live in i18n en/he; EN shim = crash-guard only
   const p = T.passport || {}
   return {
     railLabel: p.explorerRailLabel || shim.railLabel,

@@ -432,6 +432,18 @@ export const T = {
     roomClub: 'Club',
     roomHall: 'Hall',
     roomFestival: 'Festival stage',
+    // ── T-83b Evidence Explorer (§8.7 interactive panes) ──
+    explorerRailLabel: 'Evidence chapters',
+    explorerJumpTo: (label) => `Jump to ${label}`,
+    explorerNext: (label) => `Next: ${label}`,
+    explorerPrev: (label) => `Back: ${label}`,
+    explorerProgress: (n, total) => `${n} of ${total}`,
+    explorerSwipeHint: 'Swipe or tap to see more',
+    explorerExpandAria: 'Show full details',
+    explorerCollapseAria: 'Hide details',
+    explorerShowMore: (n) => `Show ${n} more`,
+    explorerEnd: "That's everything verified so far.",
+    explorerLiveAnnounce: (label, n, total) => `Now viewing: ${label}, ${n} of ${total}`,
   },
   request: {
     title: (name) => `Availability check — ${name}`,

@@ -427,6 +427,18 @@ export const T = {
     roomClub: 'קלאב',
     roomHall: 'אולם',
     roomFestival: 'במת פסטיבל',
+    // ── T-83b סייר הראיות (§8.7) ──
+    explorerRailLabel: 'פרקי ההוכחה',
+    explorerJumpTo: (label) => `עבור אל ${label}`,
+    explorerNext: (label) => `הבא: ${label}`,
+    explorerPrev: (label) => `חזרה: ${label}`,
+    explorerProgress: (n, total) => `${n} מתוך ${total}`,
+    explorerSwipeHint: 'החליקו או הקישו כדי לראות עוד',
+    explorerExpandAria: 'הצג פרטים מלאים',
+    explorerCollapseAria: 'הסתר פרטים',
+    explorerShowMore: (n) => `הצג עוד ${n}`,
+    explorerEnd: 'אלה כל הממצאים המאומתים עד כה.',
+    explorerLiveAnnounce: (label, n, total) => `מוצג כעת: ${label}, ${n} מתוך ${total}`,
   },
   request: {
     title: (name) => `בדיקת זמינות — ${name}`,
