@@ -249,7 +249,7 @@ export default function Contact() {
             Registration is open — free for artists during the pilot.
           </p>
           <a
-            href={`${APP_URL}/signup`}
+            href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
             style={{
               display: 'inline-block',
               padding: '14px 32px',

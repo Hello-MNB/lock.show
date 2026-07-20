@@ -6,7 +6,7 @@ import {
   adminListConsents, adminExportArtist, adminDeleteArtist, adminListAudit,
 } from '../../lib/db.js'
 import { listUpgradeRequests, approveUpgrade } from '../../lib/orgs.js'
-import { fetchGateCounts, fetchRetention, fetchFunnelCounts, FUNNEL_EVENTS } from './gateCounts.js'
+import { fetchGateCounts, fetchRetention, fetchFunnelCounts, fetchAiRuns30d, FUNNEL_EVENTS, AI_RUN_STATUSES } from './gateCounts.js'
 import { createNotification } from '../../lib/notifications.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import {
@@ -101,6 +101,23 @@ export default function AdminDashboard() {
     }
   }, [])
   useEffect(() => { loadFunnel() }, [loadFunnel])
+
+  // B5-L (T-92, §8.12) — AI-COST LEDGER, owner ruling (a) "honest hybrid" (20
+  // Jul): runs/30d is a REAL count from our own DB (processing_job, migration
+  // 022). Spend is NOT computed here (no server-side cost read path exists —
+  // server/** is out of this territory) and renders as a manually-tracked
+  // line, never a number. Same isolation contract as Gate/Retention/Funnel:
+  // own state, a metrics hiccup never blanks the console.
+  const [aiCost, setAiCost] = useState({ loading: true, error: false, counts: null })
+  const loadAiCost = useCallback(async () => {
+    setAiCost((a) => ({ ...a, loading: true, error: false }))
+    try {
+      setAiCost({ loading: false, error: false, counts: await fetchAiRuns30d() })
+    } catch {
+      setAiCost({ loading: false, error: true, counts: null })
+    }
+  }, [])
+  useEffect(() => { loadAiCost() }, [loadAiCost])
 
   const load = useCallback(async () => {
     setLoading(true); setError(false)
@@ -231,6 +248,16 @@ export default function AdminDashboard() {
   const funnelStages = FUNNEL_EVENTS.map((key) => ({ key, label: funnelLabelByKey[key] }))
   // fill-bar denominator — the funnel's OWN max, never a per-person figure.
   const funnelMax = Math.max(1, ...FUNNEL_EVENTS.map((key) => funnel.counts?.[key] ?? 0))
+
+  // B5-L (T-92, §8.12) — AI-cost ledger status-breakdown labels, keyed off the
+  // canon AI_RUN_STATUSES order (the processing_job check-constraint values)
+  // so the rendered line can never drift from the source-of-truth list.
+  const aiStatusLabelByKey = {
+    queued: T.admin.aiCostStatusQueued,
+    running: T.admin.aiCostStatusRunning,
+    completed: T.admin.aiCostStatusCompleted,
+    failed: T.admin.aiCostStatusFailed,
+  }
 
   return (
     <PageShell max="max-w-2xl">
@@ -369,11 +396,13 @@ export default function AdminDashboard() {
                 NOT derivable here — that needs a dedicated read model; not
                 guessed). Reuses the main dashboard's own loading/error gate
                 since it reads the same `artists` state, not a new query.
-                FLAG (out of B5 territory / not yet built, see report):
+                FLAG (still out of territory / not yet built, see report):
                 a risk tile — no risk field exists in any state fetched by
-                this dashboard, so nothing honest to render; and the AI-cost
-                ledger — needs a server read path (server/**), which is
-                explicitly out of B5 territory. Neither is stubbed. */}
+                this dashboard, so nothing honest to render. Not stubbed.
+                The AI-cost ledger below WAS flagged out for the same reason
+                (needs server/**) until owner ruling (a), 20 Jul: ship the
+                run count we already have + an honestly-labeled manual spend
+                line — see the B5-L block below. */}
             <p className="mb-2 mt-5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{T.admin.freshTitle}</p>
             <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
               <div data-testid="fresh-published" className="card py-3 text-center">
@@ -386,6 +415,58 @@ export default function AdminDashboard() {
               </div>
             </div>
             <p className="mt-2 text-xs text-faint">{T.admin.freshNote}</p>
+
+            {/* B5-L (T-92, §8.12) — AI-COST LEDGER: owner ruling (a) "honest
+                hybrid" (20 Jul). runs/30d is a REAL head-count from OUR OWN
+                DB (processing_job, migration 022) — one row per automated AI
+                extraction run. Spend is NOT computed here: no server-side
+                cost read path exists yet (server/** is out of this
+                territory), so it renders as an honestly-labeled MANUAL line
+                — never a number, never a budget bar. The hard cap is the
+                same story: not readable client-side, so it is folded into
+                the same manual-line wording rather than shown as a figure.
+                FIREWALL: processing_job has no is_demo column (unlike
+                analytics_event) — the note below says plainly that this
+                count is not demo/seed-excluded, matching §14.3's "no fake
+                precision" rule rather than implying a guarantee this tile
+                cannot make. Own loading/error/retry, same isolation
+                contract as Gate/Retention/Funnel above. No .btn-primary
+                here — the one-primary-CTA law stays with "Confirm & activate". */}
+            <p className="mb-2 mt-5 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{T.admin.aiCostTitle}</p>
+            {aiCost.loading ? (
+              <div className="card py-4" role="status" aria-live="polite">
+                <div className="skeleton h-4 w-1/3" />
+                <span className="sr-only">{T.common.loading}</span>
+              </div>
+            ) : aiCost.error ? (
+              <div className="card py-4 text-center" role="alert">
+                <p className="text-sm text-ink">{T.admin.gateError}</p>
+                <button onClick={loadAiCost} className="btn-ghost mt-3 text-xs">{T.admin.gateRetry}</button>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
+                  <div data-testid="aicost-runs" className="card py-3 text-center">
+                    <p className="text-2xl font-extrabold text-ink" data-testid="aicost-runs-n">{aiCost.counts?.total ?? 0}</p>
+                    <p className="mt-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted">{T.admin.aiCostRuns}</p>
+                    <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.06em] text-faint">{T.admin.aiCostRunsTag}</p>
+                  </div>
+                </div>
+                {aiCost.counts?.byStatus && (
+                  <p className="mt-2 whitespace-normal break-words font-mono text-[10.5px] text-muted">
+                    {AI_RUN_STATUSES.map((k) => `${aiStatusLabelByKey[k]} ${aiCost.counts.byStatus[k] ?? 0}`).join(' · ')}
+                  </p>
+                )}
+                {/* manual spend line — a separate card, deliberately NOT styled
+                    like a number tile, so it can never be mistaken for a
+                    computed figure (§2 firewall: no fake precision). */}
+                <div data-testid="aicost-spend" className="card mt-2 py-3">
+                  <p className="whitespace-normal break-words text-sm font-medium text-ink">{T.admin.aiCostSpendLine}</p>
+                  <p className="mt-1 whitespace-normal break-words font-mono text-[10px] uppercase tracking-[0.04em] text-faint">{T.admin.aiCostSpendTag}</p>
+                </div>
+                <p className="mt-2 whitespace-normal break-words text-xs text-faint">{T.admin.aiCostNote}</p>
+              </>
+            )}
           </Section>
 
           {/* OP4 — SEC-01 compliance posture (read-only status) */}

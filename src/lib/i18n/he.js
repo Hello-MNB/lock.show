@@ -634,6 +634,17 @@ export const T = {
     freshPublished: 'מפורסמים',
     freshUnpublished: 'לא מפורסמים',
     freshNote: 'ספירת מפורסמים מול לא-מפורסמים מתוך רשימת האמנים שכבר נטענה. זיהוי פריטים מיושנים (עדכון אחרון לכל פספורט מפורסם) דורש read-model ייעודי עם תאריכי פריט — עוד לא נבנה; לא מוצג כאן במקום לנחש.',
+    // B5-L — יומן עלות AI: ספירה אמיתית + שורת הוצאה ידנית.
+    aiCostTitle: 'יומן עלות AI',
+    aiCostRuns: 'הרצות AI (30 יום)',
+    aiCostRunsTag: 'processing_job · 30 יום',
+    aiCostStatusQueued: 'בתור',
+    aiCostStatusRunning: 'פעיל',
+    aiCostStatusCompleted: 'הושלם',
+    aiCostStatusFailed: 'נכשל',
+    aiCostSpendLine: 'הוצאה: מנוטרת ידנית בקונסולת Anthropic',
+    aiCostSpendTag: 'שורה ידנית · אין עדיין נתיב קריאת עלות אוטומטי',
+    aiCostNote: 'ספירת ההרצות היא ספירה אמיתית מה-DB שלנו (processing_job, 30 יום אחרונים) — אינה מסננת דמו/בדיקה (אין עמודת is_demo בטבלה זו). ההוצאה והתקרה אינן מחושבות כאן; שתיהן מנוטרות ידנית בקונסולת Anthropic עד שיהיה נתיב קריאת עלות בצד שרת.',
     anchors: {
       gate: 'שער',
       funnel: 'משפך',

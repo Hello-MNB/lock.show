@@ -29,7 +29,7 @@ const seats = [
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
     ],
-    cta: { text: 'START FREE IN THE PILOT →', href: `${APP_URL}/signup`, primary: true },
+    cta: { text: 'START FREE IN THE PILOT →', href: `${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=seats`, primary: true },
     note: 'The pilot is a closed beta for Israeli artists. When pricing comes, it will be set with the artists already inside.',
   },
   {
@@ -188,7 +188,7 @@ export default function Pricing() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
               <a
-                href={`${APP_URL}/signup`}
+                href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=hero`}
                 style={{
                   background: 'var(--color-stamp)',
                   color: 'var(--color-ink)',
@@ -654,7 +654,7 @@ export default function Pricing() {
             play makes the next room easier to enter.
           </p>
           <a
-            href={`${APP_URL}/signup`}
+            href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=final`}
             style={{
               background: 'var(--color-stamp)',
               color: 'var(--color-ink)',

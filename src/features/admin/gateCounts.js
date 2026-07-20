@@ -167,3 +167,45 @@ export async function fetchFunnelCounts() {
   }))
   return Object.fromEntries(pairs)
 }
+
+// B5-L (T-92, §8.12) — AI-COST LEDGER, owner ruling (a) "honest hybrid" (20 Jul):
+// the spend figure needs a server-side cost read path (server/**, out of this
+// territory) and is NOT computed here — it renders as a manually-tracked line
+// on the AdminDashboard, never a number. What CAN be shown honestly from OUR
+// OWN DB is the automated-extraction run volume: a head-count of
+// public.processing_job rows (migration 022 — one row per AI extraction run)
+// created in the last 30 days, plus its status breakdown (queued / running /
+// completed / failed — the table's own check-constraint values).
+//
+// FIREWALL NOTE: unlike analytics_event (migration 037), processing_job carries
+// NO is_demo column and no direct seed/test-account marker reachable from the
+// client (it would need a 3-table join through evidence_artifacts → artists →
+// auth.users email domain, which the anon/operator client cannot do). This
+// count is therefore NOT demo/seed-excluded — the tile must say so plainly
+// rather than imply the same guarantee as the Gate/Retention/Funnel tiles.
+export const AI_RUN_STATUSES = ['queued', 'running', 'completed', 'failed']
+
+const AI_RUNS_DEMO = { total: 6, byStatus: { queued: 1, running: 1, completed: 3, failed: 1 } }
+
+// → { total: n, byStatus: { queued: n, running: n, completed: n, failed: n } }
+// Same contract as fetchGateCounts/fetchFunnelCounts: throws on error (real,
+// retryable error state instead of a silently-wrong zero).
+export async function fetchAiRuns30d() {
+  if (DEMO) return AI_RUNS_DEMO
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const { count, error } = await supabase
+    .from('processing_job')
+    .select('id', { count: 'exact', head: true })
+    .gte('created_at', since)
+  if (error) throw error
+  const pairs = await Promise.all(AI_RUN_STATUSES.map(async (status) => {
+    const { count: n, error: e2 } = await supabase
+      .from('processing_job')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', since)
+      .eq('status', status)
+    if (e2) throw e2
+    return [status, n ?? 0]
+  }))
+  return { total: count ?? 0, byStatus: Object.fromEntries(pairs) }
+}

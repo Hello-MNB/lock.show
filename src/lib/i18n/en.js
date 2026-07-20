@@ -640,6 +640,17 @@ export const T = {
     freshPublished: 'Published',
     freshUnpublished: 'Unpublished',
     freshNote: 'Published vs. unpublished counts from the artists list already loaded. Stale-item detection (last-updated per published Passport) needs a dedicated read model with item dates — not yet built; not shown here rather than guessed.',
+    // B5-L (owner ruling (a), 20 Jul) — AI-cost ledger: real runs count + manual spend line.
+    aiCostTitle: 'AI-cost ledger',
+    aiCostRuns: 'AI runs (30d)',
+    aiCostRunsTag: 'processing_job · 30d',
+    aiCostStatusQueued: 'queued',
+    aiCostStatusRunning: 'running',
+    aiCostStatusCompleted: 'completed',
+    aiCostStatusFailed: 'failed',
+    aiCostSpendLine: 'Spend: tracked manually in the Anthropic console',
+    aiCostSpendTag: 'manual line · no automated cost read path yet',
+    aiCostNote: 'Run count is a real head-count from our own DB (processing_job, last 30 days) — not demo/seed-excluded (no is_demo column on this table). Spend and the hard cap are not computed here; both are tracked manually in the Anthropic console until a server-side cost read path exists.',
     anchors: {
       gate: 'Gate',
       funnel: 'Funnel',
