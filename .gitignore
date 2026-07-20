@@ -13,3 +13,4 @@ vite.config.js.timestamp-*.mjs
 
 # throwaway Playwright/QA driver scripts (agents create + delete these)
 ._*
+scripts/*.tmp.mjs
