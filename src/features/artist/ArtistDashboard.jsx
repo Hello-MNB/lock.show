@@ -16,6 +16,39 @@ import { appUrl } from '../../lib/appUrl.js'
 // Bounded dimension states + ONE next action. FIREWALL: rule-based states only —
 // no score, no %, no fill bars; a gap renders as an invitation, never a failure.
 
+// V2 (owner witness-fix 20 Jul, §6 law 7 Radar no-scroll): the VIEWPORT LAW
+// below is enforced ENTIRELY by a `calc(100dvh-Xrem)` Tailwind class with no
+// fallback. The arithmetic is exact (top-bar 3.5rem + bottom-nav reserve
+// 4rem = the same 7.5rem subtracted here — verified empirically: a Playwright
+// pass across base/planet-panel-open/review-open states at 360×780 and
+// 1360×850 measured ZERO page overflow in the current build). But `dvh` is a
+// 2023-era unit — a browser or in-app webview without it treats the WHOLE
+// calc() as invalid and falls back to `height: auto`, which sizes to
+// content instead of the viewport: the overflow-hidden clip stops doing
+// anything, and the page scrolls exactly like the owner's walk described.
+// This hook is the JS-measured belt-and-suspenders: on a browser that lacks
+// `dvh` support it returns a real pixel height (window.innerHeight minus the
+// same reserve, kept in sync on resize/orientation change) for an inline
+// style to enforce instead; on every browser that already supports `dvh` it
+// returns null and the existing Tailwind class is untouched — zero risk to
+// the verified common case.
+function useViewportHeightFallback(reserveRem) {
+  const supported = typeof CSS !== 'undefined' && CSS.supports?.('height', '100dvh')
+  const [px, setPx] = useState(() => (supported ? null : window.innerHeight - reserveRem * 16))
+  useEffect(() => {
+    if (supported) return undefined
+    const sync = () => setPx(window.innerHeight - reserveRem * 16)
+    sync()
+    window.addEventListener('resize', sync)
+    window.addEventListener('orientationchange', sync)
+    return () => {
+      window.removeEventListener('resize', sync)
+      window.removeEventListener('orientationchange', sync)
+    }
+  }, [supported, reserveRem])
+  return supported ? null : px
+}
+
 // ONE prioritized action — a coach's single clearest move, never a list of ten.
 // Deep links go to the SPECIFIC surface: claims → claim review (a radar panel),
 // evidence-shaped work → evidence capture, deferred identity fields (photo) →
@@ -156,6 +189,10 @@ export default function ArtistDashboard() {
   // primary; below md this screen's next-step card owns it. Render XOR — never
   // both .btn-primary nodes in the DOM at once (T-31 residue).
   const fullStage = useFullStage()
+  // V2 — null on every browser that supports `dvh` (today's build, verified
+  // no-overflow); a real px height otherwise, matching the SAME 7.5rem
+  // mobile / 3.5rem md+ reserve the Tailwind class already encodes.
+  const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
 
   async function load() {
     setLoadError(false)
@@ -353,7 +390,8 @@ export default function ArtistDashboard() {
     // internal panel below (overflow-y-auto), so long content scrolls inside a
     // panel, never the page. (PageShell stays on the loading/error/empty
     // returns — those are single-screen by nature.)
-    <div className="h-[calc(100dvh-7.5rem)] px-4 py-3 sm:px-8 md:h-[calc(100dvh-3.5rem)] md:py-6">
+    <div className="h-[calc(100dvh-7.5rem)] px-4 py-3 sm:px-8 md:h-[calc(100dvh-3.5rem)] md:py-6"
+      style={vhFallbackPx != null ? { height: `${Math.max(vhFallbackPx, 0)}px` } : undefined}>
       <div className="animate-fade-in mx-auto flex h-full max-w-xl flex-col overflow-hidden md:max-w-[1360px]">
       <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
         <div>
