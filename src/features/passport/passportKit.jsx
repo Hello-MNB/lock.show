@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -124,7 +125,15 @@ function sourceLineFor(c, T) {
 // on the card. Dates render as "Fresh proof · July 2026" (recent, quiet lime
 // chip) or "Verified · July 2026" (older, neutral), never a raw dd/mm/yyyy
 // stamp and never red/warning styling for a stale claim (P-4).
-export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine, sourceType, sourceValue }) {
+// §8.7 item 3 — "Proof-card collapse/expand (extends the existing ProofUnit;
+// no new visual component)": `expandable` opts a caller INTO the tap-to-expand
+// behavior (the DrawSection chapter, when it holds >1 unit — §8.7's single-
+// open-accordion rule); every other existing caller (RoomGrammar's badge
+// slot aside, this component itself) is untouched — `expandable` defaults
+// false so today's always-expanded rendering is the exact same output as
+// before this change. Collapsed = source icon + one-line headline + method
+// chip only (no band/date row, per spec); expanded = the full card, unchanged.
+export function ProofUnit({ claim, context, band, status, methodLabel, reviewedAt, T, contextLine, sourceType, sourceValue, expandable = false, expanded = true, onToggle }) {
   const { lang } = useLang()
   const claimIsBand = isBand(claim)
   const reviewed = humanizeReviewDate(reviewedAt, { lang })
@@ -137,6 +146,8 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
       : (T.passport.dateVerified ? T.passport.dateVerified(reviewed.monthYear) : reviewed.monthYear)
   )
   const srcInfo = { source_type: sourceType ?? null, value: sourceValue ?? null, method_label: methodLabel }
+  const headline = contextLine || claim
+  const copy = explorerCopy(T, lang)
   return (
     // V1 (owner witness-fix 20 Jul, §6 law 7): trimmed padding/gaps on mobile
     // only — at 360×780 the first card's bottom edge dipped ~25px into the
@@ -144,28 +155,45 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
     // after the hero/strip compression above; this alone recovers the
     // difference so the whole first proof card clears the CTA bar. md+
     // keeps the original p-5/mb-3/mt-3.5/pt-3 rhythm unchanged.
-    <article className="rounded-[18px] border border-line bg-surface p-4 shadow-card sm:p-5">
-      <div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-3">
+    <article className="rounded-[18px] border border-line bg-surface p-4 shadow-card sm:p-5" aria-expanded={expandable ? expanded : undefined}>
+      <button
+        type="button"
+        disabled={!expandable}
+        onClick={expandable ? onToggle : undefined}
+        aria-label={expandable ? (expanded ? copy.collapseAria : copy.expandAria) : undefined}
+        className={`flex w-full items-center gap-2 text-start ${expandable ? 'tap-target min-h-[44px] cursor-pointer' : 'cursor-default'} ${
+          expanded ? 'mb-2 sm:mb-3' : ''
+        }`}
+      >
         <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line2 text-muted">
           <PlatformLogo name={sourceIconOf(srcInfo)} size={14} />
         </span>
-        <span className="text-[12.5px] font-medium text-muted">{sourceLineFor(srcInfo, T)}</span>
-        <span className="ml-auto"><MethodLabel status={status} methodLabel={methodLabel} /></span>
-      </div>
-      {contextLine
-        ? <p className="font-display text-[19px] font-bold leading-snug text-ink">{contextLine}</p>
-        : claimIsBand
-          ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
-          : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
-      {context && context !== claim && <p className="mt-1 text-sm text-muted">{context}</p>}
-      <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5 font-mono sm:mt-3.5 sm:pt-3">
-        {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
-        {reviewedLabel && (
-          <span className={`ml-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
-            {reviewedLabel}
-          </span>
+        {expanded
+          ? <span className="min-w-0 flex-1 text-[12.5px] font-medium text-muted">{sourceLineFor(srcInfo, T)}</span>
+          : <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-ink">{headline}</span>}
+        <MethodLabel status={status} methodLabel={methodLabel} />
+        {expandable && (
+          <span aria-hidden="true" className={`ms-0.5 shrink-0 text-faint transition-transform ${expanded ? 'rotate-180' : ''}`}>⌄</span>
         )}
-      </div>
+      </button>
+      {expanded && (
+        <>
+          {contextLine
+            ? <p className="font-display text-[19px] font-bold leading-snug text-ink">{contextLine}</p>
+            : claimIsBand
+              ? <p className="font-mono text-[26px] font-bold leading-tight tracking-[-0.01em] text-ink" aria-label={`Band: ${claim}`}>{claim}</p>
+              : <p className="text-[19px] font-bold leading-snug text-ink">{claim}</p>}
+          {context && context !== claim && <p className="mt-1 text-sm text-muted">{context}</p>}
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5 font-mono sm:mt-3.5 sm:pt-3">
+            {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
+            {reviewedLabel && (
+              <span className={`ml-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
+                {reviewedLabel}
+              </span>
+            )}
+          </div>
+        </>
+      )}
     </article>
   )
 }

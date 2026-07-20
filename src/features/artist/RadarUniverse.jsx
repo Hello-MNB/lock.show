@@ -690,14 +690,18 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                     ("AUDIENCE & COMMUNITY") gets a firm 2-line cap, never an
                     ellipsis mid-word — none of the six planet names actually
                     need a 3rd line at this width, so the clamp never fires. */}
-                <span className="line-clamp-2 mt-1.5 block max-w-[80px] whitespace-normal break-words text-center font-mono text-[8px] uppercase leading-tight tracking-[0.08em] text-ink/80 md:text-[9px]">
+                {/* T-9x (owner verdict 21 Jul): readable case, not all-caps
+                    mono — a planet's name is a name, not a code, so it reads
+                    the way the coach copy elsewhere reads (Heebo, sentence/
+                    title case, no letter-spacing). */}
+                <span className="line-clamp-2 mt-1.5 block max-w-[84px] whitespace-normal break-words text-center text-[10px] font-semibold leading-tight text-ink/80 md:text-[11px]">
                   {S.planets[p.key]}
                 </span>
                 {/* G2 — method-safe wording label; words only, never a weight.
                     T-60: text on the FIRST-priority planet only (ring+★ still
                     mark every primary; the rest keep the wording in aria). */}
                 {primary && p.key === genreLabelPlanet && (
-                  <span className="mt-0.5 block w-20 font-mono text-[7px] uppercase tracking-[0.08em] text-gold/75 leading-tight md:text-[8px]">
+                  <span className="mt-0.5 block w-20 text-[9px] font-medium leading-tight text-gold/75 md:text-[10px]">
                     {S.genrePrimary}
                   </span>
                 )}
@@ -740,7 +744,8 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                     <span aria-hidden className="text-xs font-bold leading-none">+</span>
                   </button>
                 ) : (() => {
-                  // T-59: link nodes caption their host; claim nodes caption
+                  // T-59: link nodes caption their PLATFORM'S human name (never
+                  // the raw domain — owner verdict 21 Jul); claim nodes caption
                   // their METHOD LABEL (provenance word) — never the value.
                   const caption = pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value
                   return (
@@ -757,8 +762,10 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
                 {!isConnect && (
                   /* T-61 (L-8 fit law): captions WRAP to two centered lines —
                      truncation on the flagship face is forbidden; the longest
-                     method label ("PRODUCER-CONFIRMED") must read in full. */
-                  <span className="line-clamp-2 block max-w-[96px] whitespace-normal break-words text-center font-mono text-[7px] uppercase leading-tight tracking-[0.06em] text-faint">
+                     method label ("Producer-confirmed") must read in full.
+                     T-9x (owner verdict 21 Jul): readable case, not all-caps
+                     mono — a platform's name reads like a name here. */
+                  <span className="line-clamp-2 block max-w-[96px] whitespace-normal break-words text-center text-[9px] leading-tight text-faint">
                     {pn.fromClaim ? (T.methodLabel?.[pn.method] || human(pn.method)) : pn.value}
                   </span>
                 )}
@@ -806,9 +813,21 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             .btn-primary ever renders (rail closed ⇒ dock returns). ── */}
       {fullStage && !blossom && nextAction && !railHoldsCTA && (
         <div className="relative z-10 hidden items-center justify-between gap-3 rounded-xl border border-gold/25 bg-surface/95 px-3 py-2.5 shadow-card backdrop-blur md:absolute md:bottom-8 md:start-8 md:flex md:w-[380px] md:max-w-[calc(100%-4rem)]">
+          {/* T-9x (owner verdict 21 Jul): the NBA card carries its REASON
+              visibly — why + time hint already existed on the mobile card
+              (ArtistDashboard.jsx) but were dropped here, leaving a bare
+              title with no coaching behind it. One flowing sentence (why,
+              then the time hint as a quiet trailing aside), not a second
+              metadata row — a coach's sentence, not a stat block. */}
           <div className="min-w-0">
             <p className="font-mono text-[8px] uppercase tracking-[0.14em] text-faint">{T.radar.nextActionEyebrow}</p>
             <p className="truncate text-sm font-semibold text-ink">{nextAction.title}</p>
+            {nextAction.why && (
+              <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-muted">
+                {nextAction.why}
+                {nextAction.time != null && <span className="text-faint"> {T.radar.timeHint(nextAction.time)}</span>}
+              </p>
+            )}
           </div>
           {(nextAction.to || nextAction.planet) && (
             <button className="btn-primary shrink-0 px-3 py-2 text-xs" onClick={() => onNextAction?.(nextAction)}>
@@ -961,9 +980,12 @@ function PlanetPanelContent({ selected, sel, S, T, coachScene, batchable, bulkBu
       {/* N3 (T-65, §8.3) — the COACHING LINE, Inspector Layer 1: names the
           artist's actual scene + why this dimension matters there. Scene-
           standard framing ONLY (a fact about the scene, never about peers);
-          G2 — no genre signal → no line. Artist-private (N5 test). */}
+          G2 — no genre signal → no line. Artist-private (N5 test).
+          T-9x (owner verdict 21 Jul): the coach's voice LEADS the panel — a
+          contained card + body-size text, ahead of the technical chrome
+          (chips/labels) below it, not a quiet caption easy to miss. */}
       {coachScene && S.coach?.[selected] && (
-        <p className="mb-3 text-xs leading-relaxed text-muted">
+        <p className="mb-3 rounded-xl border border-line bg-surface2/70 px-3 py-2.5 text-sm leading-relaxed text-ink/90">
           <span className="font-semibold text-ink">{S.coachIn(coachScene)}</span>{' '}
           {S.coach[selected]}
         </p>
@@ -1078,9 +1100,12 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
 
       {/* N2 (T-65, §8.3 node law) — why a buyer cares, per field, from the
           registry (§16.A.5b). The buyer's reasoning next to the ask is what
-          turns a form field into coaching. Artist-private only (N5 test). */}
+          turns a form field into coaching. Artist-private only (N5 test).
+          T-9x (owner verdict 21 Jul): this is the coaching voice, not fine
+          print — reads at the same weight as the label above it, not faded
+          into the chrome. */}
       {n.why && S.why?.[n.why] && (
-        <p className="mt-1.5 text-[11px] leading-relaxed text-faint">{S.why[n.why]}</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-ink/70">{S.why[n.why]}</p>
       )}
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
