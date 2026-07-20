@@ -18,6 +18,21 @@ export const PLANETS = [
 // Node states (spec legend): confirmed ✓ · found ✦ · review ? · missing +
 export const NODE = { CONFIRMED: 'confirmed', FOUND: 'found', REVIEW: 'review', MISSING: 'missing' }
 
+// ── Platform ring — HUMAN platform names (owner verdict 21 Jul: the ring was
+// reading raw platform domains, "OPEN.SPOTIFY.COM"/"INSTAGRAM.COM" — technical,
+// not warm). Same brand-noun set as PlatformLogo's own mark keys (detectPlatform
+// in components/PlatformLogo.jsx), so the ring reads "Spotify"/"Instagram" the
+// way a person would say it. Proper nouns only — identical in EN and HE, same
+// precedent already shipped in passportKit.jsx's own PLATFORM_NAMES (i18n-allow:
+// brand proper nouns, not translatable sentences — matches PlatformLogo's own
+// untranslated names). Category (non-brand) sources fall back to the existing
+// host/label behaviour untouched — only the named-brand case gets humanized.
+export const PLATFORM_NAMES = { // i18n-allow — brand proper nouns, shown as-is in both locales
+  spotify: 'Spotify', soundcloud: 'SoundCloud', instagram: 'Instagram', facebook: 'Facebook',
+  youtube: 'YouTube', tiktok: 'TikTok', whatsapp: 'WhatsApp', telegram: 'Telegram',
+  applemusic: 'Apple Music', beatport: 'Beatport', bandcamp: 'Bandcamp',
+}
+
 // What a source proves / does NOT prove (canon Discovery §7c honesty lines) —
 // keyed by source_type; shown verbatim on the Impact Card at the confirm moment.
 export const PROVES = {

@@ -17,6 +17,65 @@ import { RoomGrammar } from './RoomGrammar.jsx'
 
 export const isBand = (v = '') => /^[\d,.]+\s*[–-]\s*[\d,.]+/.test(String(v).trim())
 
+// ── §8.7 EXPLORER COPY SHIM ──────────────────────────────────────────────────
+// The Interactive Evidence Explorer (§8.7) ratifies a new `T.passport.explorer*`
+// lexicon (see LOCK-PRODUCT-SPECIFICATION.md §8.7 "EN + HE LEXICON" table).
+// This build's territory is src/features/passport/** ONLY — src/lib/i18n/
+// en.js + he.js (the shared manifest) is a sibling team's surface and is
+// deliberately UNTOUCHED here. So these ship as a same-shape LOCAL fallback,
+// exactly the established `T.passport.KEY || fallback` pattern already used
+// above this file (dateFresh/dateVerified/storyWho/storyProven/storyVouches)
+// — every string below is the EXACT EN/HE pair the spec ratifies, so the
+// Explorer is fully bilingual today with zero behavior change once the
+// manifest lands: `T.passport.explorerX` will simply win over `shim.x` the
+// moment it exists, and this block can be deleted then (not required to).
+const EXPLORER_FALLBACK = {
+  en: {
+    railLabel: 'Evidence chapters',
+    jumpTo: (label) => `Jump to ${label}`,
+    next: (label) => `Next: ${label}`,
+    prev: (label) => `Back: ${label}`,
+    progress: (n, total) => `${n} of ${total}`,
+    swipeHint: 'Swipe or tap to see more',
+    expandAria: 'Show full details',
+    collapseAria: 'Hide details',
+    showMore: (n) => `Show ${n} more`,
+    end: "That's everything verified so far.",
+    liveAnnounce: (label, n, total) => `Now viewing: ${label}, ${n} of ${total}`,
+  },
+  he: {
+    railLabel: 'פרקי ההוכחה',
+    jumpTo: (label) => `עבור אל ${label}`,
+    next: (label) => `הבא: ${label}`,
+    prev: (label) => `חזרה: ${label}`,
+    progress: (n, total) => `${n} מתוך ${total}`,
+    swipeHint: 'החליקו או הקישו כדי לראות עוד',
+    expandAria: 'הצג פרטים מלאים',
+    collapseAria: 'הסתר פרטים',
+    showMore: (n) => `הצג עוד ${n}`,
+    end: 'אלה כל הממצאים המאומתים עד כה.',
+    liveAnnounce: (label, n, total) => `מוצג כעת: ${label}, ${n} מתוך ${total}`,
+  },
+}
+
+export function explorerCopy(T, lang) {
+  const shim = EXPLORER_FALLBACK[lang] || EXPLORER_FALLBACK.en
+  const p = T.passport || {}
+  return {
+    railLabel: p.explorerRailLabel || shim.railLabel,
+    jumpTo: p.explorerJumpTo || shim.jumpTo,
+    next: p.explorerNext || shim.next,
+    prev: p.explorerPrev || shim.prev,
+    progress: p.explorerProgress || shim.progress,
+    swipeHint: p.explorerSwipeHint || shim.swipeHint,
+    expandAria: p.explorerExpandAria || shim.expandAria,
+    collapseAria: p.explorerCollapseAria || shim.collapseAria,
+    showMore: p.explorerShowMore || shim.showMore,
+    end: p.explorerEnd || shim.end,
+    liveAnnounce: p.explorerLiveAnnounce || shim.liveAnnounce,
+  }
+}
+
 // ── Proof primitives ────────────────────────────────────────────────────────
 // Method label: mono uppercase, gold on transparent; producer-confirmed in lime.
 // §5.10 warmth layer: a one-line human sub-text peeks in on hover/focus (mouse
@@ -329,11 +388,23 @@ export function drawProofUnits(data, T, BANDS, contextLines) {
 // unit, never a guessed nearest room (§5.10 honesty-on-fallback).
 export function DrawSection({ data, T, label, contextLines, heroRoom = false }) {
   const { BANDS } = useLang()
+  // §8.7 item 3 — single-open accordion, scoped to THIS chapter instance (a
+  // fresh DrawSection mounts per chapter/persona, so this never leaks state
+  // across chapters or faces). `null` defers to the "first item open" default
+  // computed below — hooks must run before the RENDER LAW early-return, so
+  // the null-guard lives here rather than gating the useState call itself.
+  const [openKey, setOpenKey] = useState(null)
   if (!data.hasDraw) return null
   const units = drawProofUnits(data, T, BANDS, contextLines)
   const first = units[0]
   const showRoomGrammar = heroRoom && !!first?.fromClaim && BANDS.capacity.includes(first.band)
   const rest = showRoomGrammar ? units.slice(1) : units
+  // Only turn on tap-to-expand when there's more than one card to disclose —
+  // a lone card stays exactly as before (always expanded, no chevron/toggle).
+  // Default open = the first card, so the chapter never renders fully
+  // collapsed with nothing readable at rest.
+  const canCollapse = rest.length > 1
+  const activeKey = openKey ?? rest[0]?.key ?? null
   return (
     <PassportSection label={label || T.passport.proofTitle} caption={T.passport.drawCaption}>
       <div className="grid gap-3">
@@ -363,6 +434,9 @@ export function DrawSection({ data, T, label, contextLines, heroRoom = false }) 
             sourceType={u.sourceType}
             sourceValue={u.sourceValue}
             T={T}
+            expandable={canCollapse}
+            expanded={!canCollapse || activeKey === u.key}
+            onToggle={() => setOpenKey(activeKey === u.key ? null : u.key)}
           />
         ))}
       </div>
@@ -469,7 +543,7 @@ const cleanGenre = (g) => (g || '').replace(/[,\s]+$/, '') || null
 // safe extraction the ledger itself uses); (3) who vouches — the strongest
 // producer-confirmed claim, ONLY when one is actually on file (RENDER LAW —
 // never an empty promise). Order is fixed 1→2→3, never a ranking.
-export function ProofStory({ artist, data, T, contextLines }) {
+export function ProofStory({ artist, data, T, contextLines, onJumpToDraw }) {
   const { BANDS } = useLang()
   const lead = drawProofUnits(data, T, BANDS, contextLines)[0]
   // Owner witness verdict (21 Jul): beat 03 must never REPEAT beat 02 — when
@@ -480,6 +554,14 @@ export function ProofStory({ artist, data, T, contextLines }) {
   const vouchSafe = vouchClaim && (vouchClaim.public_wording || vouchClaim.public_band || (isBand(vouchClaim.value) ? vouchClaim.value : null))
   const positioning = artist.one_line || [cleanGenre(artist.genre), artist.city].filter(Boolean).join(' · ')
   if (!lead && !vouchSafe && !positioning) return null
+  // §8.7 item 4 — beats 02 ("what's proven") and 03 ("who vouches") become a
+  // jump-menu into the Explorer below: both facts are always extracted from
+  // data.drawClaims/data.drawBands (drawProofUnits, above), which is the SAME
+  // pool DrawSection alone renders — so the target chapter is always 'draw'.
+  // Beat 01 stays inert (it describes the hero already on screen).
+  const jumpProps = onJumpToDraw
+    ? { role: 'button', tabIndex: 0, onClick: onJumpToDraw, onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onJumpToDraw() } } }
+    : {}
   // V1 (owner witness-fix 20 Jul, §6 law 7 Passport fold): at 360×780 the
   // full 3-beat list alone measured ~225px — with the hero above it, the
   // FIRST proof unit (the very next thing after this strip) landed ~75px
@@ -515,7 +597,10 @@ export function ProofStory({ artist, data, T, contextLines }) {
           </div>
         </li>
         {lead && (
-          <li className="flex items-start gap-3 border-t border-line pt-3">
+          <li
+            {...jumpProps}
+            className={`flex items-start gap-3 border-t border-line pt-3 ${onJumpToDraw ? 'tap-target -m-1 cursor-pointer rounded-md p-1 outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent/60' : ''}`}
+          >
             <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-faint">02</span>
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{T.passport.storyProven || "What's proven"}</p>
@@ -525,7 +610,10 @@ export function ProofStory({ artist, data, T, contextLines }) {
           </li>
         )}
         {vouchSafe && (
-          <li className="flex items-start gap-3 border-t border-line pt-3">
+          <li
+            {...jumpProps}
+            className={`flex items-start gap-3 border-t border-line pt-3 ${onJumpToDraw ? 'tap-target -m-1 cursor-pointer rounded-md p-1 outline-none transition hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent/60' : ''}`}
+          >
             <span aria-hidden="true" className="mt-0.5 font-mono text-[10px] text-faint">03</span>
             <div className="min-w-0">
               <p className="font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{T.passport.storyVouches || 'Who vouches'}</p>

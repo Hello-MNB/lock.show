@@ -8,7 +8,7 @@ import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
-import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount, ownHistory } from '../../lib/radarUniverse.js'
+import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount, ownHistory, PLATFORM_NAMES } from '../../lib/radarUniverse.js'
 import { primaryPlanets } from '../../lib/genreWeights.js'
 
 // ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
@@ -86,7 +86,11 @@ function derivePlatformNodes(items = [], claims = []) {
     if (it.item_type !== 'link' || !it.public_url) continue
     const platform = detectPlatform(it.public_url)
     if (!platform || byKey.has(platform)) continue
-    byKey.set(platform, { key: platform, platform, value: hostOf(it.public_url) || human(it.title) || platform })
+    // T-9x (owner verdict 21 Jul, §5.10 warmth layer): the ring caption is the
+    // PLATFORM'S human name when it's a recognized brand ("Spotify", never
+    // "open.spotify.com") — the raw host stays only as the honest fallback for
+    // a category source with no brand name (ticket/venue/press/mailing/search).
+    byKey.set(platform, { key: platform, platform, value: PLATFORM_NAMES[platform] || hostOf(it.public_url) || human(it.title) || platform })
   }
   for (const c of claims) {
     const platform = detectPlatform(c.value) || detectPlatform(c.source_type)
