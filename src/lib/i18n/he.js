@@ -219,6 +219,7 @@ export const T = {
     entryOptional: 'אופציונלי',
     entryLinkTitle: 'הקישור החזק שלך',
     entryLinkHint: 'קישור אחד שמציג אותך הכי טוב — אינסטגרם או סאונדקלאוד. הרדאר סורק אותו ומתחיל לבנות את ההוכחות שלך.',
+    linkInvalid: 'זה עוד לא נראה כמו קישור — נסה להדביק את הכתובת המלאה (למשל instagram.com/השם-שלך).',
     entryDeferNote: 'תמונה, הופעות, מספרים, שאר הקישורים — לא שואלים עכשיו. הרדאר יציף כל אחד מהם כצעד שקט הבא, כשזה רלוונטי.',
     entryStart: 'פתח את הרדאר שלי',
     entryStartScan: 'סרוק — ופתח את הרדאר שלי',
@@ -711,12 +712,31 @@ export const T = {
     verifiedLabel: 'הוכחה מאומתת — ניתן לפרסם',
     selfReportedLabel: 'דיווח עצמי — הצג בזהירות',
     notAssessableLabel: 'לא-ניתן-להעריך',
+    // A8 review-action + row-state keys — was EN-only; ClaimRow reads these
+    // directly (T.claims.approve/correct/omit/flag etc.) so a missing key
+    // rendered as literal "undefined" in Hebrew, not just an English fallback
+    // (§8.13.3 backfill, ratify:R00).
+    needsReview: 'ממתין לאישור שלך',
+    needsReviewHint: 'שום דבר לא מגיע לפספורט שלך — ואפילו לא לתצוגה הפרטית — בלי אישור מפורש שלך.',
+    approve: 'אשר',
+    approvedChip: 'אושר על ידך',
+    correct: 'תקן ערך',
+    correctSave: 'שמור תיקון',
+    omit: 'השמט',
+    omitConfirm: 'להסיר את ההוכחה הזו? היא תימחק.',
+    flag: 'שגוי / לערער',
+    flaggedChip: 'מסומן — בבדיקה',
+    limitationLabel: 'מה זה תומך / לא מוכיח',
+    notApprovedHint: 'אשר את ההוכחה קודם — שום דבר לא מתפרסם בלי אישורך.',
+    selfReportedNoPassport: 'הוכחות שדווחו עצמאית נשארות בתצוגה הפרטית שלך — הן לעולם לא מופיעות בפספורט הציבורי. חזק אותן עם מקור או אישור מפיק.',
     // Named confirmation receipt — says WHAT was confirmed and WHERE it landed.
     confirmReceipt: (dest, w) => `נוסף אל ${dest}: “${w}”`,
   },
   settings: {
     title: 'הגדרות',
     displayName: 'שם מוצג',
+    // T-A3 (§17.B.5 / §8.5-adjacent one-name law) — ראה הערה מקבילה ב-en.js.
+    displayNameHint: 'שם החשבון — פרטי. לעולם לא מוצג למזמינים; מה שהם רואים הוא שם הבמה של האקט שלך (בעמוד "האקט שלי").',
     language: 'שפה',
     languageHe: 'עברית',
     languageEn: 'אנגלית',
@@ -736,9 +756,12 @@ export const T = {
     waIntro: 'המספר שלך נשאר פרטי. מזמין הופעות יראה אותו רק לאחר ששלח אליך בקשה — ורק אם תפעיל/י שיתוף למטה.',
     waNumber: 'מספר וואטסאפ',
     waNumberHint: 'כולל קידומת מדינה, למשל +972…',
+    waInvalid: 'זה עוד לא נראה כמו מספר וואטסאפ תקין — כלול קידומת מדינה, למשל +972 5X-XXX-XXXX.',
     waShareLabel: 'אפשר למזמיני הופעות ליצור איתי קשר בוואטסאפ',
     waShareHint: 'יוצג במסך האישור לאחר שמישהו שולח בקשת זמינות. כבוי כברירת מחדל.',
     waNeedProfile: 'צור/צרי קודם פרופיל אמן, ואז הוסף/הוסיפי כאן את הוואטסאפ.',
+    // §10.4/§17.A.10 — undo affordance on account-level saves.
+    undo: 'ביטול',
     // Consent-record names (settings list) + the footer beta badge.
     consentPrivacy: 'מדיניות פרטיות (v2)',
     consentProcessing: 'עיבוד נתונים (v2)',
@@ -1250,6 +1273,39 @@ export const T = {
   evidence: {
     title: 'הוכחות',
     subtitle: 'העלה קבצים, קישורים או הוסף בנד ידנית',
+    // Claim-first entry (canon A7) — was EN-only; runtime gap on this exact
+    // screen fixed here (§8.13.2 backfill, ratify:R00): T.evidence.intents[k]
+    // and T.evidence.intentAsk[k] are read directly by EvidenceCapture.jsx —
+    // an undefined object here throws, not just shows English fallback text.
+    intentTitle: 'מה תרצה להוכיח?',
+    intentHelp: 'כל טענה משויכת למקור שניתן לאמת. שום נתיב אינו חובה.',
+    intents: {
+      'drew-crowd': 'משכתי קהל',
+      'sold-via-link': 'מכרתי כרטיסים דרך הקישור שלי',
+      'rebooked': 'הוזמנתי שוב לאותו מקום',
+      'community': 'יש לי קהילה פעילה',
+      'produced-event': 'הפקתי אירוע',
+      'consistent-frequency': 'אני מופיע/ה בעקביות',
+      'producer-confirm': 'מפיק יאשר',
+    },
+    intentAsk: {
+      'drew-crowd': 'החזק ביותר: ייצוא ממערכת כרטיסים או דוח סגירה (סטלמנט). תקף גם: בנד משיכה עם קישור ציבורי.',
+      'sold-via-link': 'העלה ייצוא UTM / קופון — מכירות שיוחסו לקישור שלך.',
+      'rebooked': 'מי הזמין אותך שוב? הוסף את שם המקום/המפיק (שם + אירוע או קישור).',
+      'community': 'הזן את גודל הקהילה שלך כמספר. זה כל מה שנשמור.',
+      'produced-event': 'הוסף הוכחה ציבורית לאירוע — קישור או תמונת פוסטר.',
+      'consistent-frequency': 'הוסף קישור ציבורי ללוח הופעות שמראה שאתה מופיע/ה באופן קבוע.',
+      'producer-confirm': 'הוסף את שם המפיק ופרטי הקשר שלו — הוא יקבל קישור אישור חד-פעמי לטענה אחת ספציפית.',
+    },
+    communityLabel: 'גודל הקהילה (מספר בלבד)',
+    communityPII: 'כדי להגן על הקהילה שלך, לעולם אל תעלה רשימות חברים או צילומי מסך עם שמות או טלפונים — החוק הישראלי לפרטיות אוסר זאת. אנחנו שומרים רק את המספר.',
+    referenceLabel: 'מקום / הפניית מפיק',
+    referencePlaceholder: 'לדוגמה "בארבי ת"א — הוזמנתי שוב למרץ" או קישור ציבורי',
+    producerContactLabel: 'שם המפיק + פרטי קשר',
+    producerContactPlaceholder: 'שם · טלפון או אימייל',
+    authorityNote: 'בהוספת ראיה אתה מאשר שיש לך סמכות על המקור הזה.',
+    changeIntent: '→ טענה אחרת',
+    addedOk: 'נוסף — הראיה תאומת ותתויג לפי המקור.',
     uploadFile: 'העלאת קובץ (ייצוא כרטיסים / סטלמנט)',
     bandEntry: 'הוספת בנד ידנית',
     publicUrl: 'קישור ציבורי (מיקס / פרופיל / תוצאת חיפוש)',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { upsertProfile, requestAccountDeletion, hasConsent, recordConsentScope, getMyArtist, saveArtistWhatsApp } from '../../lib/db.js'
@@ -14,6 +14,13 @@ import { logEvent, EVENTS } from '../../lib/analytics.js'
 // The exact 5 canon scope values (DB-STRUCTURE.md Layer 1).
 const ALL_SCOPES = ['view', 'upload', 'edit', 'share', 'publish']
 const scopeWord = (T, s) => T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`] || s
+
+// §10.4 per-field DoD ("invalid = human explanation") — a loose phone-shape
+// check, not a strict E.164 parser: digits/spaces/dashes/parens, optional
+// leading +, 7–15 digits total. Good enough to catch "obviously not a number"
+// without rejecting a real WhatsApp number in an unfamiliar format.
+const WA_SHAPE = /^\+?[\d\s\-()]{7,20}$/
+const isValidWa = (v) => !v.trim() || (WA_SHAPE.test(v.trim()) && v.replace(/\D/g, '').length >= 7)
 
 // ── Collapsible settings group (§10.2 owner no-scroll law, µ-task W3-2).
 // The screen previously stacked every card open → +1521px page overflow @390.
@@ -182,6 +189,11 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  // §10.4/§17.A.10 per-field DoD — "undo available" on every save. Holds the
+  // PRE-save value for a few seconds after a successful save so the artist can
+  // revert without hunting for the old value.
+  const [nameUndo, setNameUndo] = useState(null)
+  const nameUndoTimer = useRef(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   // W3-2 accordion state — which settings groups are expanded. Profile starts
   // open (the screen's one primary job); everything else is one tap away.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport, authHeaders } from '../../lib/db.js'
@@ -31,14 +31,34 @@ export default function ClaimReview() {
   const [loadError, setLoadError] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [republishing, setRepublishing] = useState(false)
-  const [receipt, setReceipt] = useState('') // named confirmation receipt (evidence integrity)
+  // Named confirmation receipt (evidence integrity) — carries the same 7s-undo
+  // contract as the Radar Inspector's confirm (§8.3/§8.13.3 confirm-wording
+  // law: "what landed where" + a real undo window, not just a toast).
+  const [receiptClaim, setReceiptClaim] = useState(null) // { claim, msg } | null
+  const receiptRef = useRef(null)
   // Confirm bloom (Master-Class Pillar 1: the moment of confirmation must feel
   // like progress being minted) — claim id currently mid-bloom (~400ms).
   const [bloomId, setBloomId] = useState(null)
 
-  function flashReceipt(msg) {
-    setReceipt(msg)
-    setTimeout(() => setReceipt(''), 3400)
+  function flashReceipt(claim, msg) {
+    clearTimeout(receiptRef.current)
+    setReceiptClaim({ claim, msg })
+    receiptRef.current = setTimeout(() => setReceiptClaim(null), 7000)
+  }
+
+  // Reverts the just-made approval within the 7s window — same contract as
+  // RadarUniverse's undoConfirm (artist_approved back to false, in place).
+  async function undoApprove() {
+    if (!receiptClaim) return
+    clearTimeout(receiptRef.current)
+    const { claim } = receiptClaim
+    setReceiptClaim(null)
+    setToggling(claim.id)
+    try {
+      await updateClaim(claim.id, { artist_approved: false })
+      setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: false } : c))
+      if (claim.visibility === VISIBILITY.PASSPORT_OK) { markPassportDirty(artist.id); setDirty(true) }
+    } finally { setToggling(null) }
   }
 
   async function load() {
@@ -91,8 +111,9 @@ export default function ClaimReview() {
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: true } : c))
       setBloomId(claim.id)
       setTimeout(() => setBloomId((cur) => (cur === claim.id ? null : cur)), 420)
-      // The receipt names what was confirmed and where it now appears.
-      flashReceipt(T.claims.confirmReceipt(destinationOf(claim, T), claim.public_wording || claim.value || human(claim.claim_type)))
+      // The receipt names what was confirmed and where it now appears, with a
+      // 7s undo (same contract as the Radar Inspector's confirm, §8.3).
+      flashReceipt(claim, T.claims.confirmReceipt(destinationOf(claim, T), claim.public_wording || claim.value || human(claim.claim_type)))
     } finally { setToggling(null) }
   }
 

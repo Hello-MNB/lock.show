@@ -221,6 +221,7 @@ export const T = {
     entryOptional: 'optional',
     entryLinkTitle: 'Your strongest link',
     entryLinkHint: 'One link that shows you best — Instagram or SoundCloud. The Radar scans it and starts building your proof.',
+    linkInvalid: "That doesn't look like a link yet — try pasting the full address (e.g. instagram.com/yourname).",
     entryDeferNote: 'Photo, gigs, numbers, the rest of your links — nothing else is asked now. Your Radar surfaces each one as a quiet next step, when it matters.',
     entryStart: 'Open my Radar',
     entryStartScan: 'Scan it — open my Radar',
@@ -737,6 +738,12 @@ export const T = {
   settings: {
     title: 'Settings',
     displayName: 'Display name',
+    // T-A3 (§17.B.5 / §8.5-adjacent one-name law): this is the ACCOUNT-level
+    // name — it never renders on any buyer-facing surface. The name buyers
+    // read is the Act's own "Stage name" (§8.6), edited separately in Your Act.
+    // This hint exists so the owner's earlier confusion between the two never
+    // recurs.
+    displayNameHint: "Account name — private. Never shown to buyers; your Act's stage name (in Your Act) is what they see.",
     language: 'Language',
     languageHe: 'Hebrew',
     languageEn: 'English',
@@ -756,9 +763,13 @@ export const T = {
     waIntro: 'Your number stays private. A booking manager only sees it after they send you a request — and only if you turn on sharing below.',
     waNumber: 'WhatsApp number',
     waNumberHint: 'Include country code, e.g. +972…',
+    waInvalid: "That doesn't look like a WhatsApp number yet — include the country code, e.g. +972 5X-XXX-XXXX.",
     waShareLabel: 'Let booking managers reach me on WhatsApp',
     waShareHint: 'Shown on the confirmation screen after someone sends you an availability request. Off by default.',
     waNeedProfile: 'Create your artist profile first, then add your WhatsApp here.',
+    // Undo affordance on the two account-level saves (name, WhatsApp) —
+    // §10.4/§17.A.10 per-field DoD requires "undo available" on every save.
+    undo: 'Undo',
     // Consent-record names (settings list) + the footer beta badge.
     consentPrivacy: 'Privacy Policy (v2)',
     consentProcessing: 'Data Processing (v2)',

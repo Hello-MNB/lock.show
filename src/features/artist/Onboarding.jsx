@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, upsertArtist, addProfileItem, addEvidence, processEvidence, hasConsent } from '../../lib/db.js'
@@ -39,7 +39,27 @@ function readSavedStep(userId) {
   return raw >= 1 && raw <= STEPS ? raw : 1
 }
 
+// One-link recognition, made to match how artists actually paste (§8.0.a
+// "recognized-platform chip appears/disappears live" + `detectPlatform`,
+// which already works protocol-less — PlatformLogo.jsx: "works for a pasted
+// link AND a claim row that only carries a category string"). A bare paste
+// like "instagram.com/name" is the common real-world case; requiring the
+// artist to type "https://" first would silently drop their one link into
+// the no-link completion path with zero explanation — never the ONE JOB
+// ("get just enough … one real found signal"). Genuinely unrecognizable text
+// (no dot, spaces, not a link at all) stays unrecognized — never guessed.
+function normalizeLink(raw) {
+  const v = String(raw || '').trim()
+  if (!v) return ''
+  if (/^https?:\/\//i.test(v)) return v
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/\S*)?$/i.test(v)) return `https://${v}`
+  return ''
+}
+
 // Segmented progress — bounded position ("you are here"), never a completion %.
+// aria-live announces the step change to screen readers (same idiom as the
+// §8.7 Evidence Explorer's chapter announcer) — a step change is a real
+// content change, not just a visual one, per §6 law 5 "immediate feedback".
 function ProgressSegments({ step }) {
   const { T } = useLang()
   return (
@@ -54,7 +74,7 @@ function ProgressSegments({ step }) {
           />
         ))}
       </div>
-      <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
+      <p aria-live="polite" className="mt-2 text-center font-mono text-[10px] uppercase tracking-[0.12em] text-muted">
         {T.onboarding.stepOf(step, STEPS)} · <span className="text-ink/80">{T.onboarding.entryStepLabels[step - 1]}</span>
       </p>
     </div>
@@ -77,6 +97,15 @@ export default function Onboarding() {
   const [consentChecked, setConsentChecked] = useState(false)
   const [f, setF] = useState({ stage_name: '', city: '' })
   const [link, setLink] = useState('')
+  const [linkTouched, setLinkTouched] = useState(false)
+  const [capturedLink, setCapturedLink] = useState('') // exactly what step 3 reveals — never re-derived from a since-edited input
+  // §10.4 focus management: a step change is a real content change, not just
+  // a visual one — move focus to the new step's heading so keyboard/SR users
+  // land at the top of it (Step 1 already autofocuses its own input, so this
+  // only matters for 2→3 and any back-navigation).
+  const stepHeadingRef = useRef(null)
+  const mountedRef = useRef(false)
+  const startedLoggedRef = useRef(false)
 
   useEffect(() => {
     (async () => {
@@ -89,6 +118,15 @@ export default function Onboarding() {
           // Canon scope is the single `privacy-processing` (migration 021 CHECK).
           setConsentAlready(await hasConsent(user.id, 'privacy-processing'))
         } catch { setConsentAlready(false) }
+        // Funnel top signal (was never fired anywhere — a genuine gap: the
+        // canon event name exists in analytics.js but no screen fired it).
+        // Fires once per mount, on every real visit to the entry screen
+        // (fresh entry or a resumed mid-entry step) — same "once per visit"
+        // idiom as RADAR_OPENED (ArtistDashboard.jsx).
+        if (!startedLoggedRef.current) {
+          startedLoggedRef.current = true
+          logEvent(EVENTS.ONBOARDING_STARTED, { artist_id: a?.id })
+        }
       } catch (e) { setError(e.message) } finally { setLoading(false) }
     })()
   }, [user.id])
@@ -97,6 +135,13 @@ export default function Onboarding() {
   useEffect(() => {
     sessionStorage.setItem(stepStorageKey(user.id), String(step))
   }, [user.id, step])
+
+  // Move focus to the new step's own heading on every step change (never on
+  // first mount — Step 1's stage-name input already autofocuses).
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return }
+    stepHeadingRef.current?.focus()
+  }, [step])
 
   // Screen 1 → 2: record consent (once) + save the two identity fields.
   async function continueEntry(e) {
@@ -129,8 +174,8 @@ export default function Onboarding() {
     e?.preventDefault?.()
     setSaving(true); setError('')
     try {
-      const url = link.trim()
-      if (/^https?:\/\//i.test(url)) {
+      const url = normalizeLink(link)
+      if (url) {
         await addProfileItem({
           artist_id: artist.id, item_type: 'link', title: url,
           public_url: url, source_status: SOURCE_STATUS.PUBLIC_VERIFIED,
@@ -143,6 +188,7 @@ export default function Onboarding() {
           processEvidence(artist.id).catch(() => { /* radar retries on next visit */ })
         } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
         setSaving(false)
+        setCapturedLink(url) // reveal shows exactly what was saved, never what's still in the input
         setStep(3) // the payoff: show what was captured before landing on the Radar
         return
       }
