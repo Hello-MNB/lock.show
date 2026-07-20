@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useAuth } from '../auth/AuthProvider.jsx'
 import { SOURCE_STATUS, METHOD_LABELS, methodLabelFor } from '../../lib/constants.js'
 import { humanizeDrawBand, humanizeBinary, humanizeReviewDate } from '../../lib/humanize.js'
 import { RoomGrammar } from './RoomGrammar.jsx'
@@ -506,6 +507,15 @@ export function ProofStory({ artist, data, T, contextLines }) {
 // top; proof never depends on the photo. ────────────────────────────────────
 export function PassportHero({ artist, tagline, photoOk, onPhotoError, children }) {
   const { T } = useLang()
+  // Nav-law (§10.6, no dead ends): /passport/:id is deliberately shell-less for
+  // an anonymous buyer arriving via a shared link — no back link needed there.
+  // But the SAME route is also how a logged-in artist/agency/production user
+  // previews their own public Passport (ArtistDashboard "view public", the
+  // artist nav "Passport" tab via PassportSelf, etc.) — and once here they lost
+  // AppShell's nav chrome with no way back. Show a small "back" pill ONLY when
+  // a session exists; RoleHome ("/") already resolves to the right workspace
+  // for any role, same pattern the org/* screens use.
+  const { user } = useAuth() || {}
   const eyebrow = [artist.genre, artist.city].filter(Boolean).join(' · ')
   return (
     <header className="relative">
@@ -536,7 +546,17 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5 pt-4 sm:px-8 sm:pt-5">
         <Wordmark />
-        <LanguageToggle />
+        <div className="flex items-center gap-2">
+          {user && (
+            <Link
+              to="/"
+              className="tap-target text-xs font-mono font-semibold text-muted border border-line rounded-full px-3 py-1 hover:text-ink hover:border-line2 transition"
+            >
+              ← {T.common.back}
+            </Link>
+          )}
+          <LanguageToggle />
+        </div>
       </div>
 
       <div className="relative mx-auto -mt-20 max-w-[720px] px-5 sm:-mt-24 sm:px-8 md:-mt-32">
