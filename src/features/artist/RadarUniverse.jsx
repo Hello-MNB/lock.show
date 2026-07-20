@@ -498,6 +498,23 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     (selected === 'prokit' && sel.state === 'locked') || batchable.length >= 2
   )
 
+  // Owner screenshot defect (20 Jul, §8.2 corner-tenant law/D3 collision law):
+  // the scene rail's `md:end-8` anchors to the OUTER stage container (below),
+  // which also holds the 300px right-rail Inspector `<aside>` (§8.3) as a flex
+  // sibling once a planet is selected — so at ≥1024 the rail's fixed end-8
+  // lands directly over the Inspector's OWN top-end corner, clipping its
+  // title ("Career Proof" etc.) under the "Your standing in" chips. The
+  // Inspector only ever renders under this exact condition (see the `<aside>`
+  // below, `{fullStage && sel && (…)}`), so reserving the aside's real
+  // footprint (300px width + the gap-5 flex gap = 1.25rem + the existing
+  // end-8 = 2rem inset ⇒ 22rem) — ONLY while it is actually mounted — moves
+  // the rail's own end-edge to sit flush against the Inspector's start edge
+  // instead of on top of it, at every width ≥1024 (the Inspector never
+  // renders below md, so no mobile-layout change). One-tenant-per-corner is
+  // restored without touching the Inspector, the mobile layout, or any other
+  // corner tenant (lens rail/history line/next-move card, all untouched).
+  const inspectorOpen = fullStage && !!sel
+
   return (
     // Viewport law (T-35/§10.2): inside the dashboard's fixed-height column this
     // panel FLEXES to the remaining height on md+ (min-h-0 + flex-1 instead of a
@@ -513,7 +530,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
           genres; picking one re-weights the ★ through genreWeights (additive
           emphasis only — never dims, never grades). */}
       {scenes.length > 0 && (
-        <div className="relative z-10 mb-2 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:end-8 md:top-8 md:mb-0 md:pb-0"
+        <div className={`relative z-10 mb-2 flex items-center gap-1.5 overflow-x-auto pb-1 md:absolute md:top-8 md:mb-0 md:pb-0 ${
+            inspectorOpen ? 'md:end-[22rem]' : 'md:end-8'
+          }`}
           role="tablist" aria-label={S.sceneLabel}>
           {/* V4 (owner witness-fix 20 Jul): the label WAS already rendering
               unconditionally at every width (no hidden/md: gate) — the defect

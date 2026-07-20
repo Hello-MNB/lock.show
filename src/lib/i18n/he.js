@@ -331,6 +331,10 @@ export const T = {
     nextPresenceExists: 'נוכחות קיימת',
     nextEnableInvoice: 'הפעל חשבונית (עוסק מורשה)',
     nextReady: 'מוכן',
+    // NOTE (T-A2, 20 Jul): was missing entirely — EN fell back silently
+    // whenever all four axes were covered (ArtistReadiness.jsx `R.nextAllCovered`),
+    // so a fully-covered artist saw a blank next-step card in Hebrew.
+    nextAllCovered: 'כל ארבעת התחומים מכוסים — כך נראה אקט שמוכן להזמנה. שמור על כך: הוכחה מאומתת מתיישנת, אז רענן הוכחות אחרי כל הופעה חזקה.',
   },
   passport: {
     // ── מטריצת תרגום: LOCK-Glossary §14b (7 Jul) — מונחי סצנה נעולים:
@@ -522,6 +526,17 @@ export const T = {
     eventLabel: 'אירוע',
     artistLabel: 'אמן', // B3 (T-79) — שורת פירוט בתיבת הבקשות
     closeConfirm: 'לסגור את הבקשה?',
+    // ── ווידג'ט ההחלטה §17.A.4 (ArtistRequests בלבד — תיבת הסוכנות ממשיכה
+    // עם markReplied/markClosed/statusReplied/statusClosed ללא שינוי) ──
+    requestSayAvailable: 'ייתכן שאהיה זמין',
+    requestNotForMe: 'לא מתאים לי',
+    declineConfirm: 'לדחות את הבקשה?',
+    availabilitySentChip: '✓ הזמינות נשלחה',
+    declinedChip: 'נדחתה',
+    safetyCueNoContact: 'שום פרט קשר לא שותף עדיין — כלום לא נחשף עד שתגיב.',
+    missingInfoLabel: 'חסר:',
+    requestFitComplete: 'הפרטים המרכזיים כאן — מספיק כדי להחליט.',
+    requestFitPartial: 'עדיין חסרים כמה פרטים — ראה למטה.',
     // ── כרטיס צד ורוסטר (AgencyDashboard) ──
     newCount: (n) => `${n} חדשות`,
     requestsLoadError: 'לא הצלחנו לטעון את הבקשות כרגע.',

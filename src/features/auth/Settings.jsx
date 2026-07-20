@@ -233,6 +233,13 @@ export default function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Kept in sync so the two "did X actually change" effects below can read
+  // the CURRENT role without listing it as a dependency — a workspace switch
+  // changes `role` alone and must never masquerade as a consent or language
+  // change (both effects would otherwise re-fire on every role change too).
+  const roleRef = useRef(role)
+  useEffect(() => { roleRef.current = role }, [role])
+
   // §14.1.2 event #6 `consent_withdrawn` / consent_granted trigger is named
   // "(settings)" in the canon table — this IS that trigger point. Skips the
   // initial load (hasConsent below only sets the starting value, not a change).
@@ -240,8 +247,9 @@ export default function Settings() {
   useEffect(() => {
     if (!marketingLoaded) return
     if (marketingFirstLoad.current) { marketingFirstLoad.current = false; return }
-    logEvent(marketing ? EVENTS.CONSENT_ACCEPTED : EVENTS.CONSENT_WITHDRAWN, { role, scope: 'marketing' })
-  }, [marketing, marketingLoaded, role])
+    logEvent(marketing ? EVENTS.CONSENT_ACCEPTED : EVENTS.CONSENT_WITHDRAWN, { role: roleRef.current, scope: 'marketing' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketing, marketingLoaded])
 
   // Dev-only breadcrumb (§14.1.2: `language_changed` is a local-ring event,
   // never persisted) — the language row's own DoD ("language change... applies
@@ -250,8 +258,9 @@ export default function Settings() {
   const langFirstRender = useRef(true)
   useEffect(() => {
     if (langFirstRender.current) { langFirstRender.current = false; return }
-    logEvent(EVENTS.LANGUAGE_CHANGED, { role, lang })
-  }, [lang, role])
+    logEvent(EVENTS.LANGUAGE_CHANGED, { role: roleRef.current, lang })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang])
 
   useEffect(() => {
     (async () => {

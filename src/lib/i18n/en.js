@@ -527,6 +527,17 @@ export const T = {
     eventLabel: 'Event',
     artistLabel: 'Artist', // B3 (T-79) — inbox detail row
     closeConfirm: 'Close this request?',
+    // ── §17.A.4 decision-widget (ArtistRequests only — AgencyRequestsInbox
+    // keeps markReplied/markClosed/statusReplied/statusClosed unchanged) ──
+    requestSayAvailable: 'Say I may be available',
+    requestNotForMe: 'Not for me',
+    declineConfirm: 'Decline this request?',
+    availabilitySentChip: '✓ Availability sent',
+    declinedChip: 'Declined',
+    safetyCueNoContact: 'No contact details shared yet — nothing is exposed until you reply.',
+    missingInfoLabel: 'Missing:',
+    requestFitComplete: 'The key details are here — enough to make a call.',
+    requestFitPartial: 'A few details are still missing — see below.',
     // ── dashboard side card + roster (AgencyDashboard) ──
     newCount: (n) => `${n} new`,
     requestsLoadError: "Couldn't load requests right now.",
