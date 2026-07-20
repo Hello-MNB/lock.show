@@ -103,7 +103,7 @@ export default function AvailabilityRequest() {
       <PageShell max="max-w-md">
         <div className="mb-8 flex items-center justify-between">
           <Wordmark />
-          <Link to={`/passport/${id}`} className="text-sm text-muted transition hover:text-ink">
+          <Link to={`/passport/${id}`} className="tap-target text-sm text-muted transition hover:text-ink">
             ← {T.common.back}
           </Link>
         </div>
@@ -119,31 +119,31 @@ export default function AvailabilityRequest() {
             </p>
           )}
 
-          <Field label={T.request.name} error={fieldErr.requester_name}>
+          <Field label={T.request.name} hint={T.request.nameHint} error={fieldErr.requester_name}>
             <input className="field" value={f.requester_name} onChange={set('requester_name')}
               placeholder={T.request.namePlaceholder} autoComplete="name" />
           </Field>
-          <Field label={T.request.org}>
+          <Field label={T.request.org} hint={T.request.orgHint}>
             <input className="field" value={f.requester_org} onChange={set('requester_org')}
               placeholder={T.request.orgPlaceholder} autoComplete="organization" />
           </Field>
-          <Field label={T.request.eventDate}>
+          <Field label={T.request.eventDate} hint={T.request.eventDateHint} error={fieldErr.event_date}>
             <input className="field" type="date" value={f.event_date} onChange={set('event_date')} />
           </Field>
-          <Field label={T.request.location}>
+          <Field label={T.request.location} hint={T.request.locationHint}>
             <input className="field" value={f.location} onChange={set('location')} placeholder={T.request.locationPlaceholder} />
           </Field>
-          <Field label={T.request.capacity}>
+          <Field label={T.request.capacity} hint={T.request.capacityHint}>
             <select className="field" value={f.capacity_band} onChange={set('capacity_band')}>
               <option value="">—</option>{BANDS.capacity.map((b) => <option key={b}>{b}</option>)}
             </select>
           </Field>
-          <Field label={T.request.budget}>
+          <Field label={T.request.budget} hint={T.request.budgetHint}>
             <select className="field" value={f.budget_band} onChange={set('budget_band')}>
               <option value="">—</option>{BANDS.budget.map((b) => <option key={b}>{b}</option>)}
             </select>
           </Field>
-          <Field label={T.request.message}>
+          <Field label={T.request.message} hint={T.request.messageHint}>
             <textarea className="field" rows={3} value={f.message} onChange={set('message')}
               placeholder={T.request.messagePlaceholder} />
           </Field>

@@ -110,7 +110,7 @@ export default function RequestConfirmation() {
             </div>
           )}
 
-          <Link to={`/passport/${id}`} className="mt-5 inline-block text-sm text-muted transition hover:text-ink">
+          <Link to={`/passport/${id}`} className="tap-target mt-5 inline-block text-sm text-muted transition hover:text-ink">
             ← {T.request.backToPassport}
           </Link>
         </div>
