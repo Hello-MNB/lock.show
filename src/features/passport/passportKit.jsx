@@ -176,7 +176,7 @@ export function PassportSection({ label, caption, children }) {
     // tablet only (md+ keeps the original 40px rhythm unchanged) as part of
     // the hero-fold compression; this is spacing only, no section is removed
     // or reordered.
-    <section className="mt-6 sm:mt-8 md:mt-9">
+    <section className="mt-6 sm:mt-8 md:mt-7">
       <h2 className="font-display text-[22px] font-bold text-ink">{label}</h2>
       {caption && (
         <p className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.12em] text-faint">{caption}</p>
@@ -453,7 +453,7 @@ export function ProofStory({ artist, data, T, contextLines }) {
   // method label text, just laid out on one line instead of three.
   const leadMethodKey = lead ? methodLabelFor({ method_label: lead.methodLabel, verification_status: lead.status }) : null
   return (
-    <section className="mt-4 rounded-[18px] border border-line bg-surface2/60 px-4 py-3 sm:mt-6 sm:px-5 sm:py-4 md:mt-7">
+    <section className="mt-4 rounded-[18px] border border-line bg-surface2/60 px-4 py-3 sm:mt-6 sm:px-5 sm:py-4 md:mt-5 md:py-3.5">
       {/* compact single-line spine — mobile only */}
       <p className="text-[13px] leading-snug text-ink sm:hidden">
         <span className="font-display font-semibold">{artist.stage_name}</span>
@@ -518,7 +518,7 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
           shorter band so identity + the first proof card can share one
           screen. */}
       {artist.photo_url && photoOk ? (
-        <div className="relative h-[32vh] min-h-[210px] max-h-[380px] w-full overflow-hidden sm:h-[38vh] sm:min-h-[290px] sm:max-h-[460px] md:h-[38vh] md:min-h-[300px] md:max-h-[460px]">
+        <div className="relative h-[32vh] min-h-[210px] max-h-[380px] w-full overflow-hidden sm:h-[38vh] sm:min-h-[290px] sm:max-h-[460px] md:h-[32vh] md:min-h-[250px] md:max-h-[400px]">
           <img
             src={artist.photo_url}
             alt={artist.stage_name}
@@ -539,7 +539,7 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
         <LanguageToggle />
       </div>
 
-      <div className="relative mx-auto -mt-20 max-w-[720px] px-5 sm:-mt-24 sm:px-8 md:-mt-28">
+      <div className="relative mx-auto -mt-20 max-w-[720px] px-5 sm:-mt-24 sm:px-8 md:-mt-32">
         <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
           {tagline || T.passport.eyebrow}
         </p>
