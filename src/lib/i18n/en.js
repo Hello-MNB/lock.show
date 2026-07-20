@@ -1161,7 +1161,7 @@ export const T = {
         numberInvalid: 'A whole number above zero — just the count.',
         openEvidence: 'Open evidence capture (consent applies)',
       },
-      state: { established: 'Established', developing: 'Developing', needs: 'Needs you', locked: 'Not needed yet' },
+      state: { established: 'Ready to support', developing: 'Growing', needs: 'Needs your touch', locked: 'Not needed yet' },
       // R-2 (T-82, §8.2 L648) — locked Professional Kit: a sequencing hook, never a judgement.
       lockedChip: 'Not needed yet — it opens once your live draw is backed',
       lockedCta: 'Confirm your live draw first',
