@@ -74,7 +74,7 @@ export default function RadarFeed() {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-end mb-4"><Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <div className="flex items-center justify-end mb-4"><Link to="/agency" className="tap-target text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-1">{T.radar.title}</h1>
       <p className="text-sm text-muted mb-4">{T.radar.subtitle}</p>
 
@@ -85,12 +85,12 @@ export default function RadarFeed() {
           {signals.length > 0 && (
             <div className="flex gap-2 mb-4">
               <select aria-label={T.radar.filterArtist} value={fArtist} onChange={(e) => setFArtist(e.target.value)}
-                className="field flex-1 min-h-[40px] rounded-lg px-2 py-2 text-xs">
+                className="field flex-1 min-h-[44px] rounded-lg px-2 py-2 text-xs">
                 <option value="">{T.radar.filterArtist}: {T.radar.filterAll}</option>
                 {artists.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
               <select aria-label={T.radar.filterType} value={fType} onChange={(e) => setFType(e.target.value)}
-                className="field flex-1 min-h-[40px] rounded-lg px-2 py-2 text-xs">
+                className="field flex-1 min-h-[44px] rounded-lg px-2 py-2 text-xs">
                 <option value="">{T.radar.filterType}: {T.radar.filterAll}</option>
                 {types.map((t) => <option key={t} value={t}>{T.radar.ruleLabel?.[t] || t}</option>)}
               </select>
@@ -119,13 +119,13 @@ export default function RadarFeed() {
                       <span className="font-mono text-[11px] text-faint">{sig.signalDate}</span>
                     </div>
                     <p className="text-sm text-ink mb-2">{explain(sig, T)}</p>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
                         {(sig.methodLabel || sig.vstatus) && <SourceLabel status={sig.vstatus} methodLabel={sig.methodLabel} />}
-                        {sig.evidenceBasis && <span className="text-xs text-muted truncate">{T.radar.basisLabel}: {sig.evidenceBasis}</span>}
+                        {sig.evidenceBasis && <span className="min-w-0 line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted">{T.radar.basisLabel}: {sig.evidenceBasis}</span>}
                       </div>
                       <button onClick={() => nav(actionRoute(sig))}
-                        className="chip bg-accent text-[#12160A] text-xs font-bold shrink-0 min-h-[36px] px-3">
+                        className="chip bg-accent text-[#12160A] text-xs font-bold shrink-0 min-h-[44px] px-3">
                         {T.radar.action[sig.actionType]}
                       </button>
                     </div>

@@ -412,13 +412,21 @@ The recurring UX critique: a raw band ("300–800") or a binary ("invoice_ready 
 | ~1,000+ | "Plays festival-scale stages" |
 Rules: the human line **describes room fit, never ranks the artist**; always pair with the band (kept visible) + a method label; **the tiers are NOT an ordered "better→worse" ladder** — a lounge act is not "lower" than a festival act, just a different room. *(This is why §2.1 stays as-is: the moment these become a ranked ladder or replace the band, they are a rank — forbidden.)*
 
+**The ROOM GRAMMAR — the draw unit's hero visual (owner-picked concept 3, 20 Jul — ratify: R00).** The four canonical bands may render as four **room silhouettes side-by-side** — Lounge · Club · Hall · Festival stage — with the artist's room **lit by a stage-light cone**; the band value + its method chip sit on/under the light; the §5.10 human line leads beneath. Binding grammar rules:
+1. **Side-by-side, equal footprint, fixed venue-type order** — the rooms are DIFFERENT ROOMS, never a size-progression, never a stacked/growing bar, never left-to-right "growth" framing. Equal visual weight for the unlit rooms (quiet outlines — rooms, not failures; no grey-to-shame, no red).
+2. **One room lit** — the artist's stored band lights exactly its room. The light carries the truth: band value visible + method chip adjacent. The picture IS the band; it adds no information the band doesn't hold.
+3. **Canonical bands only, honesty on fallback** — the room grammar fires ONLY when the confirmed, passport-ok draw claim carries one of the four canonical bands. A free-form band (e.g. "220–340") falls back to warm-line-over-band with NO room lit — never a guessed nearest room.
+4. **Buyer-facing draw presentation only** — never an artist-private gap display (an unlit room must never read as "what you lack"; artist-side coaching stays §8.2/§8.3 vocabulary).
+5. **A11y/aria** = the band + method label in words ("150–500 · Evidence-supported") — never "bigger/better/level".
+6. **Firewall check (the two questions):** the room is the same stored band drawn as a picture — not a number about a person; four rooms side-by-side under rule 1 — not a peer comparison, not a ladder. Any render that breaks rule 1 (progression framing) IS a rank and is forbidden.
+
 **Binary → positive capability (negatives NEVER shown buyer-side).**
 - true → an active, warm trait: `✓ Issues formal tax invoices` · `✓ Stage-ready technical rider on file`. A cluster of trues can read as **"Turnkey · booking-ready."**
 - false/missing → **absent from the buyer Passport entirely** (gaps are never shown to a buyer, §8.7). "Admin needed / Not ready" states may appear **only on the artist's private Radar**, and there only as a warm invitation ("Unlock Turnkey — buyers book faster when docs are on file"), never a red "Not Ready" verdict.
 
-**Method label → canon chip + human sub-text.** Keep the English canon chip (the moat, §4.4); add a one-line human explainer on the buyer face / on source-peek: `★ Producer-confirmed` → *"verified by an industry peer who worked with them — this claim only."* (Source-peek detail = §8.7 B6 / §17.A.6.)
+**Method label → canon chip + human sub-text.** Keep the English canon chip (the moat, §4.4); add a one-line human explainer on the buyer face / on source-peek: `★ Producer-confirmed` → *"verified by an industry peer who worked with them — this claim only."* (Source-peek detail = §8.7 B6 / §17.A.6.) **BUILT (Wave-B/T-77, 20 Jul):** `methodLabelHint` dict (all 6 methods, EN+HE) rendered as a hover/focus/tap peek on `MethodLabel`; warm dates BUILT via `humanizeReviewDate` ("Fresh proof · {month}" ≤90d, else "Verified · {month}"); venue-context draw lines BUILT — with the honest limit that `humanizeDrawBand` fires only on the 4 canonical bands, and seeded free-form ranges (e.g. "220–340") fall back to band-only until the extraction pipeline normalizes `public_band` (pipeline gap, pre-existing, recorded).
 
-**Status words → warm invitations** (already the voice law §4.5/§6.8): "ready to support" / "growing" / "needs your touch" — never "weak/missing/not assessable." **Dates → "Fresh proof · July 2026"** / "added this month," not "Reviewed 12/05/2026." **Milestones** render as named waypoints ("First light" … "Ready for market"), **never `M1–M8`** on screen (§8.2).
+**Status words → warm invitations** (already the voice law §4.5/§6.8): "ready to support" / "growing" / "needs your touch" — never "weak/missing/not assessable." **Dates → "Fresh proof · July 2026"** / "added this month," not "Reviewed 12/05/2026." **Milestones** render as named waypoints ("First light" … "Ready for market"), **never `M1–M8`** on screen — `M1–M8` are internal spec/analytics codes (§4.1a names are the only display form; §8.2 agrees).
 
 **Two visual-grammar rules (adopted from review):**
 1. **Lime discipline** — solid lime = an actionable **button only**. A *confirmed status* uses a **lime outline / lime text**, never a solid-lime fill, so a buyer/artist never taps a status chip thinking it's a CTA. (Protects law 3's one-CTA clarity.)
@@ -430,6 +438,8 @@ Rules: the human line **describes room fit, never ranks the artist**; always pai
 - **Per-planet tallies** in the Inspector — "confirmed 4 · found 2 · to add 3" (the artist's own items on their private Radar).
 - Named waypoints (M-names) + the count-up, as already specified.
 Rules: artist-private surfaces only; denominators exclude N/A fields (N/A ≠ gap, §16.A.5b); never comparative, never a quality read, never buyer-facing. **A completion *percentage* remains rejected (§2.9) unless the owner rules R-11 (§18.2) to allow the artist-private variant — this vocabulary needs no such ruling.**
+
+**Proof-card order as BUILT (T-83 P-3, 20 Jul — ratify: R00):** provenance leads — source line + method chip at the TOP of the card, claim/human line in the middle, band + date in the quiet bottom row. The chip renders ONCE (top, beside the source), not duplicated beside the band — resolving the warm-line-lead vs provenance-lead overlap in favor of provenance-lead.
 
 **Firewall guardrails on this whole layer:** no ranked ladder; no numeric grade; no negative state on a buyer face; the band/binary stays the stored truth; every human line pairs with provenance. Warmth is a **wording + visual** change, never a data change.
 
@@ -460,6 +470,8 @@ The audit's top drift point: values marked "OWED by Codex (Drive)" (§5.9) are u
 Solid-lime is **buttons only** (a confirmed *status* uses lime **outline/text** — §5.10). One primary per view (law 3).
 **Light-card token (task surfaces):** bg `ds-card #FFFFFF` · border `1px ds-mist #DDE3D9` · radius 12 · padding 16–20 · text `ds-forest #18221A`.
 **Motion tokens:** the 5 easings + duration ladder + reduced-motion contract are DEFINED in §17.0 (derived from the prototype) — also no longer owed.
+
+**G-DS · Radar effect-layer tokens — DOCUMENTED-IN-CODE-ONLY (currency audit T-69/T-70, 18 Jul — ratify: R00).** The Artist screens use an effect vocabulary that exists in `src/index.css` + `tailwind.config.js` but NOT yet in `docs/design-system/`: `glow-found` (✦ gold discovery pulse) · `bloom-confirm` (~420ms confirm bloom) · `shadow-glow-gold` · `dark-island` (the Radar stage ground) · constellation-thread state colors (amber=needs-you · teal=developing · lime=ready) · sonar/sweep/starfield motion · `shadow-card` (partially documented) · `tap-target` (documented once). Present-and-current in the DS docs: all color/spacing/type tokens (gold·teal·amber·na-bg, lime discipline), node marks ✓✦?+, dashed=private/solid=public. **Ruling needed (R00/Codex lane): adopt the as-built values into the DS doc (mechanical transcription from index.css — no invention) or assign to Codex.** Until adopted, `index.css` is the working source of these values; the generated COMPONENT-STYLES registry also does not yet cover feature components (generator-scope gap, same ruling).
 
 **Still genuinely OWED (assets, not blockers):** the **master logo SVG** and **real venue logos** (Barby/Block/Sunset) — until delivered, use the existing wordmark component + neutral text placeholders; and the **gold/amber ruling** (§5.4, interim = neutral mist). These are asset/owner items; no *code value* is blocked by them.
 
@@ -563,7 +575,161 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 
 ---
 
-### 8.1 Onboarding (`/onboarding`) — the discover→confirm narrative (BUILT 3-step as of 18 Jul, T-58 — reveal ships the REAL-data version; the animated multi-source scan moment stays TARGET)
+### 8.0 The Complete Radar Flow — four stages, one viewport each (owner order 21 Jul — ratify: R00)
+
+**Owner verdict (verbatim intent, 21 Jul, Hebrew):** *"הכל צריך לקרות במסך אחד כמסכים אינטראקטיביים — זה לא מה שאני רואה. תסיים את הפלואו המלא של הרדאר: (א) קבלת מידע בסיסי מהאמן, (ב) מציאת מידע נוסף, (ג) אימותים, (ד) הצעות שדרוג מנומקות."* — EN gloss: *"Everything must happen in ONE screen height as INTERACTIVE screens — that's not what I see. Finish the RADAR's complete FLOW: (a) getting basic info from the artist, (b) finding additional info, (c) verifications, (d) reasoned upgrade suggestions."* This section is the binding answer: the four stages of §8.2's loop (`scan → ✦ found → artist confirms ✓ → LOCK advises → artist adds it → scan again`), each specified as its OWN one-viewport interactive stage per §6 law 7 ("one-viewport per primary workflow") and law 13 ("one canvas per workspace — every secondary action happens in place"), audited against the build at HEAD per HOW-TO-BUILD-A-TASK Part 8. **Nothing below invents a new screen** — every stage routes to an existing §8.1/§8.2/§8.3 surface; this section is the flow-level lens across them, honestly marked BUILT / PARTIAL / TARGET, with genuine gaps flagged (never filled by guessing, per Part 0).
+
+**SUCCESS FORMULA (Part 8.1).** The flow succeeds when an artist can move basics → found → confirmed → next-move without the ground shifting under them — every stage they touch is either (i) already inside the Radar's one bounded canvas (Inspector / bottom-sheet / inline widget) or (ii) a clearly-named, deliberately separate one-viewport card (Onboarding, Source-Confirmer) — never an open-ended scrolling page standing in for a "step." It does **not** succeed merely because each individual field saves correctly.
+
+**COMPLETENESS CHECKLIST (Part 8.2 — the parameters this section audits, per stage below):** navigation (in ↔ back, §10.6) · one-viewport layout vs contained-scroll region (§6.7) · every interaction enumerated (element · states · in-place behavior) · firewall constraints (§2) · signals fired (§14.1) · EN+HE lexicon keys · BUILT/PARTIAL/TARGET honesty (§2.8).
+
+#### The stage table (built status · one-viewport verdict TODAY · interaction count spec'd below)
+
+| Stage | ONE job | Surface(s) at HEAD | Built status | One-viewport verdict TODAY |
+|---|---|---|---|---|
+| **(a) Basic-info intake** | get just enough (stage name + one link) to open a live Radar with one real found signal | `Onboarding.jsx` (§8.1) | BUILT (3-step, T-58) | Fits by brevity, not by an engineered height cap; fit-tested (`scripts/test-fit.mjs`) in its default Step-1 render only |
+| **(b) Additional-info discovery** | let the artist hand LOCK one more piece of their footprint and see it become a ✦ found claim | Radar-inline `MissingFill` (§8.3, simple fields) **+** `EvidenceCapture.jsx` `/evidence/:artistId` (files/forms) | BUILT (functionally) | Inline half = one-viewport (inside the Inspector). `EvidenceCapture.jsx` = an unbounded scrolling page, **not** fit-tested |
+| **(c) Verification** | let a claim earn its strongest method label — self-confirm or producer-confirm — without leaving the Radar's mental model | Radar-inline confirm (§8.3) **+** `ClaimReview.jsx` `/artist/claims` (correct/omit/flag + producer-confirm request) **+** `ProducerConfirm.jsx` `/confirm/:token` (§8.9) | BUILT, split across 3 surfaces | Self-confirm half = one-viewport (Inspector). Correct/omit/flag + producer-confirm-request = a separate scrolling page, **not** fit-tested. The receiving ceremony (§8.9) = one-viewport, fit-tested |
+| **(d) Reasoned upgrade suggestions** | never let a gap sit silent — every Needs-you state carries one named reason a buyer cares, in the artist's own scene's terms | Coaching line + next-best-move dock (§8.2/§8.3, `pickNextAction`) **+** registry `why_a_buyer_cares` (`registryUniverse.js`) | BUILT (coaching + NBA) · PARTIAL (16/376 registry why-keys wired; HE half of the registry namespace not yet authored) | One-viewport already (inside the engineered dashboard column) |
+
+---
+
+#### 8.0.a — Stage (a): Basic-info intake (`Onboarding.jsx`, §8.1 is the full screen spec)
+
+**ONE JOB.** Collect only stage name + one optional link; everything else is deferred to the Radar's in-place fill mechanics (per the file's own MINIMUM-VIABLE-ENTRY header note, 8 Jul owner order).
+
+**ONE-VIEWPORT LAYOUT.** A centered `PageShell max-w-lg` overlay card; no internal contained-scroll region is declared — the screen relies on its content staying short (2 fields, one sticky CTA bar) rather than on an engineered height cap (contrast §8.2's dashboard column, which hard-caps at `h-[calc(100dvh-…)]`). `scripts/test-fit.mjs` asserts `/onboarding` at 360×780 and 1360×850, but only the screen's **default Step-1 landing** — the consent-block-visible variant and the Step-3 reveal are not separately asserted.
+
+**ENUMERATED INTERACTIONS (element → states → in-place behavior):**
+| Element | States | In-place behavior |
+|---|---|---|
+| `stage_name` field (required, autofocus) | empty · typing · saved | gates the primary CTA (`disabled={saving \|\| !f.stage_name.trim() \|\| …}`) |
+| `city` field (optional) | empty · typing · saved | no gate |
+| `ConsentLegal` checkbox | shown only if `!consentAlready` · unchecked · checked | additional CTA gate until checked |
+| Primary CTA "Continue" (`continueEntry`) | idle · saving (spinner) · error (`ErrorNote`) | `upsertArtist` + `recordPrivacyConsent` (once) → `setStep(2)`, same card, no navigation |
+| `link` field (optional, `dir="ltr"`, `inputMode="url"`) | empty · typing · recognized-platform chip appears/disappears live (`detectPlatform`) | no navigation, live recognition only |
+| Back (`btn-ghost`, disabled while saving) | idle · disabled | `setStep(1)` in place |
+| Primary CTA (Step 2, `startRadar`) | label swaps `entryStartScan` ↔ `entryStart` depending on `linkGiven` | valid URL → `addProfileItem` + best-effort `addEvidence`/`processEvidence` → `setStep(3)`; no valid URL → `finish()` directly (never fabricates a reveal) |
+| Step 3 reveal card | static (no further input) | shows the pasted link as a real ✦-found row; primary CTA `finish()` clears the resume-step key, logs `onboarding_completed`, navigates to `/artist/home` |
+| Refresh mid-entry | resumes at the saved step (`sessionStorage` `gigproof_onboarding_step_{userId}`) | never restarts from Step 1 |
+
+**FIREWALL.** Unchanged from §8.1 — the Step-2/3 honest-scope line ("a wider multi-source auto-scan is in development") ships verbatim; the Step-3 tally is a count of the artist's own found items, never a grade.
+
+**SIGNALS.** `onboarding_completed` (`ONBOARDING_COMPLETE`) fires once from `finish()`, identical whether reached from the no-link Step-2 path or the Step-3 reveal — there is no separate "reveal seen" signal today.
+
+**LEXICON (EN, keys — HE twins live in `OBT.he`/`he.js` per §8.1, not independently re-spot-checked in this pass).** `T.onboarding.{entryTitle, entryHint, stageName, city, entryOptional, stepOf, entryStepLabels[], entryLinkTitle, entryLinkHint, linkPlaceholder, entryStartScan, entryStart, entryDeferNote, revealTitle, revealSub, revealRowSub, revealFound, revealScope, revealCta}` · `T.evidence.platformRecognized()` · `T.common.{continue, back, error}`.
+
+**STATUS.** BUILT · one-viewport by brevity, not by height contract · fit-tested in its default state only.
+
+---
+
+#### 8.0.b — Stage (b): Additional-info discovery (link scan → ✦ found)
+
+**ONE JOB.** Let the artist hand LOCK one more piece of their public footprint and watch it become a ✦ found claim, without learning a new mental model.
+
+**TWO BUILT PATHS + ONE TARGET.**
+1. **Radar-inline (`MissingFill`, inside `PlanetRow`, §8.3)** — simple single-field fills (band picks, photo, one-liners) open an inline mini-form in the already-open Inspector/bottom-sheet. **One-viewport: yes** — no navigation, no page scroll, the existing panel just grows a form.
+2. **`EvidenceCapture.jsx` (`/evidence/:artistId`)** — the claim-first three-path flow (upload / connect / declare) for anything `MissingFill` can't do inline: file uploads (ticket exports, screenshots), producer-reference text, community counts. **One-viewport: no.** The page stacks, all simultaneously in the DOM and page-scrollable: consent-gate card → 3 path cards → the chosen intent's form → an unbounded "collected" evidence list → a processing skeleton → an unbounded "results" claims list → the `Process` button at the very bottom. Nothing here is a named contained-scroll region (§6.7's explicit exception) — it is one long page that grows with evidence count, the literal shape law 1 (§6.1, "never many panels of evidence and internal states") forbids. **It is absent from `scripts/test-fit.mjs`** (which asserts only login / radar / radar-panel / onboarding / confirm) — the L1 fit ladder (HOW-TO-BUILD Part 2) has never actually run on this screen.
+3. **Multi-source deep scan + automatic incremental re-scan (§9, CLAUDE.md) — TARGET, not built.** Today "discovery" always means: the artist pastes/uploads one thing, the AI extracts claims from that one thing (§2.8 BUILT capability) — never an autonomous multi-source crawl.
+
+**ENUMERATED INTERACTIONS (`EvidenceCapture.jsx`, BUILT today):**
+| Element | States | In-place behavior |
+|---|---|---|
+| Consent-gate card (`evidence-storage` scope) | unconsented · consenting (spinner) · consented | one CTA (`acceptEvidenceConsent`) reveals the rest of the page |
+| 3 path cards (`upload`/`connect`/`declare`) → intent chips | idle · selected | `setIntent(key)` swaps to the Step-2 form in place (same page) |
+| Step-2 form (6 intent variants) | empty · typing · uploading (file) · error (size/type) · saved (toast, 2.2s) | `submitEvidence`/`addBand`/`addLink`/`addCommunityCount`/`onFile` → `resetForms` + reload |
+| "Change" link | idle | `setIntent(null)` returns to path cards, in place |
+| Community-count field | empty · numeric only | Amendment-13 caption (`communityPII`) shown inline, not just in legal text — never a member list |
+| "Collected" evidence list | grows unbounded | chip `processed`/`pending`, no cap, no virtualization |
+| "Process" button | disabled (`pending===0`) · processing (skeleton, 3 rows) · error (`serverRefused` honest disclosure, never a masked stub) | `processEvidence` → AI claim extraction (§2.8 BUILT) → reload claims |
+| "Results" claims list | grows unbounded | `SourceLabel` (method/verification/expiry), no cap |
+
+**FIREWALL.** Bands/binaries/method-labels only, unchanged; the community-count field is explicitly never a member list (Amendment 13) — a privacy-adjacent constraint worth naming alongside the evidence firewall.
+
+**SIGNALS.** `evidence_added` (`EVIDENCE_UPLOADED`) per submission · `gig_evidence_refresh_completed` (`EVIDENCE_PROCESSED`) per successful `process()`.
+
+**LEXICON.** `T.evidence.{title, subtitle, paths[key].{title,desc}, intents[key], intentAsk[key], uploadFile, fileHint, bandEntry, publicUrl, communityLabel, communityPII, referenceLabel, referencePlaceholder, producerContactLabel, producerContactPlaceholder, authorityNote, collected, processed, pending, results, processingTitle, processingNote, process, processing, serverRefused, addedOk, errFileSize, errFileType, changeIntent}` · `T.evidence.platformRecognized()`. HE twins assumed present, not independently spot-checked this pass.
+
+**STATUS.** BUILT (functionality) · Radar-inline half = one-viewport · `EvidenceCapture.jsx` half = NOT one-viewport, NOT fit-tested.
+
+**FLAG (owner/Codex ruling — not invented here).** Should `EvidenceCapture.jsx`'s file-upload/producer-reference/community-count paths be folded INTO the Planet Inspector as new inline widget kinds (completing the §7.7.a target already on record: *"Evidence §8.13 (planet panel → back to Radar)"*, which is not yet how the build actually works), or kept as a deliberately separate, NAMED contained-scroll secondary surface (§6.7's exception) with a height cap added and wired into `test-fit.mjs`? Either is legitimate; picking one is a build decision this spec should not invent.
+
+---
+
+#### 8.0.c — Stage (c): Verification (confirm ceremony + producer-confirm routing)
+
+**ONE JOB.** Let a claim earn its strongest possible method label — the artist's own confirm, or a third party's producer-confirm — without the artist ever leaving the Radar's mental model or doubting what's actually proven.
+
+**THREE MECHANISMS AT HEAD, split across three surfaces:**
+1. **Artist's own confirm ceremony — INLINE, one-viewport, BUILT.** `confirm(node)` / `confirmMany(nodesToConfirm)` in `RadarUniverse.jsx`, exposed via `PlanetRow`'s confirm button and `PlanetPanelContent`'s bulk "confirm all" button. On confirm: `updateClaim(…, {artist_approved:true})` → optimistic update → a ~400ms bloom (`triggerBloom`) → a 7-second undo window (`undo`/`undoConfirm`, paused on pointer-enter via `pauseUndo`, resumed on pointer-leave via `resumeUndo`). This is the piece the owner already sees working: it never leaves the Inspector/bottom-sheet.
+2. **Producer-confirm — REQUESTING half, BUILT but DISPLACED.** `ClaimRow.generate()` in `ClaimReview.jsx` (`/artist/claims`, a separate route) posts `/api/request-confirmation`, returns the `/confirm/:token` link, offers copy-to-clipboard + an optional email field. **This exists nowhere inside `RadarUniverse.jsx`** — the Inspector's `PlanetRow` renders only a confirm button; there is no "ask a producer to confirm" affordance in the Radar itself. `ClaimReview.jsx` is a full scrolling page (draw-bands card → needs-review list → passport-ok list → mirror-only list → items list, each unbounded, each row with its own expandable request panel) and is **absent from `scripts/test-fit.mjs`**.
+3. **Producer-confirm — RECEIVING half, BUILT and fit-tested.** `/confirm/:token` (`ProducerConfirm.jsx`, full spec §8.9, outside this section's edit region) — a genuinely accountless, one-card, one-viewport ceremony. Already the cleanest pass in the whole flow.
+4. **Self-verification triage (correct / omit / flag) — BUILT but ALSO ONLY on `ClaimReview.jsx`.** `approve`/`correctValue`/`omit`/`flag` exist only on the separate `/artist/claims` page; the Radar's inline `PlanetRow` offers confirm only — no correct/omit/flag affordance inline.
+
+**ONE-VIEWPORT VERDICT TODAY.** The self-confirm half is a clean pass. The producer-confirm-request half and the correct/omit/flag triage half are **not** one-viewport — full, working functionality that exists only on a separate scrolling route, duplicating and extending what the Radar's Inspector offers, unreachable from inside the Radar at all. This is the sharpest concrete instance of the owner's complaint for this stage: what's visible inside the Radar is real but incomplete; the other two mechanisms live on a screen the flow narrative may not even register as part of "the Radar."
+
+**ENUMERATED INTERACTIONS:**
+| Element | Surface | States | In-place behavior |
+|---|---|---|---|
+| Confirm button (single node) | Radar Inspector | idle · busy · bloomed · undo-window (7s) | `confirm(node)`, never leaves the panel |
+| "Confirm all {n}" | Radar Inspector (≥2 batchable) | idle · busy | `confirmMany`, same panel |
+| Approve / Correct / Flag / Omit | `ClaimReview.jsx` only | idle · busy · correcting (inline input) · flagged (disputed) | full page, own route |
+| "Request a producer to confirm" (`generate`) | `ClaimReview.jsx` only | idle · busy · link-ready (copy/copied) · error (`serverOffline`) | full page, own route |
+| 3 ceremony choices (Yes/Partly/No) + wrong-person | `/confirm/:token` (§8.9) | ask · submitting (per-button spinner) · done (terminal) · dead-link (4 states) | single card, no shell |
+
+**FIREWALL.** Unchanged — producer-confirm is never an endorsement/score (§8.9); correct/omit/flag are all bounded, non-scoring actions (value edit, dispute, delete).
+
+**SIGNALS.** `claim_confirmed` (`CLAIM_CONFIRMED`) fires client-side from the artist's own `approve()` — §7.7.a's Source-Confirmer row also names `claim_confirmed` as the producer-side firing event; whether this is the identical event name reused for two different confirming actors was not independently re-verified in this pass and is worth a footnote, not a fix. `claim_visibility_changed` (`CLAIM_VISIBILITY_CHANGED`) on toggle. `producer_confirmation_sent` (`PRODUCER_CONFIRMATION_SENT`) on `generate()`.
+
+**LEXICON.** `T.claims.{title, subtitle, needsReview, needsReviewHint, passportOk, mirrorOnly, drawTitle, drawNote, drawEditHint, noClaimsYet, approve, correct, correctSave, flag, omit, approvedChip, flaggedChip, notApprovedHint, selfReportedNoPassport, limitationLabel, alwaysVisible, confirmReceipt(), itemsTitle, applyTitle, applyBody, applyCta}` · `T.producer.{requestTitle, requestHelp, requestEmail, requestCta, linkReady, copyLink, copied, pendingChip, serverOffline, …}` (full set at §8.9) · `T.radar.universe.{destPassport, destPrivate}`.
+
+**STATUS.** BUILT (self-confirm, inline, one-viewport) · BUILT-BUT-DISPLACED (producer-confirm request + correct/omit/flag — full functionality, wrong surface) · BUILT + fit-tested (the receiving ceremony, §8.9).
+
+**FLAG (owner/Codex ruling — not invented here).** Should `ClaimReview.jsx`'s correct/omit/flag + producer-confirm-request affordances move INTO the Planet Inspector's Layer 3 (§8.3) — e.g. a "Request a producer to confirm" quiet secondary beside the existing confirm CTA, and an inline "Correct" affordance beside it — retiring `/artist/claims` as a separate route in the same spirit §8.9 already retired the `/producer` shell (D3)? Or does `/artist/claims` stay a deliberate secondary "ledger" screen (§6.7's named contained-scroll exception) that the Radar deep-links into, with a height cap added and wired into `test-fit.mjs`? A build decision, not a spec-writing one.
+
+---
+
+#### 8.0.d — Stage (d): Reasoned upgrade suggestions (coaching + NBA + registry `why_a_buyer_cares`)
+
+**ONE JOB.** Never let a gap sit silent — every Needs-you state on screen carries one named reason a buyer would care, in the artist's own scene's terms.
+
+**THREE MECHANISMS, already substantially spec'd in §8.2/§8.3, re-grounded here against the actual code:**
+1. **Coaching line — Inspector Layer 1 (§8.3).** BUILT, one-viewport, scene-aware (`S.coach[selected]`, gated on `coachScene`, G2 guard: no declared scene → no line).
+2. **Next-best-action (NBA) — the bottom dock.** BUILT, one-viewport. `pickNextAction()` (`ArtistDashboard.jsx`) computes ONE action from live state, walked in this exact order: pending claims by family-emphasis (§8.2) → no supported claim yet → missing photo → zero links → <3 track-record items → missing frequency band → not published → an open buyer request waiting → stale proof (>`FRESHNESS_DAYS`) → share. Rendered exclusively by the dock **or** the Inspector, never both (`railHoldsCTA` XOR logic, the one-primary-CTA law enforced mechanically). Each action's `why` is attached via `withGenreNote`.
+3. **Registry `why_a_buyer_cares` — PARTIAL.** 16 hand-written why-keys are wired today (`n.why` on `MissingFill`-eligible nodes → `S.why?.[n.why]`): photo, positioning, genre, goal, setLength, regions, rider, invoice, whatsapp, freqBand, sellsTickets, priceBand, community, trackRecord, streaming, ticketExport. The FULL registry (`src/lib/registryUniverse.js` over `docs/registry/F1.csv`, 376 fields / 18 segments) is explicitly **not wired** — its own file header states so verbatim ("This module is DELIBERATELY not wired into the live Radar yet"). Its `WHY_KEY_MANIFEST` carries EN label seeds only; `he_seed: null` for all 376 — so even once wired, the Hebrew half of "every suggestion carries its reason" does not exist yet.
+
+**ONE-VIEWPORT VERDICT TODAY.** This is the flow's healthiest stage on layout: coaching line + NBA dock both already live inside the engineered one-viewport dashboard column (`h-[calc(100dvh-…)]`) — no separate page, no page-level scroll. The gap here is **coverage, not viewport**: 16/376 registry fields carry a reason; the rest render a gap node with no reason attached at all — already honestly marked TARGET in §8.2's "REGISTRY-DRIVEN NODES" paragraph, now re-confirmed against the live code (no drift found — a clean forward-check).
+
+**ENUMERATED INTERACTIONS:**
+| Element | States | In-place behavior |
+|---|---|---|
+| Coaching line (Inspector Layer 1) | present (declared scene) · absent (no scene, G2) | render-time only, no click |
+| Next-best-move dock CTA | one of ~10 computed actions | `runNextAction(a)` → `a.planet` focuses that planet's Inspector panel in place, `a.to==='/artist/claims'` opens the review bottom-sheet in place, else navigates |
+| Per-node `why` line (16 keys) | present · absent (missing i18n key or unmapped field) | render-time only, static text under the node |
+
+**FIREWALL.** G2 guard unchanged (no genre/scene signal → no coaching line, no emphasis); `why_a_buyer_cares` lines are always the buyer's reasoning, never a peer comparison (the firewall pair already codified in §8.3).
+
+**SIGNALS.** None of these three mechanisms fires its own analytics event today (no `EVENTS.*` reference near `pickNextAction`, the coaching-line render, or the why-line render) — correct per §2.1 ("derived, never stored… no coaching text, rating, or judgment is ever persisted"), but it means there is currently zero measurement of whether coaching/NBA/why-lines change artist behavior. Flagged as a possible §14 measurement gap (e.g. a future `next_action_followed` event), not a firewall violation — not built here.
+
+**LEXICON.** `T.radar.nextActions.{reviewClaims, draw, photo, links, experience, bands, publish, replyRequest, refreshProof, share}` · `T.radar.universe.why.{photo, positioning, genre, goal, setLength, regions, rider, invoice, whatsapp, freqBand, sellsTickets, priceBand, community, trackRecord, streaming, ticketExport}` (16 keys, `en.js`/`he.js` per `registryUniverse.js`'s own citation) · the registry's own `T.registry.why[field_id]` namespace (376 keys) is **named but not yet authored** (EN seeds only, HE null) — TARGET.
+
+**STATUS.** BUILT + one-viewport (coaching line + NBA dock) · PARTIAL (16/376 why-keys; HE half of even the target namespace absent).
+
+---
+
+#### 8.0.e — Consolidated flags (owner/Codex ruling required — none resolved here, per Part 0)
+
+1. **Stage (b) surface split** — fold `EvidenceCapture.jsx` into the Inspector as new inline widget kinds, or keep it as a named contained-scroll secondary with a height cap + `test-fit.mjs` coverage added?
+2. **Stage (c) surface split** — fold `ClaimReview.jsx`'s correct/omit/flag + producer-confirm-request into the Inspector's Layer 3, or keep `/artist/claims` as a deliberate secondary ledger (same treatment as (1))?
+3. **`claim_confirmed` event ambiguity** — confirm whether the artist-side and producer-side firings are genuinely the same analytics event by design, or should be distinguished (e.g. an actor field) — not re-verified in this pass.
+4. **Stage (d) measurement gap** — coaching/NBA/why-lines fire no signal today; a future `next_action_followed`-style event would let the UPGRADE job's effectiveness actually be measured, consistent with §14's honesty rule ("declared ≠ measured").
+5. **Function-name drift (pre-existing, found while grounding this section)** — §8.2/§8.3's existing prose cites `confirmTop` / `dismissTop` / `nextStep` as if these are the build's function names; the actual code uses `confirm`/`confirmMany`/`undoConfirm` (`RadarUniverse.jsx`) and `runNextAction`/`pickNextAction` (`ArtistDashboard.jsx`). Predates this task; flagged for a follow-up terminology correction, not fixed here to keep this task's diff scoped to the four-stage flow addition.
+
+**None of the above is invented or resolved in this pass** — each is a genuine build-vs-spec or build-vs-owner-intent gap surfaced while grounding the four-stage flow in the code at HEAD, held for ruling per Part 0/Part 9's SPEC-COMPLETENESS gate.
+
+---
+
+### 8.1 Onboarding (`/onboarding`) — the discover→confirm narrative (BUILT 3-step as of 18 Jul, T-58 — reveal ships the REAL-data version; the animated multi-source scan moment stays TARGET) — flow-stage (a), full stage spec at §8.0.a
 
 > **T-58 provenance note (18 Jul):** step 3 "Here's what we found" is now BUILT in its honest form —
 > it reveals the artist's actually-captured link as a ✦ found signal with the §2.8 honest-scope line
@@ -596,7 +762,7 @@ Each screen is buildable from its sub-spec alone. Routes shown are the prototype
 
 ---
 
-### 8.2 Artist Radar (`/artist/radar`) — the central interactive engine
+### 8.2 Artist Radar (`/artist/radar`) — the central interactive engine — flow-stages (a) inline fills, (b) inline half, (c) artist-confirm half, (d) coaching+NBA, full stage spec at §8.0
 
 **PURPOSE.** The artist's private, living picture of their own professional proof — six dimensions a booking manager weighs — where LOCK shows what it *found* on public sources and the artist *confirms* what's really theirs, one tap at a time. It is where evidence is reviewed and confirmed; it is **not** a dashboard, and buyers never see it. Two readings for every component: **Artist read** = "what's strong, what still needs me, what to do next" (gaps are invitations); **Buyer relevance** = the same signal, once confirmed + method-labeled, becomes a checkable strength on the public Passport.
 
@@ -646,9 +812,9 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 **Planet states (bounded rollup — never a count on the face):** **Needs you** (something found is waiting to confirm, OR still empty) · **Developing** (some confirmed, gaps remain) · **Ready** (confirmed, no gaps) · **Locked / "Not needed yet"** (Professional Kit stays locked until Live Show is backed — a sequencing hook, not a judgement). Node marks: ✓ (settled) · ✦ (found dot) · ? / + . Each planet also shows its **plain-language state word** under it (Ready · Developing · Needs you · Not needed yet). Genre-primary planets carry a second gold ring + a ★ and a topline; additive only (non-primary planets keep full opacity/interactivity/order).
 
 **Supporting components:**
-- **Constellation threads** — one thread center↔each planet, coloured by live state (amber=Needs you, teal=Developing, lime=Ready, faint=Locked); confirmed threads glow and flow energy inward (growth made visible). Firewall: colour is a state only; geometry is fixed by planet angle, identical for every artist — it grades nothing.
+- **Constellation threads** — one thread center↔each planet, coloured by live state (amber=Needs you, teal=Developing, lime=Ready, faint=Locked); confirmed threads glow and flow energy inward (growth made visible). Firewall: colour is a state only; geometry is fixed by planet angle, identical for every artist — it grades nothing. **BUILT (T-82 R-3, 20 Jul — ratify: R00):** token-class strokes over shared planet geometry; Ready-thread glow = a quiet blur filter, parameters pending taste sign-off at witness. **Three T-82 placement decisions as built (ratify: R00):** (1) center-star tap = clear-selection when a planet is selected, Act-switch otherwise (one hit-zone, dual role); (2) the desktop right rail COLLAPSES when no planet is selected (no empty-hint state — the no-selection layout is unchanged); (3) rail-XOR-dock enforces the one-primary-CTA law mechanically.
 - **Platform ring** ("Where your proof comes from") — one tile per platform **actually detected in this Act's data**; connected = full colour + lime dot, not-yet = greyed + one "+ connect". Per-source hover meaning in plain language (Instagram = "your lineup listings & community", Spotify = "your streaming catalogue", Eventer/Tickchak/Go-Out = your Israeli ticketed events / ticket sales / event listings, etc.). Caption stays honest: "5 sources connected · buyers check these to verify you. A wider automatic scan is in development." META-FIELD LAW: never an invented count/follower number.
-- **Milestone journey M1–M8 (G-8 backfill from the build, 18 Jul — ratify: R00).** The full ladder as BUILT (`ArtistDashboard.jsx:MilestoneStrip`; names = §4.1a canon, EN+HE from i18n):
+- **Milestone journey M1–M8 (G-8 backfill from the build, 18 Jul — ratify: R00).** _Naming clarification (contradiction-check, T-70): `M1–M8` are INTERNAL spec/analytics codes only; the SCREEN renders exclusively the §4.1a waypoint NAMES — so this heading and §5.10's "never `M1–M8` on screen" agree; do not "fix" either._ The full ladder as BUILT (`ArtistDashboard.jsx:MilestoneStrip`; names = §4.1a canon, EN+HE from i18n):
   | # | Waypoint (EN · HE) | Lights when (the real state) |
   |---|---|---|
   | M1 | Arrived · הגעת | always (the artist exists) |
@@ -678,7 +844,7 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 ---
 
-### 8.3 The Planet Inspector (the full spec)
+### 8.3 The Planet Inspector (the full spec) — flow-stages (c) self-confirm ceremony, (d) coaching line + why lines, full stage spec at §8.0
 
 **PURPOSE.** On planet select, a SHORT 3-layer action widget that answers the guiding sentence for that one dimension: what it means, what LOCK found, the one thing to do next. It is **not** a long drawer.
 
@@ -729,7 +895,7 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 **PURPOSE.** The artist previews **exactly** what a buyer sees — the proof a booking manager reads before putting their name on the night — in each buyer's language, and controls publish/share. (In the real app, `/artist/passport` redirects to the public `/passport/:id` so the artist previews the true Buyer view.)
 
-**DESKTOP & MOBILE layout.** Page head with H1 "Passport" + a purpose line + the **unified view-switcher chip** (U34). Below: the standing row (Draft/Live), the dark hero island, the "what this viewer cares about" line, the public-frame reassurance, the view eyebrow, the evidence ledger (lead + support proof cards), a ready row, and a private-gaps bar. Single column; the hero is a `.dark-island`, everything else is light.
+**DESKTOP & MOBILE layout.** Page head with H1 "Passport" + a purpose line + the **unified view-switcher chip** (U34). Below: the standing row (Draft/Live), the dark hero island, the "what this viewer cares about" line, the public-frame reassurance, the view eyebrow, **the evidence ledger — which is the SAME §8.7 Interactive Evidence Explorer** (chaptered one-viewport panes, not a flat scroll — since `/artist/passport` redirects to `/passport/:id`, the artist previews the true paginated buyer experience, not a separate layout), a ready row, and a private-gaps bar. Single column; the hero is a `.dark-island`, everything else is light.
 
 **The multi-view / faces (U22).** ONE evidence pool, **four reads**, re-ordered per face — never four documents. Views: **Booker · Representation (manager) · Production · Private & corporate.** Each face declares what that viewer cares about + a lead proof + support proofs:
 - **Booker** — "A booker asks one thing: will they fill the room and show up like a pro?" lead = draw ("300–800"), support = rebook, sells-tickets.
@@ -739,7 +905,9 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 **The unified view-switcher (U34).** The **same dropdown-chip pattern as the Radar scene switch**, placed in the **page header** (a shared component/CSS, never in-card tabs). Chip label: "**Viewing as: {view} ▾**". Popover header "Show this Passport as", radio rows (Booker · Representation · Production · Private & corporate) with a check on active, note "Each buyer weighs different proof first."
 
-**COMPONENTS.** View-switcher chip · standing row · dark hero (photo + veil + "LOCK · Verified" seal + name + one-line positioning + source logos) · "what {noun} sees" cares line · public-frame line · view eyebrow · evidence ledger of proof cards (each: source logo · big band OR claim · context · method chip · "Reviewed {date}") · ready row of lime binary chips · private-gaps bar.
+**BUILT STATUS (Wave-B/T-77, 20 Jul — ratify: R00).** All FOUR faces now exist in the real app (`PassportBookingView` · `PassportRepView` · `PassportProductionView` · `PassportPrivateView`, routed via bounded `?view=` keys with a safe booking fallback; the persona toggle is a 4-tab horizontally-scrollable pill pending the U34 dropdown-chip). Four **draft-copy judgment calls await R00 ratification — draft, not canon**: (1) the Production/Private CTA + tagline strings ("Confirm show-day details" / "Check availability for my event"); (2) Private-face section order Readiness→Draw→Performance→Context; (3) the "Turnkey booking" cluster fires only when ALL THREE readiness facts are true (2-of-3 is the plausible alternative); (4) Production keeps industry chip wording — only its section label softens to "Show-day readiness". Also BUILT kit-wide: positive-capability law enforced in `deriveSections` (a false binary is now ABSENT from the buyer DOM, never rendered "No"). **(5) NEW, TARGET not yet built (owner verdict 21 Jul — ratify: R00):** the flat evidence ledger becomes the §8.7 **Interactive Evidence Explorer** — the four sections above convert from stacked-scroll to paginated one-viewport chapters, in the SAME per-face order named in judgment call (2) and the §8.7 per-face chapter map — no new order/fact judgment call is introduced by this, only the interaction wrapper.
+
+**COMPONENTS.** View-switcher chip · standing row · dark hero (photo + veil + "LOCK · Verified" seal + name + one-line positioning + source logos) · "what {noun} sees" cares line · public-frame line · view eyebrow · **the evidence ledger as the §8.7 Interactive Evidence Explorer** (chapter rail · Next/Prev · collapsed/expanded proof cards, each: source logo · big band OR claim · context · method chip · "Reviewed {date}") · ready row of lime binary chips · private-gaps bar.
 
 **Edit vs buyer-preview split (target, Codex P0).** The Passport screen must clearly separate **owner-edit** (what the artist controls/publishes) from **buyer-preview** (the exact public read). Edits happen via the Radar's inline widgets / the Act-Identity Editor (§8.6), not by typing into the public preview. A **publish/share widget** is new work.
 
@@ -748,7 +916,7 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 **STATES.**
 - **Draft** — standing "Draft — only you can see this" + a "Publish Passport" primary. Private-gaps bar visible to the artist only.
 - **Live/published** — standing "Live for buyers · refreshed {date}"; inspector/radar reflect public-ready.
-- **Per-view** — the ledger re-orders per selected face.
+- **Per-view** — the ledger re-orders per selected face (as the Explorer's chapter order, §8.7); switching face resets the Explorer to chapter 1 (§8.7 rule 8 — never leaves a viewer silently facing swapped content at a fixed chapter position).
 - **Gaps bar** — collapsed ("＋ 1 private item to add · only you") / expanded (explains the item; "Gaps never appear on a buyer's Passport — adding one builds strength, it never removes a penalty." + an "Add it" ghost).
 
 **INTERACTIONS.** `toggleView` opens the popover; `pickView` switches face; `publish` publishes; `toggleGaps` expands the private item; `goEvidence` opens the add flow; the CTA on a ready view is "Preview on Passport".
@@ -757,9 +925,19 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 **FIREWALL.** Verified strengths only; draw as bands, readiness as binaries, each with a method chip; no gap ever shown on a buyer face; **no firewall strip / no narration** (U33 — remove the `.fwstrip`, §2.2); no score/rank.
 
-**DEFINITION OF DONE.** Four faces from one evidence pool; unified header view-switcher (shared with Radar scene switch); purpose line present; draft/live standing with publish; de-technicalised provenance (method chips + seal, no technical badges); gaps bar artist-only; owner-edit vs buyer-preview visibly separated; no firewall strip; light surface with a single dark hero island; one viewport for the hero.
+**DEFINITION OF DONE.** Four faces from one evidence pool; unified header view-switcher (shared with Radar scene switch); purpose line present; draft/live standing with publish; de-technicalised provenance (method chips + seal, no technical badges); gaps bar artist-only; owner-edit vs buyer-preview visibly separated; no firewall strip; light surface with a single dark hero island; one viewport for the hero; **the ledger below the hero is the §8.7 Interactive Evidence Explorer** (chaptered one-viewport panes, chapter rail, Next/Prev + swipe, tap-to-expand cards) — never a flat scrolling ledger.
 
 ---
+
+**THE CANONICAL DISPLAY-NAME LAW (witness-fix W-1, owner 20 Jul — ratify: R00).** ONE name per
+artist, app-wide: **`artists.stage_name` is the single display-name source for every product
+surface** (Radar center, Passport hero, requests, rosters, admin lists, receipts). Account/person
+names (auth email, `person.display_name`, "Maria Test"-class signup values) NEVER render on product
+surfaces — they are login identity, not stage identity. Initials chips derive from `stage_name`
+only. The T-63(a) act mirror keeps `act` identity synced FROM the artist record; readers still read
+`artists.stage_name` (one read path, no fallback chains to account fields). A surface showing any
+other name field is a defect. Demo fixtures carry their own fixture stage names (e.g. "Maya Vale") —
+demo-only, never mixed into real-account surfaces.
 
 ### 8.5 Artist Access — "Who can act for you" (`/artist/access`) (U31)
 
@@ -807,9 +985,83 @@ Each pass around the loop makes the universe more provable; the loop never ends,
 
 **PURPOSE.** THE product surface for the buyer. A recipient-safe, **no-login** page that answers **fit · trust · readiness · availability** in the first viewport, in the buyer's language, and offers one action: check the date. This is the Gate-critical buyer surface.
 
-**DESKTOP & MOBILE layout.** A full page (`.pp`): dark hero island (photo + veil + LOCK wordmark) → id block (eyebrow "LOCK · FOR YOUR EVENT" · genre/active-since line · name · one-line positioning · persona toggle · "No login needed" reassurance) → body sections (proof-of-draw / career-proof grid · performance track · booking-readiness binaries · the CTA) → footer. Mobile: single column, sticky availability CTA.
+**DESKTOP & MOBILE layout.** A full page (`.pp`): dark hero island (photo + veil + LOCK wordmark) → id block (eyebrow "LOCK · FOR YOUR EVENT" · genre/active-since line · name · one-line positioning · persona toggle · "No login needed" reassurance) → the compact 3-beat proof story (UNIVERSE TRANSLATION pt.2 below, unchanged) → **the Interactive Evidence Explorer** (new — see below; REPLACES the old flat body-sections scroll) → footer. Mobile: single column; the explorer paginates in place; the sticky availability CTA stays pinned across hero, story and every explorer chapter.
 
-**COMPONENTS.** Persona toggle (**Booking a show** / **Representing**) that changes copy + CTA · proof cards (big band OR claim + context + method label + reviewed date) · performance track rows (each source-linked) · readiness chips (binaries only) · primary CTA + sub-line.
+**COMPONENTS.** Persona toggle (**Booking a show** / **Representing**) that changes copy + CTA · the 3-beat proof story (jump-menu, see Explorer below) · **the chapter rail** (persistent index + jump) · **Next/Prev controls** · proof cards, each with a **collapsed** (one line + method chip) and **expanded** (big band OR claim + context + method label + reviewed date) state · performance track rows (each source-linked) · readiness chips (binaries only) · primary CTA + sub-line.
+
+**THE INTERACTIVE EVIDENCE EXPLORER — one-viewport chaptered pages (owner verdict 21 Jul, verbatim intent: "The PASSPORT is still TECHNICAL. I asked for it designed INTERACTIVE and INTERESTING for the other entities (buyers) — otherwise it's not clear to a human. Everything in ONE screen height as interactive screens." — TARGET, not yet built — ratify: R00).**
+
+The hero above is the one-viewport HERO MOMENT (law 7, already built). Below it, the OLD flat scroll — Draw → Performance → Readiness → Context stacked one under another, requiring the buyer to keep scrolling past a growing ledger — is exactly the "still technical" complaint. It is REPLACED by an **Explorer**: the same four section components (`DrawSection` / `PerformanceSection` / `ReadinessSection` / `ContextSection` in `passportKit.jsx`, unchanged — same firewall, same RENDER LAW, same facts), each now rendered as its own **one-viewport CHAPTER**, advanced by direct interaction instead of scrolled past. No fact, no per-face order (§8.4), and no evidence component changes — only the interaction wrapper around them is new.
+
+**Chosen model (the strongest coherent fit; the other candidates are logged as flagged alternatives for R00, not built):** a **chaptered, one-viewport-per-pane sequence** — panes sized to `100dvh` or the frame's own contained height (§6 law 7) — advanced by (a) an explicit **Next/Prev** control pair, (b) a **persistent chapter rail** (dots + current label, reusing the `PersonaToggle` segmented-chip visual grammar) that also allows a direct jump, and (c) a **swipe** gesture on mobile (the SAME idiom the Radar already uses for "swipe between planets," §7.5 — one gesture vocabulary product-wide, not a new one). Density inside a chapter is handled by **tap-to-expand proof cards** (collapsed = one line + method chip; expand in place, single-open accordion) so a chapter with several items still fits its own one-viewport frame; only if a chapter's own list still overflows does it become the law-7/13 **NAMED contained-scroll region** — the outer page itself never scrolls.
+
+**Why this combination, not the others:**
+- *Chaptered pagination* is the direct, literal answer to "everything in ONE screen height as **interactive screens**" (plural screens, each one height) — no single-tall-page variant satisfies that sentence.
+- *Tap-to-expand* is nested INSIDE a chapter, never the primary mechanism — a long accordion is still a long page, merely shorter at rest; it solves density, not the "one screen" requirement.
+- *The rail* stays SLIM (dots + current label only, not a full always-open index) — a full always-visible sidebar index would compete for width on a 360px screen and add a second area of focus, breaking law 3 (one CTA/one focus at a time) and law 4 (no extra chrome).
+- *Per-face guided 30-second tours* are NOT the primary mechanism — a forced tour is a tutorial/onboarding pattern, and this screen's own DEFINITION OF DONE requires the buyer to need **no login, no tutorial**, reading in 30 seconds unassisted. A tour that auto-advances or gates content behind a "start tour" click would itself become the friction the owner is rejecting.
+
+**FLAGGED ALTERNATIVES (for R00 — logged, not built, so they are never silently reinvented):**
+1. **Guided 30-second tour per face** (auto-advancing, modal-like walkthrough) — rejected as PRIMARY (adds tutorial friction the spec forbids here); could exist later as an OPTIONAL, dismiss-on-sight "narrated" toggle over the same chapters — a pure taste call, not built now.
+2. **Flat single-page accordion** (tap-to-expand only, no chaptering — the page still scrolls past all four sections, just each starts collapsed) — rejected as PRIMARY (does not solve "one screen height"); **FLAG:** should this stand as a reduced-motion/no-JS graceful-degradation fallback, or does scroll-snap degrade safely on its own without a separate fallback mode? Owner/Codex taste call.
+3. **Full always-open index rail** (a permanent side panel listing every chapter + a one-line preview, visible at all times — common on desktop long-form sites) — rejected as PRIMARY on mobile (width/focus conflict, laws 3–4). **FLAG:** on desktop (≥1024px, where width is free), should the slim rail expand into a richer always-visible index with a one-line preview per chapter? Taste call for R00/Codex, non-blocking (the slim rail is the floor spec either way).
+
+**THE FULL INTERACTION ENUMERATION (element · states · in-place behavior · mobile gesture — per HOW-TO-BUILD-A-TASK Part 8 shape):**
+
+1. **Chapter rail** (persistent, docked between the 3-beat story and the explorer frame; reuses `PersonaToggle`'s pill/chip pattern).
+   - *States:* idle (N dots/labels; the current one is a **lime OUTLINE**, never solid-lime — §5.10 lime discipline: solid lime stays button-only) · focus-visible ring per dot · overflow-scroll (mobile: `overflow-x-auto` drag, same as `PersonaToggle`, never wraps to a second row).
+   - *In-place behavior:* click/tap a dot → the explorer jumps straight to that chapter (crossfade/slide ≤300ms per the §5.11/§17.0 motion tokens; reduced-motion = instant swap); the current dot updates; the URL/route is unchanged (still `/passport/:id`) — chapter position is view-local state only, not persisted or deep-linkable. **FLAG for R00:** should a chapter be deep-linkable (e.g. `?ch=performance`) for a "share this one proof" use case? Not built now — no fact changes either way.
+   - *Mobile gesture:* tap only on the rail itself — the rail never responds to swipe (swipe belongs to the explorer body, #2, so the two gestures never collide).
+2. **Next / Prev controls** (an explicit affordance so a first-time buyer never needs to *discover* a hidden swipe).
+   - *States:* default (44px min tap target, §5.11 CTA spec) · Prev absent/disabled on chapter 1 · Next replaced by the `explorerEnd` closing state on the last chapter (never a dead "next" that goes nowhere) · focus-visible ring.
+   - *In-place behavior:* same jump/transition as the rail; keyboard Left/Right (or Home/End) moves chapters when the explorer region holds focus.
+   - *Mobile gesture:* the buttons are tap-only; the SAME chapter-advance also fires on a horizontal swipe anywhere on the chapter body (left = next, right = prev — the Radar's established "swipe between planets" idiom, §7.5, kept as the product's ONE gesture vocabulary, not a second one).
+3. **Proof-card collapse/expand** (extends the existing `ProofUnit`; no new visual component).
+   - *States:* collapsed (source icon + one-line headline, truncated, + method chip — no band/date row) · expanded (the full existing `ProofUnit` card: contextLine, BandPill, reviewed date) · single-open accordion (expanding one card auto-collapses any other open card in the SAME chapter, keeping the chapter inside its one-viewport frame).
+   - *In-place behavior:* tap the card's header row (or a chevron) → expands in place; the chapter's own inner list becomes the law-7/13 **named contained-scroll region** ONLY if the expanded state still overflows the frame — the outer page never scrolls for this.
+   - *Mobile gesture:* tap (44px row height, already true of `ProofUnit`'s header row); swipe is reserved for chapter navigation (#2), never card-expand, so the two never collide.
+4. **The 3-beat proof story as a jump-menu** (extends `ProofStory`; no new component; stays put between hero and explorer, itself NOT paginated).
+   - *States:* unchanged visuals (mobile compact single line / desktop 3-row list); beats 02 ("what's proven") and 03 ("who vouches") gain `role="button"` + focus-visible when their fact lives inside a chapter; beat 01 ("who they are") stays inert — it describes the hero already on screen, nothing to jump to.
+   - *In-place behavior:* tap beat 02 → the explorer jumps to the Draw chapter; tap beat 03 → jumps to whichever chapter structurally holds that producer-confirmed claim (Draw or Performance, per face).
+   - *Mobile gesture:* tap only.
+5. **The chapter frame** (the one-viewport pane itself).
+   - *States:* current / entering / exiting (crossfade or slide, §5.11/§17.0 motion tokens) · a first-open hint (`explorerSwipeHint`) shown once per session on chapter 1's first render, auto-dismissed on any interaction or after ~2.5s, never re-shown.
+   - *In-place behavior:* renders the SAME per-face component order already built in the four view files (table below) — only the pagination wrapper is new; a face whose RENDER LAW removes a section (e.g. no `hasContext`) simply has fewer total chapters — the rail must reflect the TRUE count only (see FIREWALL below).
+   - *Mobile gesture:* swipe (see #2).
+6. **Sticky CTA + disclaimer bar** (existing, UNCHANGED) — persists across hero, story and every chapter; never paginated, never covered by the explorer.
+7. **Keyboard / focus / a11y.** Tab order: hero controls → persona toggle → story beats (if tappable) → rail dots → Prev/Next → the active chapter's own proof cards → sticky CTA. An `aria-live="polite"` region announces `explorerLiveAnnounce` on every chapter change (name + position) so a screen-reader user is never silently relocated. Reduced-motion: every transition above collapses to an instant swap (no slide/crossfade), consistent with the existing motion contract (§5.11/§17.0).
+8. **Persona toggle × explorer interaction.** Switching persona re-orders chapters per the existing per-face arrays (table below) AND resets the explorer to chapter 1 — a buyer must never be left "on chapter 3" silently holding DIFFERENT content after a persona switch. This is an honesty guardrail, not only a UX nicety: a fixed position with silently-swapped content underneath would misrepresent what is currently on screen.
+
+**PER-FACE CHAPTER MAP (identical order to the already-built/ratified §8.4 view files — ONLY the interaction wrapper is new; no order or fact changes):**
+| Face | Ch.1 | Ch.2 | Ch.3 | Ch.4 |
+|---|---|---|---|---|
+| **Booking** (`PassportBookingView`) | Proof of draw (Room Grammar hero, §5.10) | Performance | Booking readiness | Context |
+| **Representation** (`PassportRepView`) | Career proof (Performance) | Audience (Context) | Proof of draw | Readiness |
+| **Production** (`PassportProductionView`) | Show-day readiness | Proof of draw | Performance | Context |
+| **Private & corporate** (`PassportPrivateView`) | Turnkey / private readiness | Proof of draw (private register) | Performance (private) | Context (private) |
+Each row's real chapter count is dynamic — RENDER LAW still applies PER CHAPTER (e.g. a face with no `hasContext` shows 3 chapters, never 4 with a blank one).
+
+**FIREWALL on the explorer itself (the two-question check, §5.10 rule 6, applied to pagination):**
+- Chapter ORDER is relevance-to-THIS-VIEWER (already ratified §8.4), never a rank of the artist — restated here because pagination makes order more visually prominent than a continuous scroll ever did.
+- The rail shows the artist's TRUE chapter count only — **never a ghost/disabled dot for a section RENDER LAW removed.** A visible-but-unlit 4th dot when only 3 chapters are real would read as "this artist is missing something" — exactly the gap-display the firewall forbids on a buyer face (§8.7 FIREWALL / §5.10).
+- Collapse/expand changes PRESENTATION only of already-approved facts — it never reveals a field the old scrolled ledger would not already have shown expanded (no "hidden extra data" behind a tap).
+- No count anywhere in the explorer (rail position, "N of Y") describes the ARTIST — it describes the buyer's OWN navigation position through public content, the same category as a pagination indicator on any content site, never a score about the person.
+
+**EN + HE LEXICON — new copy keys (namespace `T.passport.*`; chapter NAMES reuse existing keys — `proofTitle` / `performance` / `careerProof` / `readiness` / `productionReadiness` / `privateReadiness` / `contextTitle` / `audience` / `privateContextTitle` — no new chapter-name keys needed):**
+| Key | EN | HE |
+|---|---|---|
+| `explorerRailLabel` | Evidence chapters | פרקי ההוכחה |
+| `explorerJumpTo(label)` | Jump to {label} | עבור אל {label} |
+| `explorerNext(label)` | Next: {label} | הבא: {label} |
+| `explorerPrev(label)` | Back: {label} | חזרה: {label} |
+| `explorerProgress(n, total)` | {n} of {total} | {n} מתוך {total} |
+| `explorerSwipeHint` | Swipe or tap to see more | החליקו או הקישו כדי לראות עוד |
+| `explorerExpandAria` | Show full details | הצג פרטים מלאים |
+| `explorerCollapseAria` | Hide details | הסתר פרטים |
+| `explorerShowMore(n)` | Show {n} more | הצג עוד {n} |
+| `explorerEnd` | That's everything verified so far. | אלה כל הממצאים המאומתים עד כה. |
+| `explorerLiveAnnounce(label, n, total)` | Now viewing: {label}, {n} of {total} | מוצג כעת: {label}, {n} מתוך {total} |
+All new keys mark **ratify: R00** (new copy — CLAUDE.md lexicon rule); none replace, rename, or shadow an existing key.
 
 **Non-pro language (target — broaden beyond "booker").** The buyer surface must read for **all** demand segments (private/corporate/planner), not only pros. Evidence is phrased buyer-readable ("Can this artist carry a room?" not "Proof of draw"). Booking-vs-representing changes the copy and the CTA. The private/corporate register is warm and non-industry.
 
@@ -824,21 +1076,21 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 
 **Cold-start empty-state framing (prevents new-artist churn).** A brand-new Act with zero `producer-confirmed` claims must **not** read as "empty/weak/unverified" to a buyer or feel hopeless to the artist. Instead, **elevate evidence-supported signals** (public footprint via §9.8/§9.9 Door 2) into a warm **"Rising / building momentum"** framing — "Verified footprint" rather than "Unverified." The artist is *starting*, not *failing* (voice law §4.5; gaps-are-invitations §6.8). On the artist's Radar, empty nodes show as **soft ghost/skeleton nodes** (§17.B.11) — "where your proof will live," an exciting build-up, never a dead canvas.
 
-**STATES.** Persona = booking (section title "Proof of draw"; CTA "Check availability for your date") · persona = rep (title "Career proof"; CTA "Discuss representation"). Hover a proof-unit → a source peek (where-it-comes-from + what-the-label-means).
+**STATES.** Persona = booking (section title "Proof of draw"; CTA "Check availability for your date") · persona = rep (title "Career proof"; CTA "Discuss representation"). Hover a proof-unit → a source peek (where-it-comes-from + what-the-label-means). **Explorer states (new, see THE INTERACTIVE EVIDENCE EXPLORER above):** chapter current/entering/exiting · rail idle/focus/overflow-scroll · Next/Prev default/disabled/end · proof card collapsed/expanded (single-open) · first-open swipe hint shown-once.
 
-**EXACT MICROCOPY.** eyebrow "LOCK · FOR YOUR EVENT" · reassurance "**No login needed.** This is the public Passport — read it, then check the date." "Under a minute" · draw cap "Figures shown as band — no exact headcount" · readiness cap "Binaries only — ready or not shown" · CTA sub "No commitment — this only asks the artist about the date." · sample proofs: "300–800 · Headline draw · own-name nights, Tel Aviv · ★ Producer-confirmed · Reviewed 12/05/2026"; "Sells tickets to their own name · Yes · Evidence-supported"; "Lineup frequency · Regular · Source-linked"; "Price / guarantee band · ₪8,000–20,000 · Artist-declared".
+**EXACT MICROCOPY.** eyebrow "LOCK · FOR YOUR EVENT" · reassurance "**No login needed.** This is the public Passport — read it, then check the date." "Under a minute" · draw cap "Figures shown as band — no exact headcount" · readiness cap "Binaries only — ready or not shown" · CTA sub "No commitment — this only asks the artist about the date." · sample proofs: "300–800 · Headline draw · own-name nights, Tel Aviv · ★ Producer-confirmed · Reviewed 12/05/2026"; "Sells tickets to their own name · Yes · Evidence-supported"; "Lineup frequency · Regular · Source-linked"; "Price / guarantee band · ₪8,000–20,000 · Artist-declared". **Explorer copy** = the EN + HE LEXICON table above (`explorerNext`/`explorerPrev`/`explorerProgress`/`explorerSwipeHint`/`explorerExpandAria`/`explorerCollapseAria`/`explorerShowMore`/`explorerEnd`/`explorerLiveAnnounce`/`explorerRailLabel`/`explorerJumpTo`); chapter NAMES reuse the existing section-label keys (no duplication).
 
-**FIREWALL.** Verified strengths only; draw as bands, readiness as binaries, each with a method label; no gap; no score/rank/prediction. **Remove the `.fwstrip` footer** (U33 — the prototype's leftover strip is a violation; §2.2). Peer bands are **not** shown buyer-side unless method-safe and requested.
+**FIREWALL.** Verified strengths only; draw as bands, readiness as binaries, each with a method label; no gap; no score/rank/prediction. **Remove the `.fwstrip` footer** (U33 — the prototype's leftover strip is a violation; §2.2). Peer bands are **not** shown buyer-side unless method-safe and requested. **Explorer-specific (new, restated from THE INTERACTIVE EVIDENCE EXPLORER above):** chapter order is relevance-to-viewer, never a rank of the artist; the rail's dot count must equal the TRUE (RENDER LAW-filtered) chapter count — never a ghost/disabled dot for a removed section; collapse/expand changes presentation only, never reveals an un-vetted field; no count in the explorer (rail position, "N of Y") describes the artist, only the buyer's own navigation position.
 
 **UNIVERSE TRANSLATION (TARGET — the owner's 18 Jul ruling frame + old-canon recovery; awaiting the T-49 taste brief before design).** The owner's diagnosis stands as law: *the Passport must translate the Radar universe — everything confirmed and improved — to other people; today it reads as a headcount output because only draw bands + a community band are wired.* The recovered canon (B4-35.50 A15/A11 + the lens structure of the superseded Universal-Passport vision — structure adopted, its scores/predictions remain REJECTED §2.9):
 1. **Proof Unit anatomy (atomic law):** every Passport item = **claim + context + method label + reviewed date** — never a bare number/band row. (§8.7's proof cards already carry this; it becomes the rule for ALL content classes below.)
-2. **The 30-second proof story (section hierarchy):** identity → attributed-draw Proof Units → track record → **catalogue & releases** → **audience context** → **booking/admin readiness** → **supported references (testimonials · reliability confirmations · press)** → one sticky CTA. Sections render only when supported content exists (RENDER LAW) — an empty class disappears, it never shows as a gap.
+2. **The 30-second proof story (section hierarchy):** identity → attributed-draw Proof Units → track record → **catalogue & releases** → **audience context** → **booking/admin readiness** → **supported references (testimonials · reliability confirmations · press)** → one sticky CTA. Sections render only when supported content exists (RENDER LAW) — an empty class disappears, it never shows as a gap. **Interaction-model note (21 Jul):** this hierarchy is now delivered as the THE INTERACTIVE EVIDENCE EXPLORER's chapters (above) — the content order named here is unchanged; only the presentation wrapper (paginated one-viewport chapters vs a flat scroll) is new.
 3. **Content classes to wire** (all documented passport-eligible in `docs/registry/F1.csv`; ~84 of 96 eligible fields unreached today): releases & label credits · gateway live clip / full-set video · press & career milestones · testimonials & published reviews · reliability confirmations (rebook / invited-back) · industry affiliations · brand assets (press photo set) — each as method-labeled Proof Units, never as self-authored EPK prose. **This is the not-an-EPK answer: same content classes, provenance on every item.**
 4. **Per-viewer lenses:** the four faces (U22) upgrade from re-ORDERING to per-viewer **selection + language** — the buyer face leads with risk-relief ("carries a room, shows up like a pro"), the representation face with trajectory, private/corporate with warm non-industry safety. Same evidence pool, translated — never four documents.
 5. **Minimum credible-Passport gate (publish law):** publishable only with ≥2 supported Proof Units, at least one live-demand/commercial; identity + bio + media + streaming context alone are never publishable. Server-enforced at publish.
 6. **Interactivity depth (buyer side):** the professional action set widens beyond one request — check availability · request price/details (commercial) · save privately · forward to decision-maker · future fit · request specific proof (diagnostic) · not-fit (close) — every action a recorded ProfessionalReaction, only commercial actions create an availability request; plus per-Proof-Unit source-peek, incorrect-information report, and a no-guarantee route. Reaction-to-artist stays method-safe text (§2.5).
 
-**DEFINITION OF DONE.** First viewport answers fit·trust·readiness·availability; no-login; persona toggle changes copy + CTA; source-peek on proof units; sticky/compact availability CTA; non-pro readable; no firewall strip; no score/rank.
+**DEFINITION OF DONE.** First viewport answers fit·trust·readiness·availability; no-login; persona toggle changes copy + CTA; source-peek on proof units; sticky/compact availability CTA; non-pro readable; no firewall strip; no score/rank; **the evidence below the hero is the Interactive Evidence Explorer** — chaptered one-viewport panes (not a flat scroll), a persistent chapter rail with true (RENDER LAW-filtered) count, Next/Prev + swipe, tap-to-expand proof cards, persona-switch resets to chapter 1, reduced-motion respected, no ghost dots.
 
 ---
 
@@ -862,23 +1114,57 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 
 ### 8.9 Source-Confirmer (`/confirm/:token`) — warm one-minute confirmation
 
+_Deepened to the full interactive standard, 21 Jul — TEAM IX-ENTITIES. Grounded in the BUILT code: `src/features/producer/ProducerConfirm.jsx` (267 lines) + `server/index.js` `GET/POST /api/confirm/:token` (lines 746–850) + `POST /api/request-confirmation` (the artist-side minting call, §8.13 Claim review). Honest BUILT/PARTIAL/TARGET marks throughout; genuine gaps flagged, none invented._
+
+**THE ONE JOB.** An accountless recipient reads exactly ONE claim and answers it in under a minute — nothing else is reachable from this surface. **1-screen happy path (§6 law 13):** open the emailed/WhatsApp'd link → the claim + asker load (`GET /api/confirm/:token`) → tap one of four choices → `POST` records the reply → the same card flips to a Done receipt with a revoke option. Two states, one screen, zero navigation.
+
 **PURPOSE.** An **accountless** person confirms exactly ONE claim via a bounded magic link — the mechanism that upgrades a claim to **Producer-confirmed**. The entire correct surface is `/confirm/:token`: no nav, no switch, no home, no dashboard. **NEVER a workspace shell** (D3 — retire any `/producer` shell).
 
-**LAYOUT.** A single centered card (`.confirmer-wrap`): eyebrow "One-statement confirmation · מאשר-מקור" → H1 "{Asker} asked you to confirm one statement." → reassurance → asker chip → the **statement card** (the exact one claim + context + a two-column "what confirming means / what does NOT happen") → three large choices → a closing reassurance.
+**NAV IN / OUT (per §7.7.a + App.jsx, verified).** **In:** the ONLY entry is the tokened link the artist mints from Claim review (§8.13, `ClaimReview.jsx:generate()` → `POST /api/request-confirmation` → `/confirm/{token}`), sent by the artist out-of-band (WhatsApp/email — LOCK never sends it). No other path reaches this route; it is not linked from any nav, hub, or search. **Out:** there is no "back" — `App.jsx` registers `/confirm/:token` OUTSIDE `<AppShell>` (line 160, alongside the public Passport routes), so the identity chrome/hub (§7.1–7.2) never renders here. Exit is one of: close the tab (the closing line says so — "You can close this window now"), or **"Replay this link"** (`cfReset`) which simply re-fetches the same token and returns to the Ask state in place. **BUILT correct** — this is the one entity-map row with zero drift between spec and code (§7.7.a: "none by design (no shell; exit = done screen)").
 
-**COMPONENTS.** Asker chip (initials + name + Act/genre + "is asking") · claim card (◆ "The statement you're confirming" + the quoted statement + context line) · the pos/neg two-column explainer · three choice buttons · done state.
+**DESKTOP & MOBILE — single viewport, no scroll target.** One centered card (`Shell`, `max-w-md`), identical structure at 390px and 1360px — this is deliberately NOT a responsive layout split, it is the same narrow column at every width (a trust ceremony reads better narrow even on desktop). Header row = Wordmark + language toggle only. No page scroll at either width in the Ask state; the Done/dead-link states may run slightly taller on long claim text, contained within the one card — no second scroll region anywhere on this screen.
+
+**COMPONENTS (BUILT, `ProducerConfirm.jsx`).** `Shell` (wordmark + `LanguageToggle`, centered `max-w-md` column) · eyebrow "One-statement confirmation" · H1 "{artistName} asked you to confirm one statement." · reassurance line · a serif quote-block claim card (gold left border) holding the **exact claim text** + "— submitted by {artistName}" · an inline error banner (`sendError`, retry-safe) · four full-width buttons in the Ask state · `Terminal` (the Done/no/wrong-person receipt) · `Footnote` (the closing firewall line).
+
+**BUILT vs current spec-narrative — two corrections (flagged, not invented):** (1) there is **no separate "asker chip"** (initials + Act + genre) as a distinct component — the asker's name is folded into the H1 sentence only; Act/genre are never shown (PARTIAL vs the prior spec text, which described a component that does not exist in code). (2) there is **no two-column "what confirming means / what does NOT happen" explainer** — that content is condensed into the single `Footnote` line plus the per-outcome body copy; the "What happens after I answer?" expandable named in the previous spec draft remains **TARGET, not built** (confirmed unchanged this pass).
+
+**ENUMERATED INTERACTIVITY — every interactive element, in place, no new page:**
+| # | Element | Trigger | States | In-place behavior | Result |
+|---|---|---|---|---|---|
+| 1 | **"Yes — this is accurate"** (`confirmYes`, primary) | tap | default → `pendingKind='yes'` (spinner in-button) → done | `POST {response:'yes'}`; on success `load()` re-fetches and the SAME card re-renders as `Terminal` | claim's `method_label` → `producer-confirmed`; artist bell rings; `claim_confirmed` fires server-side (see Signals) |
+| 2 | **"Partly right — needs a fix"** (`confirmPartial`) | tap | default → spinner → done | `POST {response:'partial'}` — **BUILT sends no correction text**; the "note what to correct" copy in the old spec draft is **TARGET, not built** (code has no textarea for this path) | claim's `method_label` cleared (not `producer-confirmed`); chip reads "Sent back for a fix" |
+| 3 | **"No — this isn't accurate"** (`confirmNo`) | tap | default → spinner → done | `POST {response:'no'}` | records a decline; never shows as confirmed |
+| 4 | **"I'm not the right person for this"** (`confirmWrongPerson`, quiet/tertiary) | tap | default → spinner → done | `POST {response:'wrong_person'}` | recorded distinctly from "No" — a 4th choice **missing from the previous spec's 3-choice STATES list** (the entity map §7.7.a already named all four correctly: "yes / partial / no / wrong-person") |
+| 5 | **"Revoke my confirmation"** (`onRevoke`, Terminal only, yes/partial answers) | tap | idle → `revoking` spinner → re-fetch | `POST {revoke:true}` | `method_label` cleared server-side; ceremony **re-opens** (server returns 200 + the claim reverts to Ask — the deliberate re-confirmation path, not a dead state) |
+| 6 | **"Replay this link"** (`cfReset`, dead-link states only) | tap | — | re-runs `load()` against the same token | if the link has since become valid (e.g. a revoke cleared it) the Ask state opens; otherwise the same dead state re-renders |
+| 7 | Language toggle | tap | EN ⇄ HE | in-place copy swap, no reload | — |
+
+Every button disables while `busy`, shows a `Spinner` only on the exact button pressed (`pendingKind`), and the claim quote-block never changes once loaded — the one thing being confirmed is never in motion.
 
 **STATES.**
-- **Ask** — three choices: **"Yes — this is accurate"** (primary; "Confirm exactly as written · adds PRODUCER-CONFIRMED") · **"Partly right — needs a fix"** ("Confirm most of it, note what to correct" — inline correction) · **"No — this isn't accurate"** (warn; "Records a decline · it won't show as confirmed").
-- **Done** — "Recorded — thank you", "Your confirmation now appears on this one statement of {artist}'s Passport as **PRODUCER-CONFIRMED**. You're done — nothing else is needed." + chips "✓ Producer-confirmed" · "Revocable anytime" + a "Replay this link" ghost.
+- **Loading** — `Loading` spinner, no shell chrome.
+- **Ask** — the four choices above; none pre-selected; no default.
+- **Done (Terminal)** — one of four receipts keyed to the recorded response: **yes** → "Confirmed" + `★ PRODUCER-CONFIRMED` chip (lime) + date + revoke button · **partial** → "Noted — partly right" + "Sent back for a fix" chip + revoke button · **no** → "Noted — your answer was recorded." (no chip, no revoke) · **wrong_person** → "Thanks — no action needed." (no chip, no revoke). Every branch ends with the closing exit line — no dead ends.
+- **Dead-link states (BUILT Wave-B/T-78, 20 Jul — ratify: R00).** Four warm terminal reads, each ending with a close-note exit line: **expired** ("short-lived on purpose — ask for a fresh one") · **used** ("already did its job") · **revoked** ("the artist cancelled it") · **invalid** (anything else). **Server contract (verified, `server/index.js` lines 746–850):** the API errors ONLY with 404=invalid and 410=expired; a used link returns 200 with its recorded receipt (idempotent single-use, G15-2) and a revoked link returns 200 and re-opens the ceremony. The client (`ProducerConfirm.jsx:load()`) additionally sniffs the response BODY for `/expir/`, `/already[-\s]?used/`, `/revok/` to route 409/403 branches that the server never actually sends — **dead code kept as defense, not expected to fire** (comment in code confirms this explicitly).
+- **Submitting** — the exact button pressed shows `<Spinner/>`, the other three stay static (never all four disable-and-spin at once).
+- **Send error** — an inline retryable banner ("Couldn't record your reply — check your connection and try again"); the ceremony stays on screen, nothing is lost.
 
-**INTERACTIONS.** `cfConfirm` (Yes / Partly) · `cfDecline` (No) · `cfReset` (replay). Name-visibility control + legal detail live in an expandable "What happens after I answer?" (target).
+**SIGNALS FIRED (verified against `server/index.js` + `src/lib/analytics.js` CANON).** The client (`ProducerConfirm.jsx`) fires **no** `logEvent` calls at all — every signal here is **server-side**, inside `POST /api/confirm/:token` (lines 808–845):
+- **`claim_confirmed`** — inserted directly into `analytics_event` **only when `response==='yes'`** (partial/no/wrong_person never fire it). This is the Trust-family FIRING signal named in §7.7.a. **Flagged gap (genuine, not invented):** this server-side insert carries **no `is_demo` flag** — unlike the client `analytics.js` sink, which marks `@gigproof.test` rows at write time (T-57). A confirmation on a demo/seed claim would count as real on the operator's Gate/funnel tiles (§8.12) if this code path were ever reached against seed data; today it is not reached in DEMO builds (the client short-circuits before any network call), so the exposure is theoretical but real in the code as written — worth a T-number to add the same seed-domain check server-side.
+- **Two notifications fire on every response** (yes/partial/no/wrong_person alike), not just on "yes": `notifyArtistOwner(..., {type:'claim_confirmed', body: en.notifications.claimConfirmed})` fires **unconditionally** whenever `pc.artist_id` exists, followed by a second, always-fired `{type:'confirmation_arrived', body: en.notifications.confirmationArrived(claimText)}`. **Flagged gap:** the first notification's copy is literally "claim confirmed" even when the recorded answer was **No** or **Wrong person** — the artist's bell can read as a confirmation when the producer actually declined. Genuine copy/logic mismatch found in code (`server/index.js` lines 820–834), not invented; needs a T-number to gate that first notification's type/body on `response==='yes'`.
+- **`producer_confirmation_sent`** fires **client-side**, but on the *artist's* Claim-review screen when the link is minted (§8.13), not here.
+- **`producer_confirmation_received`** exists in the CANON event vocabulary (`analytics.js`) but is **never written anywhere** — the server writes `claim_confirmed` on a "yes" instead (naming mismatch, already recorded at spec L1885/§14.1.5; restated here because this is the screen that would fire it).
 
-**EXACT MICROCOPY.** "No account needed. Your reply applies to this statement only — you won't be signed up for anything." · pos column "You verify this one statement is accurate. / It gets the **PRODUCER-CONFIRMED** label." · neg column "No account, no ongoing role. / Never a score or rating. / {artist} controls publishing. / Revocable anytime." · closing "This confirmation refers to the specific statement above only — never an endorsement, never a score." · target tagline "One detail. One answer. No account."
+**LEXICON (EN + HE, `producer.*` namespace — shipped, §15.4.5).** All copy on this screen is externalized; representative keys: `oneStatementEyebrow` / `askedToConfirm(name)` / `noAccountNote` / `confirmYes` / `confirmPartial` / `confirmNo` / `confirmWrongPerson` / `wrongPersonTitle` / `wrongPersonBody` / `noTitle` / `noBody` / `confirmedTitle` / `partialTitle` / `chipSentBack` / `confirmedBody` / `partialBody` / `footnote` / `closeNote` / `linkExpiredTitle` / `linkExpiredBody` / `linkUsedTitle` / `linkUsedBody` / `linkRevokedTitle` / `linkRevokedBody` / `linkInactiveTitle` / `linkDeadBody` / `sendError` / `revoke`. HE strings are ✓ shipped verbatim (see §15.4.5 table); **◐ PENDING (terminology, owner ruling open):** the code namespace and some artist-facing copy still say "מפיק" — canon HE for this capability is **מאשר-מקור** (§15.4.0); the swap is drafted but not yet ratified.
 
-**FIREWALL.** Confirms this one statement only — never an endorsement, never a score/rating. Adds only the canon **Producer-confirmed** label. Revocable anytime; the artist controls publishing.
+**FIREWALL.** Confirms this one statement only — never an endorsement, never a score/rating. Adds only the canon **Producer-confirmed** label (or clears it on partial/decline/revoke). Revocable anytime; the artist controls publishing. No count, no rank, no comparison to any other statement or artist ever appears on this card.
 
-**DEFINITION OF DONE.** Single `/confirm/:token` surface (no workspace shell); the exact one statement shown with context; three warm choices incl. inline "partly" correction; done state with revoke route; no login, no nav, one decision; legal moved to an expandable.
+**DEFINITION OF DONE.** Single `/confirm/:token` surface (no workspace shell — BUILT correct); the exact one statement shown with context; **four** warm choices (yes/partial/no/wrong-person — partial has NO inline correction field, that is TARGET); done state per-outcome with revoke route on yes/partial; no login, no nav, one decision at a time; four dead-link states each with a close-note exit; legal/expandable detail remains TARGET (not built).
+
+**PART-8 SHAPE.**
+- **SUCCESS FORMULA.** This screen succeeds when a stranger who has never heard of LOCK reads one sentence, recognizes the show it's about, and taps a truthful answer inside a minute — feeling asked a favor, never enrolled in anything. It fails the moment it feels like a form, a signup, or a rating request.
+- **COMPLETENESS CHECKLIST.** Nav-in/out (single token entry, no shell, replay path) ✓ · four interactive choices enumerated with states ✓ · dead-link coverage (4 variants) ✓ · signals fired incl. the is_demo + notification-copy gaps ✓ · EN+HE lexicon (shipped) ✓ · firewall (one statement, no score) ✓ · one-viewport no-scroll ✓ · a11y (button labels, spinner `aria-live` via `role="status"` on error banner) — not independently re-audited this pass, carried forward as previously verified.
+- **PARAMETER AUDIT (vs HEAD, this pass).** Taxonomy/terminology: **present**, one open PENDING item (מאשר-מקור swap, owner ruling, unchanged). Entities: **present** (Source-Confirmer is a capability, not a role — §4.2, unchanged). Interactivity enumeration: **was THIN** (3 choices documented, 4 built; asker-chip/two-column-explainer described as built but absent in code) → **backfilled in place this pass**, marked `ratify: R00`. Nav map: **present**, confirmed matching code exactly (no change needed). Signals: **was THIN** (no is_demo/notification-copy gaps previously flagged) → **backfilled**, flagged for a future T-number, not fixed here (spec-first, no code touched). Design-system tokens: unchanged, no new tokens introduced.
 
 ---
 
@@ -942,8 +1228,9 @@ The switch is **vocabulary + emphasis only**, never different facts (firewall). 
 | Gate tiles ×5 (views · reactions · requests · intent · verified-pay) | ✅ **BUILT, live source events**, demo-excluded (T-52 filter) | all FIRING except intent (dormant behind the pay flag, M-8 — fires on flip) |
 | **Retention tiles ×2** (returning accounts · repeat Passport opens) | ✅ **BUILT (T-55, owner priority)** — `fetchRetention()`, demo-excluded, own load/error/retry | `login` (incl. `session-restore`) · `passport_view` + `return_visit` — FIRING |
 | Stat counts (artists · published · requests · claims) | ✅ BUILT | table reads (inventories, not demand metrics) |
-| Pilot funnel bar (signup → … → availability_request) | ⏳ PENDING build — its source events mostly FIRE already (§14.1.5); wiring only | canon events |
-| AI-cost ledger · publish-freshness · risk tile | ⏳ PENDING build | server refresh-quota data exists; tiles not rendered |
+| Pilot funnel bar (signup → … → availability_request) | ✅ **BUILT (Wave-B/T-81, 20 Jul)** — 8 stages driven by `FUNNEL_EVENTS` in `gateCounts.js` (render cannot drift from canon), `is_demo=false`, proportional fill vs the funnel's own max, source event in mono per stage | canon events — FIRING |
+| Publish-freshness | ✅ **BUILT partial (T-81)** — published vs unpublished counts only; per-item staleness needs a read model with item dates — the gap is stated IN-COPY (EN+HE), not guessed | artists table read |
+| AI-cost ledger · risk tile | ⏳ PENDING — both correctly FLAGGED OUT, not faked: AI-cost needs a server read path (owner lane decision pending: manual-hybrid vs admin-key endpoint); risk needs an aggregate query (the capped 50-claim list would be dishonestly partial) | — |
 
 ---
 
@@ -971,7 +1258,7 @@ Discovery adapts to the artist's **country and the languages spoken there** (det
 - **TARGET (RAD5, roadmap):** true peer/industry **bands** ("what does a techno DJ at your stage usually show?") as **bands + method labels only, never a rank/percentile.** Nothing compares an artist to a peer cohort today; firewall-review required before any cohort context renders, and **never buyer-side** unless method-safe and requested.
 
 ### 9.4 Pillar (c) — RECOMMENDATIONS (reasoned next-best-action)
-- **BUILT:** the rule-based next-best-action engine (`pickNextAction` / `nextBestStep`) derives ONE clearest move from real state, each carrying a `why`; the milestone journey M1–M8 frames progress (no %, no bar-as-grade).
+- **BUILT:** the rule-based next-best-action engine (`pickNextAction` / `nextBestStep`) derives ONE clearest move from real state, each carrying a `why`; the milestone journey M1–M8 frames progress (no %, no bar-as-grade; `M1–M8` = internal codes — the screen shows only the §4.1a names).
 - **TARGET:** reasoned, evidence-linked recommendations that cite the scan + comparison ("*found a Selector listing — confirm it to fill your Proof planet, which buyers in techno weigh first*"). Partly reachable by extending the built engine.
 
 ### 9.5 Provider fallback + firewall preservation
@@ -2911,11 +3198,21 @@ line (§8.3) **data-driven instead of hand-coded** — `radarUniverse.js` today 
 > **stale** — a field-grain registry EXISTS in-repo: **`docs/registry/F1.csv`** (483 rows · 376 fields ·
 > 18 segments → 6 planets · per-field visibility/applicability/freshness/consent) + `F2-F6-DELTAS.csv`
 > (337 family deltas). What remains true: the **DB** still has no representation (no `field_id`,
-> free-text `claim_type` — the ≥038 migration, §16.A.6.a). **Four schema variants now compete** (F1.csv
-> 15-col · the Sheet's B01–B24 24-col · its 14-col sample header · this section's 5-col conceptual
-> core) — unification is owner ruling **M-17** (§18.2). Recommendation on record: F1.csv's 15 columns
-> as the working base + `next_action_rule` · `freshness gap_rule` · `why_a_buyer_cares` adopted from
-> B01–B24; this section's 5 columns remain the conceptual contract every variant must express.
+> free-text `claim_type`) until the taxonomy migration is applied.
+>
+> **M-17 RULED (R00, 20 Jul) — the schema competition is OVER:** (a) **the ONE Registry-B schema =
+> `docs/registry/F1.csv`'s 15 columns** (+ `next_action_rule` · `freshness_window` · `why_a_buyer_cares`
+> adopted from B01–B24); the Sheet's 24-col and 14-col variants are retired as sources; this section's
+> 5 columns remain the conceptual contract F1.csv expresses. (b) **Certainty = TWO separate fields**:
+> `claims.verification_status` (the live 4-value claim door, unchanged) + extraction **provenance**
+> (internal-only metadata, never rendered — same law as `internal_confidence`, §13.5/§21.6).
+> (c) **The four taxonomy sub-calls:** ① family build order = **`dj-club` first** (the pilot cohort) ·
+> ② the F6 delta family = **out of scope pre-Gate** (stays staged in F2-F6-DELTAS.csv) · ③ **one family
+> per Act** — secondary-family support deferred; a multi-genre artist's canon answer is a second Act
+> (MULTI-ACT law) · ④ the `radar_segments` Sheet tab **folds into F1.csv** and retires (one source of
+> truth; F1's 18 segments are machine-validated on every `verify`).
+> **The migration implementing this is AUTHORED as `supabase/migrations/039_taxonomy_registry.sql`
+> (+ paired down) — owner-gated, NOT applied; R00 approves and applies it herself.**
 
 **Schema (the five columns, canon):**
 

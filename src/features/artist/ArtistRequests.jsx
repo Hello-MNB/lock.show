@@ -18,6 +18,28 @@ const BandPill = UI.BandPill || function BandPill({ children }) {
 
 const STATUS_STYLE = { new: 'bg-accent/10 text-accent', replied: 'bg-teal/10 text-teal', closed: 'bg-surface2 text-muted' }
 
+// V5(a) (owner witness-fix 20 Jul) — root cause of the "1980-10-10" sighting:
+// this row/detail rendering does ZERO date parsing (no `new Date()` anywhere
+// below) — event_date is printed as the raw `date` column string, so a value
+// like 1980-10-10 can only be literally what a row's event_date column holds.
+// That rules out a client-side parsing/epoch bug in THIS component; it is a
+// bad row (either a manual/API test insert, since server/index.js only checks
+// the /^\d{4}-\d{2}-\d{2}$/ SHAPE — not plausibility — before writing
+// availability_requests.event_date, or a stray seed/test row). As a defensive
+// belt-and-suspenders fix regardless of DB hygiene, treat any date before the
+// product's plausible floor as garbage and render the same no-date i18n
+// label instead of a nonsense year — never hides a genuine past booking
+// (requests can legitimately reference a date that has since passed).
+const EVENT_DATE_FLOOR_YEAR = 2020
+function isSaneEventDate(d) {
+  if (!d || typeof d !== 'string') return false
+  const m = /^(\d{4})-\d{2}-\d{2}$/.exec(d)
+  return !!m && Number(m[1]) >= EVENT_DATE_FLOOR_YEAR
+}
+function eventDateLabel(d, T) {
+  return isSaneEventDate(d) ? d : T.agency.noDate
+}
+
 // Artist nav "Requests" tab (IA CORRECTION — canon: Radar · Passport ·
 // Requests · Account). Incoming availability requests from booking managers —
 // the buyer-side "Check availability" action on the public Passport (A15)
@@ -66,7 +88,13 @@ export default function ArtistRequests() {
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.agency.requests}</h1>
 
       {rows.length === 0 ? (
-        <EmptyState title={T.agency.requestsEmpty} />
+        // V5(b) (owner witness-fix 20 Jul): a warm empty state, not a bare
+        // title — `requestsEmptyHint` already exists in both i18n locales
+        // (used today by AgencyDashboard's own empty state) but wasn't wired
+        // here; reusing it needs no new manifest keys. headline carries the
+        // short title, title carries the explanatory line (EmptyState's own
+        // layout), matching the same warm pattern already used elsewhere.
+        <EmptyState headline={T.agency.requestsEmpty} title={T.agency.requestsEmptyHint} />
       ) : (
         <div className="space-y-3">
           {rows.map((r) => {
@@ -75,10 +103,10 @@ export default function ArtistRequests() {
               <div key={r.id} className={`card transition ${open ? 'border-accent' : ''}`}>
                 {/* collapsed row — one tap opens the detail in place (no drawer, no modal) */}
                 <button type="button" onClick={() => toggle(r.id)} aria-expanded={open}
-                  className="flex w-full items-center justify-between gap-2 text-start">
+                  className="flex min-h-[44px] w-full items-center justify-between gap-2 text-start">
                   <div className="min-w-0">
                     <p className="truncate font-bold text-ink">{r.requester_name}{r.requester_org ? ` · ${r.requester_org}` : ''}</p>
-                    <p className="truncate text-xs text-muted"><span className="font-mono">{r.event_date || T.agency.noDate}</span></p>
+                    <p className="truncate text-xs text-muted"><span className="font-mono">{eventDateLabel(r.event_date, T)}</span></p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <span className={`chip ${STATUS_STYLE[r.status]}`}>{STATUS_LABEL[r.status]}</span>
@@ -91,7 +119,7 @@ export default function ArtistRequests() {
                   <div className="mt-3 border-t border-line pt-3 animate-fade-in">
                     <div className="space-y-1.5 text-sm">
                       <DetailRow label={T.agency.requesterLabel} value={`${r.requester_name}${r.requester_org ? ` · ${r.requester_org}` : ''}`} />
-                      <DetailRow label={T.agency.eventLabel} value={`${r.event_date || T.agency.noDate} · ${r.location || '—'}`} mono />
+                      <DetailRow label={T.agency.eventLabel} value={`${eventDateLabel(r.event_date, T)} · ${r.location || '—'}`} mono />
                       {(r.capacity_band || r.budget_band) && (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {r.capacity_band && <BandPill>{T.agency.audience} {r.capacity_band}</BandPill>}

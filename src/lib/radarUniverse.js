@@ -59,7 +59,9 @@ const linkPlanet = (url = '') => {
   return 'identity'
 }
 
-const claimPlanet = (c) => {
+// Exported for R-5 (§8.2 L669): the NBA walks the family emphasis order over
+// pending claims' planets — the mapping must be THIS one, never a duplicate.
+export const claimPlanet = (c) => {
   const t = `${c.claim_type || ''} ${c.source_type || ''}`
   if (/community/.test(t)) return 'audience'
   if (/frequency|lineup/.test(t)) return 'live'
@@ -121,6 +123,24 @@ export function ownHistory(claims = [], days = 60) {
     if (Number.isFinite(d) && d >= cutoff) { n += 1; if (!earliest || d < earliest) earliest = d }
   }
   return n > 0 ? { n, since: new Date(earliest) } : null
+}
+
+// R-2 (T-82, §8.2 planet state "Locked / 'Not needed yet'"): the Professional
+// Kit is a SEQUENCING hook, not a judgement — it stays locked until the Act's
+// live draw has SOME backing. Honest minimal rule, derived from the real data
+// shapes already flowing into buildUniverse (no new columns, no new query):
+//   backed = artist.lineup_frequency_band is set (a declared draw band)
+//            OR at least one claim on the live/proof dimensions is
+//            artist_approved (⇒ NODE.CONFIRMED) and not disputed.
+// Never locked once ANY live proof exists — this only ever tightens FALSE,
+// it never re-locks a planet that was already open.
+export function hasBackedLiveProof({ artist = {}, claims = [] }) {
+  if (artist.lineup_frequency_band) return true
+  return claims.some((c) => {
+    if (c.status === 'disputed' || !c.artist_approved) return false
+    const planet = claimPlanet(c)
+    return planet === 'live' || planet === 'proof'
+  })
 }
 
 // Build the whole universe. Returns { planets: {key → {nodes, state, foundCount}}, foundTotal }
@@ -229,6 +249,7 @@ export function buildUniverse({ artist = {}, act = null, items = [], claims = []
   if (!nodes.proof.some((n) => n.claim)) push('proof', { state: NODE.MISSING, label: S.src.ticketExport, sub: S.addIt, evidence: true, why: 'ticketExport' }) // needs the evidence+consent flow
 
   // ── planet rollup: bounded state, never a number ──
+  const backed = hasBackedLiveProof({ artist, claims })
   const planets = {}
   let foundTotal = 0
   for (const p of PLANETS) {
@@ -236,7 +257,10 @@ export function buildUniverse({ artist = {}, act = null, items = [], claims = []
     const found = list.filter((n) => n.state === NODE.FOUND || n.state === NODE.REVIEW).length
     foundTotal += found
     const confirmed = list.some((n) => n.state === NODE.CONFIRMED)
-    const state = found > 0 ? 'needs' : confirmed ? 'established' : 'developing'
+    let state = found > 0 ? 'needs' : confirmed ? 'established' : 'developing'
+    // R-2 — Professional Kit is a sequencing hook: quiet 'locked' state until
+    // the Act's live draw has some backing, never re-locked once it does.
+    if (p.key === 'prokit' && !backed) state = 'locked'
     planets[p.key] = { nodes: list, state, foundCount: found }
   }
   return { planets, foundTotal }

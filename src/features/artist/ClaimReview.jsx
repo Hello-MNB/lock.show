@@ -174,7 +174,7 @@ export default function ClaimReview() {
   return (
     <PageShell>
       <div className="mb-6 flex items-center justify-end">
-        <Link to="/artist/home" className="text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+        <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -211,7 +211,7 @@ export default function ClaimReview() {
             {artist.community_size_band && <DrawLine label={T.passport.drawCommunity} value={artist.community_size_band} T={T} />}
           </div>
           <p className="mt-2 text-xs text-muted">{T.claims.drawNote}</p>
-          <Link to="/artist/home" className="mt-1 inline-flex min-h-[40px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
+          <Link to="/artist/home" className="tap-target mt-1 inline-flex min-h-[44px] items-center text-xs font-semibold text-muted underline decoration-line2 hover:text-ink">{T.claims.drawEditHint}</Link>
         </div>
       )}
 
@@ -282,7 +282,7 @@ export default function ClaimReview() {
       {receipt && (
         <div role="status" className="fixed inset-x-4 bottom-4 z-[70] mx-auto flex max-w-md items-center gap-2 rounded-xl border border-accent/25 bg-surface px-3.5 py-2.5 text-xs font-semibold text-ink shadow-card">
           <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-accent" />
-          <span className="truncate">{receipt}</span>
+          <span className="line-clamp-2 min-w-0 whitespace-normal break-words">{receipt}</span>
         </div>
       )}
     </PageShell>
@@ -293,7 +293,7 @@ function DrawLine({ label, value, T }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="flex min-w-0 items-center gap-2 text-sm text-ink/90">
-        <span className="truncate">{label}</span>
+        <span className="min-w-0 leading-snug">{label}</span>
         <BandPill>{value}</BandPill>
       </span>
       <span className="chip shrink-0 bg-na-bg text-muted text-xs">{T.claims.alwaysVisible}</span>
@@ -307,7 +307,7 @@ function VisibilityToggle({ isPassportOk, busy, onClick, T }) {
     <button
       onClick={onClick}
       disabled={busy}
-      className={`chip min-h-[40px] shrink-0 px-3 py-1.5 text-xs font-bold transition ${
+      className={`tap-target chip min-h-[44px] shrink-0 px-3 py-1.5 text-xs font-bold transition ${
         isPassportOk
           ? 'bg-good-bg text-good hover:bg-good/15'
           : 'border border-line2 bg-surface2 text-muted hover:bg-raise'
@@ -333,7 +333,7 @@ function ItemRow({ item, onToggle, toggling, T }) {
     <div className={`card transition ${busy ? 'opacity-60' : ''}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-ink">{item.title}</p>
+          <p className="text-sm font-semibold leading-snug text-ink">{item.title}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <MethodLabel label={T.methodLabel[verified ? 'source-linked' : 'artist-declared'] || (verified ? 'source-linked' : 'self-reported')} />
             {item.item_date && <span className="font-mono text-[10px] text-faint">{fmtDate(item.item_date)}</span>}
@@ -462,7 +462,7 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
             className="flex min-h-[44px] min-w-0 flex-1 basis-full items-center justify-center gap-1.5 rounded-lg border border-line2 bg-surface2 px-3 py-2.5 text-sm font-bold text-accent transition-colors hover:bg-raise disabled:opacity-50"
             onClick={() => onApprove(claim)} disabled={busy}
             aria-label={`${T.claims.approve}: ${claimTitle}`}>
-            {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="truncate">{T.claims.approve}: “{claimTitle}”</span></>}
+            {busy ? <Spinner /> : <><span aria-hidden>✓</span><span className="min-w-0 whitespace-normal break-words text-start leading-snug">{T.claims.approve}: “{claimTitle}”</span></>}
           </button>
           <button className="btn-ghost text-sm" onClick={() => setCorrecting((v) => !v)} disabled={busy}>{T.claims.correct}</button>
           <button className="btn-ghost text-sm" onClick={() => onFlag(claim)} disabled={busy}>{T.claims.flag}</button>
@@ -484,7 +484,7 @@ function ClaimRow({ claim, onToggle, toggling, T, bloom, canPublish, onApprove, 
       )}
 
       {!isConfirmed && (
-        <button className="mt-1 min-h-[40px] text-xs text-muted transition-colors hover:text-ink" onClick={() => setOpen((o) => !o)}>
+        <button className="tap-target mt-1 min-h-[44px] text-xs text-muted transition-colors hover:text-ink" onClick={() => setOpen((o) => !o)}>
           {T.producer.requestTitle}
         </button>
       )}

@@ -7,30 +7,40 @@ import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 import { deriveSections, PassportSkeleton } from './passportKit.jsx'
 import PassportBookingView from './PassportBookingView.jsx'
 import PassportRepView from './PassportRepView.jsx'
+import PassportProductionView from './PassportProductionView.jsx'
+import PassportPrivateView from './PassportPrivateView.jsx'
 
 // ── A15 · The public Passport — the WEDGE (warm cinematic night) ─────────────
 // Public, buyer-facing, no login. Reads LIVE via anon + RLS; the firewall is
 // physical (published-gate + passport-ok RLS + 016/025 column grants).
 // This file is the LOADER: it fetches, guards the load states, owns the persona
-// (Booking ⇄ Representation) and the conversion sheet, and delegates the actual
-// page to one of two persona views. Both views render IDENTICAL evidence via
-// passportKit.deriveSections — a persona changes only ORDER and FRAMING, never
-// a fact. RENDER LAW: a section with nothing verified is removed. Bands only,
-// method labels always. NO score, NO gauge, ever.
+// (§8.4 four faces: Booking ⇄ Representation ⇄ Production ⇄ Private & corporate)
+// and the conversion sheet, and delegates the actual page to one of four persona
+// views. All four render IDENTICAL evidence via passportKit.deriveSections — a
+// persona changes only ORDER and FRAMING, never a fact. RENDER LAW: a section
+// with nothing verified is removed. Bands only, method labels always. NO score,
+// NO gauge, ever.
 // Re-exported here for backward-compat with any older imports.
 export { MethodLabel, BandPill } from './passportKit.jsx'
+
+// The four §8.4 faces — 'booking' is the default (no query param); the other
+// three deep-link via ?view=. Kept as a bounded lookup (never a free string)
+// so an unknown/garbled ?view= value always falls back to booking, never a blank view.
+const VIEW_KEYS = ['rep', 'production', 'private']
 
 export default function Passport() {
   const { T } = useLang()
   const { id } = useParams()
   const nav = useNavigate()
   const [sp, setSp] = useSearchParams()
-  // persona is self-selected by whoever opens the link; ?view=rep deep-links the
-  // representation framing (an artist can share that flavour to an agency).
-  const persona = sp.get('view') === 'rep' ? 'rep' : 'booking'
+  // persona is self-selected by whoever opens the link; ?view=rep/production/
+  // private deep-links that framing (e.g. an artist can share the production
+  // flavour to a stage manager, or the private flavour to a corporate planner).
+  const rawView = sp.get('view')
+  const persona = VIEW_KEYS.includes(rawView) ? rawView : 'booking'
   const setPersona = (p) => setSp((prev) => {
     const next = new URLSearchParams(prev)
-    if (p === 'rep') next.set('view', 'rep'); else next.delete('view')
+    if (VIEW_KEYS.includes(p)) next.set('view', p); else next.delete('view')
     return next
   }, { replace: true })
 
@@ -133,8 +143,13 @@ export default function Passport() {
     finally { setBusy(false) }
   }
 
-  const ViewComp = persona === 'rep' ? PassportRepView : PassportBookingView
-  const ctaLabel = persona === 'rep' ? T.passport.ctaRep : T.passport.checkAvailability
+  // §8.4 four faces — same evidence pool (data), a different view component
+  // + CTA wording per persona. Unknown/garbled persona values can't reach this
+  // point (VIEW_KEYS bounds them above), so 'booking' is a safe default only.
+  const VIEWS = { rep: PassportRepView, production: PassportProductionView, private: PassportPrivateView }
+  const ViewComp = VIEWS[persona] || PassportBookingView
+  const CTA_LABELS = { rep: T.passport.ctaRep, production: T.passport.ctaProduction, private: T.passport.ctaPrivate }
+  const ctaLabel = CTA_LABELS[persona] || T.passport.checkAvailability
 
   return (
     <div className="min-h-full bg-bg pb-32">

@@ -13,5 +13,7 @@ _Owner directive 17 Jul: "a reliable source for logo / icons / platform logos / 
 | **Demo persona photos** | `public/assets/` (maya-vale-profile-v2.png, demo-artist-techno.jpg, persona webps) | demo-only | Never referenced from real user flows; embed build copies to the site origin |
 | **Site marketing photography** | `website-next/public/` per-page | canon (approved-site set) | New imagery ships only via rule-12 taste trains |
 | **Venue-logo set** | — DOES NOT EXIST — | Codex OWED (M-7) | When delivered: lives in `public/assets/venues/` + a `VenueLogo.jsx` mapper, same pattern as PlatformLogo |
+| **Constellation threads** (Radar center↔planet state lines) | `src/features/artist/RadarUniverse.jsx` — DYNAMIC per-render SVG (T-82 R-3, §8.2) | canon (component-owned graphic) | Geometry derives from live planet state — cannot be a static asset; token classes / currentColor only; allowlisted in test-ds-drift with reason |
+| **Room-grammar silhouettes** (Lounge · Club · Hall · Festival + light cone) | `src/features/passport/RoomGrammar.jsx` — 4 line-art shapes + band-driven cone (T-83 P-5, §5.10 ratify: R00) | canon (component-owned graphic) | The cone lights the artist's canonical band's room; currentColor only, never a size ladder; allowlisted in test-ds-drift with reason |
 
 **The hermetic law:** an asset that isn't in this table doesn't get committed. The DS-drift inspector (T-46) adds a check: any `<img src>` / inline `<svg>` in a component that bypasses these sources = build failure.

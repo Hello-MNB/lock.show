@@ -56,7 +56,7 @@ export default function AgencyRadarUniverse({ artists, claims }) {
             value={world || ''}
             onChange={(e) => setWorld(e.target.value || null)}
             aria-label={S.worldsHint}
-            className={`appearance-none rounded-full border bg-surface px-3 py-1 font-mono text-[10px] outline-none ${
+            className={`tap-target appearance-none rounded-full border bg-surface px-3 py-1 font-mono text-[10px] outline-none ${
               world ? 'border-accent text-accent' : 'border-line text-faint'
             }`}>
             <option value="">{S.allWorlds}</option>
@@ -115,8 +115,8 @@ export default function AgencyRadarUniverse({ artists, claims }) {
       {overflow > 0 && (
         <div className="mt-2 flex justify-center">
           <a href="#roster"
-            className="rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition hover:border-accent hover:text-accent">
-            +{overflow} more — full roster below
+            className="tap-target rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted transition hover:border-accent hover:text-accent">
+            {S.overflowMore ? S.overflowMore(overflow) : `+${overflow} more — full roster below`}
           </a>
         </div>
       )}

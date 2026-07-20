@@ -89,7 +89,7 @@ export default function RequestConfirmation() {
               </a>
               <p className="text-xs text-faint">{T.request.whatsappHint}</p>
             </>
-          ) : settled && (
+          ) : settled ? (
             /* no WhatsApp on file — still not a dead end */
             <div className="mt-6 rounded-[14px] border border-line bg-surface2 p-4 text-left">
               <p className="text-sm leading-relaxed text-ink">
@@ -108,9 +108,13 @@ export default function RequestConfirmation() {
                 </button>
               </div>
             </div>
+          ) : (
+            /* still resolving the WhatsApp-opt-in lookup — a quiet skeleton,
+               never a blank gap between the confirmation and its one next step */
+            <div className="skeleton mt-6 h-11 w-full rounded-md" aria-hidden="true" />
           )}
 
-          <Link to={`/passport/${id}`} className="mt-5 inline-block text-sm text-muted transition hover:text-ink">
+          <Link to={`/passport/${id}`} className="tap-target mt-5 inline-block text-sm text-muted transition hover:text-ink">
             ← {T.request.backToPassport}
           </Link>
         </div>

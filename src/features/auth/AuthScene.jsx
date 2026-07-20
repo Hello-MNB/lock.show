@@ -1,5 +1,15 @@
+import { Link } from 'react-router-dom'
 import { Wordmark, LanguageToggle } from '../../components/ui.jsx'
+import BuildStamp from '../../components/BuildStamp.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useAuth } from './AuthProvider.jsx'
+import { useOrg } from '../../context/OrgContext.jsx'
+import { homePathFor } from '../../lib/navigation.js'
+import { DEMO } from '../../lib/demo.js'
+
+// The public marketing site's home — where a LOGGED-OUT visitor lands when
+// they tap the wordmark on an auth screen (it must never be a dead mark).
+const SITE_HOME = 'https://lock.show'
 
 // Local auth-scene shell (auth feature only — not a shared component).
 // Cinematic split: warm artist photo on the left (hidden on mobile), the form
@@ -9,6 +19,15 @@ import { useLang } from '../../context/LangContext.jsx'
 // localized authScene.tagline.
 export default function AuthScene({ children, tagline }) {
   const { T } = useLang()
+  const { user } = useAuth() || {}
+  const { role, isProducerWorkspace } = useOrg() || {}
+  // LOGO → HOME (never a dead mark): logged-out taps land on the public site
+  // home; a logged-in visitor (e.g. mid password-reset with a live session)
+  // goes to THEIR workspace home via the same RoleHome contract App.jsx uses —
+  // homePathFor is the single source of truth, so this never drifts from it.
+  const loggedInHome = homePathFor({ role, isProducerWorkspace, demo: DEMO })
+  const wordmark = <Wordmark />
+
   return (
     <div className="flex min-h-full bg-bg">
       {/* left — warm live photo with a gradient veil (desktop only) */}
@@ -28,14 +47,26 @@ export default function AuthScene({ children, tagline }) {
         </div>
       </div>
 
-      {/* right — the form column */}
-      <div className="flex w-full flex-col px-4 py-6 sm:px-8 lg:w-[520px] lg:shrink-0">
-        <div className="mb-8 flex items-center justify-between">
-          <Wordmark />
+      {/* right — the form column. `relative` so the header can be lifted out
+          of flow at desktop (lg:absolute) — otherwise its reserved row height
+          skews the flex-centered form off the column's true vertical middle,
+          visibly off-balance against the hero image at wide viewports. Mobile
+          keeps the original in-flow header (untouched — same fit as before). */}
+      <div className="relative flex w-full flex-col px-4 py-6 sm:px-8 lg:w-[520px] lg:shrink-0">
+        <div className="mb-8 flex items-center justify-between lg:absolute lg:inset-x-8 lg:top-6 lg:z-10 lg:mb-0">
+          {user
+            ? <Link to={loggedInHome} aria-label={T.authScene.homeAria} className="tap-target">{wordmark}</Link>
+            : <a href={SITE_HOME} aria-label={T.authScene.homeAria} className="tap-target">{wordmark}</a>}
           <LanguageToggle />
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-sm animate-fade-in pb-10">{children}</div>
+          {/* Build stamp lives INSIDE the centered card (not a page-level
+              sibling) so it never skews the vertical-centering math above —
+              it's part of the one thing that's centered, always below it. */}
+          <div className="w-full max-w-sm animate-fade-in pb-10">
+            {children}
+            <BuildStamp className="mt-8 flex justify-center" />
+          </div>
         </div>
       </div>
     </div>

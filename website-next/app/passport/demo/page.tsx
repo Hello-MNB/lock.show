@@ -373,7 +373,7 @@ export default function PassportDemo() {
             Build your own Passport. Get verified. Share with booking managers.
           </p>
           <a
-            href={`${APP_URL}/signup`}
+            href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
             style={{
               display: 'inline-block',
               padding: '12px 28px',

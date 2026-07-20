@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
@@ -68,9 +69,20 @@ const FOOTER_LINKS = [
   },
 ]
 
+// T-84 CTA attribution law (docs/SITE-REWRITE-BRIEF.md): footer is shared
+// across every page, so the campaign must be derived from the route, not
+// hardcoded — otherwise 100% of footer-driven signups attribute via referrer
+// only.
+function pageSlug(pathname: string | null): string {
+  if (!pathname || pathname === '/') return 'home'
+  return pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, '-')
+}
+
 export function Footer() {
   const { messages } = useLocale()
   const t = messages.footer
+  const pathname = usePathname()
+  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=footer`
 
   return (
     <footer
@@ -125,7 +137,7 @@ export function Footer() {
             </p>
           </div>
           <a
-            href={`${APP_URL}/signup`}
+            href={signupHref}
             style={{
               display: 'inline-block',
               padding: '15px 24px',

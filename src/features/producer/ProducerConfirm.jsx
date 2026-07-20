@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import * as UI from '../../components/ui.jsx'
-import { Wordmark, Loading, LanguageToggle } from '../../components/ui.jsx'
+import { Wordmark, Loading, LanguageToggle, Spinner } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { DEMO, demoConfirm } from '../../lib/demo.js'
 
@@ -36,22 +36,41 @@ export default function ProducerConfirm() {
   const { T } = useLang()
   const { token } = useParams()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null) // null | 'expired' | 'invalid'
+  const [error, setError] = useState(null) // null | 'expired' | 'used' | 'revoked' | 'invalid'
   const [sendError, setSendError] = useState(false)
   const [data, setData] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [pendingKind, setPendingKind] = useState(null) // which action is in-flight: 'yes'|'partial'|'no'|'wrong_person'|'revoke'
 
   async function load() {
+    // DEMO build: zero network, always. Every /confirm/:token route renders the
+    // same fixture ceremony from demoConfirm — the fit-inspector uses the token
+    // 'demo-token' (scripts/test-fit.mjs); the in-app "generate a link" preview
+    // (ClaimReview.jsx) uses 'demo-token-preview'. Neither is looked up by
+    // value; DEMO short-circuits before any token comparison, same as every
+    // other demo screen in this app.
     if (DEMO) { setData({ ...demoConfirm }); setLoading(false); return }
     setLoading(true); setError(null)
     try {
       const res = await fetch(`/api/confirm/${token}`)
       if (!res.ok) {
-        // Distinguish expired vs invalid when the API says so — never show a raw error.
+        // Distinguish WHY the link is dead — never show a raw error. Four warm,
+        // safe outcomes: expired (time-based), used (a one-time link already
+        // spent), revoked (the artist cancelled it), or invalid (anything else,
+        // including a mistyped/unknown token). Verified against server/index.js
+        // (GET/POST /api/confirm/:token): the server sends 404=invalid and
+        // 410 {error:'link_expired'}=expired ONLY. Used/revoked links come back
+        // 200 with {responded, revoked} payload flags and render below — a used
+        // link shows its recorded receipt; a revoked link re-opens the ceremony
+        // (the server's deliberate re-confirmation path). The 409/'used' and
+        // 403/'revoked' branches here are unreachable defense — keep them, but
+        // do not expect them to fire.
         let kind = 'invalid'
         try {
           const body = await res.text()
           if (res.status === 410 || /expir/i.test(body)) kind = 'expired'
+          else if (res.status === 409 || /already[\s-]?used/i.test(body)) kind = 'used'
+          else if (res.status === 403 || /revok/i.test(body)) kind = 'revoked'
         } catch { /* body unreadable — keep generic */ }
         setError(kind)
         return
@@ -66,11 +85,12 @@ export default function ProducerConfirm() {
   async function send(body) {
     if (busy) return
     setSendError(false)
+    const kind = body.revoke ? 'revoke' : body.response
     if (DEMO) {
       setData((d) => ({ ...d, response: body.revoke ? d.response : body.response, revoked: !!body.revoke, responded: !body.revoke, respondedAt: new Date().toISOString() }))
       return
     }
-    setBusy(true)
+    setBusy(true); setPendingKind(kind)
     try {
       const res = await fetch(`/api/confirm/${token}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -81,23 +101,32 @@ export default function ProducerConfirm() {
     } catch {
       // Reply failed — keep the ceremony on screen so the producer can retry.
       setSendError(true)
-    } finally { setBusy(false) }
+    } finally { setBusy(false); setPendingKind(null) }
   }
 
   if (loading) return <div className="min-h-full bg-bg"><Loading /></div>
 
-  // ── Dead link — graceful, never a raw error ───────────────────────────────
+  // ── Dead link — graceful, never a raw error. Four warm, safe outcomes;
+  // each names what happened and offers a clear exit line — never a dead end. ──
   if (error || !data) {
+    const DEAD_COPY = {
+      expired: { title: T.producer.linkExpiredTitle, body: T.producer.linkExpiredBody },
+      used: { title: T.producer.linkUsedTitle, body: T.producer.linkUsedBody },
+      revoked: { title: T.producer.linkRevokedTitle, body: T.producer.linkRevokedBody },
+      invalid: { title: T.producer.linkInactiveTitle, body: T.producer.linkDeadBody },
+    }
+    const copy = DEAD_COPY[error] || DEAD_COPY.invalid
     return (
       <Shell>
         <div className="card text-center">
           <span className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-surface2 text-2xl text-muted" aria-hidden>⏱</span>
           <h1 className="mb-2 text-xl font-bold text-ink">
-            {error === 'expired' ? T.producer.linkExpiredTitle : T.producer.linkInactiveTitle}
+            {copy.title}
           </h1>
           <p className="text-sm text-muted">
-            {T.producer.linkDeadBody}
+            {copy.body}
           </p>
+          <p className="mt-4 text-xs text-faint">{T.producer.closeNote}</p>
         </div>
         <Footnote />
       </Shell>
@@ -134,25 +163,25 @@ export default function ProducerConfirm() {
         )}
 
         {answered ? (
-          <Terminal data={data} when={when} busy={busy} onRevoke={() => send({ revoke: true })} />
+          <Terminal data={data} when={when} busy={busy} revoking={pendingKind === 'revoke'} onRevoke={() => send({ revoke: true })} />
         ) : (
           <div className="grid gap-2">
             <button className="btn-primary w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'yes' })}>
-              {T.producer.confirmYes}
+              {pendingKind === 'yes' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmYes}
             </button>
             <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'partial' })}>
-              {T.producer.confirmPartial}
+              {pendingKind === 'partial' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmPartial}
             </button>
             <button className="btn-ghost w-full min-h-[48px]" disabled={busy}
               onClick={() => send({ response: 'no' })}>
-              {T.producer.confirmNo}
+              {pendingKind === 'no' ? <><Spinner /> {T.common.loading}</> : T.producer.confirmNo}
             </button>
             <button disabled={busy}
               className="min-h-[44px] w-full rounded-xl text-sm text-faint transition hover:text-muted"
               onClick={() => send({ response: 'wrong_person' })}>
-              {T.producer.confirmWrongPerson}
+              {pendingKind === 'wrong_person' ? <span className="inline-flex items-center gap-2"><Spinner className="h-3.5 w-3.5" /> {T.common.loading}</span> : T.producer.confirmWrongPerson}
             </button>
           </div>
         )}
@@ -164,7 +193,9 @@ export default function ProducerConfirm() {
 }
 
 // Distinct terminal states — the ceremony ends with a clear, human close.
-function Terminal({ data, when, busy, onRevoke }) {
+// Every branch is a "submitted receipt": what was recorded, bounded, plus a
+// closing exit line — no dead ends.
+function Terminal({ data, when, busy, revoking, onRevoke }) {
   const { T } = useLang()
   const canRevoke = data.response === 'yes' || data.response === 'partial'
   if (data.response === 'wrong_person') {
@@ -172,6 +203,7 @@ function Terminal({ data, when, busy, onRevoke }) {
       <div className="text-center py-2">
         <p className="mb-1 text-lg font-bold text-ink">{T.producer.wrongPersonTitle}</p>
         <p className="text-sm text-muted">{T.producer.wrongPersonBody}</p>
+        <p className="mt-4 text-xs text-faint">{T.producer.closeNote}</p>
       </div>
     )
   }
@@ -180,6 +212,7 @@ function Terminal({ data, when, busy, onRevoke }) {
       <div className="text-center py-2">
         <p className="mb-1 text-lg font-bold text-ink">{T.producer.noTitle}</p>
         <p className="text-sm text-muted">{T.producer.noBody}</p>
+        <p className="mt-4 text-xs text-faint">{T.producer.closeNote}</p>
       </div>
     )
   }
@@ -203,9 +236,10 @@ function Terminal({ data, when, busy, onRevoke }) {
       </p>
       {canRevoke && (
         <button className="btn-ghost w-full" onClick={onRevoke} disabled={busy}>
-          {T.producer.revoke}
+          {revoking ? <><Spinner /> {T.common.loading}</> : T.producer.revoke}
         </button>
       )}
+      <p className="mt-4 text-center text-xs text-faint">{T.producer.closeNote}</p>
     </div>
   )
 }

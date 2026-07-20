@@ -6,7 +6,8 @@ import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } fro
 import { useLang } from '../../context/LangContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { isPrimaryPlanet, primaryPlanets } from '../../lib/genreWeights.js'
+import { isPrimaryPlanet, primaryPlanets, planetEmphasisOrder } from '../../lib/genreWeights.js'
+import { claimPlanet } from '../../lib/radarUniverse.js'
 import { PAYMENTS_ENABLED } from '../../lib/constants.js'
 import RadarUniverse, { useFullStage } from './RadarUniverse.jsx'
 import { appUrl } from '../../lib/appUrl.js'
@@ -14,6 +15,39 @@ import { appUrl } from '../../lib/appUrl.js'
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
 // Bounded dimension states + ONE next action. FIREWALL: rule-based states only —
 // no score, no %, no fill bars; a gap renders as an invitation, never a failure.
+
+// V2 (owner witness-fix 20 Jul, §6 law 7 Radar no-scroll): the VIEWPORT LAW
+// below is enforced ENTIRELY by a `calc(100dvh-Xrem)` Tailwind class with no
+// fallback. The arithmetic is exact (top-bar 3.5rem + bottom-nav reserve
+// 4rem = the same 7.5rem subtracted here — verified empirically: a Playwright
+// pass across base/planet-panel-open/review-open states at 360×780 and
+// 1360×850 measured ZERO page overflow in the current build). But `dvh` is a
+// 2023-era unit — a browser or in-app webview without it treats the WHOLE
+// calc() as invalid and falls back to `height: auto`, which sizes to
+// content instead of the viewport: the overflow-hidden clip stops doing
+// anything, and the page scrolls exactly like the owner's walk described.
+// This hook is the JS-measured belt-and-suspenders: on a browser that lacks
+// `dvh` support it returns a real pixel height (window.innerHeight minus the
+// same reserve, kept in sync on resize/orientation change) for an inline
+// style to enforce instead; on every browser that already supports `dvh` it
+// returns null and the existing Tailwind class is untouched — zero risk to
+// the verified common case.
+function useViewportHeightFallback(reserveRem) {
+  const supported = typeof CSS !== 'undefined' && CSS.supports?.('height', '100dvh')
+  const [px, setPx] = useState(() => (supported ? null : window.innerHeight - reserveRem * 16))
+  useEffect(() => {
+    if (supported) return undefined
+    const sync = () => setPx(window.innerHeight - reserveRem * 16)
+    sync()
+    window.addEventListener('resize', sync)
+    window.addEventListener('orientationchange', sync)
+    return () => {
+      window.removeEventListener('resize', sync)
+      window.removeEventListener('orientationchange', sync)
+    }
+  }, [supported, reserveRem])
+  return supported ? null : px
+}
 
 // ONE prioritized action — a coach's single clearest move, never a list of ten.
 // Deep links go to the SPECIFIC surface: claims → claim review (a radar panel),
@@ -34,7 +68,7 @@ function withGenreNote(action, act, artist, T) {
 // refresh instead of another share (freshness is a TIME state, never quality).
 const FRESHNESS_DAYS = 90
 
-function pickNextAction(artist, items, claims, T, openRequests = 0) {
+function pickNextAction(artist, items, claims, T, openRequests = 0, act = null) {
   const A = T.radar.nextActions
   const links = items.filter((i) => i.item_type === 'link')
   const exp = items.filter((i) => i.item_type !== 'link')
@@ -42,7 +76,16 @@ function pickNextAction(artist, items, claims, T, openRequests = 0) {
   const supported = claims.filter((c) => ['verified', 'supporting'].includes(c.verification_status))
   const evidenceRoute = `/evidence/${artist.id}`
 
-  if (pending.length > 0) return { ...A.reviewClaims, to: '/artist/claims' }
+  if (pending.length > 0) {
+    // R-5 (T-82, §8.2 L669): walk the FAMILY EMPHASIS order over the planets
+    // holding found items — the genre-primary planet in Needs-you is reviewed
+    // first; focusing its panel is §8.3's "Review your {dimension}" action.
+    // Internal prioritization only (§2.7): renders as focus, never a number.
+    const pendingPlanets = new Set(pending.map(claimPlanet))
+    const target = planetEmphasisOrder(act, artist).find((p) => pendingPlanets.has(p))
+    if (target) return { ...A.reviewClaims, planet: target }
+    return { ...A.reviewClaims, to: '/artist/claims' }
+  }
   if (supported.length === 0) return { ...A.draw, to: evidenceRoute }
   if (!artist.photo_url) return { ...A.photo, planet: 'identity' } // deferred field → radar fill, in place
   if (links.length === 0) return { ...A.links, to: evidenceRoute }
@@ -146,6 +189,10 @@ export default function ArtistDashboard() {
   // primary; below md this screen's next-step card owns it. Render XOR — never
   // both .btn-primary nodes in the DOM at once (T-31 residue).
   const fullStage = useFullStage()
+  // V2 — null on every browser that supports `dvh` (today's build, verified
+  // no-overflow); a real px height otherwise, matching the SAME 7.5rem
+  // mobile / 3.5rem md+ reserve the Tailwind class already encodes.
+  const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
 
   async function load() {
     setLoadError(false)
@@ -306,7 +353,7 @@ export default function ArtistDashboard() {
     )
   }
 
-  const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs), act, artist, T)
+  const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs, act), act, artist, T)
 
   // G2 — genre emphasis guidance: the first two planets buyers weigh in this
   // artist's genre family. Names only, joined for one wording-only line.
@@ -343,7 +390,8 @@ export default function ArtistDashboard() {
     // internal panel below (overflow-y-auto), so long content scrolls inside a
     // panel, never the page. (PageShell stays on the loading/error/empty
     // returns — those are single-screen by nature.)
-    <div className="h-[calc(100dvh-7.5rem)] px-4 py-3 sm:px-8 md:h-[calc(100dvh-3.5rem)] md:py-6">
+    <div className="h-[calc(100dvh-7.5rem)] px-4 py-3 sm:px-8 md:h-[calc(100dvh-3.5rem)] md:py-6"
+      style={vhFallbackPx != null ? { height: `${Math.max(vhFallbackPx, 0)}px` } : undefined}>
       <div className="animate-fade-in mx-auto flex h-full max-w-xl flex-col overflow-hidden md:max-w-[1360px]">
       <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
         <div>

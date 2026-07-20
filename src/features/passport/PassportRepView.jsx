@@ -1,6 +1,6 @@
 import {
   PassportHero, PersonaToggle, PassportFooter,
-  DrawSection, PerformanceSection, ReadinessSection, ContextSection,
+  DrawSection, PerformanceSection, ReadinessSection, ContextSection, ProofStory,
 } from './passportKit.jsx'
 
 // ── Passport · REPRESENTATION VIEW — for an agency deciding whether to take
@@ -15,6 +15,7 @@ export default function PassportRepView({ artist, data, T, persona, onPersonaCha
       </PassportHero>
 
       <main className="mx-auto max-w-[720px] px-5 sm:px-8">
+        <ProofStory artist={artist} data={data} T={T} />
         <PerformanceSection data={data} T={T} label={T.passport.careerProof} />
         <ContextSection data={data} artist={artist} T={T} title={T.passport.audience} />
         <DrawSection data={data} T={T} label={T.passport.proofTitle} />

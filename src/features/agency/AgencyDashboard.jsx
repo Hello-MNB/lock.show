@@ -78,7 +78,7 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
                 {r.status === 'active' ? T.representation.activeLabel : r.status === 'pending' ? T.agency.pendingArtistLabel : T.representation.revokedLabel}
               </span>
               {(r.status === 'pending' || r.status === 'active') && (
-                <button className="chip border border-line bg-surface2 px-2 py-0.5 text-[10px] text-amber min-h-[28px]"
+                <button className="chip border border-line bg-surface2 px-2 py-0.5 text-[10px] text-amber min-h-[44px]"
                   onClick={() => revoke(r)} disabled={busyId === r.id}>
                   {busyId === r.id ? <Spinner /> : (r.status === 'pending' ? T.agency.cancelInvite : T.representation.revoke)}
                 </button>
@@ -93,7 +93,7 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
 
 function ChecklistRow({ done, label, to }) {
   const inner = (<><span className={done ? 'text-accent' : 'text-muted'} aria-hidden="true">{done ? '✓' : '○'}</span><span className={done ? 'text-muted line-through' : 'text-ink'}>{label}</span></>)
-  return <li className="flex items-center gap-2">{to && !done ? <Link to={to} className="flex items-center gap-2 hover:text-accent">{inner}</Link> : inner}</li>
+  return <li className="flex items-center gap-2">{to && !done ? <Link to={to} className="tap-target flex items-center gap-2 hover:text-accent">{inner}</Link> : inner}</li>
 }
 
 // bounded roster signal (firewall: never a number)
@@ -117,7 +117,7 @@ function NextActionChip({ action, T }) {
   return (
     <Link
       to={action.to}
-      className={`chip min-h-[28px] border px-2 py-0.5 text-[10px] font-semibold transition ${
+      className={`chip min-h-[44px] border px-2 py-0.5 text-[10px] font-semibold transition ${
         action.urgent ? 'border-accent/60 text-accent hover:border-accent' : 'border-line text-ink hover:border-line2'}`}
     >
       {T.agency[action.key]} ›
@@ -160,7 +160,7 @@ function RequestsSideCard({ requests, T }) {
           ))}
         </ul>
       )}
-      <Link to="/agency/requests" className="mt-3 block text-sm font-semibold text-accent hover:underline">{T.agency.openInbox} ›</Link>
+      <Link to="/agency/requests" className="tap-target mt-3 block text-sm font-semibold text-accent hover:underline">{T.agency.openInbox} ›</Link>
     </div>
   )
 }
@@ -290,8 +290,8 @@ export default function AgencyDashboard() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="font-display text-xl font-bold text-ink">{T.agency.title}</h1>
         <div className="flex items-center gap-4">
-          <Link to="/agency/radar" className="font-mono text-[11px] uppercase tracking-[0.1em] text-accent hover:underline">{T.nav.radar} ›</Link>
-          <Link to="/agency/requests" className="font-mono text-[11px] uppercase tracking-[0.1em] text-accent hover:underline">{T.agency.requests} ›</Link>
+          <Link to="/agency/radar" className="tap-target font-mono text-[11px] uppercase tracking-[0.1em] text-accent hover:underline">{T.nav.radar} ›</Link>
+          <Link to="/agency/requests" className="tap-target font-mono text-[11px] uppercase tracking-[0.1em] text-accent hover:underline">{T.agency.requests} ›</Link>
         </div>
       </div>
 
@@ -355,7 +355,7 @@ export default function AgencyDashboard() {
         <div className="card mb-4 border border-line">
           <div className="flex items-center justify-between mb-2">
             <p className="font-bold text-ink text-sm">{T.org.checklistTitle}</p>
-            <button className="text-xs text-muted" onClick={() => { try { localStorage.setItem('gigproof_hide_checklist', '1') } catch { /* ignore */ } setHideChecklist(true) }}>{T.org.checklistDismiss}</button>
+            <button className="tap-target text-xs text-muted" onClick={() => { try { localStorage.setItem('gigproof_hide_checklist', '1') } catch { /* ignore */ } setHideChecklist(true) }}>{T.org.checklistDismiss}</button>
           </div>
           <ul className="space-y-1.5 text-sm">
             <ChecklistRow done={artists.length > 0} label={T.org.checklistAddArtist} />
@@ -400,7 +400,7 @@ export default function AgencyDashboard() {
                           : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface2 font-display text-lg text-ink">{(a.stage_name || '?').slice(0, 1)}</div>}
                         <div className="min-w-0">
                           <p className="truncate font-bold text-ink">{a.stage_name || T.agency.noName}</p>
-                          <p className="truncate text-xs text-muted">{a.genre || '—'} · {a.published ? T.agency.publishedTag : T.agency.draftTag}</p>
+                          <p className="line-clamp-2 whitespace-normal break-words text-xs text-muted leading-snug">{a.genre || '—'} · {a.published ? T.agency.publishedTag : T.agency.draftTag}</p>
                           {fresh && <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.06em] text-faint">{T.agency.updatedOn(fresh)}</p>}
                         </div>
                       </Link>
@@ -418,10 +418,10 @@ export default function AgencyDashboard() {
                       account + approval control) vs. legacy owned placeholder */}
                   <div className="mb-3 flex gap-1 rounded-full border border-line bg-surface2 p-1">
                     <button type="button"
-                      className={`flex-1 rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'invite' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
+                      className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'invite' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
                       onClick={() => setAddMode('invite')}>{T.agency.inviteTabInvite}</button>
                     <button type="button"
-                      className={`flex-1 rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'own' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
+                      className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'own' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
                       onClick={() => setAddMode('own')}>{T.agency.inviteTabOwn}</button>
                   </div>
 
@@ -436,7 +436,7 @@ export default function AgencyDashboard() {
                       <Field label={T.agency.inviteScopeLabel}>
                         <div className="flex flex-wrap gap-2">
                           {OPTIONAL_SCOPES.map((s) => (
-                            <label key={s} className="flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">
+                            <label key={s} className="tap-target flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">
                               <input type="checkbox" checked={inviteScope[s]} onChange={(e) => setInviteScope({ ...inviteScope, [s]: e.target.checked })} />
                               {T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`]}
                             </label>

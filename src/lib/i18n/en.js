@@ -40,6 +40,7 @@ export const T = {
     tagline: 'The evidence behind the night.',
     taglineSignup: 'Your nights, made provable.',
     disclaimer: 'LOCK shows evidence only — not a guarantee.',
+    homeAria: 'LOCK — go to home',
   },
   login: {
     title: 'Welcome back',
@@ -154,8 +155,14 @@ export const T = {
     serverOffline: 'Link generation requires the API server (npm run dev).',
     // ── one-tap confirmation ceremony (ProducerConfirm) ──
     linkExpiredTitle: 'This link has expired',
+    linkExpiredBody: 'Confirmation links are short-lived on purpose — ask the artist to send a fresh one.',
+    linkUsedTitle: 'This link already did its job',
+    linkUsedBody: 'This confirmation was already recorded through this link. If something looks wrong, ask the artist for a fresh link.',
+    linkRevokedTitle: 'This link was cancelled',
+    linkRevokedBody: 'The artist cancelled this confirmation link, so it can no longer be used. Ask them for a new one if you still want to help.',
     linkInactiveTitle: 'This link is no longer active',
     linkDeadBody: 'Confirmation links are one-time and short-lived on purpose — ask the artist for a fresh one.',
+    closeNote: 'You can close this window now — there is nothing else to do here.',
     oneStatementEyebrow: 'One-statement confirmation',
     askedToConfirm: (name) => `${name} asked you to confirm one statement.`,
     noAccountNote: 'No account needed. Your reply applies to this statement only.',
@@ -386,6 +393,45 @@ export const T = {
     loadErrorTitle: "Couldn't load this passport",
     loadErrorBody: 'Connection issue on our side or yours — your link is probably fine.',
     contextTitle: 'Context — not a draw metric',
+    // ── B1 (T-77) — Production + Private/corporate faces + §5.10 date warmth ──
+    dateFresh: (m) => `Fresh proof · ${m}`,
+    dateVerified: (m) => `Verified · ${m}`,
+    personaProduction: 'Production',
+    personaPrivate: 'Private & corporate',
+    taglineProduction: 'LOCK · FOR PRODUCTION',
+    taglinePrivate: 'LOCK · FOR PRIVATE & CORPORATE EVENTS',
+    ctaProduction: 'Confirm show-day details',
+    ctaPrivate: 'Check availability for my event',
+    productionReadiness: 'Show-day readiness',
+    privateReadiness: 'Ready to book',
+    readinessTurnkey: 'Turnkey booking',
+    privateProofTitle: 'Great fit for your event',
+    privatePerformance: 'Where they’ve performed',
+    privateContextTitle: 'Online presence',
+    privateSetLabel: (v) => `${v} performance`,
+    privateRegionsLabel: (v) => `Available in ${v}`,
+    privateInvoiceLabel: 'Invoicing handled — no paperwork hassle',
+    // Index-aligned to BANDS.capacity like drawContext above — room FIT for a
+    // private event, never a rank (§5.10 firewall).
+    drawContextPrivate: ['Comfortable for intimate gatherings', 'Comfortable for 100–300 guests', 'Handles large private events with ease', 'Built for large-scale celebrations'],
+    // ── T-83 Passport v2 — 30-second proof story (§8.7) ──
+    storyWho: 'Who they are',
+    storyProven: "What's proven",
+    storyVouches: 'Who vouches',
+    // ── T-83 — provenance-forward source lines (§5.10 pairing rule; the
+    //    display type derives from source_type/method — logo never = quality) ──
+    sourceBrandedPlatform: (name) => `From their ${name}`,
+    sourceProfile: 'From their public profile',
+    sourceTicketExport: 'From an uploaded ticket export',
+    sourceSettlement: 'From a settlement record',
+    sourceScreenshot: 'From an uploaded document',
+    sourceEntity: 'Producer-confirmed by an industry peer',
+    sourceDeclared: 'Artist-declared',
+    // ── T-83 — ROOM GRAMMAR names (§5.10, fixed venue-type order — never a ladder) ──
+    roomLounge: 'Lounge',
+    roomClub: 'Club',
+    roomHall: 'Hall',
+    roomFestival: 'Festival stage',
   },
   request: {
     title: (name) => `Availability check — ${name}`,
@@ -411,6 +457,15 @@ export const T = {
     messagePlaceholder: 'Anything the artist should know about the event',
     nameRequired: 'Add your name so the artist knows who is asking.',
     noCommitment: 'No commitment — this only asks the artist about the date.',
+    // ── B1 (T-77) — per-field human hints + past-date invalid state ──
+    nameHint: 'So the artist knows who’s asking.',
+    orgHint: 'Optional — helps the artist understand the context.',
+    eventDateHint: 'Optional — a specific date speeds up their reply.',
+    locationHint: 'Helps the artist plan travel and logistics.',
+    capacityHint: 'Optional — an approximate range is enough.',
+    budgetHint: 'Optional — a range is enough to start the conversation.',
+    messageHint: 'Optional — anything about the vibe, lineup, or set length they should know.',
+    eventDatePast: 'That date has already passed — check for a typo, or leave it blank if you’re not sure yet.',
     // ── confirmation landing (RequestConfirmation) ──
     willGetBack: (name) => `${name} or their agency will get back to you using the details you sent.`,
     keepLinkHint: 'Keep the passport link for your file — the evidence stays available there.',
@@ -458,6 +513,7 @@ export const T = {
     // ── request detail rows + inline close-confirm (ArtistRequests / inbox) ──
     requesterLabel: 'Requester',
     eventLabel: 'Event',
+    artistLabel: 'Artist', // B3 (T-79) — inbox detail row
     closeConfirm: 'Close this request?',
     // ── dashboard side card + roster (AgencyDashboard) ──
     newCount: (n) => `${n} new`,
@@ -565,8 +621,40 @@ export const T = {
     retRepeat: 'Repeat Passport opens',
     retRepeatTag: 'same browser returned · passport_view',
     retNote: 'Accounts seen on more than one day, and Passport pages reopened by a returning browser. Counts of product events only — no identity, never shown to artists or buyers. Seed and test-account activity is excluded.',
+    // B5-a (T-81, §8.12) — pilot funnel: whole-funnel product-milestone counts,
+    // a proportional fill bar (relative to the funnel's own max — never a
+    // per-person figure).
+    funnelTitle: 'Pilot funnel — product milestones',
+    funnelNote: 'Counts of product events for the whole pilot funnel — never about a single person. Demo activity excluded. Source event shown in mono under each stage.',
+    funnelSignup: 'Signed up',
+    funnelOnboarding: 'Onboarding completed',
+    funnelRadar: 'Radar opened',
+    funnelEvidence: 'Evidence added',
+    funnelClaim: 'Claim confirmed',
+    funnelPublished: 'Passport published',
+    funnelShared: 'Share link created',
+    funnelRequested: 'Availability requested',
+    // B5-c (T-81, §8.12) — publish-freshness: only what's honestly derivable
+    // from the artists list already fetched (published vs unpublished).
+    // Per-item staleness needs a read model with item dates — not yet built.
+    freshTitle: 'Publish freshness',
+    freshPublished: 'Published',
+    freshUnpublished: 'Unpublished',
+    freshNote: 'Published vs. unpublished counts from the artists list already loaded. Stale-item detection (last-updated per published Passport) needs a dedicated read model with item dates — not yet built; not shown here rather than guessed.',
+    // B5-L (owner ruling (a), 20 Jul) — AI-cost ledger: real runs count + manual spend line.
+    aiCostTitle: 'AI-cost ledger',
+    aiCostRuns: 'AI runs (30d)',
+    aiCostRunsTag: 'processing_job · 30d',
+    aiCostStatusQueued: 'queued',
+    aiCostStatusRunning: 'running',
+    aiCostStatusCompleted: 'completed',
+    aiCostStatusFailed: 'failed',
+    aiCostSpendLine: 'Spend: tracked manually in the Anthropic console',
+    aiCostSpendTag: 'manual line · no automated cost read path yet',
+    aiCostNote: 'Run count is a real head-count from our own DB (processing_job, last 30 days) — not demo/seed-excluded (no is_demo column on this table). Spend and the hard cap are not computed here; both are tracked manually in the Anthropic console until a server-side cost read path exists.',
     anchors: {
       gate: 'Gate',
+      funnel: 'Funnel',
       payments: 'Payments',
       upgrades: 'Upgrades',
       artists: 'Artists',
@@ -1013,6 +1101,9 @@ export const T = {
       sceneAll: 'All',
       // T-62 — the visible label on the lens rail (vs the scene rail above).
       filtersLabel: 'Show',
+      // B3 (T-79) — roster-orbit overflow link (AgencyRadarUniverse). A count
+      // of ORBIT SLOTS ("+N more"), never a number about a person (firewall).
+      overflowMore: (n) => `+${n} more — full roster below`,
       // N3 (T-65, §8.3) — scene-aware coaching, Layer 1. Scene-standard facts
       // ONLY ("in {scene}, X matters") — never a peer comparison (§2.9).
       coachIn: (scene) => `In ${scene},`,
@@ -1064,9 +1155,16 @@ export const T = {
         numberPlaceholder: '1200',
         photoOr: 'or paste an image link',
         savedInPlace: 'Saved — right in place',
+        // D6 (T-72, §8.3): invalid = a human explanation, never a silent disabled button; undo on every field save.
+        undo: 'Undo',
+        urlInvalid: 'A link starts with https:// — paste the full address.',
+        numberInvalid: 'A whole number above zero — just the count.',
         openEvidence: 'Open evidence capture (consent applies)',
       },
-      state: { established: 'Established', developing: 'Developing', needs: 'Needs you' },
+      state: { established: 'Established', developing: 'Developing', needs: 'Needs you', locked: 'Not needed yet' },
+      // R-2 (T-82, §8.2 L648) — locked Professional Kit: a sequencing hook, never a judgement.
+      lockedChip: 'Not needed yet — it opens once your live draw is backed',
+      lockedCta: 'Confirm your live draw first',
       you: 'You',
       // Act-switch at the center-star (Design Spec §MULTI-ACT) — switching Acts
       // swaps the whole radar universe (identity + evidence), never merges them.
@@ -1236,6 +1334,17 @@ export const T = {
     'artist-declared': 'Artist-declared',
     'unable-to-verify': 'Unable to verify',
     'stale': 'Not recently updated',
+  },
+  // B1 (T-77) — one-line peek shown on hover/focus/tap of a method label:
+  // WHAT the label means, scoped to this claim only. Never a score or strength
+  // number — plain words about the verification method (§3).
+  methodLabelHint: {
+    'producer-confirmed': 'Verified by an industry peer who worked with them — this claim only.',
+    'evidence-supported': 'Backed by uploaded evidence (ticket export, settlement, or similar) — this claim only.',
+    'source-linked': 'Backed by a public, checkable source — this claim only.',
+    'artist-declared': 'Stated by the artist, not yet independently verified.',
+    'unable-to-verify': 'Could not be independently verified.',
+    'stale': 'Verified previously — due for a refresh.',
   },
   // Shared artist_access scope vocabulary — the exact 5 values DB-STRUCTURE.md
   // locks (view/upload/edit/share/publish). Reused by both the agency's invite

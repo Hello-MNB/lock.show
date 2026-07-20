@@ -531,7 +531,7 @@ export default function Radar() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup`}
+              href={`${APP_URL}/signup?utm_source=site&utm_campaign=radar`}
               style={{
                 display: 'inline-block',
                 padding: '15px 32px',

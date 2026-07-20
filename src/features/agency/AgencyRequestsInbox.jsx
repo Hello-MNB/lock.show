@@ -77,7 +77,7 @@ export default function AgencyRequestsInbox() {
   return (
     <PageShell>
       <div className="flex items-center justify-end mb-6">
-        <Link to="/agency" className="text-sm text-muted hover:text-ink">{T.common.back}</Link>
+        <Link to="/agency" className="tap-target text-sm text-muted hover:text-ink">{T.common.back}</Link>
       </div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.agency.requests}</h1>
 
@@ -85,7 +85,7 @@ export default function AgencyRequestsInbox() {
       {artistFilter && (
         <div className="mb-3 flex items-center gap-2">
           <span className="chip border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">{T.agency.filteredForArtist(filterName)}</span>
-          <button type="button" className="text-xs text-muted underline hover:text-ink" onClick={() => setSearchParams({}, { replace: true })}>
+          <button type="button" className="tap-target text-xs text-muted underline hover:text-ink" onClick={() => setSearchParams({}, { replace: true })}>
             {T.agency.showAllRequests}
           </button>
         </div>
@@ -104,10 +104,10 @@ export default function AgencyRequestsInbox() {
               <div key={r.id} className={`card transition ${open ? 'border-accent' : ''}`}>
                 {/* collapsed row — one tap opens the detail in place (no drawer, no modal) */}
                 <button type="button" onClick={() => toggle(r.id)} aria-expanded={open}
-                  className="flex w-full items-center justify-between gap-2 text-start">
+                  className="flex min-h-[44px] w-full items-center justify-between gap-2 text-start">
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-ink">{r.requester_name}{r.requester_org ? ` · ${r.requester_org}` : ''}</p>
-                    <p className="truncate text-xs text-muted">
+                    <p className="line-clamp-2 whitespace-normal break-words font-bold leading-snug text-ink">{r.requester_name}{r.requester_org ? ` · ${r.requester_org}` : ''}</p>
+                    <p className="line-clamp-2 whitespace-normal break-words text-xs leading-snug text-muted">
                       {r.artists?.stage_name && <>{T.agency.forArtist} {r.artists.stage_name} · </>}
                       <span className="font-mono">{r.event_date || T.agency.noDate}</span>
                     </p>
@@ -122,9 +122,9 @@ export default function AgencyRequestsInbox() {
                 {open && (
                   <div className="mt-3 border-t border-line pt-3 animate-fade-in">
                     <div className="space-y-1.5 text-sm">
-                      <DetailRow label="Requester" value={`${r.requester_name}${r.requester_org ? ` · ${r.requester_org}` : ''}`} />
-                      {r.artists?.stage_name && <DetailRow label="Artist" value={r.artists.stage_name} />}
-                      <DetailRow label="Event" value={`${r.event_date || T.agency.noDate} · ${r.location || '—'}`} mono />
+                      <DetailRow label={T.agency.requesterLabel} value={`${r.requester_name}${r.requester_org ? ` · ${r.requester_org}` : ''}`} />
+                      {r.artists?.stage_name && <DetailRow label={T.agency.artistLabel || 'Artist'} value={r.artists.stage_name} />}
+                      <DetailRow label={T.agency.eventLabel} value={`${r.event_date || T.agency.noDate} · ${r.location || '—'}`} mono />
                       {(r.capacity_band || r.budget_band) && (
                         <div className="flex flex-wrap items-center gap-2 pt-1">
                           {r.capacity_band && <BandPill>{T.agency.audience} {r.capacity_band}</BandPill>}
@@ -142,10 +142,10 @@ export default function AgencyRequestsInbox() {
                       {r.status !== 'closed' && (confirmCloseId === r.id ? (
                         // inline confirm chip — closing hides the request, so ask once, in place
                         <span className="inline-flex items-center gap-2 rounded-full border border-amber px-3 py-1.5 text-xs animate-fade-in">
-                          <span className="text-amber">Close this request?</span>
-                          <button className="font-bold text-amber underline" disabled={busyId === r.id}
+                          <span className="text-amber">{T.agency.closeConfirm}</span>
+                          <button className="tap-target font-bold text-amber underline" disabled={busyId === r.id}
                             onClick={() => setStatus(r.id, 'closed')}>{T.agency.markClosed}</button>
-                          <button className="text-muted" onClick={() => setConfirmCloseId(null)}>{T.common.cancel}</button>
+                          <button className="tap-target text-muted" onClick={() => setConfirmCloseId(null)}>{T.common.cancel}</button>
                         </span>
                       ) : (
                         <button className="btn-ghost text-sm py-2" disabled={busyId === r.id}

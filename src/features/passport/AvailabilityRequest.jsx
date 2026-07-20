@@ -40,9 +40,19 @@ export default function AvailabilityRequest() {
 
   async function submit(e) {
     e.preventDefault()
-    // inline validation — message next to the field, input stays intact
-    if (!f.requester_name.trim()) {
-      setFieldErr({ requester_name: T.request.nameRequired })
+    // duplicate-submit guard — a second Enter/click while the first is still
+    // in flight is a no-op, never a second request (idempotent feel).
+    if (busy) return
+    // inline validation — message next to the field, human explanation next
+    // to it, input stays intact. Never a silently-disabled button.
+    const nextFieldErr = {}
+    if (!f.requester_name.trim()) nextFieldErr.requester_name = T.request.nameRequired
+    if (f.event_date) {
+      const today = new Date(); today.setHours(0, 0, 0, 0)
+      if (new Date(f.event_date) < today) nextFieldErr.event_date = T.request.eventDatePast
+    }
+    if (Object.keys(nextFieldErr).length) {
+      setFieldErr(nextFieldErr)
       return
     }
     setBusy(true); setError('')
@@ -93,7 +103,7 @@ export default function AvailabilityRequest() {
       <PageShell max="max-w-md">
         <div className="mb-8 flex items-center justify-between">
           <Wordmark />
-          <Link to={`/passport/${id}`} className="text-sm text-muted transition hover:text-ink">
+          <Link to={`/passport/${id}`} className="tap-target text-sm text-muted transition hover:text-ink">
             ← {T.common.back}
           </Link>
         </div>
@@ -109,31 +119,31 @@ export default function AvailabilityRequest() {
             </p>
           )}
 
-          <Field label={T.request.name} error={fieldErr.requester_name}>
+          <Field label={T.request.name} hint={T.request.nameHint} error={fieldErr.requester_name}>
             <input className="field" value={f.requester_name} onChange={set('requester_name')}
               placeholder={T.request.namePlaceholder} autoComplete="name" />
           </Field>
-          <Field label={T.request.org}>
+          <Field label={T.request.org} hint={T.request.orgHint}>
             <input className="field" value={f.requester_org} onChange={set('requester_org')}
               placeholder={T.request.orgPlaceholder} autoComplete="organization" />
           </Field>
-          <Field label={T.request.eventDate}>
+          <Field label={T.request.eventDate} hint={T.request.eventDateHint} error={fieldErr.event_date}>
             <input className="field" type="date" value={f.event_date} onChange={set('event_date')} />
           </Field>
-          <Field label={T.request.location}>
+          <Field label={T.request.location} hint={T.request.locationHint}>
             <input className="field" value={f.location} onChange={set('location')} placeholder={T.request.locationPlaceholder} />
           </Field>
-          <Field label={T.request.capacity}>
+          <Field label={T.request.capacity} hint={T.request.capacityHint}>
             <select className="field" value={f.capacity_band} onChange={set('capacity_band')}>
               <option value="">—</option>{BANDS.capacity.map((b) => <option key={b}>{b}</option>)}
             </select>
           </Field>
-          <Field label={T.request.budget}>
+          <Field label={T.request.budget} hint={T.request.budgetHint}>
             <select className="field" value={f.budget_band} onChange={set('budget_band')}>
               <option value="">—</option>{BANDS.budget.map((b) => <option key={b}>{b}</option>)}
             </select>
           </Field>
-          <Field label={T.request.message}>
+          <Field label={T.request.message} hint={T.request.messageHint}>
             <textarea className="field" rows={3} value={f.message} onChange={set('message')}
               placeholder={T.request.messagePlaceholder} />
           </Field>

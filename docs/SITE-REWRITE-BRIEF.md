@@ -37,4 +37,17 @@ lockshow-persona-manager-v1.webp · lockshow-persona-producer-v1.webp · locksho
 ## Hard constraints
 - Next.js static export; inline-style TSX pattern as-is; KEEP metadata/JSON-LD blocks (may edit text
   inside them to match new copy); keep all internal links/routes; page must build (`npm run build`).
-- Hebrew terms when naming roles: booking manager (אמרגן) etc. — keep the disambiguation.
+- Hebrew terms when naming roles (T-84 correction, 20 Jul — ratify: R00; supersedes this brief's
+  earlier wrong instruction): booking manager/buyer = **מזמיני הופעות**; artist-side agent/office =
+  **אמרגן** (Representation entity ONLY); producer/Confirmer = **מפיק**. **Never swap buyer↔אמרגן** —
+  that is the "v1.0 inversion" the spec (§3.6 entity table, CLAUDE.md) forbids absolutely. Known live
+  violation to fix in the rebuild pass: `website-next/app/faq/page.tsx` glosses the buyer as
+  "(amargan)" — plus the same wrong framing in WEBSITE-DESIGN-SYSTEM.md and SEO-PAGE-META-SPEC.md.
+
+## CTA attribution law (T-84, 20 Jul — ratify: R00)
+Every CTA pointing at `${APP_URL}/...` carries `utm_source=site&utm_campaign=<page-slug>` (+ a
+distinguishing `utm_content` when a page has 2+ CTAs to one destination), so `captureFirstTouch()`
+(`src/lib/analytics.js`) can attribute a signup to the page/CTA that produced it. Today NO site CTA
+carries any utm (audited 20 Jul) — attribution falls back to referrer, which in-app browsers strip.
+Internal site-to-site links need none. Params meant for app use (e.g. `?role=artist`) are either
+captured by analytics or their exclusion is documented — never silently dropped.

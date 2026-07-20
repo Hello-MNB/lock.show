@@ -69,7 +69,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    alternateLocale: 'he_IL',
+    // No alternateLocale: page bodies are EN-only today (locale toggle covers
+    // nav/footer/consent copy only, not page content — T-84 HE-scope note).
+    // Claiming he_IL here would overclaim translated content that doesn't exist.
     siteName: 'LOCK',
     images: [
       {
@@ -111,7 +113,9 @@ const jsonLd = {
       description:
         'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
-      inLanguage: ['en', 'he'],
+      // 'en' only: page bodies are English-only today; the locale toggle
+      // covers nav/footer/consent copy, not page content (T-84 HE-scope note).
+      inLanguage: ['en'],
     },
     {
       '@type': 'Organization',
@@ -165,13 +169,14 @@ const jsonLd = {
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (אמרגנים) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
+        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (מזמיני הופעות) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
       provider: { '@id': `${SITE_URL}/#organization` },
       areaServed: {
         '@type': 'Country',
         name: 'Israel',
       },
-      inLanguage: ['en', 'he'],
+      // 'en' only — see WebSite node above for the same HE-scope note.
+      inLanguage: ['en'],
       offers: {
         '@type': 'Offer',
         price: '0',

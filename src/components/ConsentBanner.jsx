@@ -127,9 +127,16 @@ export default function ConsentBanner() {
     if (value === 'granted') loadGA()
   }
 
-  // §15.2 equal-weight consent: Accept and Decline are the SAME button style
-  // (both ghost — neither lime), so declining is exactly as easy as accepting,
-  // and §10.2 one-primary-CTA: the page keeps its single .btn-primary.
+  // Accept is the ONE lime-filled action on this bar; Decline is a quiet ghost
+  // (.btn-ghost) — two competing filled buttons reads as a false choice, so
+  // Decline stays exactly as easy to tap (same size/position, just unfilled).
+  // Accept borrows .btn-primary's lime-gradient/dark-text look WITHOUT the
+  // literal class: this bar can be visible over a screen that already has its
+  // own .btn-primary (Sign in, Continue, …), and the "exactly one primary CTA
+  // per view" law (scripts/test-fit.mjs · LOCK-PRODUCT-SPECIFICATION.md) counts
+  // that selector — Accept must look primary without being counted as a
+  // second one.
+  const acceptClass = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-sm px-4 py-2 text-sm font-extrabold text-[#12160A] transition active:translate-y-px active:scale-[0.99] bg-gradient-to-b from-accent to-accent-deep hover:brightness-[1.06]'
   return (
     <div
       ref={ref}
@@ -155,7 +162,7 @@ export default function ConsentBanner() {
           <button type="button" className="btn-ghost !py-2 !px-4" onClick={() => decide('denied')}>
             {t.decline}
           </button>
-          <button type="button" className="btn-ghost !py-2 !px-4" onClick={() => decide('granted')}>
+          <button type="button" className={acceptClass} onClick={() => decide('granted')}>
             {t.accept}
           </button>
         </div>

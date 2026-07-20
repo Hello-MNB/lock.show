@@ -40,6 +40,7 @@ export const T = {
     tagline: 'העדות שמאחורי הופעה.',
     taglineSignup: 'ההופעות שלך — עם הוכחה.',
     disclaimer: 'LOCK מציג עדויות בלבד — לא ערובה.',
+    homeAria: 'LOCK — מעבר לדף הבית',
   },
   login: {
     title: 'ברוכים השבים',
@@ -152,8 +153,14 @@ export const T = {
     serverOffline: 'יצירת קישור דורשת את שרת ה-API (npm run dev).',
     // ── טקס האישור בלחיצה אחת (ProducerConfirm) ──
     linkExpiredTitle: 'תוקף הקישור פג',
+    linkExpiredBody: 'קישורי אישור הם קצרי-מועד בכוונה — בקש מהאמן לשלוח קישור חדש.',
+    linkUsedTitle: 'הקישור הזה כבר עשה את שלו',
+    linkUsedBody: 'האישור כבר נרשם דרך הקישור הזה. אם משהו נראה לא נכון, בקש מהאמן קישור חדש.',
+    linkRevokedTitle: 'הקישור הזה בוטל',
+    linkRevokedBody: 'האמן ביטל את קישור האישור הזה ולכן אי אפשר יותר להשתמש בו. אם עדיין תרצה לעזור, בקש ממנו קישור חדש.',
     linkInactiveTitle: 'הקישור כבר לא פעיל',
     linkDeadBody: 'קישורי אישור הם חד-פעמיים וקצרי-מועד בכוונה — בקש מהאמן קישור חדש.',
+    closeNote: 'אפשר לסגור את החלון הזה עכשיו — אין עוד מה לעשות כאן.',
     oneStatementEyebrow: 'אישור של הצהרה אחת',
     askedToConfirm: (name) => `${name} מבקש ממך לאשר הצהרה אחת.`,
     noAccountNote: 'בלי חשבון ובלי הרשמה. התשובה שלך חלה על ההצהרה הזאת בלבד.',
@@ -383,6 +390,43 @@ export const T = {
     loadErrorTitle: 'לא הצלחנו לטעון את הפספורט',
     loadErrorBody: 'בעיית חיבור אצלנו או אצלך — הקישור שלך כנראה תקין.',
     contextTitle: 'הקשר — לא מדד משיכה',
+    // ── B1 (T-77) — פני הפקה ופרטי/עסקי + חום תאריך §5.10 ──
+    dateFresh: (m) => `הוכחה טרייה · ${m}`,
+    dateVerified: (m) => `אומת · ${m}`,
+    personaProduction: 'הפקה',
+    personaPrivate: 'פרטי ועסקי',
+    taglineProduction: 'LOCK · להפקה',
+    taglinePrivate: 'LOCK · לאירוע פרטי או עסקי',
+    ctaProduction: 'לאישור פרטי יום ההופעה',
+    ctaPrivate: 'בדיקת זמינות לאירוע שלי',
+    productionReadiness: 'מוכנות ליום ההופעה',
+    privateReadiness: 'מוכן להזמנה',
+    readinessTurnkey: 'הזמנה מוכנה מקצה לקצה',
+    privateProofTitle: 'מתאים מצוין לאירוע שלך',
+    privatePerformance: 'איפה הם הופיעו',
+    privateContextTitle: 'נוכחות ברשת',
+    privateSetLabel: (v) => `הופעה של ${v}`,
+    privateRegionsLabel: (v) => `זמין ב-${v}`,
+    privateInvoiceLabel: 'חשבונית מסודרת — בלי כאב ראש של ניירת',
+    // מיושר לאינדקסים של BANDS.capacity כמו drawContext — התאמת חלל לאירוע פרטי, לעולם לא דירוג (§5.10).
+    drawContextPrivate: ['נוח לאירועים אינטימיים', 'נוח ל-100–300 אורחים', 'מתמודד בקלות עם אירועים פרטיים גדולים', 'בנוי לחגיגות בקנה מידה גדול'],
+    // ── T-83 פספורט v2 — סיפור ההוכחה של 30 השניות (§8.7) ──
+    storyWho: 'מי הם',
+    storyProven: 'מה מוכח',
+    storyVouches: 'מי מעיד',
+    // ── T-83 — שורות מקור מובילות (§5.10; לוגו לעולם לא = איכות) ──
+    sourceBrandedPlatform: (name) => `מתוך ה-${name} שלהם`,
+    sourceProfile: 'מתוך הפרופיל הציבורי שלהם',
+    sourceTicketExport: 'מתוך ייצוא כרטיסים שהועלה',
+    sourceSettlement: 'מתוך דו"ח התחשבנות',
+    sourceScreenshot: 'מתוך מסמך שהועלה',
+    sourceEntity: 'אושר על ידי מפיק עמית בענף',
+    sourceDeclared: 'בהצהרת האמן',
+    // ── T-83 — שמות החללים (§5.10, סדר קבוע לפי סוג מקום — לעולם לא סולם) ──
+    roomLounge: "לאונג'",
+    roomClub: 'קלאב',
+    roomHall: 'אולם',
+    roomFestival: 'במת פסטיבל',
   },
   request: {
     title: (name) => `בדיקת זמינות — ${name}`,
@@ -408,6 +452,15 @@ export const T = {
     messagePlaceholder: 'כל מה שכדאי לאמן לדעת על האירוע',
     nameRequired: 'הוסף את שמך כדי שהאמן יידע מי פונה אליו.',
     noCommitment: 'ללא התחייבות — זו רק שאלה לאמן לגבי התאריך.',
+    // ── B1 (T-77) — רמזי שדות אנושיים + מצב תאריך שעבר ──
+    nameHint: 'כדי שהאמן ידע מי פונה.',
+    orgHint: 'לא חובה — עוזר לאמן להבין את ההקשר.',
+    eventDateHint: 'לא חובה — תאריך מדויק מזרז את התשובה.',
+    locationHint: 'עוזר לאמן לתכנן הגעה ולוגיסטיקה.',
+    capacityHint: 'לא חובה — טווח משוער מספיק.',
+    budgetHint: 'לא חובה — טווח מספיק כדי להתחיל שיחה.',
+    messageHint: 'לא חובה — כל מה שכדאי לאמן לדעת על האווירה, הליינאפ או אורך הסט.',
+    eventDatePast: 'התאריך הזה כבר עבר — בדוק שאין טעות הקלדה, או השאר ריק אם עוד לא בטוח.',
     // ── מסך אישור השליחה (RequestConfirmation) ──
     willGetBack: (name) => `${name} או הסוכנות שלו יחזרו אליך לפי הפרטים ששלחת.`,
     keepLinkHint: 'שמור את קישור הפספורט אצלך — הראיות נשארות זמינות שם.',
@@ -455,6 +508,7 @@ export const T = {
     // ── שורות פירוט ואישור סגירה (ArtistRequests / תיבת הבקשות) ──
     requesterLabel: 'פונה',
     eventLabel: 'אירוע',
+    artistLabel: 'אמן', // B3 (T-79) — שורת פירוט בתיבת הבקשות
     closeConfirm: 'לסגור את הבקשה?',
     // ── כרטיס צד ורוסטר (AgencyDashboard) ──
     newCount: (n) => `${n} חדשות`,
@@ -562,8 +616,39 @@ export const T = {
     retRepeat: 'פתיחות חוזרות של פספורט',
     retRepeatTag: 'אותו דפדפן חזר · passport_view',
     retNote: 'חשבונות שנראו ביותר מיום אחד, ועמודי פספורט שנפתחו שוב מדפדפן חוזר. ספירת אירועי מוצר בלבד — ללא זהות, לעולם לא מוצג לאמנים או למזמינים. פעילות חשבונות בדיקה מסוננת.',
+    // B5-a (T-81, §8.12) — משפך הפיילוט: ספירת אבני-דרך של המוצר לכלל המשפך,
+    // עם פס מילוי יחסי (יחסי למקסימום של המשפך עצמו — לעולם לא מספר על אדם).
+    funnelTitle: 'משפך הפיילוט — אבני דרך של המוצר',
+    funnelNote: 'ספירת אירועי מוצר לכלל משפך הפיילוט — לעולם לא על אדם יחיד. פעילות דמו מסוננת. שם אירוע המקור מוצג במונו מתחת לכל שלב.',
+    funnelSignup: 'נרשמו',
+    funnelOnboarding: 'סיום קליטה',
+    funnelRadar: 'פתיחת רדאר',
+    funnelEvidence: 'הוספת ראיה',
+    funnelClaim: 'אישור הוכחה',
+    funnelPublished: 'פרסום פספורט',
+    funnelShared: 'יצירת קישור שיתוף',
+    funnelRequested: 'בקשת זמינות',
+    // B5-c (T-81, §8.12) — רעננות פרסום: רק מה שנגזר ביושר מרשימת האמנים
+    // שכבר נטענה (מפורסם מול לא-מפורסם). זיהוי פריטים מיושנים דורש read-model
+    // ייעודי עם תאריכי פריט — עוד לא נבנה.
+    freshTitle: 'רעננות פרסום',
+    freshPublished: 'מפורסמים',
+    freshUnpublished: 'לא מפורסמים',
+    freshNote: 'ספירת מפורסמים מול לא-מפורסמים מתוך רשימת האמנים שכבר נטענה. זיהוי פריטים מיושנים (עדכון אחרון לכל פספורט מפורסם) דורש read-model ייעודי עם תאריכי פריט — עוד לא נבנה; לא מוצג כאן במקום לנחש.',
+    // B5-L — יומן עלות AI: ספירה אמיתית + שורת הוצאה ידנית.
+    aiCostTitle: 'יומן עלות AI',
+    aiCostRuns: 'הרצות AI (30 יום)',
+    aiCostRunsTag: 'processing_job · 30 יום',
+    aiCostStatusQueued: 'בתור',
+    aiCostStatusRunning: 'פעיל',
+    aiCostStatusCompleted: 'הושלם',
+    aiCostStatusFailed: 'נכשל',
+    aiCostSpendLine: 'הוצאה: מנוטרת ידנית בקונסולת Anthropic',
+    aiCostSpendTag: 'שורה ידנית · אין עדיין נתיב קריאת עלות אוטומטי',
+    aiCostNote: 'ספירת ההרצות היא ספירה אמיתית מה-DB שלנו (processing_job, 30 יום אחרונים) — אינה מסננת דמו/בדיקה (אין עמודת is_demo בטבלה זו). ההוצאה והתקרה אינן מחושבות כאן; שתיהן מנוטרות ידנית בקונסולת Anthropic עד שיהיה נתיב קריאת עלות בצד שרת.',
     anchors: {
       gate: 'שער',
+      funnel: 'משפך',
       payments: 'תשלומים',
       upgrades: 'שדרוגים',
       artists: 'אמנים',
@@ -989,6 +1074,8 @@ export const T = {
       sceneAll: 'הכל',
       // T-62 — תווית גלויה למסנן התצוגה (מול שורת הסצנה למעלה).
       filtersLabel: 'הצג',
+      // B3 (T-79) — קישור גלישת רוסטר (AgencyRadarUniverse). ספירת משבצות מסלול בלבד — לעולם לא מספר על אדם.
+      overflowMore: (n) => `+${n} נוספים — כל הרוסטר למטה`,
       // N3 (T-65, §8.3) — שורת אימון מודעת-סצנה. עובדות על הסצנה בלבד — לעולם לא השוואה לאחרים (§2.9).
       coachIn: (scene) => `ב${scene},`,
       coach: {
@@ -1039,9 +1126,16 @@ export const T = {
         numberPlaceholder: '1200',
         photoOr: 'או הדבק קישור לתמונה',
         savedInPlace: 'נשמר — בדיוק במקום',
+        // D6 (T-72, §8.3): קלט שגוי מקבל הסבר אנושי; ביטול על כל שמירת שדה.
+        undo: 'ביטול',
+        urlInvalid: 'קישור מתחיל ב-https:// — הדבק את הכתובת המלאה.',
+        numberInvalid: 'מספר שלם מעל אפס — רק הכמות.',
         openEvidence: 'פתח לכידת ראיות (בכפוף להסכמה)',
       },
-      state: { established: 'מבוסס', developing: 'מתפתח', needs: 'דורש אותך' },
+      state: { established: 'מבוסס', developing: 'מתפתח', needs: 'דורש אותך', locked: 'לא נדרש עדיין' },
+      // R-2 (T-82, §8.2 L648) — כלי מקצועי נעול: שלב ברצף, לעולם לא שיפוט.
+      lockedChip: 'לא נדרש עדיין — זה נפתח ברגע שההוכחה החיה שלך מגובה',
+      lockedCta: 'אשר קודם את ההוכחה החיה שלך',
       you: 'אתה',
       // Act-switch at the center-star (Design Spec §MULTI-ACT) — switching Acts
       // swaps the whole radar universe (identity + evidence), never merges them.
@@ -1185,6 +1279,16 @@ export const T = {
     'artist-declared': 'הצהרת האמן',
     'unable-to-verify': 'לא ניתן לאמת',
     'stale': 'לא עודכן לאחרונה',
+  },
+  // B1 (T-77) — שורת הסבר לתווית שיטה (במגע/ריחוף/פוקוס): מה משמעות התווית,
+  // לגבי הטענה הזו בלבד. לעולם לא ציון או מספר חוזק — מילים פשוטות על שיטת האימות (§3).
+  methodLabelHint: {
+    'producer-confirmed': 'אומת על ידי איש מקצוע מהתעשייה שעבד איתם — לגבי הטענה הזו בלבד.',
+    'evidence-supported': 'מבוסס על ראיה שהועלתה (דו"ח כרטיסים, גמר חשבון וכדומה) — לגבי הטענה הזו בלבד.',
+    'source-linked': 'מבוסס על מקור פומבי הניתן לבדיקה — לגבי הטענה הזו בלבד.',
+    'artist-declared': 'הוצהר על ידי האמן, טרם אומת באופן עצמאי.',
+    'unable-to-verify': 'לא ניתן היה לאמת באופן עצמאי.',
+    'stale': 'אומת בעבר — נדרש רענון.',
   },
   access: {
     scopeView: 'צפייה',

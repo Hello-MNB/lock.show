@@ -13,7 +13,7 @@
   },
   "footer": {
     "tagline": "Pre-booking proof for independent artists.",
-    "entityNotice": "אמרגן ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
+    "entityNotice": "מזמין הופעות ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
     "firewallNotice": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE. Evidence, labelled by method.",
     "copyright": "© 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL",
     "privacy": "Privacy",
@@ -41,7 +41,7 @@
         "cta": "FOR ARTISTS →"
       },
       "booker": {
-        "tag": "אמרגן · BOOKING MANAGER",
+        "tag": "מזמין הופעות · BOOKING MANAGER",
         "title": "Evaluate before you risk your name",
         "body": "Read a Bookability Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing. Viewing is always free.",
         "cta": "FOR BOOKING MANAGERS →"

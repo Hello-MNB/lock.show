@@ -46,7 +46,7 @@ function SectionTabs({ active, T }) {
     <div className="mb-4 flex gap-1 rounded-full border border-line bg-surface2 p-1">
       {tabs.map((t) => (
         <Link key={t.key} to={t.to}
-          className={`flex-1 rounded-full py-1.5 text-center text-xs font-semibold transition ${active === t.key ? 'bg-accent text-[#12160A]' : 'text-muted hover:text-ink'}`}>
+          className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-center text-xs font-semibold transition ${active === t.key ? 'bg-accent text-[#12160A]' : 'text-muted hover:text-ink'}`}>
           {t.label}
         </Link>
       ))}
@@ -88,7 +88,9 @@ function TeamSection({ orgId, T }) {
           ))}
         </div>
       )}
-      <Link to="/org/members" className="btn-ghost mt-3 w-full block text-center">{T.production.manageTeam}</Link>
+      {members.length > 0 && (
+        <Link to="/org/members" className="btn-ghost mt-3 w-full block text-center">{T.production.manageTeam}</Link>
+      )}
     </div>
   )
 }
@@ -230,7 +232,7 @@ export default function ProductionDashboard() {
 
       {section === 'team' && <TeamSection orgId={activeOrgId} T={T} />}
       {section === 'events' && <EventsSection orgId={activeOrgId} T={T} />}
-      {section === 'requests' && <RequestsSection orgId={activeOrgId} T={T} />}
+      {section === 'requests' && <RequestsSection T={T} />}
     </PageShell>
   )
 }
