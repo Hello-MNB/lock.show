@@ -36,40 +36,40 @@ const methodLabels = [
 
 const pipelineSteps = [
   {
-    phase: 'DISCOVER',
+    phase: 'LOGGED',
     title: 'A gig is logged.',
     body: 'The artist adds a gig to their Artist Radar — date, venue, estimated audience. The claim enters the system as self-reported.',
   },
   {
-    phase: 'CONFIRM',
+    phase: 'BACKED UP',
     title: 'A producer verifies.',
     body: 'LOCK generates a unique, bounded magic link for that gig. The artist sends it to the producer; the producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
   },
   {
-    phase: 'METHOD-LABEL',
+    phase: 'LABELED',
     title: 'The method is stamped.',
     body: 'The claim now carries its full label: what was verified, by whom, through which method, and when the review was completed. The label is not fine print — it is the claim.',
   },
   {
-    phase: 'ARTIST APPROVES',
+    phase: 'YOUR CALL',
     title: 'The artist controls publication.',
     body: 'Nothing crosses to the public Passport without the artist\'s explicit approval. Every claim waits in the private Radar until the artist decides to publish it.',
   },
   {
-    phase: 'PUBLISH',
+    phase: 'LIVE',
     title: 'The claim appears on the Passport — if eligible.',
     body: 'Only claims that meet the firewall rules appear publicly: band range (not an exact figure), method visible, date stamped, artist-approved. A claim that fails any rule is left off the public surface entirely.',
   },
 ]
 
 const firewallItems = [
-  'Audience draw is always expressed as a band (e.g. 70–150) — never an exact count.',
-  'Every public claim shows its method label. "Verified" never stands alone.',
-  'Every claim shows a date and geographic area. Evidence from 2023 ≠ evidence from 2026.',
-  'Self-reported data appears only with an explicit SELF-REPORTED label — never disguised as verified.',
-  'Streaming figures appear as secondary context only — never as draw evidence.',
-  'LOCK publishes no score, ranking, percentile, prediction, or guarantee.',
-  'A domain with no supported, verified claim is removed from the Passport entirely — never shown as "developing" or "missing".',
+  'Every crowd shows as an honest range, like 70–150 — never a made-up exact number.',
+  'Every claim tells you plainly how it was checked. "Verified" never gets to stand there on its own.',
+  'Every claim carries its date and place. A great night in 2023 doesn\'t speak for who the artist is today.',
+  'If it\'s the artist\'s own word and nobody\'s confirmed it yet, we say so — it never gets dressed up as checked.',
+  'Streaming numbers are background color, never proof of who shows up live.',
+  'There\'s no score, no ranking, no prediction here — just what happened.',
+  'If there\'s nothing solid to show in an area, it\'s simply left off — never flagged as a weak spot.',
 ]
 
 export default function Methodology() {
@@ -252,7 +252,7 @@ export default function Methodology() {
             textTransform: 'uppercase',
             marginBottom: '1rem',
           }}>
-            CLAIM PIPELINE
+            HOW A CLAIM GETS THERE
           </p>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
@@ -346,7 +346,7 @@ export default function Methodology() {
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}>
-              THE FIREWALL
+              THE GROUND RULES
             </p>
             <h2 style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
@@ -360,8 +360,8 @@ export default function Methodology() {
               What is always true about every public claim.
             </h2>
             <p style={{ color: 'var(--color-tally-onlight)', fontSize: '1rem', lineHeight: 1.65, marginBottom: 'clamp(2rem, 5vw, 3rem)' }}>
-              These rules are not guidelines — they are structural. A claim
-              that breaks any one of them is simply never published.
+              This isn't fine print — it's the whole point. If a claim can't
+              meet these, it simply doesn't make the cut.
             </p>
           </div>
 

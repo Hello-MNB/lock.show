@@ -33,7 +33,7 @@ const jsonLd = {
           name: 'What is a Bookability Passport?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
+            text: "A Bookability Passport is a public page showing an artist's real, checked performance history — every claim shows how and when it was verified, so a booking manager can judge for themselves.",
           },
         },
         {
@@ -57,7 +57,7 @@ const jsonLd = {
           name: 'What does LOCK not do?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'LOCK does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
+            text: "LOCK doesn't score, rank, predict, or promise anything. It just shows what happened, and how we know.",
           },
         },
       ],

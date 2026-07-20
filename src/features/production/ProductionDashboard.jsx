@@ -190,7 +190,7 @@ function ReceivedPassportsFold() {
     <div className="card">
       <p className="mb-1 font-bold text-ink">Passports shared with you</p>
       <p className="mb-3 text-sm text-muted">
-        Paste a Passport link an artist sent you to open it — standardized, method-labeled evidence, no account needed.
+        Paste a Passport link an artist sent you to open it — clear, checked proof you can read in two minutes, no account needed.
       </p>
       <Field label="Passport link / ID">
         <input className="field" dir="ltr" value={v} onChange={(e) => setV(e.target.value)}

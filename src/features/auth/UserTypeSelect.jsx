@@ -46,7 +46,7 @@ export default function UserTypeSelect() {
     },
     {
       key: ROLES.BOOKER, label: T.roleSelect.jobBooker, route: selectRoute(ROLES.BOOKER), icon: 'gp-booking',
-      what: 'Evaluate an unfamiliar artist on method-labeled evidence before you risk your name.',
+      what: 'Size up an artist you don’t know yet, using proof that says exactly how it was checked — before you risk your name.',
     },
   ]
 

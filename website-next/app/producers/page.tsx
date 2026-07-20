@@ -286,7 +286,7 @@ export default function ProducersPage() {
                 marginBottom: '0.5rem',
               }}
             >
-              PRODUCER ≠ BOOKING MANAGER
+              TWO DIFFERENT JOBS
             </p>
             <p
               style={{

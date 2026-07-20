@@ -41,7 +41,7 @@ const faqs = [
       },
       {
         q: 'Who is a "producer" (mefik)?',
-        a: 'A producer (mefik) is the person who ran a specific event — took financial risk, sold tickets, managed the venue. They confirm the gig record via a bounded magic link. A producer is NOT the same as a booking manager. These are distinct roles and are never merged in this system.',
+        a: 'A producer (mefik) is the person who actually ran that night — took the financial risk, sold the tickets, managed the venue. They confirm the gig with one tap on a private link. A producer is a different person doing a different job than a booking manager, and LOCK never mixes the two up.',
       },
       {
         q: 'Is LOCK free for booking managers?',
@@ -70,7 +70,7 @@ const faqs = [
       },
       {
         q: 'Who reviews ticket export documents?',
-        a: 'Submitted documents run through LOCK\'s automated review pipeline, which reads the document and assigns the method label the evidence actually supports. During the current beta the founding team keeps an eye on every result before it stands.',
+        a: 'Ticket export documents are read and matched to the right label automatically. During this early beta, the founding team also double-checks every result by hand before it goes live.',
       },
       {
         q: 'Can an artist remove a claim from their Passport?',
@@ -83,7 +83,7 @@ const faqs = [
     questions: [
       {
         q: 'What is a BandPill?',
-        a: 'A BandPill is the way audience draw is expressed on the Passport — as a text range (e.g. "70–150") rather than an exact number. This is by design. An exact figure implies precision that live attendance data rarely supports. A band is honest about what can actually be known. There is no fill bar, no gauge, and no visual representation of the number as a fraction of anything.',
+        a: 'Audience draw on a Passport always shows as a range, like 70–150, instead of one exact number. That\'s on purpose — nobody can count a room to the person, and pretending otherwise would be dishonest. It\'s just plain text — no bars, no dials, nothing dressed up to look more precise than it is.',
       },
       {
         q: 'Why does every claim show a date?',
@@ -104,7 +104,7 @@ const faqs = [
     questions: [
       {
         q: 'Is my data stored before I give consent?',
-        a: 'No. Real data is not stored before explicit, contextual consent. Consents are separate — account terms, data connection, public publication, and counterparty-name disclosure are each separate consent events. They are never pre-checked or bundled.',
+        a: 'No. Nothing real gets stored before you\'ve clearly said yes to it. And every yes is its own — agreeing to the account terms doesn\'t quietly agree to publishing, or to naming who confirmed your show. Nothing comes pre-checked, and nothing gets bundled together.',
       },
       {
         q: 'Can booking managers see my exact audience numbers?',

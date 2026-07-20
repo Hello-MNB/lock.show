@@ -319,9 +319,9 @@ export function Footer() {
             margin: 0,
             lineHeight: 1.8,
           }}>
-            BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.
-            {' '}EVERY CLAIM SHOWS HOW IT WAS CHECKED. AUDIENCE SIZE ALWAYS SHOWN AS A RANGE.
-            {' '}THE DECISION ALWAYS STAYS WITH THE PERSON BOOKING.
+            The booking manager and the producer are two different people doing two different jobs — LOCK never mixes them up.
+            {' '}Every claim says how it was checked. Every crowd is an honest range, never a guess dressed up as a number.
+            {' '}The call is always yours.
           </p>
         </div>
 

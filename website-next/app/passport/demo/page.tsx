@@ -316,35 +316,6 @@ export default function PassportDemo() {
           </div>
         </div>
 
-        {/* PASSPORT FOOTER — firewall notice */}
-        <div style={{
-          borderTop: '2px solid var(--color-ink)',
-          paddingTop: '20px',
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
-            color: 'var(--color-tally-onlight)',
-            margin: '0 0 8px',
-            lineHeight: 1.7,
-          }}>
-            THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY.
-            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE.
-            EVERY CLAIM CARRIES ITS VERIFICATION METHOD AND DATE.
-            AUDIENCE DRAW IS SHOWN AS A BAND — NEVER AN EXACT FIGURE.
-          </p>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
-            color: 'var(--color-stamp-onlight)',
-            margin: 0,
-          }}>
-            LOCK · lock.show
-          </p>
-        </div>
-
         {/* CTA */}
         <div style={{
           marginTop: '40px',
