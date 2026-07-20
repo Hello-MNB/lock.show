@@ -116,3 +116,11 @@ Every wave-close report has TWO halves; nothing new starts until R00 releases fr
 - **OWNER-GATED** → name the exact ruling it waits on; do not build.
 
 R00 reads Half 2 and says which tasks enter work. Only released tasks are built.
+
+## PART 10 — THE COMPLETION METRIC + MAX-PARALLEL LAW (standing rule, owner 20 Jul)
+
+**The two-number metric (never one):** every task and the product overall report **% BUILT** (code exists to the spec) and **% VERIFIED** (passed L0–L5 with fit numbers AND owner-witnessed). A task is 100% only when BOTH are 100 — and VERIFIED's last mile (MOBILE/DESKTOP) closes ONLY after R00 witnesses. "100% built · 60% verified — awaiting owner witness" is the honest shape. At every wave close report: a per-task line · an OVERALL product line (built screens/total · verified screens/total from the screen/entity registry) · a one-line "what the gap is" (which built-but-unverified tasks a witness pass would convert to done). **Never report VERIFIED for anything the owner hasn't witnessed.**
+
+**Max-parallel law:** default to the MOST teams that share zero files, every wave — the cap is collision, not caution. Before each wave: map candidate tasks to file territories; every zero-overlap set dispatches at once; only shared-writer or hard-dependency tasks sequence; shared components build solo FIRST. Report per wave: how many teams ran parallel and why any task sequenced. "Can we go faster?" is answered either "yes — dispatching N teams" or "no — these share files X; here's why."
+
+**The witness-backlog honesty note:** if the true bottleneck is the WITNESS/RULING queue rather than build capacity, say so plainly at wave close: "build is ahead; N tasks are 100% built awaiting your witness — that pass is the fastest way forward, not more teams." Never add parallel teams to mask a witness backlog — that stacks more unwitnessed work.
