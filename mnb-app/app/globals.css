@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: #0c0f16;
+}
+
+body {
+  @apply bg-night text-ink font-body antialiased;
+  min-height: 100dvh;
+}
+
+/* Premium hairline gold divider */
+.gold-line {
+  background: linear-gradient(90deg, transparent, rgba(201, 167, 91, 0.55), transparent);
+  height: 1px;
+}
+
+.card {
+  @apply bg-night-surface border border-night-line rounded-card shadow-card;
+}
+
+.btn-gold {
+  @apply bg-gold text-night font-semibold rounded-full px-6 py-3 transition
+    hover:bg-gold-soft active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none;
+}
+
+.btn-ghost {
+  @apply border border-night-line text-ink-muted rounded-full px-5 py-2.5 transition
+    hover:border-gold hover:text-gold active:scale-[0.98];
+}
+
+.chip {
+  @apply border border-night-line bg-night-raised text-ink rounded-full px-4 py-2 text-sm transition
+    hover:border-gold hover:text-gold active:scale-[0.97];
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 0.35s ease both;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pop {
+  animation: pop 0.4s ease both;
+}
