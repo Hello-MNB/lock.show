@@ -7,7 +7,7 @@ The prototype (gigproof-desktop.html) was the **cheap-approval stage**: it let y
 - The prototype is BEHIND the app (still says GIGPROOF, lacks tonight's fixes).
 - Designing in the prototype THEN re-implementing = **double work + double tokens + drift** (two versions disagreeing).
 
-**Decision: the prototype becomes a READ-ONLY reference (a museum piece of the approved vision), not a working surface.** We do not build in it anymore.
+**Decision (SUPERSEDED 21 Jul 2026 — `ratify:R00`): prototype versions are DESIGN-INTENT SNAPSHOTS.** We still do not build in them — but they are neither "museum pieces" nor automatic behavioral truth. The rule (control-plane repair, from the external design↔code audit): only a snapshot registered as the current bundle in `docs/prototypes/REGISTRY.md` with status `ACCEPTED_FOR_IMPLEMENTATION` may guide build work, and product canon, permissions, entity rules and data contracts ALWAYS override visual prototype behavior. A snapshot in `DESIGN_REVIEW` informs TARGETs only. Spec stays the written law.
 
 ## How we actually work now — two clean lanes
 1. **DESIGN (yours):** for a NEW screen or a look-change, you either (a) sketch it in your design tool / Figma, or (b) just tell me in words / a screenshot with arrows. Either is enough.

@@ -5,7 +5,7 @@ _Status: consolidated master spec (complete) · Written 15 Jul 2026, scaling-rev
 
 > This document is written so that a developer or a fresh AI session could build the entire LOCK product from it alone, with no other context. It synthesizes and reconciles the full canon doc set (see §0.3 Sources). Where the interactive prototype and the newest design law differ from an older doc, **the prototype + the newest doc win** and the reconciliation is noted inline.
 >
-> **The behavioral ground-truth is the interactive prototype** (`scratchpad/lock-full-prototype.html`, published as artifact `1c9b0030`). The prototype *shows* how every screen behaves; **this document is the written law**. When in doubt about an interaction nuance, open the prototype; when in doubt about a rule, obey this document.
+> **Prototype authority (corrected 21 Jul 2026, `ratify:R00` — replaces the "behavioral ground-truth" rule):** prototypes are **design-intent snapshots**, registered and versioned in `docs/prototypes/REGISTRY.md`. Only a bundle registered `ACCEPTED_FOR_IMPLEMENTATION` guides build; a `DESIGN_REVIEW` bundle informs screen TARGETs only. **This document is the written law**, and canon/permissions/entity rules/data contracts always override any prototype behavior. The v0 prototype (`docs/reference/lock-full-prototype.html`, artifact `1c9b0030`) remains a historical interaction reference — open it for nuance, never for authority.
 
 ---
 
@@ -1586,8 +1586,8 @@ All motion respects `prefers-reduced-motion`; menu a11y (haspopup/expanded/contr
 - **Embed (lock.show/app):** mirrors the app release; every app release must rebuild the embed (`build:embed`) or the two surfaces skew.
 - **DB:** applied through **037** (`is_demo`, owner-applied + verified 17 Jul; 036 stays `.DRAFT`); migration 021 is FROZEN (do not apply). Diff before creating ≥038; never recreate existing tables.
 
-### 11.2 The prototype is the behavioral ground-truth
-The interactive prototype (`scratchpad/lock-full-prototype.html`, artifact **`1c9b0030`**) is COMPLETE and owner-approved-in-iteration: engaging Radar + signal spec, consolidated ≤2-step nav hub + branding, discover→confirm planet drill-in, the Radar Inspector, onboarding narrative EN+HE locale-aware, multi-view Passport, Requests, Access, the unified switcher, and the light theme with dark Radar/Passport islands. **It is the behavioral ground-truth; this document is the written law.** When a nuance is ambiguous here, open the prototype.
+### 11.2 Prototype authority — design-intent snapshots (corrected 21 Jul 2026, `ratify:R00`)
+The v0 interactive prototype (`docs/reference/lock-full-prototype.html`, artifact **`1c9b0030`**) was COMPLETE and owner-approved-in-iteration: engaging Radar + signal spec, consolidated ≤2-step nav hub + branding, discover→confirm planet drill-in, the Radar Inspector, onboarding narrative EN+HE locale-aware, multi-view Passport, Requests, Access, the unified switcher, and the light theme with dark Radar/Passport islands. **It is now a historical interaction reference, not ground truth.** The standing rule: prototypes are versioned design-intent snapshots governed by `docs/prototypes/REGISTRY.md`; only an `ACCEPTED_FOR_IMPLEMENTATION` bundle guides build, a `DESIGN_REVIEW` bundle informs TARGETs, and this document + canon/permission/data law always win over any prototype behavior.
 
 ### 11.3 The three canonical artifacts (the only ones to maintain)
 1. **VERSION MAP** — `a65d12d9-a66d-442c-9077-306eb05fddd6`.

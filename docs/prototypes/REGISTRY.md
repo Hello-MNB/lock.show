@@ -8,12 +8,26 @@ pointed-to, and archived here, mirroring the governance of the `BRANDING AND DES
 > artifact URL) + the current DS — never a scratch file or a superseded version. If a current prototype is
 > missing for a surface, that gap is a task, not a green light to improvise.
 
-## Current prototypes (`00_CURRENT/`)
+## AUTHORITY RULE (control-plane repair, 21 Jul 2026 · `ratify:R00`)
+Prototypes are **design-intent snapshots**, never automatic build authority. Statuses: `DESIGN_REVIEW` (informs screen TARGETs only) → `ACCEPTED_FOR_IMPLEMENTATION` (owner word; may guide build) → `SUPERSEDED`. Canon, permissions, entity rules and data contracts always override prototype behavior. A bundle = ALL its files (hash-pinned); a partial bundle is not the reviewed design.
+
+## Current design bundle — LOCK Prototype v7 (`DESIGN_REVIEW` — NOT accepted; owner: "not yet good enough, design + per-screen spec")
+
+| File | Role | sha256 (16) |
+|---|---|---|
+| `docs/reference/LOCK_Prototype_v7_standalone.html` | interaction + hierarchy intent (39 presets ≈ 21 base surfaces) | `5fcd2d72eefdcf69` |
+| `docs/reference/LOCK_DESIGN_SYSTEM_THEME.v8.css` | prototype SKIN — extract semantic rules only, never port selectors (894 `!important`, 431 `nth-child`) | `46bea50efe6b8053` |
+| `docs/reference/LOCK_UX_COPY_PATCH.v8.1.js` | copy/emotional-tone source — harvest strings into i18n keys, never port runtime DOM-patching | `8d060c21272a8511` |
+| `docs/reference/LOCK_Prototype_v7_Audit.md` | v7 defect audit (inert buttons, permission/entity defects, a11y gaps) — the reasons v7 is NOT accepted | `d1a5812008aa0847` |
+
+KNOWN v7 DEFECTS (never port): persona-switch disclosure failure · `repGranted` treats declined as granted · cross-artist roster contamination · event form discards inputs · confirmation rejection can look successful · **persona name "SHIDAPU"×20 / "Roy Sason"×8 — canonical is Maya Vale (rename on any promotion, per the T-89 promoted-reference name law)**.
+
+## Prior prototypes (`00_CURRENT/` — SUPERSEDED as authority by the v7 bundle above; kept as references)
 
 | Prototype | Surface / entity | Ver | Status | Source (repo) | Live artifact URL |
 |---|---|---|---|---|---|
-| **Radar** | Artist home (growth surface) | v4 | ✅ current | `00_CURRENT/radar-v4.html` | https://claude.ai/code/artifact/9664a4b9-c11d-4e81-ba34-96ac80d542c7 |
-| **Passport** | Public buyer view (2 personas) | v3 | ✅ current | `00_CURRENT/passport-v3.html` | https://claude.ai/code/artifact/04bb4782-df3a-4205-bb49-99b46cca5e75 |
+| **Radar** | Artist home (growth surface) | v4 | superseded (built: see Map below) | `00_CURRENT/radar-v4.html` | https://claude.ai/code/artifact/9664a4b9-c11d-4e81-ba34-96ac80d542c7 |
+| **Passport** | Public buyer view (2 personas) | v3 | superseded (built: see Map below) | `00_CURRENT/passport-v3.html` | https://claude.ai/code/artifact/04bb4782-df3a-4205-bb49-99b46cca5e75 |
 | **Version Roadmap** | Planning (users × releases) | v1 | ✅ current | `00_CURRENT/version-roadmap-v1.html` | https://claude.ai/code/artifact/a65d12d9-a66d-442c-9077-306eb05fddd6 |
 | **Flow Map** | Whole-app architecture + gaps | v1 | ✅ current | `00_CURRENT/flow-map-v1.html` | _re-publish from source_ |
 | **Release Guide** | How a version ships | v1 | ✅ current | `00_CURRENT/release-guide-v1.html` | _re-publish from source_ |

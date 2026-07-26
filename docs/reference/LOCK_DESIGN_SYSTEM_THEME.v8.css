@@ -1,0 +1,1985 @@
+/*
+  LOCK Design System Theme v8
+  Managed skin file for the standalone prototype review build.
+
+  Edit here when you want to change:
+  - skin / colors
+  - typography scale
+  - contrast levels
+  - review shell background
+  - phone frame visibility
+  - shared button, card, chip, input and navigation behavior
+
+  Principle:
+  The outer review shell is light so designers can see the phone.
+  The in-phone LOCK product remains premium, dark, high-contrast and music-industry native.
+
+  Token governance:
+  - Do not add a new visual color for a one-off component.
+  - Do not use borders as decoration. Borders mean containment, selection, evidence, review or danger.
+  - Detected-but-passive items use a quiet surface and icon/label, not a hard border.
+  - Pure reading sections should be separated by spacing, type and surface level.
+  - Buttons are not free-form: primary, secondary, quiet, icon-only, option, danger.
+  - Arrows belong in button text only when they signal navigation/continuation; they do not get their own colored text background.
+*/
+
+:root {
+  --lock-shell-bg: #eef2ea;
+  --lock-shell-panel: #f8faf5;
+  --lock-shell-panel-2: #f3f6f0;
+  --lock-shell-text: #111a13;
+  --lock-shell-muted: #5d6b60;
+  --lock-shell-line: rgba(17, 26, 19, .14);
+  --lock-shell-grid: rgba(17, 26, 19, .045);
+
+  --lock-app-bg: #050806;
+  --lock-app-surface-1: #0c110d;
+  --lock-app-surface-2: #111912;
+  --lock-app-surface-3: #18221a;
+  --lock-app-elevated: #1d2a20;
+  --lock-app-line: rgba(220, 238, 219, .13);
+  --lock-app-line-strong: rgba(220, 238, 219, .22);
+
+  --lock-text-main: #f6f8f2;
+  --lock-text-soft: #c8d2c6;
+  --lock-text-muted: #8f9f92;
+  --lock-text-low: #66736a;
+
+  --lock-lime: #c8ff3d;
+  --lock-lime-soft: #ddff82;
+  --lock-lime-dim: rgba(200, 255, 61, .18);
+  --lock-mint: #77e7b2;
+  --lock-amber: #ffb15e;
+  --lock-danger: #ff7d70;
+
+  /*
+    V8.1 palette governance:
+    - Lime is the only primary action color.
+    - Mint is supportive evidence/recognized state.
+    - Amber is caution/review.
+    - Red is destructive/error.
+    - Teal/cyan/violet are not daily UI tokens.
+      If needed, reserve them only for multi-series charts, never for controls, states or proof cards.
+  */
+  --lock-app-input-bg: #121a14;
+  --lock-app-input-bg-focus: #162318;
+  --lock-app-option-bg: #101811;
+  --lock-app-option-bg-active: #203928;
+  --lock-app-option-line: rgba(200, 255, 61, .20);
+
+  --lock-font-sans: Inter, Manrope, Rubik, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --lock-font-mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+
+  /*
+    V8.2 radius governance:
+    LOCK should feel sharp, editorial and high-trust, not bubbly SaaS.
+    Use no border/radius for pure content sections.
+    Use small radii for controls and proof cards.
+    Reserve larger radii for the phone shell and modal/sheet containers only.
+  */
+  --lock-radius-none: 0px;
+  --lock-radius-xs: 4px;
+  --lock-radius-sm: 6px;
+  --lock-radius-md: 8px;
+  --lock-radius-lg: 12px;
+  --lock-radius-xl: 18px;
+  --lock-radius-phone: 34px;
+
+  /*
+    V8.10 button governance:
+    - In-phone decision/action buttons use one touch target: 48px.
+    - Compact controls are allowed only for utility chips, tab chips and inline tools: 40px.
+    - Icon-only controls are square and separate from text buttons.
+    - Shell navigation is outside the phone and may stay visually smaller.
+  */
+  --lock-btn-action-height: 48px;
+  --lock-btn-compact-height: 40px;
+  --lock-btn-icon-size: 36px;
+  --lock-btn-gap: 10px;
+  --lock-btn-radius: var(--lock-radius-md);
+  --lock-btn-pad-x: 16px;
+
+  /*
+    V8.11 grid governance:
+    - Review shell has one real grid: navigation + phone stage.
+    - Phone stage centers the 390px phone on a 16px grid.
+    - Mobile review mode stacks nav over stage without fake 900px spacer heights.
+    - In-phone components use 8/10/16px rhythm only.
+  */
+  --lock-grid-unit: 8px;
+  --lock-shell-nav-width: 316px;
+  --lock-stage-pad-x: 32px;
+  --lock-stage-pad-y: 28px;
+  --lock-phone-width: 390px;
+  --lock-phone-stage-max: 560px;
+
+  --lock-shadow-card: 0 18px 48px rgba(0, 0, 0, .24);
+  --lock-shadow-phone: 0 34px 80px rgba(17, 26, 19, .22);
+
+  --lock-focus: 0 0 0 3px rgba(200, 255, 61, .34);
+}
+
+body {
+  background: var(--lock-shell-bg) !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+}
+
+#__bundler_thumbnail {
+  background: var(--lock-shell-bg) !important;
+}
+
+/* Review shell */
+#dc-root > .sc-host > div {
+  --page-bg: var(--lock-shell-bg) !important;
+  --text: var(--lock-shell-text) !important;
+  --muted: var(--lock-shell-muted) !important;
+  --line-rgb: 17, 26, 19 !important;
+  background: var(--lock-shell-bg) !important;
+  color: var(--lock-shell-text) !important;
+  font-family: var(--lock-font-sans) !important;
+}
+
+#dc-root > .sc-host > div > div:first-child {
+  background: var(--lock-shell-panel) !important;
+  color: var(--lock-shell-text) !important;
+  border-bottom: 1px solid var(--lock-shell-line) !important;
+  box-shadow: 0 10px 30px rgba(17, 26, 19, .06) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) {
+  background:
+    radial-gradient(900px 500px at 72% 8%, rgba(200, 255, 61, .16), transparent 56%),
+    linear-gradient(90deg, var(--lock-shell-panel) 0 316px, var(--lock-shell-bg) 316px 100%) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child {
+  background: var(--lock-shell-panel) !important;
+  color: var(--lock-shell-text) !important;
+  border-right: 1px solid var(--lock-shell-line) !important;
+  box-shadow: 18px 0 40px rgba(17, 26, 19, .06) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child *,
+#dc-root > .sc-host > div > div:first-child * {
+  color: var(--lock-shell-text) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button {
+  min-height: 36px !important;
+  background: #ffffff !important;
+  color: var(--lock-shell-text) !important;
+  border: 1px solid rgba(17, 26, 19, .12) !important;
+  border-radius: var(--lock-radius-md) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button:hover {
+  border-color: rgba(17, 26, 19, .28) !important;
+  background: #faffef !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button:focus-visible {
+  outline: none !important;
+  box-shadow: var(--lock-focus) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) {
+  background:
+    linear-gradient(var(--lock-shell-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lock-shell-grid) 1px, transparent 1px),
+    radial-gradient(800px 520px at 50% 0%, rgba(200, 255, 61, .16), transparent 62%),
+    var(--lock-shell-bg) !important;
+  background-size: 32px 32px, 32px 32px, auto, auto !important;
+}
+
+/* Phone product surface */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div {
+  --brand: var(--lock-lime) !important;
+  --brand-rgb: 200, 255, 61 !important;
+  --brand2: var(--lock-mint) !important;
+  --brand2-rgb: 119, 231, 178 !important;
+  --brand2-soft: #bdf5da !important;
+  --brand2-deep: #2d7f58 !important;
+  --brand2-deeper: #16442f !important;
+  --surface: var(--lock-app-surface-2) !important;
+  --surface-2: var(--lock-app-bg) !important;
+  --text: var(--lock-text-main) !important;
+  --muted: var(--lock-text-muted) !important;
+  --text-2: var(--lock-text-soft) !important;
+  --text-3: var(--lock-text-muted) !important;
+  --select-bg: var(--lock-app-option-bg-active) !important;
+  --accent: var(--lock-lime) !important;
+  --accent-rgb: 200, 255, 61 !important;
+  --on-accent: #111a13 !important;
+  --success: var(--lock-mint) !important;
+  --success-rgb: 119, 231, 178 !important;
+  --danger: var(--lock-danger) !important;
+  --danger-rgb: 255, 125, 112 !important;
+  --line-rgb: 220, 238, 219 !important;
+
+  outline: 1px solid rgba(17, 26, 19, .12) !important;
+  box-shadow: var(--lock-shadow-phone) !important;
+  background: var(--lock-app-bg) !important;
+  font-family: var(--lock-font-sans) !important;
+  border-radius: var(--lock-radius-phone) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div * {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Shared in-phone interaction standards */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button {
+  min-height: 44px;
+  border-radius: var(--lock-radius-md) !important;
+  font-family: var(--lock-font-sans) !important;
+  font-weight: 750 !important;
+  letter-spacing: -.01em;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button span {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* V8.1: screen-1/screen-4 field components */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 9px"]:has(input),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 8px"]:has(input),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 9px"]:has(textarea),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 8px"]:has(textarea) {
+  min-height: 58px !important;
+  padding: 0 14px !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .070), rgba(246, 248, 242, .035)),
+    var(--lock-app-input-bg) !important;
+  border: 1px solid rgba(220, 238, 219, .20) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .035),
+    0 10px 26px rgba(0, 0, 0, .16) !important;
+}
+
+/* V8.5: input fields are one surface, not a visible frame inside another frame */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"]:has(input) input,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"]:has(textarea) textarea {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  min-height: 50px !important;
+  padding: 0 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 9px"]:has(input:focus),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 8px"]:has(input:focus),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 9px"]:has(textarea:focus),
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"][style*="gap: 8px"]:has(textarea:focus) {
+  background:
+    linear-gradient(180deg, rgba(200, 255, 61, .08), rgba(246, 248, 242, .045)),
+    var(--lock-app-input-bg-focus) !important;
+  border-color: rgba(200, 255, 61, .50) !important;
+  box-shadow: var(--lock-focus), inset 0 1px 0 rgba(255, 255, 255, .05) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"]:has(input) span,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="align-items: center"]:has(textarea) span {
+  color: var(--lock-text-soft) !important;
+  opacity: .92 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button:focus-visible,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div input:focus-visible,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div textarea:focus-visible,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div select:focus-visible {
+  outline: none !important;
+  box-shadow: var(--lock-focus) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div input,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div textarea,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div select {
+  min-height: 44px;
+  border-radius: var(--lock-radius-md) !important;
+  background: rgba(246, 248, 242, .055) !important;
+  border: 1px solid var(--lock-app-line) !important;
+  color: var(--lock-text-main) !important;
+  font-family: var(--lock-font-sans) !important;
+  caret-color: var(--lock-lime) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div input::placeholder,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div textarea::placeholder {
+  color: rgba(200, 210, 198, .78) !important;
+}
+
+/* V8.1: field labels must be readable on dark backgrounds */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 11.5px"][style*="var(--text-2"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:11.5px"][style*="var(--text-2"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 12px"][style*="var(--text-2"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:12px"][style*="var(--text-2"] {
+  color: var(--lock-text-soft) !important;
+  font-weight: 750 !important;
+  letter-spacing: .012em !important;
+}
+
+/* V8.1: signup / choice cards and onboarding option chips */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius: 14px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius:14px"] {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .055), rgba(246, 248, 242, .025)),
+    var(--lock-app-option-bg) !important;
+  border-color: rgba(220, 238, 219, .16) !important;
+  color: var(--lock-text-main) !important;
+  border-radius: 10px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius: 14px"]:hover,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius:14px"]:hover {
+  border-color: rgba(200, 255, 61, .42) !important;
+  background:
+    linear-gradient(180deg, rgba(200, 255, 61, .090), rgba(246, 248, 242, .030)),
+    var(--lock-app-option-bg) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius: 999px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius:999px"] {
+  min-height: 42px !important;
+  background: var(--lock-app-option-bg) !important;
+  border-color: rgba(220, 238, 219, .17) !important;
+  color: var(--lock-text-soft) !important;
+  border-radius: 10px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius: 999px"][style*="var(--select-bg"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="border-radius:999px"][style*="var(--select-bg"] {
+  background:
+    linear-gradient(180deg, rgba(119, 231, 178, .18), rgba(200, 255, 61, .06)),
+    var(--lock-app-option-bg-active) !important;
+  border-color: rgba(119, 231, 178, .55) !important;
+  color: var(--lock-text-main) !important;
+}
+
+/* V8.1: keep secondary body text readable; avoid purple/grey mush */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#a79fc0"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#7d76a0"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#b0a4f5"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="rgb(207, 199, 234)"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="176, 164, 245"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="var(--text-2"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="var(--text-3"] {
+  color: var(--lock-text-soft) !important;
+}
+
+/* V8.1: purple is not a main LOCK brand signal */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="139,123,240"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="139, 123, 240"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#8b7bf0"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#9d88ff"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#62e5d0"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#4ed0c2"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="var(--brand2"] {
+  background: rgba(119, 231, 178, .14) !important;
+  border-color: rgba(119, 231, 178, .45) !important;
+  color: var(--lock-text-main) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#F2C063"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="242,192,99"] {
+  background: rgba(255, 177, 94, .14) !important;
+  border-color: rgba(255, 177, 94, .54) !important;
+  color: var(--lock-amber) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="var(--accent"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button[style*="#F2C063"] {
+  background: var(--lock-lime) !important;
+  border-color: rgba(200, 255, 61, .68) !important;
+  color: #111a13 !important;
+}
+
+/* V8.5: button taxonomy — one brand hand, not many ad-hoc button styles */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-primary {
+  background: var(--lock-lime) !important;
+  color: #111a13 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-secondary {
+  background: rgba(246, 248, 242, .045) !important;
+  color: var(--lock-text-main) !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-quiet {
+  background: transparent !important;
+  color: var(--lock-text-soft) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-icon {
+  background: rgba(246, 248, 242, .045) !important;
+  color: var(--lock-text-soft) !important;
+  border: 1px solid rgba(220, 238, 219, .12) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-option {
+  background: var(--lock-app-option-bg) !important;
+  color: var(--lock-text-soft) !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-option-selected {
+  background: var(--lock-app-option-bg-active) !important;
+  color: var(--lock-text-main) !important;
+  border: 1px solid rgba(119, 231, 178, .45) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-btn-danger {
+  background: rgba(255, 125, 112, .11) !important;
+  color: var(--lock-danger) !important;
+  border: 1px solid rgba(255, 125, 112, .36) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-detected-source-chip {
+  background: rgba(246, 248, 242, .055) !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  color: var(--lock-text-soft) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found {
+  background: rgba(119, 231, 178, .14) !important;
+  border: 1px solid rgba(119, 231, 178, .36) !important;
+  border-radius: 8px !important;
+  color: var(--lock-text-main) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive {
+  background: rgba(246, 248, 242, .045) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: var(--lock-text-muted) !important;
+  box-shadow: none !important;
+  opacity: .82 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found span,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive span {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found span[style*="width: 24px"] {
+  background: rgba(119, 231, 178, .20) !important;
+  color: var(--lock-mint) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive span[style*="width: 24px"] {
+  background: rgba(246, 248, 242, .08) !important;
+  color: var(--lock-text-muted) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v85-empty-scan-screen div[style*="border-radius: 999px"][style*="brand2-rgb"] {
+  background: rgba(246, 248, 242, .055) !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035) !important;
+  color: var(--lock-text-soft) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-detected-source-chip span {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-detected-source-chip span[style*="width: 24px"] {
+  background: rgba(119, 231, 178, .18) !important;
+  color: var(--lock-mint) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#B23B2E"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="#C94F3F"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="178,59,46"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="201,79,63"] {
+  background: rgba(255, 125, 112, .13) !important;
+  border-color: rgba(255, 125, 112, .54) !important;
+  color: var(--lock-danger) !important;
+}
+
+/* V8.5: shell nav statuses are neutral; only selected state may use lime/mint emphasis */
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style*="var(--brand2-rgb"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style*="139,123,240"] {
+  background: rgba(119, 231, 178, .12) !important;
+  border-color: rgba(119, 231, 178, .34) !important;
+  color: var(--lock-shell-text) !important;
+}
+
+/* V8.1: avoid exposing prototype/admin labels as dominant product language */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 9px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:9px"] {
+  color: var(--lock-text-muted) !important;
+}
+
+/* V8.1: workspace switcher is a professional account surface, not a purple demo menu */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .055), rgba(246, 248, 242, .025)),
+    #171d1f !important;
+  border-color: rgba(220, 238, 219, .18) !important;
+  box-shadow: 0 24px 52px rgba(0, 0, 0, .34) !important;
+  border-radius: 14px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] button,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] button *,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] [style*="text-align: left"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] [style*="rgb(207, 199, 234)"] {
+  color: var(--lock-text-soft) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] button:first-of-type,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="top: 88px"][style*="right: 14px"] button:first-of-type * {
+  color: var(--lock-text-main) !important;
+}
+
+/* Normalize repeated cards without flattening the brand */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="border-radius: 16px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="border-radius:16px"] {
+  border-color: var(--lock-app-line) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .18) !important;
+  border-radius: 12px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="border-radius: 20px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="border-radius:20px"] {
+  border-color: var(--lock-app-line) !important;
+  border-radius: 14px !important;
+}
+
+/* V8.5: process sheets must read as one clear task surface, not a transparent overlay */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-process-sheet {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .055), rgba(246, 248, 242, .025)),
+    #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+  border-bottom: 0 !important;
+  box-shadow: 0 -22px 54px rgba(0, 0, 0, .54) !important;
+  border-radius: 14px 14px 0 0 !important;
+  backdrop-filter: none !important;
+}
+
+/* Micro-detail contrast: captions, badges, evidence labels */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 10px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:10px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 11px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:11px"] {
+  letter-spacing: .035em;
+}
+
+/* Keep status language useful, not gamified */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="box-shadow"][style*="rgba(var(--brand-rgb"] {
+  box-shadow: 0 0 24px rgba(200, 255, 61, .18) !important;
+}
+
+/* Dev/frozen labels should be visible as review annotations, not product badges */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="border: 1px dashed"] {
+  background: rgba(255, 177, 94, .11) !important;
+  border-color: rgba(255, 177, 94, .55) !important;
+  color: #ffd8ae !important;
+}
+
+/* V8.2: design-system slide as the visual-language authority */
+.lock-v82-brand-board {
+  margin: 14px 0 18px !important;
+  padding: 12px !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .060), rgba(246, 248, 242, .025)),
+    #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, .18) !important;
+}
+
+.lock-v82-brand-board__title {
+  font-size: 11px !important;
+  letter-spacing: .105em !important;
+  text-transform: uppercase !important;
+  color: var(--lock-lime) !important;
+  font-weight: 850 !important;
+  margin-bottom: 10px !important;
+}
+
+.lock-v82-brand-board__grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+.lock-v82-brand-rule {
+  min-height: 70px !important;
+  padding: 10px !important;
+  background: rgba(246, 248, 242, .035) !important;
+  border: 1px solid rgba(220, 238, 219, .12) !important;
+  border-radius: 8px !important;
+}
+
+.lock-v82-brand-rule strong {
+  display: block !important;
+  color: var(--lock-text-main) !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+  margin-bottom: 5px !important;
+}
+
+.lock-v82-brand-rule span {
+  display: block !important;
+  color: var(--lock-text-soft) !important;
+  font-size: 10.5px !important;
+  line-height: 1.35 !important;
+}
+
+.lock-v83-color-system {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+.lock-v83-color-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+.lock-v83-color-card {
+  min-height: 68px !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  box-sizing: border-box !important;
+}
+
+.lock-v83-color-card strong {
+  display: block !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  font-weight: 850 !important;
+  margin-bottom: 5px !important;
+}
+
+.lock-v83-color-card span {
+  display: block !important;
+  font-size: 9.8px !important;
+  line-height: 1.34 !important;
+  font-weight: 650 !important;
+}
+
+.lock-v83-color-card--dark {
+  background: #050806 !important;
+  color: #f6f8f2 !important;
+}
+
+.lock-v83-color-card--paper {
+  background: #f6f8f2 !important;
+  color: #111a13 !important;
+}
+
+.lock-v83-color-card--lime {
+  background: var(--lock-lime) !important;
+  color: #111a13 !important;
+}
+
+.lock-v83-color-card--mint {
+  background: var(--lock-mint) !important;
+  color: #062015 !important;
+}
+
+.lock-v83-color-card--amber {
+  background: var(--lock-amber) !important;
+  color: #241605 !important;
+}
+
+.lock-v83-color-card--danger {
+  background: var(--lock-danger) !important;
+  color: #260b08 !important;
+}
+
+.lock-v83-color-note {
+  padding: 10px !important;
+  border-radius: 8px !important;
+  background: rgba(246, 248, 242, .035) !important;
+  border: 1px dashed rgba(220, 238, 219, .18) !important;
+  color: var(--lock-text-soft) !important;
+  font-size: 10.5px !important;
+  line-height: 1.38 !important;
+}
+
+/* V8.6: contrast examples are readable rules, not inline color fragments */
+.lock-v86-contrast-system {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .052), rgba(246, 248, 242, .026)),
+    #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: 10px !important;
+  display: grid !important;
+  gap: 7px !important;
+  margin-top: 8px !important;
+  padding: 10px !important;
+}
+
+.lock-v86-contrast-row {
+  background: rgba(246, 248, 242, .030) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  padding: 9px 10px !important;
+}
+
+.lock-v86-contrast-row strong,
+.lock-v86-contrast-row span {
+  background: transparent !important;
+  box-shadow: none !important;
+  display: block !important;
+}
+
+.lock-v86-contrast-row strong {
+  color: var(--lock-text-main) !important;
+  font-size: 10.8px !important;
+  font-weight: 850 !important;
+  line-height: 1.2 !important;
+  margin-bottom: 4px !important;
+}
+
+.lock-v86-contrast-row span {
+  color: var(--lock-text-soft) !important;
+  font-size: 9.8px !important;
+  font-weight: 620 !important;
+  line-height: 1.32 !important;
+}
+
+.lock-v86-contrast-row--action {
+  background: rgba(200, 255, 61, .10) !important;
+  border: 1px solid rgba(200, 255, 61, .20) !important;
+}
+
+.lock-v86-contrast-row--action strong {
+  color: var(--lock-lime) !important;
+}
+
+.lock-v86-contrast-row--paper {
+  background: rgba(246, 248, 242, .92) !important;
+  border: 1px solid rgba(17, 26, 19, .14) !important;
+}
+
+.lock-v86-contrast-row--paper strong {
+  color: #111a13 !important;
+}
+
+.lock-v86-contrast-row--paper span {
+  color: rgba(17, 26, 19, .68) !important;
+}
+
+.lock-v86-contrast-row--danger {
+  background: rgba(255, 125, 112, .10) !important;
+  border: 1px solid rgba(255, 125, 112, .25) !important;
+}
+
+.lock-v86-contrast-row--danger strong {
+  color: var(--lock-danger) !important;
+}
+
+/* V8.6: TOKENS · SURFACES & TEXT is a contract, not a raw variable dump */
+.lock-v86-surface-text-system {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+.lock-v86-token-group {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .052), rgba(246, 248, 242, .026)),
+    #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  box-shadow: none !important;
+}
+
+.lock-v86-token-group__label {
+  color: var(--lock-lime) !important;
+  font-family: var(--lock-font-mono, "DM Mono", monospace) !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: .12em !important;
+  line-height: 1.2 !important;
+  margin-bottom: 8px !important;
+  text-transform: uppercase !important;
+}
+
+.lock-v86-token-list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+}
+
+.lock-v86-token-row {
+  align-items: center !important;
+  background: rgba(246, 248, 242, .028) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  display: grid !important;
+  gap: 3px 9px !important;
+  grid-template-columns: 28px 1fr !important;
+  min-height: 44px !important;
+  padding: 8px !important;
+}
+
+.lock-v86-token-row strong,
+.lock-v86-token-row em {
+  background: transparent !important;
+  box-shadow: none !important;
+  display: block !important;
+  font-style: normal !important;
+}
+
+.lock-v86-token-row strong {
+  color: var(--lock-text-main) !important;
+  font-size: 11px !important;
+  font-weight: 850 !important;
+  line-height: 1.15 !important;
+}
+
+.lock-v86-token-row em {
+  color: var(--lock-text-soft) !important;
+  font-size: 9.6px !important;
+  font-weight: 620 !important;
+  grid-column: 2 !important;
+  line-height: 1.28 !important;
+}
+
+.lock-v86-token-swatch,
+.lock-v86-type-sample {
+  align-items: center !important;
+  border-radius: 7px !important;
+  display: inline-flex !important;
+  grid-row: span 2 !important;
+  height: 28px !important;
+  justify-content: center !important;
+  width: 28px !important;
+}
+
+.lock-v86-token-swatch--app {
+  background: var(--lock-bg, #050806) !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+}
+
+.lock-v86-token-swatch--surface {
+  background: var(--lock-surface, #101711) !important;
+  border: 1px solid rgba(220, 238, 219, .20) !important;
+}
+
+.lock-v86-token-swatch--sheet {
+  background: var(--lock-sheet, #162116) !important;
+  border: 1px solid rgba(200, 255, 61, .20) !important;
+}
+
+.lock-v86-token-swatch--paper {
+  background: var(--lock-paper, #f6f8f2) !important;
+  border: 1px solid rgba(17, 26, 19, .18) !important;
+}
+
+.lock-v86-type-sample {
+  background: rgba(246, 248, 242, .055) !important;
+  border: 1px solid rgba(220, 238, 219, .12) !important;
+  font-family: var(--lock-font-sans, Manrope, system-ui, sans-serif) !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+}
+
+.lock-v86-type-sample--main {
+  color: var(--lock-text-main) !important;
+}
+
+.lock-v86-type-sample--soft {
+  color: var(--lock-text-soft) !important;
+}
+
+.lock-v86-type-sample--meta {
+  color: var(--lock-lime) !important;
+  font-family: var(--lock-font-mono, "DM Mono", monospace) !important;
+  font-size: 9px !important;
+  letter-spacing: .04em !important;
+}
+
+.lock-v86-type-sample--disabled {
+  color: var(--lock-text-muted) !important;
+  opacity: .58 !important;
+}
+
+.lock-v86-token-note {
+  background: rgba(200, 255, 61, .055) !important;
+  border: 1px solid rgba(200, 255, 61, .16) !important;
+  border-radius: 8px !important;
+  color: var(--lock-text-soft) !important;
+  font-size: 10px !important;
+  font-weight: 680 !important;
+  line-height: 1.36 !important;
+  padding: 9px 10px !important;
+}
+
+/* V8.4: Source Confirmation is an active product flow, not a frozen entity */
+.lock-v84-source-banner {
+  background:
+    linear-gradient(180deg, rgba(119, 231, 178, .12), rgba(246, 248, 242, .035)),
+    #101711 !important;
+  border: 1px solid rgba(119, 231, 178, .42) !important;
+  border-radius: 10px !important;
+  color: var(--lock-text-soft) !important;
+  padding: 11px 13px !important;
+  font-weight: 720 !important;
+  line-height: 1.42 !important;
+}
+
+.lock-v84-source-request-label {
+  color: var(--lock-mint) !important;
+  font-weight: 850 !important;
+  letter-spacing: .045em !important;
+  text-transform: uppercase !important;
+}
+
+.lock-v84-source-claim-card {
+  border-color: rgba(119, 231, 178, .26) !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .060), rgba(246, 248, 242, .030)),
+    #101811 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .22) !important;
+}
+
+.lock-v84-source-privacy-note {
+  color: var(--lock-text-soft) !important;
+  background: rgba(246, 248, 242, .035) !important;
+  border: 1px solid rgba(220, 238, 219, .10) !important;
+  border-radius: 8px !important;
+  padding: 9px 10px !important;
+  text-align: left !important;
+}
+
+.lock-v84-source-primary {
+  background: var(--lock-lime) !important;
+  color: #111a13 !important;
+  border-color: rgba(200, 255, 61, .68) !important;
+  border-radius: 8px !important;
+}
+
+.lock-v84-source-secondary {
+  background: rgba(246, 248, 242, .040) !important;
+  color: var(--lock-text-main) !important;
+  border-color: rgba(200, 255, 61, .30) !important;
+  border-radius: 8px !important;
+}
+
+.lock-v84-source-safe-secondary {
+  background: rgba(246, 248, 242, .025) !important;
+  color: var(--lock-text-soft) !important;
+  border-color: rgba(220, 238, 219, .14) !important;
+  border-radius: 8px !important;
+}
+
+/* V8.5 final precedence: semantic class wins over inline accent hacks */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-secondary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-secondary {
+  background: rgba(246, 248, 242, .045) !important;
+  color: var(--lock-text-main) !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-danger,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-safe-secondary {
+  background: rgba(255, 125, 112, .11) !important;
+  color: var(--lock-danger) !important;
+  border: 1px solid rgba(255, 125, 112, .36) !important;
+}
+
+/* V8.7: no tint panels behind explanatory text.
+   Color should clarify through swatches, borders, icons or primary actions — not through extra colored reading slabs. */
+.lock-v83-color-card {
+  background: #101711 !important;
+  color: var(--lock-text-main) !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-left-width: 4px !important;
+}
+
+.lock-v83-color-card span {
+  color: var(--lock-text-soft) !important;
+}
+
+.lock-v83-color-card--dark {
+  border-left-color: #050806 !important;
+}
+
+.lock-v83-color-card--paper {
+  border-left-color: #f6f8f2 !important;
+}
+
+.lock-v83-color-card--lime {
+  border-left-color: var(--lock-lime) !important;
+}
+
+.lock-v83-color-card--lime strong {
+  color: var(--lock-lime) !important;
+}
+
+.lock-v83-color-card--mint {
+  border-left-color: var(--lock-mint) !important;
+}
+
+.lock-v83-color-card--mint strong {
+  color: var(--lock-mint) !important;
+}
+
+.lock-v83-color-card--amber {
+  border-left-color: var(--lock-amber) !important;
+}
+
+.lock-v83-color-card--amber strong {
+  color: var(--lock-amber) !important;
+}
+
+.lock-v83-color-card--danger {
+  border-left-color: var(--lock-danger) !important;
+}
+
+.lock-v83-color-card--danger strong {
+  color: var(--lock-danger) !important;
+}
+
+.lock-v86-contrast-row,
+.lock-v86-contrast-row--action,
+.lock-v86-contrast-row--paper,
+.lock-v86-contrast-row--danger,
+.lock-v86-token-row,
+.lock-v86-token-note {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.lock-v86-contrast-row,
+.lock-v86-token-row {
+  border-bottom: 1px solid rgba(220, 238, 219, .11) !important;
+  border-radius: 0 !important;
+}
+
+.lock-v86-contrast-row--action,
+.lock-v86-contrast-row--paper,
+.lock-v86-contrast-row--danger {
+  border-left: 3px solid rgba(220, 238, 219, .16) !important;
+  padding-left: 10px !important;
+}
+
+.lock-v86-contrast-row--action {
+  border-left-color: var(--lock-lime) !important;
+}
+
+.lock-v86-contrast-row--paper {
+  border-left-color: #f6f8f2 !important;
+}
+
+.lock-v86-contrast-row--danger {
+  border-left-color: var(--lock-danger) !important;
+}
+
+.lock-v86-contrast-row--paper strong,
+.lock-v86-contrast-row--paper span {
+  color: inherit !important;
+}
+
+.lock-v86-token-group {
+  background: #101711 !important;
+}
+
+.lock-v86-type-sample {
+  background: transparent !important;
+}
+
+.lock-v86-token-note {
+  border: 1px solid rgba(220, 238, 219, .12) !important;
+  color: var(--lock-text-soft) !important;
+}
+
+/* V8.8: Source Confirmation screen — one-screen decision flow */
+.lock-v87-source-flow-screen {
+  background:
+    radial-gradient(320px 220px at 70% 8%, rgba(200, 255, 61, .055), transparent 68%),
+    var(--lock-app-bg, #050806) !important;
+}
+
+.lock-v87-source-kicker,
+.lock-v87-source-eyebrow {
+  color: var(--lock-lime) !important;
+  font-family: var(--lock-font-mono, "DM Mono", monospace) !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: .11em !important;
+  line-height: 1.35 !important;
+  text-transform: uppercase !important;
+}
+
+.lock-v87-source-kicker {
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--lock-text-soft) !important;
+  display: flex !important;
+  gap: 8px !important;
+  padding: 0 !important;
+}
+
+.lock-v87-source-kicker::before {
+  background: var(--lock-lime) !important;
+  border-radius: 50% !important;
+  content: "" !important;
+  display: inline-block !important;
+  height: 7px !important;
+  width: 7px !important;
+}
+
+.lock-v87-source-title {
+  color: var(--lock-text-main) !important;
+  font-size: 22px !important;
+  font-weight: 850 !important;
+  letter-spacing: -.025em !important;
+  line-height: 1.12 !important;
+  margin-top: 8px !important;
+}
+
+.lock-v87-source-flow-screen .lock-v84-source-request-label {
+  color: var(--lock-text-soft) !important;
+  font-family: var(--lock-font-mono, "DM Mono", monospace) !important;
+  font-size: 9.5px !important;
+  font-weight: 850 !important;
+  letter-spacing: .10em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+.lock-v87-source-flow-screen .lock-v84-source-claim-card:not(.lock-v87-source-claim-card) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.lock-v87-source-claim-card {
+  background: #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+  border-left: 4px solid var(--lock-mint) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  padding: 15px 16px !important;
+}
+
+.lock-v87-source-claim-card div,
+.lock-v87-source-claim-card span {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.lock-v87-source-privacy-note {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(220, 238, 219, .12) !important;
+  border-radius: 0 !important;
+  color: var(--lock-text-soft) !important;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  padding: 12px 0 0 !important;
+  text-align: left !important;
+}
+
+.lock-v87-source-action-stack {
+  display: grid !important;
+  gap: 8px !important;
+  grid-template-columns: 1fr 1fr !important;
+  margin-top: 16px !important;
+}
+
+.lock-v87-source-action-stack .lock-v85-btn-primary,
+.lock-v87-source-action-stack .lock-v84-source-primary {
+  grid-column: 1 / -1 !important;
+  min-height: 46px !important;
+}
+
+.lock-v87-source-action-stack .lock-v84-source-privacy-note,
+.lock-v87-source-action-stack .lock-v87-source-privacy-note {
+  grid-column: 1 / -1 !important;
+}
+
+.lock-v87-source-action-stack .lock-v85-btn-secondary,
+.lock-v87-source-action-stack .lock-v84-source-secondary {
+  background: transparent !important;
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+  color: var(--lock-text-main) !important;
+  grid-column: 1 / -1 !important;
+}
+
+.lock-v87-source-action-stack .lock-v85-btn-danger,
+.lock-v87-source-action-stack .lock-v84-source-safe-secondary {
+  background: transparent !important;
+  border: 1px solid rgba(255, 125, 112, .28) !important;
+  color: var(--lock-danger) !important;
+}
+
+.lock-v87-source-action-stack .lock-v85-btn-danger:first-of-type,
+.lock-v87-source-action-stack .lock-v84-source-safe-secondary:first-of-type {
+  grid-column: 1 / -1 !important;
+}
+
+.lock-v87-source-action-stack button {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  width: 100% !important;
+}
+
+.lock-v87-source-action-stack .lock-v87-danger-full {
+  grid-column: 1 / -1 !important;
+}
+
+.lock-v87-source-action-stack .lock-v87-source-paired-row {
+  display: grid !important;
+  gap: 8px !important;
+  grid-column: 1 / -1 !important;
+  grid-template-columns: 1fr 1fr !important;
+  width: 100% !important;
+}
+
+.lock-v87-source-action-stack .lock-v87-source-paired-row button {
+  grid-column: auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+@media (max-width: 760px) {
+  #dc-root > .sc-host > div > div:nth-child(2) {
+    display: block !important;
+    overflow: auto !important;
+  }
+
+  #dc-root > .sc-host > div > div:nth-child(2) > div:first-child {
+    width: 100% !important;
+    max-height: 38vh !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--lock-shell-line) !important;
+  }
+
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) {
+    min-height: 900px !important;
+    padding: 22px 0 80px !important;
+  }
+}
+
+/* V8.8 final precedence for screen 20: no tint behind non-primary actions */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-claim-card {
+  background: #101711 !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+  border-left: 4px solid var(--lock-mint) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v85-btn-secondary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v84-source-secondary {
+  background: transparent !important;
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+  color: var(--lock-text-main) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v85-btn-danger,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v84-source-safe-secondary {
+  background: transparent !important;
+  border: 1px solid rgba(255, 125, 112, .32) !important;
+  color: var(--lock-danger) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v87-danger-full {
+  grid-column: 1 / -1 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack .lock-v87-source-paired-row {
+  display: grid !important;
+  gap: 8px !important;
+  grid-column: 1 / -1 !important;
+  grid-template-columns: 1fr 1fr !important;
+  width: 100% !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack .lock-v87-source-paired-row button {
+  grid-column: auto !important;
+  width: 100% !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v85-btn-primary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v87-source-flow-screen .lock-v87-source-action-stack button.lock-v84-source-primary {
+  background: var(--lock-lime) !important;
+  border: 1px solid var(--lock-lime) !important;
+  color: #111a13 !important;
+}
+
+/* V8.9: Source confirmation copy states.
+   The helper line must explain the current state, not market the product.
+   No tint slab behind text; use spacing, rule and hierarchy only. */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div.lock-v89-source-confirmation-screen .lock-v89-source-state-note {
+  background: transparent !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(220, 238, 219, .12) !important;
+  box-shadow: none !important;
+  color: var(--lock-text-soft) !important;
+  font-family: var(--lock-font-sans, Manrope, system-ui, sans-serif) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.55 !important;
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v88-inline-action {
+  min-width: 132px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  white-space: nowrap !important;
+}
+
+/* V8.10 final button-system precedence.
+   Action buttons share one height and rhythm. Compact controls are explicit exceptions. */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-primary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-secondary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-danger,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-quiet,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-primary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-secondary,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-safe-secondary {
+  align-items: center !important;
+  border-radius: var(--lock-btn-radius) !important;
+  display: inline-flex !important;
+  font-family: var(--lock-font-sans, Manrope, system-ui, sans-serif) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  justify-content: center !important;
+  line-height: 1.15 !important;
+  min-height: var(--lock-btn-action-height) !important;
+  padding: 0 var(--lock-btn-pad-x) !important;
+  touch-action: manipulation !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-option,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-option-selected,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v88-inline-action {
+  align-items: center !important;
+  border-radius: var(--lock-btn-radius) !important;
+  display: inline-flex !important;
+  font-size: 12px !important;
+  font-weight: 760 !important;
+  justify-content: center !important;
+  line-height: 1.1 !important;
+  min-height: var(--lock-btn-compact-height) !important;
+  padding: 0 14px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-icon {
+  align-items: center !important;
+  border-radius: var(--lock-btn-radius) !important;
+  display: inline-flex !important;
+  height: var(--lock-btn-icon-size) !important;
+  justify-content: center !important;
+  min-height: var(--lock-btn-icon-size) !important;
+  min-width: var(--lock-btn-icon-size) !important;
+  padding: 0 !important;
+  width: var(--lock-btn-icon-size) !important;
+}
+
+.lock-v87-source-action-stack {
+  gap: var(--lock-btn-gap) !important;
+}
+
+.lock-v87-source-action-stack button {
+  min-height: var(--lock-btn-action-height) !important;
+  width: 100% !important;
+}
+
+.lock-v87-source-action-stack .lock-v87-source-paired-row {
+  gap: var(--lock-btn-gap) !important;
+}
+
+@media (max-width: 720px) {
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-primary,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-secondary,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-danger,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v85-btn-quiet,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-primary,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-secondary,
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v84-source-safe-secondary {
+    min-height: 48px !important;
+    width: 100% !important;
+  }
+
+  .lock-v87-source-action-stack,
+  .lock-v87-source-action-stack .lock-v87-source-paired-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .lock-v87-source-action-stack div:has(> button.lock-v84-source-safe-secondary) {
+    display: grid !important;
+    gap: var(--lock-btn-gap) !important;
+    grid-column: 1 / -1 !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  .lock-v87-source-action-stack div:has(> button.lock-v84-source-safe-secondary) > button {
+    width: 100% !important;
+  }
+}
+
+/* V8.11 final grid-system precedence.
+   Replace old hard-coded shell behavior with one explicit review grid. */
+#dc-root > .sc-host > div > div:nth-child(2) {
+  background:
+    radial-gradient(900px 500px at 72% 8%, rgba(200, 255, 61, .12), transparent 56%),
+    linear-gradient(90deg, var(--lock-shell-panel) 0 var(--lock-shell-nav-width), var(--lock-shell-bg) var(--lock-shell-nav-width) 100%) !important;
+  display: grid !important;
+  grid-template-columns: var(--lock-shell-nav-width) minmax(0, 1fr) !important;
+  min-height: calc(100vh - 64px) !important;
+  overflow: hidden !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  overflow: auto !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) {
+  align-items: start !important;
+  background:
+    linear-gradient(var(--lock-shell-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--lock-shell-grid) 1px, transparent 1px),
+    radial-gradient(760px 500px at 50% 0%, rgba(200, 255, 61, .14), transparent 62%),
+    var(--lock-shell-bg) !important;
+  background-size: 32px 32px, 32px 32px, auto, auto !important;
+  display: grid !important;
+  grid-column: 2 !important;
+  justify-items: center !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: var(--lock-stage-pad-y) var(--lock-stage-pad-x) 72px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div {
+  justify-self: center !important;
+  max-width: var(--lock-phone-width) !important;
+  width: min(var(--lock-phone-width), calc(100vw - var(--lock-shell-nav-width) - (var(--lock-stage-pad-x) * 2))) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div > div {
+  max-width: 100% !important;
+}
+
+@media (max-width: 760px) {
+  #dc-root > .sc-host > div > div:nth-child(2) {
+    background: var(--lock-shell-bg) !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto 1fr !important;
+    min-height: calc(100vh - 64px) !important;
+    overflow: auto !important;
+    width: 100% !important;
+  }
+
+  #dc-root > .sc-host > div > div:nth-child(2) > div:first-child {
+    border-bottom: 1px solid var(--lock-shell-line) !important;
+    border-right: 0 !important;
+    box-sizing: border-box !important;
+    grid-column: 1 !important;
+    max-height: 34vh !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) {
+    box-sizing: border-box !important;
+    grid-column: 1 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    padding: 16px 12px 64px !important;
+    width: 100% !important;
+  }
+
+  #dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div {
+    width: min(var(--lock-phone-width), calc(100vw - 24px)) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 980px) {
+  #dc-root > .sc-host > div > div:nth-child(2) {
+    --lock-shell-nav-width: 276px;
+    --lock-stage-pad-x: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  #dc-root > .sc-host > div > div:first-child {
+    align-items: center !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    gap: 8px 12px !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    min-height: 104px !important;
+    padding: 14px 16px !important;
+  }
+
+  #dc-root > .sc-host > div > div:first-child > div:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    min-width: max-content !important;
+  }
+
+  #dc-root > .sc-host > div > div:first-child > div:nth-child(2) {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    line-height: 1.25 !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  #dc-root > .sc-host > div > div:first-child > div:nth-child(3) {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-content: end !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  #dc-root > .sc-host > div > div:first-child > div:nth-child(3) > * {
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* V8.12 final navigation + platform-logo governance.
+   Lemon/lime is a CTA color, not a navigation fill. Navigation uses neutral
+   surfaces with typography, outline, and icon-state changes only. */
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button,
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style],
+#dc-root > .sc-host > div > div:first-child button,
+#dc-root > .sc-host > div > div:first-child button[style] {
+  background: #ffffff !important;
+  border: 1px solid rgba(17, 26, 19, .12) !important;
+  color: var(--lock-shell-text) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style*="200, 255, 61"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style*="#c8ff3d"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button[style*="#C8FF3D"],
+#dc-root > .sc-host > div > div:first-child button[style*="200, 255, 61"],
+#dc-root > .sc-host > div > div:first-child button[style*="#c8ff3d"],
+#dc-root > .sc-host > div > div:first-child button[style*="#C8FF3D"] {
+  background: var(--lock-shell-panel-2) !important;
+  border-color: rgba(17, 26, 19, .28) !important;
+  color: var(--lock-shell-text) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:first-child button:hover,
+#dc-root > .sc-host > div > div:first-child button:hover {
+  background: var(--lock-shell-panel-2) !important;
+  border-color: rgba(17, 26, 19, .28) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v812-phone-nav-item {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--lock-text-soft) !important;
+  min-height: 40px !important;
+  padding: 0 10px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v812-phone-nav-item--active {
+  background: rgba(246, 248, 242, .065) !important;
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+  color: var(--lock-text-main) !important;
+}
+
+.lock-v812-platform-logo-appendix {
+  background: rgba(246, 248, 242, .035) !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: var(--lock-radius-lg) !important;
+  display: grid !important;
+  gap: 14px !important;
+  margin-top: 14px !important;
+  padding: 16px !important;
+}
+
+.lock-v812-platform-logo-appendix__head {
+  display: grid !important;
+  gap: 5px !important;
+}
+
+.lock-v812-platform-logo-appendix__head span {
+  color: var(--lock-text-muted) !important;
+  font-family: var(--lock-font-mono) !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+.lock-v812-platform-logo-appendix__head strong {
+  color: var(--lock-text-main) !important;
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+}
+
+.lock-v812-platform-logo-appendix__head em,
+.lock-v812-platform-logo-rule {
+  color: var(--lock-text-soft) !important;
+  font-size: 11.5px !important;
+  font-style: normal !important;
+  line-height: 1.45 !important;
+}
+
+.lock-v812-platform-logo-grid {
+  display: grid !important;
+  gap: 8px !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.lock-v812-platform-logo-grid span {
+  align-items: center !important;
+  background: rgba(246, 248, 242, .035) !important;
+  border: 1px solid rgba(220, 238, 219, .13) !important;
+  border-radius: var(--lock-radius-md) !important;
+  color: var(--lock-text-soft) !important;
+  display: inline-flex !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  gap: 8px !important;
+  min-height: 34px !important;
+  padding: 0 10px !important;
+}
+
+.lock-v812-platform-logo-grid span::before {
+  background: transparent !important;
+  border: 1.5px solid currentColor !important;
+  border-radius: 50% !important;
+  content: "" !important;
+  height: 12px !important;
+  width: 12px !important;
+}
+
+.lock-v812-platform-logo-grid span[data-state="active"] {
+  border-color: rgba(119, 231, 178, .34) !important;
+  color: var(--lock-mint) !important;
+}
+
+.lock-v812-platform-logo-grid span[data-state="active"]::before {
+  background: var(--lock-mint) !important;
+  border-color: var(--lock-mint) !important;
+}
+
+.lock-v812-platform-logo-grid span[data-state="passive"] {
+  opacity: .72 !important;
+}
+
+/* V8.15 brand governance: no decorative tint behind text.
+   Allowed: true surfaces, borders, icon states, primary CTA fill.
+   Banned: random lime/mint/amber text pills and orange review tint. */
+:root {
+  --lock-amber: var(--lock-text-soft);
+}
+
+#dc-root > .sc-host > div > div:first-child span[style*="background"],
+#dc-root > .sc-host > div > div:first-child div[style*="background"] {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="242, 192, 99"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="242, 192, 99"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="#F2C063"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="#F2C063"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="#ffb15e"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="#ffb15e"] {
+  background: transparent !important;
+  border-color: rgba(220, 238, 219, .18) !important;
+  color: var(--lock-text-soft) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="rgba(119, 231, 178"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="rgba(119, 231, 178"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="rgba(200, 255"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="rgba(200, 255"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="rgba(200, 240"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="rgba(200, 240"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="rgba(255, 177"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="rgba(255, 177"] {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="rgba(255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="rgba(var(--accent-rgb"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="rgba(119, 231, 178"] {
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-detected-source-chip {
+  background: transparent !important;
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found {
+  border-color: rgba(119, 231, 178, .42) !important;
+  color: var(--lock-text-main) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive {
+  color: var(--lock-text-muted) !important;
+  opacity: .78 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-found span[style*="width: 24px"] {
+  background: var(--lock-mint) !important;
+  color: #08100b !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v85-source-chip-passive span[style*="width: 24px"] {
+  background: transparent !important;
+  border: 1px solid rgba(220, 238, 219, .24) !important;
+  color: var(--lock-text-muted) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v815-brand-mark {
+  align-items: center !important;
+  background: var(--lock-lime) !important;
+  border: 0 !important;
+  border-radius: var(--lock-radius-sm) !important;
+  color: #08100b !important;
+  display: inline-flex !important;
+  font-family: var(--lock-font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  height: 30px !important;
+  justify-content: center !important;
+  letter-spacing: -.02em !important;
+  line-height: 1 !important;
+  width: 30px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v815-brand-word {
+  color: var(--lock-text-main) !important;
+  font-family: var(--lock-font-sans) !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: -.04em !important;
+  line-height: 1 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v815-no-tint-text {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--lock-text-soft) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span.lock-v815-no-tint-text {
+  border: 1px solid rgba(220, 238, 219, .18) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v815-no-tint-text[style*="width: 44px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v815-no-tint-text[style*="height: 44px"] {
+  align-items: center !important;
+  border-radius: var(--lock-radius-md) !important;
+  color: var(--lock-text-main) !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+}
+
+/* V8.17 screen 2: intent choices are role cards, not primary CTAs. */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card {
+  align-items: start !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .035), rgba(246, 248, 242, .015)),
+    var(--lock-app-surface-2) !important;
+  border: 1px solid rgba(220, 238, 219, .16) !important;
+  border-radius: var(--lock-radius-lg) !important;
+  box-shadow: none !important;
+  color: var(--lock-text-main) !important;
+  display: grid !important;
+  gap: 7px !important;
+  grid-template-columns: 1fr !important;
+  justify-content: stretch !important;
+  min-height: 116px !important;
+  padding: 16px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card:hover,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card:focus-visible {
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .05), rgba(246, 248, 242, .02)),
+    var(--lock-app-surface-2) !important;
+  border-color: rgba(200, 255, 61, .38) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card > * {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--lock-text-soft) !important;
+  display: block !important;
+  height: auto !important;
+  line-height: 1.35 !important;
+  max-width: 100% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card > *:first-child {
+  color: var(--lock-text-main) !important;
+  font-size: 16px !important;
+  font-weight: 850 !important;
+  line-height: 1.15 !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card > *:last-child {
+  align-items: center !important;
+  color: var(--lock-text-main) !important;
+  display: inline-flex !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  justify-content: space-between !important;
+  margin-top: 4px !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div button.lock-v817-intent-card > *:last-child::after {
+  content: none !important;
+}
+
+/* V8.19: hard DS proofing pass.
+   No decorative tint behind text. Tint is not a reading surface.
+   Status meaning is carried by copy, border, icon/state, and text color only. */
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v819-no-tint-leaf-text {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  color: var(--lock-text-main) !important;
+  border-color: transparent !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v819-no-orange-drift {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--lock-text-soft) !important;
+  border-color: rgba(220, 238, 219, .18) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v87-source-kicker,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v87-source-eyebrow,
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v89-source-state-note {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--lock-text-soft) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div:not(.lock-v815-brand-mark)[style*="119, 231, 178"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span:not(.lock-v815-brand-mark)[style*="119, 231, 178"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div p[style*="119, 231, 178"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div:not(.lock-v815-brand-mark)[style*="111, 217, 154"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span:not(.lock-v815-brand-mark)[style*="111, 217, 154"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div p[style*="111, 217, 154"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div p[style*="255, 177, 94"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="226, 132, 56"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="226, 132, 56"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div div[style*="201, 79, 63"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div span[style*="201, 79, 63"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v819-metric-card-button {
+  min-height: 112px !important;
+  padding: 14px !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .045), rgba(246, 248, 242, .018)) !important;
+  border: 1px solid rgba(220, 238, 219, .14) !important;
+  border-radius: var(--lock-radius-lg) !important;
+  box-shadow: none !important;
+  color: var(--lock-text-main) !important;
+  cursor: pointer !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v819-metric-card-button:hover {
+  border-color: rgba(220, 238, 219, .28) !important;
+  background:
+    linear-gradient(180deg, rgba(246, 248, 242, .06), rgba(246, 248, 242, .028)) !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div .lock-v819-metric-card-button * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 9px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:9px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size: 9.5px"],
+#dc-root > .sc-host > div > div:nth-child(2) > div:nth-child(2) > div [style*="font-size:9.5px"] {
+  font-size: 10.5px !important;
+  line-height: 1.32 !important;
+}
