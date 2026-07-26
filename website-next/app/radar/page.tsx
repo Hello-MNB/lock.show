@@ -82,7 +82,7 @@ export default function Radar() {
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -123,7 +123,7 @@ export default function Radar() {
 
       {/* WHAT IT IS */}
       <section style={{ padding: '80px 24px', backgroundColor: 'var(--color-paper)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -206,7 +206,7 @@ export default function Radar() {
 
       {/* DIMENSIONS */}
       <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -290,7 +290,7 @@ export default function Radar() {
           padding: 'clamp(2.5rem, 6vw, 4rem) 24px',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -318,7 +318,7 @@ export default function Radar() {
 
       {/* EVIDENCE STATES — dark */}
       <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -394,7 +394,7 @@ export default function Radar() {
 
       {/* RADAR VS PASSPORT */}
       <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',

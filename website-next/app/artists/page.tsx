@@ -167,6 +167,7 @@ export default function ArtistsPage() {
           }}
         />
 
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           {/* Eyebrow with pulsing dot */}
           <div
@@ -292,6 +293,7 @@ export default function ArtistsPage() {
             FREE FOR ISRAELI ARTISTS DURING THE PILOT · REAL NIGHTS, CHECKED
           </p>
         </div>
+        </div>
 
         <style>{`
           @keyframes gp-pulse {
@@ -312,7 +314,7 @@ export default function ArtistsPage() {
           borderBottom: '1px solid #dde3d9',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
@@ -405,7 +407,7 @@ export default function ArtistsPage() {
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',

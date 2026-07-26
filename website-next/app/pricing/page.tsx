@@ -142,7 +142,7 @@ export default function Pricing() {
           padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        <div style={{ maxWidth: '1120px', width: '100%', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', width: '100%', margin: '0 auto' }}>
           <div style={{ maxWidth: '640px' }}>
             <p
               style={{
@@ -240,7 +240,7 @@ export default function Pricing() {
 
       {/* ── THE FOUR ANSWERS ──────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: mono,
@@ -421,7 +421,7 @@ export default function Pricing() {
       >
         <div
           style={{
-            maxWidth: '1120px',
+            maxWidth: '1100px',
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
@@ -512,7 +512,7 @@ export default function Pricing() {
           borderBottom: '1px solid var(--color-mist)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p
               style={{
@@ -557,7 +557,7 @@ export default function Pricing() {
 
       {/* ── PRICING FAQ ───────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p
               style={{

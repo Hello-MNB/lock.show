@@ -168,7 +168,7 @@ export default function ProducersPage() {
 
       {/* ── THE FAVOR ────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',

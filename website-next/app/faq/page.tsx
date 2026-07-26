@@ -124,7 +124,7 @@ export default function FAQ() {
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -155,7 +155,7 @@ export default function FAQ() {
 
       {/* FAQ SECTIONS */}
       <section style={{ padding: '64px 24px 80px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           {faqs.map((section, si) => (
             <div key={si} style={{ marginBottom: '64px' }}>

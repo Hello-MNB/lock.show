@@ -96,7 +96,7 @@ export default function Methodology() {
           padding: 'clamp(2rem, 5vw, 3.5rem) max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
           <div style={{ maxWidth: '720px', position: 'relative' }}>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -140,7 +140,7 @@ export default function Methodology() {
         background: 'var(--color-paper)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -336,7 +336,7 @@ export default function Methodology() {
         background: 'var(--color-paper)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -411,7 +411,7 @@ export default function Methodology() {
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderTop: '1px solid #dde3d9',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 400,

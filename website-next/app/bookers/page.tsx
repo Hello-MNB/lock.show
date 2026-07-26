@@ -104,6 +104,7 @@ export default function BookersPage() {
         >
           <DoorStamp size={240} />
         </div>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
             style={{
@@ -196,6 +197,7 @@ export default function BookersPage() {
             FREE FOR BOOKING MANAGERS — ALWAYS. NO ACCOUNT, NO SIGNUP.
           </p>
         </div>
+        </div>
       </section>
 
       {/* ── THE RISK ─────────────────────────────────────── */}
@@ -206,7 +208,7 @@ export default function BookersPage() {
           borderBottom: '1px solid var(--color-mist)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -291,7 +293,7 @@ export default function BookersPage() {
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) 0',
         }}
       >
-        <figure style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <figure style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div
             style={{
               borderRadius: '16px',
@@ -329,7 +331,7 @@ export default function BookersPage() {
 
       {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',

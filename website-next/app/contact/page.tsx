@@ -28,7 +28,7 @@ export default function Contact() {
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -62,7 +62,7 @@ export default function Contact() {
         <div
           className="contact-grid"
           style={{
-            maxWidth: '1120px',
+            maxWidth: '1100px',
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
