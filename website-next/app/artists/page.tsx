@@ -401,9 +401,10 @@ export default function ArtistsPage() {
       </section>
 
       {/* ── TWO TOOLS ─────────────────────────────────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
+          background: '#ffffff',
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         }}
       >

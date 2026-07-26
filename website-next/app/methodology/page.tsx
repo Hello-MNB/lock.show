@@ -405,9 +405,10 @@ export default function Methodology() {
         </div>
       </section>
 
-      {/* ── WHAT WE DON'T DO — paper ─────────────────────────────────────── */}
+      {/* ── WHAT WE DON'T DO — white ─────────────────────────────────────── */}
+      {/* container-contrast law: white band after the paper firewall band */}
       <section style={{
-        background: 'var(--color-paper)',
+        background: '#ffffff',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderTop: '1px solid #dde3d9',
       }}>

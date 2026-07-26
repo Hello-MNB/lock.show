@@ -154,7 +154,8 @@ export default function FAQ() {
       </section>
 
       {/* FAQ SECTIONS */}
-      <section style={{ padding: '64px 24px 80px' }}>
+      {/* container-contrast law: white body after the paper page header */}
+      <section style={{ padding: '64px 24px 80px', backgroundColor: '#ffffff' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           {faqs.map((section, si) => (

@@ -556,7 +556,8 @@ export default function Pricing() {
       </section>
 
       {/* ── PRICING FAQ ───────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
+      {/* container-contrast law: white band after the paper after-pilot band */}
+      <section style={{ background: '#ffffff', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p

@@ -122,7 +122,8 @@ export default function Radar() {
       </section>
 
       {/* WHAT IT IS */}
-      <section style={{ padding: '80px 24px', backgroundColor: 'var(--color-paper)' }}>
+      {/* container-contrast law: white band after the paper page header */}
+      <section style={{ padding: '80px 24px', backgroundColor: '#ffffff' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{
             display: 'grid',

@@ -225,9 +225,10 @@ export default function HowItWorks() {
         </div>
       </section>
 
-      {/* ── STEP BY STEP — paper, narrow text column ─────────────────────── */}
+      {/* ── STEP BY STEP — white, narrow text column ─────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section style={{
-        background: 'var(--color-paper)',
+        background: '#ffffff',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>

@@ -5,8 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
-import { DoorStamp } from '@/components/door-stamp'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
+import { SOCIAL, WHATSAPP_URL } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -82,7 +81,12 @@ export function Footer() {
   const { messages } = useLocale()
   const t = messages.footer
   const pathname = usePathname()
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=footer`
+  const slug = pageSlug(pathname)
+  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=footer`
+  // Owner order 21 Jul: quiet footer link to the LOCK shop (top-nav slot waits
+  // until the store is live + stocked). Attribution law applies to every
+  // off-site CTA: source + per-page campaign + placement.
+  const shopHref = `https://shop.lock.show/?utm_source=site&utm_campaign=${slug}&utm_content=footer-shop`
 
   return (
     <footer
@@ -123,7 +127,17 @@ export function Footer() {
                 marginBottom: '6px',
               }}
             >
-              <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
+              {/* Official spotlight-lens symbol — same drawing as the favicon
+                  (owner logo-consistency ruling; master-lime = transparent
+                  variant for dark surfaces) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+                alt=""
+                width={36}
+                height={36}
+                style={{ display: 'block', flexShrink: 0 }}
+              />
               LOCK
             </Link>
             <p style={{
@@ -192,6 +206,23 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+                {heading === 'LEARN MORE' && (
+                  <li style={{ marginBottom: '4px' }}>
+                    <a
+                      href={shopHref}
+                      style={{
+                        fontFamily: 'var(--font-heebo)',
+                        fontSize: '0.875rem',
+                        color: 'rgba(243,245,239,0.7)',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                        padding: '0.4rem 0',
+                      }}
+                    >
+                      Shop
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           ))}
@@ -266,6 +297,9 @@ export function Footer() {
                   </a>
                 </li>
               ))}
+              {/* Footer contact rule (21 Jul): channel links only — no raw
+                  phone number or email address rendered in the footer. The
+                  contact page carries the full details. */}
               <li style={{ marginBottom: '4px' }}>
                 <a
                   href={WHATSAPP_URL}
@@ -280,23 +314,7 @@ export function Footer() {
                     padding: '0.4rem 0',
                   }}
                 >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-              </li>
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={`mailto:${EMAILS.hello}`}
-                  dir="ltr"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  {EMAILS.hello}
+                  WhatsApp
                 </a>
               </li>
             </ul>

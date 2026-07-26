@@ -83,6 +83,7 @@ export default function ProducersPage() {
           padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
             style={{
@@ -163,6 +164,7 @@ export default function ProducersPage() {
               HOW IT WORKS
             </Link>
           </div>
+        </div>
         </div>
       </section>
 
@@ -305,9 +307,10 @@ export default function ProducersPage() {
       </section>
 
       {/* ── WHY YOUR WORD MATTERS ────────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
+          background: '#ffffff',
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           borderTop: '1px solid var(--color-mist)',
           borderBottom: '1px solid var(--color-mist)',

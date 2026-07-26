@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
-import { DoorStamp } from '@/components/door-stamp'
 
 import { APP_URL } from '@/lib/app-url'
 
@@ -119,7 +118,17 @@ export function Nav() {
           }}
           aria-label="LOCK home"
         >
-          <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
+          {/* Official spotlight-lens symbol — same drawing as the favicon
+              (owner logo-consistency ruling; master-lime = transparent
+              variant for the dark nav) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+            alt=""
+            width={36}
+            height={36}
+            style={{ display: 'block', flexShrink: 0 }}
+          />
           LOCK
         </Link>
 

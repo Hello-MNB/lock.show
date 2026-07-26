@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { DoorStamp } from '@/components/door-stamp'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/bookers' },
@@ -75,7 +74,8 @@ export default function BookersPage() {
           padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        {/* Stamp watermarks */}
+        {/* Spotlight-lens watermarks — official symbol only (owner
+            logo-consistency ruling: one drawing everywhere) */}
         <div
           aria-hidden="true"
           style={{
@@ -83,12 +83,18 @@ export default function BookersPage() {
             top: '-15px',
             right: '-55px',
             transform: 'rotate(-11deg)',
-            color: 'var(--color-paper)',
             opacity: 0.07,
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={310} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-white.svg"
+            alt=""
+            width={280}
+            height={280}
+            style={{ display: 'block' }}
+          />
         </div>
         <div
           aria-hidden="true"
@@ -97,12 +103,18 @@ export default function BookersPage() {
             bottom: '-20px',
             left: '-70px',
             transform: 'rotate(7deg)',
-            color: 'var(--color-paper)',
             opacity: 0.03,
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={240} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-white.svg"
+            alt=""
+            width={220}
+            height={220}
+            style={{ display: 'block' }}
+          />
         </div>
         <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
@@ -287,10 +299,11 @@ export default function BookersPage() {
 
       {/* ── EVIDENCE ANCHOR IMAGE ────────────────────────── */}
       {/* TODO: swap for a lockshow-atmosphere-* scene if a better booker-desk shot arrives from Codex's Drive */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
-          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) 0',
+          background: '#ffffff',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) clamp(3rem, 8vw, 6rem)',
         }}
       >
         <figure style={{ maxWidth: '1100px', margin: '0 auto' }}>

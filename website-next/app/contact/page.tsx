@@ -58,7 +58,8 @@ export default function Contact() {
       </section>
 
       {/* CONTACT GRID */}
-      <section style={{ padding: '64px 24px 80px' }}>
+      {/* container-contrast law: white body after the paper page header */}
+      <section style={{ padding: '64px 24px 80px', backgroundColor: '#ffffff' }}>
         <div
           className="contact-grid"
           style={{

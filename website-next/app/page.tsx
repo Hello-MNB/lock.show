@@ -596,9 +596,11 @@ export default function HomePage() {
         </section>
 
         {/* ── FIREWALL BANNER ──────────────────────────────────────────── */}
+        {/* container-contrast law: white strip between dark hero and paper
+            actors band — no two adjacent containers share a tone */}
         <section
           style={{
-            background: 'var(--color-paper)',
+            background: '#ffffff',
             borderBottom: '1px solid rgba(10,13,11,0.1)',
             padding: '0.85rem max(24px, 4vw)',
             textAlign: 'center',
@@ -1218,9 +1220,11 @@ export default function HomePage() {
         </section>
 
         {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
+        {/* container-contrast law: night after the ink trust band — adjacent
+            dark containers must not share the same tone */}
         <section
           style={{
-            background: 'var(--color-ink)',
+            background: 'var(--color-night)',
             padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
           }}
