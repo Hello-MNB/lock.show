@@ -603,3 +603,140 @@ mechanisms are meta-level and sitemap-level, both verified in `out/`:
    the static EN-default HTML (item 3 in §8).
 5. The four ghost-button borders below 3.0:1 (§3) are pre-existing and
    unchanged by this RC — flagged for an owner decision, not silently passed.
+
+---
+
+# ADDENDUM — RC closure (ghost-border token fix + rhythm boards + hero option table)
+
+Appended 2026-07-27 on branch `claude/b4-gigproof-discovery-e7749o`.
+Source fix committed as `1470045` on top of `35ee7c9`; this addendum + the two
+review boards ride the closing commit (the new RC head). **Nothing deployed.**
+
+## A1 · GHOST-BUTTON BORDER FIX — one shared token
+
+The four below-3.0:1 ghost-CTA borders from §3 are now driven by ONE shared
+token pair in `website-next/app/globals.css` (`:root`):
+
+```
+--ghost-border-on-dark:  rgba(243, 245, 239, 0.42)   /* paper @0.42 */
+--ghost-border-on-light: rgba(10, 13, 11, 0.58)      /* reserve — no current consumer */
+```
+
+Files changed (5): `app/globals.css` (token) + the 4 consumers —
+`app/contact/page.tsx:268`, `app/faq/page.tsx:290`,
+`app/methodology/page.tsx:524`, `app/page.tsx:1170` (home trust band). Each
+replaced its page-specific rgba with `1px solid var(--ghost-border-on-dark)`.
+Nothing else on the buttons changed: transparent background, text colors,
+padding, radius, hierarchy all untouched.
+
+**Measured ratios (same method as §3 — sRGB alpha compositing over the actual
+band background; hover/active modeled as the site-wide `filter: brightness()`
+channel multiply, identical to the §3 lime-CTA method):**
+
+| Button (surface) | BEFORE | normal | hover ×1.14 | active ×0.97 | focus (border / lime ring) | Verdict (≥3.0 UI) |
+|---|---|---|---|---|---|---|
+| contact "BUILD YOUR PASSPORT →" (ink) | 2.98 | **3.81** | 4.74 | 3.63 | 3.81 / 14.90 | PASS all states |
+| home trust "READ THE METHODOLOGY" (night) | 2.57 | **3.75** | 4.72 | 3.56 | 3.75 / 12.50 | PASS all states |
+| methodology "HOW IT WORKS" (ink) | 1.86 | **3.81** | 4.74 | 3.63 | 3.81 / 14.90 | PASS all states |
+| faq "SEE A SAMPLE PASSPORT" (ink) | 1.79 | **3.81** | 4.74 | 3.63 | 3.81 / 14.90 | PASS all states |
+
+Button text is unchanged and stays AA: paper on ink 17.78:1, paper on night
+14.91:1, faq white@0.70 on ink 9.65:1. Hierarchy unchanged — ghost stays
+ghost (transparent bg vs the lime primary at 14.90:1).
+
+Reserve on-light value, verified for its future consumer surface: 4.67:1 on
+paper normal, 3.75:1 under the hover brighten (which *lowers* contrast on
+light grounds — hence the higher alpha), 4.80:1 on white.
+
+**Same-pattern ghosts OUTSIDE the ordered four (owner note, unchanged):**
+`app/radar/page.tsx:568` ("SEE A PASSPORT", paper@0.25 on ink = **2.08:1**)
+and `app/how-it-works/page.tsx:479` ("SEE A SAMPLE", paper@0.22 over the
+near-ink photo veil ≈ **1.86:1**) share the ghost pattern but were not in the
+§3 table's four and were left untouched per the no-broad-audit order. Each
+becomes conformant with the same one-line swap to the token if the owner
+extends the ruling.
+
+## A2 · DARK-RHYTHM REVIEW BOARDS
+
+- `docs/releases/rc-b79900a-shots/rhythm-board-1440.png` (1330×4552)
+- `docs/releases/rc-b79900a-shots/rhythm-board-390.png` (1330×7302)
+
+Composition: 6 routes (home, contact, methodology, faq, radar, 404) ×
+BEFORE|AFTER side-by-side, page tails (last ~2 sections + footer; when the
+footer exceeds 800px — the ~1700px mobile mega-footer — only its top 600px is
+kept so every rhythm boundary incl. the footer seam stays visible and the
+board stays compact). Every crop is labeled route · viewport · BEFORE/AFTER ·
+SHA. Sources: BEFORE = the T-97.1 pre-fix render set (tree @`8d10df5`);
+AFTER = fresh render of the ghost-fix tree @`1470045` (same renderer/protocol
+as §2: static export, consent denied, animations frozen, 1440×900 and 390×844).
+
+Afters were re-rendered only where the ghost fix changed pixels — proven by
+pixel-diff of the fresh render set against the b79900a set: **26/30 full-page
+renders byte-identical**; only home/contact/methodology/faq differ, by 354–524
+px each (0.005–0.033% — exactly the 1px border rectangles of the four ghost
+buttons). Radar and 404 after-crops are therefore pixel-identical to the
+b79900a state.
+
+**Slab check (ordered):** all 12 tail pairs reviewed at both viewports. Every
+dark tail shows a tone rotation and/or a visible structural seam; no tail
+reads as one undifferentiated dark slab. The single seam-only boundary remains
+`/404` (night main | night footer, hairline #2a342d — §1.15); restated for the
+owner as the one boundary carried by the hairline alone. No additional visual
+change was made.
+
+## A3 · NEUTRAL HERO OPTION TABLE (research only — no code touched)
+
+**Canon status, searched (docs/ + TASK-REGISTER):**
+`docs/WEBSITE-DESIGN-SYSTEM.md` §"Contained hero contract (v52 — one hero
+grammar for every page)" still declares the single 620px stage and carries no
+supersession marker. The closest owner text is the T-97 order line in
+TASK-REGISTER (2026-07-27: "Hero: 4 documented variants
+(feature/primary/standard/compact) on shared tokens — no magic numbers"),
+which `styles/hero.css` cites as its authority; but the canon doc was never
+amended, and §7 of this package recorded ratification as an open owner
+decision. Plainly: **the 4-variant system is implemented but NOT
+canon-approved.**
+
+Scored neutrally — page-purpose fit, consistency, measured fold data, density,
+mobile, accessibility, conversion hierarchy, governance. No
+implementation-cost arguments. Fold = 900px @1440.
+
+| Criterion | Option 1 — historical single 620px grammar | Option 2 — current 4-variant system | Option 3 — hybrid: one shared grammar + content-density modifiers |
+|---|---|---|---|
+| Page-purpose fit | One 620px stage regardless of intent: persona sell-page, doc page, pricing, legal header all get the same container | Variant chosen per page intent (feature = persona/home sell · primary = pricing · standard = doc/image band · compact = utility/legal) | One container language; intent expressed through density modifiers (deep/shallow), not container type |
+| Visual consistency | Maximal — identical stage on every page | 4 container geometries on shared tokens; consistency enforced within each variant (test:hero ±15%), not across variants | Single grammar with bounded modifiers — between Options 1 and 2 |
+| First-fold CTA visibility (measured) | No measurement exists — zero routes render 620px. Geometric bound: stage bottom ≈648px (620 + 28 margin), so any in-stage CTA sits ≥252px above the fold by construction | Measured @1440×900: home CTA bottom 623.9 · artists 763 · bookers 763 · producers 805 · pricing 661 — all above fold, margins 95–276px | Unmeasured; inherits Option 1's geometric bound only if the shared grammar keeps a contained fixed-height stage |
+| Content density | Fixed height: dense hero content (persona eyebrow+H1+desc+CTA+proof card) must compress/overflow; sparse pages (legal) carry a mostly-empty 620px stage | Density-matched per variant — codified from measured medians (880/748/560/292) | Density handled explicitly by the modifier axis inside one grammar |
+| Mobile behavior | Unmeasured on any mobile viewport; a fixed 620px stage exceeds the 568px fold (320×568) by construction unless separately overridden | Measured: no h-overflow @320 (T-97 P0 wave); compact-fold rule keeps H1+CTA above the consent banner @320×568 | Unmeasured; modifiers could floor at compact values but no data exists |
+| Accessibility | Neutral — landmarks/tap-targets/focus-ring are orthogonal to hero geometry (RC §7); the one geometry-coupled datum (consent-banner fold rule) is unproven here | Same orthogonality; the consent-banner fold rule is proven green for this option only | Neutral; geometry-coupled a11y data would need to be produced |
+| Conversion hierarchy | Uniform stage ⇒ uniform CTA prominence — sell pages and utility pages present identical hierarchy weight | Prominence graded by variant; FIT gate proves exactly one primary CTA per screen at 360/1360 | Hierarchy carried by the modifier axis; grading possible but undefined |
+| Governance simplicity | One number, one rule — trivially auditable | 4 variants × per-variant tokens + hero contract test — auditable, 4-way surface | Two axes (grammar + modifier set) — simplicity depends on capping the modifier count; undefined today |
+
+Evidence coverage per option: Option 2 is the state the 28 committed baselines
+and the §2 shot set document; Option 1 has no rendered evidence anywhere;
+Option 3 has none (never built). Decision is the owner's; nothing in this
+table changes code.
+
+## A4 · VERIFICATION AT THE CLOSING TREE — and an honest correction
+
+Per the owner order, baselines were **NOT regenerated** — zero files under
+`website-next/visual-baseline/` are touched by this closure (git-verifiable).
+
+Full verify chain run at the ghost-fix tree, each check individually:
+`website-next npx next build` exit 0, then test:nav · test:isolation ·
+test:canon · test:analytics · test:security · test:guardrails · test:ds ·
+test:states · test:embed · test:seo · test:sitenav · test:hero · check:styles ·
+lint:i18n · validate:registry · validate:deltas · event-registry --check ·
+build · build:demo · test:fit — **21/21 green** (logs: scratchpad
+`ghostfix/verify-no-visual.log`, `ghostfix/build.log`).
+
+**test:visual — the predicted expected-fail did NOT materialize:** run
+separately, it **PASSES** — `✓ VISUAL REGRESSION: 28 screenshot(s) match the
+committed baselines (≤1% pixel drift)`, exit 0. The ghost fix changes at most
+524 px per route (≤0.033% of the image), which sits inside the gate's ≤1%
+drift tolerance by design. So the committed b79900a baselines remain valid
+as-is; no regeneration is needed, and none was performed. (Stated plainly
+rather than reporting a fail that did not occur.)
+
+Net verification state: **22/22 green including test:visual**, baselines
+untouched, nothing deployed.
