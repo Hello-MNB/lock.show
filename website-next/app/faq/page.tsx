@@ -1,5 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
   alternates: { canonical: '/faq' },
   title: 'FAQ — What LOCK Does (and Doesn\'t) Promise',
@@ -141,8 +143,8 @@ export default function FAQ() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+      {/* PAGE HEADER — compact variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
@@ -151,7 +153,7 @@ export default function FAQ() {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             FAQ · FREQUENTLY ASKED QUESTIONS
           </p>
@@ -161,7 +163,7 @@ export default function FAQ() {
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             Common questions, direct answers.
           </h1>
@@ -170,7 +172,7 @@ export default function FAQ() {
           </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* FAQ SECTIONS */}
       {/* container-contrast law: white body after the paper page header */}

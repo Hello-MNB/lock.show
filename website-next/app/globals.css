@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/design-system.css";
+@import "../styles/hero.css";
 
 /* ─── LOCK Design Tokens — Codex Theme ─── */
 /* To retheme: edit values here + in design-system.css  */
@@ -47,6 +48,13 @@ html {
 
 * {
   box-sizing: border-box;
+}
+
+/* Marketing headline orphan control (T-97 P2): balance line lengths on every
+   H1 so no headline strands a single word on its last line. Progressive
+   enhancement — browsers without text-wrap:balance simply ignore it. */
+h1 {
+  text-wrap: balance;
 }
 
 /* ─── Interaction layer — ONE duration/easing site-wide ───────────────── */

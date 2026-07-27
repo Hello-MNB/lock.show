@@ -1,0 +1,118 @@
+/*
+ * LOCK hero band system — T-97 (owner order, 27 Jul 2026)
+ * ─────────────────────────────────────────────────────────────────────────
+ * THE ONLY place hero band min-heights, paddings, and rhythm live.
+ * scripts/test-hero-contract.mjs enforces:
+ *   - every public hero page declares one of the 4 approved variants
+ *   - no page-specific magic-number hero min-height outside this file
+ *   - rendered height stays within ±15% of the variant reference
+ *
+ * 4 variants (values codified from the T-97 phase-1 measured medians):
+ *   feature  — full-bleed persona/home heroes: min(92svh, 880px),
+ *              pad clamp(3.5rem, 8vw, 5.5rem), rhythm 28/24/36, desc 520px
+ *   primary  — pricing-class hero:            min(78svh, 748px),
+ *              pad clamp(3rem, 7vw, 4rem), rhythm 28/24/36
+ *   standard — image/paper page band:         min(56svh, 560px)
+ *              (= measured 504px @1440×900), pad clamp(2rem, 5vw, 3.5rem),
+ *              rhythm 16/20
+ *   compact  — page headers (faq/contact + legal): auto height floored at
+ *              292px (measured family median 291.3), pad 72/56, rhythm 16/20;
+ *              legal sub-flavor: pad-bottom 32, rhythm 16/16
+ *
+ * Consumed by components/hero.tsx. Pages reference the rhythm through
+ * var(--hero-gap-eyebrow|--hero-gap-h1|--hero-gap-desc|--hero-desc-max-w).
+ */
+
+:root {
+  /* feature */
+  --hero-feature-min-h: min(92svh, 880px);
+  --hero-feature-pad-block: clamp(3.5rem, 8vw, 5.5rem);
+  /* primary */
+  --hero-primary-min-h: min(78svh, 748px);
+  --hero-primary-pad-block: clamp(3rem, 7vw, 4rem);
+  /* standard */
+  --hero-standard-min-h: min(56svh, 560px);
+  --hero-standard-pad-block: clamp(2rem, 5vw, 3.5rem);
+  /* compact */
+  --hero-compact-min-h: 292px;
+  --hero-compact-pad-top: 72px;
+  --hero-compact-pad-bottom: 56px;
+  --hero-compact-legal-pad-bottom: 32px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  box-sizing: border-box;
+  min-height: var(--hero-min-h, auto);
+  padding: var(--hero-pad-top, var(--hero-pad-block, 0))
+    var(--hero-pad-inline, 24px)
+    var(--hero-pad-bottom, var(--hero-pad-block, 0));
+}
+
+/* alignment (structure preserved per page — not a redesign knob) */
+.hero--align-center { align-items: center; }
+.hero--align-end    { align-items: flex-end; }
+.hero--align-start  { align-items: flex-start; }
+
+.hero--feature {
+  --hero-min-h: var(--hero-feature-min-h);
+  --hero-pad-block: var(--hero-feature-pad-block);
+  --hero-pad-inline: clamp(1.5rem, 4vw, 4rem);
+  --hero-gap-eyebrow: 1.75rem; /* eyebrow → h1 : 28px */
+  --hero-gap-h1: 1.5rem;       /* h1 → desc    : 24px */
+  --hero-gap-desc: 2.25rem;    /* desc → cta   : 36px */
+  --hero-desc-max-w: 520px;
+}
+
+.hero--primary {
+  --hero-min-h: var(--hero-primary-min-h);
+  --hero-pad-block: var(--hero-primary-pad-block);
+  --hero-pad-inline: clamp(1.5rem, 4vw, 4rem);
+  --hero-gap-eyebrow: 1.75rem;
+  --hero-gap-h1: 1.5rem;
+  --hero-gap-desc: 2.25rem;
+  --hero-desc-max-w: 520px;
+}
+
+.hero--standard {
+  --hero-min-h: var(--hero-standard-min-h);
+  --hero-pad-block: var(--hero-standard-pad-block);
+  --hero-pad-inline: max(24px, 4vw);
+  --hero-gap-eyebrow: 1rem;    /* eyebrow → h1 : 16px */
+  --hero-gap-h1: 1.25rem;      /* h1 → desc    : 20px */
+  --hero-gap-desc: 1.5rem;
+  --hero-desc-max-w: 540px;
+}
+
+.hero--compact {
+  --hero-min-h: var(--hero-compact-min-h);
+  --hero-pad-top: var(--hero-compact-pad-top);
+  --hero-pad-bottom: var(--hero-compact-pad-bottom);
+  --hero-pad-inline: 24px;
+  --hero-gap-eyebrow: 16px;
+  --hero-gap-h1: 20px;
+  --hero-gap-desc: 1.5rem;
+}
+
+/* legal sub-flavor of compact (terms / privacy / accessibility) */
+.hero--legal {
+  --hero-pad-bottom: var(--hero-compact-legal-pad-bottom);
+  --hero-gap-h1: 16px;
+}
+
+/* ── compact-fold rule (T-97): short viewports (≤568px tall, e.g. 320×568)
+   collapse the tall bands so H1 + primary CTA stay reachable above the
+   consent banner — the band stops insisting on 92svh and the rhythm
+   tightens. Applies to the tall variants only. ─────────────────────────── */
+@media (max-height: 568px) {
+  .hero--feature,
+  .hero--primary {
+    --hero-min-h: auto;
+    --hero-pad-block: 1rem;
+    --hero-gap-eyebrow: 0.625rem;
+    --hero-gap-h1: 0.625rem;
+    --hero-gap-desc: 0.875rem;
+  }
+}

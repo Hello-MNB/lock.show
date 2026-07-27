@@ -79,6 +79,10 @@ export function Nav() {
   const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=nav`
 
   return (
+    // <header> landmark wraps the site nav (T-97 P1 landmark fix) — sticky
+    // positioning lives on the landmark so the nav band behaves exactly as
+    // before.
+    <header style={{ position: 'sticky', top: 0, zIndex: 100 }}>
     <nav
       role="navigation"
       aria-label="Main navigation"
@@ -87,9 +91,6 @@ export function Nav() {
         backdropFilter: 'var(--nav-blur)',
         WebkitBackdropFilter: 'var(--nav-blur)',
         borderBottom: '1px solid var(--nav-border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
       }}
     >
       <div style={{
@@ -115,6 +116,9 @@ export function Nav() {
             color: 'var(--color-paper)',
             textDecoration: 'none',
             flexShrink: 0,
+            // ≥44px hit area (T-97 P1 tap targets) — padding, not font-size
+            minHeight: '44px',
+            padding: '4px 0',
           }}
           aria-label="LOCK home"
         >
@@ -156,7 +160,9 @@ export function Nav() {
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   position: 'relative',
-                  paddingBottom: '4px',
+                  // ≥44px hit area (T-97 P1 tap targets): 21px line + 12/10
+                  // padding + 2px active-rule ≈ 45px — visual look unchanged.
+                  padding: '12px 0 10px',
                   borderBottom: active
                     ? '2px solid var(--color-stamp)'
                     : '2px solid transparent',
@@ -318,5 +324,6 @@ export function Nav() {
         }
       `}</style>
     </nav>
+    </header>
   )
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
+import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
@@ -117,10 +118,12 @@ export default function HomePage() {
   return (
     <>
       <main>
-        {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section
+        {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+        <Hero
+          variant="feature"
+          align="center"
           style={{
-                        background: `
+            background: `
               linear-gradient(100deg,
                 rgba(10,13,11,0.95) 0%,
                 rgba(10,13,11,0.82) 30%,
@@ -130,12 +133,6 @@ export default function HomePage() {
               url('/lockshow-hero-live.webp') center 35%/cover no-repeat
             `,
             color: 'var(--color-paper)',
-            minHeight: 'min(92svh, 880px)',
-            padding: 'clamp(3.5rem, 8vw, 5.5rem) clamp(1.5rem, 4vw, 4rem)',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
           }}
         >
           {/* Lime ambient glow */}
@@ -177,7 +174,7 @@ export default function HomePage() {
               margin: '0 auto',
               width: '100%',
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(300px, 0.7fr)',
+              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(min(300px, 100%), 0.7fr)',
               gap: 'clamp(2rem, 6vw, 5rem)',
               alignItems: 'center',
               position: 'relative',
@@ -191,7 +188,7 @@ export default function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  marginBottom: '1.75rem',
+                  marginBottom: 'var(--hero-gap-eyebrow)',
                 }}
               >
                 <span
@@ -228,7 +225,7 @@ export default function HomePage() {
                   lineHeight: 0.96,
                   letterSpacing: '-0.055em',
                   color: 'var(--color-paper)',
-                  marginBottom: '1.5rem',
+                  marginBottom: 'var(--hero-gap-h1)',
                 }}
               >
                 Build the proof
@@ -249,8 +246,8 @@ export default function HomePage() {
                   fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                   lineHeight: 1.7,
                   color: 'rgba(243,245,239,0.68)',
-                  maxWidth: '480px',
-                  marginBottom: '2.25rem',
+                  maxWidth: 'var(--hero-desc-max-w)',
+                  marginBottom: 'var(--hero-gap-desc)',
                 }}
               >
                 The rooms you filled, the nights that sold out — LOCK turns them
@@ -550,7 +547,7 @@ export default function HomePage() {
               .hero-passport-card { display: none !important; }
             }
           `}</style>
-        </section>
+        </Hero>
 
         {/* ── FIREWALL BANNER ──────────────────────────────────────────── */}
         {/* container-contrast law: white strip between dark hero and paper
@@ -629,7 +626,7 @@ export default function HomePage() {
               className="m-divide"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
                 gap: 'clamp(1rem, 2vw, 1.5rem)',
               }}
             >
@@ -710,8 +707,9 @@ export default function HomePage() {
                         letterSpacing: '0.08em',
                         color: 'var(--color-ink)',
                         textDecoration: 'none',
-                        padding: '0.6rem 0',
-                        marginBottom: '-0.6rem',
+                        minHeight: '44px',
+                        padding: '0.75rem 0',
+                        marginBottom: '-0.75rem',
                         marginTop: 'auto',
                       }}
                     >
@@ -738,7 +736,7 @@ export default function HomePage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
                 gap: 'clamp(1.5rem, 4vw, 3rem)',
                 alignItems: 'center',
               }}
@@ -792,7 +790,8 @@ export default function HomePage() {
                     letterSpacing: '0.08em',
                     color: 'var(--color-paper)',
                     textDecoration: 'none',
-                    padding: '0.6rem 0',
+                    minHeight: '44px',
+                    padding: '0.75rem 0',
                   }}
                 >
                   READ THE METHODOLOGY
@@ -1079,7 +1078,8 @@ export default function HomePage() {
                   letterSpacing: '0.08em',
                   color: 'var(--color-ink)',
                   textDecoration: 'none',
-                  padding: '0.6rem 0',
+                  minHeight: '44px',
+                  padding: '0.75rem 0',
                 }}
               >
                 SEE THE FULL WALKTHROUGH

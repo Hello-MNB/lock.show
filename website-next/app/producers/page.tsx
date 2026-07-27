@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
   alternates: { canonical: '/producers' },
   title: 'For Producers — 20 Seconds, No Account',
@@ -69,18 +71,13 @@ export default function ProducersPage() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         style={{
-                    overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-producer-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
         <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
@@ -92,7 +89,7 @@ export default function ProducersPage() {
               letterSpacing: '0.14em',
               color: 'rgba(243,245,239,0.72)',
               textTransform: 'uppercase',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             FOR PRODUCERS
@@ -105,7 +102,7 @@ export default function ProducersPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             You know what happened that night.
@@ -120,8 +117,8 @@ export default function ProducersPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.78)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             An artist you booked is asking a small favor between professionals: open one link,
@@ -166,7 +163,7 @@ export default function ProducersPage() {
           </div>
         </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── THE FAVOR ────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
@@ -198,7 +195,7 @@ export default function ProducersPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1px',
               background: 'rgba(10,13,11,0.08)',
               border: '1px solid rgba(10,13,11,0.08)',

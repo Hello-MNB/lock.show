@@ -12,6 +12,7 @@
 
 import { useLocale } from '@/lib/locale-context'
 import { renderInline } from '@/lib/inline-markdown'
+import { Hero } from '@/components/hero'
 
 export interface LegalSection {
   heading: string
@@ -46,8 +47,8 @@ export function LegalDocument({ content }: { content: LegalContent }) {
         fontFamily: 'var(--font-heebo)',
       }}
     >
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 32px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+      {/* PAGE HEADER — compact legal variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" legal align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -55,7 +56,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             {t.metaLabel}
           </p>
@@ -64,7 +65,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             fontSize: 'clamp(1.9rem, 5vw, 2.9rem)',
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
-            margin: '0 0 16px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             {t.title}
           </h1>
@@ -90,7 +91,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             </p>
           )}
         </div>
-      </section>
+      </Hero>
 
       {/* DRAFT NOTICE */}
       <section style={{ padding: '32px 24px 0' }}>

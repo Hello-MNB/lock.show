@@ -1,4 +1,6 @@
 ﻿import type { Metadata } from 'next'
+
+import { Hero } from '@/components/hero'
 import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
@@ -26,8 +28,8 @@ export default function Contact() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+      {/* PAGE HEADER — compact variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
@@ -36,7 +38,7 @@ export default function Contact() {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             CONTACT · GET IN TOUCH
           </p>
@@ -46,7 +48,7 @@ export default function Contact() {
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             Questions? Ideas? Collaboration?
           </h1>
@@ -55,7 +57,7 @@ export default function Contact() {
           </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* CONTACT GRID */}
       {/* container-contrast law: white body after the paper page header */}
@@ -161,7 +163,7 @@ export default function Contact() {
                   </span>
                   <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
                 </a>
-                <div style={{ display: 'flex', gap: '18px' }}>
+                <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
                   {SOCIAL.map(({ key, label, href }) => (
                     <a
                       key={key}
@@ -174,6 +176,11 @@ export default function Contact() {
                         letterSpacing: '0.06em',
                         color: 'var(--color-tally-onlight)',
                         textDecoration: 'none',
+                        // ≥44px hit area (T-97 P1 tap targets)
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        minHeight: '44px',
+                        padding: '0.5rem 0',
                       }}
                     >
                       {label}

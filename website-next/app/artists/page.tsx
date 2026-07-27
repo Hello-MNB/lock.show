@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
   alternates: { canonical: '/artists' },
   title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
@@ -132,12 +134,12 @@ const passportFeatures = [
 export default function ArtistsPage() {
   return (
     <main>
-      {/* ── HERO — floating dark card ──────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         className="persona-hero-artist"
         style={{
-                    overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `
             linear-gradient(180deg,
               rgba(10,13,11,0.55) 0%,
@@ -147,10 +149,6 @@ export default function ArtistsPage() {
             url('/lockshow-persona-artist-v1.webp') center/cover no-repeat
           `,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4.5rem)',
         }}
       >
         {/* Lime ambient glow */}
@@ -177,7 +175,7 @@ export default function ArtistsPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             <span
@@ -214,7 +212,7 @@ export default function ArtistsPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             Your sets fill rooms.
@@ -230,8 +228,8 @@ export default function ArtistsPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.05rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.72)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             The nights you&apos;ve already played can open the rooms you
@@ -304,7 +302,7 @@ export default function ArtistsPage() {
           }
           .pulse-dot { animation: gp-pulse 2.4s ease-in-out infinite; }
         `}</style>
-      </section>
+      </Hero>
 
       {/* ── PAIN SECTION — paper surface (DS surface contract: paper does the
              work; dark regions shorten — this was a full dark band) ── */}
@@ -349,7 +347,7 @@ export default function ArtistsPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1px',
               background: 'var(--color-mist)',
             }}
@@ -440,7 +438,7 @@ export default function ArtistsPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
               gap: 'clamp(1rem, 2vw, 1.5rem)',
             }}
           >
@@ -626,7 +624,7 @@ export default function ArtistsPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
                 gap: '1px',
                 background: 'rgba(10,13,11,0.06)',
               }}

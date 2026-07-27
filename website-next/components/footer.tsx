@@ -24,7 +24,7 @@ function ConsentPrefsButton({ label }: { label: string }) {
       style={{
         display: 'block',
         marginTop: '2px',
-        padding: '0.4rem 0',
+        padding: '0.75rem 0',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
@@ -51,7 +51,7 @@ const FOOTER_LINKS = [
     ],
   },
   {
-    heading: 'FOR BOOKERS',
+    heading: 'FOR BOOKING MANAGERS',
     links: [
       { href: '/bookers',       label: 'For Booking Managers' },
       { href: '/producers',     label: 'For Producers' },
@@ -125,6 +125,9 @@ export function Footer() {
                 color: 'var(--color-paper)',
                 textDecoration: 'none',
                 marginBottom: '6px',
+                // ≥44px hit area (T-97 P1 tap targets)
+                minHeight: '44px',
+                padding: '4px 0',
               }}
             >
               {/* Official spotlight-lens symbol — same drawing as the favicon
@@ -173,7 +176,7 @@ export function Footer() {
         {/* Link columns */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))',
           gap: '32px',
           marginBottom: '48px',
         }}>
@@ -190,7 +193,7 @@ export function Footer() {
               </p>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {links.map(({ href, label }) => (
-                  <li key={href} style={{ marginBottom: '4px' }}>
+                  <li key={href} style={{ marginBottom: 0 }}>
                     <Link
                       href={href}
                       style={{
@@ -199,7 +202,8 @@ export function Footer() {
                         color: 'rgba(243,245,239,0.7)',
                         textDecoration: 'none',
                         display: 'inline-block',
-                        padding: '0.4rem 0',
+                        minWidth: '44px',
+                        padding: '0.75rem 0',
                       }}
                     >
                       {label}
@@ -207,7 +211,7 @@ export function Footer() {
                   </li>
                 ))}
                 {heading === 'LEARN MORE' && (
-                  <li style={{ marginBottom: '4px' }}>
+                  <li style={{ marginBottom: 0 }}>
                     <a
                       href={shopHref}
                       style={{
@@ -216,7 +220,8 @@ export function Footer() {
                         color: 'rgba(243,245,239,0.7)',
                         textDecoration: 'none',
                         display: 'inline-block',
-                        padding: '0.4rem 0',
+                        minWidth: '44px',
+                        padding: '0.75rem 0',
                       }}
                     >
                       Shop
@@ -244,7 +249,7 @@ export function Footer() {
                 { href: '/terms',         label: t.terms },
                 { href: '/accessibility', label: t.accessibility },
               ].map(({ href, label }) => (
-                <li key={href} style={{ marginBottom: '4px' }}>
+                <li key={href} style={{ marginBottom: 0 }}>
                   <Link
                     href={href}
                     style={{
@@ -253,14 +258,15 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '0.4rem 0',
+                      minWidth: '44px',
+                      padding: '0.75rem 0',
                     }}
                   >
                     {label}
                   </Link>
                 </li>
               ))}
-              <li style={{ marginBottom: '4px' }}>
+              <li style={{ marginBottom: 0 }}>
                 <ConsentPrefsButton label={t.consentPrefs} />
               </li>
             </ul>
@@ -279,7 +285,7 @@ export function Footer() {
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {SOCIAL.map(({ key, label, href }) => (
-                <li key={key} style={{ marginBottom: '4px' }}>
+                <li key={key} style={{ marginBottom: 0 }}>
                   <a
                     href={href}
                     target="_blank"
@@ -290,7 +296,8 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '0.4rem 0',
+                      minWidth: '44px',
+                      padding: '0.75rem 0',
                     }}
                   >
                     {label}
@@ -300,7 +307,7 @@ export function Footer() {
               {/* Footer contact rule (21 Jul): channel links only — no raw
                   phone number or email address rendered in the footer. The
                   contact page carries the full details. */}
-              <li style={{ marginBottom: '4px' }}>
+              <li style={{ marginBottom: 0 }}>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
@@ -311,7 +318,7 @@ export function Footer() {
                     color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
                     display: 'inline-block',
-                    padding: '0.4rem 0',
+                    padding: '0.75rem 0',
                   }}
                 >
                   Message LOCK on WhatsApp
@@ -368,7 +375,9 @@ export function Footer() {
               letterSpacing: '0.08em',
               color: 'rgba(243,245,239,0.7)',
               textDecoration: 'none',
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
               padding: '0.5rem 0',
             }}
           >

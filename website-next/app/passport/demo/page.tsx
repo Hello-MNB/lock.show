@@ -179,7 +179,9 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
 
 export default function PassportDemo() {
   return (
-    <div style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
+    // <main> landmark (T-97 P1) — page content wrapper; sizing is structural
+    // (full-viewport dark stage behind the floating passport card).
+    <main style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
 
       {/* DEMO BANNER — warm, normal-case (mono-caps rule-strips are banned on
           marketing surfaces, owner exhibit 21 Jul). D5: the fictional nature
@@ -366,7 +368,9 @@ export default function PassportDemo() {
           <a
             href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
             style={{
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
               padding: '12px 28px',
               backgroundColor: 'var(--color-stamp)',
               color: 'var(--color-ink)',
@@ -396,6 +400,6 @@ export default function PassportDemo() {
           }
         }
       `}</style>
-    </div>
+    </main>
   )
 }

@@ -1,5 +1,7 @@
 ﻿import type { Metadata } from 'next'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
   alternates: { canonical: '/radar' },
   title: 'Artist Radar — Your Private Evidence Workspace',
@@ -85,8 +87,8 @@ export default function Radar() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+      {/* PAGE HEADER — standard variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="standard" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
@@ -95,7 +97,7 @@ export default function Radar() {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             ARTIST RADAR · PRIVATE WORKSPACE
           </p>
@@ -105,7 +107,7 @@ export default function Radar() {
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             See what you&apos;ve got. Build what&apos;s next.
           </h1>
@@ -124,7 +126,7 @@ export default function Radar() {
           </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* WHAT IT IS */}
       {/* container-contrast law: white band after the paper page header */}
@@ -132,7 +134,7 @@ export default function Radar() {
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '32px',
             alignItems: 'start',
           }}>
@@ -238,7 +240,7 @@ export default function Radar() {
 
           <div className="m-divide" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
             gap: '16px',
           }}>
             {dimensions.map((d) => (

@@ -77,6 +77,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
       role="dialog"
       aria-label={t.ariaLabel}
       dir={dir}
+      className="consent-banner"
       style={{
         position: 'fixed',
         insetInline: 0,
@@ -89,6 +90,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
       }}
     >
       <div
+        className="consent-inner"
         style={{
           margin: '0 auto',
           maxWidth: 760,
@@ -98,17 +100,33 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
           gap: 12,
         }}
       >
-        <p style={{ flex: '1 1 320px', fontSize: 14, color: 'var(--color-tally, #98A19A)', margin: 0 }}>
+        <p
+          className="consent-msg"
+          style={{ flex: '1 1 320px', fontSize: 14, color: 'var(--color-tally, #98A19A)', margin: 0 }}
+        >
           {t.message}{' '}
-          <Link href="/privacy" style={{ color: 'var(--color-paper, #F3F0E8)', textDecoration: 'underline' }}>
+          <Link
+            href="/privacy"
+            style={{
+              color: 'var(--color-paper, #F3F0E8)',
+              textDecoration: 'underline',
+              // ≥44px hit area without moving the text line (inline-block +
+              // symmetric padding cancelled by negative margin)
+              display: 'inline-block',
+              padding: '0.95rem 0',
+              margin: '-0.95rem 0',
+            }}
+          >
             {t.privacyLink}
           </Link>
         </p>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div className="consent-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <button
             type="button"
             onClick={() => decide('denied')}
             style={{
+              minHeight: '44px',
+              minWidth: '44px',
               padding: '8px 16px',
               borderRadius: 10,
               border: '1px solid rgba(255,255,255,.15)',
@@ -125,6 +143,8 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
             type="button"
             onClick={() => decide('granted')}
             style={{
+              minHeight: '44px',
+              minWidth: '44px',
               padding: '8px 16px',
               borderRadius: 10,
               border: 'none',
@@ -139,6 +159,31 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
           </button>
         </div>
       </div>
+      {/* T-97 P1: compact single-line variant at small widths (≤430px) so the
+          fixed banner never covers a hero CTA (verified by elementFromPoint at
+          320/390 in scripts/test-hero-contract.mjs). The full message stays in
+          the DOM for assistive tech; visually it clamps to two short lines. */}
+      <style>{`
+        @media (max-width: 430px) {
+          .consent-banner { padding: 6px 10px !important; }
+          .consent-inner { flex-wrap: nowrap !important; gap: 8px !important; }
+          .consent-msg {
+            flex: 1 1 auto !important;
+            font-size: 11px !important;
+            line-height: 1.3 !important;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .consent-actions { gap: 6px !important; }
+          .consent-actions button {
+            padding: 6px 10px !important;
+            font-size: 12px !important;
+            white-space: nowrap;
+          }
+        }
+      `}</style>
     </div>
   )
 }

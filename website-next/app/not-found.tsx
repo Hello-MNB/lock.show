@@ -53,7 +53,18 @@ export default function NotFound() {
         <p style={{ maxWidth: 420, opacity: 0.75 }}>
           The address you opened doesn&apos;t exist here. The proof you&apos;re after is one click away.
         </p>
-        <Link href="/" style={{ textDecoration: 'underline', fontWeight: 600 }}>
+        <Link
+          href="/"
+          style={{
+            textDecoration: 'underline',
+            fontWeight: 600,
+            // ≥44px hit area (T-97 P1)
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: '44px',
+            padding: '0.5rem 0.75rem',
+          }}
+        >
           Back to LOCK
         </Link>
       </main>

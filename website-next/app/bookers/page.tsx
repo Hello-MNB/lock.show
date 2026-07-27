@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
   alternates: { canonical: '/bookers' },
   title: 'For Booking Managers — Book With Context, Not Guesswork',
@@ -60,18 +62,13 @@ export default function BookersPage() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-manager-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
         {/* Spotlight-lens watermarks — official symbol only (owner
@@ -125,7 +122,7 @@ export default function BookersPage() {
               letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             FOR BOOKING MANAGERS
@@ -138,7 +135,7 @@ export default function BookersPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             Book with context,
@@ -153,8 +150,8 @@ export default function BookersPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.72)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             An unfamiliar artist wants your stage. Before your name goes on
@@ -210,7 +207,7 @@ export default function BookersPage() {
           </p>
         </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── THE RISK ─────────────────────────────────────── */}
       <section
@@ -247,7 +244,7 @@ export default function BookersPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
               gap: '1px',
               background: 'rgba(10,13,11,0.08)',
               border: '1px solid rgba(10,13,11,0.08)',
@@ -318,7 +315,10 @@ export default function BookersPage() {
             <img
               src="/lockshow-evidence-review.webp"
               alt="A booking manager reading an artist's checked evidence before saying yes"
+              width={1672}
+              height={941}
               style={{
+                height: 'auto',
                 display: 'block',
                 width: '100%',
                 maxHeight: '440px',

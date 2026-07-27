@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 import { APP_URL } from '@/lib/app-url'
 
 export const metadata: Metadata = {
@@ -128,18 +130,13 @@ export default function Pricing() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* ── HERO — live-crowd band with dark veil ─────────── */}
-      <section
+      {/* ── HERO — primary variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="primary"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(78svh, 720px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-hero-live.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
         <div style={{ maxWidth: '1100px', width: '100%', margin: '0 auto' }}>
@@ -151,7 +148,7 @@ export default function Pricing() {
                 letterSpacing: '0.14em',
                 color: 'rgba(243,245,239,0.72)',
                 textTransform: 'uppercase',
-                marginBottom: '1.75rem',
+                marginBottom: 'var(--hero-gap-eyebrow)',
               }}
             >
               PRICING
@@ -164,7 +161,7 @@ export default function Pricing() {
                 lineHeight: 0.96,
                 letterSpacing: '-0.055em',
                 color: 'var(--color-paper)',
-                marginBottom: '1.5rem',
+                marginBottom: 'var(--hero-gap-h1)',
               }}
             >
               Four people make a booking happen.
@@ -179,14 +176,14 @@ export default function Pricing() {
                 fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
                 lineHeight: 1.65,
                 color: 'rgba(243,245,239,0.78)',
-                maxWidth: '520px',
-                marginBottom: '2.25rem',
+                maxWidth: 'var(--hero-desc-max-w)',
+                marginBottom: 'var(--hero-gap-desc)',
               }}
             >
               The short version: during the pilot, almost nobody pays anything. And the
               things that make proof worth trusting are never for sale — to anyone.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
               <a
                 href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=hero`}
                 style={{
@@ -199,7 +196,8 @@ export default function Pricing() {
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                   borderRadius: '10px',
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
                 START FREE IN THE PILOT →
@@ -216,7 +214,8 @@ export default function Pricing() {
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                   borderRadius: '10px',
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
                 SEE A SAMPLE PASSPORT
@@ -236,7 +235,7 @@ export default function Pricing() {
             </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── THE FOUR ANSWERS ──────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
@@ -280,7 +279,7 @@ export default function Pricing() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1.25rem',
             }}
           >
@@ -397,6 +396,10 @@ export default function Pricing() {
                       color: 'var(--color-ink)',
                       textDecoration: 'none',
                       borderBottom: '2px solid var(--color-stamp)',
+                      // ≥44px hit area (T-97 P1): padding, not font-size
+                      display: 'inline-flex',
+                      alignItems: 'flex-end',
+                      minHeight: '44px',
                       paddingBottom: '3px',
                       alignSelf: 'flex-start',
                       marginTop: 'auto',
@@ -424,7 +427,7 @@ export default function Pricing() {
             maxWidth: '1100px',
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
             gap: 'clamp(2rem, 5vw, 4rem)',
             alignItems: 'center',
           }}
