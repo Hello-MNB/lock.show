@@ -317,6 +317,14 @@ border-color: #A8B49F; box-shadow: 0 18px 42px #24322812;
 
 ### Contained hero contract (v52 — one hero grammar for every page)
 
+> **STATUS: RE-RATIFIED by owner 27 Jul 2026 — one desktop hero height.**
+> On desktop (≥1024px) EVERY marketing-page hero renders the ONE shared height
+> token `--hero-height-desktop: 620px` (the v52 canon value below), enforced
+> ±0px at 1440×900 by `scripts/test-hero-contract.mjs`. The four
+> `website-next/styles/hero.css` variants (feature / primary / standard /
+> compact) remain as MOBILE-ONLY differentiation (<1024px). Feature
+> block-padding on desktop is the v52 canon pad `clamp(48px,5vw,74px)`.
+
 ```css
 .modern-site { --hero-height:620px; --hero-radius:20px;
                --hero-pad:clamp(48px,5vw,74px); --hero-title:clamp(48px,4.8vw,72px); }

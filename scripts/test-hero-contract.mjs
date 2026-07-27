@@ -15,8 +15,11 @@
  *   R1  no horizontal overflow (document.scrollWidth == innerWidth)
  *   R2  fold contract: hero H1 fully inside the first viewport; the hero's
  *       primary CTA (when the variant carries one) inside the first viewport
- *   R3  hero band height within ±15% of its variant reference (table below,
- *       derived from the T-97 post-fix measurements)
+ *   R3  DESKTOP (1440×900): every hero band equals the ONE shared height
+ *       token --hero-height-desktop (owner ruling 27 Jul 2026 — same hero
+ *       height on all desktop pages; 620px per v52 canon), ±0px.
+ *       MOBILE (390×844): height within ±15% of its variant reference
+ *       (table below, from the T-97 post-fix measurements)
  *   R4  consent-banner overlap: with the banner visible, elementFromPoint
  *       across the hero CTA's on-screen rect never lands on the banner
  *       (checked at 390×844 and 320×568)
@@ -55,17 +58,29 @@ const VARIANT_MAP = {
 // Public routes with NO hero band (documented exemptions):
 const NO_HERO_ROUTES = ['/passport/demo']
 
-// ── R3: variant reference heights (px) per viewport — derived from the
-// hero token math + T-97 post-fix measurements. ±15% tolerance.
-//   feature  min(92svh,880): 828 @900, 776.5 @844
-//   primary  min(78svh,748): 702 @900, 658.3 @844
-//   standard min(56svh,560): 504 @900, 472.6 @844
-//   compact  auto floored at 292: family median ≈296 @1440, ≈325 @390
+// ── R3 DESKTOP: ONE shared hero height on desktop (owner ruling 27 Jul 2026,
+// "ביקשתי HERO בעמודים דסקטופ באותו גובה") — read live from the token file so
+// the test can never drift from styles/hero.css. ±0px tolerance at 1440×900.
+const HERO_CSS = readFileSync(path.join(SITE, 'styles', 'hero.css'), 'utf8')
+const desktopTokenMatch = HERO_CSS.match(/--hero-height-desktop:\s*(\d+(?:\.\d+)?)px/)
+if (!desktopTokenMatch) {
+  console.error('✗ HERO CONTRACT: --hero-height-desktop token missing from styles/hero.css')
+  process.exit(1)
+}
+const DESKTOP_HERO_H = Number(desktopTokenMatch[1])
+
+// ── R3 MOBILE: variant reference heights (px) @390×844 — derived from the
+// hero token math + T-97 post-fix measurements. ±15% tolerance. (Variants
+// differentiate BELOW 1024px only; on desktop the shared token wins.)
+//   feature  min(92svh,880): 776.5 @844
+//   primary  min(78svh,748): 658.3 @844
+//   standard min(56svh,560): 472.6 @844
+//   compact  auto floored at 292: ≈325 @390
 const REFERENCE = {
-  feature: { '1440x900': 828, '390x844': 776.5 },
-  primary: { '1440x900': 702, '390x844': 658.3 },
-  standard: { '1440x900': 504, '390x844': 472.6 },
-  compact: { '1440x900': 296, '390x844': 325 },
+  feature: { '390x844': 776.5 },
+  primary: { '390x844': 658.3 },
+  standard: { '390x844': 472.6 },
+  compact: { '390x844': 325 },
 }
 const TOLERANCE = 0.15
 
@@ -219,10 +234,19 @@ async function renderedChecks() {
       if ((variant === 'feature' || variant === 'primary') && m.cta && m.cta.bottom > m.innerH) {
         findings.push(`R2 · ${route} @${vpKey}: hero primary CTA below the fold (bottom ${m.cta.bottom.toFixed(0)} > ${m.innerH})`)
       }
-      const ref = REFERENCE[variant][vpKey]
-      const dev = Math.abs(m.hero.h - ref) / ref
-      if (dev > TOLERANCE) {
-        findings.push(`R3 · ${route} @${vpKey}: hero height ${m.hero.h.toFixed(1)} deviates ${(dev * 100).toFixed(1)}% from ${variant} reference ${ref} (±15%)`)
+      if (vpKey === '1440x900') {
+        // DESKTOP: every hero equals the shared token exactly (±0px)
+        const dev = Math.abs(m.hero.h - DESKTOP_HERO_H)
+        if (dev > 0) {
+          findings.push(`R3 · ${route} @${vpKey}: hero height ${m.hero.h.toFixed(1)} ≠ --hero-height-desktop ${DESKTOP_HERO_H} (±0px — one desktop hero height, owner ruling)`)
+        }
+      } else {
+        // MOBILE: variant reference ±15%
+        const ref = REFERENCE[variant][vpKey]
+        const dev = Math.abs(m.hero.h - ref) / ref
+        if (dev > TOLERANCE) {
+          findings.push(`R3 · ${route} @${vpKey}: hero height ${m.hero.h.toFixed(1)} deviates ${(dev * 100).toFixed(1)}% from ${variant} reference ${ref} (±15%)`)
+        }
       }
     }
     await ctx.close()
@@ -308,4 +332,4 @@ if (findings.length) {
 }
 console.log(`\n✓ HERO CONTRACT: ${Object.keys(VARIANT_MAP).length} hero pages on approved variants, ` +
   `no magic hero min-heights outside styles/hero.css` +
-  (ran ? `, rendered fold/height/overlap/crawl contracts hold @1440×900 + 390×844 (+320×568 consent)` : ` (rendered checks skipped — no chromium)`))
+  (ran ? `, ONE desktop hero height ${DESKTOP_HERO_H}px on all heroes @1440×900 (±0px), rendered fold/height/overlap/crawl contracts hold @1440×900 + 390×844 (+320×568 consent)` : ` (rendered checks skipped — no chromium)`))

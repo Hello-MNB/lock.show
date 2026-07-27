@@ -5,9 +5,12 @@
  * scripts/test-hero-contract.mjs enforces:
  *   - every public hero page declares one of the 4 approved variants
  *   - no page-specific magic-number hero min-height outside this file
- *   - rendered height stays within ±15% of the variant reference
+ *   - DESKTOP (≥1024px): every hero equals --hero-height-desktop (±0px at
+ *     1440×900) — owner ruling 27 Jul 2026, one desktop hero height
+ *   - MOBILE (<1024px): rendered height within ±15% of the variant reference
  *
- * 4 variants (values codified from the T-97 phase-1 measured medians):
+ * 4 variants — MOBILE-ONLY differentiation since the 27 Jul 2026 ruling
+ * (values codified from the T-97 phase-1 measured medians):
  *   feature  — full-bleed persona/home heroes: min(92svh, 880px),
  *              pad clamp(3.5rem, 8vw, 5.5rem), rhythm 28/24/36, desc 520px
  *   primary  — pricing-class hero:            min(78svh, 748px),
@@ -24,6 +27,14 @@
  */
 
 :root {
+  /* ── ONE desktop hero height (owner ruling 27 Jul 2026: "ביקשתי HERO בעמודים
+     דסקטופ באותו גובה" — all marketing-page heroes THE SAME height on desktop).
+     Value = 620px per WEBSITE-DESIGN-SYSTEM.md §"Contained hero contract (v52)"
+     (--hero-height:620px canon), fit-verified against the tallest hero content
+     at 1440×900 / 1366×768 / 1280×800. Supersedes the 4 variant heights on
+     desktop (≥1024px); variants keep differentiating <1024px only. */
+  --hero-height-desktop: 620px;
+
   /* feature */
   --hero-feature-min-h: min(92svh, 880px);
   --hero-feature-pad-block: clamp(3.5rem, 8vw, 5.5rem);
@@ -100,6 +111,30 @@
 .hero--legal {
   --hero-pad-bottom: var(--hero-compact-legal-pad-bottom);
   --hero-gap-h1: 16px;
+}
+
+/* ── desktop hero unification (owner ruling 27 Jul 2026): at ≥1024px EVERY
+   hero variant renders ONE shared height — var(--hero-height-desktop).
+   min-height (not height) so content can never be clipped; the hero contract
+   test asserts the rendered band equals the token exactly at 1440×900, which
+   also proves the tallest content fits inside it. <1024px keeps the 4-variant
+   responsive behavior above. Placed BEFORE the compact-fold rule so the
+   short-viewport safety collapse still wins on freak ≤568px-tall windows. ── */
+@media (min-width: 1024px) {
+  .hero--feature,
+  .hero--primary,
+  .hero--standard,
+  .hero--compact {
+    --hero-min-h: var(--hero-height-desktop);
+  }
+  /* feature block-padding returns to the v52 canon pad on desktop
+     (clamp(48px,5vw,74px) per the contained-hero contract) — the T-97
+     88px pad made the home/producers in-flow content exceed 620
+     (641.8 / 633.5 measured); with canon pad every hero's content fits
+     inside 620 (tallest: home 609.8 @1440). */
+  .hero--feature {
+    --hero-pad-block: clamp(48px, 5vw, 74px);
+  }
 }
 
 /* ── compact-fold rule (T-97): short viewports (≤568px tall, e.g. 320×568)
