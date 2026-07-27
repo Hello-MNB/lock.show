@@ -1167,7 +1167,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
-                  border: '1px solid rgba(243,245,239,0.3)',
+                  border: '1px solid var(--ghost-border-on-dark)',
                   borderRadius: '10px',
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',

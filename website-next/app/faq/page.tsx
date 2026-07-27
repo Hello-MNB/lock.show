@@ -287,7 +287,7 @@ export default function FAQ() {
                 padding: '14px 28px',
                 backgroundColor: 'transparent',
                 color: 'rgba(255,255,255,0.7)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: '1px solid var(--ghost-border-on-dark)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',

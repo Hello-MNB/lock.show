@@ -37,6 +37,18 @@
 /* Alias: --font-archivo → --font-heebo (Manrope handles both roles) */
 :root {
   --font-archivo: var(--font-heebo);
+
+  /* Ghost-button border — ONE shared token for ghost/secondary CTAs
+     (WCAG 1.4.11 UI-component contrast ≥3.0:1, RC-b79900a addendum).
+     on-dark: paper @0.42 composites to ≥3.0:1 against BOTH dark grounds
+     (ink #0a0d0b and night/forest #18221a) in every state — normal, hover
+     (site-wide filter: brightness(1.14) raises it), active (brightness .97
+     still ≥3.0), focus (lime ring carries the indicator at 12.5–14.9:1).
+     on-light: ink @0.58 keeps ≥3.0:1 on paper/white including the hover
+     brighten (which LOWERS contrast on light grounds — hence the higher
+     alpha). No page may carry a page-specific ghost-border value. */
+  --ghost-border-on-dark: rgba(243, 245, 239, 0.42);
+  --ghost-border-on-light: rgba(10, 13, 11, 0.58);
 }
 
 html {

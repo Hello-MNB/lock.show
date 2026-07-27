@@ -521,7 +521,7 @@ export default function Methodology() {
                 padding: '0.95rem 2rem',
                 backgroundColor: 'transparent',
                 color: 'var(--color-paper)',
-                border: '1px solid rgba(243,245,239,0.22)',
+                border: '1px solid var(--ghost-border-on-dark)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.78rem',
                 letterSpacing: '0.08em',

@@ -265,7 +265,7 @@ export default function Contact() {
               padding: '14px 32px',
               backgroundColor: 'transparent',
               color: 'var(--color-paper)',
-              border: '1px solid rgba(243,245,239,0.35)',
+              border: '1px solid var(--ghost-border-on-dark)',
               fontFamily: 'var(--font-space-mono)',
               fontWeight: 700,
               fontSize: '0.75rem',
