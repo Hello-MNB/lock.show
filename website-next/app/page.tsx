@@ -3,8 +3,6 @@ import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
 
-const SITE_URL = 'https://lock.show'
-
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
   title: 'LOCK — Build the Proof That Books You',
@@ -15,55 +13,20 @@ export const metadata: Metadata = {
     description:
       'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
-    url: `${SITE_URL}/`,
+    // Relative — resolved against metadataBase (lib/site.ts www origin), same
+    // convention as every other page. The old absolute apex URL here was the
+    // one mixed og:url on the site.
+    url: '/',
   },
 }
 
-// Page-level JSON-LD: FAQPage ONLY. WebSite/Organization live in the root
-// layout's graph — duplicating them here with different @ids/urls created a
-// conflicting entity graph (audit G8 finding).
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is a Bookability Passport?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: "A Bookability Passport is a public page showing an artist's real, checked performance history — every claim shows how and when it was verified, so a booking manager can judge for themselves.",
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Is LOCK free for booking managers?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Booking managers (מזמיני הופעות) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'How is evidence verified?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Each claim carries a method label — TICKET EXPORT, PRODUCER-CONFIRMED, PLATFORM DATA, OPERATOR-REVIEWED, or SELF-REPORTED — alongside a review date. The label is always visible. Producers confirm individual claims via a bounded magic link; no account required.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'What does LOCK not do?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: "LOCK doesn't score, rank, predict, or promise anything. It just shows what happened, and how we know.",
-          },
-        },
-      ],
-    },
-  ],
-}
+// NO page-level JSON-LD here. The homepage's FAQPage block was REMOVED
+// (T-96 step ③ / C5, owner-ruled): its questions had no visible Q&A
+// counterpart in the page body — invisible FAQ markup violates Google's
+// structured-data policy and is a manual-action risk. The visible-content
+// FAQPage blocks on /faq and /pricing remain. Do not re-add a FAQPage here
+// unless the homepage actually renders those questions as visible text
+// (scripts/test-seo-contract.mjs enforces this — C5 flag is now true).
 
 // ─── Inline icon helper ────────────────────────────────────────────────────
 // Paths sourced from gigproof-icons.svg (Codex design system)
@@ -153,11 +116,6 @@ function MethodBadge({ label }: { label: string }) {
 export default function HomePage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
       <main>
         {/* ── HERO ─────────────────────────────────────────────────────── */}
         <section

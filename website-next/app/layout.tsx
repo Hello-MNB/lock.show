@@ -7,6 +7,7 @@ import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
 import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
+import { SITE_URL } from '@/lib/site'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -24,8 +25,13 @@ const dmMono = DM_Mono({
 // GA4 — property LOCK (544738110), stream LOCK App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
-const SITE_URL = 'https://lock.show'
+// SITE_URL comes from lib/site.ts — the ONE place the canonical www origin
+// is declared (owner ruling D2). Do not re-declare a host string here.
 const OG_IMAGE = `${SITE_URL}/og/og-default.png`
+// Square brand mark for Organization.logo — a real logo asset, not an OG card
+// (C9 fix). SVG is valid as an ImageObject URL per schema.org; this is the
+// self-contained spotlight-lens symbol on its ink background (1000×1000).
+const LOGO_URL = `${SITE_URL}/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg`
 
 // Next.js App Router viewport export
 export const viewport = {
@@ -42,17 +48,10 @@ export const metadata: Metadata = {
   },
   description:
     'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
-  keywords: [
-    'artist booking proof',
-    'live performance verification',
-    'booking manager',
-    'artist passport',
-    'אמרגן',
-    'אמן',
-    'LOCK',
-    'verified gig history',
-    'music industry verification',
-  ],
+  // NO `keywords` meta: deprecated by every major engine (dead weight), and
+  // the removed list carried the WRONG actor noun (אמרגן = artist-side agent —
+  // LOCK's buyer is the מזמין הופעות; the site's own FAQ says so). C4 fix,
+  // authorized by the D2 execution-order metadata alignment.
   authors: [{ name: 'LOCK', url: SITE_URL }],
   creator: 'LOCK',
   publisher: 'LOCK',
@@ -124,7 +123,7 @@ const jsonLd = {
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: OG_IMAGE,
+        url: LOGO_URL,
       },
       foundingLocation: {
         '@type': 'Place',
@@ -164,8 +163,10 @@ const jsonLd = {
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#software`,
-      name: 'LOCK — Bookability Passport',
-      url: SITE_URL,
+      // url = where the APPLICATION actually lives today: the embedded SPA at
+      // /app on the www origin (C8 fix). Not the marketing homepage, and not
+      // app.lock.show — that migration is D3-gated and has not shipped.
+      url: `${SITE_URL}/app`,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
@@ -177,12 +178,15 @@ const jsonLd = {
       },
       // 'en' only — see WebSite node above for the same HE-scope note.
       inLanguage: ['en'],
+      // Offer text matches /pricing's actual published truth (C7 fix):
+      // artists free during the pilot, booking managers free always. No
+      // invented tiers, no "by arrangement" contradiction.
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'USD',
+        priceCurrency: 'ILS',
         description:
-          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
+          'Free during the pilot: artists build and publish their Passport at no cost while the closed pilot runs. Booking managers read Passports free, always. Post-pilot artist pricing is not set yet.',
       },
     },
   ],
