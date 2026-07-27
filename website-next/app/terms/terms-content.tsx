@@ -19,7 +19,8 @@ const content: LegalContent = {
     metaLabel: 'משפטי · תנאי שימוש',
     title: 'תנאי שימוש — LOCK',
     versionLine: 'טיוטה לבדיקת עו״ד — אינה ייעוץ משפטי. גרסה 0.1 · 8.7.2026',
-    taskNote: 'לאשר מול היועץ המשפטי לפני פרסום (משימה #23).',
+    // taskNote (internal dev note, "משימה #23") removed from the visible page —
+    // the draft-review banner below stays; the legal body is unchanged.
     draftNotice: 'טיוטה בבדיקת יועץ משפטי — נוסח לא סופי',
     sections: [
       {
@@ -88,7 +89,8 @@ const content: LegalContent = {
     metaLabel: 'LEGAL · TERMS OF USE',
     title: 'Terms of Use — LOCK',
     versionLine: 'Draft for legal review — not legal advice. v0.1 · 8 Jul 2026',
-    taskNote: 'To be confirmed with legal counsel before publishing (task #23).',
+    // taskNote (internal dev note, "task #23") removed from the visible page —
+    // the draft-review banner below stays; the legal body is unchanged.
     draftNotice: 'Draft under legal review — not final',
     sections: [
       {

@@ -122,7 +122,9 @@ const radarFeatures = [
 
 const passportFeatures = [
   'Only what\'s been checked — with how it was checked, in plain sight',
-  'Your crowd shown as an honest range, e.g. 200–350 — never a made-up exact number',
+  // ⁦…⁩ (LRI…PDI) keep the range reading "200–350" (not "350–200")
+  // when the page is toggled to Hebrew (RTL)
+  'Your crowd shown as an honest range, e.g. ⁦200–350⁩ — never a made-up exact number',
   'Every night dated, so it reads fresh, not recycled',
   'Always free for booking managers to open — no wall between you and the yes',
 ]
@@ -674,7 +676,7 @@ export default function ArtistsPage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    {item.value}
+                    <bdi dir="ltr">{item.value}</bdi>
                   </div>
                   <div
                     style={{

@@ -24,7 +24,7 @@ const seats = [
     price: 'Free during the pilot',
     line: 'Build your Radar, shape your story, publish your Passport — all of it free while the pilot runs.',
     points: [
-      'A full first scan of your gig and platform history',
+      'Share your links — LOCK reads them and drafts your first items for you to confirm',
       'Your private Radar workspace — only you see it',
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
@@ -590,16 +590,18 @@ export default function Pricing() {
                   }}
                 >
                   <span>{item.q}</span>
+                  {/* .faq-glyph (globals.css): '+' closed, '−' open — same
+                      pattern as the FAQ page's accordion */}
                   <span
+                    className="faq-glyph"
+                    aria-hidden
                     style={{
                       fontFamily: mono,
                       fontSize: '0.85rem',
                       color: 'var(--color-stamp-onlight)',
                       flexShrink: 0,
                     }}
-                  >
-                    +
-                  </span>
+                  />
                 </summary>
                 <p
                   style={{

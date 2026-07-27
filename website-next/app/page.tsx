@@ -468,7 +468,7 @@ export default function HomePage() {
                     marginBottom: '0.5rem',
                   }}
                 >
-                  200–350
+                  <bdi dir="ltr">200–350</bdi>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <MethodBadge label="TICKET EXPORT" />
@@ -882,7 +882,7 @@ export default function HomePage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    200–350
+                    <bdi dir="ltr">200–350</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
                     Headline audience draw, Zappa Club TLV, Feb 2025
@@ -955,7 +955,7 @@ export default function HomePage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    70–120
+                    <bdi dir="ltr">70–120</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
                     Capacity, Shapira Arts Hub, support slot, Dec 2024

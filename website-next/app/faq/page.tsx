@@ -83,7 +83,7 @@ const faqs = [
     questions: [
       {
         q: 'What is a BandPill?',
-        a: 'Audience draw on a Passport always shows as a range, like 70–150, instead of one exact number. That\'s on purpose — nobody can count a room to the person, and pretending otherwise would be dishonest. It\'s just plain text — no bars, no dials, nothing dressed up to look more precise than it is.',
+        a: 'Audience draw on a Passport always shows as a range, like ⁦70–150⁩, instead of one exact number. That\'s on purpose — nobody can count a room to the person, and pretending otherwise would be dishonest. It\'s just plain text — no bars, no dials, nothing dressed up to look more precise than it is.',
       },
       {
         q: 'Why does every claim show a date?',
@@ -108,19 +108,38 @@ const faqs = [
       },
       {
         q: 'Can booking managers see my exact audience numbers?',
-        a: 'No. Exact figures are never shown on the public Passport — only bands. The internal Radar may hold a more precise estimate for operational purposes, but this is never surfaced to buyers.',
+        a: 'No. Exact figures are never shown on the public Passport — only honest ranges. Your own private Radar may keep the more precise estimate you logged, but that stays with you — a booking manager never sees it.',
       },
       {
         q: 'Is my contact information visible on my Passport?',
-        a: 'No. Artist contact details are never accessible via a public session. An interested booking manager can send an availability request through the Passport; LOCK routes it to the artist without exposing contact information.',
+        a: 'No. Your contact details never appear on your Passport — anyone opening the link simply can\'t see them. An interested booking manager can send an availability request through the Passport; LOCK passes it to you without ever revealing your contact information.',
       },
     ],
   },
 ]
 
+// FAQPage structured data — same pattern as /pricing. Bidi isolate marks
+// (U+2066/U+2069, used for RTL-safe ranges in the visible copy) are stripped
+// so the schema text stays clean.
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.flatMap((section) =>
+    section.questions.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a.replace(/[⁦⁩]/g, '') },
+    })),
+  ),
+}
+
 export default function FAQ() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
       {/* PAGE HEADER */}
       <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>

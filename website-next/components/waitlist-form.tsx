@@ -87,12 +87,12 @@ export default function WaitlistForm() {
             margin: '0 0 8px',
           }}
         >
-          {state === 'done' ? "✓ You're on the list" : "✓ You're already on the list"}
+          {state === 'done' ? '✓ Message sent' : '✓ We already have your message'}
         </p>
         <p style={{ fontSize: '0.9rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.6 }}>
           {state === 'done'
-            ? "We'll only use your email to contact you about LOCK beta access. No spam, no third parties."
-            : "This email is already registered — we'll be in touch about beta access."}
+            ? <>We usually reply within <bdi dir="ltr">1–2</bdi> business days. Your email is used only to reply — no spam, no third parties.</>
+            : "This email has already reached us — we'll reply to your earlier message."}
         </p>
       </div>
     )
@@ -157,7 +157,7 @@ export default function WaitlistForm() {
           opacity: state === 'sending' ? 0.7 : 1,
         }}
       >
-        {state === 'sending' ? 'SENDING…' : 'JOIN THE WAITLIST →'}
+        {state === 'sending' ? 'SENDING…' : 'SEND MESSAGE →'}
       </button>
 
       {state === 'error' && (
@@ -175,7 +175,7 @@ export default function WaitlistForm() {
           margin: 0,
         }}
       >
-        No spam. Data is not shared with third parties.
+        We usually reply within <bdi dir="ltr">1–2</bdi> business days. No spam. Data is not shared with third parties.
       </p>
     </form>
   )

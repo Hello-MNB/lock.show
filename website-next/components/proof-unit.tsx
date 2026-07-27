@@ -20,7 +20,8 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
         marginBottom: '1.25rem',
       }}
     >
-      {/* Claim */}
+      {/* Claim — <bdi> so band ranges ("200–350") never visually reverse
+          in RTL (Hebrew) mode */}
       <div
         style={{
           fontFamily: isBand ? 'var(--font-space-mono)' : 'var(--font-archivo)',
@@ -31,7 +32,7 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
           marginBottom: '0.25rem',
         }}
       >
-        {claim}
+        <bdi dir="ltr">{claim}</bdi>
       </div>
 
       {/* Context */}

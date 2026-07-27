@@ -63,7 +63,8 @@ const pipelineSteps = [
 ]
 
 const firewallItems = [
-  'Every crowd shows as an honest range, like 70–150 — never a made-up exact number.',
+  // ⁦…⁩ (LRI…PDI) keep the range reading "70–150" in RTL (Hebrew) mode
+  'Every crowd shows as an honest range, like ⁦70–150⁩ — never a made-up exact number.',
   'Every claim tells you plainly how it was checked. "Verified" never gets to stand there on its own.',
   'Every claim carries its date and place. A great night in 2023 doesn\'t speak for who the artist is today.',
   'If it\'s the artist\'s own word and nobody\'s confirmed it yet, we say so — it never gets dressed up as checked.',

@@ -88,8 +88,9 @@ const readinessUnits: ProofUnitData[] = [
 // ---- Sub-components (inline, no imports needed) ----
 
 function BandPill({ value }: { value: string }) {
+  // dir="ltr": ranges like "200–350" must never visually reverse in RTL mode
   return (
-    <span style={{
+    <span dir="ltr" style={{
       fontFamily: 'var(--font-space-mono)',
       fontSize: '1.35rem',
       fontWeight: 700,
@@ -132,7 +133,7 @@ function ProofUnitBlock({ unit, isDrawUnit = false }: { unit: ProofUnitData; isD
           fontWeight: 600,
           color: 'var(--color-ink)',
           margin: '2px 0 4px',
-        }}>{unit.claim}</p>
+        }}><bdi dir="ltr">{unit.claim}</bdi></p>
       )}
       <p style={{
         fontFamily: 'var(--font-heebo)',
@@ -252,14 +253,17 @@ export default function PassportDemo() {
         {/* LIVE DRAW */}
         <div style={{ paddingTop: '28px', marginBottom: '24px' }}>
           <SectionHeader label="LIVE DRAW" title="Audience evidence from real events" />
+          {/* Warm sentence, normal case — mono-caps rule-strips are banned
+              on marketing surfaces (owner exhibit, 21 Jul) */}
           <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
+            fontFamily: 'var(--font-heebo)',
+            fontSize: '0.8rem',
+            fontStyle: 'italic',
             color: 'var(--color-tally-onlight)',
             margin: '6px 0 0',
+            lineHeight: 1.5,
           }}>
-            FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT
+            Crowds appear as honest ranges — nobody can count a room to the person.
           </p>
           <div style={{ marginTop: '4px' }}>
             {drawUnits.map((u, i) => (
@@ -287,14 +291,17 @@ export default function PassportDemo() {
         {/* COMMUNITY — contextual only */}
         <div style={{ marginBottom: '24px' }}>
           <SectionHeader label="COMMUNITY" title="Audience signals" />
+          {/* Warm sentence, normal case — mono-caps rule-strips are banned
+              on marketing surfaces (owner exhibit, 21 Jul) */}
           <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
+            fontFamily: 'var(--font-heebo)',
+            fontSize: '0.8rem',
+            fontStyle: 'italic',
             color: 'var(--color-tally-onlight)',
             margin: '6px 0 0',
+            lineHeight: 1.5,
           }}>
-            CONTEXTUAL — NOT DRAW EVIDENCE
+            Background colour only — a following says who listens, not who shows up.
           </p>
           <div style={{ marginTop: '4px' }}>
             {communityUnits.map((u, i) => (

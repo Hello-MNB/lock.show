@@ -22,6 +22,10 @@ export function BandPill({ value, size = 'md', onDark }: BandPillProps) {
 
   return (
     <span
+      // dir="ltr": band ranges like "70–150" must never visually reverse to
+      // "150–70" when the page is toggled to Hebrew (RTL). Same rule as the
+      // Wordmark's dir="ltr" precedent.
+      dir="ltr"
       style={{
         fontFamily: 'var(--font-space-mono)',
         fontSize,

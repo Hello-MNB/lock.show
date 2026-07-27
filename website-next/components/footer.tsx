@@ -314,7 +314,7 @@ export function Footer() {
                     padding: '0.4rem 0',
                   }}
                 >
-                  WhatsApp
+                  Message LOCK on WhatsApp
                 </a>
               </li>
             </ul>

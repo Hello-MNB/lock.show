@@ -37,7 +37,7 @@ const passportFeatures = [
   {
     label: 'DRAW AS A BAND, NOT A BOAST',
     title: 'A range the evidence can actually carry.',
-    body: 'Audience draw appears as a band — 60–100, 100–200 — not a flattering number someone typed into a bio. It’s a quieter claim, and that’s exactly why you can lean on it.',
+    body: 'Audience draw appears as a band — ⁦60–100⁩, ⁦100–200⁩ — not a flattering number someone typed into a bio. It’s a quieter claim, and that’s exactly why you can lean on it.',
   },
   {
     label: 'HOW IT WAS CHECKED',
