@@ -3,6 +3,9 @@ import TermsContent from './terms-content'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/terms' },
+  // D6 (owner ruling): legal pages stay NOINDEX + out of sitemap.ts until the
+  // owner supplies the legal facts and review completes. Body text untouched.
+  robots: { index: false, follow: false },
   title: 'Terms of Use',
   description: 'LOCK terms of use — draft under legal review. Covers the service, evidence and content rules, payments, liability, and governing law.',
 }

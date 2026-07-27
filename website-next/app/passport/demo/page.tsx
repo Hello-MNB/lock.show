@@ -2,18 +2,25 @@
 
 export const metadata: Metadata = {
   alternates: { canonical: '/passport/demo' },
+  // D5 (owner ruling): the demo Passport is a FICTIONAL sample — noindex +
+  // out of sitemap.ts. A fabricated history must never be an indexation
+  // target or a factual-implying search result.
+  robots: { index: false, follow: false },
   title: 'Sample Passport — Verified Live Performance Evidence',
   description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
 import { APP_URL } from '@/lib/app-url'
 
-// --- Demo data: fictional artist "Dana Lev" ---
+// --- Demo data: Maya Vale, THE canonical demo persona (owner ruling 21 Jul
+// 2026, docs/LOCK-PRODUCT-SPECIFICATION.md §8.4 — supersedes "Dana Lev").
+// Every venue/festival below is INVENTED (D5): no name may be mistakable for
+// a real Israeli venue, so no real room ever appears in a fabricated history.
+// Brand/stage names stay Latin in both languages (src/lib/demo.js purity law).
 
 const artist = {
-  name: 'Dana Lev',
-  nameHe: 'דנה לב',
-  genre: 'Singer-songwriter · Indie',
+  name: 'Maya Vale',
+  genre: 'Underground Techno',
   base: 'Tel Aviv',
   since: '2019',
 }
@@ -25,22 +32,24 @@ interface ProofUnitData {
   reviewed: string
 }
 
+// Fictional venues only (D5): Club Vela, The Attic Stage and Horizon
+// Gathering are invented for this sample and do not exist.
 const drawUnits: ProofUnitData[] = [
   {
     claim: '200–350',
-    context: 'Sold-out headline show · Barby, Tel Aviv',
+    context: 'Sold-out headline night · Club Vela, Tel Aviv',
     method: 'TICKET EXPORT · REVIEWED',
     reviewed: 'JAN 2025',
   },
   {
     claim: '70–120',
-    context: 'Recurring Friday residency · Levontin 7, Tel Aviv',
+    context: 'Recurring Friday residency · The Attic Stage, Tel Aviv',
     method: 'PRODUCER-CONFIRMED',
     reviewed: 'MAR 2025',
   },
   {
     claim: '400–600',
-    context: 'Festival support slot · Meteor Festival, Galilee',
+    context: 'Festival support slot · Horizon Gathering, Galilee',
     method: 'PRODUCER-CONFIRMED',
     reviewed: 'AUG 2024',
   },
@@ -64,7 +73,7 @@ const performanceUnits: ProofUnitData[] = [
 const communityUnits: ProofUnitData[] = [
   {
     claim: '4,200 followers',
-    context: 'Instagram @dana.lev.music — organic, no paid promotion',
+    context: 'Instagram @maya.vale.music — organic, no paid promotion',
     method: 'PLATFORM DATA · REVIEWED',
     reviewed: 'APR 2025',
   },
@@ -172,17 +181,19 @@ export default function PassportDemo() {
   return (
     <div style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
 
-      {/* DEMO BANNER */}
+      {/* DEMO BANNER — warm, normal-case (mono-caps rule-strips are banned on
+          marketing surfaces, owner exhibit 21 Jul). D5: the fictional nature
+          must be visible right at the top. */}
       <div style={{
         backgroundColor: 'var(--color-stamp)',
         color: 'var(--color-ink)',
         textAlign: 'center',
         padding: '10px 16px',
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.7rem',
-        letterSpacing: '0.1em',
+        fontFamily: 'var(--font-heebo)',
+        fontSize: '0.85rem',
+        fontWeight: 600,
       }}>
-        SAMPLE PASSPORT — FICTIONAL ARTIST FOR ILLUSTRATION ONLY
+        Sample profile — a fictional artist, here to show you around.
       </div>
 
       {/* PASSPORT DOCUMENT — floats as a card on wide viewports, full-bleed on mobile */}
@@ -230,12 +241,14 @@ export default function PassportDemo() {
           color: 'var(--color-ink)',
           lineHeight: 1,
         }}>{artist.name}</h1>
+        {/* No Hebrew transliteration line: stage names stay Latin in both
+            languages (src/lib/demo.js language-purity law). */}
         <p style={{
           fontFamily: 'var(--font-heebo)',
           fontSize: '0.85rem',
           color: 'var(--color-tally-onlight)',
           margin: '4px 0 12px',
-        }}>{artist.nameHe}</p>
+        }}>Fictional artist — for demonstration only</p>
         <p style={{
           fontFamily: 'var(--font-space-mono)',
           fontSize: '0.65rem',

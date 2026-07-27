@@ -40,23 +40,21 @@ Every claim on a Passport carries a method label and reviewed date. Method label
 
 ## Pages
 
-- https://lock.show/ — Homepage
-- https://lock.show/artists — For artists (אמן): how to build a Passport
-- https://lock.show/bookers — For booking managers (מזמיני הופעות): how to read a Passport
-- https://lock.show/producers — For producers (מפיק): the magic-link confirmation flow
-- https://lock.show/managers — For artist managers/agencies (משרד אמרגנות): roster beta signup
-- https://lock.show/production — For production offices (משרד הפקה): production beta signup
-- https://lock.show/passport/demo — A sample Passport showing verified evidence
-- https://lock.show/how-it-works — Three players, seven steps
-- https://lock.show/methodology — How evidence is verified; method labels explained
-- (Pricing page temporarily unpublished during the closed beta — access is by arrangement; booking managers always free)
-- https://lock.show/radar — The Artist Radar feature explained
-- https://lock.show/faq — Frequently asked questions
-- https://lock.show/contact — Contact form and information
+- https://www.lock.show/ — Homepage
+- https://www.lock.show/artists — For artists (אמן): how to build a Passport
+- https://www.lock.show/bookers — For booking managers (מזמיני הופעות): how to read a Passport
+- https://www.lock.show/producers — For producers (מפיק): the magic-link confirmation flow
+- https://www.lock.show/passport/demo — A sample Passport showing what verified evidence looks like (fictional demonstration artist)
+- https://www.lock.show/how-it-works — Three players, seven steps
+- https://www.lock.show/methodology — How evidence is verified; method labels explained
+- https://www.lock.show/pricing — Pricing: artists build and publish free during the pilot; booking managers read Passports free, always
+- https://www.lock.show/radar — The Artist Radar feature explained
+- https://www.lock.show/faq — Frequently asked questions
+- https://www.lock.show/contact — Contact form and information
 
-Not indexed for AI retrieval: https://lock.show/app/* (the product application
-itself — private tool screens and auth-walled workspace, not marketing or
-reference content).
+Not indexed for AI retrieval: https://www.lock.show/app/* (the product
+application itself — private tool screens and auth-walled workspace, not
+marketing or reference content).
 
 ## Current stage
 
@@ -68,5 +66,5 @@ English and Hebrew (עברית). Hebrew copy is authored native-first, not trans
 
 ## Domain
 
-https://lock.show — marketing site
-https://app.lock.show — artist and operator app (not indexed here)
+https://www.lock.show — marketing site (canonical host; the apex lock.show redirects here)
+https://www.lock.show/app — artist and operator app (not indexed here)

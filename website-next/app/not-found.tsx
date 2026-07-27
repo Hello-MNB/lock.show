@@ -6,7 +6,16 @@
 // router mounts (src/main.jsx). Same-origin only — the script never uses a
 // caller-controlled host, only location.pathname/search of THIS origin.
 // Every other path gets a warm site 404 instead of Next's bare default.
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+// A 404 must never be an indexation target (C27 fix). App Router supports a
+// static `metadata` export on not-found.tsx — this renders
+// <meta name="robots" content="noindex, nofollow"> into the built out/404.html.
+export const metadata: Metadata = {
+  title: 'Page not found',
+  robots: { index: false, follow: false },
+}
 
 const BOUNCE = `(function(){var p=location.pathname;
 if(p.indexOf('/app/')===0||p==='/app'){
