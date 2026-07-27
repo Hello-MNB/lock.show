@@ -242,8 +242,10 @@ export default function FAQ() {
       </section>
 
       {/* STILL HAVE QUESTIONS? */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section style={{
-        backgroundColor: 'var(--color-night)',
+        backgroundColor: 'var(--color-ink)',
         color: 'var(--color-paper)',
         padding: '64px 24px',
         textAlign: 'center',

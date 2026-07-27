@@ -1090,9 +1090,12 @@ export default function HomePage() {
         </section>
 
         {/* ── TRUST STATEMENT ──────────────────────────────────────────── */}
+        {/* T-97.1 dark-adjacency law: night here, ink on the final CTA below —
+            the dark tail of the page rotates night → ink → night(footer) so
+            no two adjacent dark containers share a tone */}
         <section
           style={{
-            background: 'var(--color-ink)',
+            background: 'var(--color-night)',
             padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
             borderTop: '1px solid rgba(243,245,239,0.1)',
@@ -1177,11 +1180,12 @@ export default function HomePage() {
         </section>
 
         {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
-        {/* container-contrast law: night after the ink trust band — adjacent
-            dark containers must not share the same tone */}
+        {/* container-contrast law (dark side, T-97.1): ink after the night
+            trust band and before the night footer — adjacent dark containers
+            must not share the same tone */}
         <section
           style={{
-            background: 'var(--color-night)',
+            background: 'var(--color-ink)',
             padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
           }}

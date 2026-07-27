@@ -626,9 +626,11 @@ export default function Pricing() {
       </section>
 
       {/* ── DARK CLOSING CTA ──────────────────────────────── */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section
         style={{
-          background: 'var(--color-night)',
+          background: 'var(--color-ink)',
           color: 'var(--color-paper)',
           padding: 'clamp(3.5rem, 9vw, 6.5rem) max(24px, 4vw)',
           textAlign: 'center',

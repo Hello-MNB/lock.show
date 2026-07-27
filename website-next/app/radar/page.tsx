@@ -325,7 +325,10 @@ export default function Radar() {
       </section>
 
       {/* EVIDENCE STATES — dark */}
-      <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px' }}>
+      {/* T-97.1 dark-adjacency law: the atmosphere image band above ends in a
+          near-ink veil — a structural seam marks where the photo stops and
+          the flat night panel starts */}
+      <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px', borderTop: '1px solid #2a342d' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',

@@ -94,6 +94,10 @@ export function Footer() {
         backgroundColor: 'var(--color-night)',
         color: 'rgba(255,255,255,0.7)',
         padding: '56px max(24px, 4vw) 32px',
+        // T-97.1 dark-adjacency law: the footer is always night, so its top
+        // edge carries a structural seam — the boundary stays visible even
+        // when the preceding band is dark (image CTA bands, 404, ink CTAs).
+        borderTop: '1px solid #2a342d',
       }}
       aria-label="Site footer"
     >

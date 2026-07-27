@@ -472,8 +472,10 @@ export default function Methodology() {
       </section>
 
       {/* ── CLOSING CTA — dark ───────────────────────────────────────────── */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section style={{
-        backgroundColor: 'var(--color-night)',
+        backgroundColor: 'var(--color-ink)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         textAlign: 'center',
       }}>
