@@ -92,6 +92,20 @@
 
   <rect x="780" y="460" width="340" height="1" fill="rgba(10,13,11,0.08)"/>
 
+  <!-- Fictional-sample disclosure (T-97 item 2): stamped tag under the sample
+       proof units, inside the center-safe crop area, sized to stay legible at
+       50% render (600x315) -->
+  <rect x="780" y="486" width="316" height="40" fill="none" stroke="#0a0d0b" stroke-width="2"/>
+  <text
+    x="796"
+    y="513"
+    font-family="'Space Mono', monospace"
+    font-weight="700"
+    font-size="17"
+    fill="#0a0d0b"
+    letter-spacing="0.5"
+  >SAMPLE — FICTIONAL ARTIST</text>
+
   <!-- Bottom border -->
   <rect x="0" y="624" width="1200" height="6" fill="rgba(10,13,11,0.08)"/>
 </svg>
