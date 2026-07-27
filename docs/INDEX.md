@@ -38,3 +38,6 @@ enforces.
 | Measurement narrative (Drive) | Cowork's plan | Cowork | mirror-only (repo §14 is canon) |
 | Accounts registry (Drive) | Cowork's registry | Cowork | mirror-only pending repo canon |
 | Legacy site | website/ | — | archived-in-place (S0: unreferenced; archive move planned) |
+| SEO/analytics change record (T-96) | docs/SEO-CHANGELOG.md | Claude | current — every canonical/robots/sitemap/schema/tagging change lands here |
+| GSC console handoff (owner actions) | docs/SEO-GSC-HANDOFF.md | Claude → Maria | current — wait-until flags gate sitemap submission |
+| GA4 property setup handoff (D1 card) | docs/GA4-SETUP-HANDOFF.md | Claude → Maria | awaiting owner: Measurement IDs A+B |
