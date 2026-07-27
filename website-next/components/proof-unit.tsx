@@ -4,7 +4,7 @@
 
 interface ProofUnitProps {
   claim: string          // e.g. "200–350" or "Self-managed touring"
-  context: string        // e.g. "Headline capacity, Zappa Club TLV, Feb 2025"
+  context: string        // e.g. "Headline capacity, Club Vela TLV, Feb 2025"
   method: string         // e.g. "TICKET EXPORT" or "OPERATOR-REVIEWED"
   reviewed: string       // e.g. "REVIEWED OCT 2025"
   isBand?: boolean       // true → render claim as BandPill style

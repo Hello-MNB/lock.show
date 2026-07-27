@@ -1,5 +1,9 @@
 # GSC HANDOFF — Google Search Console setup for lock.show (T-96 Phase 9 · owner console actions)
 
+> **⚠️ CORRECTION — 27 Jul 2026 (owner-relayed architecture review; supersedes any conflicting text below):**
+> **A verified GSC Domain property `sc-domain:lock.show` already EXISTS** (owned via hello@lock.show, per Drive records). **Do NOT create a duplicate or re-run GoDaddy TXT verification.** Step 1 becomes: log into Search Console with hello@lock.show → confirm you see `sc-domain:lock.show` → done. Only if access is genuinely missing does the TXT walk below apply. URL-prefix properties for www/app remain optional conveniences, not requirements.
+
+
 _For: Maria. Written 27 Jul 2026, step-⑥ of the locked T-96 execution order._
 _What this is: everything that has to happen inside Google Search Console (Google's free tool that shows how Google sees, crawls, and indexes our pages — "GSC" from here on). None of it touches code; it is all done in your browser. I cannot see your Google account from here, so where Google's screens vary by account I say so instead of inventing a button name._
 

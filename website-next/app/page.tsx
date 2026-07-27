@@ -472,7 +472,7 @@ export default function HomePage() {
                     marginBottom: '0.2rem',
                   }}
                 >
-                  Zappa Tel Aviv — headline
+                  Club Vela, Tel Aviv — headline
                 </div>
                 <div
                   style={{
@@ -510,14 +510,13 @@ export default function HomePage() {
               >
                 <span
                   style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.52rem',
-                    letterSpacing: '0.06em',
-                    color: 'rgba(243,245,239,0.18)',
-                    textTransform: 'uppercase',
+                    fontFamily: 'var(--font-heebo)',
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.02em',
+                    color: 'rgba(243,245,239,0.55)',
                   }}
                 >
-                  Sample · Fictional artist
+                  Sample — a fictional artist
                 </span>
                 <Link
                   href="/passport/demo"
@@ -820,7 +819,7 @@ export default function HomePage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Sample Claims — Fictional Artist
+                  Sample Claims — Fictional Artist &amp; Venues
                 </p>
 
                 {/* BandPill proof unit */}
@@ -843,7 +842,7 @@ export default function HomePage() {
                     <bdi dir="ltr">200–350</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
-                    Headline audience draw, Zappa Club TLV, Feb 2025
+                    Headline audience draw, Club Vela, Tel Aviv, Feb 2025
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <MethodBadge label="TICKET EXPORT" />
@@ -916,7 +915,7 @@ export default function HomePage() {
                     <bdi dir="ltr">70–120</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
-                    Capacity, Shapira Arts Hub, support slot, Dec 2024
+                    Capacity, The Attic Stage, support slot, Dec 2024
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <MethodBadge label="PRODUCER-CONFIRMED" />

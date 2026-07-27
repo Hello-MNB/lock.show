@@ -635,13 +635,13 @@ export default function ArtistsPage() {
                 {
                   label: 'Audience Draw',
                   value: '200–350',
-                  detail: 'Headline slot, Zappa Club TLV, Feb 2025',
+                  detail: 'Headline slot, Club Vela, Tel Aviv, Feb 2025',
                   badge: 'TICKET EXPORT',
                   date: 'REVIEWED MAR 2025',
                 },
                 {
                   label: 'Gig',
-                  value: 'Barby — support slot',
+                  value: 'The Attic Stage — support slot',
                   detail: 'Booked it herself, Dec 2024',
                   badge: 'PRODUCER-CONFIRMED',
                   date: 'REVIEWED DEC 2024',

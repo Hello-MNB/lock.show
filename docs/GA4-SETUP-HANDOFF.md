@@ -1,5 +1,11 @@
 # GA4 SETUP HANDOFF — the D1 dependency card (owner console actions)
 
+> **⚠️ CORRECTION — 27 Jul 2026 (owner-relayed architecture review; supersedes any conflicting text below):**
+> 1. **www.lock.show and app.lock.show are SUBDOMAINS of one registrable domain.** GA4 cookies set on `.lock.show` cover both — **do NOT configure cross-domain measurement between them.** Instead VERIFY: one Measurement ID on both surfaces, cookie continuity across the www→app hop, consent persistence, no self-referrals, and the `surface` parameter distinguishing them.
+> 2. **The platform keeps the EXISTING ID `G-ZX907M2NY8`** — verify it in production; do not wait for or create a replacement "Property A" ID. The clean-up is about *what* we send (bounded milestones, `surface`, `environment`), not a new property.
+> 3. **A separate Shopify property (Property B) is an OPEN architecture decision for Maria** — not an automatic requirement. If created, Shopify's Google & YouTube integration belongs to shop.lock.show ONLY.
+
+
 _For: Maria. Written 27 Jul 2026, step-⑥ of the locked T-96 execution order. This is the console-setup handoff your ruling D1 asked for: you create two Google Analytics properties, send me back two Measurement IDs, and only then does any analytics code change. I cannot see your Google Analytics account from here — where Google's screens differ by account or version, I say "the screen may name this X or Y" instead of inventing a label._
 
 **What GA4 is, in one line:** Google Analytics 4 — Google's free measurement tool; a **property** is one reporting container, a **data stream** is one tagged source feeding it, and a **Measurement ID** (looks like `G-XXXXXXXXXX`) is the public key the website uses to send events to that stream.
