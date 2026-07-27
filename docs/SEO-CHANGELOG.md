@@ -1,6 +1,9 @@
 # SEO CHANGELOG — T-96 SEO/AEO/GEO + Entity-Analytics Rebuild
 _Deliverable #14 of the 27 Jul owner task. Newest entries on top. Every change to canonical/robots/sitemap/metadata/JSON-LD/analytics-tagging lands here with its SHA._
 
+## Entry 1 · 27 Jul 2026 · REGRESSION HARNESS LANDED (step 1 of the safe order)
+`scripts/test-seo-contract.mjs` (S1–S7: unique metadata + canonical-host consistency [host-agnostic — survives the D2 ruling] + sitemap/robots contract + built-HTML ld+json validity + FAQPage visibility w/ C5 allowlisted behind `C5_HOMEPAGE_FAQ_VISIBILITY_ENFORCED=false`) · `scripts/test-analytics-contract.mjs` (A1–A4: CANON⊆CHECK, EVENTS∈CANON∪DEV_ONLY, firewall prop-key scan over 35 call sites) · orphaned `test-site-nav.mjs` wired as `test:sitenav` (passes unmodified) · `.github/workflows/verify.yml` — CI now runs the FULL 19-check verify chain (nothing ran verify in CI before). All 19 green at commit.
+
 ## Entry 0 · 27 Jul 2026 · PHASE-0 PRE-CHANGE BASELINE (discovery @ `5fcf7d2`, read-only)
 **Surfaces:** marketing = Next.js 16 static export (`website-next/`, project lock-site, lock.show/www) · app = Vite SPA (repo root, project lock-app, app.lock.show) · committed embed mirror at `website-next/public/app` served at lock.show/app · legacy dead `website/` dir (7 files).
 
