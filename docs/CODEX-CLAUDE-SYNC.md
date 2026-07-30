@@ -12,7 +12,6 @@ owes the other, and the live status of cross-team asks. **Both agents read this 
 | **Visual quality / design law** | Drive `00_CURRENT/LOCKSHOW_Design_System_CURRENT.html` | **Codex** |
 | Entities, signup/routing, pricing ruling | `docs/CODEX-FUNCTIONAL-CONTRACTS.md` | **Claude** (from live code, nav-contract-tested) |
 | **Entity vocabulary (canonical terms)** | `docs/ENTITY-GLOSSARY.md` = DS v1.5.6 `#entity-hierarchy` + code mapping | **Codex** names (DS) · **Claude** code-binding · **Maria** HE terms |
-| Token backlog (what the DS still owes) | `docs/CODEX-TOKEN-COMPLETION-MAP.md` + `docs/CODEX-DS-v1.4.2-AUDIT.md` (work order, 7 ranked asks) | Claude audits → Codex delivers |
 | Approved visual directions (prototypes) | `docs/prototypes/REGISTRY.md` (`00_CURRENT/`: radar-v4, passport-v3) | Claude curates, Maria approves |
 | **Live app reality (what screens actually look like)** | `docs/design-system/current-screens/*.png` + `docs/CODEX-RADAR-VISUAL-SPEC.md` | Claude captures |
 | Release state / task board | `docs/TASK-REGISTER.md` (retired `docs/TASK-STATUS-BOARD.md` superseded 21 Jul 2026), `docs/releases/` | Claude |
@@ -28,7 +27,6 @@ the firewall or the routing table; a prototype may not contradict the DS once v1
 2. 🔴 Per-surface token VALUES (Paper / White card / Forest / Media overlay).
 3. 🟡 Hebrew display face decision + font tokens; 5-state + method-label tokens in **canon vocabulary**
    (Producer-confirmed / Source-linked / Evidence-supported / Self-declared); draw band+binary component
-   spec. (Full list: `CODEX-DS-v1.4.2-AUDIT.md` §ranked asks.)
 
 **Claude → Codex (so Codex designs from reality, not imagination):**
 1. ✅ Functional contracts (routing table, vocabulary, pricing ruling).
@@ -56,7 +54,6 @@ current tokens stay frozen (no new invented styling), and the re-ground starts t
 | 3b | Physical files INTO git | Owner/Codex → repo | 🟢 MOSTLY CLOSED 12 Jul night: OG exports ✅ (8dde17e) · logo/icon SVGs ✅ (2c66d24, byte-faithful from 02_ASSETS, firewall-clean). REMAINING: 4 atmosphere PNGs + social cover are 1.4–1.9MB each — too large for the MCP transfer path; **Cowork commits them from its local clone** (one copy+commit), or Codex exports web-weight webp (≤150KB) to Drive for me to carry |
 | 3c | DB-state inventory (states vs actions) + post-implementation screenshots | Claude → Codex | 🟡 Claude owes |
 | 4 | Live-app screenshots + Radar visual spec | Claude → Codex | ✅ delivered (`current-screens/` ×12 + `CODEX-RADAR-VISUAL-SPEC.md`) |
-| 5 | v1.4.2 audit (what Codex misread / still owes) | Claude → Codex | ✅ delivered (`CODEX-DS-v1.4.2-AUDIT.md`) |
 | 6 | Functional contracts | Claude → Codex | ✅ delivered |
 
 ## 5. Working rhythm
@@ -211,7 +208,6 @@ a Pricing page that SCOPE S8 unpublished. Honest audit, accepted with gratitude.
 **RULINGS (Claude Code, release governor):**
 - **Deep Scan = TARGET ARCHITECTURE ruling (GPT's option 1).** What is LIVE: per-evidence claim
   extraction. The canon's "$1 deep scan once at onboarding + cheap incremental" = the target,
-  building P2 post-preview. Documented in FLOWS-PER-ENTITY §1; CFRO economics must price the
   CURRENT per-evidence pipeline separately from the PLANNED deep scan (no business number may
   assume an unbuilt process). CLAUDE.md canon text itself = owner's to amend; flagged to Maria.
 - **Post-M8 derivation BUILT NOW (not just documented):** pickNextAction after publish now
@@ -233,16 +229,13 @@ a Pricing page that SCOPE S8 unpublished. Honest audit, accepted with gratitude.
   Cowork: return-loop probes added to Q3 · CFRO: recurring-value willingness-to-pay split).
 
 ## 23. PRE-DEPLOY VERIFICATION MEGA-BATCH (13 Jul, owner order: "check the processes Claude built")
-Owner-visible surfaces created: `docs/FLOWS-PER-ENTITY.md` (repo canon, from code truth) + the
 Flows-per-Entity artifact + CFRO-VALIDATION-PACK (canon mirror, 1VntX6XSrOCxhXeBQCM5XoAKEK3oiGXNJ).
 Each AI CHECKS Claude Code's work — not its own (independent verification, release rule applies):
-- **COWORK (on preview):** execute Q1–Q8 against the 6 entity flows in FLOWS-PER-ENTITY.md
   literally — every numbered step, real browser; verify the 9 pilot analytics events actually
   write rows (analytics_event) incl. waitlist role/source/?src attribution; the 2 firewall
   watch-items; RPC gap-states (roster grants / production requests) on an empty org.
 - **CODEX (its published Q4 list):** + one addition — cross-check the Flows artifact vs its DS
   user journeys; flag any screen the flow map claims that the DS doesn't cover (or vice versa).
-- **GPT (next sentinel run):** drift-check FLOWS-PER-ENTITY.md + SCOPE-rel-2026.07.13 + canon
   pack against each other; flag contradictions; classify the flow doc into the canon set.
 - **CFRO (CLAUDE CHAT):** validation pack v1 delivered to the canon mirror — 5 checks
   (signal points per lane, pricing posture, unit-economics sanity, v2.3-hypothesis→signal map,
@@ -266,7 +259,6 @@ declaration will INCLUDE the proof pack it listed (Radar desktop+mobile, Passpor
 /bookers 3-audience copy, /managers, /production, /producers, waitlist attribution, 360px) —
 no proof pack, no declaration ③ buyer-segmentation copy + manager next-action value = Codex Q4
 gates, my implementation.
-**Cowork spec audit (4 gaps — all real, all CLOSED in FLOWS-PER-ENTITY.md same hour):**
 ① ArtistAccess handshake was missing from the DOC (code has it: agency access-requests card →
 artist approves in Settings → grant active; orgs.js + Settings.jsx) — added as Manager §2 step 2
 + Artist step 10. ② Production outbound booking clarified: production BOOKS AS A BUYER via the
@@ -869,7 +861,6 @@ NOTE: sandbox CAN now reach www.lock.show (HTTP 200) — live verification is in
 outside-in check remains as redundancy, not dependency.
 
 ## 52. COST-BOUNDARIES MAP + DEPLOY-TRAIN LAW (owner order 14 Jul)
-docs/COSTS-BOUNDARIES-2026.07.14.md = the single free-vs-paid map (CFRO-aligned; CFRO owns
 updates). Owner-flagged waste CONFIRMED by measurement: 50+ deployments today (26 app/24 site)
 vs Vercel Hobby 100/day. FIXED: site smart-skip restored (range-aware, website-next-only,
 fail-open; API train-deploys bypass it by design). LAW: production = named trains only
