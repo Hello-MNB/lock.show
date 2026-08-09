@@ -72,3 +72,41 @@ Existing gates that stay: fit · guardrails · canon-drift · analytics contract
 
 ## 6 · WHAT I NEED FROM THE OWNER (decision card)
 C1–C10 above, in that order — C1, C2, C3 unblock the most. Plus: the 4 open v9 decisions that touch data (D2 on-request lifecycle · D3 handoff acceptance · D4 scene dataset · D6 close-out facts) and our pending migrations (034 · 040 · 041+).
+
+---
+
+# 7 · TASK SPECIFICATION — foundation build (design-independent)
+**Owner word 9 Aug: "the design isn't final, but we can start advancing development — spec the tasks including test processes."**
+Every task below is buildable while screens keep moving. Each carries the proof of *why* design churn cannot invalidate it, a definition of done, and its own test process. Migrations are AUTHORED by us and APPLIED by the owner (standing law); nothing here deploys without her word.
+
+## WAVE A — closes known live debts on code we already own (no migration, no ruling, no design)
+| ID | Task | Why it can't be invalidated by design | DoD | Test process |
+|---|---|---|---|---|
+| **T-100** | **Roster health unification** — one rule replaces `artistState()` + `rosterStatus()` so one artist can never show two different states | It is a defect: two derivations of one truth. Any design renders one state | Single exported rule; both surfaces consume it; no second derivation remains in `src/features/agency/` | New `test:one-truth` assertion: grep-level — no two functions may derive roster health; render assertion — same artist, same state on both surfaces |
+| **T-101** | **Rep + Production analytics wiring** — both entities fire ZERO events today; the operator cockpit is blind to half the product | Events are contracts on actions, not screens; the canon event list already exists | Every existing rep/production action fires its canon event; no new event names invented (canon-gated) | Extend `test:analytics` (A5): every interactive element in agency/production maps to a canon event or is explicitly listed as intentionally-silent |
+| **T-102** | **Authority explainer** — replace silent capability degradation with "X can approve this → ask X" | v9 Registry:86 and our own §8.10 both demand it; the sentence is data-driven, not layout | Every gated action names the authority holder instead of quietly changing label | `test:authority` (see T-110); plus an i18n assertion that no gated action renders a bare disabled state |
+| **T-103** | **Mandate expiry chooser** — `artist_access.expires_at` exists (027) and is never written; artists can only grant endless access | The column exists; the control is one field. Canon §3.3 already promises scoped+revocable | Artist approve writes an expiry (incl. explicit "no end date"); expired mandates stop future authority; history stays readable | `test:authority` case: expired mandate → capability denied, history still readable |
+| **T-104** | **Fit-gate extension** — add `/agency ×3`, `/production ×3` to `test:fit` | Viewport laws are design-agnostic | 6 routes in the recurring sweep, all-zeros at 360/1360 | The gate itself |
+
+## WAVE B — the data spine (migrations authored 041+, owner applies; code behind flags)
+Order is dependency-driven. Each migration is additive-only, paired with a `.down.sql`, and independently useful.
+| ID | Task | Objects / shape | Why design-independent | DoD | Test process |
+|---|---|---|---|---|---|
+| **T-105** | **Confirmation completion** (smallest, closes a live debt) | `producer_confirmations` + `expires_at`, `correction_text` | The correction box is BUILT and its text is silently dropped today; expiry is computed server-side instead of stored | Correction persists and reaches the artist's review; expiry is a state, not arithmetic | `test:object-states` (confirmation) + an end-to-end: partly-right → text stored → visible to artist |
+| **T-106** | **Share-link service** — the highest-leverage single step | `share_link` + `token` (unique) + `recipient_view`; nullable expiry = endless; `/p/:token` resolver | The table already exists with zero writes. One link = one version + one policy is an IA rule, not a layout | Links are minted, resolved, revoked, expired; policy binds at mint time | `test:link-integrity`: one link → exactly one version+policy; all 6 dead-link states reachable and distinct; revoked never resolves |
+| **T-107** | **Passport version store** | `passport_versions` + `version_no`, `state` (draft·preview·review·published·superseded), `recipient_view`, `superseded_by`; publish truth moves off `artists.published` | v9, canon and our own T-89 all require versioned publishing; the diff *screen* can change, the version *object* cannot | Every publish creates an immutable version; superseding is explicit; the old boolean becomes derived | `test:object-states` (passport) + assertion: no two live versions per (act, recipient_view) |
+| **T-108** | **Thread object** (the spine) | `thread` + `thread_message` + `thread_participant`; `availability_requests` becomes the thread's origin event; per-workspace read projections in RLS | Case, Advance, Handoff and all three inboxes project from Thread in v9. Nothing above it is correct without it | Existing buyer request flows unchanged in behavior but backed by Thread; rep projection gated on mandate scope | `test:projection-matrix` (thread row): each persona sees exactly its permitted projection; no copies exist |
+| **T-109** | **Professional Asset + version store** | `act_asset` + `act_asset_version` (current·superseded) + `event_asset_reference` | v9 flags this as its own P0 data hole; the artist owning a canonical asset is an IA rule | Assets versioned; "newer exists" derivable; production never overwrites the artist's canonical asset | `test:object-states` (asset) + an assertion that no non-owner write path exists |
+
+## WAVE C — the machine gates (pure additive; make drift mechanical, not editorial)
+| ID | Gate | What it asserts | Why now |
+|---|---|---|---|
+| **T-110** | `test:authority` | No capability reachable without an active in-scope mandate; expiry stops future authority; history remains readable | Guards T-102/T-103 and every future rep feature |
+| **T-111** | `test:object-states` | Every object's stored state set == its canon state set (extends canon-drift from events to entity state machines) | Catches the exact class of drift found in this analysis (3 mandate vocabularies, 3 slot enums) |
+| **T-112** | `test:projection-matrix` | Per object × persona, the rendered surface contains only what the Entity Projection Matrix permits — with the artist-private exemption explicit (owner ruling 9 Aug) | Turns the firewall from prose into physics across all six personas |
+| **T-113** | `test:link-integrity` | One link = one version = one policy; 6 dead-link states distinct; revoked/expired never resolve | Guards T-106 |
+| **T-114** | `test:screen-registry` | Every route declares a v9 screen ID; every registry ID maps to a route or is explicitly NOT-BUILT | Kills silent scope drift once the design lands; needs `data-screen-id` from Claude Design |
+
+## SEQUENCE
+Wave A (now — no gates) → T-105 → T-106 → T-107 → T-108 → T-109, each with its Wave-C gate landing alongside. T-114 waits for `data-screen-id` in the design bundle.
+**Blocked and NOT in this plan:** anything gated on C1–C10 (all screen work), the 4 open v9 decisions (D2/D3/D4/D6), payments, and the Rep/Production feature set (post-Gate).
