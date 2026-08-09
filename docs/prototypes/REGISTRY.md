@@ -11,7 +11,39 @@ pointed-to, and archived here, mirroring the governance of the `BRANDING AND DES
 ## AUTHORITY RULE (control-plane repair, 21 Jul 2026 · `ratify:R00`)
 Prototypes are **design-intent snapshots**, never automatic build authority. Statuses: `DESIGN_REVIEW` (informs screen TARGETs only) → `ACCEPTED_FOR_IMPLEMENTATION` (owner word; may guide build) → `SUPERSEDED`. Canon, permissions, entity rules and data contracts always override prototype behavior. A bundle = ALL its files (hash-pinned); a partial bundle is not the reviewed design.
 
-## Current design bundle — LOCK Prototype v7 (`DESIGN_REVIEW` — NOT accepted; owner: "not yet good enough, design + per-screen spec")
+## Current design bundle — LOCK Prototype **v9** (`DESIGN_REVIEW` — registered 9 Aug 2026, hash-pinned)
+Owner delivered v9 as a full design package (prototype + 16 SSOT specs + 3 handoff docs). Status per the authority rule above: **DESIGN_REVIEW** — informs TARGETs and the build plan; becomes `ACCEPTED_FOR_IMPLEMENTATION` only on the owner's word, per screen or per wave. Owner frame (9 Aug): *"the BETA is canonical — a working application for all needs, not a prototype."* Canon/permissions/data contracts still override prototype behavior; conflicts are recorded, never silently resolved.
+
+Location: `docs/reference/v9/` — 22 files, sha256 (first 16):
+
+| File | sha256 |
+|---|---|
+| `LOCK_Prototype_v9_standalone.html` | 20f34e352722bce6 |
+| `README-REVIEW.md` | d235fbfb1a121938 |
+| `handoff/HANDOFF-1-Product-Spec.md` | ce1e86d8b50d1dae |
+| `handoff/HANDOFF-2-Design-System.md` | 2a91dc1fcf432e38 |
+| `handoff/HANDOFF-3-Decisions-Contracts-QA.md` | f481fb6033cc38c3 |
+| `handoff/README.md` | 26c08e13234bba0e |
+| `specs/LOCK-Artist-Bridge-Contract.md` | 54d6219af408bf62 |
+| `specs/LOCK-DS-Registries.md` | 0deaf7cc08f6b2ee |
+| `specs/LOCK-Entity-Blueprints.md` | de822e03de4d46d5 |
+| `specs/LOCK-Execution-Contract.md` | 64436e92eb40b185 |
+| `specs/LOCK-Flow-Register.md` | 1f250a484b517302 |
+| `specs/LOCK-Freeze-Matrix.md` | 37b2130536abb6d7 |
+| `specs/LOCK-Information-Architecture.md` | 5b3cb8c1e7ca44f6 |
+| `specs/LOCK-Layout-Registry.md` | ebf2049073c96c97 |
+| `specs/LOCK-Localization-Matrix-HE.md` | b345863348e776b2 |
+| `specs/LOCK-Open-Decisions.md` | 62700410db937266 |
+| `specs/LOCK-Production-Operating-Model.md` | 96e3fa5ba9a19f83 |
+| `specs/LOCK-Prototype-Spec-v8.md` | 7f4823f7585c8715 |
+| `specs/LOCK-QA-Checklist-Status.md` | 44efa46a3dd06874 |
+| `specs/LOCK-Rep-Operating-Model.md` | 178539c55d8bf46c |
+| `specs/LOCK-Screen-Registry.md` | 26a9167b39e549c9 |
+| `specs/LOCK-TopBar-System.md` | 27be617d36149428 |
+
+v9 structural anchors: 32 indexed screens with **permanent IDs** (`ART-*`/`REP-*`/`PRO-*`/`EXT-*`/`CNF-*`/`ADM-*`) · 5 entity **experience profiles** · an **Information Object Registry** (owner/lineage/states/visibility per object) · an **Entity Projection Matrix** · 5 non-negotiable IA rules · a 5-layer DS plan (DS 🔴 until layers 3-5 exist) · surface classification (USER SURFACE / SUBVIEW / STATE / OVERLAY / TECHNICAL ROUTE).
+
+## Prior design bundle — LOCK Prototype v7 (`DESIGN_REVIEW` — NOT accepted; owner: "not yet good enough, design + per-screen spec")
 
 | File | Role | sha256 (16) |
 |---|---|---|
