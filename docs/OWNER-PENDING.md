@@ -41,7 +41,7 @@ _Re-audited 9 Aug 2026. Ordered by how much each unblocks._
 | # | What | The call |
 |---|---|---|
 | G-8/G-9/G-10/G-DS | Backfilled spec blocks marked `ratify: R00` (milestone canon · history-line corner law · mobile scene rail · DS block §5.11) + the Wave-B backfills (§8.4 four-faces status · §8.9 dead-link states · §8.12 rows · §5.10 BUILT markers) | yes/confirm each |
-| R-11 | Display-language ruling (UNIVERSE-GAP-REPORT §4): count-based vocabulary only (**recommended**) or ALSO artist-private completion % | Richer Radar progress displays |
+| ~~R-11~~ | ✅ **RULED 9 Aug 2026:** the artist-private view may show everything — percentages, coverage, benchmarks, rich data. The firewall stays absolute only on every OTHER entity's surface. Recorded `c9710ba`; canon backfill owed in §2.9/§5.10 | (closed — unblocks Radar richness) |
 | M-17 | **⅔ RULED (R00, 20 Jul):** (a) Registry-B schema = **F1.csv 15 columns — approved** · (b) certainty = **two separate fields (4-value claim door + 10-value extraction provenance) — approved** · (c) the 4 taxonomy sub-calls: laid out with recommendations 20 Jul, awaiting one-pass ruling | (c) releases R-6/R-7 — the registry-driven universe, priority build |
 
 ## 🧰 PRE-LAUNCH CHECKLIST (technical team, before public launch — parked 20 Jul, silent until launch prep)
