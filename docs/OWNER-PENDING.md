@@ -4,21 +4,37 @@ _Maintained by the build agent. Appears at the end of every reply (owner directi
 **Triage rule (owner ruling 20 Jul):** every item sits in exactly one bucket by one test — "does this block development or a real user RIGHT NOW?" Active = true blockers + decisions a team is waiting on + witness batches + foundation ratifications. Everything else is parked in the PRE-LAUNCH CHECKLIST, fully recorded, silent until launch prep. A parked item un-parks the moment it becomes a true blocker._
 
 ## 🔴 ACTIVE — blockers + dev-unblocking decisions (the only daily surface)
+_Re-audited 9 Aug 2026. Ordered by how much each unblocks._
 
 | # | What | The one-line decision | Unblocks |
 |---|---|---|---|
-| C6 | **Migration 038 ruling** (production_event + lineup_slot) | Approve or reject — SQL authored at `3730b62`, plain-language card delivered 20 Jul, fully reversible, NEVER RUN. **Recommend approve**; you apply it yourself as always | B4-c: the Production create-event/open-slot flows |
-| M-8 | **Prices + pilot-pay flag** (the Gate) | (a) set the pilot price (earlier rec: ₪179) · (b) say "turn on the pay screen". Your STOP-list item — yours alone | Makes the Gate walkable for real (J5) |
-| T-49 | **Passport taste brief — or release it** | Send the brief, or say "**build from §8.7/§8.4 as-is**" (**recommended now** — the four buyer faces exist as a base to react to) | Passport redesign lane + T-07 |
-| B5-L | **AI-cost ledger lane** | (a) honest hybrid: runs/30d from our own DB + spend labeled "tracked in Anthropic console" (**recommended** — no new secret) · (b) server endpoint + Anthropic admin key · (c) defer | The last §8.12 cockpit tile |
-| B3-D | **Representation depth** | Adopt AG1–AG4 card states now, or **queue for a later wave (recommended** — the Gate runs through Artist+Buyer) | Next-wave scope |
+| **W** | **Witness walk + merge word** | Walk the app preview; one word ships 77 commits (Artist entity · Radar A+B · Passport v2 · Artist Home step 1 · pilot lanes) | Everything app-side; the free pilot |
+| **ENV** | **Restore `.env.local`** (2 min at the computer) | Copy VERCEL_TOKEN + SUPABASE_ACCESS_TOKEN etc. from Vercel → lock-app → Settings → Env Vars into a new `.env.local` | My ability to deploy or read the DB at all |
+| **C1** | **Recipient view switching** (v9 vs canon) | v9: one link = one view, no switcher · ours: persona toggle mandated + shipped. Pick one | ALL recipient/passport work (6 policies, dead-link states, share service) |
+| **C2** | **Artist-side Passport screens** | v9 adds 5 (Library/Composer/Preview/Publish-Review/Share) · canon ruled "no artist passport surface, redirect only". Pick one | The largest artist build |
+| **C3** | **Where a claim is edited** | v9: full-screen Category Workbench · your T-90 law: inline widgets, never a page where a widget fits | The Workbench P0 |
+| **C4** | **Radar privacy** (LIVE FINDING) | Rep orgs currently read the artist's private Radar gap signals. Tighten (removes info from a shipped screen) or ratify as-is | Rep radar feed legality; RLS design |
+| **PV** | **Old passport versions are anon-readable** (LIVE FINDING) | Narrow the public read policy so only the version a live link binds is readable. **Recommend fix** — this is a real exposure | Rule "one link = one version" becoming true |
+| **040** | **Apply migration 040** (buyer-funnel events) | Paste in Supabase as always — Gate-relevant, additive, reversible. **Recommend approve** | Buyer-funnel measurement (5 events are localStorage-only today) |
+| **C5–C10** | Six more v9↔canon contradictions | % to reps · draw as numbers on buyer faces · contact card PII · confirmer model · "Producer" name collision · mandate vocabulary — full text in `docs/V9-GAP-ANALYSIS.md` §1 | Each blocks its own surface |
+| **§9.10** | **Ratify the deep-scanner spec** + build word for Phase S-1 | Spec authored in the product spec (§9.10, ratify:R00); 5-question card delivered | The multi-source scan you asked for |
+| M-8 | Prices + pilot-pay flag (the Gate) | Yours alone; payments stay OFF until you say | Makes the Gate walkable for real |
+| C6 | Migration 038 (production events) | Approve or keep deferred — **fine to keep waiting** (post-Gate) | Production create-event flows |
 
-## 👁 WITNESS — what to look at (MOBILE/DESKTOP green only after you look)
-
+## 👁 WITNESS — what to look at
 | What | Where |
 |---|---|
-| Passport P1→P2→P3 verdict (started 19 Jul, outstanding) + the Wave-B batch (four Passport faces · confirmer · agency · production · admin) | Witness table in the 20 Jul wave-close report · preview: lock-app deployment at the current branch HEAD |
-| M-3 live-fix re-test (refresh, Passport link fresh, home-screen hang, small controls) — fold into the same walk | Production app |
+| **App preview walk** (the merge gate) — Artist entity, Radar, Passport v2, Artist Home | latest preview at branch HEAD |
+| **Live site walk** — uniform 620px heroes, container rotation, ghost-CTA contrast | www.lock.show |
+| Wave-B witness batch (four Passport faces · confirmer · agency · production · admin) | same preview |
+
+## 📮 OWNER CONSOLE ACTIONS (outside the repo — only you can do these)
+| # | What | Doc |
+|---|---|---|
+| GA4 | Confirm the platform property + decide whether the Shopify store gets its own | `docs/GA4-SETUP-HANDOFF.md` |
+| GSC | One login check: does hello@lock.show see `sc-domain:lock.show`? | `docs/SEO-GSC-HANDOFF.md` |
+| LEGAL | Supply company number · refund/cancellation policy · accessibility coordinator name | legal pages stay noindexed drafts until then |
+| SUPABASE | Delete my 3 e2e test users before the pilot cohort | `test-artist-e2e@` + 2× `e2e-embed-*@` |
 
 ## 🏛 FOUNDATION RATIFICATIONS (spec-integrity — kept active per the 20 Jul ruling)
 
