@@ -120,6 +120,20 @@ function NextActionChip({ action, T }) {
   )
 }
 
+// ── T-102 · AUTHORITY EXPLAINER ─────────────────────────────────────────────
+// When a grant's scope does not cover the action this row actually needs, the
+// row used to swap its label and say nothing (Publish Passport → View
+// Passport). That is silent degradation: the rep sees a weaker button and has
+// no idea authority sits with the artist. Now the row names who can act, in a
+// warm human sentence. The raw scope value NEVER reaches the user — `gatedBy`
+// only picks the sentence.
+function AuthorityNote({ gatedBy, artistName, T }) {
+  if (!gatedBy) return null
+  const who = artistName || T.agency.authorityWho
+  const line = (T.agency.authorityAsk[gatedBy] || T.agency.authorityAsk.fallback)(who)
+  return <p className="mt-1.5 whitespace-normal break-words text-[11px] leading-snug text-muted">{line}</p>
+}
+
 // Open 'new' availability requests for ONE artist — ladder input, never rendered.
 const openRequestsFor = (requests, artistId) =>
   (requests || []).filter((r) => r.status === 'new' && r.artist_id === artistId).length

@@ -21,27 +21,43 @@ import { DEMO, demoRadarRecords } from '../../lib/demo.js'
 // (ArtistDashboard.jsx FRESHNESS_DAYS); freshness is a time state, never quality.
 export const FRESHNESS_DAYS = 90
 
+// T-102 · AUTHORITY EXPLAINER. Before this, a rung the mandate did not cover
+// was SILENTLY swapped for a quieter label — "Publish Passport" simply became
+// "View Passport" and the rep was left to guess why. Silent degradation is a
+// lie of omission about who holds authority. The ladder now remembers the FIRST
+// capability the grant's scope blocked and returns it as `gatedBy`, so the row
+// can say in plain words who CAN do it ("Only {artist} can publish this — ask
+// them to."). `gatedBy` carries the scope value for the CALLER to look up a
+// human sentence — it is never rendered raw; no scope enum word reaches a user.
 export function pickRosterAction({ artistId, published, items, openRequests, scope }) {
-  const can = (s) => !Array.isArray(scope) || scope.includes(s)
+  let gatedBy = null
+  const can = (s) => {
+    if (!Array.isArray(scope) || scope.includes(s)) return true
+    if (!gatedBy) gatedBy = s // first block wins — one sentence per row, never a list
+    return false
+  }
+  const out = (a) => (gatedBy ? { ...a, gatedBy } : a)
   const passport = `/passport/${artistId}`
   // 1 · A waiting buyer beats everything — deep-link the inbox TO this artist.
+  //     Replying is the `view` floor every grant carries, so nothing is gated here.
   if (openRequests > 0) return { key: 'nextReplyRequest', to: `/agency/requests?artist=${artistId}`, urgent: true }
   // 2 · No published Passport → nothing to sell yet. With 'publish' scope the
-  //     grant allows guiding it live; otherwise the honest floor is the draft view.
-  if (published === false) return { key: can('publish') ? 'nextPublishPassport' : 'nextViewPassport', to: passport }
+  //     grant allows guiding it live; without it the row falls to the draft view
+  //     AND says who can publish, instead of quietly changing its own label.
+  if (published === false) return out({ key: can('publish') ? 'nextPublishPassport' : 'nextViewPassport', to: passport })
   // 3 · Evidence rungs run only when the item state was actually readable
   //     (null = unknown — RLS or a failed side-query; never guess from silence).
   if (Array.isArray(items)) {
     const newest = items.reduce((t, i) => Math.max(t, Date.parse(i.created_at || i.item_date) || 0), 0)
     if (newest && Date.now() - newest > FRESHNESS_DAYS * 864e5 && can('upload'))
-      return { key: 'nextRefreshProof', to: passport }
+      return out({ key: 'nextRefreshProof', to: passport })
     // 4 · No link/video evidence at all → the commercial move is to get one
     //     (a nudge to the artist, not a passport mutation — view floor).
-    if (!items.some((i) => i.item_type === 'link')) return { key: 'nextRequestVideo', to: passport }
+    if (!items.some((i) => i.item_type === 'link')) return out({ key: 'nextRequestVideo', to: passport })
   }
   // 5 · Published, fresh, linkable → put it in front of the market.
-  if (published && can('share')) return { key: 'nextSharePassport', to: passport }
-  return { key: 'nextViewPassport', to: passport }
+  if (published && can('share')) return out({ key: 'nextSharePassport', to: passport })
+  return out({ key: 'nextViewPassport', to: passport })
 }
 
 // ── Consented-roster state fetch (bounded fields only) ──────────────────────
