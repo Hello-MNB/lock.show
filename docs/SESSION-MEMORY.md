@@ -35,11 +35,11 @@ reply with `docs/TASK-REGISTER.md`'s priority sections + the open list in `docs/
   cap or price, never assume from memory).
 
 ## Current state
-Last recorded ship (see `docs/TASK-REGISTER.md` "NOW" section for the live detail): main merge
-`534606a` + embed push `669b970`, 18 Jul 2026 (T-66/T-68/T-69). **MOBILE/DESKTOP marks await the
-owner's witness walk (rule 4)** — that witness pass, not a new build, is the standing next step.
-Full ship-by-ship history: `docs/DEPLOY-LOG.md`. Do not re-derive deploy state from memory — read
-those files; this section is a pointer, refreshed at every ship, not the record of truth.
+**Audited 9 Aug 2026 — read `docs/VERSIONS.md` for the full manifest, this is the pointer.**
+LIVE: site `rel-site-2026.07.27` @ branch `a77393f` (alias-promoted) · app main `ef98d91` · embed + shop live. Work branch is **77 commits ahead of main** and merges only on the owner's witness walk.
+DESIGN: current bundle = **LOCK Prototype v9** (`docs/reference/v9/`, hash-pinned, DESIGN_REVIEW — not build authority yet). Gap vs canon+code: `docs/V9-GAP-ANALYSIS.md` (10 gating contradictions C1–C10 + build architecture + task spec). Data layer: `docs/DATA-LAYER-GAP-MAP.md` (18 objects, migrations 041→059).
+GATES: `npm run verify` = 21 checks, CI-enforced.
+BLOCKED ON OWNER: C1–C10 rulings · migrations 038/040 · witness walk/merge word · legal facts · GA4+GSC console steps · `.env.local` restoration (blocks deploys + DB reads from this container).
 
 ## Standing rules with no single owning doc yet (kept here until one is designated)
 - **Artifact governance** (owner order 14 Jul; full text now in `docs/TASK-REGISTER.md` rule 14):

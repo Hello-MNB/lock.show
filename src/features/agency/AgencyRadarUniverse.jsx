@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusChip } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { STATUS } from '../../lib/constants.js'
+import { deriveRosterHealth, ROSTER_HEALTH_RING, ROSTER_HEALTH_CHIP } from '../../lib/rosterHealth.js'
 import { deriveWorlds } from '../../lib/radarUniverse.js'
 
 // ── The Agency Radar Universe — the manager's HOME (canon AG1, firewall-safe) ─
@@ -12,25 +12,9 @@ import { deriveWorlds } from '../../lib/radarUniverse.js'
 // Worlds dropdown filters by genre/content-world — evidence coverage per world,
 // NEVER a ranking, NEVER a cross-artist comparison. MOBILE FIRST.
 
-// Ring colors = spec state tokens: amber (needs-you) · lime (established) ·
-// teal (developing) · quiet line (no evidence yet). Categorical, never a gauge.
-const RING = {
-  needs: 'border-amber',
-  established: 'border-accent',
-  developing: 'border-teal',
-  missing: 'border-line',
-}
-
-function artistState(a, claims) {
-  const own = claims.filter((c) => c.artist_id === a.id)
-  const pending = own.filter((c) => !c.artist_approved).length
-  if (pending > 0) return { key: 'needs', pending }
-  if (own.some((c) => c.artist_approved && ['verified', 'supporting'].includes(c.verification_status))) return { key: 'established', pending: 0 }
-  const signals = [a.lineup_frequency_band, a.sells_tickets != null, a.price_band, a.photo_url].filter(Boolean).length
-  return { key: signals >= 1 ? 'developing' : 'missing', pending: 0 }
-}
-
-const chipStatus = { needs: STATUS.DEVELOPING, established: STATUS.STRONG, developing: STATUS.DEVELOPING, missing: STATUS.MISSING }
+// T-100: roster health is derived ONCE, in src/lib/rosterHealth.js, and this
+// surface only MAPS that one state to its own vocabulary — ring colours here,
+// StatusChip words on the roster rows. Nothing in this file may re-derive it.
 
 export default function AgencyRadarUniverse({ artists, claims }) {
   const { T } = useLang()
@@ -82,7 +66,7 @@ export default function AgencyRadarUniverse({ artists, claims }) {
           </div>
           {/* the artists — each a world */}
           {shown.map((a, i) => {
-            const st = artistState(a, claims)
+            const st = deriveRosterHealth(a, claims)
             const dimmed = !inWorld(a)
             const angle = -90 + i * (360 / shown.length)
             const rad = (angle * Math.PI) / 180
@@ -93,8 +77,8 @@ export default function AgencyRadarUniverse({ artists, claims }) {
                 onClick={() => setSelected(a)}
                 style={{ left: `${x}%`, top: `${y}%` }}
                 className={`absolute -translate-x-1/2 -translate-y-1/2 text-center transition-all duration-300 ${dimmed ? 'opacity-25' : 'opacity-100'}`}
-                aria-label={`${a.stage_name} — ${st.key}`}>
-                <span className={`relative mx-auto grid h-14 w-14 place-items-center overflow-visible rounded-full border-2 bg-surface2 transition-transform hover:scale-105 ${RING[st.key]} ${st.pending > 0 ? 'shadow-[0_0_18px_rgba(190,226,78,0.1)]' : ''}`}>
+                aria-label={`${a.stage_name} — ${st.state}`}>
+                <span className={`relative mx-auto grid h-14 w-14 place-items-center overflow-visible rounded-full border-2 bg-surface2 transition-transform hover:scale-105 ${ROSTER_HEALTH_RING[st.state]} ${st.pending > 0 ? 'shadow-[0_0_18px_rgba(190,226,78,0.1)]' : ''}`}>
                   {a.photo_url
                     ? <img src={a.photo_url} alt="" className="h-full w-full rounded-full object-cover" />
                     : <span className="font-display text-base text-ink">{(a.stage_name || '?').slice(0, 1)}</span>}
@@ -147,12 +131,12 @@ export default function AgencyRadarUniverse({ artists, claims }) {
             </div>
 
             {(() => {
-              const st = artistState(selected, claims)
+              const st = deriveRosterHealth(selected, claims)
               return (
                 <div className="space-y-2">
                   <div className="card flex items-center justify-between py-3">
                     <span className="text-sm font-semibold text-ink">{T.radar.evidencePicture}</span>
-                    <StatusChip status={chipStatus[st.key]} />
+                    <StatusChip status={ROSTER_HEALTH_CHIP[st.state]} />
                   </div>
                   {st.pending > 0 && (
                     <div className="card flex items-center justify-between border-accent py-3">

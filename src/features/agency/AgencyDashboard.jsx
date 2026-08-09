@@ -8,7 +8,10 @@ import AgencyRadarUniverse from './AgencyRadarUniverse.jsx'
 import { PageShell, Loading, ErrorState, StatusChip, Field, Spinner, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
-import { STATUS } from '../../lib/constants.js'
+// T-100: ONE roster-health rule for the whole cockpit — the orbit ring
+// (AgencyRadarUniverse) and the owned rows below read the SAME state and only
+// differ in which vocabulary they map it to.
+import { deriveRosterHealth, ROSTER_HEALTH_CHIP } from '../../lib/rosterHealth.js'
 import { DEMO } from '../../lib/demo.js'
 
 // The exact 5 canon scope values (DB-STRUCTURE.md Layer 1) minus `view`, which
@@ -94,14 +97,6 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
 function ChecklistRow({ done, label, to }) {
   const inner = (<><span className={done ? 'text-accent' : 'text-muted'} aria-hidden="true">{done ? '✓' : '○'}</span><span className={done ? 'text-muted line-through' : 'text-ink'}>{label}</span></>)
   return <li className="flex items-center gap-2">{to && !done ? <Link to={to} className="tap-target flex items-center gap-2 hover:text-accent">{inner}</Link> : inner}</li>
-}
-
-// bounded roster signal (firewall: never a number)
-function rosterStatus(a) {
-  const signals = [a.lineup_frequency_band, a.sells_tickets != null, a.price_band, a.photo_url].filter(Boolean).length
-  if (signals >= 3) return STATUS.STRONG
-  if (signals >= 1) return STATUS.DEVELOPING
-  return STATUS.MISSING
 }
 
 const fmtDate = (d) => {
@@ -405,7 +400,7 @@ export default function AgencyDashboard() {
                         </div>
                       </Link>
                       <div className="flex shrink-0 flex-col items-end gap-1.5">
-                        <StatusChip status={rosterStatus(a)} />
+                        <StatusChip status={ROSTER_HEALTH_CHIP[deriveRosterHealth(a, rosterClaims).state]} />
                         <NextActionChip action={action} T={T} />
                       </div>
                     </div>

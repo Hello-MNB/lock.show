@@ -1,8 +1,7 @@
 # LOCK — VERSION MANIFEST (what is live RIGHT NOW, per track)
 
 _The single answer to "what version is each surface on?" Updated as part of EVERY release
-(release-checklist step, same as DEPLOY-LOG). Rewritten 13 Jul 2026 from current truth
-(GOVERNANCE WAVE 3, V12). Owner audit 12 Jul: marketing-site updates are a FIRST-CLASS
+(release-checklist step, same as DEPLOY-LOG). Rewritten 13 Jul 2026; CURRENT STATE re-audited 9 Aug 2026. Owner audit 12 Jul: marketing-site updates are a FIRST-CLASS
 versioned track, not a footnote._
 
 ## Naming scheme (codified 12 Jul)
@@ -16,34 +15,33 @@ versioned track, not a footnote._
 
 Every app/site release row also records **which DS version it implements** (design↔code traceability).
 
-## CURRENT STATE (13 Jul 2026)
+## CURRENT STATE (9 Aug 2026 — audited)
 
-### Candidate (the rel-2026.07.13 train — NOT yet deployed)
-| Track | Version | Where | State |
-|---|---|---|---|
-| App + Site (one train) | rel-app-2026.07.13 + rel-site-2026.07.13 | branch `claude/b4-gigproof-discovery-e7749o` — **RC0 frozen at 2a2c955** (state: PREVIEW-DEPLOYABLE; per SYNC §32 re-freeze happens per fix wave) | **candidate — not yet deployed**; ladder: PREVIEW-DEPLOYABLE → QA-READY → Q8-READY → PRODUCTION-READY (docs/releases/DEPLOY-GAPS.md) |
-
-### Live production (last deployed state per docs/DEPLOY-LOG.md)
-| Track | Version | SHA | DS implemented | Live-verified |
+### Live production
+| Surface | Version | SHA | How it shipped | Verified |
 |---|---|---|---|---|
-| App | rel-2026.07.10 (incl. firewall hotfix eafcd4e) | **a874ab5** — last app production deploy (10 Jul) | pre-DS dark legacy (A13 mapping = this train) | ✅ bundle fingerprints (DEPLOY-LOG) |
-| Site | **rel-site-2026.07.15-3 (Codex homepage narrative rebuild: 7-section flow Hero→Problem→lime Product band→emotional image→entity "rooms"→LOCK loop→CTA)** | **9a18249** — 15 Jul: alias-promoted. **Rollback anchor: 6f01e56.** | Codex DS v1.6.25 | ✅ live-verified: 8/8 routes 200; section HEADERS readable (prior dark-on-dark bug NOT recurring). NOTE: automated tool flagged CTA buttons/footer links but those are the lime CTAs (dark-on-lime, readable) — measurement artifact; a few footer links read slightly faint (minor, Codex next pass). Homepage only — inner pages still pending the same architecture pass. |
-| Embed | embed@rel-app-2026.07.10 | e027958 | = app | ✅ bundle hash |
+| **Marketing site** `www.lock.show` | `rel-site-2026.07.27` | branch `a77393f` | alias-promotion of `lock-site-5zsfbixyd` (main NOT advanced) | ✅ 200 all pages · canonical www · sitemap 10 · X-Robots on /app · uniform 620px heroes |
+| **App** `app.lock.show` | `rel-2026.07.21` | main `ef98d91` | owner merge word 21 Jul | ✅ 200 |
+| **Embed** `lock.show/app` | rebuilt from production source | in `a77393f` | shipped with the site train (P0 conflict-marker fix) | ✅ 200, single bundle, zero markers |
+| **Shop** `shop.lock.show` | Shopify (Lock Show, Basic, ILS) | — | owner connected the subdomain | ✅ 200 |
 
-### Reference tracks
-| Track | Version | Where | State |
-|---|---|---|---|
-| DS | **v1.6.20 (Codex)** — CURRENT authority | Drive 00_CURRENT | owner-directed; v1.2.0 remains the historical site base |
-| DB | applied: 032 (verified) · 033 · **034 ✓ in effect (DB CHECK = app CANON = 29 events, Cowork-verified SYNC §29; repo file regenerated as-applied)** · **035 ✓ (Cowork-verified, SYNC §28 — G3 unblocked)** · **037 ✓ `is_demo` (owner-applied 17 Jul 2026, backfill verified 43 demo / 3 real; 036 stays `.DRAFT` out of sequence)** · **039 ✓ taxonomy/Registry-B spine (owner-applied 20 Jul 2026, verified: `genre_family` count = 8)**; 021 FROZEN; **038 authored NOT applied (C6 deferred by R00 20 Jul)** | Supabase qexfndiyallwqhhzeerd | **head = 039 applied** (038 skipped-pending); next free number ≥040, diff-first |
-| Infra | previews OFF (one-time preview hook for this train) · smart build-skip · OAuth published | 6f5ce8e | operational |
+### Not deployed (built, verified, waiting)
+The work branch `claude/b4-gigproof-discovery-e7749o` is **77 commits ahead of `main`**. It holds: the Artist entity (11 screens), Radar A+B, Passport v2 explorer, Artist Home step 1 (10-state widget law), the 3 pilot lanes (T-86/87/88), signup fixes, and all governance/analysis docs. **Nothing merges until the owner's witness walk.** Preview: cut per commit via the Vercel integration.
 
-### Known governance notes
-- Git tags are LOCAL-ONLY (integration 403) — **SHA = the authoritative rollback anchor**; tags =
-  convenience aliases pending remote-tag verification (see DEPLOY-LOG top note).
-- Gap lifecycle truth (what is CODE-COMPLETE vs OPEN on the candidate): the register in
-  docs/releases/DEPLOY-GAPS.md, not this file.
+### Database
+Head applied = **040 pending, 039 applied**. Applied: 001–035, 037, 039 (+034 ✓ in effect). **Authored NOT applied: 038** (production events — C6 deferred by owner) and **040** (buyer-funnel events — Gate-relevant, recommended next). Planned: **041→059** per `docs/DATA-LAYER-GAP-MAP.md` (additive-only, each with a `.down.sql`, owner applies).
+⚠ **Drift warning:** migration 039's file header contradicts this manifest about its own applied state. We read migration files, not the live DB (no DB credentials in this container). Verify against Supabase before citing any schema fact as certain.
 
-## NEXT PROMOTION (rel-*.2026.07.13 — one atomic train; ladder per SYNC §32, corrected 14 Jul per GPT audit)
+### Quality gates
+`npm run verify` = **21 checks** (nav · isolation · canon-drift · analytics-contract · security · guardrails · ds-drift · widget-states · embed-integrity · seo-contract · site-nav · hero-contract · visual-regression · component-styles · i18n-purity · registry · deltas · event-registry · build · build:demo · fit). CI runs the full chain on every push (`.github/workflows/verify.yml`).
+
+### Design authority
+Current bundle = **LOCK Prototype v9** (`docs/reference/v9/`, 22 files, hash-pinned, status **DESIGN_REVIEW**). Not build authority until the owner accepts it per persona/wave. Gap analysis vs canon and built code: `docs/V9-GAP-ANALYSIS.md`.
+
+### Infrastructure note
+`.env.local` was lost when the container recycled — production is unaffected (all keys live in the Vercel vault), but deploys and DB reads from this session are blocked until it is restored.
+
+## PROMOTION LADDER (the standing gate sequence for any train — re-titled 9 Aug; the 07.13 train it was written for shipped long ago)
 | Step | Gate |
 |---|---|
 | **PREVIEW-DEPLOYABLE** — RC frozen, `npm run verify` green | RC anchor record (SYNC §34): frozen SHA + docs-only equivalence |
