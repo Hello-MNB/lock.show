@@ -1551,6 +1551,183 @@ Every piece of evidence enters through exactly one **door**, and the door determ
 | **4 · Human vouch** | Source-Confirmer (venue/promoter) | highest | medium | "confirmed by {role}" — the golden standard |
 **Rule:** the UI names the door, not just "source-linked" — "confirmed by the venue" ≠ "found on public Instagram." Door 2 (public scraping) carries the highest legal load and only fires under the public-footprint consent scope (§15.2). Doors map 1:1 to the canon method labels (§4.4); no new label vocabulary. *(Door 1 OAuth ingestion + Door-3 mobile-camera capture are TARGET; Door 4 is BUILT; Door 2 is the consent-gated scan, partly TARGET.)*
 
+### 9.10 Deep-scanner BUILD SPEC (Phase S — spec-first, `ratify:R00`; TARGET until built + cost-measured)
+
+> **Status law.** This block turns the §9.1-TARGET vision into a build-level contract. Everything
+> here is **TARGET / NOT BUILT** (§2.8 honesty firewall) until each phase's acceptance tests pass
+> and the owner witnesses. It builds only on what exists: the claim pipeline
+> (`server/index.js` → `processor.labelWithMethod`, `src/lib/ai/anthropic.js`), migration **028**
+> (applied: `source_type='discovered'`, `discovery_source_url`, `discovery_query`,
+> `same_person_state`, HE name fields), migration **022** (`processing_job`), and migration **039
+> (AUTHORED, NOT APPLIED)** (`claims.field_id`, `claims.extraction_provenance`,
+> `evidence_field` ← `docs/registry/F1.csv`). Where 039 is not yet applied, the dual-read law
+> holds: free-text `claim_type` is written, `field_id` is written when the registry lands.
+
+#### 9.10.1 Input contract (what onboarding hands the scanner)
+
+One server-side call — `POST /api/discovery-scan/:actId` (server-only; never callable from the
+browser without a session that owns the Act):
+
+| Field | Required | Source | Notes |
+|---|---|---|---|
+| `act_id` | yes | route param | the scan is per-Act (§2.4); results never cross Acts |
+| `stage_name` | yes | onboarding Step 1 (§8.1) | as typed; HE/EN/RU transliterations generated per §9.2 |
+| `anchor_url` | yes | onboarding Step 1 "one main link" | http(s), publicly reachable; the identity anchor for the whole scan |
+| `genre_hint` | no | onboarding / Act | narrows query generation + platform set |
+| `city_hint` / market | no | onboarding / locale detection (§9.2) | drives the locale-aware platform mix (Israel → Eventer · Tickchak · Go-Out + global set) |
+| consent proof | yes (server-checked) | `consent_records` | see §9.10.4 — no rows, no scan |
+
+Server validation: reject a private/localhost/non-http anchor; reject if the Act already has a scan
+running (`processing_job` row in `running`); idempotency key = `act_id + date` so a double-tap
+never runs two scans.
+
+#### 9.10.2 Source list v1 — per-source extraction contract
+
+Provenance vocabulary = the **M-17(b) 10-value internal-only enum** (reused, never invented, never
+rendered): `OBSERVED · EXTRACTED · CALCULATED · INFERRED · HUMAN_REVIEWED · COUNTERPARTY_CONFIRMED ·
+SELF_REPORTED · SELF_CONFIRMED_FROM_WEB · STALE · CONFLICTED` — stored in
+`claims.extraction_provenance` (039). The scanner itself may write only the first four
+(`OBSERVED / EXTRACTED / CALCULATED / INFERRED`); `SELF_CONFIRMED_FROM_WEB` is set **by the
+artist's confirm action** on a web-found claim, never by the scanner. Certainty is **two fields**
+(M-17 ruling): `claims.verification_status` (the 4-value bounded door, buyer-relevant) +
+`extraction_provenance` (internal-only, same law as `internal_confidence` — no client read path).
+
+| # | Source | Key state | May yield (F1.csv segment → example `field_id`s) | `extraction_provenance` | `verification_status` ceiling | Identity-match rule |
+|---|---|---|---|---|---|---|
+| S-A | **The pasted platform itself** (page fetch of `anchor_url` — SoundCloud / IG / Spotify page / website) | none needed (public fetch) | Identity & Entity Resolution (`instagram_profile_url`, `soundcloud_profile_url`, `official_website_url`…) · Positioning & Brand (bio/one-line) · Social & Content Engine (upload cadence) | `EXTRACTED` (AI read of the page) | `supporting` | Anchor is artist-provided → identity is anchored by declaration; still record `discovery_source_url` + the handle for cross-reference |
+| S-B | **Tavily search + extract** (`TAVILY_API_KEY` — dormant in Vercel `lock-app`) | dormant until Phase S-1 | Live Footprint & Performance (lineup listings, event pages) · Observed Career History · Identity (discovered profile URLs) · press mentions | `EXTRACTED`; `INFERRED` when the page implies but doesn't state | `supporting` | **Two-signal rule** (below) |
+| S-C | **Google Programmable Search** (`GOOGLE_API_KEY` — dormant) | dormant until Phase S-2 | same families as S-B — used as the second engine + corroboration lane | `EXTRACTED` / `INFERRED` | `supporting` | Two-signal rule |
+| S-D | **Spotify Web API** (`SPOTIFY_CLIENT_ID/SECRET` — dormant; client-credentials, no user OAuth) | dormant until Phase S-2 | Identity (`spotify_artist_profile`) · Catalogue/Repertoire (releases, dates, genres) · Streaming Consumption **as bands only, secondary context (§2.3)** | `OBSERVED` (authoritative platform API) | `supporting` (API data without artist OAuth is still Door-2, not Door-1) | If the anchor IS a Spotify link → direct ID, exact. Else: normalized-name match **plus** one cross-link (the Spotify profile linked from an already-anchored page) — name-only is never enough |
+| S-E | **Social profiles discovered from results** (IG / TikTok / RA / Bandcamp / YouTube… surfaced by S-A…S-D) | rides S-B/S-C | Identity profile-URL family · Social & Content Engine · Audience & Fanbase **as bands only** | `EXTRACTED` | `supporting` | **Link-graph rule:** a discovered profile enters only if it is linked FROM an identity-anchored source (anchor page, or a result already passing the two-signal rule). Never name-search-only |
+
+**The two-signal identity rule (binding — never guess).** A search-discovered page belongs to THIS
+artist only if **≥2 independent signals** agree: (1) stage-name match (any §9.2 language/
+transliteration), (2) a link/handle cross-reference to the anchor or an already-confirmed profile,
+(3) genre/city consistency with the hints. Fewer than 2 → the item is **dropped or held internal**
+(`same_person_state='unreviewed'`, never surfaced). Every accepted item stores
+`discovery_source_url` + `discovery_query` (028) and an internal `same_person_confidence` written
+to `claims.internal_confidence` (DB-only, migration 016 firewall — never returned to any client).
+The artist's "this isn't me" → `same_person_state='artist-dismissed'` — **recorded, not deleted**,
+and excluded from every future scan's candidate set.
+
+#### 9.10.3 Pipeline (orchestration, dedup, cost cap, budgets)
+
+**Order:** consent check → (1) S-A anchor fetch + extract (the fast lane — also feeds §9.8
+smart-link metadata) → (2) Claude generates 8–12 locale-aware queries (§9.2) → (3) S-B Tavily
+(+ S-C Google in S-2) fan-out → (4) S-D Spotify lookup → (5) S-E discovered-profile fetches
+(capped) → (6) per-source Claude extraction (`claude-opus-4-8`, the §9.1 contract:
+candidate claims + `same_person_confidence` + source + date + proves/doesn't-prove) → (7) dedup →
+(8) write `evidence_artifacts(source_type='discovered')` + UNCONFIRMED claims → (9) ✦found nodes.
+
+**Dedup rule.** Same fact (same `field_id`/`claim_type` + normalized value) from ≥2 sources → **one
+claim, strongest provenance wins** (scanner order: `OBSERVED > EXTRACTED > CALCULATED > INFERRED`);
+the losing sources remain as their own `evidence_artifacts` rows linked as corroboration (nothing
+is thrown away, nothing is double-shown). Conflicting values for the same field → both held,
+provenance `CONFLICTED`, routed to the §9.7 human-review queue — never auto-picked.
+
+**Cost cap (hard, server-enforced).** Target ≈ **$1/scan** (CLAUDE.md). Hard cap env
+`SCAN_MAX_COST_USD` (default **1.50**) enforced by the same estimate-ledger pattern as G14
+(`COST_PER_ITEM_USD`, `MONTHLY_BUDGET_USD` in `server/index.js`): the orchestrator tracks
+estimated spend per stage and **degrades honestly** when the budget nears: drop S-E extra
+profiles → drop S-C → halve the query set (12→6) → anchor-only. Degradation is **disclosed** to
+the artist per §9.5 ("we scanned {N} sources today"), never silent. Monthly global cap: the scan
+draws from the same `MONTHLY_BUDGET_USD` ledger — scans stop (with honest copy) before the cap,
+core claim-labeling keeps its reserve. No pricing may assume any of these numbers until measured
+(§9.10.7).
+
+**Rate limits / retries / timeouts.** Per-source fetch timeout 10s; retries: 2 on the transient
+set already canonized in `anthropic.js` (`408/409/429/500/502/503/529`) with backoff; Tavily/Google
+calls serialized ≤4 concurrent; one scan per Act per UTC day (idempotency, §9.10.1); per-user daily
+scan cap env `MAX_SCANS_PER_USER_DAY` (default 2, G14-3 pattern).
+
+**Timeout budget — the honest UX choice (RECOMMENDATION: async-with-notification).**
+- *Option A — synchronous ≤90s:* onboarding Step 2 waits. Rejected as primary: p95 of
+  fan-out + 8–12 extractions will breach 90s, and a spinner that long kills the §8.1 moment.
+- *Option B (RECOMMENDED) — two-lane:* **fast lane** = S-A anchor fetch (≤10s) feeds Step 3 "Here's
+  what we found" with real anchor findings (this is §9.8 smart-link, honestly labeled); **deep
+  lane** = the full scan continues async (Vercel-Cron / background worker writing `processing_job`,
+  §9.1), wall-clock hard stop **90s of compute** across chunks; findings land as ✦found on the
+  Radar + one in-app bell notification ("the wider scan found {N} items to review"). Step 2 copy
+  already discloses exactly this ("a wider multi-source auto-scan…"). Owner word picks A or B;
+  the spec builds B unless overruled.
+
+#### 9.10.4 Firewall laws (absolute, inherited + applied)
+
+1. **Everything lands UNCONFIRMED.** Every scanner output is an `evidence_artifacts` row
+   (`source_type='discovered'`, `same_person_state='unreviewed'`) + claims awaiting the artist's
+   confirm ceremony. **Nothing auto-publishes; nothing touches a public Passport** until the artist
+   confirms AND the `public-publication` scope is granted (§15.2.2). "Not me" is recorded, not
+   deleted (028, Amendment-13 posture).
+2. **No scores / counts-about-a-person derived.** The scanner may not compute, store, or emit any
+   score/rank/%/exact follower- or head-count about the artist (§2.1). Numeric platform figures
+   are converted to **bands at extraction time**; the raw exact figure is not persisted.
+   `internal_confidence` / `same_person_confidence` describe *the match*, not the artist, and are
+   DB-only (016).
+3. **Provenance internal-only; method labels public.** `extraction_provenance` (10-value) is never
+   rendered (M-17(b)); the artist/buyer see only the canon method labels via the four doors
+   (§9.9 — the scan is Door 2: "found on your public {platform}").
+4. **Provider fallback discloses narrower scope** (§9.5): a cheaper extraction tier keeps the
+   bounded 4-value status + all rules above, and the found-card copy states the narrower scope.
+5. **Consent gate (Amendment-13).** The scan runs only after: `privacy-processing` (onboarding
+   Step 1 inline checkbox, §15.2.2) **and** `thirdparty-evidence` for the pasted source at the
+   connect moment (§15.2.2 — "per-connection consent is the load-bearing promise"; Phase-S register
+   item S1). The server checks `consent_records` before step 1 of the pipeline — no rows, HTTP 403,
+   no fetch is made. Wider-than-anchor discovery is covered by the same `thirdparty-evidence`
+   scope's public-footprint language (§15.2, §9.9 Door 2) and the Step-2 on-screen disclosure.
+
+#### 9.10.5 Incremental re-scan (TARGET, the cheap follow-up)
+
+**Triggers:** (a) artist taps "re-scan" (rate-limited to the daily cap), (b) artist adds a new
+link/source, (c) scheduled ≤monthly per Act via `last_discovery_scan_at` (§9.1) — cron, cheapest
+hours. **Subset rule:** re-scan touches only (i) the anchor + sources that previously yielded
+accepted items, (ii) queries date-bounded to "since last scan," (iii) never re-extracts identical
+content (dedup-by-hash, §9.7 — cache hit = $0). Budget: ≤25% of a full scan's cap. Dismissed
+(`artist-dismissed`) URLs are excluded permanently. Claims older than their F1.csv
+`freshness_rule` window flip provenance to `STALE` internally and surface as a re-confirm ask —
+never as a public downgrade without the artist seeing it first.
+
+#### 9.10.6 Measurement (REQUIRES-MIGRATION — never wire without)
+
+§14.1 canon (29 events, CHECK = CANON = migration 034) contains **no scan events** — checked
+16 Jul canon + 040 extension. Two new names are specified here and are **REQUIRES-MIGRATION**
+(next free number ≥041, diff-first; CHECK + `analytics.js` CANON widened in lockstep per §14.1.2):
+- `scan_started` — fires when the deep lane begins (server-side emit). Props: `act_id`,
+  `sources_planned` (count of product lanes), `trigger` (`onboarding|manual|incremental`).
+- `scan_completed` — fires when the scan settles. Props: `act_id`, `sources_scanned`,
+  `findings_count` (count of the artist's own found items — the §8.1 tally class, allowed),
+  `degraded` (bool), `duration_band` (`<15s|15-45s|45-90s|>90s`), `outcome` (`ok|partial|failed`).
+Firewall: props are product-event counts/ids only — never a follower count, never a per-person
+number (§14.0). Until the migration lands, the scanner logs to `processing_job` only.
+
+#### 9.10.7 NOT-BUILD-YET line (CLAUDE.md law, restated)
+
+The multi-source deep scan and the incremental re-scan are **TARGET ARCHITECTURE, not yet built.
+No business case, price point, or pitch may price or assume them until implementation ships and
+per-scan cost is measured** (§9.5, §16.B.10). "≈$1/scan" is a design target, not a quote. Site/app
+copy keeps the §2.8 wording ("a wider multi-source auto-scan is in development").
+
+#### 9.10.8 Build plan (server-side, behind `DEEP_SCAN_ENABLED`)
+
+Flag law: server env `DEEP_SCAN_ENABLED` (default **off**) gates every endpoint/worker; per-workspace
+`organization.plan_flags.deep_scan` (028) allows operator-scoped enablement for QA cohorts. Build
+order (these are the build sub-phases of register **PHASE S** item S2; register S1 = the consent
+surface precedes, S3 = operator hand-QA queue rides Phase S-3 below):
+
+| Phase | Scope | Acceptance tests (all must pass + owner witness) |
+|---|---|---|
+| **S-1 · Tavily-only walking skeleton** | endpoint + consent check + query-gen + S-A anchor fetch + S-B Tavily + extraction + dedup + UNCONFIRMED claims + `processing_job` + cost ledger | (1) no consent → 403, zero external calls · (2) seed artist scan yields ✦found nodes, all `unreviewed`, zero on Passport · (3) forced Tavily 429 → retry then honest partial (`degraded=true`) · (4) cost ledger row per scan; kill-switch: flag off → 404 · (5) two-signal rule proven: a same-named decoy artist in fixtures is NOT attached · (6) firewall grep (§10.1) on every new surface — zero exact figures persisted |
+| **S-2 · +Spotify +Google (+S-E capped)** | S-C corroboration lane · S-D client-credentials lookup · discovered-profile fetches (≤5) · dedup-across-engines · degradation ladder | (1) same fact from Tavily+Google → ONE claim, strongest provenance, 2 artifact rows · (2) Spotify numeric fields persist as bands only (assert no raw exact figure in DB) · (3) budget breach mid-scan → ladder fires in order, disclosure copy rendered · (4) name-only Spotify match (no cross-link) is rejected · (5) measured per-scan cost logged; report vs the $1 target |
+| **S-3 · Onboarding wow-moment wiring** (GATED on owner witness of S-1/S-2 + register S3 hand-QA queue live) | two-lane UX (§9.10.3 Option B): fast lane feeds §8.1 Step 3; deep lane lands ✦found + bell; scan events (only if the §9.10.6 migration is applied) | (1) Step 3 shows only REAL anchor findings (no invented tally — T-58 law) · (2) deep-lane findings appear on the Radar with confirm/"not me" both writing `same_person_state` · (3) reduced-motion respected; Step 2 discloses the async lane · (4) operator hand-QA queue reviewed ≥1 real cohort before any real-artist default-on · (5) owner witnesses the full moment on mobile + desktop before the flag defaults on anywhere |
+
+Rollback: flag off restores today's behavior exactly (anchor-link-only onboarding, T-58). No
+schema this section needs is destructive; every migration follows diff-first ≥041 law.
+
+*(End §9.10 — authored spec-first, `ratify:R00`. Owner words required: ① ratify this block ②
+timeout choice A/B (§9.10.3, B recommended) ③ apply 039 (prerequisite for `field_id`/
+`extraction_provenance` writes) ④ authorize the ≥041 scan-events migration ⑤ restore/rotate the
+dormant keys (`TAVILY_API_KEY` · `GOOGLE_API_KEY` · `SPOTIFY_CLIENT_ID/SECRET`, OWNER-PENDING) ⑥
+the build word for Phase S-1.)*
+
 ---
 
 ## 10. QA / Acceptance
