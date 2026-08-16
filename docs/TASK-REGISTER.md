@@ -891,3 +891,20 @@ Independent review findings repaired at head `d1849e3` → **`4c177e2`**. NOTE: 
 **F7 tests** — chain **22 → 26** (`test:sql-privileges` new; link-integrity/projection-matrix/sql-migrations extended). Every assertion labelled EXECUTED-LOCALLY vs RUNTIME-UNVERIFIED.
 **RESIDUALS reported, deliberately not fixed (out of named scope):** `availability_requests` RLS `req_org_read = can_access_artist()` is the real cross-org boundary — narrowing it breaks the shipped requests inbox · `rosterNextAction.js:88` reads requests across orgs (status/id only, counted not displayed) · `sl_org_all` still lets an artist's org read `share_link.open_count` directly (the sanctioned projection excludes it).
 STATUS: migrations 041/042 DRAFTED-NOT-APPLIED, flags OFF, nothing deployed/merged. **No production-readiness claim.** Next: T-106.
+
+## T-106 · APP-LAUNCH WAVE — team, DoD, KPI, evidence rules (16 Aug 2026)
+Owner directive: app-first launch, evidence-first, no deploy/live-migration/console-mutation/secret-output. Lanes run on this branch only.
+
+| Lane | Role | Owns (write) | DoD | KPI | Checker |
+|---|---|---|---|---|---|
+| A | Product Flow & Integration | `src/App.jsx`, `src/lib/navigation*`, flow/state in `src/features/**`+`src/lib/**`, `test-flow-contracts` | every target resolves & is role-reachable; reverse path per screen; forward/reverse/recovery/empty/partial/stale/conflict/offline/terminal covered | 0 unresolved route mismatches · 0 swallowed-error mutations · 0 dead controls | E |
+| B | DS/UI Integrator | `src/components/**`, `src/index.css`, `tailwind.config.js`, `docs/design-system/**` | code consumes Claude Design's semantic system without drift; imagery slots named, never faked | token/state/RTL/reduced-motion contracts asserted by a gate | E |
+| C | Website · Growth · Auth · Analytics · Localization | `website-next/**`, site gates | claim-safe EN/HE; boundary walked; consent-before-analytics; first-party ledger canonical, GA4 a projection | analytics truth table complete (declared vs reaches GA4 vs persisted vs queryable vs PII class) | E |
+| D | Data, Security & Privacy | `scripts/test-sql-*`, `scripts/sql/**`, `scripts/lib/pgharness.mjs`, isolation gates | RLS/org/mandate/Act isolation proven by execution incl. negative + live-control cases | 0 cross-tenant reads/writes reachable · every denial has a live-mandate control | E |
+| G | Public/Private Boundary | `src/lib/publicPassport.js`, `src/lib/contracts/**`, its gate | Private/Unlisted/Public/Withdrawn states; SSR outside the blocked SPA; 410 withdrawal; sitemap only by explicit consent | every terminal state reachable+distinct; default unlisted; no gap/coaching/% in a public projection | E |
+| E | Independent QA / A11y / Failure-mode | acceptance matrix + fit/a11y gates; READ-ONLY over src | rejects any maker claim unsupported by observed evidence | AI-integration bug classes each have a test | — |
+| F | Performance & Venture-Cost | measurement hooks + docs | cost drivers named with variables/hooks; no invented prices, volumes or WTP | bounded safeguards that are not permanent product limits | E |
+
+**EVIDENCE RULE (binding on every lane):** each statement is OBSERVED/EXECUTED · REPORTED · UNVERIFIED/RUNTIME-UNVERIFIED · RECOMMENDED. **A skipped test is not a pass.** Defects ping-pong back to the owning lane, not to the owner, unless a ruling is required.
+**RELEASE RULE:** commit/push only on a green full chain with a non-WIP message; temp scripts never enter a release artifact; exact head SHA + rollback note in every report.
+**npm audit (prod, observed 16 Aug):** 3 vulnerabilities — 1 low `body-parser` (server-side DoS on an invalid limit), 2 moderate `react-router`/`react-router-dom` (client). All `fixAvailable: true` and **non-major**. NOT bumped mid-wave: three lanes are writing to the tree and react-router is the routing spine lane A just reworked — bumping now would confuse attribution. Recommended as the first ISOLATED, independently-testable increment after this wave lands green.
