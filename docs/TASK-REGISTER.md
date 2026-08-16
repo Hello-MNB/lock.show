@@ -908,3 +908,78 @@ Owner directive: app-first launch, evidence-first, no deploy/live-migration/cons
 **EVIDENCE RULE (binding on every lane):** each statement is OBSERVED/EXECUTED · REPORTED · UNVERIFIED/RUNTIME-UNVERIFIED · RECOMMENDED. **A skipped test is not a pass.** Defects ping-pong back to the owning lane, not to the owner, unless a ruling is required.
 **RELEASE RULE:** commit/push only on a green full chain with a non-WIP message; temp scripts never enter a release artifact; exact head SHA + rollback note in every report.
 **npm audit (prod, observed 16 Aug):** 3 vulnerabilities — 1 low `body-parser` (server-side DoS on an invalid limit), 2 moderate `react-router`/`react-router-dom` (client). All `fixAvailable: true` and **non-major**. NOT bumped mid-wave: three lanes are writing to the tree and react-router is the routing spine lane A just reworked — bumping now would confuse attribution. Recommended as the first ISOLATED, independently-testable increment after this wave lands green.
+
+## T-107 · LANE M — INTEGRATIONS / INTERFACES / ACCOUNTS / KEYS (owner addendum, 16 Aug 2026)
+
+Kept inside the existing Wave 2 team and session; no duplicate authority opened. **Names and metadata
+only — no secret value was read, printed, committed or exposed. No deploy, no console mutation, no key
+rotation.**
+
+**Delivered**
+- `docs/INTEGRATION-CONTRACT-REGISTER.md` — labelled **IMPLEMENTATION CONTRACT / NOT PRODUCT CANON**.
+  36 interface entries (10 PUBLIC · 4 SECRET · 13 CONFIG · 6 AMBIENT · 3 TOOLING) with owner,
+  environment, class, consumer, privilege, storage class, activation evidence, health check,
+  failure/fallback, spend driver, rotation and exit path; plus a 13-route guard table.
+- `scripts/test-integration-contract.mjs` — new executable gate, wired into `verify` after
+  `test:release-artifacts`. Seven inspectors: register↔code drift · class separation · secret scanning
+  (5 patterns, each proven against a synthetic sample + a benign control every run) · browser-bundle
+  leak · log redaction · route-guard drift · activation honesty.
+- `.env.local.example` reconciled: five undocumented flags added, and the OAuth block **corrected** —
+  it claimed off-by-default while code defaults ON (kill-switch semantics).
+
+**Non-duplication (deliberate).** Origin/preflight allowlisting, rate limiting, JWT denial and error
+redaction stay owned by `scripts/test-security-denial.mjs`; release-host hygiene by
+`scripts/test-release-artifacts.mjs`. Lane M covers only what had no executable owner.
+
+**Gate proven by mutation, not by passing.** Four injected defects were each caught and the tree
+restored: unregistered env read · undeclared new route · committed `sk-ant`-shaped literal ·
+`requireAuth` stripped from `POST /api/notify`.
+
+**Findings — all five reported items verified, none accepted on report**
+| # | Verdict |
+|---|---|
+| M-a app GA ID hardcoded vs website env override | CONFIRMED — `ConsentBanner.jsx:5` literal vs `layout.tsx:26` env-overridable. Public ID, so not a leak; the app cannot be repointed without a code change. **Not changed** — repointing a live measurement surface is outside an inventory lane. |
+| M-b OAuth flag drift | CONFIRMED + fixed in the example (doc-only) |
+| M-c Facebook flag undocumented | CONFIRMED + fixed in the example (doc-only) |
+| M-d CORS/auth/rate-limit unproven under managed runtime | CONFIRMED AS UNPROVEN — witnessed only against a local server. A per-instance in-memory limiter does not bound a multi-instance deployment. |
+| M-e legacy artistId-only service paths | CONFIRMED — `server/index.js` is `artistId` 55 : `act_id` 10; publish/passport/`buildSafePayload` key on the Person-level row. Converges with Lane D (`act_id` in **0 of 126** RLS policies). Product-correctness defect; **owner ruling required**, no code moved. |
+
+**Honest state:** activation witnesses **0 of 36**. `.env.local` is absent, so not one credential was
+exercised this session. No claim of a functioning provider is made anywhere in the register.
+
+### T-107.1 · Visual-baseline re-seed — ATTRIBUTION RESOLVED (16 Aug 2026)
+
+`c5a59ad` re-seeded 11 baselines and flagged **ATTRIBUTION REVIEW PENDING**. Closing that flag with
+measured evidence rather than acceptance.
+
+Old baselines were extracted from `c5a59ad^` and compared with the committed ones (pixelmatch,
+threshold 0.1 — the same comparator the gate uses):
+
+| Baseline | Δ px | Δ % | Rows touched |
+|---|---|---|---|
+| privacy-390 | 191,267 | **3.025%** | 141–14281 of 16212, spread across nearly every band |
+| privacy-1440 | 191,267 | **1.213%** | 141–10190 of 10954 |
+| terms-390 | 23,886 | **1.433%** | 141–2333 of 4274 |
+| terms-1440 | 23,886 | 0.576% | 141–2105 of 2880 |
+| accessibility-390 | 11,345 | 0.870% | 141–1403 |
+| accessibility-1440 | 11,342 | 0.345% | 141–1511 |
+| home-390 | 1,070 | 0.040% | localized, 3 bands |
+| faq / contact / methodology / bookers -390 | 0–560 | ≤0.026% | one band each |
+
+**Two baselines (privacy-390, terms-390) exceeded the gate's own 1% tolerance** — i.e. the re-seed
+absorbed a change the gate would otherwise have failed. That is exactly what a re-seed must never do
+silently, so it is recorded here.
+
+**Attribution.** Page sources are NOT the cause: `website-next/app/privacy/page.tsx` last changed in
+`4cfdac0` (27 Jul), three weeks before the re-seed, and no uncommitted change touches `website-next/`.
+The change magnitude tracks **text density** — the three densest legal pages move most, image-led
+pages move by a few hundred pixels — and the diffs are distributed across all text rows rather than
+localized to any component. That signature is **text rasterisation drift from a different rendering
+environment (font availability in a fresh container), not a product regression**.
+
+**Honest limits.** This is an inference from the diff signature, not a proof: no font inventory was
+captured from the container that produced the original baselines, and that container is gone. The
+consequence is real regardless of cause — **the baselines are environment-coupled, so `test:visual`
+currently proves consistency with this container, not with the design**. Recommended (not done here,
+as it changes a QA authority): pin the rendering environment (container image + font set) before the
+baselines are treated as design truth. Raised for the owner; no baseline was re-seeded by this lane.

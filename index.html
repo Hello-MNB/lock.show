@@ -2,6 +2,10 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <!-- The app is a private surface. Public Passports are a controlled exception and will be
+         served from their own SSR boundary, never from this SPA shell (see docs/V9-GAP-ANALYSIS.md).
+         Header-level X-Robots-Tag in vercel.json is the enforcing layer; this meta is the belt. -->
+    <meta name="robots" content="noindex, nofollow" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0B0C0B" />
     <link rel="icon" type="image/png" href="/favicon-32.png" />
