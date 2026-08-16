@@ -320,6 +320,11 @@ update public.share_link
    set expiry_kind = case when expiry is null then 'endless' else 'date' end
  where expiry_kind is null;
 
+-- Default 'endless' matches the common case (a link with no end date). NOTE:
+-- an INSERT that sets `expiry` but leaves `expiry_kind` to the default is
+-- REFUSED by share_link_expiry_kind_check — deliberately fail-closed, so a
+-- dated link can never masquerade as endless. Every writer sets both
+-- (mint_share_link() and the server mint route already do).
 alter table public.share_link alter column expiry_kind set default 'endless';
 
 do $$ begin
@@ -414,7 +419,12 @@ revoke select on public.share_link_event from anon;
 -- ──────────────────────────────────────────────────────────────────────────
 -- Delivery + expiry. No opened_at, no open_count, no event count, no derived
 -- "engagement" anything. A reaction is a reaction (019); an open is not one.
-create or replace view public.share_link_delivery_v as
+-- security_invoker = true is NOT optional here: a view created by the postgres
+-- role otherwise runs with the OWNER's rights and would hand every caller
+-- every artist's links, bypassing share_link's RLS entirely. With it, the
+-- existing sl_org_all / sl_operator_read policies still decide who sees what.
+create or replace view public.share_link_delivery_v
+  with (security_invoker = true) as
   select sl.id,
          sl.act_id,
          sl.artist_id,

@@ -147,6 +147,9 @@ assert(/revoke select on public\.share_link_event from anon/.test(executable),
   const view = executable.slice(executable.indexOf('create or replace view public.share_link_delivery_v'),
     executable.indexOf('comment on view public.share_link_delivery_v'))
   assert(view.length > 0, 'S7  share_link_delivery_v exists (the artist-facing link projection)')
+  assert(/security_invoker = true/.test(view),
+    'S7  the view is security_invoker — it cannot bypass share_link RLS with the owner\'s rights',
+    'S7  ⚠ the view runs with owner rights and would expose every artist\'s links')
   assert(!/open_count|opened_at/.test(view),
     'S7  the artist-facing projection exposes delivery + expiry ONLY — no open_count, no opened_at',
     'S7  ⚠ the artist-facing projection leaks an open count/timestamp')
