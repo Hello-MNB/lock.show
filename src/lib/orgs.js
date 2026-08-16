@@ -428,8 +428,21 @@ export async function listProductionRequests() {
 }
 
 // ── RADAR inputs (O5 agencies): per-roster-artist record for the §20 rules engine. ──
-export async function getRadarInputs(orgId) {
+export async function getRadarInputs(orgId, { audience = 'artist_private' } = {}) {
   if (DEMO) return demoRadarRecords
+  // ── P0-PRIVACY B2 · AUDIENCE-NARROWED READ ────────────────────────────────
+  // AUTHORITY: RADAR is artist-private intelligence. An `artist_access` grant
+  // never authorizes the private interpretation — only a purpose-bounded,
+  // artist-authorized projection (migration 042).
+  // `audience='rep_summary'` narrows what this read path even FETCHES for a
+  // representation org: passport-approved claims only (the same rows the
+  // artist already publishes), and no `draw_signals` at all — draw staleness
+  // (R7) is coaching about a gap and belongs to the artist alone.
+  // HONESTY: this is client-side narrowing, NOT enforcement. The server gate on
+  // these tables is still `can_access_artist()` (027), which does not know about
+  // audiences; a grant-holder could still query the wider set directly. The
+  // enforcing half is migration 042 §6 (RLS + generated projection), which is
+  // owner-gated and NOT applied. Do not read this branch as a boundary.
   // T-103: an EXPIRED mandate grants no capability. `can_access_artist()` (027)
   // already refuses one server-side, but this client read filtered on status
   // ALONE — an expired grant kept feeding radar signals for an artist the org
@@ -445,9 +458,15 @@ export async function getRadarInputs(orgId) {
   for (const a of access || []) {
     const artist = a.artist
     if (!artist) continue
+    const repOnly = audience === 'rep_summary'
+    const claimsQ = supabase.from('claims')
+      .select('claim_type, verification_status, visibility, method_label, expires_at')
+      .eq('artist_id', artist.id)
+    if (repOnly) claimsQ.eq('visibility', 'passport-ok')
     const [claims, draw, demand] = await Promise.all([
-      supabase.from('claims').select('claim_type, verification_status, visibility, method_label, expires_at').eq('artist_id', artist.id),
-      supabase.from('draw_signals').select('signal_type, computed_at').eq('artist_id', artist.id),
+      claimsQ,
+      repOnly ? Promise.resolve({ data: [] })
+        : supabase.from('draw_signals').select('signal_type, computed_at').eq('artist_id', artist.id),
       supabase.from('availability_requests').select('id, event_type, location, status').eq('artist_id', artist.id).eq('status', 'new'),
     ])
     records.push({ artist, claims: claims.data || [], draw: draw.data || [], demand: demand.data || [] })

@@ -65,3 +65,58 @@ export function computeRadarSignals(records, now = Date.now()) {
 }
 
 export const RADAR_ACTIONS = ['refresh-evidence', 'request-evidence', 'respond', 'publish', 'promote', 'review']
+
+// ── P0-PRIVACY B2 · THE REP-SUMMARY PROJECTION ──────────────────────────────
+// AUTHORITY: RADAR is artist-private intelligence. Organization membership or
+// an artist_access row NEVER grants automatic access to private RADAR gaps or
+// interpretation. Representation may receive ONLY a purpose-bounded,
+// artist-authorized projection; a mandate scope authorizes only the named
+// projection/action.
+// Owner ruling 9 Aug 2026 (docs/OWNER-PENDING.md R-11): the ARTIST-PRIVATE
+// surface may show everything — percentages, coverage, gaps. The firewall stays
+// absolute on every OTHER entity's surface: bands + binaries + method labels,
+// never private gap or coaching content.
+//
+// These three constants are the CLIENT MIRROR of the SQL content law in
+// migration 042 §2 (`radar_signal_rep_content_check`). If one side changes the
+// other must change with it — scripts/test-projection-matrix.mjs asserts they
+// still agree, in both directions.
+
+// The only rules a representation org may ever receive: R2 = a ready, published
+// Passport meeting real inbound demand (coordination); R5 = a producer-confirmed
+// strength (a strength, never a gap). Everything else IS the private
+// interpretation: R1/R7 staleness coaching, R3 unanswered demand, R4
+// "not published yet", R6 "no strong proof", R8 "no evidence at all".
+export const REP_SUMMARY_RULE_IDS = ['R2', 'R5']
+export const REP_SUMMARY_ACTIONS = ['respond', 'promote']
+export const REP_SUMMARY_STATUSES = ['strong']
+
+// Fields that are private interpretation even on an allowed rule: `ageDays` is
+// staleness (a gap measured in days) and never crosses to another entity.
+const REP_SUMMARY_STRIPPED_FIELDS = ['ageDays']
+
+/**
+ * Narrow a full (artist-private) RADAR signal set down to what a mandate may
+ * authorize a representation org to see. Pure, total, and deliberately a
+ * SUBTRACTION — it can only ever drop signals and drop fields, never invent,
+ * re-rank, aggregate or summarize one. No counts, no score, no next-best-action.
+ *
+ * NOTE ON AUTHORIZATION: this function enforces the CEILING (what content is
+ * eligible to be projected at all). It does NOT by itself prove a mandate
+ * authorized it — that lives in the DB (migration 042 §1 radar_projection_purpose
+ * + §6 RLS) and, as of this writing, NO purpose is enabled, so the authorized
+ * projection is legitimately EMPTY until the owner names one.
+ */
+export function projectRadarForRep(signals) {
+  return (signals || [])
+    .filter((s) => s
+      && REP_SUMMARY_RULE_IDS.includes(s.ruleId)
+      && REP_SUMMARY_ACTIONS.includes(s.actionType)
+      && REP_SUMMARY_STATUSES.includes(s.status)
+      && Boolean(s.methodLabel || s.vstatus))   // method label is mandatory off-artist
+    .map((s) => {
+      const out = { ...s }
+      for (const f of REP_SUMMARY_STRIPPED_FIELDS) out[f] = null
+      return out
+    })
+}

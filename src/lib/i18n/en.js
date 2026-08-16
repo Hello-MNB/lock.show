@@ -1061,6 +1061,10 @@ export const T = {
   radar: {
     title: 'RADAR · roster & demand intelligence',
     subtitle: 'Evidence-based signals — what needs attention across your roster and incoming demand.',
+    // P0-PRIVACY B2 — shown only when RADAR_AUDIENCE_SPLIT_ENABLED is on. The
+    // quiet must not read as "nothing is happening": the artist's private RADAR
+    // keeps running, this surface just isn't its audience.
+    repProjectionNote: 'Mandate view — only what the artist authorized this office to act on. Their private Radar is not shown here.',
     empty: 'No active signals right now.',
     next: 'Handle the next signal',
     filterAll: 'All',

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getRadarInputs } from '../../lib/orgs.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { computeRadarSignals } from '../../lib/radar.js'
+import { computeRadarSignals, projectRadarForRep } from '../../lib/radar.js'
+import { RADAR_AUDIENCE_SPLIT_ENABLED } from '../../lib/constants.js'
 import { PageShell, Loading, EmptyState, ErrorState, StatusChip, SourceLabel } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -51,8 +52,17 @@ export default function RadarFeed() {
   async function load() {
     setError(false)
     try {
-      const inputs = await getRadarInputs(activeOrgId)
-      setSignals(computeRadarSignals(inputs))
+      // P0-PRIVACY B2 — AUDIENCE. This screen belongs to a REPRESENTATION org,
+      // not to the artist. RADAR is artist-private intelligence: an
+      // `artist_access` grant never authorizes the private interpretation, only
+      // a purpose-bounded projection the artist named. With the flag ON we keep
+      // ONLY that projection (src/lib/radar.js — the client mirror of migration
+      // 042's SQL content law); with it OFF behavior is byte-identical to today.
+      // Flag default OFF: this tightening removes information from a shipped
+      // screen, so the owner enables it, not a deploy.
+      const inputs = await getRadarInputs(activeOrgId, { audience: RADAR_AUDIENCE_SPLIT_ENABLED ? 'rep_summary' : 'artist_private' })
+      const computed = computeRadarSignals(inputs)
+      setSignals(RADAR_AUDIENCE_SPLIT_ENABLED ? projectRadarForRep(computed) : computed)
       if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { role: 'agency', org_id: activeOrgId }) }
     } catch {
       setError(true)
@@ -84,6 +94,11 @@ export default function RadarFeed() {
       <div className="flex items-center justify-end mb-4"><Link to="/agency" className="tap-target text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-1">{T.radar.title}</h1>
       <p className="text-sm text-muted mb-4">{T.radar.subtitle}</p>
+      {/* Honesty line, not a redesign: when the audience split is on, an empty
+          or short feed is a MANDATE boundary, never "the artist has nothing". */}
+      {RADAR_AUDIENCE_SPLIT_ENABLED && (
+        <p className="text-xs text-faint mb-4">{T.radar.repProjectionNote}</p>
+      )}
 
       {error ? (
         <ErrorState title={T.agency.loadError} onRetry={() => { setLoading(true); load() }} />

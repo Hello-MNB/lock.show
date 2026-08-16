@@ -1057,6 +1057,8 @@ export const T = {
   radar: {
     title: 'RADAR · מודיעין רוסטר וביקוש',
     subtitle: 'סיגנלים מבוססי-ראיות — מה דורש טיפול ברוסטר ובביקוש הנכנס.',
+    // P0-PRIVACY B2 — מוצג רק כאשר RADAR_AUDIENCE_SPLIT_ENABLED פעיל.
+    repProjectionNote: 'תצוגת מנדט — רק מה שהאמן אישר למשרד הזה לפעול לפיו. הראדאר הפרטי שלו אינו מוצג כאן.',
     scanKickoff: 'הרדאר שלך פועל — חוזקות מופיעות קודם; מה שצריך אותך מחכה בשקט למטה.',
     // ── A9 Artist Radar (the artist's private surface — LF-A1) ──
     artistTitle: 'ראדאר האמן',

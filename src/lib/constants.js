@@ -43,6 +43,19 @@ export const OAUTH_ENABLED = import.meta.env?.VITE_OAUTH_ENABLED !== '0'
 // provider is enabled in the Supabase dashboard.
 export const OAUTH_FACEBOOK_ENABLED = import.meta.env?.VITE_OAUTH_FACEBOOK === '1'
 
+// ── P0-PRIVACY B2 · RADAR AUDIENCE SPLIT (migration 042) ────────────────────
+// RADAR is artist-private intelligence. A representation org holding an
+// `artist_access` grant currently receives the artist's FULL private RADAR
+// interpretation — gap signals (R8 'missing', R6 'notAssessable'), staleness
+// coaching (R1/R7) and all — on /agency/radar, because that screen re-derives
+// the private rule set client-side from raw claims/draw/demand.
+// With this flag ON the rep side reads ONLY the bounded rep-summary projection
+// (src/lib/radar.js projectRadarForRep), mirroring the SQL content law in
+// migration 042 §2. DEFAULT OFF: tightening removes information from a screen
+// that ships today, so the owner flips it, not a deploy.
+// The DB half is a separate, also-owner-gated act: select public.apply_radar_audience_split().
+export const RADAR_AUDIENCE_SPLIT_ENABLED = import.meta.env?.VITE_RADAR_AUDIENCE_SPLIT === '1'
+
 // Bounded status vocabulary — the ONLY statuses the firewall permits in the UI
 // (חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך). Keys map to i18n status.*.
 export const STATUS = {

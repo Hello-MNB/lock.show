@@ -8,10 +8,14 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
-import { randomUUID, createHash } from 'node:crypto'
+import { randomUUID, createHash, randomBytes } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { T as en } from '../src/lib/i18n/en.js'
+import {
+  OUTCOME, OUTCOME_HTTP_STATUS, AUDIENCES, READABLE_VERSION_STATES, TOKEN_BYTES,
+  isWellFormedToken, resolveShareLink, mintIdempotencyKey, openIdempotencyKey,
+} from '../src/lib/shareLink.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -460,6 +464,213 @@ app.get('/api/passport/:artistId', async (req, res) => {
     res.json(payload)
   } catch (e) {
     console.error('[passport]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
+})
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// SHARE LINK SERVICE (P0-PRIVACY lane B1 · migration 041) — FLAG-GATED, OFF.
+//
+// Nothing below changes any existing behaviour: every route answers 503
+// share_link_service_disabled unless SHARE_LINK_SERVICE_ENABLED === '1'.
+// These paths did not exist before, so a 503 on them is not a regression.
+//
+// TURN-ON ORDER (see the PRECONDITIONS header of migration 041):
+//   1. apply 041 PART A   2. set SHARE_LINK_SERVICE_ENABLED=1 and mint links
+//   3. apply 041 PART B (the fenced policy swap — the breaking half)
+// Flag ON before step 1 = 500s from the resolver (missing columns/functions).
+//
+// THE RULE LIVES IN ONE PLACE: src/lib/shareLink.js resolveShareLink(). This
+// file fetches rows and renders a response; it never re-decides who may read
+// what. Postgres holds the same rule a third time (resolve_share_link()) for
+// the no-server client path — the three must agree, and
+// scripts/test-link-integrity.mjs asserts they do.
+//
+// WHY THE SERVER DOES ITS OWN OWNERSHIP CHECK: this process holds the SERVICE
+// ROLE, so auth.uid() is null inside SECURITY DEFINER functions and
+// can_access_artist() would refuse every mint. The RPCs in 041 are the
+// no-secret client path (an authenticated user JWT, exactly like 017's
+// pv_owner_insert); these routes are the service-role path and enforce
+// ownership with requireArtistOwner() before touching a row.
+// ══════════════════════════════════════════════════════════════════════════
+const SHARE_LINK_SERVICE_ENABLED = process.env.SHARE_LINK_SERVICE_ENABLED === '1'
+
+function shareLinkEnabled(res) {
+  if (SHARE_LINK_SERVICE_ENABLED) return true
+  res.status(503).json({ error: 'share_link_service_disabled' })
+  return false
+}
+
+// sha256 hex — the SAME digest shape stored in share_link.token_hash and the
+// same one 036_token_hash.sql.DRAFT specifies for confirmation tokens.
+const sha256hex = (s) => createHash('sha256').update(String(s)).digest('hex')
+
+// The raw token exists here and nowhere else: minted, returned once, forgotten.
+// 32 CSPRNG bytes → 43 base64url chars → 256 bits. This is a bearer credential
+// to a person's professional evidence; do not shorten it.
+const mintToken = () => randomBytes(TOKEN_BYTES).toString('base64url')
+
+// ── POST /api/share-link — mint (idempotent) ──────────────────────────────
+// body { passportVersionId, audience, recipientLabel?, purpose?, expiry?,
+//        trackingDisclosed:true }
+// Returns { ok, id, token, url } — `token` is shown ONCE and is never
+// retrievable again (only its hash is stored).
+app.post('/api/share-link', requireAuth, async (req, res) => {
+  if (!shareLinkEnabled(res)) return
+  try {
+    if (!admin) return res.status(503).json({ error: 'Supabase admin client not configured.' })
+    const { passportVersionId, audience, recipientLabel, purpose, expiry, trackingDisclosed } = req.body || {}
+    if (!passportVersionId) return res.status(400).json({ error: 'passportVersionId required' })
+    if (!AUDIENCES.includes(audience)) {
+      return res.status(400).json({ error: 'audience_invalid', allowed: AUDIENCES })
+    }
+    // PUB4 (024:23): a link that measures opens may not be sent until the
+    // artist has been told it does. The gate is here, not in the UI.
+    if (trackingDisclosed !== true) return res.status(400).json({ error: 'tracking_disclosure_required' })
+
+    const { data: pv, error: pvErr } = await admin
+      .from('passport_versions').select('id, artist_id, act_id, state')
+      .eq('id', passportVersionId).maybeSingle()
+    if (pvErr) throw pvErr
+    if (!pv) return res.status(404).json({ error: 'Version not found.' })
+    if (!(await requireArtistOwner(req, res, pv.artist_id))) return
+    // Only a version somebody actually published may be handed to a recipient.
+    if (pv.state && !READABLE_VERSION_STATES.includes(pv.state)) {
+      return res.status(409).json({ error: 'version_not_publishable', state: pv.state })
+    }
+
+    const idempotencyKey = mintIdempotencyKey({
+      passportVersionId, audience, recipientLabel, purpose, expiry,
+    })
+
+    // Replay: the mint receipt already exists → return the SAME link. A second
+    // bearer credential is never minted for the same request. The raw token is
+    // NOT re-issuable (it was never stored) — the caller is told so explicitly.
+    const { data: prior } = await admin
+      .from('share_link_event').select('share_link_id')
+      .eq('event', 'minted').eq('idempotency_key', idempotencyKey).maybeSingle()
+    if (prior?.share_link_id) {
+      return res.json({ ok: true, id: prior.share_link_id, token: null, replayed: true })
+    }
+
+    const token = mintToken()
+    const { data: row, error: insErr } = await admin.from('share_link').insert({
+      passport_version_id: pv.id,
+      artist_id: pv.artist_id,
+      act_id: pv.act_id,
+      recipient_label: recipientLabel || null,
+      purpose: purpose || null,
+      audience,
+      token_hash: sha256hex(token),
+      expiry: expiry || null,                                    // null = endless, deliberately
+      expiry_kind: expiry ? 'date' : 'endless',
+      status: 'live',
+      tracking_disclosed: true,
+      created_by: req.userId,
+    }).select('id').single()
+    if (insErr) throw insErr
+
+    await admin.from('share_link_event').insert({
+      share_link_id: row.id, event: 'minted', idempotency_key: idempotencyKey,
+      detail: { audience },
+    })
+
+    res.json({ ok: true, id: row.id, token, replayed: false })
+  } catch (e) {
+    console.error('[share-link-mint]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
+})
+
+// ── GET /api/share-link/:token — resolve (the recipient's only door) ───────
+// One token → one version + its policy, or one typed reason and NOTHING else.
+app.get('/api/share-link/:token', async (req, res) => {
+  if (!shareLinkEnabled(res)) return
+  try {
+    if (!admin) return res.status(503).json({ error: 'Supabase admin client not configured.' })
+    const { token } = req.params
+    // A malformed token is not looked up at all — it cannot match a real row,
+    // and answering identically to a wrong-but-well-formed token keeps the two
+    // indistinguishable to a prober.
+    if (!isWellFormedToken(token)) {
+      return res.status(OUTCOME_HTTP_STATUS[OUTCOME.NOT_FOUND]).json({ outcome: OUTCOME.NOT_FOUND })
+    }
+
+    const { data: link, error: lErr } = await admin
+      .from('share_link')
+      .select('id, passport_version_id, artist_id, act_id, audience, status, expiry, revoked_at, wrong_recipient_at')
+      .eq('token_hash', sha256hex(token)).maybeSingle()
+    if (lErr) throw lErr
+
+    let version = null
+    if (link?.passport_version_id) {
+      const { data: pv, error: vErr } = await admin
+        .from('passport_versions')
+        .select('id, act_id, audience, state, version_no, snapshot')
+        .eq('id', link.passport_version_id).maybeSingle()
+      if (vErr) throw vErr
+      version = pv || null
+    }
+
+    // ONE rule, imported — this route does not decide anything itself.
+    const result = resolveShareLink(link, version, { now: Date.now() })
+    const status = OUTCOME_HTTP_STATUS[result.outcome] || 500
+    if (result.outcome !== OUTCOME.OK) {
+      return res.status(status).json({ outcome: result.outcome })  // reason only, no payload
+    }
+
+    // Receipt: replay-safe, best-effort. A measurement failure must never stop
+    // a recipient from reading. Counts never travel back to the artist.
+    try {
+      const sessionId = String(req.headers['x-public-session'] || '').slice(0, 64) || 'anon'
+      await admin.from('share_link_event').insert({
+        share_link_id: result.shareLinkId,
+        event: 'opened',
+        idempotency_key: openIdempotencyKey(result.shareLinkId, sessionId, Date.now()),
+        detail: { via: 'api' },
+      })
+    } catch { /* duplicate receipt (replay) or measurement outage — both are fine */ }
+
+    res.status(200).json({
+      outcome: OUTCOME.OK,
+      passport_version_id: result.passportVersionId,
+      version_no: result.versionNo,
+      audience: result.audience,
+      act_id: result.actId,
+      expiry: result.expiry,
+      snapshot: version?.snapshot ?? null,
+    })
+  } catch (e) {
+    console.error('[share-link-resolve]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
+})
+
+// ── POST /api/share-link/:id/revoke — future authority stops, history stays ─
+app.post('/api/share-link/:id/revoke', requireAuth, async (req, res) => {
+  if (!shareLinkEnabled(res)) return
+  try {
+    if (!admin) return res.status(503).json({ error: 'Supabase admin client not configured.' })
+    const { id } = req.params
+    const { data: link, error: lErr } = await admin
+      .from('share_link').select('id, artist_id, status').eq('id', id).maybeSingle()
+    if (lErr) throw lErr
+    if (!link) return res.status(404).json({ error: 'Link not found.' })
+    if (!(await requireArtistOwner(req, res, link.artist_id))) return
+
+    if (link.status !== 'revoked') {
+      const { error: upErr } = await admin.from('share_link')
+        .update({ status: 'revoked', revoked_at: new Date().toISOString() }).eq('id', id)
+      if (upErr) throw upErr
+    }
+    // The row is never deleted — the mandate law applied to links.
+    await admin.from('share_link_event').insert({
+      share_link_id: id, event: 'revoked', idempotency_key: `revoke:${id}`, detail: {},
+    })
+    res.json({ ok: true, revoked: true, already_revoked: link.status === 'revoked' })
+  } catch (e) {
+    console.error('[share-link-revoke]', e)
     res.status(500).json({ error: 'server_error' })
   }
 })
