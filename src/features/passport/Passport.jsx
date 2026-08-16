@@ -138,6 +138,14 @@ export default function Passport() {
   const data = deriveSections(artist, items, claims, T)
 
   // action ladder — primary actions continue to the request form; the rest record only
+  // LANE-A T-106 (dead control on the ONE primary CTA): recordProfessionalReaction
+  // is a best-effort MEASUREMENT write, but the old catch swallowed its failure
+  // AND swallowed the navigation with it — so on any hiccup (RLS, offline, a
+  // rate-limited insert) "Check availability" / "Ask for a price" stopped dead on
+  // a "✓ saved" receipt instead of opening the request form. The buyer's real
+  // action is the request; the measurement never gets to block it. The reaction
+  // is still attempted first (so a successful one is still recorded before the
+  // route change), and its failure is now logged rather than silently discarded.
   async function act(actionType, label, { toRequest = false } = {}) {
     if (busy) return
     setBusy(true)
@@ -146,10 +154,19 @@ export default function Passport() {
       // GATE signal — a booking professional REACTED to a real Passport (canon
       // P0-5: a view is not a reaction; this is). Sample passport never measured.
       if (id !== 'demo-artist') logEvent(EVENTS.PROFESSIONAL_REACTION, { artist_id: id, action: actionType })
-      if (toRequest) { setSheet(false); nav(`/passport/${id}/request`); return }
-      setReceipt(label)
-    } catch { setReceipt(label) } // reaction is best-effort for the visitor
-    finally { setBusy(false) }
+    } catch (e) {
+      // Never silent: the Gate funnel loses a reaction here, and an operator
+      // reading the console must be able to see that it did.
+      console.warn('[passport] professional reaction not recorded:', e?.message || e)
+    }
+    setBusy(false)
+    // The commercial path continues regardless — a measurement write may never
+    // stand between a booking manager and the request form.
+    if (toRequest) { setSheet(false); nav(`/passport/${id}/request`); return }
+    // OWNER DECISION PENDING (documented, not guessed): for the non-continuing
+    // rungs the receipt still shows on a failed write, exactly as before. Making
+    // it honest ("we couldn't record that") is a copy/UX ruling, not a code fact.
+    setReceipt(label)
   }
 
   // §8.4 four faces — same evidence pool (data), a different view component

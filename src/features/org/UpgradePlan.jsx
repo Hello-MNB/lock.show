@@ -19,7 +19,11 @@ export default function UpgradePlan() {
 
   useEffect(() => { (async () => {
     if (!activeOrgId) { setLoading(false); return }
-    try { setSub(await getSubscription(activeOrgId)) } finally { setLoading(false) }
+    // LANE-A T-106: a failed read left `sub` null, which this screen reads as
+    // "not upgraded yet" — a load failure presented as plan state.
+    try { setSub(await getSubscription(activeOrgId)) }
+    catch (e) { setError(e?.message || T.common.error) }
+    finally { setLoading(false) }
   })() }, [activeOrgId])
 
   async function upgrade() {

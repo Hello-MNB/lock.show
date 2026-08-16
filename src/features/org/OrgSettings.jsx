@@ -29,10 +29,13 @@ export default function OrgSettings() {
 
   useEffect(() => { (async () => {
     if (!activeOrgId) { setLoading(false); return }
+    // LANE-A T-106: a failed org read rendered an EMPTY settings form whose Save
+    // would then overwrite the real name with ''. Surface, never guess.
     try {
       const o = await getOrg(activeOrgId); setOrg(o); setName(o?.name || '')
       if (isOwner) setMembers(await getMembers(activeOrgId))
-    } finally { setLoading(false) }
+    } catch (e) { setError(e?.message || T.common.error) }
+    finally { setLoading(false) }
   })() }, [activeOrgId, isOwner])
 
   async function save() {

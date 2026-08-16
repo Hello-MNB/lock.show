@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { upsertProfile } from '../../lib/db.js'
 import { bootstrapOrg } from '../../lib/orgs.js'
-import { PageShell, Wordmark, GpIcon } from '../../components/ui.jsx'
+import { PageShell, Wordmark, GpIcon, ErrorNote } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { ROLES } from '../../lib/constants.js'
 import { selectRoute } from '../../lib/navigation.js'
@@ -14,6 +14,7 @@ export default function UserTypeSelect() {
   const { user, reloadProfile } = useAuth()
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   // Jobs-first framing (canon §5): the question is "what would you like to do
   // first?", never a role list. Same underlying role values are written
@@ -50,28 +51,44 @@ export default function UserTypeSelect() {
     },
   ]
 
+  // LANE-A T-106 (terminal state, no exit): `busy` was set to true and only ever
+  // cleared by navigating away. A rejected upsertProfile/reloadProfile (offline,
+  // RLS hiccup, a stalled auth lock) therefore left EVERY option permanently
+  // disabled on the first screen a new account ever sees, with no message and no
+  // retry — an unhandled promise rejection swallowed the reason. The pick is now
+  // a normal recoverable action: the error is named, `busy` always clears, and
+  // the same tap can be retried.
   async function choose(role, route) {
     if (busy) return
-    setBusy(true)
-    if (user) {
-      const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
-      await upsertProfile({ id: user.id, role, full_name })
-      // Org-first: auto-create the person's personal solo org + owner membership +
-      // functional role. Idempotent server-side; non-blocking if already bootstrapped.
-      try {
-        await bootstrapOrg({ name: full_name, functionalRole: role, email: user.email, displayName: full_name })
-      } catch (e) {
-        // "already bootstrapped" is benign (idempotent). Anything else means the
-        // user has a profile but NO org/role — surface it instead of silently
-        // proceeding into broken org-dependent screens later (audit finding #3).
-        const msg = String(e?.message || e)
-        if (!/already|exists|duplicate/i.test(msg)) {
-          console.error('[bootstrapOrg] failed — user may lack an organization:', msg)
+    setBusy(true); setError('')
+    try {
+      if (user) {
+        const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
+        await upsertProfile({ id: user.id, role, full_name })
+        // Org-first: auto-create the person's personal solo org + owner membership +
+        // functional role. Idempotent server-side; non-blocking if already bootstrapped.
+        try {
+          await bootstrapOrg({ name: full_name, functionalRole: role, email: user.email, displayName: full_name })
+        } catch (e) {
+          // "already bootstrapped" is benign (idempotent). Anything else means the
+          // user has a profile but NO org/role — surface it instead of silently
+          // proceeding into broken org-dependent screens later (audit finding #3).
+          const msg = String(e?.message || e)
+          if (!/already|exists|duplicate/i.test(msg)) {
+            console.error('[bootstrapOrg] failed — user may lack an organization:', msg)
+          }
         }
+        await reloadProfile()
       }
-      await reloadProfile()
+      nav(route)
+    } catch (e) {
+      // autoChose (below) fires this without a click — the note is the ONLY way
+      // that failure is ever visible, so it must never be swallowed.
+      autoChoseRef.current = false
+      setError(e?.message || T.common.error)
+    } finally {
+      setBusy(false)
     }
-    nav(route)
   }
 
   // Cross-funnel seam: if the visitor arrived via a persona-specific CTA on
@@ -101,6 +118,7 @@ export default function UserTypeSelect() {
         <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">One quick question</p>
         <h1 className="text-2xl font-bold text-ink">{T.roleSelect.jobTitle}</h1>
       </div>
+      <ErrorNote>{error}</ErrorNote>
       <div className="space-y-3">
         {ROLE_OPTIONS.map((r) => (
           <button key={r.key} onClick={() => choose(r.key, r.route)} disabled={busy}

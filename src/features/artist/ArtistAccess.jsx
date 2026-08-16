@@ -154,7 +154,8 @@ function InviteSheet({ open, onClose, T, artist, toast }) {
       const res = await inviteArtistRepresentative(artist.id, clean, ['view'])
       if (res?.ok === false) toast.show(a.inviteComingSoon, 'warn')
       else { toast.show(a.inviteSent(clean), 'ok'); setEmail(''); onClose() }
-    } finally { setSending(false) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setSending(false) }
   }
 
   return (
@@ -200,7 +201,11 @@ export default function ArtistAccess() {
   const [undoTarget, setUndoTarget] = useState(null) // { row, prevScope } briefly shown post-end
   const undoTimer = useRef(null)
 
+  // LANE-A T-106 (terminal state): loadErr was never cleared, so ErrorState's own
+  // `onRetry={load}` could succeed and STILL leave the failure screen up forever —
+  // the retry was decorative. Clearing on entry makes the retry real.
   async function load() {
+    setLoadErr('')
     try {
       const [art, reqs] = await Promise.all([getMyArtist(user.id), listIncomingAccessRequests()])
       setArtist(art || null)
@@ -245,7 +250,8 @@ export default function ArtistAccess() {
       }
       setApproveTarget(null)
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   async function decline(r) {
@@ -255,7 +261,8 @@ export default function ArtistAccess() {
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
       else logEvent(EVENTS.CONSENT_WITHDRAWN, { role: 'artist', scope: 'representation', grant_id: r.id, outcome: 'declined' })
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   async function saveScopes() {
@@ -267,7 +274,8 @@ export default function ArtistAccess() {
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
       setScopeTarget(null)
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   // End-access ceremony (§8.5 DoD: "revoke ceremony with confirm+undo
@@ -287,7 +295,8 @@ export default function ArtistAccess() {
       clearTimeout(undoTimer.current)
       undoTimer.current = setTimeout(() => setUndoTarget(null), 7000)
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   async function undoEnd(r) {
@@ -298,7 +307,13 @@ export default function ArtistAccess() {
       const scope = (r.scope || ['view'])
       await respondToAccessRequest(r.id, true, scope)
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) {
+      // The undo failed — the grant really is still ended. Say so, and put the
+      // undo affordance back so the artist can try once more.
+      setUndoTarget(r.id)
+      toast.show(e?.message || T.common.error, 'warn')
+    }
+    finally { setBusyId(null) }
   }
 
   return (

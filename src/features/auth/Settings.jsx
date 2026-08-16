@@ -79,7 +79,13 @@ function RepresentationSection({ T, toast }) {
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
       setApproveTarget(null)
       await load()
-    } finally { setBusyId(null) }
+    // LANE-A T-106 (dead control / swallowed error): approving, declining or
+    // revoking a representation mandate used to fail in total silence — no catch
+    // at all, so the rejection became an unhandled promise and the row simply
+    // stopped spinning. A mandate decision must never look like it landed when
+    // it did not.
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   async function decline(r) {
@@ -88,7 +94,8 @@ function RepresentationSection({ T, toast }) {
       const res = await respondToAccessRequest(r.id, false)
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   async function revoke(r) {
@@ -98,7 +105,8 @@ function RepresentationSection({ T, toast }) {
       const res = await revokeArtistAccess(r.id)
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
       await load()
-    } finally { setBusyId(null) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusyId(null) }
   }
 
   const pending = requests.filter((r) => r.status === 'pending')

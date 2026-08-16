@@ -39,7 +39,7 @@ function parseArtistId(raw) {
 // scope chips, territory and expiry all render from the actual grant, not a
 // guess. Either side may revoke an active grant, or the requesting org may
 // cancel its own still-pending invite (both go through revoke_artist_access).
-function AccessRequestsCard({ requests, T, onRevoked }) {
+function AccessRequestsCard({ requests, T, onRevoked, onError }) {
   const [busyId, setBusyId] = useState(null)
   if (!requests || requests.length === 0) return null
 
@@ -58,6 +58,12 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
         logEvent(EVENTS.CONSENT_WITHDRAWN, { role: 'agency', scope: 'representation', grant_id: r.id, outcome: 'ended' })
       }
       await onRevoked?.()
+    } catch (e) {
+      // LANE-A T-106 (dead control / swallowed error): revoking an active mandate
+      // or cancelling a still-pending invite had NO catch — the row stopped
+      // spinning, the grant was still there, and nothing was said. A mandate
+      // action must never fail in silence.
+      onError?.(e?.message || T.common.error)
     } finally {
       setBusyId(null)
     }
@@ -324,7 +330,7 @@ export default function AgencyDashboard() {
       {/* ── Representation — the artist_access consent handshake this org has
             requested (pending/active/revoked). Separate from the owned roster
             below: this is ACCESS, not ownership. ── */}
-      <AccessRequestsCard requests={accessRequests} T={T} onRevoked={load} />
+      <AccessRequestsCard requests={accessRequests} T={T} onRevoked={load} onError={(m) => toast.show(m, 'warn')} />
 
       {/* ── A6 (032-backed): the CONSENTED roster — ACTIVE ArtistAccess grants.
             A grant, never ownership (ENTITY-GLOSSARY §2c boundary). Renders only

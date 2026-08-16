@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport, authHeaders } from '../../lib/db.js'
 import { VISIBILITY, SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
-import { PageShell, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
+import { PageShell, Loading, EmptyState, ErrorState, ErrorNote, Spinner } from '../../components/ui.jsx'
 import { MethodLabel, BandPill } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
@@ -31,6 +31,14 @@ export default function ClaimReview() {
   const [loadError, setLoadError] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [republishing, setRepublishing] = useState(false)
+  // LANE-A T-106 (dead control / swallowed error): every mutation below was
+  // `try { await … } finally { … }` with NO catch — a rejected write became an
+  // unhandled promise rejection, the spinner stopped, and the artist was told
+  // nothing at all. Approving a claim, correcting it, omitting it, flagging it
+  // and re-publishing are the evidence-integrity actions of this whole product;
+  // none of them may fail invisibly. One shared, named action error, cleared on
+  // the next attempt.
+  const [actionErr, setActionErr] = useState('')
   // Named confirmation receipt (evidence integrity) — carries the same 7s-undo
   // contract as the Radar Inspector's confirm (§8.3/§8.13.3 confirm-wording
   // law: "what landed where" + a real undo window, not just a toast).
@@ -53,11 +61,15 @@ export default function ClaimReview() {
     clearTimeout(receiptRef.current)
     const { claim } = receiptClaim
     setReceiptClaim(null)
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       await updateClaim(claim.id, { artist_approved: false })
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, artist_approved: false } : c))
       if (claim.visibility === VISIBILITY.PASSPORT_OK) { markPassportDirty(artist.id); setDirty(true) }
+    } catch (e) {
+      // The undo did NOT land — restore the receipt so the 7s window is real.
+      setReceiptClaim({ claim, msg: receiptClaim?.msg })
+      setActionErr(e?.message || T.common.error)
     } finally { setToggling(null) }
   }
 
@@ -91,20 +103,21 @@ export default function ClaimReview() {
     if (toggling) return
     const goingPublic = claim.visibility !== VISIBILITY.PASSPORT_OK
     if (goingPublic && !canPublish(claim)) return // UI disables this; guard anyway
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       const next = goingPublic ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY
       await updateClaimVisibility(claim.id, next)
       logEvent(EVENTS.CLAIM_VISIBILITY_CHANGED, { claim_id: claim.id, from: claim.visibility, to: next })
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, visibility: next } : c))
       markPassportDirty(artist.id); setDirty(true)
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   // ── A8 review actions — the artist-approval gate ──
   async function approve(claim) {
     if (toggling) return
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       await updateClaim(claim.id, { artist_approved: true })
       logEvent(EVENTS.CLAIM_CONFIRMED, { claim_id: claim.id }) // pilot signal (A10)
@@ -114,60 +127,69 @@ export default function ClaimReview() {
       // The receipt names what was confirmed and where it now appears, with a
       // 7s undo (same contract as the Radar Inspector's confirm, §8.3).
       flashReceipt(claim, T.claims.confirmReceipt(destinationOf(claim, T), claim.public_wording || claim.value || human(claim.claim_type)))
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   async function correctValue(claim, newValue) {
     if (toggling || !newValue || newValue === claim.value) return
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       await updateClaim(claim.id, { value: newValue, verified_by: 'artist' })
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, value: newValue, verified_by: 'artist' } : c))
       if (claim.visibility === VISIBILITY.PASSPORT_OK) { markPassportDirty(artist.id); setDirty(true) }
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   // Single tap — "It won't count against you — it just won't show."
   async function omit(claim) {
     if (toggling) return
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       await deleteClaim(claim.id)
       setClaims((prev) => prev.filter((c) => c.id !== claim.id))
       if (claim.visibility === VISIBILITY.PASSPORT_OK) { markPassportDirty(artist.id); setDirty(true) }
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   async function flag(claim) {
     if (toggling) return
-    setToggling(claim.id)
+    setToggling(claim.id); setActionErr('')
     try {
       // Wrong event / dispute → operator queue (status='disputed'); never publishable while flagged.
       await updateClaim(claim.id, { status: 'disputed', artist_approved: false, visibility: VISIBILITY.MIRROR_ONLY })
       setClaims((prev) => prev.map((c) => c.id === claim.id ? { ...c, status: 'disputed', artist_approved: false, visibility: VISIBILITY.MIRROR_ONLY } : c))
       if (claim.visibility === VISIBILITY.PASSPORT_OK) { markPassportDirty(artist.id); setDirty(true) }
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   async function toggleItem(item) {
     if (toggling) return
-    setToggling(item.id)
+    setToggling(item.id); setActionErr('')
     try {
       const next = item.visibility === VISIBILITY.PASSPORT_OK ? VISIBILITY.MIRROR_ONLY : VISIBILITY.PASSPORT_OK
       await updateItemVisibility(item.id, next)
       logEvent(EVENTS.CLAIM_VISIBILITY_CHANGED, { item_id: item.id, from: item.visibility, to: next })
       setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, visibility: next } : i))
       markPassportDirty(artist.id); setDirty(true)
-    } finally { setToggling(null) }
+    } catch (e) { setActionErr(e?.message || T.common.error) }
+    finally { setToggling(null) }
   }
 
   async function republish() {
     if (republishing) return
-    setRepublishing(true)
+    setRepublishing(true); setActionErr('')
     try {
       await publishPassport(artist.id)
       clearPassportDirty(artist.id)
       setDirty(false)
+    } catch (e) {
+      // The public snapshot did NOT refresh — `dirty` must stay true so the
+      // artist is not told their Passport is current when it is not.
+      setActionErr(e?.message || T.common.error)
     } finally { setRepublishing(false) }
   }
 
@@ -197,6 +219,7 @@ export default function ClaimReview() {
       <div className="mb-6 flex items-center justify-end">
         <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
+      <ErrorNote>{actionErr}</ErrorNote>
 
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h1 className="font-display text-2xl font-bold tracking-[-0.01em] text-ink">{T.claims.title}</h1>

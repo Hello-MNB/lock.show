@@ -25,9 +25,16 @@ export default function Members() {
   const [inviteRole, setInviteRole] = useState('member')
   const [inviteErr, setInviteErr] = useState('')
 
+  const [loadErr, setLoadErr] = useState('')
+  // LANE-A T-106: a failed member/subscription read used to render as an EMPTY
+  // team (seatsUsed 0, "no members yet") — a load failure masquerading as truth,
+  // and the seat-cap maths silently derived from it. Now it says so and retries.
   async function load() {
     if (!activeOrgId) { setLoading(false); return }
-    try { setMembers(await getMembers(activeOrgId)); setSub(await getSubscription(activeOrgId)) } finally { setLoading(false) }
+    setLoadErr('')
+    try { setMembers(await getMembers(activeOrgId)); setSub(await getSubscription(activeOrgId)) }
+    catch (e) { setLoadErr(e?.message || T.common.error) }
+    finally { setLoading(false) }
   }
   useEffect(() => { load() }, [activeOrgId])
 
@@ -67,7 +74,8 @@ export default function Members() {
       if (role === 'owner') await transferOwnership(activeOrgId, m.person.id)
       else await changeMemberRole(m.id, role)
       await load(); await reload()
-    } finally { setBusy(false) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusy(false) }
   }
 
   async function doRemove() {
@@ -75,16 +83,25 @@ export default function Members() {
     if (!m) return
     if (m.org_role === 'owner' && m.status === 'active' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); setRemoveTarget(null); return }
     setBusy(true)
-    try { await removeMember(m.id); await load() } finally { setBusy(false); setRemoveTarget(null) }
+    try { await removeMember(m.id); await load() }
+    catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusy(false); setRemoveTarget(null) }
   }
 
-  async function resend(m) { await resendInvite(m.id); toast.show(T.org.toastInviteResent) }
+  // A failed resend used to reject unhandled AND still show the success toast on
+  // the next tick only when it happened to succeed — the artist/admin could not
+  // tell the two apart. Now the outcome decides the message.
+  async function resend(m) {
+    try { await resendInvite(m.id); toast.show(T.org.toastInviteResent) }
+    catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+  }
 
   if (loading) return <Loading />
 
   return (
     <PageShell>
       <div className="flex items-center justify-end mb-6"><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
+      <ErrorNote>{loadErr}</ErrorNote>
       <div className="flex items-center justify-between mb-1">
         <h1 className="font-display text-xl font-bold text-ink">{T.org.membersTitle}</h1>
         <button onClick={() => setPermsOpen(true)} aria-label={T.org.permsTitle} className="text-muted hover:text-ink text-sm border border-line rounded-full w-7 h-7 min-h-[36px] min-w-[36px] transition">?</button>

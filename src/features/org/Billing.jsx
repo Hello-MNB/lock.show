@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getSubscription, addSeats } from '../../lib/orgs.js'
-import { PageShell, Spinner, Loading, useToast } from '../../components/ui.jsx'
+import { PageShell, Spinner, Loading, ErrorNote, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 const planLabel = (plan, T) => ({ solo: T.org.planSolo, agency: T.org.planAgency, agency_plus: T.org.planAgencyPlus }[plan] || plan)
@@ -18,9 +18,15 @@ export default function Billing() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
 
+  const [loadErr, setLoadErr] = useState('')
+  // LANE-A T-106: a failed subscription read rendered as "no subscription" —
+  // indistinguishable from a real solo plan. Name the failure instead.
   async function load() {
     if (!activeOrgId) { setLoading(false); return }
-    try { setSub(await getSubscription(activeOrgId)) } finally { setLoading(false) }
+    setLoadErr('')
+    try { setSub(await getSubscription(activeOrgId)) }
+    catch (e) { setLoadErr(e?.message || T.common.error) }
+    finally { setLoading(false) }
   }
   useEffect(() => { load() }, [activeOrgId])
 
@@ -30,7 +36,8 @@ export default function Billing() {
       await addSeats(activeOrgId, 1)
       await load(); await reload()
       toast.show('Seat added — billing is settled manually with the operator')
-    } finally { setBusy(false) }
+    } catch (e) { toast.show(e?.message || T.common.error, 'warn') }
+    finally { setBusy(false) }
   }
 
   if (loading) return <Loading />
@@ -39,6 +46,7 @@ export default function Billing() {
     <PageShell>
       <div className="flex items-center justify-end mb-6"><Link to="/" className="text-sm text-muted hover:text-ink">{T.common.back}</Link></div>
       <h1 className="font-display text-xl font-bold text-ink mb-4">{T.org.billingTitle}</h1>
+      <ErrorNote>{loadErr}</ErrorNote>
 
       <div className="card mb-2 space-y-2 text-sm">
         <Row label={T.org.planLabel} value={planLabel(sub?.plan, T)} />
