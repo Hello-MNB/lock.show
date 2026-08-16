@@ -429,7 +429,12 @@ export async function listProductionRequests() {
 
 // ── RADAR inputs (O5 agencies): per-roster-artist record for the §20 rules engine. ──
 export async function getRadarInputs(orgId, { audience = 'artist_private' } = {}) {
-  if (DEMO) return demoRadarRecords
+  // DEMO fixtures have no cross-organization dimension at all — there is one
+  // synthetic org and every request in them belongs to it — so the demo keeps
+  // demand detail and renders exactly as it did before the F2 repair. The
+  // declaration is explicit rather than implied: computeRadarSignals() redacts
+  // unless a record SAYS it owns its demand.
+  if (DEMO) return demoRadarRecords.map((r) => ({ ...r, demandDetail: true }))
   // ── P0-PRIVACY B2 · AUDIENCE-NARROWED READ ────────────────────────────────
   // AUTHORITY: RADAR is artist-private intelligence. An `artist_access` grant
   // never authorizes the private interpretation — only a purpose-bounded,
@@ -448,9 +453,27 @@ export async function getRadarInputs(orgId, { audience = 'artist_private' } = {}
   // ALONE — an expired grant kept feeding radar signals for an artist the org
   // no longer represents. Endless (`expires_at is null`) stays valid forever;
   // anything with a past end date drops out here exactly as it does in RLS.
+  // APPSEC F2 · CROSS-ORGANIZATION DEMAND. `availability_requests` carries an
+  // organization_id (008:118) and this read path never consulted it: it fetched
+  // every open request for the artist by artist_id alone, with id + event_type
+  // + location, for ANY org holding a grant. Two orgs representing the same
+  // artist could each read the other's inbound demand. Two rules now apply, and
+  // they are the same two the SQL enforces (042 §5/§6):
+  //   SCOPE  — a request belongs to the org named on it; organization_id IS
+  //            NULL means it belongs to the artist's OWN context (the anonymous
+  //            public-Passport insert path, server/index.js:884, sets nothing),
+  //            so it feeds the artist's own org and no one else's.
+  //   FIELDS — event_type / location / id are fetched ONLY when the reading org
+  //            owns that demand context. No mandate scope in this codebase
+  //            (view/upload/edit/share/publish) names a projection authorizing
+  //            them, so for a grant-holder the read is narrowed to `status` and
+  //            the signal degrades to "demand is present" — a binary.
+  // Same honesty caveat as above: this is client-side narrowing of WHAT IS
+  // FETCHED, not enforcement. The enforcing halves are 042 §2's
+  // radar_signal_rep_demand_check and the §6 RLS split, both owner-gated.
   const { data: access } = await supabase
     .from('artist_access')
-    .select('artist:artist_id(id, stage_name, name, published)')
+    .select('artist:artist_id(id, stage_name, name, published, owner_organization_id)')
     .eq('organization_id', orgId)
     .eq('status', 'active')
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
@@ -459,17 +482,32 @@ export async function getRadarInputs(orgId, { audience = 'artist_private' } = {}
     const artist = a.artist
     if (!artist) continue
     const repOnly = audience === 'rep_summary'
+    // Owning the artist is what owns the artist's unattributed demand.
+    const ownsDemandContext = Boolean(orgId) && artist.owner_organization_id === orgId
     const claimsQ = supabase.from('claims')
       .select('claim_type, verification_status, visibility, method_label, expires_at')
       .eq('artist_id', artist.id)
     if (repOnly) claimsQ.eq('visibility', 'passport-ok')
+    const demandQ = supabase.from('availability_requests')
+      .select(ownsDemandContext ? 'id, event_type, location, status' : 'status')
+      .eq('artist_id', artist.id)
+      .eq('status', 'new')
+    if (ownsDemandContext) demandQ.or(`organization_id.eq.${orgId},organization_id.is.null`)
+    else demandQ.eq('organization_id', orgId)
     const [claims, draw, demand] = await Promise.all([
       claimsQ,
       repOnly ? Promise.resolve({ data: [] })
         : supabase.from('draw_signals').select('signal_type, computed_at').eq('artist_id', artist.id),
-      supabase.from('availability_requests').select('id, event_type, location, status').eq('artist_id', artist.id).eq('status', 'new'),
+      demandQ,
     ])
-    records.push({ artist, claims: claims.data || [], draw: draw.data || [], demand: demand.data || [] })
+    records.push({
+      artist,
+      claims: claims.data || [],
+      draw: draw.data || [],
+      demand: demand.data || [],
+      // Consumed by computeRadarSignals(); absent/false ⇒ redacted demand.
+      demandDetail: ownsDemandContext,
+    })
   }
   return records
 }

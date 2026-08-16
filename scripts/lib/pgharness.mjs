@@ -1,0 +1,177 @@
+// ============================================================
+// LOCAL POSTGRES HARNESS — scripts/lib/pgharness.mjs
+//
+// WHY THIS EXISTS. Every gate in this repo used to assert about the TEXT of a
+// migration, because the container had no database. A static assertion cannot
+// witness a privilege, an RLS denial, a CHECK constraint or a race: it can only
+// witness that somebody wrote a line. This harness gives the gates a REAL
+// PostgreSQL 16 to execute against, so the difference between "the file says
+// REVOKE" and "anon is actually denied" stops being an act of faith.
+//
+// WHAT IT DOES
+//   1. applies scripts/sql/supabase-shim.sql — the three PostgREST roles for
+//      real (anon / authenticated / service_role), Supabase's default
+//      privileges, auth.uid() reading request.jwt.claim.sub, a storage stub
+//   2. applies EVERY migration in supabase/migrations, each in its own
+//      transaction, exactly as the owner applies them
+//   3. hands back a handle that can run SQL as postgres, as anon, as
+//      authenticated-with-a-given-user-id, or as service_role
+//
+// MIGRATION 018 IS EXPECTED TO FAIL. It failed on the live database too — its
+// policy names public.org_memberships, which does not exist — and migration 019
+// is the repair (019's own header records the incident). A local replica that
+// silently "fixed" 018 would not be a replica. The harness asserts that 018 is
+// the ONLY failure; a second one is a real regression and throws.
+//
+// SCOPE DISCIPLINE: this harness creates and drops its own databases and
+// nothing else. It never touches Supabase, never reads a real key, and the
+// migrations it applies are applied to a scratch database that is dropped at
+// the end of the run.
+//
+// STILL NOT PROVEN BY ANYTHING HERE (say it in every report):
+//   · PostgREST — schema exposure, ?select= column filtering, role switching
+//   · GoTrue — real JWT verification (auth.uid() is a GUC here)
+//   · the production data, and whether 041/042 apply cleanly ON TOP OF IT
+// ============================================================
+import { execFileSync, execFile } from 'node:child_process'
+import { readFileSync, readdirSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { promisify } from 'node:util'
+
+const execFileP = promisify(execFile)
+const MIG_DIR = 'supabase/migrations'
+const SHIM = 'scripts/sql/supabase-shim.sql'
+
+/** Migration 018 rolled back on the live DB; 019 is its repair. */
+export const EXPECTED_MIGRATION_FAILURES = ['018_professional_reaction.sql']
+
+function su(args, { input, allowFail = false } = {}) {
+  try {
+    return execFileSync('su', ['postgres', '-c', args], {
+      input: input ?? '', encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+    })
+  } catch (e) {
+    if (allowFail) return `${e.stdout || ''}${e.stderr || ''}`
+    const err = new Error(`psql failed: ${(e.stderr || e.stdout || e.message).trim()}`)
+    err.stderrText = String(e.stderr || '')
+    err.stdoutText = String(e.stdout || '')
+    throw err
+  }
+}
+
+/** Is there a local server we can actually execute against? */
+export function pgAvailable() {
+  try {
+    execFileSync('pg_isready', [], { stdio: 'ignore' })
+    su('psql -tAc "select 1"')
+    return true
+  } catch { return false }
+}
+
+function migrationFiles() {
+  return readdirSync(MIG_DIR)
+    .filter((f) => /^\d{3}_.*\.sql$/.test(f) && !f.endsWith('.down.sql'))
+    .sort()
+}
+
+/** Identity of the schema this harness would build — used to cache a template. */
+function schemaFingerprint() {
+  const h = createHash('sha256')
+  h.update(readFileSync(SHIM))
+  for (const f of migrationFiles()) { h.update(f); h.update(readFileSync(`${MIG_DIR}/${f}`)) }
+  return h.digest('hex').slice(0, 12)
+}
+
+function buildTemplate(name) {
+  su(`psql -q -c 'drop database if exists ${name}'`)
+  su(`psql -q -c 'create database ${name}'`)
+  su(`psql -q -v ON_ERROR_STOP=1 -d ${name} -f ${process.cwd()}/${SHIM}`)
+  const failures = []
+  for (const f of migrationFiles()) {
+    const out = su(
+      `psql -q -v ON_ERROR_STOP=1 --single-transaction -d ${name} -f ${process.cwd()}/${MIG_DIR}/${f}`,
+      { allowFail: true })
+    if (/^psql.*ERROR/m.test(out)) failures.push({ file: f, error: out.match(/^psql.*ERROR.*$/m)[0] })
+  }
+  const unexpected = failures.filter((x) => !EXPECTED_MIGRATION_FAILURES.includes(x.file))
+  if (unexpected.length) {
+    throw new Error(`migration(s) failed to apply locally:\n${unexpected.map((u) => `  ${u.file}: ${u.error}`).join('\n')}`)
+  }
+  return failures
+}
+
+/** A scratch database with every migration applied. Drop it when finished. */
+export class ScratchDb {
+  constructor(name, appliedFailures) { this.name = name; this.appliedFailures = appliedFailures }
+
+  static create(prefix = 'b4_appsec') {
+    const fp = schemaFingerprint()
+    const template = `b4_tmpl_${fp}`
+    // Stale templates from an earlier schema are dropped: a cached template
+    // that no longer matches the files would test yesterday's migration.
+    const stale = su(`psql -tAc "select datname from pg_database where datname like 'b4_tmpl_%' and datname <> '${template}'"`)
+      .split('\n').map((s) => s.trim()).filter(Boolean)
+    for (const s of stale) su(`psql -q -c 'drop database if exists ${s}'`, { allowFail: true })
+
+    const exists = su(`psql -tAc "select 1 from pg_database where datname = '${template}'"`).trim() === '1'
+    let failures = []
+    if (!exists) failures = buildTemplate(template)
+    const name = `${prefix}_${process.pid}_${Date.now().toString(36)}`
+    su(`psql -q -c 'drop database if exists ${name}'`)
+    su(`psql -q -c 'create database ${name} template ${template}'`)
+    return new ScratchDb(name, failures)
+  }
+
+  /** Wrap SQL so it runs as a PostgREST role with a JWT subject in place. */
+  static asRole(sql, { role, uid } = {}) {
+    const pre = []
+    // SET (not select set_config) so the preamble emits no result rows — the
+    // caller's assertions read stdout and a stray row is a false positive.
+    if (uid) pre.push(`set request.jwt.claim.sub = '${uid}';`)
+    if (role) pre.push(`set role ${role};`)
+    return `${pre.join('\n')}\n${sql}`
+  }
+
+  /** Run SQL. Throws on any error. Returns stdout. */
+  exec(sql, opts = {}) {
+    return su(`psql -q -v ON_ERROR_STOP=1 -d ${this.name} -f -`, { input: ScratchDb.asRole(sql, opts) })
+  }
+
+  /** Run SQL, never throw. Returns { ok, out }. `out` includes the error text. */
+  try(sql, opts = {}) {
+    let ok = true
+    const out = su(`psql -q -v ON_ERROR_STOP=1 -d ${this.name} -f -`,
+      { input: ScratchDb.asRole(sql, opts), allowFail: true })
+    if (/^psql.*ERROR|^ERROR/m.test(out)) ok = false
+    return { ok, out: out.trim() }
+  }
+
+  /** One scalar. */
+  scalar(sql, opts = {}) {
+    return su(`psql -tAq -v ON_ERROR_STOP=1 -d ${this.name} -f -`,
+      { input: ScratchDb.asRole(sql, opts) }).trim().split('\n').filter(Boolean).pop() ?? ''
+  }
+
+  /** Rows as arrays of column strings (tab separated, no header). */
+  rows(sql, opts = {}) {
+    const out = su(`psql -tAqF'\t' -v ON_ERROR_STOP=1 -d ${this.name} -f -`,
+      { input: ScratchDb.asRole(sql, opts) })
+    return out.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.split('\t'))
+  }
+
+  /**
+   * Run N statements on N SEPARATE CONNECTIONS, started together. This is the
+   * only way to witness a race: one process cannot serialise itself into one.
+   * The SQL is fed through a here-doc because execFile has no stdin option.
+   */
+  async parallel(statements, opts = {}) {
+    return Promise.all(statements.map((sql) =>
+      execFileP('su', ['postgres', '-c',
+        `psql -tAq -d ${this.name} <<'B4EOF'\n${ScratchDb.asRole(sql, opts)}\nB4EOF`],
+      { encoding: 'utf8' }).then(
+        (r) => ({ ok: true, out: String(r.stdout).trim() }),
+        (e) => ({ ok: false, out: `${e.stdout || ''}${e.stderr || ''}`.trim() }))))
+  }
+
+  drop() { su(`psql -q -c 'drop database if exists ${this.name}'`, { allowFail: true }) }
+}

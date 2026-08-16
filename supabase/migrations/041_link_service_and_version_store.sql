@@ -44,6 +44,46 @@
 --       PART A is inert while it is off: the new RPCs exist but nobody calls
 --       them. Turning the flag on BEFORE PART A is applied yields 500s from
 --       the resolver route (missing function) — flag ON is step 3, not step 1.
+--   P5. (APPSEC REPAIR F3/F4 — extends the apply-order semantics.)
+--       · mint_share_link() now takes p_tracking_disclosed and REFUSES a mint
+--         without affirmative disclosure. Its SIGNATURE CHANGED (8 args, not 7).
+--         If a previous draft of this file was ever applied to a target DB, the
+--         OLD 7-arg overload must be dropped before/with this apply or BOTH
+--         will exist and the 7-arg one would still mint undisclosed links:
+--             drop function if exists public.mint_share_link(
+--               uuid, text, text, text, text, timestamptz, text);
+--         The .down.sql drops both signatures for exactly this reason.
+--       · share_link gains `mint_request_key` + a UNIQUE index. This is the
+--         logical-request identity that makes minting atomic instead of
+--         check-then-insert. It is NULL for every pre-existing row (NULLs are
+--         distinct in a unique index), so the backfill is "no backfill".
+--       · share_link_tracking_disclosed_check is added NOT VALID **on purpose**:
+--         every INSERT and UPDATE from the apply forward is refused unless
+--         tracking_disclosed is true, while rows that predate 041 are not
+--         re-validated (P3 says there are none; NOT VALID keeps the apply from
+--         failing if that ever stops being true). Validate later with
+--             alter table public.share_link validate constraint
+--               share_link_tracking_disclosed_check;
+--
+-- ██ PRIVILEGE MODEL — EVERY FUNCTION THIS FILE CREATES ██
+--   Supabase's default privileges grant EXECUTE on every new function in
+--   `public` to anon, authenticated AND service_role — on top of the PostgreSQL
+--   default of EXECUTE to PUBLIC. `revoke ... from public` alone therefore
+--   revokes NOTHING that matters: the named roles keep their explicit grants.
+--   Every function below is revoked from public, anon, authenticated AND
+--   service_role first, and then granted back to the minimum that has a caller:
+--     resolve_share_link(text)            → anon, authenticated, service_role
+--                                            (the recipient's only door)
+--     record_share_link_open(text,text)   → anon, authenticated, service_role
+--     mint_share_link(...)                → authenticated, service_role
+--     revoke_share_link(uuid,text)        → authenticated, service_role
+--     pv_fill_defaults() / pv_guard_immutable()  → NOBODY.
+--       They are TRIGGER functions. PostgreSQL checks EXECUTE at CREATE TRIGGER
+--       time, not at fire time, so the triggers keep working with zero grants —
+--       and pv_fill_defaults(), which is SECURITY DEFINER, stops being a
+--       directly callable definer entry point for anon.
+--   scripts/test-sql-privileges.mjs EXECUTES this file against a scratch
+--   Postgres and fails if any function it creates is PUBLIC-executable.
 --
 -- ORDER OF APPLY — THREE STEPS, DELIBERATELY SEPARATE
 --   Step 1  PART A (this file, everything above the PART B fence).
@@ -116,6 +156,83 @@
 --   or "4 families + modes" (LOCK-Open-Decisions:118). Six is used here; a
 --   correction is one CHECK re-add away (same pattern as 034/040).
 --
+-- ============================================================
+-- ██ DEFERRED DATA MIGRATION — publication invariant (F5c) ██████████████████
+-- ============================================================
+-- NOT FORCED BY THIS FILE, AND DELIBERATELY SO. A1.i creates
+-- idx_pv_one_published inside a guarded DO block. If historical rows already
+-- break the invariant, the CREATE rolls back with a WARNING and THE MIGRATION
+-- STILL APPLIES — no breaking cutover, no refused deploy. Until the data is
+-- repaired the invariant is maintained procedurally for NEW writes only, by
+-- trg_pv_supersede (which demotes every incumbent in the bucket on each
+-- publish). That is a weaker guarantee than the index and it is stated here
+-- rather than hidden.
+--
+-- ── WHAT MUST BE CLEANED ────────────────────────────────────────────────────
+--   C1. Buckets with more than one row in state='published'.
+--       Cause: two publishes that predate this migration, or a pre-041 apply
+--       whose backfill ran against a table that already had a `state` column.
+--   C2. Rows with act_id IS NULL. Their lineage is INFERRED as artist_id.
+--       That inference is exactly right while act.id = artists.id (020:87 —
+--       the default Act carries the artist's id), and AMBIGUOUS the moment an
+--       artist holds a second Act: a NULL-act row would coalesce onto the
+--       DEFAULT act's bucket whether or not it belongs there. Multi-act is
+--       canon (CLAUDE.md: evidence is per-Act and NON-transferable), so this
+--       must be resolved before act_id can be promoted to NOT NULL.
+--       (Note: after 041, trg_pv_immutable refuses any UPDATE that changes
+--       act_id, so C2 rows cannot be repaired in place — see R2 below.)
+--
+-- ── DETECTION — RUN THESE THREE, EXACTLY AS WRITTEN ─────────────────────────
+--   D-C1  buckets that break the invariant (expect ZERO rows):
+--         select coalesce(act_id, artist_id)      as lineage,
+--                coalesce(audience, '(none)')     as audience_key,
+--                count(*)                         as published_rows,
+--                array_agg(id order by created_at, id) as version_ids
+--           from public.passport_versions
+--          where state = 'published'
+--          group by 1, 2
+--         having count(*) > 1;
+--
+--   D-C2  rows with no explicit act lineage (expect ZERO rows):
+--         select pv.id, pv.artist_id, pv.created_at,
+--                (select count(*) from public.act a where a.person_id =
+--                   (select ar.created_by from public.artists ar where ar.id = pv.artist_id)
+--                ) as acts_held_by_person
+--           from public.passport_versions pv
+--          where pv.act_id is null;
+--
+--   D-IDX did the guarded index actually land? (expect ONE row; zero rows means
+--         the WARNING fired and C1 is outstanding):
+--         select indexname, indexdef from pg_indexes
+--          where schemaname = 'public'
+--            and indexname  = 'idx_pv_one_published'
+--            and indexdef  ilike '%COALESCE%';
+--
+-- ── REPAIR (owner-run, NOT part of any migration) ───────────────────────────
+--   R1 for C1 — keep the newest row in each bucket, demote the rest:
+--        update public.passport_versions pv
+--           set state = 'superseded',
+--               superseded_at = coalesce(pv.superseded_at, pv.created_at)
+--         where pv.state = 'published'
+--           and pv.id <> (
+--                 select p2.id from public.passport_versions p2
+--                  where p2.state = 'published'
+--                    and coalesce(p2.act_id, p2.artist_id) = coalesce(pv.act_id, pv.artist_id)
+--                    and coalesce(p2.audience, '(none)')   = coalesce(pv.audience, '(none)')
+--                  order by p2.created_at desc, p2.id desc limit 1);
+--      then re-run this migration — the DO block will create the index cleanly.
+--   R2 for C2 — act_id is immutable under trg_pv_immutable, so the repair is a
+--      deliberate, logged, owner-run act:
+--        alter table public.passport_versions disable trigger trg_pv_immutable;
+--        update public.passport_versions set act_id = artist_id where act_id is null;
+--        alter table public.passport_versions enable  trigger trg_pv_immutable;
+--      Only valid while every affected artist holds exactly ONE Act (D-C2's
+--      acts_held_by_person = 1). For a multi-act artist the correct act must be
+--      chosen per row by hand — there is no derivation that can do it.
+--   R3 only after D-C1 and D-C2 both return zero rows may a later migration
+--      promote act_id / state / version_no to NOT NULL. This file does not.
+-- ============================================================
+--
 -- FIREWALL
 --   Nothing here stores or exposes a score, percentile, rank or prediction.
 --   Open counts stay OFF the artist-facing surface: share_link_event is
@@ -154,7 +271,7 @@ alter table public.passport_versions
 comment on column public.passport_versions.version_no is
   'Monotonic per act (per artist for pre-act rows). Filled by trg_pv_defaults; never reused, never rewritten.';
 comment on column public.passport_versions.state is
-  'draft · preview · review · published · superseded. Exactly one published row per (act_id, audience) — idx_pv_one_published.';
+  'draft · preview · review · published · superseded. Exactly one published row per (coalesce(act_id,artist_id), coalesce(audience,''(none)'')) — idx_pv_one_published enforces it structurally, trg_pv_supersede maintains it atomically on every publish.';
 comment on column public.passport_versions.audience is
   'One of the six recipient policies (booker·producer·private·programmer·brand·rep), or NULL for a non-policy-scoped snapshot.';
 
@@ -195,16 +312,61 @@ update public.passport_versions pv
  where o.id = pv.id
    and (pv.version_no is null or pv.state is null or pv.published_at is null);
 
--- Ordering identity. Partial-unique on the live row: at most ONE published
--- version per (act_id, audience). NULLs are distinct in Postgres, so pre-act
--- rows (act_id null) are not constrained by this index — intended, and it is
--- why act_id NOT NULL is a later cutover, not this migration's job.
-create unique index if not exists idx_pv_one_published
-  on public.passport_versions (act_id, audience)
-  where state = 'published';
+-- ── A1.i · PUBLICATION INVARIANT — the index must not be silently inert ─────
+-- WHAT WAS WRONG (F5a, reproduced on Postgres 16 before this fix):
+--   the first draft indexed the BARE columns —
+--       create unique index idx_pv_one_published
+--         on public.passport_versions (act_id, audience) where state='published';
+--   NULLs are DISTINCT in a Postgres unique index, and `audience` is NULL for
+--   every row the live writer produces (src/lib/db.js:579 inserts
+--   {artist_id, snapshot} only). So the index never collided with itself: three
+--   consecutive publishPassport() calls left THREE rows in state='published'
+--   for one act. The invariant the comment claimed was never enforced at all.
+--   Same defect on (act_id, version_no): act_id is nullable (020 FK is
+--   ON DELETE SET NULL), so a NULL-act row escaped version_no uniqueness too.
+--
+-- THE FIX — index the COALESCED KEY, so no row can escape through a NULL:
+--   lineage      = coalesce(act_id, artist_id)
+--                  Sound because 020:87 fixes act.id = artists.id for the
+--                  default Act, so a legacy NULL-act row coalesces onto exactly
+--                  the act it belongs to instead of forming a private bucket.
+--   audience key = coalesce(audience, '(none)')
+--                  '(none)' can never be a real audience: it is refused by
+--                  passport_versions_audience_check above.
+--   artist_id is NOT NULL (001:125), so the lineage key is never NULL and the
+--   index is total. NOT NULL + default on act_id/audience is deliberately NOT
+--   used: it would change the shape the existing writer inserts.
+--
+-- WHY THE GUARDED DO BLOCK (F5c — no forced cutover):
+--   CREATE UNIQUE INDEX is a hard failure if legacy rows already violate the
+--   invariant. This migration must never refuse to apply because of historical
+--   data, so the create runs inside a subtransaction: on unique_violation the
+--   DROP and the CREATE both roll back (the pre-existing index, if any, is left
+--   exactly as it was) and the apply continues with a WARNING. New rows are
+--   still governed, because trg_pv_supersede (below) enforces the same
+--   invariant procedurally on every write regardless of whether the index
+--   exists. See "DEFERRED DATA MIGRATION" in this file's header for the exact
+--   detection and repair queries.
+do $$
+begin
+  drop index if exists public.idx_pv_one_published;
+  create unique index if not exists idx_pv_one_published
+    on public.passport_versions ((coalesce(act_id, artist_id)), (coalesce(audience, '(none)')))
+    where state = 'published';
+exception when unique_violation then
+  raise warning
+    '041 F5a: idx_pv_one_published NOT created — legacy rows already break the one-published-per-(act,audience) invariant. The old index (if any) is untouched and trg_pv_supersede still governs every new write. Run the DEFERRED DATA MIGRATION detection query in this file''s header, repair, then re-run this migration.';
+end $$;
 
-create unique index if not exists idx_pv_act_version_no
-  on public.passport_versions (act_id, version_no);
+do $$
+begin
+  drop index if exists public.idx_pv_act_version_no;
+  create unique index if not exists idx_pv_act_version_no
+    on public.passport_versions ((coalesce(act_id, artist_id)), version_no);
+exception when unique_violation then
+  raise warning
+    '041 F5a: idx_pv_act_version_no NOT created — legacy rows carry duplicate version_no within one lineage. See the DEFERRED DATA MIGRATION block in this file''s header.';
+end $$;
 
 create index if not exists idx_pv_state on public.passport_versions (state);
 
@@ -231,9 +393,95 @@ begin
   return new;
 end $$;
 
+-- APPSEC F1 · pv_fill_defaults() is SECURITY DEFINER. Left at the Supabase
+-- default it is EXECUTE-able by anon/authenticated/PUBLIC — a definer entry
+-- point any web role could call directly. A trigger function needs NO grant at
+-- all (PostgreSQL checks EXECUTE when the trigger is CREATED, not when it
+-- fires), so the minimum here is nobody.
+revoke all on function public.pv_fill_defaults() from public, anon, authenticated, service_role;
+
 drop trigger if exists trg_pv_defaults on public.passport_versions;
 create trigger trg_pv_defaults before insert on public.passport_versions
   for each row execute function public.pv_fill_defaults();
+
+-- ── A1.ii · ATOMIC SUPERSESSION (F5b) ───────────────────────────────────────
+-- WHAT WAS WRONG: publishing a new version did not touch the previous one.
+--   Nothing in the schema said "the row that was published a second ago is now
+--   history"; publishPassport() inserted and walked away. Reproduced on
+--   Postgres 16: three inserts → three rows in state='published', none with a
+--   superseded_at, none pointing at its predecessor.
+--
+-- WHY A **BEFORE** TRIGGER AND NOT AN AFTER TRIGGER / A FUNCTION:
+--   · A unique index is checked when the row is written, which is BEFORE any
+--     AFTER-row trigger runs. An AFTER trigger could never demote the incumbent
+--     in time — the INSERT would already have failed on idx_pv_one_published.
+--     A BEFORE trigger demotes the incumbent first, so the new row lands into a
+--     bucket that is already free. Index and trigger cooperate instead of
+--     racing.
+--   · A publish_version() function would only govern callers that use it. The
+--     shipped writer (src/lib/db.js:579) is a bare INSERT and is not going to
+--     be rewritten by this migration; a trigger governs it as it stands, plus
+--     the service role, plus psql, plus anything added later.
+--   · Same statement ⇒ same transaction ⇒ atomic. There is no instant at which
+--     two rows are published, and no instant at which zero are.
+--
+-- TRIGGER FIRING ORDER (alphabetical, per Postgres):
+--   INSERT: trg_actfill_pv (020, fills act_id) → trg_pv_defaults (fills state)
+--           → trg_pv_supersede. Each one needs what the previous one set.
+--   UPDATE: trg_pv_immutable (guards) → trg_pv_supersede.
+-- The demotion UPDATE re-enters this trigger with new.state='superseded', which
+-- returns on the first line — one level of recursion, then it stops.
+create or replace function public.pv_supersede_previous()
+returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_prev uuid;
+begin
+  -- Only a row ARRIVING at 'published' supersedes anything. A row that was
+  -- already published and is being touched for another reason does not.
+  if new.state is distinct from 'published' then return new; end if;
+  if tg_op = 'UPDATE' and old.state = 'published' then return new; end if;
+
+  -- The immediate predecessor, recorded on the new row as lineage.
+  select p.id into v_prev
+    from public.passport_versions p
+   where p.state = 'published'
+     and coalesce(p.act_id, p.artist_id) = coalesce(new.act_id, new.artist_id)
+     and coalesce(p.audience, '(none)')  = coalesce(new.audience, '(none)')
+     and p.id is distinct from new.id
+   order by p.version_no desc nulls last, p.created_at desc, p.id desc
+   limit 1;
+
+  -- Demote EVERY incumbent, not just the newest: if legacy data left more than
+  -- one published row in this bucket, the next publish cleans the bucket up
+  -- instead of failing on it. This is what makes the invariant hold for new
+  -- writes even while the deferred data migration is outstanding.
+  update public.passport_versions p
+     set state         = 'superseded',
+         superseded_at = coalesce(p.superseded_at, now())
+   where p.state = 'published'
+     and coalesce(p.act_id, p.artist_id) = coalesce(new.act_id, new.artist_id)
+     and coalesce(p.audience, '(none)')  = coalesce(new.audience, '(none)')
+     and p.id is distinct from new.id;
+
+  if new.supersedes_id is null then new.supersedes_id := v_prev; end if;
+  if new.published_at  is null then new.published_at  := coalesce(new.created_at, now()); end if;
+  new.superseded_at := null;   -- the row being published is not itself history
+  return new;
+end $$;
+
+-- APPSEC F1/F5 · pv_supersede_previous() is SECURITY DEFINER because it MUST
+-- be. passport_versions has RLS on and carries NO update policy (001/017 give
+-- it select + insert only), so a non-definer trigger's demotion UPDATE would
+-- silently match ZERO rows for an authenticated publisher — and the new row
+-- would then collide with the incumbent on idx_pv_one_published and the whole
+-- publish would fail. Definer rights are what make the supersession real.
+-- Same grant rule as the other two trigger functions: EXECUTE is checked at
+-- CREATE TRIGGER time, never at fire time, so the minimum grant is NOBODY.
+revoke all on function public.pv_supersede_previous() from public, anon, authenticated, service_role;
+
+drop trigger if exists trg_pv_supersede on public.passport_versions;
+create trigger trg_pv_supersede before insert or update on public.passport_versions
+  for each row execute function public.pv_supersede_previous();
 
 -- IMMUTABILITY. A share link binds one version; if that version's snapshot can
 -- be edited under the recipient, the binding proves nothing. Nothing in the repo
@@ -255,6 +503,10 @@ begin
   end if;
   return new;
 end $$;
+
+-- APPSEC F1 · same rule for the immutability guard (not a definer, but there
+-- is still no legitimate direct caller).
+revoke all on function public.pv_guard_immutable() from public, anon, authenticated, service_role;
 
 drop trigger if exists trg_pv_immutable on public.passport_versions;
 create trigger trg_pv_immutable before update on public.passport_versions
@@ -307,7 +559,27 @@ alter table public.share_link
 
   -- The recipient said "this isn't me". A distinct terminal state, because it
   -- resolves to a different recovery path than expiry or revocation.
-  add column if not exists wrong_recipient_at timestamptz;
+  add column if not exists wrong_recipient_at timestamptz,
+
+  -- APPSEC F4 · THE LOGICAL REQUEST IDENTITY.
+  -- "Mint the link for version V, audience A, recipient R, purpose P, expiry E"
+  -- is ONE logical request no matter how many times the button is pressed or
+  -- how many server instances race on it. Storing that key ON THE LINK ITSELF,
+  -- UNIQUE, is what makes minting atomic: the second concurrent mint collides
+  -- in the index and takes the ON CONFLICT branch instead of creating a second
+  -- bearer credential. The value is src/lib/shareLink.js mintIdempotencyKey() —
+  -- derived from what the link IS, never from when it was asked for.
+  -- NULL for every pre-041 row; NULLs are distinct in a unique index, so no
+  -- backfill exists and none is needed.
+  add column if not exists mint_request_key text;
+
+comment on column public.share_link.mint_request_key is
+  'Logical mint-request identity (shareLink.js mintIdempotencyKey). UNIQUE: two concurrent mints of the same request return the SAME link, never two.';
+
+-- APPSEC F4 · one logical request = one link. This index IS the concurrency
+-- control; the check-then-insert it replaces was a race, not a guarantee.
+create unique index if not exists idx_share_link_mint_request_key
+  on public.share_link (mint_request_key);
 
 comment on column public.share_link.token_hash is
   'sha256 hex of the opaque bearer token. The token itself is NEVER stored. 32 random bytes, base64url, returned to the minter once.';
@@ -341,6 +613,22 @@ do $$ begin
   alter table public.share_link
     add constraint share_link_audience_check
     check (audience is null or audience in ('booker','producer','private','programmer','brand','rep'));
+exception when duplicate_object then null; end $$;
+
+-- APPSEC F3 · DISCLOSURE IS A PRECONDITION OF EXISTENCE, NOT A UI STEP.
+-- PUB4 (024:23) says a link that measures opens may not be sent until the
+-- artist has been told it does. That rule lived in the server route only, and
+-- the SQL RPC hardcoded tracking_disclosed=false — so the RPC path minted
+-- undisclosed links while the route refused them. The rule belongs to the
+-- TABLE: no mint path (RPC, server route, service role, psql) can write a
+-- share_link row that is not disclosed.
+-- NOT VALID deliberately — see P5: new writes are refused from this statement
+-- onward; pre-existing rows (P3: there are none) are not re-validated, so the
+-- apply cannot fail on legacy data.
+do $$ begin
+  alter table public.share_link
+    add constraint share_link_tracking_disclosed_check
+    check (tracking_disclosed is true) not valid;
 exception when duplicate_object then null; end $$;
 
 -- One hash = one link. Unique AND the index the resolver seeks on.
@@ -412,7 +700,11 @@ drop policy if exists sle_operator_read on public.share_link_event;
 create policy sle_operator_read on public.share_link_event
   for select using (public.is_operator());
 
-revoke select on public.share_link_event from anon;
+-- APPSEC F1 · anon holds Supabase's default table grants, so spell out the
+-- whole surface: a receipt is never read, written, edited or deleted by an
+-- anonymous caller directly. The ONLY anon write path is
+-- record_share_link_open(), which is SECURITY DEFINER and inserts as the owner.
+revoke select, insert, update, delete on public.share_link_event from anon;
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- A4 · share_link_delivery_v — the ONLY artist-facing projection of a link
@@ -517,7 +809,12 @@ begin
   );
 end $$;
 
-revoke all on function public.resolve_share_link(text) from public;
+-- APPSEC F1 · `from public` alone is not a revoke on Supabase: the platform's
+-- default privileges hand anon/authenticated/service_role their OWN explicit
+-- EXECUTE grant on every new function in `public`. Revoke all four, then grant
+-- back the minimum. anon is genuinely needed here — this is the door a
+-- recipient with a token walks through, and they have no account.
+revoke all on function public.resolve_share_link(text) from public, anon, authenticated, service_role;
 grant execute on function public.resolve_share_link(text) to anon, authenticated, service_role;
 
 -- ──────────────────────────────────────────────────────────────────────────
@@ -566,16 +863,38 @@ begin
   return v_new;
 end $$;
 
-revoke all on function public.record_share_link_open(text, text) from public;
+-- APPSEC F1 · same four-role revoke. anon is needed: the receipt is written by
+-- the same anonymous recipient who just resolved the token.
+revoke all on function public.record_share_link_open(text, text) from public, anon, authenticated, service_role;
 grant execute on function public.record_share_link_open(text, text) to anon, authenticated, service_role;
 
 -- ──────────────────────────────────────────────────────────────────────────
--- A7 · mint_share_link() — idempotent (SECURITY DEFINER, owner/org only)
+-- A7 · mint_share_link() — ATOMICALLY idempotent (SECURITY DEFINER, owner/org)
 -- ──────────────────────────────────────────────────────────────────────────
--- Idempotency: the caller supplies a key derived from the mint request. Calling
--- twice with the same key returns the SAME row and does NOT mint a second
--- bearer credential. The raw token never enters this function — only its hash;
--- the caller is the only place the raw token ever exists.
+-- The raw token never enters this function — only its hash; the caller is the
+-- only place the raw token ever exists.
+--
+-- APPSEC F3 · DISCLOSURE. p_tracking_disclosed is REQUIRED and must be true.
+-- The previous draft hardcoded tracking_disclosed=false here, which both
+-- bypassed PUB4 and made this RPC a way around the server route's gate. The
+-- refusal is typed: message 'tracking_disclosure_required', SQLSTATE GP403 —
+-- the same vocabulary src/lib/shareLink.js exports as MINT_REFUSAL, so all
+-- three mint paths refuse with ONE word.
+--
+-- APPSEC F4 · IDEMPOTENCY IS NOW ATOMIC. The previous draft did
+--   select ... from share_link_event where idempotency_key = ...;  -- check
+--   if not found then insert into share_link ...                   -- then insert
+-- Two concurrent mints of the SAME logical request both saw "not found" and
+-- both minted: two live bearer credentials to one person's evidence, one of
+-- which nobody knows exists. The check-then-insert is replaced by a single
+-- INSERT ... ON CONFLICT (mint_request_key) DO UPDATE ... RETURNING: the loser
+-- of the race blocks on the unique index and then returns the WINNER's row.
+-- Exactly one link, whatever the concurrency.
+--
+-- APPSEC F4 · THE RECEIPT IS PART OF THE MINT, NOT A BEST-EFFORT AFTERTHOUGHT.
+-- `on conflict do nothing` on the mint receipt meant a link could exist with no
+-- record of who minted it or why. A mint whose receipt does not land now RAISES
+-- (SQLSTATE GP500) and the whole function — link row included — rolls back.
 create or replace function public.mint_share_link(
   p_passport_version_id uuid,
   p_token_hash          text,
@@ -583,7 +902,8 @@ create or replace function public.mint_share_link(
   p_recipient_label     text,
   p_purpose             text,
   p_expiry              timestamptz,
-  p_idempotency_key     text
+  p_idempotency_key     text,
+  p_tracking_disclosed  boolean
 ) returns uuid
 language plpgsql
 volatile
@@ -594,38 +914,72 @@ declare
   v_artist uuid;
   v_act    uuid;
   v_id     uuid;
+  v_hash   text;
+  v_rows   integer := 0;
 begin
   select artist_id, act_id into v_artist, v_act
     from public.passport_versions where id = p_passport_version_id;
   if v_artist is null then raise exception 'unknown passport_version %', p_passport_version_id; end if;
-  if not public.can_access_artist(v_artist) then raise exception 'forbidden'; end if;
-  if p_token_hash is null or length(p_token_hash) <> 64 then raise exception 'token_hash must be sha256 hex'; end if;
-  if p_idempotency_key is null then raise exception 'idempotency_key required'; end if;
+  if not public.can_access_artist(v_artist) then raise exception 'forbidden' using errcode = '42501'; end if;
+  if p_token_hash is null or length(p_token_hash) <> 64 then
+    raise exception 'token_hash_invalid' using errcode = 'GP422';
+  end if;
+  if p_idempotency_key is null or length(btrim(p_idempotency_key)) = 0 then
+    raise exception 'idempotency_key_required' using errcode = 'GP422';
+  end if;
+  -- F3: missing (null) is refused exactly like false. Fail closed.
+  if p_tracking_disclosed is distinct from true then
+    raise exception 'tracking_disclosure_required' using errcode = 'GP403',
+      hint = 'PUB4: the artist must be told the link measures opens BEFORE it is minted.';
+  end if;
 
-  -- Replay: the mint receipt already exists → return the link it minted.
-  select share_link_id into v_id from public.share_link_event
-   where event = 'minted' and idempotency_key = p_idempotency_key
-   limit 1;
-  if v_id is not null then return v_id; end if;
-
+  -- ONE statement decides "new link" vs "replay". The DO UPDATE is a deliberate
+  -- no-op touch of the conflicting row: it is the only way ON CONFLICT can
+  -- RETURN the row that already won.
   insert into public.share_link (
     passport_version_id, artist_id, act_id, recipient_label, purpose, audience,
-    token_hash, expiry, expiry_kind, status, created_by, tracking_disclosed
+    token_hash, expiry, expiry_kind, status, created_by, tracking_disclosed,
+    mint_request_key
   ) values (
     p_passport_version_id, v_artist, v_act, p_recipient_label, p_purpose, p_audience,
     p_token_hash, p_expiry, case when p_expiry is null then 'endless' else 'date' end,
-    'live', auth.uid(), false
-  ) returning id into v_id;
+    'live', auth.uid(), true,
+    p_idempotency_key
+  )
+  on conflict (mint_request_key) do update
+    set mint_request_key = public.share_link.mint_request_key
+  returning id, token_hash into v_id, v_hash;
+
+  -- The row we got back carries OUR token hash ⇔ this call is the one that
+  -- minted it. Anything else is a replay (or the loser of a race), and a replay
+  -- writes no second receipt and never re-issues a credential.
+  if v_hash is distinct from p_token_hash then
+    return v_id;
+  end if;
 
   insert into public.share_link_event (share_link_id, event, idempotency_key, detail)
-  values (v_id, 'minted', p_idempotency_key, jsonb_build_object('audience', p_audience))
-  on conflict (share_link_id, event, idempotency_key) do nothing;
+  values (v_id, 'minted', p_idempotency_key,
+          jsonb_build_object('audience', p_audience, 'tracking_disclosed', true));
+  get diagnostics v_rows = row_count;
+  if v_rows <> 1 then
+    raise exception 'mint_receipt_failed' using errcode = 'GP500',
+      hint = 'A link with no mint receipt is unauditable — the mint is refused, not degraded.';
+  end if;
 
   return v_id;
 end $$;
 
-revoke all on function public.mint_share_link(uuid, text, text, text, text, timestamptz, text) from public;
-grant execute on function public.mint_share_link(uuid, text, text, text, text, timestamptz, text) to authenticated, service_role;
+-- APPSEC F1 · Supabase's default privileges grant EXECUTE to anon,
+-- authenticated and service_role as well as PUBLIC. Revoke all four, then grant
+-- back only the roles with a real caller.
+revoke all on function public.mint_share_link(uuid, text, text, text, text, timestamptz, text, boolean)
+  from public, anon, authenticated, service_role;
+grant execute on function public.mint_share_link(uuid, text, text, text, text, timestamptz, text, boolean)
+  to authenticated, service_role;
+
+-- If an earlier draft of this file was applied, its 7-arg overload would still
+-- be callable AND would still mint with tracking_disclosed=false. Remove it.
+drop function if exists public.mint_share_link(uuid, text, text, text, text, timestamptz, text);
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- A8 · revoke_share_link() — future authority stops, history stays
@@ -655,7 +1009,9 @@ begin
   return true;
 end $$;
 
-revoke all on function public.revoke_share_link(uuid, text) from public;
+-- APPSEC F1 · four-role revoke, then the minimum. anon may NEVER revoke a link:
+-- withdrawal of authority is an act of the artist/org, not of a bearer.
+revoke all on function public.revoke_share_link(uuid, text) from public, anon, authenticated, service_role;
 grant execute on function public.revoke_share_link(uuid, text) to authenticated, service_role;
 
 -- ============================================================

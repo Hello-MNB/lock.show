@@ -249,6 +249,67 @@ export function fromRpcResult(row) {
   })
 }
 
+// ── Mint refusals (APPSEC F3) ───────────────────────────────────────────────
+// A mint is REFUSED, not "degraded", when its preconditions are not met. The
+// vocabulary is typed and shared by all three mint paths so they refuse with the
+// SAME word: the SQL RPC raises these as its exception message (with the
+// SQLSTATE below), the server route returns them as `error`, and any client can
+// switch on them exhaustively.
+//
+// TRACKING DISCLOSURE (PUB4, migration 024:23) is the one that had a hole: the
+// server route demanded it while the SQL RPC hardcoded tracking_disclosed=false,
+// so the RPC was a way around the gate. Disclosure is now affirmative-or-refuse
+// in every path, and `false` and `missing` are the same answer: refuse.
+export const MINT_REFUSAL = Object.freeze({
+  PASSPORT_VERSION_REQUIRED: 'passport_version_required',
+  AUDIENCE_INVALID: 'audience_invalid',
+  TRACKING_DISCLOSURE_REQUIRED: 'tracking_disclosure_required',
+  TOKEN_HASH_INVALID: 'token_hash_invalid',
+  IDEMPOTENCY_KEY_REQUIRED: 'idempotency_key_required',
+  MINT_RECEIPT_FAILED: 'mint_receipt_failed',
+})
+
+export const MINT_REFUSALS = Object.freeze(Object.values(MINT_REFUSAL))
+
+/** SQLSTATEs migration 041 raises, keyed by the refusal they carry. */
+export const MINT_REFUSAL_SQLSTATE = Object.freeze({
+  [MINT_REFUSAL.TRACKING_DISCLOSURE_REQUIRED]: 'GP403',
+  [MINT_REFUSAL.TOKEN_HASH_INVALID]: 'GP422',
+  [MINT_REFUSAL.IDEMPOTENCY_KEY_REQUIRED]: 'GP422',
+  [MINT_REFUSAL.MINT_RECEIPT_FAILED]: 'GP500',
+})
+
+/** One HTTP mapping, so no route invents its own. */
+export const MINT_REFUSAL_HTTP_STATUS = Object.freeze({
+  [MINT_REFUSAL.PASSPORT_VERSION_REQUIRED]: 400,
+  [MINT_REFUSAL.AUDIENCE_INVALID]: 400,
+  [MINT_REFUSAL.TRACKING_DISCLOSURE_REQUIRED]: 400,
+  [MINT_REFUSAL.TOKEN_HASH_INVALID]: 400,
+  [MINT_REFUSAL.IDEMPOTENCY_KEY_REQUIRED]: 400,
+  [MINT_REFUSAL.MINT_RECEIPT_FAILED]: 500,
+})
+
+/**
+ * Affirmative disclosure only. `true` passes; `false`, `undefined`, `null`,
+ * `'true'`, `1` and everything else are refusals. Strictness is the point: a
+ * truthy coercion is how "the artist was never told" becomes "disclosed".
+ */
+export function isAffirmativeDisclosure(value) {
+  return value === true
+}
+
+/**
+ * The ONE mint precondition rule. Returns null when the request may be minted,
+ * or a MINT_REFUSAL key. Pure — no I/O, no clock, no client.
+ */
+export function validateMintRequest(request) {
+  const req = request || {}
+  if (!req.passportVersionId) return MINT_REFUSAL.PASSPORT_VERSION_REQUIRED
+  if (!AUDIENCES.includes(req.audience)) return MINT_REFUSAL.AUDIENCE_INVALID
+  if (!isAffirmativeDisclosure(req.trackingDisclosed)) return MINT_REFUSAL.TRACKING_DISCLOSURE_REQUIRED
+  return null
+}
+
 /** HTTP status per outcome — one mapping, so no route invents its own. */
 export const OUTCOME_HTTP_STATUS = Object.freeze({
   [OUTCOME.OK]: 200,

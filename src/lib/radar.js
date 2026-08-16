@@ -11,10 +11,31 @@ const DAY = 86400000
 const daysSince = (iso, now) => (iso ? Math.floor((now - new Date(iso).getTime()) / DAY) : null)
 const isoDay = (now) => new Date(now).toISOString().slice(0, 10)
 
+// ── APPSEC F2 · CROSS-ORGANIZATION DEMAND ───────────────────────────────────
+// A demand row belongs to ONE organization (availability_requests.organization_id,
+// 008:118; NULL = the artist's own context, which is what the anonymous
+// public-Passport insert path writes). These three fields are the only place a
+// RADAR signal can carry another organization's inbound demand into a reader's
+// hands, and no mandate scope in this codebase (view/upload/edit/share/publish)
+// names a projection that authorizes them.
+//
+// The rule: a record must EARN demand detail by declaring `demandDetail: true`,
+// which src/lib/orgs.js sets only when the reading organization owns the
+// artist's demand context. Absent or false → the signal still says demand is
+// PRESENT (a binary, which is what R1/R2/R3/R6 are actually about) and carries
+// no event type, no location and no request id. Fail-closed by default: a
+// caller that forgets to declare gets the redacted shape, never the leak.
+export const DEMAND_DETAIL_FIELDS = Object.freeze(['event_type', 'location', 'id'])
+
+/** Presence, with every cross-organization field explicitly nulled. */
+export function redactDemand(d) {
+  return d ? { present: true, event_type: null, location: null, id: null } : null
+}
+
 export function computeRadarSignals(records, now = Date.now()) {
   const signals = []
   for (const rec of records || []) {
-    const { artist, claims = [], draw = [], demand = [] } = rec
+    const { artist, claims = [], draw = [], demand = [], demandDetail = false } = rec
     if (!artist) continue
     const name = artist.stage_name || artist.name
     const openDemand = demand.filter((d) => d.status === 'new')
@@ -25,7 +46,12 @@ export function computeRadarSignals(records, now = Date.now()) {
     const staleDraw = draw.find((d) => d.computed_at && daysSince(d.computed_at, now) > 90)
     const hasClaim = claims.length > 0
     const d0 = openDemand[0]
-    const demandOf = (d) => (d ? { event_type: d.event_type, location: d.location, id: d.id } : null)
+    // APPSEC F2 · detail only when the reader owns the demand context.
+    const demandOf = (d) => {
+      if (!d) return null
+      if (demandDetail !== true) return redactDemand(d)
+      return { present: true, event_type: d.event_type ?? null, location: d.location ?? null, id: d.id ?? null }
+    }
     const base = (ruleId, extra) => ({ ruleId, artistId: artist.id, artistName: name, signalDate: isoDay(now), demand: null, ageDays: null, methodLabel: null, vstatus: null, evidenceBasis: null, ...extra })
 
     // R1 (hero): stale evidence ∩ matching inbound demand → refresh evidence.
@@ -117,6 +143,13 @@ export function projectRadarForRep(signals) {
     .map((s) => {
       const out = { ...s }
       for (const f of REP_SUMMARY_STRIPPED_FIELDS) out[f] = null
+      // APPSEC F2 · belt AND braces. Even if a caller hands this function a
+      // signal that was computed WITH demand detail, the detail does not cross
+      // to a representation surface: R2 says "meeting real inbound demand", and
+      // which request that is belongs to whoever received it. Mirrors the SQL
+      // (042 §2 radar_signal_rep_demand_check + §6.2, which writes no
+      // demand_request_id on a rep_summary row at all).
+      out.demand = redactDemand(out.demand)
       return out
     })
 }

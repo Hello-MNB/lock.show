@@ -8,16 +8,25 @@ import { RADAR_AUDIENCE_SPLIT_ENABLED } from '../../lib/constants.js'
 import { PageShell, Loading, EmptyState, ErrorState, StatusChip, SourceLabel } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
+// APPSEC F2 · A demand signal may arrive REDACTED — presence with no event
+// type, no location and no request id — whenever the reading organization does
+// not own that demand context (src/lib/radar.js redactDemand). The sentence
+// must then simply omit the detail instead of rendering "null" or an empty
+// placeholder: the rule still says demand is present, which is the true and
+// authorized part. No new i18n key is introduced for the redacted case — the
+// same sentence is used with the detail token empty, then whitespace-normalised.
+const tidy = (line) => String(line).replace(/ {2,}/g, ' ').replace(/ +([,.])/g, '$1').trim()
+
 // Build the firewall-safe explanation from the rule's i18n function.
 function explain(sig, T) {
   const r = T.radar.rule[sig.ruleId]
   if (!r) return ''
-  const demand = sig.demand ? `${sig.demand.event_type}${sig.demand.location ? ' · ' + sig.demand.location : ''}` : ''
+  const demand = [sig.demand?.event_type, sig.demand?.location].filter(Boolean).join(' · ')
   switch (sig.ruleId) {
-    case 'R1': return r(sig.artistName, demand, sig.ageDays)
-    case 'R2': case 'R3': case 'R6': return r(sig.artistName, demand)
-    case 'R7': return r(sig.artistName, sig.ageDays)
-    default: return r(sig.artistName)
+    case 'R1': return tidy(r(sig.artistName, demand, sig.ageDays))
+    case 'R2': case 'R3': case 'R6': return tidy(r(sig.artistName, demand))
+    case 'R7': return tidy(r(sig.artistName, sig.ageDays))
+    default: return tidy(r(sig.artistName))
   }
 }
 

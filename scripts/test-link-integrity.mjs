@@ -32,13 +32,27 @@
 //     L2 `select public.resolve_share_link(<sha256 of a live token>)` → ok;
 //        the same call with a revoked / expired / unknown hash → that reason
 //        and NO act data in the payload.
-//     L3 the partial unique index idx_pv_one_published actually rejects a
-//        second published row for one (act_id, audience).
-//     L4 idx_sle_idempotent actually collapses a replayed open receipt (the JS
-//        reducer proves the RULE; only Postgres proves the CONSTRAINT).
+//     L3 ✅ NO LONGER OPEN. The partial unique index really does reject a second
+//        published row, and publishing really does supersede the incumbent
+//        atomically — both EXECUTED against a throwaway PostgreSQL 16 by
+//        scripts/test-sql-migrations.mjs (V1..V11), together with the 041/042
+//        rollback round trips and mid-file-failure injections (R1..R10). That
+//        gate is what turns the assertions below from text into evidence.
+//     L4 ✅ NO LONGER OPEN. idx_sle_idempotent really does collapse a replayed
+//        open receipt — EXECUTED below (X11) against a throwaway PostgreSQL 16.
 //     L5 the immutability trigger really refuses an UPDATE of a snapshot.
-//     L6 grants: anon can EXECUTE resolve_share_link and cannot SELECT
-//        share_link_event.
+//     L6 ✅ NO LONGER OPEN. anon can EXECUTE resolve_share_link and cannot
+//        SELECT share_link_event — EXECUTED below (X12) and, per function,
+//        in scripts/test-sql-privileges.mjs.
+//
+// ⚠ APPSEC F3 / F4 — WHAT THE EXECUTED SECTION AT THE BOTTOM ADDS
+//     F3 the SQL mint hardcoded tracking_disclosed=false, so the RPC path
+//        bypassed the server route's PUB4 gate entirely. X1..X4 execute the
+//        refusal in every direction, including a raw INSERT.
+//     F4 mint idempotency was check-then-insert (a race, not a guarantee) and
+//        the mint receipt's failure was swallowed. X5..X8 execute a real
+//        8-connection race, a negative control proving the old pattern loses
+//        it, and a forced receipt failure that must take the link down with it.
 //
 // Run: npm run test:link-integrity   (wired into `npm run verify`)
 // Exit 0 = every assertion holds; exit 1 = any failure.
@@ -49,7 +63,10 @@ import {
   TOKEN_BYTES, TOKEN_PATTERN, isWellFormedToken, isOk, isDead,
   resolveShareLink, fromRpcResult, mintIdempotencyKey, openIdempotencyKey,
   applyOpenReceipt, OPEN_BUCKET_MS, OUTCOME_HTTP_STATUS,
+  MINT_REFUSAL, MINT_REFUSALS, MINT_REFUSAL_SQLSTATE, MINT_REFUSAL_HTTP_STATUS,
+  validateMintRequest, isAffirmativeDisclosure,
 } from '../src/lib/shareLink.js'
+import { pgAvailable, ScratchDb } from './lib/pgharness.mjs'
 
 let failed = false
 const fail = (m) => { console.log(`  ✗ ${m}`); failed = true }
@@ -125,7 +142,31 @@ for (const col of ['version_no', 'state', 'supersedes_id', 'published_at', 'supe
 assert(/draft'\s*,\s*'preview'\s*,\s*'review'\s*,\s*'published'\s*,\s*'superseded/.test(executable),
   'S5  the five version states are CHECK-constrained (draft·preview·review·published·superseded)')
 assert(/create unique index if not exists idx_pv_one_published[\s\S]{0,200}where state = 'published'/.test(executable),
-  'S5  at most ONE published version per (act_id, audience) — a partial unique index, not a convention')
+  'S5  at most ONE published version per (act, audience) — a partial unique index, not a convention')
+// F5a · the index must be keyed on the COALESCED lineage/audience. Keyed on the
+// bare columns it was SILENTLY INERT: audience is NULL for every row the shipped
+// writer produces and NULLs are DISTINCT in a Postgres unique index, so three
+// publishes left three rows in state='published'. Proven, and proven fixed, by
+// scripts/test-sql-migrations.mjs V1/V4/V9 against a real PostgreSQL 16.
+assert(/idx_pv_one_published[\s\S]{0,200}coalesce\(act_id, artist_id\)[\s\S]{0,80}coalesce\(audience, '\(none\)'\)/.test(executable),
+  'S5  the publication index is keyed on COALESCE(act_id,artist_id)+COALESCE(audience,…) — a NULL cannot slip past it')
+assert(/idx_pv_act_version_no[\s\S]{0,200}coalesce\(act_id, artist_id\)/.test(executable),
+  'S5  version_no uniqueness is keyed on the same lineage the defaults trigger numbers by')
+assert(/exception when unique_violation then[\s\S]{0,400}DEFERRED DATA MIGRATION/.test(executable + up),
+  'S5  the index create is GUARDED — legacy data cannot make 041 refuse to apply (no forced cutover)')
+
+// F5b · atomic supersession. Publishing must demote the incumbent in the same
+// statement, or "one published version" is a hope rather than an invariant.
+assert(/create or replace function public\.pv_supersede_previous\(\)/.test(executable),
+  'S5  a supersession function exists')
+assert(/create trigger trg_pv_supersede before insert or update on public\.passport_versions/.test(executable),
+  'S5  supersession fires BEFORE insert or update — an AFTER trigger could never demote the incumbent before the unique index is checked')
+assert(/state\s*=\s*'superseded'[\s\S]{0,200}superseded_at\s*=\s*coalesce\(p\.superseded_at, now\(\)\)/.test(executable),
+  'S5  the prior published version is set to superseded WITH a superseded_at receipt')
+assert(/pv_supersede_previous[\s\S]{0,600}security definer/.test(executable),
+  'S5  supersession is SECURITY DEFINER — passport_versions has no UPDATE policy, so an invoker-rights demotion would silently match zero rows')
+assert(/DEFERRED DATA MIGRATION/.test(up) && /D-C1/.test(up) && /D-C2/.test(up) && /D-IDX/.test(up),
+  'S5  the deferred data migration is documented with named, runnable detection queries (D-C1 · D-C2 · D-IDX)')
 assert(/pv_guard_immutable[\s\S]{0,900}snapshot is immutable/.test(executable),
   'S5  a bound version is structurally immutable (snapshot/act/version_no cannot be rewritten)')
 
@@ -139,8 +180,8 @@ assert(/create unique index if not exists idx_sle_idempotent[\s\S]{0,160}idempot
   assert(!/create policy \w+ on public\.share_link_event\s+for (update|delete)/i.test(evBlock),
     'S6  no UPDATE and no DELETE policy on share_link_event — append-only by RLS construction')
 }
-assert(/revoke select on public\.share_link_event from anon/.test(executable),
-  'S6  anon cannot read receipts')
+assert(/revoke select, insert, update, delete on public\.share_link_event from anon/.test(executable),
+  'S6  anon cannot read receipts — and cannot write, edit or delete one either (APPSEC F1: the whole grant surface is spelled out, not just SELECT)')
 
 // ── S7 · the firewall: no counts return to the artist ───────────────────────
 {
@@ -222,6 +263,33 @@ assert(/revoke select on public\.share_link_event from anon/.test(executable),
   assert(d1 > -1 && d2 > d1, 'S11 the policy restore runs BEFORE the additive teardown')
   assert(/DATA LOSS WARNING/.test(down),
     'S11 the down file warns that dropping token_hash kills every minted link irrecoverably')
+
+  // F6 · ROLLBACK BOUNDARY. A down file that is not transactional can leave the
+  // schema half-reverted — proven by negative control: stripping BEGIN/COMMIT
+  // and injecting a mid-file error committed the destructive half anyway.
+  // scripts/test-sql-migrations.mjs R9 executes both halves of that proof.
+  assert(/^\s*begin;\s*$/m.test(down) && /^\s*commit;\s*$/m.test(down),
+    'S11 the down file is wrapped in explicit BEGIN/COMMIT — a partial failure cannot half-revert the schema')
+  assert((down.match(/^\s*begin;\s*$/gm) || []).length === (down.match(/^\s*commit;\s*$/gm) || []).length,
+    'S11 every BEGIN in the down file has its COMMIT')
+  assert(/drop trigger\s+if exists trg_pv_supersede/.test(down)
+      && /drop function if exists public\.pv_supersede_previous\(\)/.test(down),
+    'S11 the down file removes the supersession trigger AND its function')
+  // Both mint overloads: the 8-arg current one and the 7-arg draft. Dropping
+  // only one would leave a live entry point behind.
+  assert(/mint_share_link\(uuid, text, text, text, text, timestamptz, text\)/.test(down)
+      && /mint_share_link\(uuid, text, text, text, text, timestamptz, text, boolean\)/.test(down),
+    'S11 the down file drops BOTH mint_share_link signatures')
+  // Everything 041 adds to share_link must come back off on the way down.
+  for (const col of ['token_hash', 'mint_request_key', 'audience', 'purpose', 'revoked_at',
+    'created_by', 'expiry_kind', 'replaced_by', 'wrong_recipient_at']) {
+    assert(new RegExp(`drop column if exists ${col}\\b`).test(down),
+      `S11 the down file drops share_link.${col}`)
+  }
+  assert(/alter table public\.share_link add constraint share_link_status_check\s*\n\s*check \(status in \('active','expired','revoked'\)\);/.test(down),
+    'S11 the 024 status vocabulary is restored verbatim (active·expired·revoked)')
+  assert(/to_regclass\('public\.share_link'\)/.test(down) && /to_regclass\('public\.passport_versions'\)/.test(down),
+    'S11 the down file guards on preconditions — running it where 041 was never applied is a no-op, not an error')
 }
 
 console.log('\nSTATIC — server contract (text assertions)')
@@ -251,8 +319,8 @@ assert(/randomBytes\(TOKEN_BYTES\)/.test(server) && /createHash\('sha256'\)/.tes
   'S12 the raw token is CSPRNG-minted and only its sha256 is stored')
 assert(!/token_hash:\s*token\b/.test(server) && !/\.insert\([\s\S]{0,300}\btoken:\s/.test(server),
   'S12 the raw token is never written to the database')
-assert(/tracking_disclosure_required/.test(server),
-  'S12 a link cannot be minted without tracking disclosure (PUB4, 024:23)')
+assert(/validateMintRequest\(/.test(server) && /MINT_REFUSAL_HTTP_STATUS\[refusal\]/.test(server),
+  'S12 a link cannot be minted without tracking disclosure (PUB4, 024:23) — and the route no longer hand-rolls the rule, it imports validateMintRequest()')
 assert(!/open_count/.test(server),
   'S12 the server never returns an open count')
 
@@ -434,12 +502,277 @@ const resolve = (link) => resolveShareLink(link, link ? versionsById[link.passpo
     'R12 firewall — the contract computes no score, percentile, rank or count')
 }
 
+
+// ════════════════════════════════════════════════════════════════════════════
+// APPSEC F3 · DISCLOSURE   +   F4 · ATOMIC IDEMPOTENCY / RECEIPT INTEGRITY
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\nSTATIC — APPSEC F3/F4 (text of 041 + the server route)')
+{
+  const mintFn = executable.slice(executable.indexOf('function public.mint_share_link'),
+    executable.indexOf('function public.revoke_share_link'))
+
+  // ── S13 · disclosure is a PARAMETER, and refusing is the default ──────────
+  assert(/p_tracking_disclosed\s+boolean/.test(mintFn),
+    'S13 mint_share_link() takes p_tracking_disclosed — disclosure is an argument, not an assumption')
+  assert(/p_tracking_disclosed is distinct from true/.test(mintFn),
+    'S13 missing (null) is refused exactly like false — `is distinct from true`, not a truthiness test')
+  assert(/tracking_disclosure_required/.test(mintFn),
+    'S13 the refusal is typed and carries the same word the contract exports')
+  assert(!/tracking_disclosed[^\n]*\bfalse\b/.test(executable),
+    'S13 nothing in the executable SQL ever writes tracking_disclosed = false',
+    'S13 ⚠ the SQL still writes an undisclosed link somewhere')
+  assert(/tracking_disclosed\b/.test(mintFn) && /,\s*true,?\s*$/m.test(mintFn),
+    'S13 the mint writes tracking_disclosed = true, after validating it')
+
+  // ── S14 · and the TABLE refuses it too, so no path is the soft one ────────
+  assert(/share_link_tracking_disclosed_check[\s\S]{0,200}check \(tracking_disclosed is true\)/.test(executable),
+    'S14 share_link carries a CHECK: an undisclosed row cannot exist, whatever wrote it')
+  assert(/check \(tracking_disclosed is true\) not valid/.test(executable),
+    'S14 the CHECK is NOT VALID — new writes are refused, legacy rows are not re-validated (the apply cannot fail on data)')
+
+  // ── S15 · idempotency is a UNIQUE KEY, not a lookup ───────────────────────
+  assert(/add column if not exists mint_request_key text/.test(executable),
+    'S15 share_link gains mint_request_key — the logical request identity')
+  assert(/create unique index if not exists idx_share_link_mint_request_key[\s\S]{0,140}mint_request_key/.test(executable),
+    'S15 mint_request_key is UNIQUE — the index IS the concurrency control')
+  assert(/on conflict \(mint_request_key\) do update[\s\S]{0,200}returning id, token_hash/.test(mintFn),
+    'S15 the mint is ONE statement: INSERT … ON CONFLICT … RETURNING, so a racer returns the winner\'s row')
+  assert(!/select share_link_id into v_id from public\.share_link_event/.test(mintFn),
+    'S15 the check-then-insert prelude is GONE',
+    'S15 ⚠ mint_share_link still checks-then-inserts — that is the race, not a fix')
+
+  // ── S16 · the receipt is part of the mint ─────────────────────────────────
+  const receipt = mintFn.slice(mintFn.indexOf('insert into public.share_link_event'))
+  assert(!/on conflict[\s\S]{0,60}do nothing/.test(receipt),
+    'S16 the mint receipt is not written with `on conflict do nothing` — a swallowed receipt is an unauditable link',
+    'S16 ⚠ the mint receipt failure is still swallowed')
+  assert(/mint_receipt_failed/.test(mintFn) && /v_rows <> 1/.test(mintFn),
+    'S16 a receipt that does not land RAISES, which rolls the link back with it')
+
+  // ── S17 · the server route enforces the same three rules ─────────────────
+  assert(/validateMintRequest\(/.test(server),
+    'S17 the server route uses the shared precondition rule instead of its own ifs')
+  assert(/mint_request_key: idempotencyKey/.test(server),
+    'S17 the server writes the logical request key, so the DB refuses its races too')
+  assert(/insErr\.code !== '23505'/.test(server),
+    'S17 a unique violation on the server mint path is READ AS A REPLAY, not as a 500')
+  assert(/receiptErr[\s\S]{0,400}\.delete\(\)\.eq\('id', row\.id\)/.test(server),
+    'S17 a failed receipt COMPENSATES — the just-created link is removed and the mint fails',
+    'S17 ⚠ the server still keeps a link whose receipt never landed')
+  assert(/MINT_REFUSAL\.MINT_RECEIPT_FAILED/.test(server),
+    'S17 the receipt failure is returned as a typed refusal, not a generic server_error')
+
+  // ── S18 · SQL refusal vocabulary === the contract's vocabulary ────────────
+  const raised = [...mintFn.matchAll(/raise exception '([a-z_]+)'/g)].map((m) => m[1])
+  const unknown = raised.filter((r) => !MINT_REFUSALS.includes(r) && r !== 'forbidden' && !r.startsWith('unknown'))
+  assert(unknown.length === 0,
+    `S18 every typed refusal the SQL raises is in the contract vocabulary (${raised.join(', ')})`,
+    `S18 SQL raises refusals the contract does not know: ${unknown.join(', ')}`)
+  for (const [refusal, sqlstate] of Object.entries(MINT_REFUSAL_SQLSTATE)) {
+    if (!raised.includes(refusal)) continue
+    assert(new RegExp(`'${refusal}' using errcode = '${sqlstate}'`).test(mintFn),
+      `S18 ${refusal} carries SQLSTATE ${sqlstate} in SQL, exactly as the contract declares`)
+  }
+}
+
+console.log('\nRUNTIME — the mint precondition rule (pure, really executed)')
+{
+  const base = { passportVersionId: 'v-pub', audience: 'booker' }
+  assert(validateMintRequest({ ...base, trackingDisclosed: true }) === null,
+    'M1  an affirmatively disclosed request may be minted')
+  for (const bad of [undefined, null, false, 'true', 1, {}, 'yes']) {
+    assert(validateMintRequest({ ...base, trackingDisclosed: bad }) === MINT_REFUSAL.TRACKING_DISCLOSURE_REQUIRED,
+      `M1  disclosure ${JSON.stringify(bad)} is REFUSED — only literal true passes`)
+  }
+  assert(isAffirmativeDisclosure(true) && !isAffirmativeDisclosure('true') && !isAffirmativeDisclosure(1),
+    'M1  no truthiness coercion: "the artist was never told" can never become "disclosed"')
+  assert(validateMintRequest({ audience: 'booker', trackingDisclosed: true }) === MINT_REFUSAL.PASSPORT_VERSION_REQUIRED,
+    'M2  a mint with no version is refused first — there is nothing to bind')
+  assert(validateMintRequest({ ...base, audience: 'nope', trackingDisclosed: true }) === MINT_REFUSAL.AUDIENCE_INVALID,
+    'M2  an audience outside the six policies is refused')
+  assert(validateMintRequest(null) === MINT_REFUSAL.PASSPORT_VERSION_REQUIRED,
+    'M2  the rule is total — an absent request is a refusal, never a crash')
+  assert(MINT_REFUSALS.every((r) => Number.isInteger(MINT_REFUSAL_HTTP_STATUS[r]) && MINT_REFUSAL_HTTP_STATUS[r] >= 400),
+    'M3  every refusal has exactly one HTTP mapping and none of them is a success')
+}
+
+// ── EXECUTED LOCALLY ───────────────────────────────────────────────────────
+if (!pgAvailable()) {
+  console.log('\n⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X12 are UNPROVEN in this run.')
+} else {
+  console.log('\nEXECUTED LOCALLY — real PostgreSQL 16, migration 041 really applied')
+  const db = ScratchDb.create('b4_link')
+  try {
+    db.exec(readFileSync('scripts/sql/appsec-fixture.sql', 'utf8'))
+    const OWNER = '00000000-0000-0000-0000-0000000000a1'   // owns the artist
+    const REP_B = '00000000-0000-0000-0000-0000000000a3'   // holds a grant only
+    const PV = '00000000-0000-0000-0000-00000000ffa1'
+    const ART = '00000000-0000-0000-0000-0000000000c1'
+    const as = { role: 'authenticated', uid: OWNER }
+    const mint = (hexChar, key, disclosed, label = 'Yossi') =>
+      `select public.mint_share_link('${PV}', repeat('${hexChar}',64), 'booker', '${label}', 'NYE', null, '${key}', ${disclosed});`
+    const linkCount = () => Number(db.scalar('select count(*)::int from public.share_link'))
+    const eventCount = () => Number(db.scalar("select count(*)::int from public.share_link_event where event = 'minted'"))
+
+    // X1..X3 · F3 · the RPC cannot mint an undisclosed link
+    for (const [what, value] of [['false', 'false'], ['missing (null)', 'null']]) {
+      const r = db.try(mint('a', 'k-disc', value), as)
+      assert(!r.ok && /tracking_disclosure_required/.test(r.out),
+        `X1  RPC mint with tracking_disclosed = ${what} → REFUSED with the typed error (executed)`,
+        `X1  ⚠ RPC mint with ${what} disclosure was NOT refused: ${r.out.split('\n')[0]}`)
+    }
+    assert(linkCount() === 0, 'X2  a refused mint leaves NO row behind (executed)')
+    {
+      const id = db.scalar(mint('a', 'k-disc', 'true'), as)
+      assert(/^[0-9a-f-]{36}$/.test(id), 'X3  the same mint WITH disclosure succeeds (executed)')
+      assert(db.scalar("select tracking_disclosed::text from public.share_link where mint_request_key = 'k-disc'") === 'true',
+        'X3  and the row it wrote is disclosed (executed)')
+    }
+
+    // X4 · F3 · even a raw INSERT cannot get around it (this runs as the table
+    // owner — a role that bypasses RLS entirely; a CHECK it cannot bypass)
+    {
+      const r = db.try(`insert into public.share_link (passport_version_id, artist_id, token_hash, status, tracking_disclosed)
+                        values ('${PV}', '${ART}', repeat('9',64), 'live', false)`)
+      assert(!r.ok && /share_link_tracking_disclosed_check/.test(r.out),
+        'X4  a RAW INSERT of an undisclosed link is refused by the table CHECK, even for the owner role (executed)',
+        `X4  ⚠ an undisclosed link can still be written directly: ${r.out.split('\n')[0]}`)
+    }
+
+    // X5 · F4 · sequential replay returns the SAME link, mints no second token
+    {
+      const first = db.scalar(mint('b', 'k-replay', 'true'), as)
+      const again = db.scalar(mint('c', 'k-replay', 'true'), as)   // a DIFFERENT token
+      assert(first === again, 'X5  a retried mint of the same logical request returns the SAME link id (executed)')
+      assert(Number(db.scalar("select count(*)::int from public.share_link where mint_request_key = 'k-replay'")) === 1,
+        'X5  and exactly one row exists for that request (executed)')
+      assert(db.scalar("select encode(digest(repeat('b',64),'sha256'),'hex') is not null::text") !== '',
+        'X5  (sanity: pgcrypto is present)')
+    }
+
+    // X6 · F4 · THE RACE. Eight separate connections, same logical request,
+    // eight different tokens, started together. Exactly one link may result.
+    {
+      const before = linkCount()
+      const hexes = ['1', '2', '3', '4', '5', '6', '7', '8']
+      const results = await db.parallel(hexes.map((h) => mint(h, 'k-race', 'true')), as)
+      const ids = [...new Set(results.filter((r) => r.ok).map((r) => r.out))]
+      const created = Number(db.scalar("select count(*)::int from public.share_link where mint_request_key = 'k-race'"))
+      assert(results.every((r) => r.ok), `X6  all ${results.length} concurrent mints completed (executed)`,
+        `X6  a concurrent mint errored: ${results.find((r) => !r.ok)?.out.split('\n')[0]}`)
+      assert(created === 1,
+        `X6  ${results.length} CONCURRENT mints of one logical request produced EXACTLY ONE link (executed)`,
+        `X6  ⚠ ${created} links were minted for one request — the race is still open`)
+      assert(ids.length === 1, `X6  and every connection was handed the same link id (executed): ${ids[0]}`)
+      assert(Number(db.scalar("select count(*)::int from public.share_link_event where idempotency_key = 'k-race'")) === 1,
+        'X6  exactly one mint receipt was written, not eight (executed)')
+      assert(linkCount() === before + 1, 'X6  and nothing else was created along the way (executed)')
+    }
+
+    // X7 · NEGATIVE CONTROL. The pattern this replaced, reproduced verbatim in
+    // a scratch function with the check→insert window widened by pg_sleep so
+    // the race is deterministic rather than lucky. If this does NOT produce
+    // duplicates, the fixture is not exercising concurrency and X6 proves less
+    // than it claims.
+    {
+      db.exec(`
+        create or replace function public.mint_legacy_probe(p_hex text, p_key text)
+        returns uuid language plpgsql security definer set search_path = public, pg_temp as $probe$
+        declare v_id uuid;
+        begin
+          select sl.id into v_id from public.share_link sl
+           where sl.recipient_label = p_key limit 1;          -- the CHECK
+          if v_id is not null then return v_id; end if;
+          perform pg_sleep(0.25);                             -- the WINDOW
+          insert into public.share_link (passport_version_id, artist_id, token_hash,
+                                         status, tracking_disclosed, recipient_label)
+          values ('${PV}', '${ART}', repeat(p_hex,64), 'live', true, p_key)
+          returning id into v_id;                             -- the INSERT
+          return v_id;
+        end $probe$;`)
+      const res = await db.parallel(['1', '2', '3', '4'].map((h) =>
+        `select public.mint_legacy_probe('${h}', 'legacy-key');`))
+      const dupes = Number(db.scalar("select count(*)::int from public.share_link where recipient_label = 'legacy-key'"))
+      assert(res.every((r) => r.ok) && dupes > 1,
+        `X7  CONTROL — the check-then-insert pattern this replaced yields ${dupes} links for ONE request (executed). The race was real.`,
+        `X7  ⚠ the control produced ${dupes} link(s): this fixture is not exercising concurrency, so X6 proves less than it claims`)
+      db.exec("delete from public.share_link where recipient_label = 'legacy-key'; drop function public.mint_legacy_probe(text, text);")
+    }
+
+    // X8 · F4 · a receipt that cannot be written must take the mint down with
+    // it. The failure is injected with a trigger, because a receipt outage is
+    // exactly the shape of "the write raised for a reason nobody predicted".
+    {
+      const before = linkCount()
+      db.exec(`
+        create or replace function public.sle_boom() returns trigger
+        language plpgsql as $boom$
+        begin
+          if new.idempotency_key = 'k-boom' then
+            raise exception 'injected receipt outage';
+          end if;
+          return new;
+        end $boom$;
+        create trigger trg_sle_boom before insert on public.share_link_event
+          for each row execute function public.sle_boom();`)
+      const r = db.try(mint('d', 'k-boom', 'true'), as)
+      assert(!r.ok && /injected receipt outage/.test(r.out),
+        'X8  a mint whose receipt fails RAISES instead of returning a link (executed)',
+        `X8  ⚠ the mint survived a failed receipt: ${r.out.split('\n')[0]}`)
+      assert(linkCount() === before,
+        'X8  and the link row is rolled back with it — no unauditable link survives (executed)',
+        'X8  ⚠ a link exists whose mint receipt was never written')
+      db.exec('drop trigger trg_sle_boom on public.share_link_event; drop function public.sle_boom();')
+    }
+
+    // X9 · authority. A grant-holding org is not the minting authority here:
+    // can_access_artist() is what mint_share_link asks, and a user with no
+    // relationship at all must be refused.
+    {
+      const stranger = '00000000-0000-0000-0000-0000000000a9'
+      db.exec(`insert into auth.users (id, email) values ('${stranger}','stranger@fixture.test') on conflict do nothing;
+               insert into public.person (id, email) values ('${stranger}','stranger@fixture.test') on conflict do nothing;`)
+      const r = db.try(mint('e', 'k-stranger', 'true'), { role: 'authenticated', uid: stranger })
+      assert(!r.ok && /forbidden/.test(r.out),
+        'X9  a user with no organization relationship cannot mint a link for this artist (executed)',
+        `X9  ⚠ a stranger minted a link: ${r.out.split('\n')[0]}`)
+    }
+
+    // X11 · L4 CLOSED — the replayed OPEN receipt really does collapse on the
+    // unique index, not merely in the JS reducer.
+    {
+      const hash = db.scalar("select token_hash from public.share_link where mint_request_key = 'k-disc'")
+      const first = db.scalar(`select public.record_share_link_open('${hash}', 'open-key-1');`, { role: 'anon' })
+      const replay = db.scalar(`select public.record_share_link_open('${hash}', 'open-key-1');`, { role: 'anon' })
+      const receipts = Number(db.scalar(`select count(*)::int from public.share_link_event
+                                          where event = 'opened' and idempotency_key = 'open-key-1'`))
+      assert(first === 't' && replay === 'f' && receipts === 1,
+        'X11 a replayed open writes ONE receipt — idx_sle_idempotent enforces it in Postgres (executed)',
+        `X11 ⚠ replay handling is wrong: first=${first} replay=${replay} receipts=${receipts}`)
+    }
+
+    // X12 · L6 CLOSED — anon may open a link and may NOT read the receipts.
+    {
+      const r = db.try('select count(*) from public.share_link_event', { role: 'anon' })
+      assert(!r.ok && /permission denied/i.test(r.out),
+        'X12 anon cannot SELECT share_link_event — open receipts never reach a bearer (executed)',
+        `X12 ⚠ anon can read receipts: ${r.out.split('\n')[0]}`)
+    }
+  } finally {
+    db.drop()
+  }
+}
+
 console.log(
   failed
     ? '\n✗ LINK INTEGRITY: FAILED\n'
     : `\n✓ LINK INTEGRITY: all assertions hold.
   Static: migration 041 text (fence, columns, constraints, policies, SQL↔JS parity) + server flag/route text.
-  Runtime: the pure rule in src/lib/shareLink.js against fixtures.
-  STILL UNPROVEN WITHOUT A DATABASE — see L1..L6 in this file's header. This gate
-  cannot witness what anon can actually SELECT; only the applied DB can.\n`)
+  Runtime: the pure rule + the mint precondition rule in src/lib/shareLink.js against fixtures.
+  EXECUTED LOCALLY (PostgreSQL 16, 041 really applied): F3 disclosure refused via RPC and via a raw
+    INSERT · F4 sequential replay, an 8-connection race producing exactly ONE link, a negative control
+    proving the old check-then-insert loses that race, a forced receipt outage rolling the mint back ·
+    L4 replayed open receipts collapse on the index · L6 anon's grants.
+  STILL RUNTIME-UNVERIFIED ON SUPABASE: L1/L2/L5 in this file's header, PostgREST behaviour, real JWTs,
+    and whether 041 applies on top of the REAL data — it is drafted and deliberately NOT applied.\n`)
 process.exit(failed ? 1 : 0)

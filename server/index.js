@@ -15,6 +15,7 @@ import { T as en } from '../src/lib/i18n/en.js'
 import {
   OUTCOME, OUTCOME_HTTP_STATUS, AUDIENCES, READABLE_VERSION_STATES, TOKEN_BYTES,
   isWellFormedToken, resolveShareLink, mintIdempotencyKey, openIdempotencyKey,
+  validateMintRequest, MINT_REFUSAL, MINT_REFUSAL_HTTP_STATUS,
 } from '../src/lib/shareLink.js'
 
 dotenv.config({ path: '.env.local' })
@@ -521,13 +522,17 @@ app.post('/api/share-link', requireAuth, async (req, res) => {
   try {
     if (!admin) return res.status(503).json({ error: 'Supabase admin client not configured.' })
     const { passportVersionId, audience, recipientLabel, purpose, expiry, trackingDisclosed } = req.body || {}
-    if (!passportVersionId) return res.status(400).json({ error: 'passportVersionId required' })
-    if (!AUDIENCES.includes(audience)) {
-      return res.status(400).json({ error: 'audience_invalid', allowed: AUDIENCES })
+    // APPSEC F3 · ONE precondition rule, imported. PUB4 (024:23) — a link that
+    // measures opens may not be sent until the artist has been told it does —
+    // is now enforced identically here, in the SQL RPC (041 A7) and in the
+    // share_link CHECK, so no mint path can be the soft one.
+    const refusal = validateMintRequest({ passportVersionId, audience, trackingDisclosed })
+    if (refusal) {
+      return res.status(MINT_REFUSAL_HTTP_STATUS[refusal] || 400).json({
+        error: refusal,
+        ...(refusal === MINT_REFUSAL.AUDIENCE_INVALID ? { allowed: AUDIENCES } : {}),
+      })
     }
-    // PUB4 (024:23): a link that measures opens may not be sent until the
-    // artist has been told it does. The gate is here, not in the UI.
-    if (trackingDisclosed !== true) return res.status(400).json({ error: 'tracking_disclosure_required' })
 
     const { data: pv, error: pvErr } = await admin
       .from('passport_versions').select('id, artist_id, act_id, state')
@@ -544,16 +549,14 @@ app.post('/api/share-link', requireAuth, async (req, res) => {
       passportVersionId, audience, recipientLabel, purpose, expiry,
     })
 
-    // Replay: the mint receipt already exists → return the SAME link. A second
-    // bearer credential is never minted for the same request. The raw token is
-    // NOT re-issuable (it was never stored) — the caller is told so explicitly.
-    const { data: prior } = await admin
-      .from('share_link_event').select('share_link_id')
-      .eq('event', 'minted').eq('idempotency_key', idempotencyKey).maybeSingle()
-    if (prior?.share_link_id) {
-      return res.json({ ok: true, id: prior.share_link_id, token: null, replayed: true })
-    }
-
+    // APPSEC F4 · IDEMPOTENCY IS THE DATABASE'S JOB, NOT A LOOKUP'S.
+    // This used to be SELECT-then-INSERT: two concurrent mints of the same
+    // logical request both read "no prior receipt" and both minted, leaving two
+    // live bearer credentials to one person's evidence. `mint_request_key` is
+    // UNIQUE (041 A2), so the racer loses in the index instead of in a gap
+    // between two statements. A unique violation here is not an error — it is
+    // the replay answer, and the raw token is NOT re-issuable (it was never
+    // stored), which the caller is told explicitly.
     const token = mintToken()
     const { data: row, error: insErr } = await admin.from('share_link').insert({
       passport_version_id: pv.id,
@@ -566,15 +569,35 @@ app.post('/api/share-link', requireAuth, async (req, res) => {
       expiry: expiry || null,                                    // null = endless, deliberately
       expiry_kind: expiry ? 'date' : 'endless',
       status: 'live',
-      tracking_disclosed: true,
+      tracking_disclosed: true,                 // validated above; the CHECK re-asserts it
       created_by: req.userId,
+      mint_request_key: idempotencyKey,
     }).select('id').single()
-    if (insErr) throw insErr
 
-    await admin.from('share_link_event').insert({
+    if (insErr) {
+      if (insErr.code !== '23505') throw insErr
+      const { data: prior } = await admin
+        .from('share_link').select('id').eq('mint_request_key', idempotencyKey).maybeSingle()
+      if (!prior?.id) throw insErr
+      return res.json({ ok: true, id: prior.id, token: null, replayed: true })
+    }
+
+    // APPSEC F4 · THE RECEIPT IS PART OF THE MINT. This error used to be
+    // discarded, so a link could exist with no record of who minted it, when,
+    // or for which audience — unauditable, and invisible in the artist's own
+    // link list. The two writes cannot share a transaction over PostgREST, so
+    // the mint COMPENSATES: the just-created link (never returned to anyone,
+    // its token never leaves this process) is deleted and the mint fails.
+    const { error: receiptErr } = await admin.from('share_link_event').insert({
       share_link_id: row.id, event: 'minted', idempotency_key: idempotencyKey,
-      detail: { audience },
+      detail: { audience, tracking_disclosed: true },
     })
+    if (receiptErr) {
+      console.error('[share-link-mint] receipt failed, rolling back link', row.id, receiptErr)
+      await admin.from('share_link').delete().eq('id', row.id)
+      return res.status(MINT_REFUSAL_HTTP_STATUS[MINT_REFUSAL.MINT_RECEIPT_FAILED])
+        .json({ error: MINT_REFUSAL.MINT_RECEIPT_FAILED })
+    }
 
     res.json({ ok: true, id: row.id, token, replayed: false })
   } catch (e) {

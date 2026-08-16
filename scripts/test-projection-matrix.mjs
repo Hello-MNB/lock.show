@@ -35,12 +35,24 @@
 //   S8  negative cases at the level they are expressible statically
 //   S9  the flag exists, defaults OFF, and is actually wired into the screen
 //
-// NEEDS-LIVE-DB (NOT proven here — do not read a green run as proof):
-//   L1  that migration 042 applies cleanly to the real schema (never applied)
-//   L2  that RLS actually denies a wrong-org / expired-mandate / missing-scope
-//       read at runtime — that requires a live DB with two orgs and real JWTs
-//   L3  that the SECURITY DEFINER recompute/projection functions produce the
-//       rows this file claims they produce
+// EXECUTED LOCALLY (APPSEC F2 — a real PostgreSQL 16, two real organizations,
+// real RLS, real SECURITY DEFINER semantics; see the X-block at the bottom):
+//   X1  042 applies to the real migration chain, and the split can be applied
+//       AND reverted (was L1 — now closed for the local replica; the REAL data
+//       is still unverified)
+//   X2  ORG A's representative cannot read ORG B's demand row, its event_type,
+//       its location or its id — through radar_signal, before or after the
+//       split (was L2)
+//   X3  the definer functions really do produce the rows this file claims, and
+//       really do NOT produce a rep_summary row carrying a demand pointer
+//       (was L3)
+//   X4  a NEGATIVE CONTROL proves the fixture can exhibit the leak: the
+//       unscoped join 010 shipped really does hand ORG A the other org's
+//       request, so X2 is a repair and not an accident of the data
+//
+// NEEDS-LIVE-DB (still NOT proven here — do not read a green run as proof):
+//   L1  that migration 042 applies cleanly to the REAL data (never applied)
+//   L2b that PostgREST + real JWTs behave as the shim's roles do
 //   L4  that no OTHER shipped read path (PostgREST, an RPC, a view) reaches
 //       radar_signal — grep proves absence in this repo, not in the deployment
 //
@@ -50,6 +62,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
+import { pgAvailable, ScratchDb } from './lib/pgharness.mjs'
 
 let failed = false
 const fail = (m) => { console.log(`  ✗ ${m}`); failed = true }
@@ -177,12 +190,15 @@ console.log('\n[S7] object × persona matrix — what may appear, per persona')
 const now = Date.UTC(2026, 7, 16)
 const day = 86400000
 const iso = (t) => new Date(t).toISOString()
+// `demandDetail: true` = "the reading context OWNS this demand" (APPSEC F2).
+// The artist-private persona does; a representation org does not, and the S7b
+// block below re-runs the same fixtures without it to prove what changes.
 const FIXTURES = [
   { // fires R1 (stale ∩ demand), R3 (demand w/o ready passport), R7 (aging draw)
     artist: { id: 'a1', stage_name: 'Fixture One', published: false },
     claims: [{ claim_type: 'lineup', verification_status: 'self-reported', visibility: 'private', method_label: 'artist-declared', expires_at: iso(now - 30 * day) }],
     draw: [{ signal_type: 'band', computed_at: iso(now - 200 * day) }],
-    demand: [{ id: 'd1', event_type: 'club', location: 'TLV', status: 'new' }],
+    demand: [{ id: 'd1', event_type: 'club', location: 'TLV', status: 'new' }], demandDetail: true,
   },
   { // fires R2 (ready ∩ demand) + R5 (producer-confirmed strength)
     artist: { id: 'a2', stage_name: 'Fixture Two', published: true },
@@ -190,7 +206,7 @@ const FIXTURES = [
       { claim_type: 'headline', verification_status: 'verified', visibility: 'passport-ok', method_label: 'producer-confirmed', expires_at: null },
     ],
     draw: [],
-    demand: [{ id: 'd2', event_type: 'festival', location: 'Haifa', status: 'new' }],
+    demand: [{ id: 'd2', event_type: 'festival', location: 'Haifa', status: 'new' }], demandDetail: true,
   },
   { // fires R4 (evidence ready, unpublished) — a coaching signal
     artist: { id: 'a3', stage_name: 'Fixture Three', published: false },
@@ -200,7 +216,7 @@ const FIXTURES = [
   { // fires R6 (demand, no strong proof) — a gap statement about a person
     artist: { id: 'a4', stage_name: 'Fixture Four', published: true },
     claims: [{ claim_type: 'lineup', verification_status: 'self-reported', visibility: 'private', method_label: 'artist-declared', expires_at: null }],
-    draw: [], demand: [{ id: 'd4', event_type: 'private', location: 'Eilat', status: 'new' }],
+    draw: [], demand: [{ id: 'd4', event_type: 'private', location: 'Eilat', status: 'new' }], demandDetail: true,
   },
   { // fires R8 (no evidence at all) — the bluntest gap in the system
     artist: { id: 'a5', stage_name: 'Fixture Five', published: false },
@@ -248,6 +264,34 @@ check(radar.projectRadarForRep([]).length === 0 && radar.projectRadarForRep(null
   'the projection is total — an empty/absent private set yields an empty projection, never a fabricated one')
 
 // ── S8 · negative cases in the client read path ─────────────────────────────
+// ── S7b · APPSEC F2 · cross-organization demand detail ─────────────────────
+console.log('\n[S7b] cross-organization demand — event_type / location / request id')
+{
+  // The SAME fixtures, read by a context that does NOT own the demand. Nothing
+  // about the artist changes; only who is reading does.
+  const foreign = FIXTURES.map(({ demandDetail, ...rest }) => rest)   // no declaration = no detail
+  const privOwn = radar.computeRadarSignals(FIXTURES, now)
+  const privForeign = radar.computeRadarSignals(foreign, now)
+  const detailOf = (set) => set.filter((x) => x.demand)
+    .flatMap((x) => radar.DEMAND_DETAIL_FIELDS.map((f) => x.demand[f]).filter((v) => v != null))
+
+  check(radar.DEMAND_DETAIL_FIELDS.length === 3 &&
+        ['event_type', 'location', 'id'].every((f) => radar.DEMAND_DETAIL_FIELDS.includes(f)),
+    'the three cross-organization demand fields are named in one place: event_type · location · id')
+  check(detailOf(privOwn).length > 0,
+    `the OWNING context still sees demand detail (${detailOf(privOwn).length} field values) — this repair removes nothing from the artist`)
+  check(detailOf(privForeign).length === 0,
+    'NEGATIVE CASE — a context that does not own the demand sees NO event_type, NO location and NO request id')
+  check(privForeign.filter((x) => x.demand).every((x) => x.demand.present === true),
+    'and it still learns that demand EXISTS — a binary, which is what R1/R2/R3/R6 are about')
+  check(privForeign.length === privOwn.length,
+    'no signal disappears: the redaction removes FIELDS, never a rule (a shorter feed would be a different lie)')
+  check(detailOf(radar.projectRadarForRep(privOwn)).length === 0,
+    'NEGATIVE CASE — even a signal computed WITH detail loses it on the rep projection (belt and braces)')
+  check(radar.redactDemand(null) === null && radar.redactDemand({ id: 'x', event_type: 'club', location: 'TLV' }).id === null,
+    'redactDemand() is total and nulls every field it is given')
+}
+
 console.log('\n[S8] negative cases — client read path')
 const inputsFn = (ORGS_JS.match(/export async function getRadarInputs[\s\S]*?\n}/) || [''])[0]
 check(/\.eq\('organization_id', orgId\)/.test(inputsFn), 'NEGATIVE CASE — wrong org: the grant query is pinned to the active org id')
@@ -258,6 +302,17 @@ check(/audience = 'artist_private'/.test(inputsFn) || /audience = 'rep_summary'/
 check(/repOnly/.test(inputsFn) && /draw_signals/.test(inputsFn),
   'rep audience narrows the fetch itself (no draw_signals — R7 staleness is coaching)')
 check(/passport-ok/.test(inputsFn), 'rep audience fetches passport-approved claims only')
+// APPSEC F2 · the demand read itself
+check(/ownsDemandContext/.test(inputsFn),
+  'NEGATIVE CASE — the demand read asks WHO OWNS THIS DEMAND before it asks for a single field')
+check(/demandQ\.eq\('organization_id', orgId\)/.test(inputsFn),
+  'NEGATIVE CASE — wrong org: a non-owning org fetches ONLY requests belonging to itself')
+check(/organization_id\.eq\.\$\{orgId\},organization_id\.is\.null/.test(inputsFn),
+  'the owning org gets its own requests plus the unattributed ones (organization_id IS NULL = the artist\'s own context)')
+check(/ownsDemandContext \? 'id, event_type, location, status' : 'status'/.test(inputsFn),
+  'NEGATIVE CASE — event_type / location / id are not even FETCHED for a non-owning org')
+check(/demandDetail: ownsDemandContext/.test(inputsFn),
+  'the record declares its demand authority to computeRadarSignals() — absent means redacted')
 check(/NOT enforcement|not enforcement/i.test(ORGS_JS), 'the client narrowing is documented as honesty, not as a boundary')
 // Runtime negative: the mandate-expiry rule the read path leans on.
 const mandate = await import(pathToFileURL(resolve('src/lib/mandateExpiry.js')).href)
@@ -279,6 +334,162 @@ check(/RadarFeed/.test(read('src/App.jsx')) && /agency\/radar/.test(read('src/Ap
   'the /agency/radar screen still exists and is still routed — the fix hides content, it does not delete a screen')
 
 // ── KNOWN REMAINING (informational — printed, not failed) ───────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// APPSEC F2 · TWO-ORGANIZATION ISOLATION — EXECUTED against real PostgreSQL
+// ════════════════════════════════════════════════════════════════════════════
+// The fixture (scripts/sql/appsec-fixture.sql) is the shape that makes the
+// question real: ORG_A and ORG_B BOTH hold a live artist_access grant on the
+// SAME artist, and there are three open requests — one belonging to A, one to
+// B, one unattributed (organization_id IS NULL = the artist's own context).
+if (!pgAvailable()) {
+  console.log('\n⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X8 below are UNPROVEN in this run.')
+} else {
+  console.log('\n[X] EXECUTED LOCALLY — two organizations, real RLS, real definer functions')
+  const db = ScratchDb.create('b4_matrix')
+  try {
+    db.exec(readFileSync('scripts/sql/appsec-fixture.sql', 'utf8'))
+    const ORG_OWN = '00000000-0000-0000-0000-0000000000b1'
+    const ORG_A = '00000000-0000-0000-0000-0000000000b2'
+    const ORG_B = '00000000-0000-0000-0000-0000000000b3'
+    const U_A = '00000000-0000-0000-0000-0000000000a2'
+    const U_B = '00000000-0000-0000-0000-0000000000a3'
+    const ART = '00000000-0000-0000-0000-0000000000c1'
+    const REQ_A = '00000000-0000-0000-0000-0000000000f1'
+    const REQ_B = '00000000-0000-0000-0000-0000000000f2'
+    const REQ_OWN = '00000000-0000-0000-0000-0000000000f3'
+    const asA = { role: 'authenticated', uid: U_A }
+    const asB = { role: 'authenticated', uid: U_B }
+
+    // X1 · the fixture really is a two-organization fixture
+    {
+      const rows = db.rows(`select id, coalesce(organization_id::text,'(null)'), event_type
+                              from public.availability_requests order by id`)
+      check(rows.length === 3 && rows.some((r) => r[1] === ORG_A) && rows.some((r) => r[1] === ORG_B)
+            && rows.some((r) => r[1] === '(null)'),
+        `X1  fixture: three open requests — one for ORG_A, one for ORG_B, one unattributed (executed)`)
+    }
+
+    // X4 · NEGATIVE CONTROL — the unscoped join migration 010 ships really does
+    // hand ORG_A the other organization's request. Without this, a green X2
+    // could just mean the fixture never had anything to leak.
+    {
+      const leaked = db.rows(`
+        select r.id, r.event_type, r.location
+          from public.artist_access aa
+          join public.artists a on a.id = aa.artist_id
+          join public.availability_requests r on r.artist_id = a.id and r.status = 'new'
+         where aa.organization_id = '${ORG_A}' and aa.status = 'active'`)
+      check(leaked.some((r) => r[0] === REQ_B),
+        `X4  CONTROL — 010's unscoped demand join returns ORG_B's request (${leaked.length} rows incl. ${REQ_B}) to ORG_A. The leak is real and the fixture exhibits it. (executed)`)
+      check(leaked.some((r) => r[1] === 'festival-b' && r[2] === 'Haifa'),
+        'X4  CONTROL — and it carries the other organization\'s event_type and location (executed)')
+    }
+
+    // X2 · the repaired materialisation (042 §5, additive half — already run by
+    // the 010 feed triggers when the fixture inserted its rows)
+    {
+      const rows = db.rows(`select organization_id, rule_id, coalesce(demand_request_id::text,'(null)'), audience
+                              from public.radar_signal order by organization_id, rule_id`)
+      const aRows = rows.filter((r) => r[0] === ORG_A)
+      const bRows = rows.filter((r) => r[0] === ORG_B)
+      check(aRows.length > 0 && bRows.length > 0, `X2  both organizations materialised rows (${rows.length} total, executed)`)
+      check(aRows.every((r) => r[2] !== REQ_B && r[2] !== REQ_OWN),
+        'X2  ORG_A\'s rows never cite ORG_B\'s request, nor the artist\'s unattributed one (executed)')
+      check(bRows.every((r) => r[2] !== REQ_A && r[2] !== REQ_OWN),
+        'X2  ORG_B\'s rows never cite ORG_A\'s request either — symmetric (executed)')
+      check(aRows.some((r) => r[2] === REQ_A),
+        'X2  ORG_A does still see ITS OWN inbound demand — the repair scopes, it does not blind (executed)')
+    }
+
+    // X3 · what a representative can actually READ, with RLS on, as themselves
+    {
+      const visibleToA = db.rows(`select rs.id, coalesce(rs.demand_request_id::text,'(null)')
+                                    from public.radar_signal rs`, asA)
+      check(visibleToA.every((r) => r[1] !== REQ_B),
+        'X3  with RLS on, no row ORG_A can READ points at ORG_B\'s request (executed)')
+      const fields = db.rows(`select r.event_type, r.location, r.id::text
+                                from public.radar_signal rs
+                                join public.availability_requests r on r.id = rs.demand_request_id`, asA)
+      check(fields.every((f) => f[0] !== 'festival-b' && f[1] !== 'Haifa' && f[2] !== REQ_B),
+        'X3  and dereferencing every pointer it CAN read never yields ORG_B\'s event_type, location or id (executed)')
+      const fieldsB = db.rows(`select r.event_type, r.location, r.id::text
+                                 from public.radar_signal rs
+                                 join public.availability_requests r on r.id = rs.demand_request_id`, asB)
+      check(fieldsB.every((f) => f[0] !== 'club-a' && f[1] !== 'Tel Aviv' && f[2] !== REQ_A),
+        'X3  the same holds in the other direction for ORG_B (executed)')
+    }
+
+    // X5 · the CHECK is structural: a rep_summary row may not carry a demand
+    // pointer at all, whoever writes it, even the table owner.
+    {
+      const r = db.try(`insert into public.radar_signal
+        (organization_id, artist_id, rule_id, status, action_type, method_label,
+         audience, purpose, projection_id, demand_request_id)
+        values ('${ORG_A}','${ART}','R2','strong','respond','evidence-supported',
+                'rep_summary','availability-response','00000000-0000-0000-0000-0000000000d2','${REQ_A}')`)
+      check(!r.ok && /radar_signal_rep_demand_check/.test(r.out),
+        'X5  a rep_summary row carrying ANY demand pointer is refused by the table CHECK (executed)')
+    }
+
+    // X6 · THE TIGHTENING, executed. Private rows leave the representative's
+    // reach entirely; the projection is empty until a purpose is authorized.
+    {
+      db.exec('select public.apply_radar_audience_split();')
+      db.exec(`select public.recompute_radar_private_for_artist('${ART}');
+               select public.generate_radar_rep_projection('${ART}');`)
+      const privToA = db.rows("select id from public.radar_signal where audience = 'artist_private'", asA)
+      check(privToA.length === 0,
+        'X6  after the split, a grant-holding organization can read ZERO artist_private rows (executed)')
+      const privToOwner = Number(db.scalar(`select count(*)::int from public.radar_signal
+                                             where audience = 'artist_private' and organization_id = '${ORG_OWN}'`))
+      check(privToOwner > 0,
+        `X6  the artist's OWN organization has them instead (${privToOwner} rows) — the interpretation is not destroyed, it is re-homed (executed)`)
+      const repRows = Number(db.scalar("select count(*)::int from public.radar_signal where audience = 'rep_summary'"))
+      check(repRows === 0,
+        'X6  and the rep projection is EMPTY, because no purpose is enabled — the honest default (executed)')
+    }
+
+    // X7 · authorize the purpose and the projection appears — still with no
+    // demand pointer, and still scoped to each organization's own demand.
+    {
+      db.exec(`update public.radar_projection_purpose set enabled = true where purpose = 'availability-response';
+               select public.generate_radar_rep_projection('${ART}');`)
+      const rep = db.rows(`select organization_id, rule_id, coalesce(demand_request_id::text,'(null)')
+                             from public.radar_signal where audience = 'rep_summary' order by 1`)
+      check(rep.length > 0, `X7  with the purpose enabled, ${rep.length} rep_summary row(s) are generated (executed)`)
+      check(rep.every((r) => r[2] === '(null)'),
+        'X7  and NOT ONE of them carries a demand pointer — the projection is a binary, not a request (executed)')
+      const aSees = db.rows("select organization_id from public.radar_signal where audience = 'rep_summary'", asA)
+      check(aSees.every((r) => r[0] === ORG_A),
+        'X7  ORG_A reads only its own projection rows, never ORG_B\'s (executed)')
+      const bSees = db.rows("select organization_id from public.radar_signal where audience = 'rep_summary'", asB)
+      check(bSees.every((r) => r[0] === ORG_B), 'X7  and ORG_B only its own (executed)')
+      // A revoked mandate must stop projecting immediately.
+      db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${ORG_A}';
+               select public.generate_radar_rep_projection('${ART}');`)
+      const afterRevoke = db.rows("select organization_id from public.radar_signal where audience = 'rep_summary'", asA)
+      check(afterRevoke.length === 0,
+        'X7  NEGATIVE CASE — a revoked mandate reads nothing back through the projection (executed)')
+      db.exec(`update public.artist_access set status = 'active' where organization_id = '${ORG_A}';`)
+    }
+
+    // X8 · reversible, and the revert really does restore 010's read model
+    {
+      db.exec('select public.revert_radar_audience_split();')
+      const policies = db.rows("select policyname from pg_policies where tablename = 'radar_signal' order by 1")
+        .map((r) => r[0])
+      check(policies.includes('radar_org'),
+        'X8  revert_radar_audience_split() restores 010\'s radar_org policy (executed)')
+      check(!policies.includes('radar_rep_summary_read') && !policies.includes('radar_artist_private_read'),
+        'X8  and removes the split policies — the tightening is genuinely reversible (executed)')
+      check(Number(db.scalar("select count(*)::int from public.radar_signal where audience = 'rep_summary'")) === 0,
+        'X8  the revert takes the projections with it (executed)')
+    }
+  } finally {
+    db.drop()
+  }
+}
+
 console.log('\n[i] known remaining rep-side private-derived surfaces (NOT closed by this lane)')
 const AGENCY_ORBIT = read('src/features/agency/AgencyRadarUniverse.jsx')
 if (/deriveRosterHealth/.test(AGENCY_ORBIT)) {
@@ -305,9 +516,14 @@ console.log('  STATIC, proven here: S1 migration pair + reversibility · S2 SQL 
 console.log('    against existing 027/008 helpers · S4 ownership-keyed private policy · S5 nothing enabled')
 console.log('    by default · S6 SQL↔JS allowlist agreement · S7 object × persona matrix over fixtures ·')
 console.log('    S8 negative cases in the client read path + mandate rule · S9 flag default OFF + wiring')
-console.log('  NEEDS LIVE DB, NOT proven here: that 042 applies; that RLS denies wrong-org / expired /')
-console.log('    missing-scope reads at runtime; that the definer functions emit the claimed rows; that no')
-console.log('    other deployed reader reaches radar_signal.')
+console.log('  EXECUTED LOCALLY (PostgreSQL 16, two organizations, real RLS, real definer functions):')
+console.log('    X1 fixture shape · X4 a NEGATIVE CONTROL proving 010\'s unscoped join really does hand ORG_A')
+console.log('    ORG_B\'s request + its event_type + its location · X2/X3 the repaired materialisation and what')
+console.log('    each representative can actually READ · X5 the demand-pointer CHECK · X6 the tightening ·')
+console.log('    X7 an authorized purpose projects a binary with no demand pointer, a revoked mandate projects')
+console.log('    nothing · X8 the revert restores 010\'s read model.')
+console.log('  STILL RUNTIME-UNVERIFIED ON SUPABASE: that 042 applies to the REAL data (drafted, NOT applied);')
+console.log('    PostgREST behaviour with real JWTs; that no other deployed reader reaches radar_signal.')
 if (failed) {
   console.error('\nprojection-matrix FAILED')
   process.exit(1)

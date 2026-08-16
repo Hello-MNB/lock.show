@@ -83,6 +83,70 @@
 --   benchmarks, gaps. The firewall stays absolute on every OTHER entity's
 --   surface: bands + binaries + method labels, never private gap/coaching text.
 --
+-- ██ APPSEC F2 · CROSS-ORGANIZATION DEMAND SCOPE (repair, this file) ████████
+--   THE DEFECT: every demand join in 010 — and in this file's first draft —
+--   read `availability_requests` by artist_id + status ALONE:
+--       join public.availability_requests r on r.artist_id = a.id and r.status='new'
+--   `availability_requests.organization_id` (008:118) exists and was never
+--   consulted. So an inbound request that belongs to organization B fed
+--   organization A's RADAR, and `radar_signal.demand_request_id` handed A a
+--   pointer B never authorized — a pointer A can dereference, because
+--   `req_org_read` (008:266) gates availability_requests on
+--   can_access_artist(), which any grant-holding org passes. Two orgs holding a
+--   grant on the same artist could each see the other's inbound demand,
+--   including its event_type and location.
+--
+--   THE RULE THIS FILE NOW ENFORCES, in every demand join:
+--     · a request belongs to the org named in organization_id;
+--     · organization_id IS NULL means it belongs to the ARTIST's own context
+--       (the anonymous public-Passport insert path, server/index.js:884, does
+--       not set it), so it feeds the artist's own org and NOBODY else;
+--     · a rep_summary projection may reference demand ONLY from its own org.
+--
+--   AND, until a purpose is authorized to carry it, a rep_summary row carries
+--   NO demand pointer at all — `radar_signal_rep_demand_check` (§2) refuses
+--   one structurally. radar_signal has no event_type / location columns of its
+--   own; demand_request_id IS the route to those two fields, so removing the
+--   pointer removes the exposure. Authorizing it later is a deliberate
+--   migration that relaxes that CHECK and adds the purpose flag to carry it —
+--   never a quiet default.
+--
+--   CONSEQUENCE, SAID PLAINLY: because today's requests all carry
+--   organization_id IS NULL, an org that merely HOLDS A GRANT now derives no
+--   R1/R2 demand signal at all. That is fail-closed and intended: the artist's
+--   inbound demand is the artist's. §5 is therefore no longer "byte-identical
+--   rows" — it is "identical rows for the artist's own org, and no other org's
+--   demand for anyone else". Extends the apply-order semantics of PART A.
+--
+-- ██ PRIVILEGE MODEL — EVERY FUNCTION THIS FILE CREATES ██
+--   Supabase's default privileges grant EXECUTE on every new function in
+--   `public` to anon, authenticated AND service_role, on top of PostgreSQL's
+--   default EXECUTE to PUBLIC. This file's first draft granted nothing
+--   explicitly, so apply_radar_audience_split() and
+--   revert_radar_audience_split() — SECURITY DEFINER functions that DROP AND
+--   CREATE RLS POLICIES — were callable by anon. EXECUTED LOCALLY on
+--   PostgreSQL 16 before this repair: `set role anon; select
+--   public.apply_radar_audience_split();` succeeded and swapped the policy set
+--   of radar_signal. revert_ additionally DELETEs rows. That is privilege
+--   escalation from the least-privileged web role to schema owner.
+--   EVERY function below is now revoked from public, anon, authenticated AND
+--   service_role. NONE of them is granted back to any PostgREST role:
+--     apply_radar_audience_split() / revert_radar_audience_split()
+--       — owner-signed acts, run in the SQL editor as the owning role. There is
+--         no RPC caller and there must never be one. Least exposure = no grant.
+--     recompute_radar_for_org(uuid) / recompute_radar_private_for_artist(uuid) /
+--     generate_radar_rep_projection(uuid)
+--       — reached only from the 010 feed triggers, which fire as the definer.
+--         No client calls them (grep: zero .rpc() references in src/ + server/).
+--     radar_signal_rep_update_guard() / radar_recompute_for_artist()
+--       — trigger functions. EXECUTE is checked at CREATE TRIGGER time, never
+--         at fire time, so zero grants is the working minimum.
+--   The revokes are re-asserted INSIDE apply_/revert_ after each CREATE OR
+--   REPLACE: replacing an existing function preserves its ACL, but a function
+--   that does not yet exist would be created at the platform default.
+--   scripts/test-sql-privileges.mjs EXECUTES this file against a scratch
+--   Postgres and fails if any function it creates is PUBLIC-executable.
+--
 -- NOT DONE HERE (named so nobody assumes it):
 --   · No column-level RLS on rep_summary rows beyond the §6 update guard.
 --   · No change to can_access_artist() — the raw claims/draw read gate that the
@@ -175,6 +239,20 @@ alter table public.radar_signal add constraint radar_signal_rep_content_check ch
   )
 );
 
+-- APPSEC F2 · THE DEMAND POINTER IS PART OF THE CONTENT LAW.
+-- radar_signal has no event_type and no location column; demand_request_id is
+-- the pointer that leads to them, and the availability_requests RLS a rep
+-- passes (`req_org_read` → can_access_artist) means a pointer IS the data. No
+-- purpose in this codebase authorizes a rep to receive another org's inbound
+-- demand, so a rep_summary row may not carry one at all. Relaxing this is a
+-- deliberate later migration (drop this CHECK, add an explicit
+-- `allow_demand_reference` flag to radar_projection_purpose, and re-add the
+-- CHECK keyed on it) — never a quiet default.
+alter table public.radar_signal drop constraint if exists radar_signal_rep_demand_check;
+alter table public.radar_signal add constraint radar_signal_rep_demand_check check (
+  audience = 'artist_private' or demand_request_id is null
+);
+
 -- ============================================================
 -- §3 · unique key widened.  BEHAVIOR-PRESERVING but PAIRED WITH §5 —
 --      the old 3-column key is what 010's ON CONFLICT target names.
@@ -227,7 +305,11 @@ begin
   from public.artist_access aa
   join public.artists a on a.id = aa.artist_id and coalesce(a.published, false) = true
   join public.claims c on c.artist_id = a.id and c.visibility = 'passport-ok' and c.verification_status in ('verified','supporting')
+  -- APPSEC F2 · demand belongs to the org named on the request; NULL means the
+  -- artist's own context. Never another org's inbound demand.
   join public.availability_requests r on r.artist_id = a.id and r.status = 'new'
+       and (r.organization_id = p_org
+            or (r.organization_id is null and a.owner_organization_id = p_org))
   where aa.organization_id = p_org and aa.status = 'active'
   order by a.id, r.created_date desc
   on conflict (organization_id, artist_id, rule_id, audience) do update
@@ -240,7 +322,10 @@ begin
   join public.artists a on a.id = aa.artist_id
   join public.claims c on c.artist_id = a.id and c.method_label <> 'producer-confirmed'
      and c.expires_at is not null and c.expires_at < now()
+  -- APPSEC F2 · same org scope as R2 above.
   join public.availability_requests r on r.artist_id = a.id and r.status = 'new'
+       and (r.organization_id = p_org
+            or (r.organization_id is null and a.owner_organization_id = p_org))
   where aa.organization_id = p_org and aa.status = 'active'
   order by a.id, c.expires_at asc
   on conflict (organization_id, artist_id, rule_id, audience) do update
@@ -256,6 +341,18 @@ begin
   order by a.id, d.computed_at asc
   on conflict (organization_id, artist_id, rule_id, audience) do update set computed_at = now();
 end; $$;
+
+-- ============================================================
+-- §5.a · APPSEC F1 · PRIVILEGES FOR THE ADDITIVE HALF.
+--   `revoke ... from public` is not enough on Supabase: the platform's default
+--   privileges give anon, authenticated and service_role their OWN explicit
+--   EXECUTE grant on every new function in `public`. Revoke all four. Grant
+--   back nothing: recompute_radar_for_org() is reached from the 010 feed
+--   triggers (which fire with the definer's rights, no EXECUTE check) and from
+--   nowhere else — grep across src/ + server/ + api/ finds zero .rpc() callers.
+-- ============================================================
+revoke all on function public.recompute_radar_for_org(uuid)
+  from public, anon, authenticated, service_role;
 
 -- ============================================================
 -- §6 · ⛔ BREAKING HALF — INSTALLED, NOT EXECUTED. ⛔
@@ -289,6 +386,11 @@ begin
   join public.artists a on a.id = r.artist_id and coalesce(a.published, false) = true
   join public.claims c on c.artist_id = r.artist_id and c.visibility = 'passport-ok' and c.verification_status in ('verified','supporting')
   where r.artist_id = p_artist and r.status = 'new'
+    -- APPSEC F2 · the artist's OWN private row may only cite demand that
+    -- belongs to the artist's own org (or is unattributed, which means the
+    -- same thing). Another org's inbound request is not the artist's to read
+    -- here either — it reaches them through that org's own surface.
+    and (r.organization_id is null or r.organization_id = v_owner)
   order by r.artist_id, r.created_date desc
   on conflict (organization_id, artist_id, rule_id, audience) do update set computed_at = now();
 
@@ -296,6 +398,8 @@ begin
   select distinct on (c.artist_id) v_owner, p_artist, 'R1', 'developing', 'refresh-evidence', c.claim_type, 'stale', current_date, r.id, 'artist_private'
   from public.claims c
   join public.availability_requests r on r.artist_id = c.artist_id and r.status = 'new'
+       -- APPSEC F2 · same org scope as R2 above.
+       and (r.organization_id is null or r.organization_id = v_owner)
   where c.artist_id = p_artist and c.method_label <> 'producer-confirmed'
     and c.expires_at is not null and c.expires_at < now()
   order by c.artist_id, c.expires_at asc
@@ -321,12 +425,26 @@ begin
    where artist_id = p_artist and audience = 'rep_summary';
 
   -- R2 · "a Passport this org may act on is meeting real inbound demand."
+  --
+  -- APPSEC F2 · TWO changes, both narrowing:
+  --   (1) the demand join is scoped to THIS org's own inbound requests
+  --       (r.organization_id = aa.organization_id). A request that belongs to
+  --       another org — or to the artist's own context (organization_id NULL,
+  --       which is every request the anonymous public-Passport path writes) —
+  --       can no longer trigger a projection for a rep. Fail-closed: with
+  --       today's data this join matches nothing and the R2 projection is
+  --       legitimately empty, which is the honest answer, not a bug.
+  --   (2) demand_request_id is NOT WRITTEN AT ALL. The projection says "this
+  --       Passport is meeting real inbound demand" — a binary. WHICH request,
+  --       with its event_type and location, is not authorized by any purpose
+  --       in this codebase, and radar_signal_rep_demand_check (§2) refuses the
+  --       pointer structurally, so this insert would fail if it tried.
   insert into public.radar_signal(organization_id, artist_id, rule_id, status, action_type,
-                                  evidence_basis, method_label, signal_date, demand_request_id,
+                                  evidence_basis, method_label, signal_date,
                                   audience, purpose, projection_id)
   select distinct on (aa.organization_id)
          aa.organization_id, p_artist, 'R2', 'strong', 'respond',
-         'demand', 'evidence-supported', current_date, r.id,
+         'demand', 'evidence-supported', current_date,
          'rep_summary', p.purpose, aa.id
   from public.artist_access aa
   join public.radar_projection_purpose p
@@ -335,12 +453,13 @@ begin
   join public.claims c on c.artist_id = a.id and c.visibility = 'passport-ok'
        and c.verification_status in ('verified','supporting')
   join public.availability_requests r on r.artist_id = a.id and r.status = 'new'
+       and r.organization_id = aa.organization_id
   where aa.artist_id = p_artist
     and aa.status = 'active'
     and (aa.expires_at is null or aa.expires_at > now())
   order by aa.organization_id, r.created_date desc
   on conflict (organization_id, artist_id, rule_id, audience) do update
-    set demand_request_id = excluded.demand_request_id, purpose = excluded.purpose,
+    set purpose = excluded.purpose,
         projection_id = excluded.projection_id, computed_at = now();
 
   -- R5 · "a producer-confirmed strength exists." A strength, never a gap.
@@ -511,6 +630,15 @@ begin
     perform public.generate_radar_rep_projection(v_artist);
     return null;
   end; $body$;
+
+  -- APPSEC F1 · CREATE OR REPLACE keeps an EXISTING function's ACL, but a
+  -- function that did not exist yet would be created at the platform default
+  -- (EXECUTE to PUBLIC + anon + authenticated + service_role). Re-assert the
+  -- minimum here so the tightening can never hand back what §5.a/§6.6 revoked.
+  revoke all on function public.recompute_radar_for_org(uuid)
+    from public, anon, authenticated, service_role;
+  revoke all on function public.radar_recompute_for_artist()
+    from public, anon, authenticated, service_role;
 end; $$;
 
 -- 6.5 · THE UNDO. Restores 010's read model exactly (plus §5's audience stamp).
@@ -539,10 +667,44 @@ begin
     return null;
   end; $body$;
 
+  -- APPSEC F1 · same re-assertion on the way back (see 6.4).
+  revoke all on function public.radar_recompute_for_artist()
+    from public, anon, authenticated, service_role;
+
   -- recompute_radar_for_org() is restored by re-running §5 of this file
   -- (idempotent CREATE OR REPLACE); the down migration does it for you.
   delete from public.radar_signal where audience = 'rep_summary';
 end; $$;
+
+-- ============================================================
+-- §6.6 · APPSEC F1 · PRIVILEGES FOR THE BREAKING HALF.
+--   apply_/revert_radar_audience_split() DROP AND CREATE RLS POLICIES as the
+--   definer, and revert_ DELETEs rows. Before this repair they carried the
+--   platform default and `set role anon; select
+--   public.apply_radar_audience_split();` SUCCEEDED on a local PostgreSQL 16
+--   replica of this schema — an anonymous web role rewriting the org read
+--   model. They are owner-signed acts: the owner runs them in the SQL editor
+--   as the owning role, which needs no grant. So the minimum exposure is
+--   LITERALLY NONE, and that is what is set here — the RPC surface is removed
+--   rather than narrowed, because a narrower grant would still be a grant, and
+--   nothing in the product ever calls these.
+--   The projection/recompute functions are trigger-reached only; the two
+--   trigger functions need no EXECUTE at all (checked at CREATE TRIGGER time).
+-- ============================================================
+revoke all on function public.recompute_radar_private_for_artist(uuid)
+  from public, anon, authenticated, service_role;
+revoke all on function public.generate_radar_rep_projection(uuid)
+  from public, anon, authenticated, service_role;
+revoke all on function public.radar_signal_rep_update_guard()
+  from public, anon, authenticated, service_role;
+revoke all on function public.apply_radar_audience_split()
+  from public, anon, authenticated, service_role;
+revoke all on function public.revert_radar_audience_split()
+  from public, anon, authenticated, service_role;
+-- 010 created this one; 042's apply_/revert_ replace its BODY. Assert the same
+-- minimum here so the file leaves no PUBLIC-executable function behind.
+revoke all on function public.radar_recompute_for_artist()
+  from public, anon, authenticated, service_role;
 
 -- 6.9 · OPTIONAL one-shot sweep, run AFTER apply_radar_audience_split() if the
 --       owner wants the already-materialized rep-org private rows gone
