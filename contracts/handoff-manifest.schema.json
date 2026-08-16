@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lock.show/contracts/handoff-manifest.schema.json",
+  "title": "LOCK.SHOW design handoff manifest",
+  "description": "Versioned SCHEMA ONLY. No manifest may be hand-authored against it: handoff/current/manifest.json is generated once Claude Design DS-01 passes independent QA, and is superseded in place. A manifest that cannot bind its Drive sources by id+version+revision is not a handoff.",
+  "x-authority": "schema",
+  "type": "object",
+  "required": [
+    "manifestVersion", "generatedAtHead", "sources", "acceptedPrototype", "screens",
+    "designSystem", "permissions", "measurement", "evidence", "verdict", "expiry", "rollback"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string", "const": "1.0.0" },
+    "generatedAtHead": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "Exact commit the manifest was generated at." },
+    "sources": {
+      "type": "array", "minItems": 1,
+      "description": "Drive owner documents this handoff binds. Staleness is checked against these.",
+      "items": {
+        "type": "object",
+        "required": ["driveFileId", "title", "version", "revisionOrChecksum"],
+        "properties": {
+          "driveFileId": { "type": "string" },
+          "title": { "type": "string" },
+          "version": { "type": "string" },
+          "revisionOrChecksum": { "type": "string" }
+        }
+      }
+    },
+    "acceptedPrototype": {
+      "type": "object", "required": ["bundle", "revision", "status"],
+      "properties": {
+        "bundle": { "type": "string" },
+        "revision": { "type": "string" },
+        "status": { "enum": ["DESIGN_REVIEW", "ACCEPTED_FOR_IMPLEMENTATION", "SUPERSEDED"] }
+      }
+    },
+    "screens": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["screenId", "states"],
+        "properties": {
+          "screenId": { "type": "string", "pattern": "^(ART|REP|PRO|EXT|CNF|ADM)-[A-Z0-9-]+$" },
+          "states": {
+            "type": "array", "minItems": 1,
+            "description": "Every declared state must resolve to a named fixture; the gate fails otherwise.",
+            "items": {
+              "type": "object", "required": ["state", "fixtureRef"],
+              "properties": { "state": { "type": "string" }, "fixtureRef": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "designSystem": {
+      "type": "object", "required": ["tokensRef", "components", "stringKeysRef"],
+      "description": "References only. Tokens, i18n and fixtures are NEVER copied into handoff folders.",
+      "properties": {
+        "tokensRef": { "type": "string" },
+        "stringKeysRef": { "type": "string" },
+        "assetsRef": { "type": "string" },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["name", "anchorRef"],
+            "description": "anchorRef is the code location that renders it; the gate fails if it renders nowhere.",
+            "properties": { "name": { "type": "string" }, "anchorRef": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object", "required": ["policyRefs", "readWrite"],
+      "description": "Permission behaviour lives in executable policy/schema/tests; this only references them.",
+      "properties": {
+        "policyRefs": { "type": "array", "items": { "type": "string" } },
+        "readWrite": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "measurement": {
+      "type": "object", "required": ["eventsRef"],
+      "properties": { "eventsRef": { "type": "string" }, "kpis": { "type": "array", "items": { "type": "string" } } }
+    },
+    "evidence": {
+      "type": "object", "required": ["evidenceRef", "responsive", "rtl", "a11y"],
+      "properties": {
+        "evidenceRef": { "type": "string", "description": "Path to the generated evidence/current.json for the same HEAD." },
+        "responsive": { "type": "array", "items": { "type": "string" } },
+        "rtl": { "type": "array", "items": { "type": "string" } },
+        "a11y": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "verdict": {
+      "type": "object", "required": ["selfQa", "independent"],
+      "description": "The implementer cannot accept their own work: independent.by must differ from selfQa.by.",
+      "properties": {
+        "selfQa": { "type": "object", "required": ["by", "result"], "properties": { "by": { "type": "string" }, "result": { "enum": ["pass", "fail"] } } },
+        "independent": { "type": "object", "required": ["by", "result"], "properties": { "by": { "type": "string" }, "result": { "enum": ["ACCEPT", "REJECT"] } } }
+      }
+    },
+    "expiry": { "type": "string", "format": "date-time", "description": "After this instant the manifest is stale and may not be cited as acceptance." },
+    "rollback": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

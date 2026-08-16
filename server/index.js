@@ -382,7 +382,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
 })
 
 // ──────────────────────────────────────────────────────────
-// buildSafePayload(artistId) — the PHYSICAL FIREWALL.
+// buildSafePayload(actId) — the PHYSICAL FIREWALL.
 // Reads an artist's buyer-safe data from LIVE tables using explicit
 // column lists. A score / percentile / exact head-count / gaps /
 // internal_confidence column could NOT appear here even if it existed.
@@ -493,27 +493,40 @@ app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
     const auth = await resolveActAuthority(req.userId, { artistId, actId })
     if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
 
+    // THE PATH ID MUST BE AUTHORIZED IN ITS OWN RIGHT. Both writes below key on
+    // :artistId, so authority over a body-supplied actId can never stand in for it.
+    // Independent QA reproduced the bypass this closes: POST /api/publish/<victim>
+    // with body.actId = <attacker's own Act> resolved authority over the ATTACKER's
+    // Act, passed the is_default gate, and published the VICTIM. Checking only the
+    // object you are authorized for — while writing to a different one — is the
+    // whole defect. This also returns 404 when :artistId has no artists row, which
+    // is the typed refusal that replaced a 500 on a mismatched-default Act.
+    if (!(await requireArtistOwner(req, res, artistId))) return
+
     // FAIL-CLOSED on non-default Acts, for the same reason the client refuses:
     // publication is still the Person-level `artists.published` flag, and both
     // claims_public_read (031) and pv_public_read (001) gate on it. Flipping it
     // for a second Act would publish EVERY Act's approved claims and snapshots at
     // once. Moving the switch to per-Act passport_versions.state is an owner
     // decision (041 already built the columns) — not a refactor to make here.
-    if (!auth.act.is_default) {
+    if (actId !== artistId || !auth.act.is_default) {
       return res.status(409).json({ error: 'act_publish_unavailable' })
     }
 
     const payload = await buildSafePayload(actId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 
-    const { error: upErr } = await admin.from('artists').update({ published: true }).eq('id', artistId)
-    if (upErr) throw upErr
-
-    // act_id stamped EXPLICITLY rather than left to trg_actfill_pv to infer.
+    // ORDER MATTERS. The version row is written FIRST: if the snapshot insert fails
+    // after `published` is already true, the artist is publicly live while the
+    // caller sees a 500 and no immutable record of what a buyer can see exists.
+    // act_id is stamped EXPLICITLY rather than left to trg_actfill_pv to infer.
     const { error: snapErr } = await admin
       .from('passport_versions')
       .insert({ artist_id: artistId, act_id: actId, snapshot: payload })
     if (snapErr) throw snapErr
+
+    const { error: upErr } = await admin.from('artists').update({ published: true }).eq('id', artistId)
+    if (upErr) throw upErr
 
     res.json({ ok: true, published: true, actId })
   } catch (e) {

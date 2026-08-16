@@ -42,7 +42,9 @@
     "test:visual": "node scripts/test-visual-regression.mjs",
     "test:release-artifacts": "node scripts/test-release-artifacts.mjs",
     "test:integration-contract": "node scripts/test-integration-contract.mjs",
-    "test:act-boundary": "node scripts/test-act-boundary.mjs"
+    "test:act-boundary": "node scripts/test-act-boundary.mjs",
+    "generate:env-schema": "node scripts/generate-env-schema.mjs",
+    "generate:evidence": "node scripts/generate-evidence.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

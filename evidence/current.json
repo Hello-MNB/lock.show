@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedBy": "scripts/generate-evidence.mjs",
+  "head": "a73dbf37365a0a8f12a045fbc45d1fcfdd705ba1",
+  "branch": "claude/b4-gigproof-discovery-e7749o",
+  "treeClean": false,
+  "dirtyFiles": [
+    "M CLAUDE.md",
+    " M docs/INTEGRATION-CONTRACT-REGISTER.md",
+    " M scripts/test-integration-contract.mjs",
+    "?? contracts/",
+    "?? scripts/generate-env-schema.mjs",
+    "?? scripts/generate-evidence.mjs"
+  ],
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-act3.log)",
+  "exitCode": 0,
+  "result": "green-but-tree-dirty (does NOT describe this HEAD)",
+  "gateCount": 30,
+  "gates": [
+    {
+      "id": "NAV CONTRACT",
+      "result": "pass"
+    },
+    {
+      "id": "FLOW CONTRACTS",
+      "result": "pass"
+    },
+    {
+      "id": "A1",
+      "result": "pass"
+    },
+    {
+      "id": "A2",
+      "result": "pass"
+    },
+    {
+      "id": "A3",
+      "result": "pass"
+    },
+    {
+      "id": "A4",
+      "result": "pass"
+    },
+    {
+      "id": "A5",
+      "result": "pass"
+    },
+    {
+      "id": "ANALYTICS CONTRACT",
+      "result": "pass"
+    },
+    {
+      "id": "ACT BOUNDARY",
+      "result": "pass"
+    },
+    {
+      "id": "LINK INTEGRITY",
+      "result": "pass"
+    },
+    {
+      "id": "SQL MIGRATION GATE",
+      "result": "pass"
+    },
+    {
+      "id": "SQL PRIVILEGES",
+      "result": "pass"
+    },
+    {
+      "id": "GUARDRAILS",
+      "result": "pass"
+    },
+    {
+      "id": "WIDGET-STATES",
+      "result": "pass"
+    },
+    {
+      "id": "ONE-TRUTH",
+      "result": "pass"
+    },
+    {
+      "id": "TENANT · MANDATE · ACT ISOLATION",
+      "result": "pass"
+    },
+    {
+      "id": "EMBED-INTEGRITY",
+      "result": "pass"
+    },
+    {
+      "id": "RELEASE ARTIFACTS",
+      "result": "pass"
+    },
+    {
+      "id": "INTEGRATION CONTRACT",
+      "result": "pass"
+    },
+    {
+      "id": "S1-S3",
+      "result": "pass"
+    },
+    {
+      "id": "S4",
+      "result": "pass"
+    },
+    {
+      "id": "S5",
+      "result": "pass"
+    },
+    {
+      "id": "S6-S7",
+      "result": "pass"
+    },
+    {
+      "id": "S9",
+      "result": "pass"
+    },
+    {
+      "id": "S8",
+      "result": "pass"
+    },
+    {
+      "id": "SEO CONTRACT",
+      "result": "pass"
+    },
+    {
+      "id": "SITE NAV CONFORMANCE",
+      "result": "pass"
+    },
+    {
+      "id": "HERO CONTRACT",
+      "result": "pass"
+    },
+    {
+      "id": "VISUAL REGRESSION",
+      "result": "pass"
+    },
+    {
+      "id": "FIT",
+      "result": "pass"
+    }
+  ],
+  "skips": [
+    "Nothing was skipped."
+  ],
+  "negativeControls": [
+    {
+      "gate": "INTEGRATION CONTRACT",
+      "mutations": [
+        "unregistered env read",
+        "undeclared route",
+        "committed sk-ant-shaped literal",
+        "requireAuth stripped from POST /api/notify",
+        "schema drift",
+        "value smuggled into schema",
+        "token-bearing endpoint in schema"
+      ]
+    },
+    {
+      "gate": "ACT BOUNDARY",
+      "mutations": [
+        "stale parameter reference",
+        "act_id stamp dropped",
+        "non-default fail-closed guard removed",
+        "authority falls back to the URL"
+      ]
+    }
+  ],
+  "independentVerdict": null,
+  "rollback": "Every gate and generated artifact in this record is additive. Revert by removing the named script/contract files and their package.json entries; no runtime code, migration or provider state is touched by the evidence layer itself.",
+  "unverified": [
+    ".env.local is absent — no credential was exercised; no named-environment readiness is claimed.",
+    "No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.",
+    "Migrations 038/040/041/042 remain drafted-or-authored and NOT applied to any live environment."
+  ]
+}

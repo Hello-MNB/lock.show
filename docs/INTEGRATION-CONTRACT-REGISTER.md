@@ -28,45 +28,59 @@ Class: `PUBLIC` = bundle-visible by design · `SECRET` = server-only credential 
 knob, no credential · `AMBIENT` = supplied by the runtime/framework · `TOOLING` = local test harness.
 
 <!-- MACHINE:ENV:START -->
-| Name | Class | Surface | Consumer | Activation |
-|---|---|---|---|---|
-| `VITE_SUPABASE_URL` | PUBLIC | client+server+ops | src/lib/supabase.js, server/index.js, scripts/seed.mjs | DECLARED |
-| `VITE_SUPABASE_ANON_KEY` | PUBLIC | client | src/lib/supabase.js | DECLARED |
-| `VITE_DEMO` | PUBLIC | client | src/lib/demo.js | DECLARED |
-| `VITE_NO_API` | PUBLIC | client | src (test/preview switch) | DECLARED |
-| `VITE_OAUTH_ENABLED` | PUBLIC | client | src/lib/constants.js | DECLARED |
-| `VITE_OAUTH_FACEBOOK` | PUBLIC | client | src/lib/constants.js | DECLARED |
-| `VITE_PAYMENTS_ENABLED` | PUBLIC | client | src/lib/constants.js | DECLARED |
-| `VITE_RADAR_AUDIENCE_SPLIT` | PUBLIC | client | src/lib/constants.js | DECLARED |
-| `NEXT_PUBLIC_APP_URL` | PUBLIC | website | website-next/lib/app-url.ts | DECLARED |
-| `NEXT_PUBLIC_GA_ID` | PUBLIC | website | website-next/app/layout.tsx | DECLARED |
-| `SUPABASE_SERVICE_ROLE_KEY` | SECRET | server+ops | server/index.js, scripts/seed.mjs | DECLARED |
-| `SUPABASE_ACCESS_TOKEN` | SECRET | ops | scripts/setup-remote.mjs | DECLARED |
-| `ANTHROPIC_API_KEY` | SECRET | server | server/index.js | DECLARED |
-| `RESEND_API_KEY` | SECRET | server | server/index.js | DECLARED |
-| `ANTHROPIC_MODEL` | CONFIG | server | server/index.js | DECLARED |
-| `ALLOWED_ORIGINS` | CONFIG | server | server/index.js | DECLARED |
-| `RATE_LIMIT_PER_MIN` | CONFIG | server | server/index.js | DECLARED |
-| `API_PORT` | CONFIG | server | server/index.js | DECLARED |
-| `EMAIL_ENABLED` | CONFIG | server | server/index.js | DECLARED |
-| `EMAIL_FROM` | CONFIG | server | server/index.js | DECLARED |
-| `CONFIRM_TOKEN_TTL_DAYS` | CONFIG | server | server/index.js | DECLARED |
-| `SHARE_LINK_SERVICE_ENABLED` | CONFIG | server | server/index.js | DECLARED |
-| `MONTHLY_BUDGET_USD` | CONFIG | server | server/index.js | DECLARED |
-| `COST_PER_ITEM_USD` | CONFIG | server | server/index.js | DECLARED |
-| `MAX_ITEMS_PER_JOB` | CONFIG | server | server/index.js | DECLARED |
-| `MAX_ITEMS_PER_USER_DAY` | CONFIG | server | server/index.js | DECLARED |
-| `ALERT_AT` | CONFIG | server | server/index.js | DECLARED |
-| `VERCEL` | AMBIENT | server | server/index.js (platform detect) | DECLARED |
-| `VERCEL_GIT_COMMIT_SHA` | AMBIENT | build | src/components/BuildStamp.jsx | DECLARED |
-| `PORT` | AMBIENT | server | server/index.js | DECLARED |
-| `BASE_URL` | AMBIENT | client | src/lib/appUrl.js, src/main.jsx | DECLARED |
-| `PROD` | AMBIENT | client | src/components/BuildStamp.jsx | DECLARED |
-| `DEV` | AMBIENT | client | src (dev-only branches) | DECLARED |
-| `PW_CHROME` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED |
-| `W41_PORT` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED |
-| `W41_QA_DIR` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED |
+| Name | Class | Surface | Consumer | Activation | Required |
+|---|---|---|---|---|---|
+| `VITE_SUPABASE_URL` | PUBLIC | client+server+ops | src/lib/supabase.js, server/index.js, scripts/seed.mjs | DECLARED | required |
+| `VITE_SUPABASE_ANON_KEY` | PUBLIC | client | src/lib/supabase.js | DECLARED | required |
+| `VITE_DEMO` | PUBLIC | client | src/lib/demo.js | DECLARED | optional |
+| `VITE_NO_API` | PUBLIC | client | src (test/preview switch) | DECLARED | optional |
+| `VITE_OAUTH_ENABLED` | PUBLIC | client | src/lib/constants.js | DECLARED | optional |
+| `VITE_OAUTH_FACEBOOK` | PUBLIC | client | src/lib/constants.js | DECLARED | optional |
+| `VITE_PAYMENTS_ENABLED` | PUBLIC | client | src/lib/constants.js | DECLARED | optional |
+| `VITE_RADAR_AUDIENCE_SPLIT` | PUBLIC | client | src/lib/constants.js | DECLARED | optional |
+| `NEXT_PUBLIC_APP_URL` | PUBLIC | website | website-next/lib/app-url.ts | DECLARED | optional |
+| `NEXT_PUBLIC_GA_ID` | PUBLIC | website | website-next/app/layout.tsx | DECLARED | optional |
+| `SUPABASE_SERVICE_ROLE_KEY` | SECRET | server+ops | server/index.js, scripts/seed.mjs | DECLARED | required |
+| `SUPABASE_ACCESS_TOKEN` | SECRET | ops | scripts/setup-remote.mjs | DECLARED | optional |
+| `ANTHROPIC_API_KEY` | SECRET | server | server/index.js | DECLARED | optional |
+| `RESEND_API_KEY` | SECRET | server | server/index.js | DECLARED | optional |
+| `ANTHROPIC_MODEL` | CONFIG | server | server/index.js | DECLARED | optional |
+| `ALLOWED_ORIGINS` | CONFIG | server | server/index.js | DECLARED | optional |
+| `RATE_LIMIT_PER_MIN` | CONFIG | server | server/index.js | DECLARED | optional |
+| `API_PORT` | CONFIG | server | server/index.js | DECLARED | optional |
+| `EMAIL_ENABLED` | CONFIG | server | server/index.js | DECLARED | optional |
+| `EMAIL_FROM` | CONFIG | server | server/index.js | DECLARED | optional |
+| `CONFIRM_TOKEN_TTL_DAYS` | CONFIG | server | server/index.js | DECLARED | optional |
+| `SHARE_LINK_SERVICE_ENABLED` | CONFIG | server | server/index.js | DECLARED | optional |
+| `MONTHLY_BUDGET_USD` | CONFIG | server | server/index.js | DECLARED | optional |
+| `COST_PER_ITEM_USD` | CONFIG | server | server/index.js | DECLARED | optional |
+| `MAX_ITEMS_PER_JOB` | CONFIG | server | server/index.js | DECLARED | optional |
+| `MAX_ITEMS_PER_USER_DAY` | CONFIG | server | server/index.js | DECLARED | optional |
+| `ALERT_AT` | CONFIG | server | server/index.js | DECLARED | optional |
+| `VERCEL` | AMBIENT | server | server/index.js (platform detect) | DECLARED | optional |
+| `VERCEL_GIT_COMMIT_SHA` | AMBIENT | build | src/components/BuildStamp.jsx | DECLARED | optional |
+| `PORT` | AMBIENT | server | server/index.js | DECLARED | optional |
+| `BASE_URL` | AMBIENT | client | src/lib/appUrl.js, src/main.jsx | DECLARED | optional |
+| `PROD` | AMBIENT | client | src/components/BuildStamp.jsx | DECLARED | optional |
+| `DEV` | AMBIENT | client | src (dev-only branches) | DECLARED | optional |
+| `PW_CHROME` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED | optional |
+| `W41_PORT` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED | optional |
+| `W41_QA_DIR` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED | optional |
 <!-- MACHINE:ENV:END -->
+
+**Requiredness is a fact recorded here, verified from code — the generated schema only projects it.**
+`VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`: without both, `realConfig` is false and the client cannot
+reach the database (`src/lib/supabase.js`). `SUPABASE_SERVICE_ROLE_KEY`: `admin` is null without it and every
+privileged server route refuses (`server/index.js`). Everything else carries a code default or a documented
+fallback — `ANTHROPIC_API_KEY` falls back to `src/lib/ai/stub.js`, `NEXT_PUBLIC_APP_URL` to `'/app'`,
+`ANTHROPIC_MODEL` and all CONFIG knobs to literals — so marking them required would be false.
+
+## 1a · Generated machine projection
+
+`contracts/env.schema.json` is generated from the table above by `scripts/generate-env-schema.mjs`.
+It is a **machine projection, not a second authority**: it carries names, types, class, purpose and
+requiredness only — zero values, zero secrets, zero token-bearing URLs. `npm run test:integration-contract`
+regenerates it in memory and fails on any drift, so the two cannot diverge.
 
 ## 2 · Ownership and lifecycle
 

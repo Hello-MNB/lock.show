@@ -37,3 +37,33 @@ MEMORY RULE (owner directive): after any context compaction, the FIRST task is t
 memory — re-read docs/SESSION-MEMORY.md, docs/TASK-STATUS-BOARD.md, and the session keys
 registry before doing anything else. Every chat reply ends with the priority-sorted task board
 and the open pending-from-owner list. Answer the owner in ENGLISH always.
+OPERATING LAWS (cold-start; added 16 Aug 2026 by owner ruling). These govern HOW to work.
+They deliberately carry no product scope, version or status claim — those stale, and live in the
+canon doc set and in generated evidence, never here.
+
+PREFLIGHT (before any change): exact branch · HEAD · dirty state · background work in flight ·
+whether a local PostgreSQL is up (several gates SKIP without it, and a skip exits 0 — a skip is NOT
+a pass). Never `git checkout --` / `git reset` a file carrying uncommitted work; back it up first.
+
+AUTHORITY ORDER: Drive owner contracts are product canon. This repo holds executable projections of
+current authority, interface contracts and observed evidence — never a second product specification.
+Canon, permissions, entity rules and data contracts always override prototypes and repo docs.
+Machine projections (contracts/env.schema.json) are generated, never hand-authored.
+
+ROLE SEPARATION: the implementer cannot accept their own work. Substantive increments get an
+independent adversarial review that is allowed to REJECT. Report observed facts with file:line or
+command output; write "unverified" rather than inferring. Never claim a test that was not run.
+
+CONTINUE / STOP: continue autonomously on reversible work — code, schemas, fixtures, tests, docs,
+local/synthetic databases. STOP and ask for: merge, deploy, live migration, provider-console change,
+secret restore/rotation, real user data, outreach, or any Drive write. A missing key or environment
+LOWERS the evidence state; it never stops reversible work, and it never permits a
+named-environment readiness claim.
+
+GATE DISCIPLINE: a gate that has never failed proves nothing — mutation-test every new gate by
+injecting the defect it exists to catch, then restore. Syntax checks cannot see a ReferenceError:
+if a path matters, execute it.
+
+EVIDENCE: docs/INTEGRATION-CONTRACT-REGISTER.md (interfaces/keys, human authority) ·
+contracts/env.schema.json (generated projection) · evidence/current.json (generated per exact HEAD) ·
+docs/TASK-REGISTER.md (work log) · docs/OWNER-PENDING.md (what only the owner can unblock).

@@ -20,6 +20,7 @@
 // ============================================================
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { execSync } from 'node:child_process'
+import { parseRegister, buildSchema, SCHEMA as ENV_SCHEMA_PATH } from './generate-env-schema.mjs'
 import { join, extname } from 'node:path'
 
 const ROOT = process.cwd()
@@ -252,6 +253,38 @@ if (/\b(ACTIVE|GREEN|WORKING|VERIFIED OK)\b/.test(regText.replace(/WITNESSED:\d{
   bad('the register contains an unqualified ACTIVE/GREEN/WORKING claim — only WITNESSED:<date> may assert a working provider'); honesty++
 }
 if (!honesty) ok(`${registered.size} entries carry an honest activation state (DECLARED or WITNESSED:<date>)`)
+
+// ── [8] generated env schema is a faithful, value-free projection ───────────
+// Owner ruling 16 Aug 2026: contracts/env.schema.json is GENERATED FROM the
+// register and is a machine projection, never a second authority. This inspector
+// is what makes that true rather than aspirational — the register and the schema
+// cannot diverge without failing the build.
+console.log('[8] contracts/env.schema.json is a current, value-free projection of the register')
+if (!existsSync(join(ROOT, ENV_SCHEMA_PATH))) {
+  bad(`${ENV_SCHEMA_PATH} is missing — run: node scripts/generate-env-schema.mjs`)
+} else {
+  const onDisk = readFileSync(join(ROOT, ENV_SCHEMA_PATH), 'utf8')
+  const expected = JSON.stringify(buildSchema(parseRegister(regText)), null, 2) + '\n'
+  if (onDisk !== expected) bad(`${ENV_SCHEMA_PATH} has drifted from the register — regenerate it`)
+  else ok(`schema regenerates identically from the register (${registered.size} entries)`)
+
+  let parsed = null
+  try { parsed = JSON.parse(onDisk) } catch { bad(`${ENV_SCHEMA_PATH} is not valid JSON`) }
+  if (parsed) {
+    if (parsed['x-authority'] !== 'projection') bad('the schema does not declare itself a projection')
+    // A projection of NAMES must never carry a value. Credential shapes are checked
+    // with the same patterns proven live in [3]; URLs are allowed only as the
+    // schema's own $id/$schema identifiers, never as a token-bearing endpoint.
+    for (const p of PATTERNS) if (p.re.test(onDisk)) bad(`${ENV_SCHEMA_PATH} contains a ${p.id}-shaped value`)
+    const urls = (onDisk.match(/https?:\/\/[^"]+/g) || []).filter((u) => u !== parsed.$schema && u !== parsed.$id)
+    if (urls.length) bad(`${ENV_SCHEMA_PATH} names ${urls.length} URL(s) beyond its own identifiers: ${urls[0]}`)
+    const declaredRequired = new Set(parsed.required || [])
+    for (const r of declaredRequired) {
+      if (!registered.has(r)) bad(`schema requires ${r}, which the register does not list`)
+    }
+    if (!violations) ok(`no value, credential shape or endpoint present; ${declaredRequired.size} required entries trace to the register`)
+  }
+}
 
 console.log('')
 if (violations) {
