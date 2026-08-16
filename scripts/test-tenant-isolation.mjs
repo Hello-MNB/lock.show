@@ -94,18 +94,31 @@ console.log('\nSTATIC — buyer-facing Passport reads are Act-scoped')
     ['server/index.js  buildSafePayload → profile_items',
       region(server, 'async function buildSafePayload', "from('claims')")],
     ['server/index.js  buildSafePayload → claims',
-      region(server, "  const { data: claims, error: cErr } = await admin", '  const now = Date.now()')],
+      region(server, '  const { data: claims, error: cErr } = await scopeToAct(', '  const now = Date.now()')],
     ['server/index.js  GET /api/passport/:artistId (newest snapshot)',
       region(server, "app.get('/api/passport/:artistId'", 'Fallback:')],
     ['src/lib/db.js    buildPassportSnapshot (the published snapshot)',
       region(dbjs, 'async function buildPassportSnapshot', 'export async function publishPassport')],
   ]
+  // The two server reads now share one scoping helper, so `act_id` need not appear
+  // literally in each region — but a region that names NEITHER is unscoped. The
+  // helper itself is asserted separately below, so routing through it cannot
+  // become a way to pass this check while scoping nothing.
   for (const [label, text] of SITES) {
-    check(text !== null && /act_id/.test(text),
+    check(text !== null && /act_id|scopeToAct\(/.test(text),
       `${label} — Act-scoped`,
       text === null ? `${label} — anchor not found; this gate no longer reads the shipped code`
         : `⚠ ${label} scopes by artist_id ONLY — a second Act's evidence enters this Act's public Passport`)
   }
+  // The shared helper must carry BOTH branches: NULL-tolerant for the default Act
+  // (legacy rows predate the act_id backfill) and STRICT for a non-default Act,
+  // where a NULL act_id row belongs to the DEFAULT Act and tolerating it would
+  // import that Act's evidence — the transfer canon forbids.
+  const helper = region(server, '  const scopeToAct = (q) =>', '  const { data: items')
+  check(helper !== null && /isDefaultAct/.test(helper) && /act_id\.is\.null/.test(helper) && /q\.eq\('act_id', actId\)/.test(helper),
+    'server/index.js  scopeToAct carries the default-tolerant AND non-default-strict branches',
+    'scopeToAct is missing, or no longer distinguishes the default Act from a non-default one')
+
   // HONEST GAP, asserted so it cannot be quietly forgotten: the ANON half of
   // getPublicPassport() cannot be Act-scoped in the client, because 016/025
   // never granted anon claims.act_id / profile_items.act_id. Executed proof in A6.

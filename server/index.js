@@ -46,6 +46,7 @@ const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : nu
 // an accepted pilot-stage bound, not a persistence guarantee.
 // ──────────────────────────────────────────────────────────
 const RATE_LIMIT_PER_MIN = Number(process.env.RATE_LIMIT_PER_MIN) || 30 // per IP, sliding 60s
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_ITEMS_PER_JOB = Number(process.env.MAX_ITEMS_PER_JOB) || 15 // per process-evidence call
 const MAX_ITEMS_PER_USER_DAY = Number(process.env.MAX_ITEMS_PER_USER_DAY) || 15 // AI items/user/day
 const CONFIRM_TOKEN_TTL_DAYS = Number(process.env.CONFIRM_TOKEN_TTL_DAYS) || 14 // G15 expiry
@@ -161,6 +162,42 @@ async function requireArtistOwner(req, res, artistId) {
     return false
   }
   return true
+}
+
+// ──────────────────────────────────────────────────────────
+// resolveActAuthority(userId, { artistId, actId }) — THE ACT BOUNDARY.
+//
+// Owner contract (Product 30.10 v6.4 §7A, APPROVED BY MARIA; ratified 16 Aug
+// 2026): "PUBLISH requires Artist/Act ownership or explicit ArtistAccess for
+// audience, purpose, version and time." And §2: "User Account authenticates but
+// does not grant authority. Login, Organization membership, job title, recipient
+// access or prior authority never grants broader authority by implication."
+//
+// So the caller-supplied :artistId in the URL carries NO authority. Authority is
+// resolved against the ACT, from the JWT subject only. An explicit actId wins;
+// otherwise the path id is read AS an Act id — exactly equivalent for a default
+// Act, because migration 020 backfilled act.id = artists.id.
+//
+// FAIL-CLOSED: anything that is not Act ownership is denied. Explicit
+// ArtistAccess (a representation org publishing under mandate) CANNOT be honoured
+// yet — artist_access has no act_id, no audience, no purpose and no version
+// binding, so 3 of the contract's 4 bounds are inexpressible. Denying every
+// non-owner is the contract-correct temporary behaviour, and it is a deliberate
+// refusal of all representation publishing, recorded in docs/OWNER-PENDING.md.
+// ──────────────────────────────────────────────────────────
+async function resolveActAuthority(userId, { artistId, actId } = {}) {
+  const wanted = actId || artistId
+  if (!wanted || !UUID_RE.test(String(wanted))) return { ok: false, status: 400, error: 'act_required' }
+
+  const { data: act, error } = await admin
+    .from('act')
+    .select('id, person_id, stage_name, genre, city, photo_url, music_links, is_default')
+    .eq('id', wanted)
+    .maybeSingle()
+  if (error) throw error
+  if (!act) return { ok: false, status: 404, error: 'act_not_found' }
+  if (act.person_id === userId) return { ok: true, act, authority: 'act_owner' }
+  return { ok: false, status: 403, error: 'forbidden' }
 }
 
 // ──────────────────────────────────────────────────────────
@@ -351,31 +388,60 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
 // internal_confidence column could NOT appear here even if it existed.
 // Used both to write a publish snapshot and as a live fallback.
 // ──────────────────────────────────────────────────────────
-async function buildSafePayload(artistId) {
+async function buildSafePayload(actId) {
+  // IDENTITY. The id is an ACT id. For a DEFAULT Act it is also the artists id
+  // (migration 020 backfilled act.id = artists.id) and that artists row is the
+  // SAME entity, so reading it is not a cross-Act transfer and today's payload
+  // stays byte-identical. A NON-DEFAULT Act has no artists row: it is served from
+  // its own `act` row and legitimately starts EMPTY on the commercial fields
+  // `act` has no column for (CLAUDE.md: "evidence is per-Act and
+  // NON-transferable — a new Act starts empty"). Inheriting those from the
+  // person's other Act is exactly the transfer canon forbids.
   const { data: artist, error: aErr } = await admin
     .from('artists')
     .select(
       'id, stage_name, name, genre, city, photo_url, one_line, regions, set_length, ' +
       'invoice_ready, music_links, lineup_frequency_band, sells_tickets, price_band, community_size_band'
     )
-    .eq('id', artistId)
+    .eq('id', actId)
     .maybeSingle()
   if (aErr) throw aErr
-  if (!artist) return null
 
-  const { data: items, error: iErr } = await admin
-    .from('profile_items')
-    .select('id, item_type, title, detail, item_date, public_url, source_status')
-    .eq('artist_id', artistId)
-    // ACT SCOPE (multi-Act, CLAUDE.md: "evidence is per-Act and NON-transferable").
-    // Every child table's artist_id is NOT NULL and references public.artists, and a
-    // non-default Act has no artists row — so a second Act's rows hang off the FIRST
-    // Act's artist_id and an artist_id-only read merges two Acts into one Passport.
-    // Reproduced on a real PostgreSQL 16 by scripts/test-tenant-isolation.mjs (A7).
-    // NULL-tolerant on purpose: migration 020 backfilled act_id = artist_id and
-    // trg_actfill_* keeps filling it, so this drops nothing that exists today and
-    // only ever excludes a row that belongs to a DIFFERENT Act.
-    .or(`act_id.eq.${artistId},act_id.is.null`)
+  const isDefaultAct = Boolean(artist)
+  let identity = artist
+  if (!identity) {
+    const { data: act, error: actErr } = await admin
+      .from('act')
+      .select('id, stage_name, genre, city, photo_url, music_links')
+      .eq('id', actId)
+      .maybeSingle()
+    if (actErr) throw actErr
+    if (!act) return null
+    identity = {
+      id: act.id, stage_name: act.stage_name, name: act.stage_name,
+      genre: act.genre, city: act.city, photo_url: act.photo_url,
+      music_links: act.music_links,
+      one_line: null, regions: null, set_length: null, invoice_ready: null,
+      lineup_frequency_band: null, sells_tickets: null, price_band: null,
+      community_size_band: null,
+    }
+  }
+
+  // EVIDENCE SCOPE. NULL-tolerance is correct ONLY for the default Act, whose
+  // legacy rows predate the act_id backfill. For a NON-DEFAULT Act a NULL act_id
+  // row belongs to the DEFAULT Act, so tolerating NULL there would import that
+  // Act's evidence — exactly the transfer canon forbids. Strict act_id then, and
+  // no artist_id filter: a second Act's rows hang off the FIRST Act's artist_id,
+  // so filtering by it would return nothing.
+  // Reproduced on a real PostgreSQL 16 by scripts/test-tenant-isolation.mjs (A7).
+  const scopeToAct = (q) => (isDefaultAct
+    ? q.eq('artist_id', actId).or(`act_id.eq.${actId},act_id.is.null`)
+    : q.eq('act_id', actId))
+
+  const { data: items, error: iErr } = await scopeToAct(
+    admin
+      .from('profile_items')
+      .select('id, item_type, title, detail, item_date, public_url, source_status'))
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .order('created_at', { ascending: false })
   if (iErr) throw iErr
@@ -383,11 +449,10 @@ async function buildSafePayload(artistId) {
   // Claims: passport-ok + verified/supporting + ARTIST-APPROVED only (031 gate —
   // this admin client bypasses RLS, so the approval gate must be explicit here or
   // unreviewed claims leak into the public payload). No internal_confidence/model_version/extraction_method.
-  const { data: claims, error: cErr } = await admin
-    .from('claims')
-    .select('id, claim_type, value, source_type, verification_status, reason_code, method_label, expires_at')
-    .eq('artist_id', artistId)
-    .or(`act_id.eq.${artistId},act_id.is.null`)   // ACT SCOPE — see the items read above
+  const { data: claims, error: cErr } = await scopeToAct(
+    admin
+      .from('claims')
+      .select('id, claim_type, value, source_type, verification_status, reason_code, method_label, expires_at'))
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .in('verification_status', PUBLISHABLE_STATUSES)
     .eq('artist_approved', true)
@@ -404,7 +469,7 @@ async function buildSafePayload(artistId) {
   })
 
   // published:true so the public page renders; the GET re-checks live publish state.
-  return { artist: { ...artist, published: true }, items: items ?? [], claims: safeClaims }
+  return { artist: { ...identity, published: true }, items: items ?? [], claims: safeClaims }
 }
 
 // ──────────────────────────────────────────────────────────
@@ -421,19 +486,36 @@ app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
       })
     }
     const { artistId } = req.params
-    if (!(await requireArtistOwner(req, res, artistId))) return
-    const payload = await buildSafePayload(artistId)
+    const actId = req.body?.actId || artistId
+
+    // AUTHORITY resolves against the ACT, from the JWT subject only — the URL is
+    // caller-supplied and carries no authority (Product 30.10 §2/§7A).
+    const auth = await resolveActAuthority(req.userId, { artistId, actId })
+    if (!auth.ok) return res.status(auth.status).json({ error: auth.error })
+
+    // FAIL-CLOSED on non-default Acts, for the same reason the client refuses:
+    // publication is still the Person-level `artists.published` flag, and both
+    // claims_public_read (031) and pv_public_read (001) gate on it. Flipping it
+    // for a second Act would publish EVERY Act's approved claims and snapshots at
+    // once. Moving the switch to per-Act passport_versions.state is an owner
+    // decision (041 already built the columns) — not a refactor to make here.
+    if (!auth.act.is_default) {
+      return res.status(409).json({ error: 'act_publish_unavailable' })
+    }
+
+    const payload = await buildSafePayload(actId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 
     const { error: upErr } = await admin.from('artists').update({ published: true }).eq('id', artistId)
     if (upErr) throw upErr
 
+    // act_id stamped EXPLICITLY rather than left to trg_actfill_pv to infer.
     const { error: snapErr } = await admin
       .from('passport_versions')
-      .insert({ artist_id: artistId, snapshot: payload })
+      .insert({ artist_id: artistId, act_id: actId, snapshot: payload })
     if (snapErr) throw snapErr
 
-    res.json({ ok: true, published: true })
+    res.json({ ok: true, published: true, actId })
   } catch (e) {
     console.error('[publish]', e)
     res.status(500).json({ error: 'server_error' })
@@ -892,7 +974,6 @@ export async function sendGateEmail({ to, artistName, requesterOrg } = {}) {
 // (never caller-controlled free text into someone's bell). Rate-limited by the
 // global per-IP limiter; schema-validated to a closed field list.
 // ──────────────────────────────────────────────────────────
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 app.post('/api/availability-request', async (req, res) => {
   try {
     if (!admin) return res.status(503).json({ error: 'Supabase not configured.' })

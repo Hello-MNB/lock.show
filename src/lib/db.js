@@ -551,7 +551,7 @@ export async function getPublicPassport(id) {
 // Owner-side immutable snapshot. The owner's RLS sees ALL visibilities, so unlike
 // the anon read we MUST filter to passport-ok explicitly here (mirrors the server's
 // buildSafePayload). Buyer-safe columns only — never private/score columns.
-async function buildPassportSnapshot(artistId) {
+async function buildPassportSnapshot(artistId, actId = artistId) {
   const artist = await getArtist(artistId)
   // ACT SCOPE (multi-Act, CLAUDE.md: "evidence is per-Act and NON-transferable").
   // A non-default Act has no `artists` row, so its evidence hangs off the FIRST
@@ -568,7 +568,13 @@ async function buildPassportSnapshot(artistId) {
   // authority (which Act does this insert belong to); this is the READ scope on
   // the buyer-facing side. Same transition rule — act.id === artists.id for the
   // default Act — expressed once on each side of the boundary.
-  const actScope = `act_id.eq.${artistId},act_id.is.null`
+  // NULL-tolerance is correct ONLY for the default Act, whose legacy rows predate
+  // the act_id backfill. For a NON-DEFAULT Act a NULL act_id row belongs to the
+  // DEFAULT Act, so tolerating NULL there would import that Act's evidence — the
+  // transfer canon forbids. (Non-default publishing is refused upstream today; the
+  // scope is written correctly here so it cannot become wrong when it is enabled.)
+  const isDefaultAct = actId === artistId
+  const actScope = isDefaultAct ? `act_id.eq.${actId},act_id.is.null` : `act_id.eq.${actId}`
   const [itemsRes, claimsRes] = await Promise.all([
     supabase.from('profile_items')
       .select('id, item_type, title, detail, item_date, public_url, source_status')
@@ -585,20 +591,46 @@ async function buildPassportSnapshot(artistId) {
 // is the firewall gate (anon then reads live via getPublicPassport). The snapshot
 // (pv_owner_insert / migration 017) is the immutable record; it's best-effort so a
 // missing 017 never blocks publishing — the live-read view works regardless.
-export async function publishPassport(artistId) {
+export async function publishPassport(artistId, actId = artistId) {
   if (DEMO) return { ok: true, published: true, snapshotWritten: true }
+
+  // ACT BOUNDARY (owner ruling 16 Aug 2026: "PASSPORT publication is Act-scoped").
+  // Publishing a NON-DEFAULT Act is refused here, deliberately and fail-closed.
+  // Reason, precisely: the public read is anonymous (getPublicPassport below) and
+  // anon cannot filter on act_id — migrations 016/025 never granted anon
+  // claims.act_id / profile_items.act_id, and passport_versions is read newest-first
+  // by artist_id. So a second Act's snapshot would be served at the FIRST Act's
+  // public URL. Enabling this needs the act-scoped anon read (migration 043,
+  // drafted-not-applied), not a client change. Refusing is the safe half.
+  if (actId !== artistId) {
+    const err = new Error('publishing a non-default Act needs the act-scoped public read (migration 043)')
+    err.code = 'act_publish_unavailable'
+    throw err
+  }
+
   const { error: upErr } = await supabase.from('artists').update({ published: true }).eq('id', artistId)
   if (upErr) throw upErr
   let snapshotWritten = false
+  let snapshotError = null
   try {
-    const snapshot = await buildPassportSnapshot(artistId)
-    const { error: snapErr } = await supabase.from('passport_versions').insert({ artist_id: artistId, snapshot })
+    const snapshot = await buildPassportSnapshot(artistId, actId)
+    // act_id stamped EXPLICITLY. Until now the writer sent {artist_id, snapshot}
+    // only and trg_actfill_pv (020) inferred act_id = artist_id, so the row carried
+    // an inferred provenance rather than a declared one. Same value for a default
+    // Act; the difference is that the record now states which Act it is.
+    const { error: snapErr } = await supabase
+      .from('passport_versions')
+      .insert({ artist_id: artistId, act_id: actId, snapshot })
     if (snapErr) throw snapErr
     snapshotWritten = true
   } catch (e) {
-    console.warn('[publish] immutable snapshot deferred (apply migration 017 pv_owner_insert):', e?.message || e)
+    // Best-effort BY DESIGN (a missing 017 must never block publishing). But the
+    // reason is now returned instead of only reaching the console, so a caller can
+    // stop telling the artist the record exists when it does not.
+    snapshotError = e?.message || String(e)
+    console.warn('[publish] immutable snapshot deferred (apply migration 017 pv_owner_insert):', snapshotError)
   }
-  return { ok: true, published: true, snapshotWritten }
+  return { ok: true, published: true, snapshotWritten, snapshotError }
 }
 
 export async function unpublishArtist(artist) {

@@ -73,6 +73,15 @@ const mock = createServer(async (req, res) => {
     const row = ARTISTS[idFilter]
     return sendJson(res, 200, row ? [row] : [])
   }
+  // `act` mirrors production: migration 020's trg_act_from_artist guarantees a
+  // default Act row (act.id = artists.id) for EVERY artists row. The publish route
+  // resolves authority against that row, so the mock must carry it — without it the
+  // server correctly answers 404 act_not_found and the 403 ownership assertion
+  // below would be testing a missing fixture rather than the ownership rule.
+  if (u.pathname === '/rest/v1/act') {
+    const a = ARTISTS[idFilter]
+    return sendJson(res, 200, a ? [{ id: a.id, person_id: a.created_by, stage_name: a.stage_name, is_default: true }] : [])
+  }
   if (u.pathname === '/rest/v1/claims') {
     const row = idFilter === CLAIM_B ? { id: CLAIM_B, artist_id: ARTIST_B } : null
     return sendJson(res, 200, row ? [row] : [])
