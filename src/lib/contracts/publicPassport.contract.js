@@ -260,8 +260,24 @@ export const PUBLIC_CLAIM_REQUIREMENTS = Object.freeze({
 })
 
 // ── Locale + OG registry ────────────────────────────────────────────────────
-/** Active at launch. HE first: the buyer is Israeli. */
+// TWO LISTS, AND THE DIFFERENCE BETWEEN THEM IS THE WHOLE POINT.
+//   ACTIVE_LOCALES  — what this surface is INTENDED to serve at launch (HE+EN;
+//                     the buyer is Israeli, so HE is not an afterthought).
+//   ROUTED_LOCALES  — what actually has a real, server-rendered route tree
+//                     TODAY. Only a routed locale may ever be emitted as an
+//                     hreflang alternate: an alternate pointing at a URL that
+//                     404s, or that silently serves English, is worse than no
+//                     alternate at all — the whole cluster gets ignored.
+// This mirrors website-next/lib/locales.ts (Lane C), which marks `he` INACTIVE
+// because the HE marketing route tree and its natively-reviewed copy do not
+// exist yet. The two files must not disagree: this one declares the INTENT,
+// that one declares the SITE's shipped reality, and emission takes the
+// intersection. When HE routes ship, `he` joins ROUTED_LOCALES here and
+// 'active' there, and nothing else changes.
+/** Intended for launch on this surface. HE first: the buyer is Israeli. */
 export const ACTIVE_LOCALES = Object.freeze(['he', 'en'])
+/** Locales with a real route tree today. EMISSION IS GATED ON THIS LIST. */
+export const ROUTED_LOCALES = Object.freeze(['en'])
 /** Registered so the shape exists, INACTIVE so nothing is claimed that does not
  *  exist. An hreflang alternate to an untranslated page is a lie to a crawler. */
 export const REGISTERED_INACTIVE_LOCALES = Object.freeze(['ru', 'de'])

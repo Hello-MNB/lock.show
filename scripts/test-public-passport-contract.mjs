@@ -58,7 +58,7 @@ const P = await import('../src/lib/publicPassport.js')
 const {
   PUBLIC_STATE, PUBLIC_STATES, PUBLIC_MODE, DEFAULT_PUBLIC_MODE, PUBLICATION_STATE,
   CONSENT_SCOPE, CONSENT_TEXT_VERSION, CONSENT_REFUSAL, VERSION_POLICY,
-  ACTIVE_LOCALES, REGISTERED_INACTIVE_LOCALES, LOCALE_META, X_DEFAULT_LOCALE,
+  ACTIVE_LOCALES, ROUTED_LOCALES, REGISTERED_INACTIVE_LOCALES, LOCALE_META, X_DEFAULT_LOCALE,
   FORBIDDEN_SCHEMA_KEYS, PUBLIC_READABLE_VERSION_STATES, REDIRECTING_VERSION_STATES,
   resolvePublicPassport, evaluateIndexConsent, projectPublicPassport,
   sitemapEntryFor, sitemapEntries, hreflangAlternatesFor, isWellFormedPublicSlug,
@@ -321,24 +321,50 @@ for (const c of CASES) {
 check(Object.isFrozen(resolvePublicPassport(CASES[0].input, { now: NOW })), 'results are frozen')
 
 // ── P8 · hreflang reciprocity, inactive locales never emitted ───────────────
-console.log('\n[P8] hreflang reciprocity + registered-inactive locales absent')
+console.log('\n[P8] hreflang: emission = ACTIVE ∩ ROUTED, reciprocity, no unrouted claim')
 const alts = hreflangAlternatesFor(SLUG)
 const tags = alts.map((a) => a.hreflang)
-for (const l of ACTIVE_LOCALES) {
-  check(tags.includes(LOCALE_META[l].bcp47), `active locale ${l} present as ${LOCALE_META[l].bcp47}`)
+// only a locale that BOTH is intended for launch AND has a route tree is emitted
+const emittable = ACTIVE_LOCALES.filter((l) => ROUTED_LOCALES.includes(l))
+for (const l of emittable) {
+  check(tags.includes(LOCALE_META[l].bcp47), `routed+active locale ${l} emitted as ${LOCALE_META[l].bcp47}`)
 }
 check(tags.includes('x-default'), 'x-default present')
+for (const l of ACTIVE_LOCALES.filter((x) => !ROUTED_LOCALES.includes(x))) {
+  if (tags.includes(LOCALE_META[l].bcp47)) fail(`locale ${l} is launch-intended but has NO route tree — emitting its hreflang points a crawler at a URL that does not exist`)
+}
+ok(`unrouted launch-intent locales (${ACTIVE_LOCALES.filter((x) => !ROUTED_LOCALES.includes(x)).join(', ') || 'none'}) not emitted`)
 for (const l of REGISTERED_INACTIVE_LOCALES) {
   if (tags.includes(LOCALE_META[l].bcp47)) fail(`inactive locale ${l} emitted as an hreflang alternate`)
+  if (ROUTED_LOCALES.includes(l)) fail(`registered-inactive locale ${l} must never be in ROUTED_LOCALES`)
 }
-ok(`inactive locales (${REGISTERED_INACTIVE_LOCALES.join(', ')}) not emitted`)
+ok(`registered-inactive locales (${REGISTERED_INACTIVE_LOCALES.join(', ')}) not emitted`)
+// when HE ships its route tree the set grows without a code change — proven by
+// passing the future routed set explicitly
+const future = hreflangAlternatesFor(SLUG, { routed: ['en', 'he'] }).map((a) => a.hreflang)
+check(future.includes('he-IL') && future.includes('en') && future.includes('x-default'),
+  'flipping he into ROUTED_LOCALES emits the reciprocal HE/EN pair with no other change')
+check(!future.includes('ru') && !future.includes('de'), 'a routed-set flip cannot smuggle in an inactive locale')
 // reciprocity: the set generated from any locale is identical
-for (const l of ACTIVE_LOCALES) {
+for (const l of emittable) {
   const other = hreflangAlternatesFor(SLUG, { locales: ACTIVE_LOCALES })
   check(JSON.stringify(other) === JSON.stringify(alts), `alternate set from ${l} is identical (reciprocal)`)
 }
-check(new Set(alts.map((a) => a.href)).size >= ACTIVE_LOCALES.length,
-  'each active locale has its own URL (hreflang requires distinct URLs)')
+check(new Set(alts.map((a) => a.href)).size >= emittable.length,
+  'each emitted locale has its own URL (hreflang requires distinct URLs)')
+// cross-lane agreement: the site's own registry must not contradict this one
+const siteLocales = existsSync('website-next/lib/locales.ts') ? readFileSync('website-next/lib/locales.ts', 'utf8') : ''
+if (siteLocales) {
+  const siteActive = [...siteLocales.matchAll(/code:\s*'([a-z]{2})'[^}]*status:\s*'active'/g)].map((m) => m[1])
+  for (const l of siteActive) {
+    check(ROUTED_LOCALES.includes(l), `site marks "${l}" active → it must be in ROUTED_LOCALES here`)
+  }
+  for (const l of ROUTED_LOCALES) {
+    check(siteActive.includes(l), `this contract routes "${l}" → the site registry must mark it active (site active: ${siteActive.join(', ') || 'none'})`)
+  }
+} else {
+  ok('website-next/lib/locales.ts absent — cross-lane locale agreement UNVERIFIED')
+}
 const heOg = openGraphFor(projection, { locale: 'he', result: okResult })
 check(heOg.locale === 'he_IL' && heOg.alternateLocale.includes('en_US'), 'OG locale + alternateLocale set per locale')
 check(heOg.robots === 'index, follow', 'OG on a consented page carries the indexable directive')

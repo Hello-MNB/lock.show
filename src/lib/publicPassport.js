@@ -34,7 +34,7 @@ import {
   VERSION_POLICY, DEFAULT_VERSION_POLICY,
   PUBLIC_READABLE_VERSION_STATES, REDIRECTING_VERSION_STATES,
   PUBLIC_PROJECTION_FIELDS, PUBLIC_PROOF_UNIT_FIELDS, PUBLIC_SECTION_FIELDS,
-  ACTIVE_LOCALES, REGISTERED_INACTIVE_LOCALES, X_DEFAULT_LOCALE, LOCALE_META,
+  ACTIVE_LOCALES, ROUTED_LOCALES, REGISTERED_INACTIVE_LOCALES, X_DEFAULT_LOCALE, LOCALE_META,
   ALLOWED_SCHEMA_TYPES,
 } from './contracts/publicPassport.contract.js'
 
@@ -292,16 +292,21 @@ export function sitemapEntries(resolved = []) {
 
 // ── locale / hreflang ───────────────────────────────────────────────────────
 /**
- * hreflang set for a public passport URL. RECIPROCITY IS STRUCTURAL: every
- * active locale's alternate set is generated from the same list, so each page
- * points at every other page INCLUDING itself, which is what a crawler
- * requires. Registered-but-inactive locales (ru, de) are never emitted —
- * claiming an alternate that returns English content is a lie to a crawler and
- * gets the whole cluster ignored.
+ * hreflang set for a public passport URL.
+ *
+ * RECIPROCITY IS STRUCTURAL: every emitted locale's alternate set is generated
+ * from the same list, so each page points at every other page INCLUDING
+ * itself, which is what a crawler requires.
+ *
+ * EMISSION = ACTIVE ∩ ROUTED. A locale that is intended for launch but has no
+ * route tree yet (today: `he`) is NOT emitted, and registered-but-inactive
+ * locales (`ru`, `de`) are never emitted. An alternate that 404s or silently
+ * serves English gets the entire cluster ignored — see the note in the
+ * contract and website-next/lib/locales.ts.
  */
-export function hreflangAlternatesFor(slug, { locales = ACTIVE_LOCALES } = {}) {
-  const active = locales.filter((l) => ACTIVE_LOCALES.includes(l))
-  const out = active.map((l) => Object.freeze({
+export function hreflangAlternatesFor(slug, { locales = ACTIVE_LOCALES, routed = ROUTED_LOCALES } = {}) {
+  const emittable = locales.filter((l) => ACTIVE_LOCALES.includes(l) && routed.includes(l))
+  const out = emittable.map((l) => Object.freeze({
     hreflang: LOCALE_META[l].bcp47,
     href: publicUrlFor(slug, { locale: l }),
   }))
