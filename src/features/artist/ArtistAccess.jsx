@@ -5,6 +5,9 @@ import { useLang } from '../../context/LangContext.jsx'
 import { getMyArtist } from '../../lib/db.js'
 import { listIncomingAccessRequests, respondToAccessRequest, revokeArtistAccess, inviteArtistRepresentative } from '../../lib/orgs.js'
 import { appUrl } from '../../lib/appUrl.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { expiryFromChoice, DEFAULT_MANDATE_EXPIRY, isMandateExpired } from '../../lib/mandateExpiry.js'
+import MandateExpiryChooser from '../../components/MandateExpiryChooser.jsx'
 import { Spinner, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 
 // ── Artist Access — "Who can act for you" (spec §8.5, `/artist/access`, U31).
@@ -50,6 +53,11 @@ function StatePill({ status, T }) {
 function RepCard({ r, T, busy, onApprove, onDecline, onChangeScopes, onEnd, undoTarget, onUndo }) {
   const a = T.artistAccess
   const isUndoing = undoTarget === r.id
+  // T-103: an active grant now says how long it lasts — "Until 3 March 2027"
+  // or "No end date" — so a mandate's shape is readable, not implied. A grant
+  // whose date has already passed reads as ended: it grants nothing (027's
+  // can_access_artist() refuses it), so the card must not imply it still does.
+  const lapsed = r.status === 'active' && isMandateExpired(r.expires_at)
 
   return (
     <div className="card">
@@ -58,12 +66,18 @@ function RepCard({ r, T, busy, onApprove, onDecline, onChangeScopes, onEnd, undo
           <p className="truncate font-bold text-ink">{r.organization_name || a.unknownOrg}</p>
           <p className="mt-0.5 text-xs text-muted">
             {isUndoing ? a.endedNote
-              : r.status === 'active' ? a.since(fmtDate(r.consent_at))
-                : r.status === 'pending' ? a.wantsAccess
-                  : a.endedNote}
+              : lapsed ? a.lapsedNote(fmtDate(r.expires_at))
+                : r.status === 'active' ? a.since(fmtDate(r.consent_at))
+                  : r.status === 'pending' ? a.wantsAccess
+                    : a.endedNote}
           </p>
+          {r.status === 'active' && !isUndoing && !lapsed && (
+            <p className="mt-0.5 text-xs text-faint">
+              {r.expires_at ? a.until(fmtDate(r.expires_at)) : a.noEndDate}
+            </p>
+          )}
         </div>
-        <StatePill status={isUndoing ? 'revoked' : r.status} T={T} />
+        <StatePill status={isUndoing || lapsed ? 'revoked' : r.status} T={T} />
       </div>
 
       {r.status === 'active' && !isUndoing && (r.scope || []).length > 0 && (
@@ -181,6 +195,7 @@ export default function ArtistAccess() {
   const [approveTarget, setApproveTarget] = useState(null) // pending row being approved
   const [scopeTarget, setScopeTarget] = useState(null) // active row having scopes changed
   const [draftScope, setDraftScope] = useState({})
+  const [draftExpiry, setDraftExpiry] = useState(DEFAULT_MANDATE_EXPIRY) // T-103
   const [inviteOpen, setInviteOpen] = useState(false)
   const [undoTarget, setUndoTarget] = useState(null) // { row, prevScope } briefly shown post-end
   const undoTimer = useRef(null)
@@ -203,6 +218,7 @@ export default function ArtistAccess() {
 
   function openApprove(r) {
     setDraftScope(Object.fromEntries(ALL_SCOPES.map((s) => [s, (r.scope || ['view']).includes(s)])))
+    setDraftExpiry(DEFAULT_MANDATE_EXPIRY) // T-103 — every approval answers "how long"
     setApproveTarget(r)
   }
   function openChangeScopes(r) {
@@ -215,8 +231,18 @@ export default function ArtistAccess() {
     setBusyId(approveTarget.id)
     try {
       const scope = ALL_SCOPES.filter((s) => draftScope[s])
-      const res = await respondToAccessRequest(approveTarget.id, true, scope.length ? scope : ['view'])
+      // T-103: the mandate now carries its own end date. null = the artist
+      // explicitly chose "no end date" — endless is an answer, not a default.
+      const res = await respondToAccessRequest(
+        approveTarget.id, true, scope.length ? scope : ['view'], expiryFromChoice(draftExpiry),
+      )
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
+      else {
+        // T-101 vocabulary: a mandate IS a consent record — canon event, no
+        // new name invented. Ids and context only, never anything about a person.
+        logEvent(EVENTS.CONSENT_ACCEPTED, { role: 'artist', scope: 'representation', grant_id: approveTarget.id })
+        if (res?.expirySaved === false) toast.show(a.expiryNotSaved, 'warn')
+      }
       setApproveTarget(null)
       await load()
     } finally { setBusyId(null) }
@@ -227,6 +253,7 @@ export default function ArtistAccess() {
     try {
       const res = await respondToAccessRequest(r.id, false)
       if (res?.ok === false) toast.show(T.representation.migrationNote, 'warn')
+      else logEvent(EVENTS.CONSENT_WITHDRAWN, { role: 'artist', scope: 'representation', grant_id: r.id, outcome: 'declined' })
       await load()
     } finally { setBusyId(null) }
   }
@@ -255,6 +282,7 @@ export default function ArtistAccess() {
     try {
       const res = await revokeArtistAccess(r.id)
       if (res?.ok === false) { toast.show(T.representation.migrationNote, 'warn'); return }
+      logEvent(EVENTS.CONSENT_WITHDRAWN, { role: 'artist', scope: 'representation', grant_id: r.id, outcome: 'ended' })
       setUndoTarget(r.id)
       clearTimeout(undoTimer.current)
       undoTimer.current = setTimeout(() => setUndoTarget(null), 7000)
@@ -324,6 +352,8 @@ export default function ArtistAccess() {
           ))}
         </div>
         {draftScope.publish && <p className="mb-3 text-xs text-muted">{T.access.publishHint}</p>}
+        {/* T-103 — how long this mandate lasts. Written to artist_access.expires_at. */}
+        <MandateExpiryChooser value={draftExpiry} onChange={setDraftExpiry} />
         <div className="flex gap-2">
           <button className="btn-primary flex-1" onClick={confirmApprove} disabled={busyId === approveTarget?.id}>
             {busyId === approveTarget?.id ? <Spinner /> : a.approveCta}

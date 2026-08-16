@@ -572,6 +572,16 @@ export const T = {
     // inbox deep-linked from a roster action — artist-bound triage view
     filteredForArtist: (name) => name ? `Showing requests for ${name}` : 'Showing one artist’s requests',
     showAllRequests: 'Show all requests',
+    // ── T-102 · authority explainer — said out loud instead of a silent
+    // downgrade. Warm, no jargon, and NEVER the raw scope value.
+    authorityWho: 'this artist',
+    authorityAsk: {
+      publish: (name) => `Only ${name} can publish this — ask them to.`,
+      upload: (name) => `Only ${name} can add new proof here — ask them to.`,
+      share: (name) => `Only ${name} can share this — ask them to.`,
+      edit: (name) => `Only ${name} can change this — ask them to.`,
+      fallback: (name) => `Only ${name} can do this — ask them to.`,
+    },
   },
   booker: {
     title: 'Open an artist Passport',
@@ -1514,6 +1524,19 @@ export const T = {
     approveTitle: 'Approve access',
     approveScopeHint: 'Choose what this person may do. You can change or end this at any time.',
     approveCta: 'Approve',
+    // ── T-103 · how long the mandate lasts (artist_access.expires_at) ──
+    expiryLabel: 'How long',
+    expiryHint: 'How long should this last? You can end it earlier at any time.',
+    expiryChoice: {
+      '3m': '3 months',
+      '6m': '6 months',
+      '1y': '1 year',
+      none: 'No end date',
+    },
+    until: (date) => `Until ${date}`,
+    noEndDate: 'No end date',
+    lapsedNote: (date) => `Ended on ${date}`,
+    expiryNotSaved: "Access is on, but the end date didn't save — it has no end date for now.",
     inviteTitle: 'Invite someone to help',
     inviteBody: 'Share your Passport link with a manager you trust. Once they request access from their workspace, you can approve it here — you decide exactly what they can do.',
     inviteCopyLink: 'Copy my Passport link',

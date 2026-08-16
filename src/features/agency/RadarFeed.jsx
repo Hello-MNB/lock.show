@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { getRadarInputs } from '../../lib/orgs.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { computeRadarSignals } from '../../lib/radar.js'
 import { PageShell, Loading, EmptyState, ErrorState, StatusChip, SourceLabel } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -40,6 +41,11 @@ export default function RadarFeed() {
   const [error, setError] = useState(false)
   const [fArtist, setFArtist] = useState('')
   const [fType, setFType] = useState('')
+  // T-101: the rep entity fired ZERO analytics events. `radar_opened` is the
+  // canon event for exactly this surface (already fired by the artist-side
+  // radar home) — same name, rep side, so the operator cockpit stops being
+  // blind to half the product. Fire-and-forget, once per mount, ids only.
+  const radarLogged = useRef(false)
 
   // A failed query must NEVER masquerade as "no signals" — catch → real error state.
   async function load() {
@@ -47,6 +53,7 @@ export default function RadarFeed() {
     try {
       const inputs = await getRadarInputs(activeOrgId)
       setSignals(computeRadarSignals(inputs))
+      if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { role: 'agency', org_id: activeOrgId }) }
     } catch {
       setError(true)
     } finally {

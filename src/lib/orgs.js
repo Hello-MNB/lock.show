@@ -323,12 +323,35 @@ export async function listIncomingAccessRequests() {
 // Artist side — approve (optionally narrowing scope) or decline a pending
 // request. Approving stamps consent_at (the artist's explicit consent, per
 // REPRESENTATION-CANON §1.1 — "grant requires the ARTIST's acceptance").
-export async function respondToAccessRequest(id, approve, scope = null) {
-  if (DEMO) return demoRespondToAccessRequest(id, approve, scope)
+//
+// T-103 · MANDATE EXPIRY. `artist_access.expires_at` has existed since 027 (and
+// both can_access_artist() and artist_access_has_scope() already refuse an
+// expired grant) but NOTHING ever wrote it — every mandate an artist granted
+// was endless. respond_to_access_request() takes no expiry argument, and
+// migrations are authored-then-owner-applied (standing law), so the expiry is
+// written in a SECOND, separate statement against the same row: RLS policy
+// `aa_artist_owner_respond` (027 §3) already grants the artist's own org UPDATE
+// on exactly these rows, so no new grant, RPC or migration is needed.
+//   expiresAt === undefined → leave whatever is stored (scope-only edits)
+//   expiresAt === null      → explicit "no end date" (and CLEARS a prior expiry)
+//   expiresAt === ISO date  → the mandate ends then
+// The expiry write is best-effort and reported: consent itself is already
+// recorded by the RPC above, so a failed expiry write must never be shown as a
+// failed approval — it comes back as { ok: true, expirySaved: false }.
+export async function respondToAccessRequest(id, approve, scope = null, expiresAt = undefined) {
+  if (DEMO) return demoRespondToAccessRequest(id, approve, scope, expiresAt)
   const { error } = await supabase.rpc('respond_to_access_request', { p_id: id, p_approve: approve, p_scope: scope })
   if (error) {
     if (isPreMigration027(error)) { console.warn(MIGRATION_027_NOTE); return { ok: false, reason: 'migration-027-required' } }
     throw error
+  }
+  if (approve && expiresAt !== undefined) {
+    const { error: expErr } = await supabase.from('artist_access').update({ expires_at: expiresAt }).eq('id', id)
+    if (expErr) {
+      console.warn('[artist_access] expiry not saved — the grant is active but endless:', expErr.message)
+      return { ok: true, expirySaved: false }
+    }
+    return { ok: true, expirySaved: true }
   }
   return { ok: true }
 }
@@ -407,11 +430,17 @@ export async function listProductionRequests() {
 // ── RADAR inputs (O5 agencies): per-roster-artist record for the §20 rules engine. ──
 export async function getRadarInputs(orgId) {
   if (DEMO) return demoRadarRecords
+  // T-103: an EXPIRED mandate grants no capability. `can_access_artist()` (027)
+  // already refuses one server-side, but this client read filtered on status
+  // ALONE — an expired grant kept feeding radar signals for an artist the org
+  // no longer represents. Endless (`expires_at is null`) stays valid forever;
+  // anything with a past end date drops out here exactly as it does in RLS.
   const { data: access } = await supabase
     .from('artist_access')
     .select('artist:artist_id(id, stage_name, name, published)')
     .eq('organization_id', orgId)
     .eq('status', 'active')
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
   const records = []
   for (const a of access || []) {
     const artist = a.artist

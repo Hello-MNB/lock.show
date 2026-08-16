@@ -81,6 +81,20 @@ const ASSERT = () => {
   return out
 }
 
+// T-104 · the rep + production route set joins the recurring sweep. Both entity
+// gates (RequireAgency / RequireProduction, App.jsx) resolve from the DEMO
+// persona, so each route is reached by stamping `gigproof_demo_role` and doing
+// a real navigation. `agency` lands on the management workspace (demo-org-3),
+// `producer` on the production workspace (demo-org-2, workspace_type='producer').
+const REP_ROUTES = [
+  ['agency', '/agency'],
+  ['agency', '/agency/requests'],
+  ['agency', '/agency/radar'],
+  ['producer', '/production'],
+  ['producer', '/production/events'],
+  ['producer', '/production/requests'],
+]
+
 let failures = 0
 const browser = await chromium.launch()
 for (const [w, h, label] of [[360, 780, 'MOBILE-360'], [1360, 850, 'DESKTOP-1360']]) {
@@ -111,7 +125,21 @@ for (const [w, h, label] of [[360, 780, 'MOBILE-360'], [1360, 850, 'DESKTOP-1360
   await page.goto(`http://127.0.0.1:${port}/confirm/demo-token`, { waitUntil: 'networkidle' })
   await page.waitForTimeout(800)
   const confirm = await page.evaluate(ASSERT)
-  for (const [screen, r] of [['login', login], ['radar', radar], ['radar-panel', panel], ['onboarding', onboarding], ['confirm', confirm]]) {
+  // Screens 6–11 (T-104): the rep + production route set. The persona is
+  // re-stamped per route and `gigproof_active_org_id` cleared, so a previous
+  // screen's workspace choice can never leak into the next assertion.
+  const repScreens = []
+  for (const [persona, route] of REP_ROUTES) {
+    await page.goto(`http://127.0.0.1:${port}/login`, { waitUntil: 'networkidle' })
+    await page.evaluate((p) => { localStorage.setItem('gigproof_demo_role', p); localStorage.removeItem('gigproof_active_org_id') }, persona)
+    await page.goto(`http://127.0.0.1:${port}${route}`, { waitUntil: 'networkidle' })
+    await page.waitForSelector('.skeleton', { state: 'detached', timeout: 15000 }).catch(() => {})
+    await page.waitForTimeout(1200)
+    // A bounced route is a FAILURE, not a silent pass on an empty screen.
+    if (new URL(page.url()).pathname !== route) { console.log(`  ✗ [${label}] ${route} unreachable (landed ${page.url()})`); failures++ }
+    repScreens.push([route, await page.evaluate(ASSERT)])
+  }
+  for (const [screen, r] of [['login', login], ['radar', radar], ['radar-panel', panel], ['onboarding', onboarding], ['confirm', confirm], ...repScreens]) {
     const bad = r.truncated.length || r.overlaps.length || r.hscroll || r.primaryCtas > 1 || r.smallTaps.length
     if (bad) failures++
     console.log(`${bad ? '  ✗' : '  ·'} [${label} ${screen}] truncated: ${r.truncated.length}${r.truncated.length ? ' ' + JSON.stringify(r.truncated.slice(0, 3)) : ''} · overlaps: ${r.overlaps.length}${r.overlaps.length ? ' ' + JSON.stringify(r.overlaps.slice(0, 3)) : ''} · h-scroll: ${r.hscroll ? 'YES' : 'none'} · primary CTAs: ${r.primaryCtas}${r.smallTaps.length ? ` · ✗ taps<44: ${r.smallTaps.length} ${JSON.stringify(r.smallTaps.slice(0, 8))}` : ''}`)

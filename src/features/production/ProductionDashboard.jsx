@@ -140,7 +140,11 @@ function EventsSection({ orgId, T }) {
         <div key={ev.key} className="card">
           <div className="mb-2 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate font-bold text-ink">{ev.title || T.production.untitledEvent}</p>
+              {/* T-104 fit defect: a real event title ("INSOMNIA TLV #20 —
+                  See You in the Dark") is longer than one 360px line, and
+                  `truncate` clipped it mid-word. Wrap to two lines instead —
+                  same pattern the roster rows already use. */}
+              <p className="line-clamp-2 whitespace-normal break-words font-bold leading-snug text-ink">{ev.title || T.production.untitledEvent}</p>
               <p className="text-xs text-muted">
                 {[fmtDate(ev.event_date) || T.agency.noDate, ev.venue, ev.city].filter(Boolean).join(' · ')}
               </p>

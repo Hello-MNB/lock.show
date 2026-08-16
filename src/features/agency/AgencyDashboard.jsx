@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { listAgencyArtists, listClaimsByArtists, listRequestsForAgency, upsertArtist } from '../../lib/db.js'
 import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess, listRosterGrants } from '../../lib/orgs.js'
 import { pickRosterAction, fetchGrantArtistState } from './rosterNextAction.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import AgencyRadarUniverse from './AgencyRadarUniverse.jsx'
 import { PageShell, Loading, ErrorState, StatusChip, Field, Spinner, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -18,6 +19,11 @@ import { DEMO } from '../../lib/demo.js'
 // is always included and never opted out of — every grant carries at least
 // read access, that's the floor.
 const OPTIONAL_SCOPES = ['upload', 'edit', 'share', 'publish']
+
+// A scope value is a DB enum; a user only ever reads its human word (T-102 —
+// scope enum names never reach a screen). Falls back to the raw value only if
+// a future enum value ships ahead of its i18n key.
+const scopeWord = (T, s) => T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`] || s
 
 function parseArtistId(raw) {
   const t = (raw || '').trim()
@@ -43,6 +49,14 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
     setBusyId(r.id)
     try {
       await revokeArtistAccess(r.id)
+      // T-101: ending an ACTIVE mandate is consent ending — the canon
+      // `consent_withdrawn` event, no new name invented. Cancelling a still
+      // PENDING invite is deliberately NOT logged as consent: no consent was
+      // ever given, so calling it withdrawn would be a false record (it needs
+      // its own canon event — migration-gated, see the task report).
+      if (r.status === 'active') {
+        logEvent(EVENTS.CONSENT_WITHDRAWN, { role: 'agency', scope: 'representation', grant_id: r.id, outcome: 'ended' })
+      }
       await onRevoked?.()
     } finally {
       setBusyId(null)
@@ -63,7 +77,7 @@ function AccessRequestsCard({ requests, T, onRevoked }) {
                   <div className="mt-1 flex flex-wrap gap-1">
                     {(r.scope || []).map((s) => (
                       <span key={s} className="chip border border-line bg-surface2 px-2 py-0.5 text-[10px] text-ink">
-                        {T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`] || s}
+                        {scopeWord(T, s)}
                       </span>
                     ))}
                   </div>
@@ -338,20 +352,26 @@ export default function AgencyDashboard() {
                 scope: g.scope || ['view'],
               })
               return (
-                <div key={g.grant_id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-ink">{g.artist_stage_name || '—'}</p>
-                    {g.artist_city && <p className="truncate text-[11px] text-muted">{g.artist_city}</p>}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <div className="hidden items-center gap-1 sm:flex">
-                      {(g.scope || []).map((s) => (
-                        <span key={s} className="chip bg-na-bg text-[9px] uppercase tracking-[0.06em] text-muted">{s}</span>
-                      ))}
+                <div key={g.grant_id} className="rounded-xl border border-line bg-surface2 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">{g.artist_stage_name || '—'}</p>
+                      {g.artist_city && <p className="truncate text-[11px] text-muted">{g.artist_city}</p>}
                     </div>
-                    {/* the ONE next action — real state only, bound to THIS artist */}
-                    <NextActionChip action={action} T={T} />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {/* T-102: scope chips read as HUMAN words (T.access.scope*),
+                          never the raw DB enum value. */}
+                      <div className="hidden items-center gap-1 sm:flex">
+                        {(g.scope || []).map((s) => (
+                          <span key={s} className="chip bg-na-bg text-[9px] tracking-[0.06em] text-muted">{scopeWord(T, s)}</span>
+                        ))}
+                      </div>
+                      {/* the ONE next action — real state only, bound to THIS artist */}
+                      <NextActionChip action={action} T={T} />
+                    </div>
                   </div>
+                  {/* who can act, when this grant cannot — never a silent downgrade */}
+                  <AuthorityNote gatedBy={action.gatedBy} artistName={g.artist_stage_name} T={T} />
                 </div>
               )
             })}
@@ -447,7 +467,7 @@ export default function AgencyDashboard() {
                           {OPTIONAL_SCOPES.map((s) => (
                             <label key={s} className="tap-target flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">
                               <input type="checkbox" checked={inviteScope[s]} onChange={(e) => setInviteScope({ ...inviteScope, [s]: e.target.checked })} />
-                              {T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`]}
+                              {scopeWord(T, s)}
                             </label>
                           ))}
                         </div>

@@ -135,6 +135,48 @@ for (const f of files) {
 if (!callSites) fail('A4 · no logEvent call sites found — parser broken or analytics removed')
 else if (a4ok) console.log(`✓ A4: firewall holds — ${callSites} logEvent call sites across src/ + server/, no score/percent/percentage/percentile/rank property keys`)
 
+// ── A5. rep + production coverage (T-101) ───────────────────────────────────
+// Both entities fired ZERO events until T-101, which left the operator cockpit
+// blind to half the product. This assertion pins what got wired so it cannot
+// silently disappear, and forces every UNWIRED action to stay DOCUMENTED here
+// rather than quietly forgotten. Canon is migration-gated: an action with no
+// canon event stays silent and listed, it never invents a name.
+const REP_WIRED = {
+  'src/features/agency/RadarFeed.jsx': ['RADAR_OPENED'],
+  'src/features/agency/AgencyRequestsInbox.jsx': ['REQUEST_RESPONDED'],
+  'src/features/agency/AgencyDashboard.jsx': ['CONSENT_WITHDRAWN'],
+}
+// Rep/production actions with NO canon event that fits. Each needs a canon
+// event name, which needs a migration widening analytics_event's CHECK — so
+// they stay intentionally silent until that lands. Keep this list honest.
+const REP_INTENTIONALLY_SILENT = [
+  'agency · send representation invite (request_artist_access)',
+  'agency · cancel a still-PENDING invite (no consent was ever given)',
+  'agency · create an owned roster placeholder artist',
+  'agency · dismiss the first-run checklist',
+  'agency · radar filter by artist / signal type (triage only)',
+  'agency · radar signal action taken (navigates; destination logs its own view)',
+  'agency · open an artist world in the roster universe overlay',
+  'agency · expand a request row in the inbox',
+  'production · switch section tab (team / events / requests)',
+  'production · open a passport from the pasted-link box (destination logs passport_view)',
+]
+const EVENTS_BY_KEY = Object.fromEntries([...eventsMatch[1].matchAll(/([A-Z0-9_]+)\s*:\s*'([a-z0-9_]+)'/g)].map((m) => [m[1], m[2]]))
+let a5ok = true
+for (const [file, keys] of Object.entries(REP_WIRED)) {
+  let src
+  try { src = readFileSync(file, 'utf8') } catch { fail(`A5 · ${file} missing — rep/production analytics wiring lost`); a5ok = false; continue }
+  for (const k of keys) {
+    if (!new RegExp(`logEvent\\(\\s*EVENTS\\.${k}\\b`).test(src)) {
+      fail(`A5 · ${file} no longer fires EVENTS.${k} — rep/production analytics regressed to silent`); a5ok = false
+    } else if (!canon.has(EVENTS_BY_KEY[k])) {
+      fail(`A5 · ${file} fires EVENTS.${k} ('${EVENTS_BY_KEY[k]}'), which is not in CANON — it would never reach the DB`); a5ok = false
+    }
+  }
+}
+if (!REP_INTENTIONALLY_SILENT.length) { fail('A5 · the intentionally-silent list is empty — every rep/production action cannot already be wired'); a5ok = false }
+if (a5ok) console.log(`✓ A5: rep+production — ${Object.values(REP_WIRED).flat().length} canon events wired across ${Object.keys(REP_WIRED).length} files, ${REP_INTENTIONALLY_SILENT.length} actions documented as intentionally silent (need a canon event, migration-gated)`)
+
 // ── verdict ──────────────────────────────────────────────────────────────────
 if (failed) {
   console.error('\n✗ ANALYTICS CONTRACT: violations above.')

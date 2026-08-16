@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { listRequestsForAgency, updateRequestStatus } from '../../lib/db.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
 import * as UI from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -57,9 +58,18 @@ export default function AgencyRequestsInbox() {
     if (first) { autoOpened.current = true; setOpenId(first.id) }
   }, [loading, artistFilter, rows])
 
+  // T-101: handling a buyer's request is the rep-side half of the Gate chain,
+  // and it fired nothing. `availability_request_responded` is the canon event
+  // the artist-side inbox already fires (ArtistRequests.jsx) — same name, same
+  // property shape, rep side. Fire-and-forget: it must never block the write.
   async function setStatus(id, status) {
     setBusyId(id)
-    try { await updateRequestStatus(id, status); await load() } catch { setError(true) }
+    try {
+      await updateRequestStatus(id, status)
+      const r = rows.find((x) => x.id === id)
+      logEvent(EVENTS.REQUEST_RESPONDED, { role: 'agency', request_id: id, artist_id: r?.artist_id, response: status })
+      await load()
+    } catch { setError(true) }
     finally { setBusyId(null); setConfirmCloseId(null) }
   }
 

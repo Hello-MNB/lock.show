@@ -325,13 +325,17 @@ export function demoRequestArtistAccess(orgId, artistId, scope, territory) {
   demoAccessRequests.push(row)
   return { ok: true, id: row.id }
 }
-export function demoRespondToAccessRequest(id, approve, scope) {
+// T-103: `expiresAt` mirrors the real path exactly — `undefined` leaves the
+// stored expiry untouched, an explicit `null` means "no end date" (endless),
+// and a timestamp ends the mandate on that date.
+export function demoRespondToAccessRequest(id, approve, scope, expiresAt) {
   const row = demoAccessRequests.find((r) => r.id === id)
   if (!row) return { ok: false }
   if (approve) {
     row.status = 'active'
     row.consent_at = new Date().toISOString()
     if (scope?.length) row.scope = scope
+    if (expiresAt !== undefined) row.expires_at = expiresAt
   } else {
     row.status = 'revoked'
     row.consent_at = null
