@@ -956,6 +956,7 @@ export const T = {
     removeConfirm: 'Remove this team member?',
     seatLimit: 'No seats available.',
     seatUpsell: 'Upgrade to agency to add team seats.',
+    noWorkspace: 'No workspace is active on this account yet.',
     switchOrg: 'Switch account / agency',
     switchNote: 'Switching context — never re-registration.',
     // ── G3 · A2/N12 — add-workspace form (ContextSwitcher) ──
@@ -1307,6 +1308,9 @@ export const T = {
         newActCreate: 'Create act',
         newActCreated: (name) => `${name} created — a fresh, empty universe ready for evidence`,
         newActDemo: 'Creating an act is not available in the demo',
+        // LANE-A T-106 (act scope): honest refusals instead of a cross-Act write.
+        notActScoped: 'This one still lives on your main act only — switch back to it to answer this.',
+        evidenceDefaultOnly: 'Evidence capture still runs on your main act — switch back to it to add evidence.',
       },
       backToUniverse: '← Universe',
       // Named receipts + batch confirm — the confirm moment always says WHAT

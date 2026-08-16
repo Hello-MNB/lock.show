@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
@@ -6,7 +7,7 @@ import { Hero } from '@/components/hero'
 import { APP_URL } from '@/lib/app-url'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/pricing' },
+  alternates: localeAlternates('/pricing'),
   title: 'Pricing — What Each Person Pays',
   description:
     'Artists build and publish free during the pilot. Booking managers read Passports free, always. Producers never need an account. Agency roster plans come later.',

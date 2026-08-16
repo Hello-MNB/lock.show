@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/artists' },
+  alternates: localeAlternates('/artists'),
   title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
   description:
     'The nights you already played can open the rooms you want next. LOCK turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',

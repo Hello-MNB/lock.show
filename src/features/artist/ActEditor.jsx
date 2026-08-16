@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { getMyArtist, upsertArtist, getMyAct, updateAct, listActs, createAct } from '../../lib/db.js'
+import { ACT_IDENTITY_COLS, isDefaultAct } from '../../lib/actScope.js'
 import { PageShell, Field, ErrorNote, Spinner } from '../../components/ui.jsx'
 import { GENRES, MAX_ACT_GENRES } from '../../lib/constants.js'
 
@@ -245,7 +246,9 @@ function InlineEditRow({ fieldKey, type = 'text', max, value, onSave, T }) {
 // Identity fields shared by the artists row and the Act row — mirrors db.js's
 // own ACT_IDENTITY_FIELDS map (kept local: this screen must read/write it in
 // BOTH directions, db.js's copy only ever writes artists → act one-way).
-const ACT_IDENTITY_COLS = { stage_name: 'stage_name', city: 'city', photo_url: 'photo_url', genre: 'genre', one_line: 'positioning' }
+// LANE-A T-106: the artists→act identity mapping now lives in ONE place
+// (src/lib/actScope.js) so this screen and the Radar can never drift apart.
+// Re-exported name kept so the rest of this file reads unchanged.
 
 // ── Act chips row (§8.6 "Act chips (current Act + '＋ Second act')") — the
 // SAME switch/create mechanics as the Radar's center-star (RadarUniverse.jsx),
@@ -325,20 +328,23 @@ export default function ActEditor() {
       try {
         const a = await getMyArtist(user.id)
         setArtist(a || {})
-        const initial = localStorage.getItem('gigproof_active_act') || a?.id
-        setActiveActId(initial)
-        const [rows, actRow] = await Promise.all([
-          a?.id ? listActs(a.id) : Promise.resolve([]),
-          initial ? getMyAct(initial) : Promise.resolve(null),
-        ])
+        const rows = a?.id ? await listActs(a.id) : []
         setActs(rows || [])
-        setAct(actRow)
+        // LANE-A T-106 (stale context): the stored id was adopted UNVERIFIED, so a
+        // leftover value from another Person/workspace on this browser made the
+        // editor address an Act this artist does not hold — every field then read
+        // and wrote against a row RLS refuses. Adopt it only when it is really
+        // one of this artist's own Acts; otherwise fall back to the default Act.
+        const stored = localStorage.getItem('gigproof_active_act')
+        const initial = (stored && (rows || []).some((r) => r.id === stored)) ? stored : a?.id
+        setActiveActId(initial)
+        setAct(initial ? await getMyAct(initial) : null)
       } catch (e) { setLoadErr(e.message) }
       finally { setLoading(false) }
     })()
   }, [user.id])
 
-  const isDefaultAct = activeActId === artist?.id
+  const onDefaultAct = isDefaultAct(activeActId, artist?.id)
 
   // Reads: the DEFAULT Act's identity is canonical on `artists` (existing
   // behaviour, unchanged); a NON-default Act's identity lives on `act.*` only
@@ -346,7 +352,7 @@ export default function ActEditor() {
   // honestly absent for it, out of scope for this identity-only screen).
   function identityValue(key) {
     if (key === 'format') return act?.format || ''
-    if (isDefaultAct) return artist?.[key] || ''
+    if (onDefaultAct) return artist?.[key] || ''
     const col = ACT_IDENTITY_COLS[key]
     return act?.[col] ?? ''
   }
@@ -359,7 +365,7 @@ export default function ActEditor() {
       setAct((cur) => ({ ...cur, ...saved }))
       return
     }
-    if (isDefaultAct) {
+    if (onDefaultAct) {
       const patch = { id: artist.id, created_by: user.id, [key]: val || null }
       const saved = await upsertArtist(patch)
       setArtist((cur) => ({ ...cur, ...saved, [key]: val || null }))
@@ -384,21 +390,34 @@ export default function ActEditor() {
       setAct(row)
       setActiveActId(id)
       localStorage.setItem('gigproof_active_act', id)
+      setLoadErr('')
+    } catch (e) {
+      // LANE-A T-106 (dead control): a failed switch used to leave the chips
+      // pointing at the OLD Act with no word at all.
+      setLoadErr(e?.message || T.common.error)
     } finally {
       setActBusy(false)
     }
   }
 
+  // LANE-A T-106 (dead control): switchAct's own guard is `if (id === activeActId
+  // || actBusy) return` — and createNewAct still held actBusy while calling it, so
+  // creating a second Act here added the chip and then silently DID NOT switch
+  // into it (the artist stayed inside the first Act's universe with no word).
+  // Release the flag first, exactly as RadarUniverse.createNewAct already does
+  // ("pickAct manages its own busy state"). The throw is deliberate: ActChips'
+  // submit() catches it and shows the reason inline.
   async function createNewAct(name) {
     if (actBusy) return
     setActBusy(true)
+    let row
     try {
-      const row = await createAct(activeActId || artist.id, { stage_name: name })
+      row = await createAct(activeActId || artist.id, { stage_name: name })
       setActs((prev) => [...prev, row])
-      await switchAct(row.id, row)
     } finally {
       setActBusy(false)
     }
+    await switchAct(row.id, row)
   }
 
   if (loading) return <PageShell><div className="mt-16 flex justify-center"><Spinner /></div></PageShell>

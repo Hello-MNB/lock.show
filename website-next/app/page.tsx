@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/' },
+  alternates: localeAlternates('/'),
   title: 'LOCK — Build the Proof That Books You',
   description:
     'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
@@ -386,7 +387,7 @@ export default function HomePage() {
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.6rem',
                   letterSpacing: '0.1em',
-                  color: 'rgba(243,245,239,0.35)',
+                  color: 'rgba(243,245,239,0.55)',
                   marginBottom: '1.25rem',
                   textTransform: 'uppercase',
                 }}
@@ -407,7 +408,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.55rem',
                     letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '0.4rem',
                     textTransform: 'uppercase',
                   }}
@@ -453,7 +454,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.55rem',
                     letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '0.4rem',
                     textTransform: 'uppercase',
                   }}
@@ -813,7 +814,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.75rem',
                     letterSpacing: '0.1em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '1.5rem',
                     textTransform: 'uppercase',
                   }}
@@ -849,7 +850,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -886,7 +887,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -922,7 +923,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >

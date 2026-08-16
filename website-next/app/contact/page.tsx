@@ -1,4 +1,5 @@
 ﻿import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 
 import { Hero } from '@/components/hero'
 import WaitlistForm from '../../components/waitlist-form'
@@ -6,7 +7,7 @@ import { APP_URL } from '@/lib/app-url'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/contact' },
+  alternates: localeAlternates('/contact'),
   title: 'Contact — Get in Touch',
   description: 'LOCK is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }

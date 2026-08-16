@@ -41,7 +41,15 @@ export default function AcceptInvite() {
         {done ? (
           <p className="text-accent font-bold text-lg">{T.org.welcomeTeam(orgName)}</p>
         ) : !info ? (
-          <p className="text-sm text-amber">{T.org.inviteExpired}</p>
+          <>
+            <p className="text-sm text-amber">{T.org.inviteExpired}</p>
+            {/* LANE-A T-106 (terminal state, no exit): a dead invite left the
+                visitor on a single amber sentence with nothing to tap — the one
+                screen in the app reached by strangers, and it dead-ended. "/"
+                is RoleHome: a signed-in person lands on their own home, a
+                signed-out one on /login. No dead end either way. */}
+            <Link to="/" className="btn-ghost mt-4 block">{T.errors.notFoundHome}</Link>
+          </>
         ) : (
           <>
             <p className="text-ink mb-4">{T.org.invitedByLine(info.inviter_name, orgName, roleLabel(info.org_role, T))}</p>

@@ -367,6 +367,15 @@ async function buildSafePayload(artistId) {
     .from('profile_items')
     .select('id, item_type, title, detail, item_date, public_url, source_status')
     .eq('artist_id', artistId)
+    // ACT SCOPE (multi-Act, CLAUDE.md: "evidence is per-Act and NON-transferable").
+    // Every child table's artist_id is NOT NULL and references public.artists, and a
+    // non-default Act has no artists row — so a second Act's rows hang off the FIRST
+    // Act's artist_id and an artist_id-only read merges two Acts into one Passport.
+    // Reproduced on a real PostgreSQL 16 by scripts/test-tenant-isolation.mjs (A7).
+    // NULL-tolerant on purpose: migration 020 backfilled act_id = artist_id and
+    // trg_actfill_* keeps filling it, so this drops nothing that exists today and
+    // only ever excludes a row that belongs to a DIFFERENT Act.
+    .or(`act_id.eq.${artistId},act_id.is.null`)
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .order('created_at', { ascending: false })
   if (iErr) throw iErr
@@ -378,6 +387,7 @@ async function buildSafePayload(artistId) {
     .from('claims')
     .select('id, claim_type, value, source_type, verification_status, reason_code, method_label, expires_at')
     .eq('artist_id', artistId)
+    .or(`act_id.eq.${artistId},act_id.is.null`)   // ACT SCOPE — see the items read above
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .in('verification_status', PUBLISHABLE_STATUSES)
     .eq('artist_approved', true)
@@ -449,10 +459,16 @@ app.get('/api/passport/:artistId', async (req, res) => {
     if (!pub || !pub.published) return res.status(404).json({ error: 'Artist not published.' })
 
     // Prefer the immutable snapshot written at publish time.
+    // ACT SCOPE — without it this serves the NEWEST snapshot for the artist_id,
+    // which for a Person holding two Acts is the OTHER Act's Passport at this
+    // Act's public URL. Executed and reproduced in scripts/test-tenant-isolation.mjs
+    // (A7): the newest row for the fixture artist belonged to ACT_B. NULL-tolerant
+    // (migration 020 backfills act_id = artist_id), so no legacy snapshot is lost.
     const { data: snap, error: sErr } = await admin
       .from('passport_versions')
       .select('snapshot')
       .eq('artist_id', artistId)
+      .or(`act_id.eq.${artistId},act_id.is.null`)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()

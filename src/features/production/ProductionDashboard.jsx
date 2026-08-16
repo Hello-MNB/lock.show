@@ -269,7 +269,7 @@ function RequestsSection({ T }) {
 
 export default function ProductionDashboard() {
   const { T } = useLang()
-  const { activeOrgId, activeOrg, role } = useOrg()
+  const { activeOrgId, activeOrg, role, loading: orgLoading, reload } = useOrg()
   const loc = useLocation()
   const section = sectionFromPath(loc.pathname)
 
@@ -293,7 +293,23 @@ export default function ProductionDashboard() {
     )
   }
 
-  if (!activeOrgId) return <PageShell max="max-w-4xl"><Loading /></PageShell>
+  // LANE-A T-106 (terminal state, no exit): this rendered an ETERNAL skeleton
+  // whenever the workspace context settled with no active org (a membership that
+  // failed to load, a workspace removed on another device) — no message, no
+  // retry, no way out. `orgLoading` distinguishes "still resolving" from
+  // "resolved to nothing", and the second case is now an honest state with a
+  // reverse path.
+  if (!activeOrgId) {
+    if (orgLoading) return <PageShell max="max-w-4xl"><Loading /></PageShell>
+    return (
+      <PageShell max="max-w-4xl">
+        <ErrorState title={T.org.noWorkspace} onRetry={reload} />
+        <div className="mt-3 text-center">
+          <Link to="/settings" className="tap-target text-sm text-muted hover:text-ink">{T.dashboard.settings}</Link>
+        </div>
+      </PageShell>
+    )
+  }
 
   return (
     <PageShell max="max-w-4xl">

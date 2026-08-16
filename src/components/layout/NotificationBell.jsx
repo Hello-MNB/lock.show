@@ -35,18 +35,26 @@ export default function NotificationBell() {
 
   const unread = items.some((n) => !n.read)
 
+  // LANE-A T-106 (optimistic UI with no rollback): both handlers flipped rows to
+  // read and then ignored whether the write landed — a failed mark-read cleared
+  // the unread dot until the next reload silently brought it back. The optimistic
+  // flip stays (navigation must not wait on it), but a failed write is now undone
+  // so the bell never claims something was read when it was not.
   async function onItemClick(n) {
     setOpen(false)
     if (!n.read) {
       setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)))
-      await markRead(n.id)
+      const okRead = await markRead(n.id)
+      if (!okRead) setItems((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: false } : x)))
     }
     if (n.link) nav(n.link)
   }
 
   async function onMarkAll() {
+    const before = items
     setItems((prev) => prev.map((x) => ({ ...x, read: true })))
-    await markAllRead(user.id)
+    const okAll = await markAllRead(user.id)
+    if (!okAll) setItems(before)
   }
 
   return (

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/bookers' },
+  alternates: localeAlternates('/bookers'),
   title: 'For Booking Managers — Book With Context, Not Guesswork',
   description:
     'Your name is on the line every time you book an unfamiliar artist. Open their LOCK Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
@@ -268,12 +269,17 @@ export default function BookersPage() {
                 className="m-flat"
                 style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
               >
+                {/* Decorative index number — aria-hidden (the heading below
+                    already conveys the risk) AND at full opacity: the
+                    previous halved opacity dropped var(--color-tally-onlight)
+                    from its designed ~5.5:1 to ~2.1:1, a WCAG 1.4.3 fail for
+                    sighted low-vision users regardless of the AT exemption. */}
                 <span
+                  aria-hidden="true"
                   style={{
                     fontFamily: 'var(--font-space-mono), monospace',
                     fontSize: '0.75rem',
                     color: 'var(--color-tally-onlight)',
-                    opacity: 0.5,
                     display: 'block',
                     marginBottom: '0.75rem',
                   }}

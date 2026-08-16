@@ -224,7 +224,12 @@ for (const { route, file } of pages) {
 
   const title = firstString(entries.title)
   const description = firstString(entries.description)
-  const canonical = firstString(entries.alternates?.match(/canonical:\s*([\s\S]+)/)?.[1])
+  // Accepts both the literal `{ canonical: '/x' }` shape (noindex-class
+  // pages) and the `localeAlternates('/x')` helper call (index-class pages,
+  // S9): in both, the FIRST string literal in the `alternates` value is the
+  // page's own canonical path — the helper's other strings (locale codes,
+  // absolute URLs) live inside its own module, not in this call-site text.
+  const canonical = firstString(entries.alternates)
 
   if (!title) fail(`${file}: metadata has no top-level title`)
   if (!description) fail(`${file}: metadata has no top-level description`)
@@ -399,6 +404,57 @@ if (!existsSync(join(OUT, 'index.html'))) {
     fail('S8 · out/404.html has no robots noindex meta tag (app/not-found.tsx metadata regressed)')
   }
   if (!failed) console.log(`✓ S6-S7: built HTML — ${htmlFiles.length} pages, ${canonTags} canonical tags on ${BASE_HOST}, ${ldBlocks} ld+json blocks parse with known @type, ${faqPages} FAQPage blocks checked for visibility, ${builtNoindex}/${NOINDEX_ROUTES.size} noindex-class routes carry noindex, 404 noindex`)
+
+  // ── S9. hreflang contract (localization scaffold, lib/locales.ts) ─────────
+  // Every INDEX-class page must carry a reciprocal hreflang set: one
+  // <link rel="alternate" hreflang="X"> per ACTIVE locale in
+  // website-next/lib/locales.ts, all resolving to the SAME path on
+  // BASE_HOST, plus exactly one x-default pointing at the same URL. Today
+  // ACTIVE = [en] only, so this is a self-referencing pair — correct per
+  // Google's guidance (x-default belongs on any page with a language
+  // selector, which the site's EN/HE nav toggle is). The moment a second
+  // locale flips to 'active' in lib/locales.ts, this assertion starts
+  // requiring its reciprocal tag on every index page — a locale can no
+  // longer go active without its route existing, closing exactly the drift
+  // class this scaffold exists to prevent. NOINDEX-class routes must carry
+  // NO hreflang tags at all (a noindexed URL declaring itself a language
+  // alternate is a contradictory signal engines ignore or misread).
+  const localesSrc = readFileSync(join(SITE, 'lib', 'locales.ts'), 'utf8')
+  const activeLocaleCodes = [...localesSrc.matchAll(/code:\s*'([a-z]{2})',[^}]*status:\s*'active'/gs)].map((m) => m[1])
+  if (!activeLocaleCodes.length) fail('S9 · website-next/lib/locales.ts: no active locale found')
+
+  const HREFLANG_RE = /<link[^>]+rel="alternate"[^>]+hrefLang="([^"]+)"[^>]+href="([^"]+)"|<link[^>]+href="([^"]+)"[^>]+hrefLang="([^"]+)"[^>]+rel="alternate"/gi
+  let hreflangChecked = 0
+  for (const f of htmlFiles) {
+    const html = readFileSync(f, 'utf8')
+    const rel = '/' + f.slice(OUT.length + 1).replace(/\\/g, '/').replace(/(index)?\.html$/, '').replace(/\/$/, '')
+    const route = rel === '' || rel === '/' ? '/' : rel
+    const tags = [...html.matchAll(HREFLANG_RE)].map((m) => ({
+      hreflang: m[1] ?? m[4],
+      href: m[2] ?? m[3],
+    }))
+
+    if (NOINDEX_ROUTES.has(route)) {
+      if (tags.length) fail(`S9 · ${f}: noindex-class route ${route} carries ${tags.length} hreflang tag(s) — contradicts its own noindex (D5/D6 routes get bare canonicals only)`)
+      continue
+    }
+    if (!INDEX_ROUTES.has(route)) continue // e.g. 404 — no hreflang expected
+
+    hreflangChecked++
+    const seenCodes = new Set()
+    for (const { hreflang, href } of tags) {
+      seenCodes.add(hreflang)
+      const host = new URL(href, baseUrl).host
+      if (host !== BASE_HOST) fail(`S9 · ${f}: hreflang="${hreflang}" href="${href}" resolves to ${host}, not ${BASE_HOST}`)
+      const path = new URL(href, baseUrl).pathname.replace(/\/$/, '') || '/'
+      if (path !== route) fail(`S9 · ${f}: hreflang="${hreflang}" points at ${path}, not this page's own route ${route} (only self-referencing alternates exist until a real second-locale route ships)`)
+    }
+    for (const code of activeLocaleCodes) {
+      if (!seenCodes.has(code)) fail(`S9 · ${f}: missing reciprocal hreflang="${code}" for active locale (lib/locales.ts)`)
+    }
+    if (!seenCodes.has('x-default')) fail(`S9 · ${f}: missing hreflang="x-default"`)
+  }
+  if (!failed) console.log(`✓ S9: hreflang — ${hreflangChecked} index pages carry reciprocal hreflang for ${activeLocaleCodes.join(', ')} + x-default, all self-resolving on ${BASE_HOST}; noindex routes carry none`)
 }
 
 // ── S8e. /app/* private surface: X-Robots-Tag header config + meta in shells ─

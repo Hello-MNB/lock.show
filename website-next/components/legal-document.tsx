@@ -54,7 +54,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-stamp)',
+            color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
@@ -72,7 +72,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.8rem',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             fontWeight: 700,
             margin: 0,
           }}>
@@ -81,7 +81,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
           {t.taskNote && (
             <p style={{
               fontSize: '0.85rem',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               marginTop: '10px',
               fontStyle: 'italic',
               lineHeight: 1.6,
@@ -139,14 +139,14 @@ export function LegalDocument({ content }: { content: LegalContent }) {
                 </h2>
               )}
               {s.paragraphs?.map((p, j) => (
-                <p key={j} style={{ fontSize: '0.925rem', color: 'var(--color-tally)', lineHeight: 1.7, margin: '0 0 10px' }}>
+                <p key={j} style={{ fontSize: '0.925rem', color: 'var(--color-tally-onlight)', lineHeight: 1.7, margin: '0 0 10px' }}>
                   {renderInline(p)}
                 </p>
               ))}
               {s.bullets && (
                 <ul style={{ margin: '8px 0 0', paddingInlineStart: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {s.bullets.map((b, k) => (
-                    <li key={k} style={{ fontSize: '0.925rem', color: 'var(--color-tally)', lineHeight: 1.7 }}>
+                    <li key={k} style={{ fontSize: '0.925rem', color: 'var(--color-tally-onlight)', lineHeight: 1.7 }}>
                       {renderInline(b)}
                     </li>
                   ))}

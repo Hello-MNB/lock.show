@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/producers' },
+  alternates: localeAlternates('/producers'),
   title: 'For Producers — 20 Seconds, No Account',
   description:
     'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',

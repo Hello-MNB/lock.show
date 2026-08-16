@@ -97,6 +97,17 @@ function buildTemplate(name) {
   if (unexpected.length) {
     throw new Error(`migration(s) failed to apply locally:\n${unexpected.map((u) => `  ${u.file}: ${u.error}`).join('\n')}`)
   }
+  // Record the failure list INSIDE the template so a cached template still tells
+  // the truth. Without this, the first run reported "expected historical failure:
+  // 018_professional_reaction.sql" and every later run reported "none" — the same
+  // database, two different stories. A harness that misreports its own provenance
+  // is the last place a misreport should be tolerated.
+  su(`psql -q -v ON_ERROR_STOP=1 -d ${name} -c "create table if not exists public._b4_template_meta (file text primary key, error text)"`)
+  for (const f of failures) {
+    su(`psql -q -v ON_ERROR_STOP=1 -d ${name} -f -`, {
+      input: `insert into public._b4_template_meta (file, error) values ($b4$${f.file}$b4$, $b4$${f.error}$b4$) on conflict (file) do nothing;`,
+    })
+  }
   return failures
 }
 
@@ -119,6 +130,12 @@ export class ScratchDb {
     const name = `${prefix}_${process.pid}_${Date.now().toString(36)}`
     su(`psql -q -c 'drop database if exists ${name}'`)
     su(`psql -q -c 'create database ${name} template ${template}'`)
+    if (exists) {
+      // Cached template — read the recorded provenance instead of claiming none.
+      failures = su(`psql -tAqF'\t' -d ${name} -c "select file, error from public._b4_template_meta order by 1"`, { allowFail: true })
+        .split('\n').map((l) => l.trim()).filter(Boolean)
+        .map((l) => { const [file, ...rest] = l.split('\t'); return { file, error: rest.join('\t') } })
+    }
     return new ScratchDb(name, failures)
   }
 

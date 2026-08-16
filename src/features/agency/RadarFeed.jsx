@@ -79,7 +79,10 @@ export default function RadarFeed() {
       setLoading(false)
     }
   }
-  useEffect(() => { load() }, [activeOrgId])
+  // LANE-A T-106 (state retained across a context change): the previous org's
+  // signals stayed on screen — read as this org's — for the whole re-fetch.
+  // Clearing first means an org switch can never show another org's roster.
+  useEffect(() => { setSignals([]); setLoading(true); radarLogged.current = false; load() }, [activeOrgId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const artists = useMemo(() => [...new Set(signals.map((s) => s.artistName))], [signals])
   const types = useMemo(() => [...new Set(signals.map((s) => s.ruleId))], [signals])

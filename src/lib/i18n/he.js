@@ -952,6 +952,7 @@ export const T = {
     removeConfirm: 'להסיר את חבר הצוות?',
     seatLimit: 'אין מושבים פנויים.',
     seatUpsell: 'שדרג לסוכנות כדי להוסיף מושבי צוות.',
+    noWorkspace: 'אין כרגע סביבת עבודה פעילה בחשבון הזה.',
     switchOrg: 'החלף חשבון/סוכנות',
     switchNote: 'מעבר הקשר — לעולם לא רישום מחדש.',
     // ── G3 · A2/N12 — טופס הוספת מרחב עבודה (ContextSwitcher) ──
@@ -1290,6 +1291,9 @@ export const T = {
         newActCreate: 'צור אקט',
         newActCreated: (name) => `${name} נוצר — יקום חדש וריק, מוכן לראיות`,
         newActDemo: 'יצירת אקט אינה זמינה בדמו',
+        // LANE-A T-106 (act scope): honest refusals instead of a cross-Act write.
+        notActScoped: 'זה עדיין קיים רק באקט הראשי שלך — חזור אליו כדי לענות על זה.',
+        evidenceDefaultOnly: 'איסוף הראיות עדיין רץ על האקט הראשי שלך — חזור אליו כדי להוסיף ראיה.',
       },
       backToUniverse: '→ יקום',
       // Named receipts + batch confirm — the confirm moment names WHAT and WHERE.

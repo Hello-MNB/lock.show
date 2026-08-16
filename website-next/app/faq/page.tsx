@@ -1,9 +1,10 @@
 ﻿import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/faq' },
+  alternates: localeAlternates('/faq'),
   title: 'FAQ — What LOCK Does (and Doesn\'t) Promise',
   description: 'Straight answers on how verification works, what a Passport shows, and why there\'s no score, rank, or guarantee — ever.',
 }

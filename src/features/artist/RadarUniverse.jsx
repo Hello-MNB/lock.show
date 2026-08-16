@@ -10,6 +10,7 @@ import { useLang } from '../../context/LangContext.jsx'
 import { methodLabelFor, VISIBILITY } from '../../lib/constants.js'
 import { PLANETS, NODE, buildUniverse, deriveWorlds, bandFromCount, ownHistory } from '../../lib/radarUniverse.js'
 import { primaryPlanets } from '../../lib/genreWeights.js'
+import { isDefaultAct, splitArtistPatchForAct, withActId } from '../../lib/actScope.js'
 
 // ── The Radar Universe — "Live Intelligence" (warm cinematic night) ──────────
 // The Radar IS evidence collection (IA correction): claim review / batch
@@ -312,7 +313,13 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // evidence. `actOverride` is null while viewing the default (prop-driven)
   // Act; it holds the swapped-in identity/evidence once another Act is active.
   const [acts, setActs] = useState([])
-  const [activeActId, setActiveActId] = useState(() => localStorage.getItem('gigproof_active_act') || artist.id)
+  // LANE-A T-106 (stale context across a workspace/account change): the stored id
+  // was trusted BEFORE the Act list had loaded, so a leftover value from another
+  // Person/workspace on this browser made `activeActId` point at an Act this
+  // artist does not hold — which then became the parent id passed to createAct.
+  // Start on the default Act (always valid); the restore effect below adopts the
+  // stored id only after it has been VERIFIED against this artist's own list.
+  const [activeActId, setActiveActId] = useState(artist.id)
   const [actSheet, setActSheet] = useState(false)
   const [actBusy, setActBusy] = useState(false)
   const [newActName, setNewActName] = useState('') // + New Act inline form (A3/N12)
@@ -371,6 +378,15 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
       setActSheet(false)
       setSelected(null)
       flash(S.actSwitch.switchedToast((actRow || acts.find((a) => a.id === id) || {}).stage_name || artist.stage_name))
+    } catch (e) {
+      // LANE-A T-106 (dead control on a CONTEXT SWITCH — the worst place for
+      // one): a failed switchAct had no catch. The rejection went unhandled, the
+      // sheet stayed open, the artist remained inside the PREVIOUS Act and was
+      // told nothing — while the toast they expected never came, so the next
+      // thing they typed would have gone to the Act they thought they had left.
+      // Bail back to the Act that is genuinely on screen and say why.
+      setActiveActId(actOverride ? activeActId : artist.id)
+      flash(e?.message || T.common.error)
     } finally {
       setActBusy(false)
     }
@@ -414,6 +430,52 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const effClaims = actOverride?.claims || claims
   const effAct = actOverride?.act || act
 
+  // ── LANE-A T-106 · ACT-SCOPED WRITES (canon: evidence is per-Act and
+  // NON-transferable) ────────────────────────────────────────────────────────
+  // The Act switch used to swap the READ side only: every write below still
+  // addressed `artist.id`, so while a SECOND Act was on screen every fill,
+  // link, event and confirmation silently landed on the FIRST Act — and the
+  // switched view never updated, so the control also read as dead. The four
+  // adapters below are now the only write path the panels get; on the default
+  // Act they are byte-identical pass-throughs to the parent's callbacks.
+  const onDefaultAct = isDefaultAct(activeActId, artist.id) && !actOverride
+  const actWriteId = onDefaultAct ? artist.id : activeActId
+
+  // Identity/goal fills. A non-default Act keeps its identity on `act.*`
+  // (migration 020) — the same mapping ActEditor.jsx uses. A field with NO
+  // act-scoped column (the draw/kit bands) is REFUSED with an honest sentence
+  // rather than written to the wrong Act; MissingFill renders the thrown
+  // message inline on the card it came from.
+  async function actScopedArtistChange(patch) {
+    if (onDefaultAct) return onArtistChange(patch)
+    const { actPatch, unscoped } = splitArtistPatchForAct(patch)
+    if (unscoped.length) throw new Error(S.actSwitch.notActScoped)
+    const saved = await updateAct(actWriteId, actPatch)
+    setActOverride((cur) => (cur ? {
+      ...cur,
+      act: { ...cur.act, ...(saved || actPatch) },
+      artist: { ...cur.artist, ...patch },
+    } : cur))
+    return saved
+  }
+
+  // Re-read the ACTIVE Act's own evidence after an item/claim write, instead of
+  // refreshing the default Act's arrays in the parent.
+  async function actScopedItemsRefresh() {
+    if (onDefaultAct) return onItemsRefresh?.()
+    const res = await switchAct(actWriteId)
+    setActOverride((cur) => (cur ? { ...cur, items: res.items || [], claims: res.claims || [] } : cur))
+  }
+
+  // Claim-state updates belong to whichever Act is on screen. `next` follows
+  // React's setState contract (value OR updater), exactly like the parent's.
+  function actScopedClaimsChange(next) {
+    if (onDefaultAct) return onClaimsChange(next)
+    setActOverride((cur) => (cur
+      ? { ...cur, claims: typeof next === 'function' ? next(cur.claims || []) : next }
+      : cur))
+  }
+
   const uni = useMemo(() => buildUniverse({ artist: effArtist, act: effAct, items: effItems, claims: effClaims, T }), [effArtist, effAct, effItems, effClaims, T])
 
   // ── G2 genre emphasis (genreWeights) — ADDITIVE highlight ONLY. Primary
@@ -453,6 +515,11 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // N4 — own-history frame (§5.10): the artist's own recent confirmations.
   const history = useMemo(() => ownHistory(effClaims), [effClaims])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
+  // /evidence/:artistId — and the AI claim pipeline behind it
+  // (POST /api/process-evidence {artistId}) — are ARTIST-scoped end to end, so
+  // sending a non-default Act there would file its evidence under the default
+  // Act. Until that pipeline is act-aware (owner decision, see the task report)
+  // the Radar says so instead of silently crossing Acts.
   const evidenceRoute = `/evidence/${artist.id}`
 
   // ── THE RADAR FACE RULING (§8.2, owner design-sprint pick 21 Jul) — the coach
@@ -530,7 +597,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     setConfirming(node.id)
     try {
       await updateClaim(c.id, { artist_approved: true })
-      onClaimsChange((prev) => prev.map((x) => x.id === c.id ? { ...x, artist_approved: true } : x))
+      actScopedClaimsChange((prev) => prev.map((x) => x.id === c.id ? { ...x, artist_approved: true } : x))
       triggerBloom(node.id)
       markSaved(planetOfNode(node)) // T-90 widget machine — the saved state's receipt window
       clearTimeout(undoRef.current)
@@ -546,7 +613,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     if (!undo) return
     clearTimeout(undoRef.current)
     await updateClaim(undo.claim.id, { artist_approved: false })
-    onClaimsChange((prev) => prev.map((x) => x.id === undo.claim.id ? { ...x, artist_approved: false } : x))
+    actScopedClaimsChange((prev) => prev.map((x) => x.id === undo.claim.id ? { ...x, artist_approved: false } : x))
     setUndo(null)
   }
   const pauseUndo = () => clearTimeout(undoRef.current)
@@ -569,7 +636,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     try {
       for (const n of list) await updateClaim(n.claim.id, { artist_approved: true })
       const ids = new Set(list.map((n) => n.claim.id))
-      onClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
+      actScopedClaimsChange((prev) => prev.map((x) => ids.has(x.id) ? { ...x, artist_approved: true } : x))
       triggerBloom(list.map((n) => n.id))
       markSaved(planetOfNode(list[0])) // T-90 widget machine — saved receipt on the touched widget
       flash(S.bulkConfirmed(list.length, destinationOf(list[0].claim, S)))
@@ -579,6 +646,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   }
 
   function goEvidence() {
+    if (!onDefaultAct) { flash(S.actSwitch.evidenceDefaultOnly); return }
     setSelected(null); setReview(false)
     nav(evidenceRoute)
   }
@@ -590,7 +658,9 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const rowProps = {
     S, T,
     onEvidence: goEvidence,
-    artist: effArtist, onArtistChange, onActChange, onItemsRefresh, onClaimsChange,
+    artist: effArtist, actId: actWriteId, onDefaultAct,
+    onArtistChange: actScopedArtistChange, onActChange, onItemsRefresh: actScopedItemsRefresh,
+    onClaimsChange: actScopedClaimsChange,
     onPeek: showPeek, // R-1(c) — long-press method peek on a source row
   }
 
@@ -1151,7 +1221,7 @@ function PlanetPanelContent({ selected, sel, S, T, coachScene, batchable, bulkBu
 // identifiable reference), (3) the honest proves / doesn't-prove line. The
 // button names what it confirms. Non-claim rows keep the inline expander +
 // in-place fill form. Never a second modal above the panel.
-function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, artist, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onSaved, onPeek }) {
+function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, artist, actId, onDefaultAct = true, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onSaved, onPeek }) {
   const [open, setOpen] = useState(false)
   const chip = NODE_CHIP[n.state]
   const actionable = (n.state === NODE.FOUND || n.state === NODE.REVIEW) && !!n.claim
@@ -1265,6 +1335,8 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
           {n.state === NODE.MISSING && n.fill && (
             <MissingFill
               node={n} artist={artist} S={S}
+              actId={actId}
+              onDefaultAct={onDefaultAct}
               onArtistChange={onArtistChange}
               onActChange={onActChange}
               onItemsRefresh={onItemsRefresh}
@@ -1282,7 +1354,7 @@ function PlanetRow({ node: n, planet, S, T, busy, bloom, onConfirm, onEvidence, 
 // One node = one tiny form. Saving updates the data and the node flips to ✓
 // without ever leaving the panel. (Ticket exports stay in the evidence flow —
 // they carry the third-party consent gate.)
-function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onDone }) {
+function MissingFill({ node, artist, actId, onDefaultAct = true, S, onArtistChange, onActChange, onItemsRefresh, onClaimsChange, onDone }) {
   const { T, BANDS } = useLang() // band options + goal labels are localized
   const { kind, field, max, placeholder, set } = node.fill
   const [v, setV] = useState('')
@@ -1354,8 +1426,8 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
           {Object.entries(T.onboarding.goals).map(([g, label]) => (
             <button key={g} disabled={busy}
               onClick={() => run(async () => {
-                if (onActChange) await onActChange({ artist_goal: g })
-                else await updateAct(artist.id, { artist_goal: g })
+                if (onActChange && onDefaultAct) await onActChange({ artist_goal: g })
+                else await updateAct(actId || artist.id, { artist_goal: g })
               })}
               className="chip min-h-[44px] border border-line2 bg-surface2 px-3 py-2 text-sm font-semibold text-ink/85 transition-colors hover:border-line2">
               {label}
@@ -1401,7 +1473,7 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
           <button className="btn-ghost w-full" disabled={busy || !(parseInt(v, 10) > 0)}
             onClick={() => run(async () => {
               const n = parseInt(v, 10)
-              await updateAct(artist.id, { community_count_declared: n }) // integer stays working-only
+              await updateAct(actId || artist.id, { community_count_declared: n }) // integer stays working-only
               await onArtistChange({ community_size_band: bandFromCount(n) }) // only the band goes anywhere
             })}>
             {busy ? <Spinner /> : S.fill.save}
@@ -1415,7 +1487,7 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
           <input className="field" type="date" aria-label={S.fill.eventDate} value={v2} onChange={(e) => setV2(e.target.value)} />
           <button className="btn-ghost w-full" disabled={busy || !v.trim()}
             onClick={() => run(async () => {
-              await addProfileItem({ artist_id: artist.id, item_type: 'event', title: v.trim(), item_date: v2 || null, visibility: 'passport-ok', source_status: 'artist-provided' })
+              await addProfileItem(withActId({ artist_id: artist.id, item_type: 'event', title: v.trim(), item_date: v2 || null, visibility: 'passport-ok', source_status: 'artist-provided' }, actId))
               await onItemsRefresh?.()
             })}>
             {busy ? <Spinner /> : S.fill.save}
@@ -1432,18 +1504,28 @@ function MissingFill({ node, artist, S, onArtistChange, onActChange, onItemsRefr
           <button className="btn-ghost w-full" disabled={busy || !/^https?:\/\//i.test(v.trim())}
             onClick={() => run(async () => {
               const value = v.trim()
-              await addProfileItem({ artist_id: artist.id, item_type: 'link', title: 'link', public_url: value, visibility: 'passport-ok', source_status: 'artist-provided' })
+              await addProfileItem(withActId({ artist_id: artist.id, item_type: 'link', title: 'link', public_url: value, visibility: 'passport-ok', source_status: 'artist-provided' }, actId))
               await onItemsRefresh?.()
               // Same source also becomes evidence → runs through the AI claim
               // pipeline right here so the resulting found/review node appears
               // in this same radar session, not only after a reload.
+              // ACT SCOPE (LANE-A T-106): the evidence row is stamped with the
+              // ACTIVE Act, but processEvidence + listClaims are ARTIST-scoped
+              // (server route takes {artistId}), so running them for a
+              // non-default Act would mint claims onto the DEFAULT Act. The link
+              // itself is saved to the right Act either way; the AI mirror only
+              // runs where it can file its output correctly.
               try {
-                await addEvidence({
+                await addEvidence(withActId({
                   artist_id: artist.id, evidence_type: 'link', source_type: 'public-profile',
                   value, public_url: value, claim_intent: 'consistent-frequency', source_owner_consent: true,
-                })
-                await processEvidence(artist.id)
-                if (onClaimsChange) onClaimsChange(await listClaims(artist.id))
+                }, actId))
+                if (onDefaultAct) {
+                  await processEvidence(artist.id)
+                  if (onClaimsChange) onClaimsChange(await listClaims(artist.id))
+                } else {
+                  await onItemsRefresh?.()
+                }
               } catch { /* evidence mirror is best-effort — the profile link itself is already saved */ }
             })}>
             {busy ? <Spinner /> : S.fill.save}

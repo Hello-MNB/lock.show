@@ -35,20 +35,30 @@ export async function listNotifications(userId) {
 }
 
 // ── Mark read (self-scoped — always allowed under notif_self) ────────────
+// LANE-A T-106 (optimistic UI with no rollback): the bell flips the row to read
+// BEFORE this resolves, and these used to swallow the failure and return
+// undefined — so a failed write left the dot gone until the next reload put it
+// back, with no way for the caller to know. They still never throw (a
+// mark-read must never block navigation), but they now REPORT the outcome so
+// the caller can roll its optimistic state back.
+//   → true  = the row really is marked read (or DEMO, where there is no write)
+//   → false = the write failed; the caller should restore what it flipped
 export async function markRead(id) {
-  if (DEMO || !id) return
+  if (DEMO) return true
+  if (!id) return false
   try {
     const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id)
-    if (error) throw error
-  } catch { /* best-effort — a failed mark-read must never block navigation */ }
+    return !error
+  } catch { return false }
 }
 
 export async function markAllRead(userId) {
-  if (DEMO || !userId) return
+  if (DEMO) return true
+  if (!userId) return false
   try {
     const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
-    if (error) throw error
-  } catch { /* best-effort */ }
+    return !error
+  } catch { return false }
 }
 
 // ── Write (cross-user — server-mediated, fire-and-forget) ────────────────

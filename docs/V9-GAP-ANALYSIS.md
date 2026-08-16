@@ -110,3 +110,91 @@ Order is dependency-driven. Each migration is additive-only, paired with a `.dow
 ## SEQUENCE
 Wave A (now — no gates) → T-105 → T-106 → T-107 → T-108 → T-109, each with its Wave-C gate landing alongside. T-114 waits for `data-screen-id` in the design bundle.
 **Blocked and NOT in this plan:** anything gated on C1–C10 (all screen work), the 4 open v9 decisions (D2/D3/D4/D6), payments, and the Rep/Production feature set (post-Gate).
+
+---
+
+# 8 · §G — THE PUBLIC PASSPORT BOUNDARY (Lane G · 16 Aug 2026)
+**Status: CONTRACTS + GATE SHIPPED TO THE BRANCH. No route, no migration file, no deploy, no live behavior changed.** This lane produced `src/lib/contracts/publicPassport.contract.js`, `src/lib/publicPassport.js` and `scripts/test-public-passport-contract.mjs` (wired into `npm run verify` as `test:public-passport`). It authored NO SQL: the migration below is prose, deliberately, because migrations 041/042 belong to other lanes.
+
+## G.0 · The problem in one paragraph
+`lock.show` is public marketing (HE+EN at launch, SEO/AEO/GEO maximal). The app is mostly private: `/app/*` is de-indexed by `X-Robots-Tag: noindex, nofollow` (website-next/vercel.json) plus a `<meta name="robots">` in all 30 committed shells, with **crawl deliberately left open** so the noindex can actually be read (`website-next/app/robots.ts` documents this inversion). The only login-free passport surfaces today are (a) the SPA route `/passport/:id` — which lives *inside* that noindexed origin — and (b) the static `/passport/demo`, a fictional Maya Vale sample that is noindex + out of the sitemap by owner ruling D5. **So a genuinely public, shareable, indexable-by-consent artist Passport has no correct home**, and worse, "public" and "indexable" were the same word. They are now two words:
+
+> **REACHABLE** is granted by publishing — the link works.
+> **INDEXABLE** is granted by CONSENT — a recorded, scoped, revocable act, default OFF.
+
+## G.1 · Terminal states (the contract)
+Seven states, exhaustive and mutually exclusive. Each is a different answer to both the reader and the crawler; collapsing any two (the usual temptation: "just 404 it") destroys information both need. All seven are asserted reachable and distinct by the gate.
+
+| State | When | HTTP | Robots | In sitemap | Body |
+|---|---|---|---|---|---|
+| `ok` | published · mode=`discoverable` · valid index consent | 200 | `index, follow` | **yes — the only state that can be** | Passport |
+| `unlisted_ok` | published · mode=`unlisted` (**the default**) | 200 | `noindex, nofollow` | no | Passport |
+| `not_consented` | claims `discoverable`, consent missing/revoked/stale/wrong-scope/other-Act | 200 | `noindex, nofollow` | no | Passport (the artist's own link must keep working — only the crawler is refused) |
+| `not_found` | slug malformed · reserved · a UUID · an internal id · no row · row still `draft` | 404 | `noindex` | no | reason only |
+| `gone` | the artist **withdrew** it · the slug was retired · the bound version was never authorised · nothing published behind a published boundary | **410** | `noindex` | no | reason only |
+| `expired` | a time-boxed publication **lapsed on the clock** (nobody revoked anything; re-publishable) | **410** | `noindex` | no | reason only |
+| `superseded_redirect` | a version-addressed URL whose version is no longer current | 301 → canonical | `noindex` | no | none |
+
+`gone` and `expired` share a status code and are **not** the same state: different copy, different recovery path, different thing for the artist to do. `410` vs `404` is load-bearing — 410 tells a crawler "drop this URL deliberately", 404 leaves it in the recrawl queue for months.
+
+**Precedence is fixed** (any SQL or route implementation must match statement for statement): slug law → row exists → retired → withdrawn → not-published → expiry → no published version → version-addressed resolution → consent → default unlisted.
+
+## G.2 · Canonical / current-version semantics — RECOMMENDATION
+The tension is real: `share_link` (migration 041 + `src/lib/shareLink.js`) enforces **one link = one recipient view = one immutable version**. Applying that literally to a public URL produces one indexable URL per version per artist — canonical dilution, duplicate content, and a guarantee that the page Google keeps is the one most out of date. Applying the opposite naively breaks the recipient rule.
+
+**RECOMMENDED: two surfaces, two rules.**
+- **Token surface (`/p/:token`, 041, unchanged):** PINNED. One recipient, one frozen version, revocable, never indexable, never in a sitemap.
+- **Public slug surface (`/p/{slug}`, this contract):** **FLOATING_CANONICAL.** Always resolves to the *current published* version. The version-addressed form `/p/{slug}/v{n}` stays addressable for citation, is always `noindex`, carries `rel=canonical` to `/p/{slug}`, and answers `superseded_redirect` (301) once it is no longer current.
+
+Trade-off accepted: a public URL shared last year shows this year's evidence. That is the correct behavior for a *risk-reduction* surface (a buyer must never make a booking decision on withdrawn evidence) and the wrong behavior for a *receipt* — which is exactly why the receipt lives on the token surface. `VERSION_POLICY.PINNED` is implemented and gate-tested, so the owner can flip this without a rewrite.
+
+## G.3 · Where it should physically live — RECOMMENDATION
+| Option | For | Against | Verdict |
+|---|---|---|---|
+| **A · Next.js route on the marketing project** (`website-next/app/p/[slug]`, SSR/ISR) | Canonical host is already `https://www.lock.show` (owner ruling D2, one origin in `lib/site.ts`); robots/sitemap/hreflang/OG/JSON-LD machinery already exists and is gate-tested by `test:seo`; GA4 + consent banner already live there, so measurement DNA is one property, not two; the noindex boundary stays physically clean — `/app/*` keeps its blanket header, `/p/*` computes its directive per record | The marketing project gains its first data dependency (a narrow anon read path into Supabase) and needs ISR/revalidate; it is owned by Lane C, so this is a handoff, not a same-lane edit | **RECOMMENDED** |
+| **B · Separate server-rendered surface** (e.g. `passport.lock.show`) | Full isolation; independent deploy cadence; zero risk to marketing SEO | **Splits canonical authority across hosts** — the single most expensive SEO/AEO mistake available here; duplicates robots, sitemap, hreflang, consent banner and analytics; a second cookie/consent domain; a second noindex boundary to keep honest | Rejected |
+| **C · App-side SSR path** (SSR the Vite SPA or a function under `/app`) | Reuses the existing data layer and `passportKit` rendering | Requires **punching a hole in the one blanket rule that keeps the private product out of the index** — a per-path exception to `X-Robots-Tag` on the app origin is precisely the kind of rule that silently breaks; the SPA is client-rendered, so crawlers get an empty shell without new infra anyway | Rejected |
+
+**Also recommended with A:** the SPA route `/passport/:id` stops being the buyer-facing surface and becomes either an authenticated preview or a redirect to the public slug URL. That is Lane A's file (`src/App.jsx`) and is NOT done here.
+
+## G.4 · The migration this needs (PROSE ONLY — no SQL authored by this lane)
+Next free number is **043+** (041 and 042 exist, both drafted-not-applied). Additive only, `.down.sql` paired, applied by the owner.
+
+**`public.public_passport`** — the boundary record, one row per Act:
+`id uuid pk` · `act_id uuid not null unique → public.act(id) on delete cascade` · `slug citext not null unique` · `mode text not null default 'unlisted'` · `state text not null default 'draft'` · `expires_at timestamptz null` (NULL = endless, same law as `artist_access.expires_at` and `share_link.expiry`) · `published_at` · `withdrawn_at` · `retired_at` · `created_by`.
+Constraints: `CHECK (mode in ('unlisted','discoverable'))` — **default `'unlisted'`, never nullable, never a boolean**; `CHECK (state in ('draft','published','withdrawn'))`; `CHECK (slug ~ '^[a-z0-9][a-z0-9-]{4,46}[a-z0-9]$')`; `CHECK (slug <> act_id::text AND slug <> artist_id::text)` — the anti-oracle rule, a public URL must never hand out an internal identifier; a reserved-word exclusion (`app`, `demo`, `passport`, `sitemap`, …) enforced by a lookup table so the list can grow without a DDL change.
+**No `published_version_id` pointer** — the current version is DERIVED from 041's unique partial index on `passport_versions (act_id) where state='published'`. A second pointer would be a second truth.
+
+**`public.public_passport_slug_history`** — append-only gravestones: `slug` (unique across both tables), `public_passport_id`, `retired_at`. A retired slug resolves `gone` forever and is **never re-issued**, so a URL can never silently start pointing at a different person.
+
+**`public.public_passport_consent`** — append-only: `id` · `public_passport_id` · `act_id` · `scope text check (scope in ('index'))` · `granted_by uuid not null → auth.users` · `granted_at timestamptz not null` · `consent_text_version text not null` · `locales text[]` · `revoked_at timestamptz` · `evidence jsonb` (IP-class/UA-class only, never a count). Consent is **per Act** (multi-act law: evidence and authority are per-Act and non-transferable) and is invalidated by bumping `consent_text_version`.
+
+**Access:** no anon SELECT on any of the three tables. Anonymous resolution goes through a single `SECURITY DEFINER` function `public.resolve_public_passport(p_slug text, p_version_no int default null)` returning the projection as jsonb and implementing the G.1 precedence **in the same order as `src/lib/publicPassport.js`** (same discipline as 041's `resolve_share_link`). RLS: the owning artist reads/writes their own row via `can_access_artist()`; operator reads all.
+
+**Hard dependency — a defect this lane did not create and cannot close:** `pv_public_read` (`001_initial_schema.sql:209-210`) currently lets **any anonymous reader SELECT every row of `public.passport_versions` for any published artist**, including every superseded historical snapshot, forever. 041's header already documents this. A public passport surface must not ship until that policy is narrowed, or the boundary is decorative.
+
+## G.5 · Design-to-Code handoff (what Claude Design must supply for this surface)
+1. **Seven states as designed screens**, each with `data-screen-id`: `ok` · `unlisted_ok` (does the artist's own indicator appear on the public page, or only in the app? — decide) · `not_consented` (owner/artist-visible repair affordance, invisible to the buyer) · `not_found` (404) · `gone` (410 — withdrawn, dignified, no blame) · `expired` (410 — distinct copy from `gone`) · plus the loading/error skeleton. `superseded_redirect` has no UI.
+2. **Exact microcopy in HE + EN for all six visible states**, RTL mirrored. The `gone` and `expired` pages are the ones most likely to be read by a buyer who was sent a link — they must not imply the artist did something wrong.
+3. **The index-consent screen** (artist side): what the artist is agreeing to, in one screen, with the `consent_text_version` string printed on it; the withdraw path; and what changes when they withdraw (link keeps working, search listing disappears — the honest sentence).
+4. **OG card template per locale** (1200×630, HE + EN), containing **no number that is not a band** and no rating/count of any kind.
+5. **The public Passport body itself** reusing the existing proof primitives (`MethodLabel`, `BandPill`, `ProofUnit`) — with the explicit ruling that **no gap, coaching, freshness-warning or completeness component may appear on this surface**. Sections with nothing verified are omitted, never rendered empty (render law).
+6. **The share sheet**: how an artist gets the public URL, and how the public URL is visually distinguished from a token link (they behave differently and must not look identical).
+7. **Whether the persona toggle (`?view=`) exists here at all** — this is C1 in §1 and is still unruled.
+
+## G.6 · What needs Maria's ruling
+| # | Ruling | Why it blocks |
+|---|---|---|
+| G-1 | **Placement A** (public passport as a Next.js route on the marketing project) | Everything downstream: canonical host, sitemap, measurement, the noindex boundary |
+| G-2 | **Floating canonical for the public slug, pinned for the token link** | Interacts with the "one link = one version" IA rule and with C1 |
+| G-3 | Slug ownership: artist-chosen vs system-minted; and confirmation that a retired slug is **never** re-issued | Slug law and the gravestone table |
+| G-4 | May a public Passport be time-boxed at all, and is `expired` 410 or 404 | The `expired` state's existence |
+| G-5 | Does consent survive re-publishing a new version (recommended: yes, it is Act-level; re-consent only when the consent TEXT changes) | Otherwise every re-publish silently de-indexes the artist |
+| G-6 | HE as a **path locale** (`/he/p/{slug}`) — hreflang requires distinct URLs, and site locale is client-side/localStorage only today (`lib/locale-context.tsx`), so hreflang cannot honestly be emitted until this exists | HE+EN launch parity for this surface |
+| G-7 | Approval of migration 043 (G.4) **and** narrowing of `pv_public_read` (001:209) | The boundary is decorative until the version table stops being anon-readable |
+| G-8 | C1 (persona toggle on a public link) — still open from §1 | The body layout of the public page |
+
+## G.7 · Proof status
+**OBSERVED / EXECUTED:** `npm run test:public-passport` passes — all seven terminal states reachable and distinct; unlisted default enforced against 9 malformed mode values plus the contract source; projection scanned recursively by key and value with unapproved/unpublished/private claims and the raw headcount proven absent; sitemap inclusion refused across 7 invalid-consent variants, for the unlisted default even with a valid consent on file, and against a forged eligibility flag; slug law refuses UUIDs, reserved words and malformed forms; 410 ≠ 404 asserted; dead results proven to carry a reason and no payload; hreflang reciprocity with `ru`/`de` never emitted; module purity and determinism; alignment with 041's `passport_versions` state vocabulary as READ.
+**INFERENCE / RECOMMENDATION:** G.2, G.3 and G.4 are architecture proposals, not measurements.
+**RUNTIME-UNVERIFIED:** no route implements this rule (none exists); no SQL resolver exists; nothing here has been observed against the deployed `www.lock.show` robots/sitemap surface or against real Supabase RLS.

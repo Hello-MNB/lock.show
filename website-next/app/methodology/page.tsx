@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/methodology' },
+  alternates: localeAlternates('/methodology'),
   title: 'Methodology — How Evidence Is Verified',
   description: 'Every claim in a LOCK Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }

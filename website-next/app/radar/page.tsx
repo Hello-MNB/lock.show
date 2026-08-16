@@ -1,9 +1,10 @@
 ﻿import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/radar' },
+  alternates: localeAlternates('/radar'),
   title: 'Artist Radar — Your Private Evidence Workspace',
   description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
 }

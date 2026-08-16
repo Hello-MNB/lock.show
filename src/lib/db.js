@@ -553,13 +553,29 @@ export async function getPublicPassport(id) {
 // buildSafePayload). Buyer-safe columns only — never private/score columns.
 async function buildPassportSnapshot(artistId) {
   const artist = await getArtist(artistId)
+  // ACT SCOPE (multi-Act, CLAUDE.md: "evidence is per-Act and NON-transferable").
+  // A non-default Act has no `artists` row, so its evidence hangs off the FIRST
+  // Act's artist_id — an artist_id-only read writes a snapshot that MERGES two
+  // Acts into one Passport. Reproduced on a real PostgreSQL 16 by
+  // scripts/test-tenant-isolation.mjs (A7). NULL-tolerant: migration 020
+  // backfilled act_id = artist_id and trg_actfill_* keeps filling it, so this
+  // drops nothing that exists and only ever excludes another Act's row.
+  // This runs as the AUTHENTICATED owner, who holds act_id; the ANON read in
+  // getPublicPassport() below cannot do the same — 016/025 never granted anon
+  // claims.act_id / profile_items.act_id, so naming the column raises 42501.
+  // Closing that half needs a migration; it is an OWNER DECISION, not a query.
+  // Complement, not a duplicate, of src/lib/actScope.js: that module is the WRITE
+  // authority (which Act does this insert belong to); this is the READ scope on
+  // the buyer-facing side. Same transition rule — act.id === artists.id for the
+  // default Act — expressed once on each side of the boundary.
+  const actScope = `act_id.eq.${artistId},act_id.is.null`
   const [itemsRes, claimsRes] = await Promise.all([
     supabase.from('profile_items')
       .select('id, item_type, title, detail, item_date, public_url, source_status')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
+      .eq('artist_id', artistId).or(actScope).eq('visibility', VISIBILITY.PASSPORT_OK),
     supabase.from('claims')
       .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
+      .eq('artist_id', artistId).or(actScope).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
   ])
   return { artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
 }
