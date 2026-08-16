@@ -114,11 +114,43 @@ export class AnthropicClaimProcessor {
 
   // Firewall + shape guard: force a bounded status, clamp string lengths, and
   // fall back to the evidence's own value if the model returned nothing usable.
+  // ── RUNTIME FIREWALL (G-AI1) ────────────────────────────────────────────
+  // The system prompt ASKS the model not to emit a score/percentile/rank/exact
+  // head-count. Asking is not enforcing: `value` and `reason` were free strings,
+  // so "top 12th percentile" would have reached a claim untouched. This is the
+  // enforcement half — it runs on every model response, including retries.
+  // Enforcement is REJECTION, not redaction: a response that breaks the firewall
+  // is unusable output (same class as unparseable, G12), never a quietly-edited
+  // string that keeps a forbidden meaning in softer words.
+  static FIREWALL_PATTERNS = [
+    /\bpercentile\b/i,
+    /\brank(?:ed|ing)?\b/i,
+    /\bscore[sd]?\b/i,
+    /\btop\s*\d+\s*%/i,
+    /\b\d{1,3}\s*%/,                    // any bare percentage about a person
+    /\b(?:out|top)\s+of\s+\d+\b/i,
+    /\b\d{3,}\s*(?:people|fans|attendees|tickets|followers)\b/i, // exact head-count
+  ]
+
+  static #breaksFirewall(text) {
+    if (typeof text !== 'string' || !text) return false
+    return AnthropicClaimProcessor.FIREWALL_PATTERNS.some((re) => re.test(text))
+  }
+
   #sanitize(json, ev) {
     const status = BOUNDED.has(json?.status) ? json.status : 'not-assessable'
     const claim_type = typeof json?.claim_type === 'string' && json.claim_type ? json.claim_type.slice(0, 60) : 'claim'
-    const value = typeof json?.value === 'string' ? json.value.slice(0, 140) : (ev.value ?? null)
-    const reason = typeof json?.reason === 'string' ? json.reason.slice(0, 200) : null
+    const rawValue = typeof json?.value === 'string' ? json.value.slice(0, 140) : (ev.value ?? null)
+    const rawReason = typeof json?.reason === 'string' ? json.reason.slice(0, 200) : null
+    // G-AI1: a firewall-breaking field makes the whole response unusable.
+    if (AnthropicClaimProcessor.#breaksFirewall(rawValue) || AnthropicClaimProcessor.#breaksFirewall(rawReason) ||
+        AnthropicClaimProcessor.#breaksFirewall(claim_type)) {
+      const err = new Error('anthropic output broke the evidence firewall')
+      err.firewall = true
+      throw err
+    }
+    const value = rawValue
+    const reason = rawReason
     return { status, claim_type, value, reason }
   }
 }

@@ -172,11 +172,40 @@ const buyerFiles = [...walk(join(ROOT, 'src', 'features', 'passport'), ['.jsx', 
 for (const f of buyerFiles) scanFile(f, stripJs, COACH_VOCAB)
 okline(`scanned ${buyerFiles.length} buyer-facing files (passport/** + server payload)`)
 
+console.log('[7] AI output firewall: model responses are REJECTED, not just discouraged')
+{
+  const aiProblems = inspectAiOutputFirewall()
+  for (const msg of aiProblems) { console.log(`  ✗ ${msg}`); violations++ }
+  if (!aiProblems.length) okline('src/lib/ai/anthropic.js — FIREWALL_PATTERNS + #breaksFirewall + reject-on-break wired')
+}
+
 // ── verdict ──────────────────────────────────────────────────────────────────
 console.log('')
 if (violations) {
   console.log(`✗ GUARDRAILS: ${violations} violation(s) — a §20 firewall rule was broken.`)
   process.exit(1)
 }
-console.log('✓ GUARDRAILS: all 6 §20 inspectors pass (person-score · retired-word · destructive-migration · internal-confidence · reaction-as-number · two-view).')
+console.log('✓ GUARDRAILS: all 7 §20 inspectors pass (person-score · retired-word · destructive-migration · internal-confidence · reaction-as-number · two-view · ai-output-firewall).')
 process.exit(0)
+
+// ── [7] AI OUTPUT FIREWALL (G-AI1) ─────────────────────────────────────────
+// Triage record (16 Aug 2026): an independent reviewer reported `percentile` at
+// src/lib/ai/anthropic.js:21 as a gate failure. That line is the SYSTEM PROMPT
+// telling the model never to emit one — enforcement context, not a violation,
+// and it is why inspector [1] deliberately does not scan the AI module.
+// The REAL gap the report exposed: the prompt only ASKED. `value`/`reason` were
+// free strings, so a firewall-breaking model response reached the claim intact.
+// This inspector asserts the enforcement half exists and stays wired.
+function inspectAiOutputFirewall() {
+  const file = 'src/lib/ai/anthropic.js'
+  let src = ''
+  try { src = readFileSync(file, 'utf8') } catch { return [`${file}: missing — the AI output firewall cannot be asserted`] }
+  const problems = []
+  if (!/FIREWALL_PATTERNS\s*=/.test(src)) problems.push(`${file}: no FIREWALL_PATTERNS — model output is unbounded`)
+  if (!/#breaksFirewall/.test(src)) problems.push(`${file}: no #breaksFirewall enforcement helper`)
+  if (!/broke the evidence firewall/.test(src)) problems.push(`${file}: #sanitize does not REJECT firewall-breaking output`)
+  for (const needed of ['percentile', 'rank', 'score']) {
+    if (!new RegExp(`\\\\b${needed}`, 'i').test(src)) problems.push(`${file}: FIREWALL_PATTERNS missing a /${needed}/ rule`)
+  }
+  return problems
+}
