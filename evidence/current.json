@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "08baab04ac40244412dde3b9851984b644e51f9b",
+  "head": "419ff7e2de91f16fe971ed4f8a5bf54d2da86716",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/v11.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/v12.log)",
   "exitCode": 0,
   "result": "green-at-head",
-  "gateCount": 32,
+  "gateCount": 33,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -132,6 +132,10 @@
     },
     {
       "id": "VISUAL REGRESSION",
+      "result": "pass"
+    },
+    {
+      "id": "I18N PARITY",
       "result": "pass"
     },
     {
