@@ -2059,6 +2059,84 @@ surfaces, outside every audit's scope — recorded as **SHOP-ORIGIN**, untouched
 independently verified, and the execution law is explicit that an author cannot accept their own work. A
 re-verification pass is required before WEB-02 begins. No visual implementation has started.
 
+## CODE-WEB-021A · WAITLIST MODE FOUNDATION & PRIMARY CONVERSION (17 Aug 2026)
+
+Owner-approved reversible waitlist-acquisition release, built from **B4-70.10 v4.5 §10.1** read directly from
+Drive. No redesign: existing routes, composition, imagery, demo PASSPORT and consent scaffolding preserved.
+
+**Commits:** `716bbb1` foundation · `28c6135` brand sweep + gate (committed RED, labelled) · `771c259`
+contact repair + copy matrix · `739cd3d` three defects the gates passed · `df0247e` 8 QA repairs ·
+`6c0738f` matrix wired into /contact. Chain green at `6c0738f`: **37 steps, 0 failures, "Nothing was
+skipped."**
+
+### What shipped
+
+**Central switch** (`lib/conversion.ts`) — one `NEXT_PUBLIC_CONVERSION_MODE=waitlist|signup` resolves every
+primary CTA. Waitlist is the DEFAULT so a missing variable fails toward the safe state. Login deliberately
+does NOT route through it (§10.1 requires it available in both modes). Rollback is one env var: verified
+both directions across all 7 named surfaces, **destinations AND labels**.
+
+**Migration 048** (DRAFTED, NOT APPLIED) — additive only, no row rewritten. The site is a static export so
+there is no same-origin API route; a SECURITY DEFINER RPC `join_waitlist()` is therefore the governed path,
+doing server-side validation, coarse rate limiting on a salted bucket, and an idempotent upsert. 026's public
+`anon INSERT` policy is withdrawn and the grant revoked. **The down file deliberately does NOT drop the
+consent columns** — §10.1 requires preserving consent history, and dropping them would delete the evidence a
+consent claim rests on.
+
+**Consent integrity is a table constraint, not UI** — `whatsapp_consent = true` is rejected unless text,
+version, locale, timestamp and number are all present.
+
+**`/waitlist`** — noindex per §10.1, self-canonical, absent from the sitemap; the SEO gate's ROUTE_POLICY
+refused the build until indexation was declared explicitly.
+
+**Brand sweep** — website source 116→0, rendered HTML incl. the 30 public app shells 169→0, non-HTML public
+7→0; lowercase `lock.show` preserved. New `test:brand`, 8 clauses, mutation-proven.
+
+**Copy matrix** (`content/copy-matrix.ts`) — one row per string, all locales side by side, ordered
+page→section→component→element. Gated by `test:copy`.
+
+### Independent QA — REVISE, 16 defects. 8 repaired, 8 open.
+
+| ID | Defect | State |
+|---|---|---|
+| D1 | `/pricing` ×3 + home CTA labels hardcoded — waitlist copy shown in SIGNUP mode | ✅ fixed |
+| **D2** | **`test:copy`'s engineering-vocabulary rule was a DEAD GATE** — its block regex matched ONE 8,720-char blob spanning all 25 rows; a `voice:'utility'` inside made the loop skip everything. It printed green while passing anything | ✅ fixed (per-row split + collapse guard) |
+| **D3** | **A consent survived a phone-number swap** — a second anonymous submission attached a never-consented number to a surviving `true` | ✅ fixed (number change resets consent + record) |
+| D4 | `048.down` recreated the policy but never re-granted INSERT — rollback left capture silently broken | ✅ fixed |
+| D6 | `consent_at` pinned to the first consent, so new wording carried the OLD timestamp | ✅ fixed (advances on text/version change) |
+| D8 | Lint error introduced | ✅ fixed |
+| D9 | The capture suite was wired to NO gate | ✅ fixed (`test:waitlist` in verify) |
+| D13 | `anon`/`authenticated` retained table-level UPDATE/DELETE | ✅ fixed (revoked) |
+| **D12** | **BLOCKER — 048 not applied; every submission would fail** | ⛔ OWNER-PENDING **WL-APPLY** |
+| D5 | Unauthenticated overwrite of a stranger's record | ⛔ OWNER-PENDING **WL-OVERWRITE** |
+| D7 | No privacy link at point of collection on `/waitlist` | ⛔ OWNER-PENDING **WL-PRIVACY-LINK** |
+| D11 | `wa.me/<digits>` in JSON-LD still yields the number | ⛔ OWNER-PENDING **WL-WAME** |
+| D10 | **The localization gap is 67% of the site**, not "the contact hero" | ◐ partly closed |
+| D14/15/16 | A hardcoded label, two tautological assertions, dead code | ○ open, LOW |
+
+### The localization number, corrected
+
+I reported the gap as "the contact hero H1". **QA measured it: 232 Hebrew vs 472 English visible blocks —
+67% unmigrated, with 11 of 15 routes rendering 100% English body copy under `dir=rtl`.** `6c0738f` wired the
+five orphaned matrix ids into `/contact` (Hebrew hero now renders, English byte-identical). **That fixed ONE
+page.** The remaining 10 routes are the actual Hebrew-launch blocker.
+
+### Seven defects I found in my own work, by execution
+
+The rollback test found 11 CTAs bypassing the helper. The grant-scope suite found 048 coupling to 046 and
+**breaking the 043-047 rollback chain**. My capture suite found 048 wasn't idempotent, then tripped my own
+rate limiter. The visual-baseline review — the step easiest to treat as a formality — found a **false
+availability claim** ("Registration is open — free for artists during the pilot", untrue twice over) and
+**eight buttons promising a signup** that no longer existed. **The automated chain was green on all of it.**
+
+**Standing lesson, recorded because it recurred:** two of my gates were hollow — a mutation harness that
+could not tell a crash from a kill, and the D2 dead gate. Both were found by an independent reviewer, not by
+me. A dead gate is worse than no gate: it converts "untested" into "certified". Every new gate needs a
+mutation proving it can fail, and a guard that fails loudly if its corpus collapses.
+
+**NOT COMPLETE.** QA returned REVISE; 8 repairs have not been independently re-reviewed. Migrations 046 and
+048 both remain DRAFTED / NOT APPLIED. Nothing deployed — production still serves an older build.
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this
