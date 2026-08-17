@@ -2192,3 +2192,124 @@ nothing — all caught.
 
 **Round-9 note:** the first round-9 QA agent produced no verdict — 162-byte transcript, no activity, no
 completion. Treated as stalled, not as a pass; re-spawned. No result was assumed from it.
+
+## WEB-021A.1E · TOOLCHAIN AUTHORITY RECONCILIATION + FOCUSED LINT REPAIR (17 Aug 2026)
+
+**Status: READY FOR CONTINUITY QA.** That is the ceiling the packet sets, and nothing below raises it.
+No deploy, no migration, no provider-console change, no public-release claim.
+
+**Preflight (observed, before any edit).** Branch `claude/b4-gigproof-discovery-e7749o` · HEAD
+`63c40d6f43d0e3ca14f5b8bf8ec156c719e1a42d` · identical to `origin` · dirty 0 · stashes 0 · one active
+process, the session itself · **local PostgreSQL accepting connections on 5432**, so the SQL gates
+executed rather than skipping.
+
+### 1 · Runtime authority
+
+The authority is the Runtime ADR ruling in **B4-40.20 v2.10** (BUILD-STATE, RELEASE & DECISION
+REGISTER, 17 Aug 2026): *"the lowest-drift target is Node 22.x because it is machine-enforced and
+matches the intended hosting contract … DEPLOY.md requires correction through CONTINUITY; the ruling
+does not create release readiness."* Its own drift row reads `adopt 22 in ADR/docs through CONTINUITY`.
+
+Runtime-before matrix, every row read from the working tree at HEAD:
+
+| Declaration | Before | After | Basis |
+|---|---|---|---|
+| `website-next/package.json:28` `engines.node` | `22.x` | `22.x` (unchanged) | already the machine-enforced authority |
+| `website-next/.nvmrc:1` | `20` | `22` | contradicted `engines.node`; **not named in the ADR ruling** — see below |
+| `website-next/DEPLOY.md:51` | `Node.js version: 20.x` | `22.x` + authority note | the correction the ruling explicitly ordered |
+| `.github/workflows/verify.yml:24` | `node: [20, 22]` | **unchanged** | not runtime authority — see below |
+| root `package.json` `engines` | absent | **unchanged** | absent is not drift; nothing to reconcile |
+| `vercel.json` (root and `website-next/`) | no Node declaration | **unchanged** | neither file declares one |
+| container runtime | `v22.22.2` (`npm` 10.9.7) | — | observed here, not the owner's machine |
+
+**`.nvmrc` is an addition to the register's drift list, not an inference from it.** B4-40.20 names
+`package.json`, `DEPLOY.md` and the ambient shell; a probe of the full export returns **zero** hits for
+`nvmrc`. It is tracked, held `20`, has no tracked consumer, and is read implicitly by `nvm` and by
+Vercel. Aligning it to `22` follows from the ruling's own criterion — agree with the machine-enforced
+value — but the register should record `.nvmrc` as a fourth declaration site.
+
+**CI was deliberately left alone.** `verify.yml:22-23` already documents its own intent: *"22 is the
+deploy target (website-next engines: 22.x); 20 guards the oldest still-supported LTS for the root
+toolchain."* That is a compatibility matrix, not a runtime-authority declaration, and the ruling is
+about the deploy target. Narrowing it would remove coverage the evidence does not ask to remove.
+
+**Preview/Vercel runtime is UNOBSERVED and stays EVIDENCE OPEN.** The Vercel project's Node setting
+lives in a provider console this packet may not read or mutate. `DEPLOY.md` is an instruction to a
+human operator, not a readback of the live setting, so correcting it does **not** establish what
+preview actually runs. It must be confirmed by the owner at the console.
+
+**B4-95.10 row 140 / WEB-021A.1E is EVIDENCE OPEN.** The row's content is not present in the export
+that was read (86,885 chars; `1E` → 0 hits, `lint`/`eslint`/`Node`/`nvmrc`/`toolchain` → 0 hits each).
+It was not inferred and is not restated here.
+
+### 2 · The two focused lint defects
+
+Both reproduced at this HEAD before any edit, exactly as B4-40.20 recorded them — `npx eslint app
+components lib --quiet` → **exit 1**, two `react-hooks/set-state-in-effect` errors:
+
+* `website-next/components/consent-banner.tsx:63` — `setVisible(true)` inside the mount effect
+* `website-next/lib/locale-context.tsx:64` — `setLocaleState('he')` inside the mount effect
+
+Same defect class: localStorage — an external store — mirrored into React state by a synchronous
+setState in an effect. Both now READ the store with `useSyncExternalStore` (React 19.2.4, no new
+dependency) and keep only genuine external-system writes in effects: `gtag.js` injection, and
+`<html lang>` / `<html dir>`. `getServerSnapshot` preserves the static export's EN baseline and the
+deny-by-default consent posture, so the prerendered HTML is unchanged.
+
+Each file keeps a module-level session override (`sessionChoice`, `sessionLocale`). Without it a
+visitor whose `localStorage` throws — private mode, storage disabled, sandboxed iframe — could no
+longer dismiss the banner or switch locale at all, because the snapshot would keep reporting the old
+value. The override reproduces the pre-repair behaviour exactly: the choice holds for the session and
+does not survive a reload.
+
+Nothing else was touched: the eslint config was not relaxed, no rule was disabled, no suppression
+comment was added. The other 55 errors from `npx eslint .` come from the committed minified bundle
+`website-next/public/app/assets/index-B0moPvgL.js` and are **out of scope here** — they belong to
+DEFECT-PKT-021A-EMBEDDED-APP.
+
+### 3 · Proof, because lint going green proves only that the rule is satisfied
+
+`scripts/test-client-store.mjs` (new, wired into `verify` between `test:hero` and `test:visual`)
+drives 22 assertions through headless Chromium against the built export: banner renders with no stored
+choice · hidden for `denied` · hidden for `granted` with `#ga4-src` injected by the effect · accept and
+decline both dismiss without a reload, persist, and set GA correctly · reload re-applies both stored
+values · locale toggle writes `<html lang/dir>` and survives a reload and a toggle back.
+
+**It exists because the existing rendered gate cannot make these assertions.**
+`scripts/test-hero-contract.mjs:263` does `if (!hero || !banner) return null` — a consent banner that
+never rendered would pass R4 vacuously. Chromium is required here, not optional: this file exits
+non-zero without a browser, because a skip is not a pass.
+
+**Mutation-proven, 5/5 caught** (each rebuilt before running): banner never shows · `storeChoice` stops
+notifying subscribers · locale effect stops writing `<html dir>` · locale snapshot ignores
+localStorage · sources newer than `out/`. The lint gate itself was separately mutation-proven — the
+defect was re-injected into each file and `eslint` returned exit 1 both times, so the green is the
+repair, not a silenced rule.
+
+**The mutation run found a real hole in the gate I had just written.** A mutation whose *build* failed
+left the previous `out/` in place, and all 22 assertions sailed through green against code that no
+longer existed. A rendered gate that does not check the age of its own artifact certifies the last good
+build. A vacuous-pass guard catches "nothing"; it cannot catch "stale". A freshness check against all
+52 tracked website sources was added and mutation-proven. Third time a gate of mine has been hollow —
+and the first time my own harness caught it rather than a reviewer.
+
+### 4 · Commands and exit codes
+
+| Command | Exit |
+|---|---|
+| `npx eslint app components lib --quiet` (before repair) | 1 — the two defects |
+| `npx eslint app components lib --quiet` (after repair) | 0 |
+| `npx tsc --noEmit` | 0 |
+| `npx next build` | 0 — 20 static pages |
+| `node scripts/test-client-store.mjs` | 0 — 22 assertions |
+| `npm run verify` (full chain, before wiring the new gate) | 0 — "Nothing was skipped." |
+| `npm run verify` (full chain, 38 steps, new gate wired in) | 0 — `test:client-store` at step 28 reports 22 assertions |
+
+### 5 · Observed and deliberately NOT changed
+
+* `website-next/DEPLOY.md:42` says *"select the LOCK repo"* — a bare standalone `LOCK`, i.e. the brand
+  defect under the 17 Aug founder ruling. `test:brand` does not see it because DEPLOY.md is an internal
+  operator doc, not a public surface. Left for DEFECT-PKT-021A-BRAND-GATE rather than fixed here; the
+  brand corpus decision (internal docs in or out) is not this packet's to make.
+* `npm run lint` is still in no gate. Wiring it would fail the chain on the 55 committed-bundle errors,
+  which is EMBEDDED-APP's call, not this packet's.

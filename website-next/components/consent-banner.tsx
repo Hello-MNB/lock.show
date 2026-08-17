@@ -6,7 +6,7 @@
  * the visitor grants consent; a stored grant loads it on return visits.
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { useLocale } from '@/lib/locale-context'
 
@@ -14,6 +14,36 @@ const STORAGE_KEY = 'gigproof_consent'
 const MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000 // re-ask after 12 months
 
 type Choice = 'granted' | 'denied'
+
+// 'unknown' is the SERVER / first-hydration snapshot: the store has not been
+// read yet, so the banner stays hidden. `null` means the store WAS read and
+// holds no valid choice — that is the state that shows the banner.
+type Snapshot = Choice | null | 'unknown'
+
+// ─── localStorage as an external store ─────────────────────────────────────
+// The stored consent choice lives OUTSIDE React, so it is READ with
+// useSyncExternalStore rather than mirrored into state by an effect
+// (react-hooks/set-state-in-effect).
+//
+// `sessionChoice` is the in-memory override. Without it a visitor whose
+// localStorage throws (private mode, storage disabled, sandboxed iframe)
+// could never dismiss the banner, because readChoice would keep reporting
+// null. It preserves the pre-repair behaviour: the choice holds for the
+// session, it just does not survive a reload.
+let sessionChoice: Choice | null = null
+
+const listeners = new Set<() => void>()
+
+function subscribe(onStoreChange: () => void): () => void {
+  listeners.add(onStoreChange)
+  return () => {
+    listeners.delete(onStoreChange)
+  }
+}
+
+function getServerSnapshot(): Snapshot {
+  return 'unknown'
+}
 
 declare global {
   interface Window {
@@ -23,6 +53,7 @@ declare global {
 }
 
 function readChoice(): Choice | null {
+  if (sessionChoice !== null) return sessionChoice
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
@@ -35,11 +66,13 @@ function readChoice(): Choice | null {
 }
 
 function storeChoice(value: Choice) {
+  sessionChoice = value
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ value, at: Date.now() }))
   } catch {
     /* storage unavailable — banner re-shows next visit */
   }
+  for (const listener of listeners) listener()
 }
 
 function loadGA(gaId: string) {
@@ -55,21 +88,22 @@ function loadGA(gaId: string) {
 
 export function ConsentBanner({ gaId }: { gaId: string }) {
   const { messages, dir } = useLocale()
-  const [visible, setVisible] = useState(false)
+  const choice = useSyncExternalStore<Snapshot>(subscribe, readChoice, getServerSnapshot)
 
+  // gtag.js is an external system, so loading it belongs in an effect. loadGA
+  // is idempotent (it guards on the injected #ga4-src node), so re-running it
+  // after a grant is a no-op rather than a second injection.
   useEffect(() => {
-    const choice = readChoice()
     if (choice === 'granted') loadGA(gaId)
-    else if (choice === null) setVisible(true)
-  }, [gaId])
+  }, [choice, gaId])
 
-  if (!visible) return null
+  // Hidden for 'granted', 'denied' AND 'unknown' — identical to the previous
+  // `visible` flag, which only ever turned true on a read that found nothing.
+  if (choice !== null) return null
   const t = messages.consent
 
   const decide = (value: Choice) => {
     storeChoice(value)
-    setVisible(false)
-    if (value === 'granted') loadGA(gaId)
   }
 
   return (
