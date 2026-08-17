@@ -25,7 +25,8 @@ incremental re-scans are TARGET ARCHITECTURE, not yet built; no business case ma
 assume them until implementation and measured cost are verified. Provider fallback may use a
 cheaper tier with narrower extraction, but must preserve the evidence firewall and disclose
 the narrower scope. Migrations 001–047 exist locally (highest `047_grant_decision`) — diff before creating
-048+; do not recreate existing tables. 043-047 are DRAFTED, NOT APPLIED. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
+048+; do not recreate existing tables. 043-047 are DRAFTED, NOT APPLIED. NOTE: `036` exists only as
+`036_token_hash.sql.DRAFT`, so the numbering gap is DELIBERATE — never "fix" it by writing a new 036. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
 local clone C:\Users\user\lock.show; Drive B4-lock.show = collaboration/design only.
 
 BRAND NAMING (founder ruling, Maria, 17 Aug 2026 — binding on all surfaces): the brand is
