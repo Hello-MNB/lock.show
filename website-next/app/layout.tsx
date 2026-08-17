@@ -6,7 +6,7 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
+import { SAME_AS, CONTACT_POINTS } from '@/lib/social'
 import { SITE_URL, OG_DEFAULT_IMAGE } from '@/lib/site'
 
 const manrope = Manrope({
@@ -145,7 +145,13 @@ const jsonLd = {
         {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          telephone: WHATSAPP_E164,
+          // telephone REMOVED (owner, 17 Aug). A JSON-LD `telephone` field is the
+          // most machine-readable form a number can take — it is structured,
+          // labelled and trivially harvested at scale by the scrapers that build
+          // spam and voice-phishing lists. The WhatsApp route is still published
+          // to search and answer engines through the wa.me URL in `sameAs`, which
+          // is a link target rather than a bare number, so discoverability is kept
+          // and the harvestable field is not.
           areaServed: 'IL',
           availableLanguage: ['he', 'en'],
         },

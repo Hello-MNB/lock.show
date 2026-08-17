@@ -2,10 +2,11 @@
 import { localeAlternates } from '@/lib/site'
 
 import { Hero } from '@/components/hero'
-import WaitlistForm from '../../components/waitlist-form'
+import ContactForm from '@/components/contact-form'
+import { ContactChannels } from '@/components/contact-channels'
 import { APP_URL } from '@/lib/app-url'
 import { conversionHref } from '@/lib/conversion'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
+
 
 export const metadata: Metadata = {
   alternates: localeAlternates('/contact'),
@@ -23,7 +24,9 @@ const lookingFor = [
 const contactDetails = [
   { label: 'Location', value: 'Tel Aviv, Israel' },
   { label: 'Stage', value: 'Closed Beta 2026' },
-  { label: 'Languages', value: 'Hebrew · English' },
+  // 'Languages: Hebrew · English' REMOVED (owner, 17 Aug): a technical note,
+  // not marketing copy. The site already announces its languages by BEING in
+  // them — the locale toggle is the affordance, a spec line is not.
 ]
 
 export default function Contact() {
@@ -92,7 +95,7 @@ export default function Contact() {
             {/* First-party waitlist capture — writes to waitlist_signup
                 (migration 026; write-only for the public, operator-only read).
                 No Formspree, no third parties — matching the promise below. */}
-            <WaitlistForm />
+            <ContactForm />
           </div>
 
           {/* INFO COLUMN */}
@@ -142,53 +145,9 @@ export default function Contact() {
                 ))}
               </div>
 
-              {/* Direct channels */}
+              {/* Direct channels — icon-first, no plain-text phone number */}
               <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(10,13,11,0.08)' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    backgroundColor: 'var(--color-night)',
-                    color: 'var(--color-paper)',
-                    borderRadius: 'var(--radius-sm)',
-                    textDecoration: 'none',
-                    marginBottom: '14px',
-                  }}
-                >
-                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                    WHATSAPP
-                  </span>
-                  <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-                <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap' }}>
-                  {SOCIAL.map(({ key, label, href }) => (
-                    <a
-                      key={key}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.06em',
-                        color: 'var(--color-tally-onlight)',
-                        textDecoration: 'none',
-                        // ≥44px hit area (T-97 P1 tap targets)
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        minHeight: '44px',
-                        padding: '0.5rem 0',
-                      }}
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </div>
+                <ContactChannels />
               </div>
             </div>
 
