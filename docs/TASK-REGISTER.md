@@ -2279,7 +2279,7 @@ DEFECT-PKT-021A-EMBEDDED-APP.
 ### 3 · Proof, because lint going green proves only that the rule is satisfied
 
 `scripts/test-client-store.mjs` (new, wired into `verify` between `test:hero` and `test:visual`)
-drives **39 assertions** — 5 read the prerendered export off disk, the rest run in headless
+drives **39 assertions** — 7 read the prerendered export off disk, the rest run in headless
 Chromium. **The commit message `d68f43f` says "22 rendered assertions"; that number was wrong
 twice over** — there were 21 contract assertions plus a non-vacuity check that was counting
 itself, and the suite has since grown. Assertions cover: banner renders with no stored
@@ -2299,10 +2299,11 @@ defect was re-injected into each file and `eslint` returned exit 1 both times, s
 repair, not a silenced rule.
 
 **The mutation run found a real hole in the gate I had just written.** A mutation whose *build* failed
-left the previous `out/` in place, and all 22 assertions sailed through green against code that no
+left the previous `out/` in place, and every assertion then in the file (reported as 22, actually 21)
+sailed through green against code that no
 longer existed. A rendered gate that does not check the age of its own artifact certifies the last good
 build. A vacuous-pass guard catches "nothing"; it cannot catch "stale". A freshness check against all
-52 tracked website sources was added and mutation-proven. Third time a gate of mine has been hollow —
+the tracked website sources was added and mutation-proven. Third time a gate of mine has been hollow —
 and the first time my own harness caught it rather than a reviewer.
 
 ### 4 · Commands and exit codes
@@ -2313,9 +2314,9 @@ and the first time my own harness caught it rather than a reviewer.
 | `npx eslint app components lib --quiet` (after repair) | 0 |
 | `npx tsc --noEmit` | 0 |
 | `npx next build` | 0 — 20 static pages |
-| `node scripts/test-client-store.mjs` | 0 — 22 assertions |
+| `node scripts/test-client-store.mjs` | 0 — 39 assertions |
 | `npm run verify` (full chain, before wiring the new gate) | 0 — "Nothing was skipped." |
-| `npm run verify` (full chain, 38 steps, new gate wired in) | 0 — `test:client-store` at step 28 reports 22 assertions |
+| `npm run verify` (full chain, 38 steps, new gate wired in) | 0 — `test:client-store` at step 28 reports 39 assertions |
 
 ### 5 · Observed and deliberately NOT changed
 
@@ -2330,7 +2331,7 @@ and the first time my own harness caught it rather than a reviewer.
 
 An independent reviewer with a rejection mandate audited `d68f43f`. **The repair itself survived
 intact**: ~45 executed browser probes found *zero* behavioural divergence from `63c40d6` — identical
-prerendered HTML (`index.html` 99,890 bytes on both sides; the only diff is the chunk hash and build
+prerendered HTML (the only diff is the chunk hash and build
 id), zero hydration warnings, identical outcomes for private-mode storage, soft `next/link` navigation,
 six hostile stored-consent payloads, and the `Date.now()` expiry boundary crossed mid-session. Scope was
 clean (7 files, no secrets). `npm run verify` exit 0, nothing skipped.
@@ -2364,16 +2365,18 @@ New sections: **S** reads the export off disk, because a browser *cannot* see th
 context where `localStorage` throws, so the session overrides are exercised rather than merely asserted
 in prose. **E** covers expiry, with a fresh-timestamp positive control so E1 cannot pass on an unreadable
 fixture. **P** is a precondition — a stub `out/` used to fail via an uncaught Playwright `TimeoutError`
-deep in section A; it now fails by name. The freshness corpus grew from 52 to 57 files: `next.config.ts`,
+deep in section A; it now fails by name. The freshness corpus grew from 52 files to the full tracked
+website surface (263 enumerated): `next.config.ts`,
 `package.json`, `postcss.config.mjs`, `tsconfig.json` and `eslint.config.mjs` change the output without
 changing a component, and were the same stale-artifact hole one level down.
 
-**S4 was scoped to `<header>` after a false positive.** Whole-document matching flagged `nav.bookers`
-("מזמיני הופעות") because it also appears as a deliberate bilingual gloss inside the English meta
-description — EN copy doing its job, not a locale leak.
+**S4 was scoped to `<header>` after a false positive — and that narrowing was WRONG, on a
+justification that was factually false.** See section 7.
 
 Other findings, all repaired: `@types/node` was a **fifth** Node-declaration site the matrix missed, now
-`^22` (`tsc`, `eslint`, `next build` all still exit 0; `package-lock.json` updated) · the assertion count
+`^22` (`npx tsc --noEmit`, `npx eslint app components lib` and `npx next build` all still exit 0;
+`package-lock.json` updated. `npm run lint` still exits **1** on the 55 pre-existing committed-bundle
+errors — unchanged by the bump, and never claimed otherwise) · the assertion count
 was self-inflating · `.github/workflows/verify.yml:60` still said "19 checks" for a 38-step chain · the
 `engines`-does-not-enforce-CI limitation is now disclosed above · `DEPLOY.md` lines 1 and 46 carried bare
 standalone `LOCK` and are corrected.
@@ -2390,3 +2393,67 @@ the reviewer did not read Drive — from the repo alone, only `engines.node = 22
 build are re-derivable, **not** that Node 22 is *authorised* · and my own first-round mutation set, which
 was described in prose but not committed. The five QA mutations above are now recorded as exact
 file-and-text substitutions so a third party can replay them without a script.
+
+### 7 · Second independent re-review (`9d4031f`) — verdict REVISE, and what it changed
+
+A second independent reviewer audited `9d4031f` with a rejection mandate. **The prior rejection is
+confirmed repaired**: they re-ran all five of the first reviewer's mutations themselves, rebuilding
+`website-next` each time so no stale-`out/` false result was possible, and all five failed by the exact
+named assertion this register claims. It is not a fifth hollow gate. The new verdict is REVISE for one
+real coverage narrowing and a cluster of numbers in this document that were stale or scope-dependent —
+including the very number section 6 said had been made honest.
+
+**[MED] I narrowed S4 to `<header>` on `index.html` alone, and the reason I gave was false.** I wrote
+that "מזמיני הופעות" appears in the English *meta description*. It does not. Executed here:
+`<meta name="description">` is pure English, and BOTH occurrences sit inside `<script>` elements — the
+JSON-LD block and the RSC payload — so stripping `<script>…</script>` removes the false positive
+outright and the narrowing was never necessary. The reviewer proved the cost: Hebrew injected outside
+`<header>` passed at exit 0, and **eight of the nine `useLocale()` consumers** — `/contact`,
+`/waitlist`, footer, legal-document, contact-form, contact-hero, contact-channels, waitlist-intro — live
+outside `<header>` or outside `index.html` entirely, so their locale copy was never inspected.
+
+S4 now strips `<script>` blocks and scans **the whole document of all 17 exported pages**. Re-proven
+against the reviewer's own bypass and one of my own: Hebrew outside `<header>` in `index.html` →
+caught; Hebrew in `contact.html` → caught. The `getServerSnapshot → 'he'` mutation now fails naming
+`producers.html`, `_not-found.html` and `faq.html`, not just the home page.
+
+**[MED→LOW] Other repairs.** S0 counted pages instead of resolving them: `pages.length >= routes.length`
+let a deleted `pricing.html` survive (16 pages, 15 routes — still "enough"). It now resolves every app
+route **by name** to `<route>.html` or `<route>/index.html`, and catches the deletion. Deriving the route
+list exposed a second bug of the same kind — `git ls-files -- 'website-next/app/**/page.tsx'` returns
+**14**, because git's `**/` requires at least one directory and silently drops `app/page.tsx`, the root
+route; enumeration is now suffix-filtered and returns 15. The freshness corpus said "all 57 tracked
+website sources" while 203 `public/**` assets, `package-lock.json`, `proxy.ts` and `vercel.json` sat
+outside it — a `public/` edit with no rebuild shipped green; the corpus now covers them (263 enumerated)
+and the log says "enumerated", not "all". S3b no longer asserts key presence alone: it checks the HE nav
+values actually contain Hebrew characters, so S4 cannot pass vacuously if `he.json` were filled with
+Latin text.
+
+**Numbers corrected in this document.** The section 4 evidence table still read "22 assertions" in two
+rows — the exact figure section 6 claimed to have fixed, left stale in the table a reader treats as the
+record; both now say 39 · "5 read the prerendered export off disk" was 7 · section 3 still described the
+corpus as 52 files · "`tsc`, `eslint`, `next build` all still exit 0" was true only for the scoped lint
+command, and is now written with the scope and with `npm run lint`'s unchanged exit 1 stated alongside.
+
+**The 99,890-byte figure is withdrawn.** It was the first reviewer's measurement of `d68f43f` against
+`63c40d6`. A clean build here yields 100,029 bytes, so the number does not re-derive at this HEAD. What
+mattered was the *equality* between revisions, which the second reviewer confirmed independently by
+hashing: both component files are byte-identical across `d68f43f..9d4031f`.
+
+**Disclosed, not fixed — known-equivalent mutants.** Two of the reviewer's own mutations passed at exit
+0: removing `loadGA`'s `#ga4-src` idempotency guard, and making `subscribe` return a no-op unsubscribe.
+Neither produces observable divergence in this app — `ConsentBanner` and `LocaleProvider` never unmount,
+and the `[choice, gaId]` effect fires once per grant — so they are equivalent mutants under every path
+the gate exercises, not gate holes. Recorded because the comment at `consent-banner.tsx` explicitly
+asserts idempotency and nothing tests it. **S2 is likewise not snapshot coverage**: `app/layout.tsx:207`
+hardcodes `<html lang="en" dir="ltr">`, so no client-store defect can move it — confirmed, the locale
+snapshot mutation leaves S2 green and is caught by S4/S5 instead. S2 stays as a legitimate export
+assertion under an honest description.
+
+**What the reviewer could NOT verify:** `npm ci` behaviour under Node 20 (no Node 20 binary in this
+container — still inferred, not executed) · the Vercel console setting (out of bounds, EVIDENCE OPEN) ·
+whether `@types/node@^20` would have produced a different result, since the old version was not
+reinstalled, so "still exit 0" is an absolute state at HEAD, not a before/after comparison · S3's
+non-vacuity guard, which was read but not fired because emptying `he.json` breaks the build and would
+produce a stale-`out/` false result · and the Drive authority itself — from the repo alone only
+`engines.node = 22.x` and a green Node 22 build are re-derivable, **not** that Node 22 is *authorised*.

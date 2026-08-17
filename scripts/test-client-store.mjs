@@ -98,8 +98,13 @@ if (!existsSync(path.join(OUT, 'index.html'))) {
     // skipping the rebuild left exactly the stale-artifact hole this check
     // exists to close.
     "website-next/next.config.ts website-next/package.json " +
-    "website-next/postcss.config.mjs website-next/tsconfig.json " +
-    "website-next/eslint.config.mjs",
+    "website-next/package-lock.json website-next/postcss.config.mjs " +
+    "website-next/tsconfig.json website-next/eslint.config.mjs " +
+    // public/** is copied verbatim into out/, and proxy.ts + vercel.json
+    // shape what is served. Independent QA showed the previous corpus said
+    // "all 57 tracked website sources" while 203 public assets sat outside
+    // it — an edit to public/ left a stale out/ certified green.
+    "website-next/public website-next/proxy.ts website-next/vercel.json",
     { cwd: path.join(DIR, '..'), encoding: 'utf8' },
   ).split('\n').filter(Boolean)
   if (!src.length) fail('freshness: no tracked website sources enumerated — the freshness check itself is vacuous')
@@ -113,7 +118,7 @@ if (!existsSync(path.join(OUT, 'index.html'))) {
   if (newest > built) {
     fail(`freshness: website-next/out is OLDER than ${newestFile} — rebuild (\`npx next build\` in website-next) before trusting these rendered assertions. A stale artifact turns this gate into a false green.`)
   }
-  console.log(`  · freshness: out/ newer than all ${src.length} tracked website sources (newest: ${newestFile})`)
+  console.log(`  · freshness: out/ newer than all ${src.length} enumerated website sources (newest: ${newestFile})`)
 }
 
 let chromium
@@ -181,8 +186,28 @@ console.log('\n[S] server snapshot — the prerendered static export')
 {
   const pages = execSync(`find ${JSON.stringify(OUT)} -name '*.html' -type f -not -path '*/app/*'`,
     { encoding: 'utf8' }).split('\n').filter(Boolean)
-  check(`S0 non-vacuity: ${pages.length} exported pages enumerated (excluding the /app shells)`,
-    pages.length >= 15, `only ${pages.length}`)
+  // Floor derived from the ROUTE LIST, not a hardcoded number. Independent QA
+  // noted a fixed `>= 15` against 17 actual pages let two pages vanish silently.
+  // NOT `git ls-files -- 'website-next/app/**/page.tsx'`: git's `**/` requires at
+  // least one directory, so that form silently drops app/page.tsx — the root
+  // route — and reported 14 where there are 15.
+  const routes = execSync('git ls-files -- website-next/app',
+    { cwd: path.join(DIR, '..'), encoding: 'utf8' })
+    .split('\n').filter((f) => f.endsWith('/page.tsx'))
+  // A COUNT is not coverage: a `pages.length >= routes.length` floor let a
+  // deleted page survive (16 pages, 15 routes — still "enough"). Every route is
+  // resolved BY NAME to its exported artifact instead, mirroring how the static
+  // server resolves them (`<route>.html` or `<route>/index.html`).
+  const missing = routes
+    .map((f) => f.replace(/^website-next\/app\//, '').replace(/\/?page\.tsx$/, ''))
+    .filter((r) => {
+      if (!r) return !existsSync(path.join(OUT, 'index.html'))
+      return !existsSync(path.join(OUT, `${r}.html`)) &&
+             !existsSync(path.join(OUT, r, 'index.html'))
+    })
+  check(`S0 every one of the ${routes.length} app routes has an exported page (${pages.length} total)`,
+    routes.length >= 15 && missing.length === 0,
+    missing.length ? `missing: ${missing.join(', ')}` : `only ${routes.length} routes`)
 
   const withBanner = pages.filter((f) => /consent-banner|role="dialog"/.test(readFileSync(f, 'utf8')))
   check('S1 consent banner is ABSENT from every prerendered page (deny-by-default survives export)',
@@ -201,24 +226,36 @@ console.log('\n[S] server snapshot — the prerendered static export')
   const en = JSON.parse(readFileSync(path.join(DIR, '..', 'website-next', 'messages', 'en.json'), 'utf8'))
   const he = JSON.parse(readFileSync(path.join(DIR, '..', 'website-next', 'messages', 'he.json'), 'utf8'))
   const keys = Object.keys(en.nav ?? {}).filter((k) => (he.nav ?? {})[k])
-  const home = readFileSync(path.join(OUT, 'index.html'), 'utf8')
   check(`S3 non-vacuity: ${keys.length} nav keys carry both locales`, keys.length >= 6, `only ${keys.length}`)
 
-  // Scoped to <header>, NOT the whole document. Whole-document matching gave a
-  // FALSE positive on nav.bookers: "מזמיני הופעות" also appears as a deliberate
-  // bilingual gloss inside the English meta description, which is EN copy doing
-  // its job, not a locale leak. The header is where a wrong locale snapshot
-  // actually shows up.
-  const header = (home.match(/<header[\s\S]*?<\/header>/) ?? [''])[0]
-  check('S3b non-vacuity: the prerendered home page has a <header> to inspect',
-    header.length > 200, `header length ${header.length}`)
-  const heLeaks = keys.filter((k) => header.includes(he.nav[k]))
-  check('S4 no Hebrew nav copy in the prerendered <header>',
-    heLeaks.length === 0, `leaked: ${heLeaks.map((k) => `nav.${k}`).join(', ')}`)
-  // Positive control: if the nav were not prerendered at all, S4 would pass for
-  // the wrong reason.
-  const enPresent = keys.filter((k) => header.includes(en.nav[k]))
-  check('S5 positive control: the EN nav IS prerendered (so S4 is not passing on an empty header)',
+  // <script> blocks are stripped, then the WHOLE document of EVERY page is
+  // scanned. The earlier version scoped to <header> on index.html alone, and
+  // justified it with a claim that was simply wrong: "מזמיני הופעות" is NOT in
+  // the English meta description. Both occurrences are inside <script> — the
+  // JSON-LD block and the RSC payload — so stripping <script> removes the false
+  // positive outright and the narrowing was never necessary. Independent QA
+  // proved the cost: Hebrew injected outside <header> passed at exit 0, and
+  // eight of the nine useLocale() consumers (/contact, /waitlist, footer, legal)
+  // live outside <header> or outside index.html entirely.
+  const strip = (h) => h.replace(/<script[\s\S]*?<\/script>/g, '')
+  check('S3b non-vacuity: HE nav values actually contain Hebrew characters',
+    keys.filter((k) => /[\u0590-\u05FF]/.test(he.nav[k])).length === keys.length,
+    'some he.json nav values are not Hebrew — S4 would pass vacuously')
+
+  const leakPages = []
+  for (const f of pages) {
+    const body = strip(readFileSync(f, 'utf8'))
+    const leaked = keys.filter((k) => body.includes(he.nav[k]))
+    if (leaked.length) leakPages.push(`${path.basename(f)}: ${leaked.map((k) => `nav.${k}`).join(', ')}`)
+  }
+  check(`S4 no Hebrew nav copy anywhere in the ${pages.length} prerendered pages (scripts stripped)`,
+    leakPages.length === 0, leakPages.slice(0, 3).join(' | '))
+
+  // Positive control, per page: if the nav were not prerendered at all, S4
+  // would pass for the wrong reason.
+  const home = strip(readFileSync(path.join(OUT, 'index.html'), 'utf8'))
+  const enPresent = keys.filter((k) => home.includes(en.nav[k]))
+  check('S5 positive control: the EN nav IS prerendered (so S4 is not passing on an empty page)',
     enPresent.length >= 6, `only ${enPresent.length} of ${keys.length} EN nav strings found`)
 }
 
