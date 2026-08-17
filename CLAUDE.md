@@ -24,8 +24,8 @@ step. Multi-source deep scan once at onboarding (target cost ≈ $1) and cheap a
 incremental re-scans are TARGET ARCHITECTURE, not yet built; no business case may price or
 assume them until implementation and measured cost are verified. Provider fallback may use a
 cheaper tier with narrower extraction, but must preserve the evidence firewall and disclose
-the narrower scope. Migrations 001–018 exist locally — diff before creating
-019+; do not recreate existing tables. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
+the narrower scope. Migrations 001–047 exist locally (highest `047_grant_decision`) — diff before creating
+048+; do not recreate existing tables. 043-047 are DRAFTED, NOT APPLIED. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
 local clone C:\Users\user\lock.show; Drive B4-lock.show = collaboration/design only.
 
 SOURCE OF TRUTH: ★ START HERE + CLAUDE.md + the CURRENT canon doc set (see README-INDEX for the
