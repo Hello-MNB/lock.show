@@ -7,7 +7,7 @@ import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref, conversionLabel, conversionEvent } from '@/lib/conversion'
+import { conversionHref, conversionLabel, loginHref } from '@/lib/conversion'
 import { track } from '@/lib/analytics'
 
 const NAV_LINK_KEYS = [
@@ -80,7 +80,11 @@ export function Nav() {
   // LOGIN is NOT a conversion CTA — it must keep reaching the app in BOTH
   // modes (B4-70.10 §10.1: "Login remains available"), so it does not route
   // through the conversion helper.
-  const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${slug}&utm_content=nav`
+  // Single source: lib/conversion.ts owns the login target so the "identical in
+  // both modes" contract lives in ONE place. It previously had zero importers
+  // while this line duplicated it — two sources for one contract is how they
+  // drift apart silently. Login still does NOT route through conversionHref().
+  const loginTarget = `${loginHref()}?utm_source=site&utm_campaign=${slug}&utm_content=nav`
   // The primary CTA resolves centrally: /waitlist in waitlist mode, the app
   // signup in signup mode. No page-level edit is needed to switch.
   const signupHref = conversionHref({ page: slug, placement: 'nav' })
@@ -182,7 +186,7 @@ export function Nav() {
           })}
           <LocaleToggle />
           <a
-            href={loginHref}
+            href={loginTarget}
             style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
@@ -282,7 +286,7 @@ export function Nav() {
             <LocaleToggle />
           </div>
           <a
-            href={loginHref}
+            href={loginTarget}
             style={{
               display: 'block',
               marginTop: '12px',

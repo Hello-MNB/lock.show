@@ -29,7 +29,17 @@ process.on('exit', (code) => {
 })
 
 db.exec(readFileSync('supabase/migrations/048_waitlist_mode.sql', 'utf8'))
-check('[0] migration 048 applies on top of 026', true)
+// A `check(…, true)` can never fail — independent QA flagged it as the same class
+// as the dead gate this suite exists to prevent. Assert what applying 048 should
+// have PRODUCED, not that the exec statement returned.
+check('[0] migration 048 applied: the governed RPC exists',
+  db.scalar(`select to_regprocedure('public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text)') is not null`) === 't')
+check('[0] ...and its rate-limit table exists',
+  db.scalar(`select to_regclass('public.waitlist_rate') is not null`) === 't')
+check('[0] ...and the consent columns are present on the 026 table',
+  db.scalar(`select count(*) from information_schema.columns where table_schema='public'
+     and table_name='waitlist_signup' and column_name in
+     ('whatsapp_consent','consent_text','consent_version','consent_locale','consent_at')`) === '5')
 
 const call = (args = {}, opts = {}) => {
   const d = {
@@ -148,7 +158,15 @@ check('...but anon CAN call the governed RPC (the only way in)',
   db.scalar(`select has_function_privilege('anon','public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text)','execute')`) === 't')
 
 console.log('\n[7] no account is created')
-check('the RPC creates no auth user', db.scalar(`select count(*) from auth.users`) === db.scalar(`select count(*) from auth.users`))
+// Was `count === count` on the SAME query — always true, proving nothing. Measure
+// the delta ACROSS an RPC call: the contract is "no account is created today".
+const usersBefore = db.scalar(`select count(*) from auth.users`)
+call({ p_email: 'noacct@no-account.test', p_entity_role: 'artist' })
+const usersAfter = db.scalar(`select count(*) from auth.users`)
+check('the RPC creates NO auth user (delta measured across the call)',
+  usersBefore === usersAfter, `before=${usersBefore} after=${usersAfter}`)
+check('...while the waitlist row WAS created, so the check is not vacuous',
+  db.scalar(`select count(*) from public.waitlist_signup where email='noacct@no-account.test'`) === '1')
 check('...and touches only waitlist tables',
   db.scalar(`select count(*) from public.waitlist_signup`) !== '0')
 
