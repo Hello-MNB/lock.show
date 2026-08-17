@@ -48,7 +48,7 @@ check('the fixture really has TWO Acts (positive control)', Boolean(ACT_A) && Bo
 
 // audience is MANDATORY in the decision function (a NULL used to short-circuit to
 // true); purpose and version are passed so the bounds that name them apply.
-const permits = (org, act, action, audience = 'buyer', { purpose = null, version = null, at = null } = {}) =>
+const permits = (org, act, action, audience = 'booker', { purpose = null, version = null, at = null } = {}) =>
   db.scalar(`select public.grant_permits('${org}'::uuid, '${act}'::uuid, '${action}',
      ${audience ? `'${audience}'` : 'null'},
      ${purpose ? `'${purpose}'` : 'null'},
@@ -67,7 +67,7 @@ check('publish denied with empty actions', !permits(ORG, ACT_A, 'publish'))
 check('request denied with empty actions', !permits(ORG, ACT_A, 'request'))
 
 console.log('\n[2] a grant permits ONLY the action it names')
-setGrant(`actions = '{request,prepare}', audience = '{buyer}'`)
+setGrant(`actions = '{request,prepare}', audience = '{booker}'`)
 check('request permitted', permits(ORG, ACT_A, 'request'))
 check('publish NOT permitted by a request/prepare grant', !permits(ORG, ACT_A, 'publish'))
 check('sign NOT permitted', !permits(ORG, ACT_A, 'sign'))
@@ -78,22 +78,22 @@ check('publish permitted on the granted Act', permits(ORG, ACT_A, 'publish'))
 check('publish DENIED on the other Act of the same Person', !permits(ORG, ACT_B, 'publish'))
 
 console.log('\n[4] AUDIENCE bound')
-setGrant(`audience = '{buyer}'`)
-check('publish to buyer permitted', permits(ORG, ACT_A, 'publish', 'buyer'))
+setGrant(`audience = '{booker}'`)
+check('publish to buyer permitted', permits(ORG, ACT_A, 'publish', 'booker'))
 check('publish to named_recipient DENIED', !permits(ORG, ACT_A, 'publish', 'named_recipient'))
 check('publish to private DENIED', !permits(ORG, ACT_A, 'publish', 'private'))
 
 console.log('\n[5] TIME window — a mandate is not live before it starts or after it ends')
 setGrant(`valid_from = now() + interval '7 days'`)
-check('future-dated grant denies today', !permits(ORG, ACT_A, 'publish', 'buyer'))
+check('future-dated grant denies today', !permits(ORG, ACT_A, 'publish', 'booker'))
 setGrant(`valid_from = now() - interval '7 days', expires_at = now() - interval '1 day'`)
-check('expired grant denies', !permits(ORG, ACT_A, 'publish', 'buyer'))
+check('expired grant denies', !permits(ORG, ACT_A, 'publish', 'booker'))
 setGrant(`expires_at = now() + interval '1 day'`)
-check('in-window grant permits', permits(ORG, ACT_A, 'publish', 'buyer'))
+check('in-window grant permits', permits(ORG, ACT_A, 'publish', 'booker'))
 
 console.log('\n[6] REVOCATION blocks new action and cannot be half-written')
 setGrant(`status = 'revoked', revoked_at = now()`)
-check('revoked grant denies', !permits(ORG, ACT_A, 'publish', 'buyer'))
+check('revoked grant denies', !permits(ORG, ACT_A, 'publish', 'booker'))
 // The invariant is guaranteed by a BEFORE trigger, not by refusing the write —
 // deliberately, because refusing would break every existing writer that revokes by
 // setting status alone (two shipped gates do exactly that). So the test is: an
@@ -103,7 +103,7 @@ check('an old-style revoke (status only) still succeeds — no existing writer b
   oldStyle.out.split('\n')[0]?.slice(0, 100))
 const stamped = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
 check('...and the stored row carries revoked_at anyway (trigger-filled)', stamped === 't', `revoked_at set = ${stamped}`)
-check('a revoked grant with a filled stamp still denies', !permits(ORG, ACT_A, 'publish', 'buyer'))
+check('a revoked grant with a filled stamp still denies', !permits(ORG, ACT_A, 'publish', 'booker'))
 // Reinstating clears the stamp, so a later time-window read cannot see an active
 // row that still claims to have been revoked.
 setGrant(`status = 'active'`)
@@ -117,9 +117,9 @@ const orgXRows = db.scalar(`select count(*) from public.artist_access where orga
 check('...and that org genuinely holds no grant row (positive control)', orgXRows === '0', `rows=${orgXRows}`)
 
 console.log('\n[8] a LEGACY (act_id NULL) grant may never publish')
-setGrant(`act_id = null, actions = '{publish,request}', audience = '{buyer}'`)
-check('legacy grant still permits a non-publish action', permits(ORG, ACT_A, 'request', 'buyer'))
-check('legacy grant is DENIED publish — publishing must be Act-explicit', !permits(ORG, ACT_A, 'publish', 'buyer'))
+setGrant(`act_id = null, actions = '{publish,request}', audience = '{booker}'`)
+check('legacy grant still permits a non-publish action', permits(ORG, ACT_A, 'request', 'booker'))
+check('legacy grant is DENIED publish — publishing must be Act-explicit', !permits(ORG, ACT_A, 'publish', 'booker'))
 
 console.log('\n[9] the vocabulary constraints actually refuse bad data')
 for (const [label, sql] of [
@@ -146,8 +146,22 @@ check('the shipped pv_owner_insert policy is UNCHANGED while dormant',
   /can_access_artist/.test(pvPolicy) && !/grant_permits/.test(pvPolicy), pvPolicy?.slice(0, 90))
 
 console.log('\n[11] anon cannot use the decision function as an oracle')
-const anonCall = db.try(`select public.grant_permits('${ORG}'::uuid, '${ACT_A}'::uuid, 'publish')`, { role: 'anon' })
-check('anon EXECUTE on grant_permits is refused', !anonCall.ok, anonCall.out.split('\n')[0]?.slice(0, 90))
+// FULL ARITY. This previously called a 3-argument overload that does not exist, so
+// it failed on function RESOLUTION rather than on privilege — it passed even as the
+// owner, and passed with anon explicitly granted EXECUTE. The assertion now uses the
+// real signature and demands a permission error specifically.
+const anonCall = db.try(
+  `select public.grant_permits('${ORG}'::uuid, '${ACT_A}'::uuid, 'publish', 'booker', null, null, now())`,
+  { role: 'anon' })
+check('anon EXECUTE on grant_permits is refused (permission, not resolution)',
+  !anonCall.ok && /permission denied/i.test(anonCall.out), anonCall.out.split('\n')[0]?.slice(0, 110))
+// Positive control: the same call must SUCCEED for authenticated, or the check above
+// could pass simply because the call is malformed.
+const authedCall = db.try(
+  `select public.grant_permits('${ORG}'::uuid, '${ACT_A}'::uuid, 'publish', 'booker', null, null, now())`,
+  { role: 'authenticated' })
+check('...and the identical call resolves for authenticated (positive control)', authedCall.ok,
+  authedCall.out.split('\n')[0]?.slice(0, 110))
 
 
 console.log('\n[13] THE GRANTEE MAY NOT WRITE THEIR OWN GRANT (QA C1)')
@@ -158,7 +172,7 @@ const ORG_OWNER = db.scalar(`select person_id from public.organization_membershi
   where organization_id = '${ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
 check('the granted org really has an owner/admin (positive control)', Boolean(ORG_OWNER), `got "${ORG_OWNER}"`)
 const selfIssue = db.try(
-  `update public.artist_access set actions = '{publish,sign}', audience = '{buyer,private}'
+  `update public.artist_access set actions = '{publish,sign}', audience = '{booker,private}'
     where organization_id = '${ORG}'`, { role: 'authenticated', uid: ORG_OWNER })
 check('an org owner CANNOT set their own authority columns', !selfIssue.ok,
   selfIssue.out.split('\n')[0]?.slice(0, 110))
@@ -192,16 +206,22 @@ console.log('\n[15] per-Act grants can COEXIST (QA C3 — the case the design ex
 // per artist, so two Act-scoped grants for one Person were impossible and the
 // Act-scoped model was unreachable for exactly the multi-Act case it was built for.
 const ARTIST = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
-db.exec(`update public.artist_access set act_id = '${ACT_A}' where organization_id = '${ORG}'`)
+// Disjoint actions on purpose: Act A may publish, Act B may only request. With
+// overlapping actions "does not cross" is untestable — both grants would answer
+// the same question and a leak would look like a legitimate permit.
+db.exec(`update public.artist_access set act_id = '${ACT_A}', actions = '{publish}', audience = '{booker}'
+          where organization_id = '${ORG}'`)
 const second = db.try(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, actions, audience)
-  values ('${ORG}', '${ARTIST}', '${ACT_B}', 'manage', 'active', '{request}', '{buyer}')`)
+  values ('${ORG}', '${ARTIST}', '${ACT_B}', 'manage', 'active', '{request}', '{booker}')`)
 check('a SECOND Act-scoped grant for the same artist is accepted', second.ok,
   second.out.split('\n')[0]?.slice(0, 110))
 if (second.ok) {
-  check('the two grants do not cross: Act B grant does not permit publish on Act A',
-    !permits(ORG, ACT_A, 'request', 'buyer') || true)
-  check('Act B grant permits only its own action on its own Act', permits(ORG, ACT_B, 'request', 'buyer'))
-  check('Act B grant does NOT permit publish on Act B', !permits(ORG, ACT_B, 'publish', 'buyer'))
+  // Was `!permits(...) || true` — a tautology that asserted nothing. The real
+  // separation claim: each grant carries ONLY its own action on its own Act, so
+  // Act A's publish grant must not answer for Act B's request action, or vice versa.
+  check('the Act A grant does not carry the Act B grant\'s action', !permits(ORG, ACT_A, 'request', 'booker'))
+  check('Act B grant permits only its own action on its own Act', permits(ORG, ACT_B, 'request', 'booker'))
+  check('Act B grant does NOT permit publish on Act B', !permits(ORG, ACT_B, 'publish', 'booker'))
   db.exec(`delete from public.artist_access where organization_id = '${ORG}' and act_id = '${ACT_B}'`)
 }
 
@@ -226,28 +246,146 @@ check('revert restores the ORIGINAL policy tuple byte-for-byte (expression AND r
   afterTuple === beforeTuple, `before="${beforeTuple}" after="${afterTuple}"`)
 
 
-console.log('\n[17] the KEY REPLACEMENT did not break the access-request writer')
-// Replacing `unique (organization_id, artist_id)` with partial indexes broke
-// request_artist_access: PostgreSQL only infers a PARTIAL unique index when the
-// statement repeats its predicate, so `on conflict (organization_id, artist_id)`
-// stopped matching anything and the whole access-request flow raised. This asserts
-// BOTH conflict targets: the repaired one works, and the bare one is genuinely
-// unusable — so the repair is load-bearing rather than incidental.
-const ARTIST2 = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+console.log('\n[17] the access-request writer survives the key replacement, and stays idempotent')
+// Two separate defects met here. (a) Replacing `unique (organization_id, artist_id)`
+// broke `on conflict (organization_id, artist_id)`, because PostgreSQL infers a
+// PARTIAL unique index only when the statement repeats its predicate. (b) Once
+// Act-scoped rows exist, ANY legacy-predicate conflict target stops seeing them, so
+// a re-invite silently created a SECOND row and left the Act-scoped grant active —
+// and that duplicate (org, artist) pair is exactly what makes rollback refuse.
+// 043 therefore resets every row for the pair instead of relying on ON CONFLICT.
+// Asserted by EXECUTION, not by grepping the function text.
 const bare = db.try(`insert into public.artist_access(organization_id, artist_id, scope, status)
-  values ('${ORG}', '${ARTIST2}', '{view}', 'pending')
+  values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1), '{view}', 'pending')
   on conflict (organization_id, artist_id) do update set status = 'pending'`)
-check('the BARE conflict target no longer infers an index (proves the repair matters)',
+check('the BARE conflict target no longer infers an index (why the rewrite was needed)',
   !bare.ok && /no unique or exclusion constraint/.test(bare.out), bare.out.split('\n')[0]?.slice(0, 100))
-const repaired = db.try(`insert into public.artist_access(organization_id, artist_id, scope, status)
-  values ('${ORG}', '${ARTIST2}', '{view}', 'pending')
-  on conflict (organization_id, artist_id) where act_id is null do update set status = 'pending'`)
-check('the repaired conflict target (matching the partial index) works', repaired.ok,
-  repaired.out.split('\n')[0]?.slice(0, 100))
-check('request_artist_access in 043 uses the repaired target',
-  /on conflict \(organization_id, artist_id\) where act_id is null/.test(
-    readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')),
-  'the shipped function no longer carries the predicate — the flow will raise on re-invite')
+
+const REQ_ORG = db.scalar(`select o.id from public.organization o
+  where o.workspace_type = 'management'
+    and not exists (select 1 from public.artist_access a where a.organization_id = o.id)
+  order by o.id limit 1`)
+const REQ_ADMIN = db.scalar(`select person_id from public.organization_membership
+  where organization_id = '${REQ_ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+const SUBJ = db.scalar(`select id from public.artists limit 1`)
+if (REQ_ORG && REQ_ADMIN) {
+  const first = db.try(`select public.request_artist_access('${REQ_ORG}'::uuid, '${SUBJ}'::uuid, array['view']::text[], null)`,
+    { role: 'authenticated', uid: REQ_ADMIN })
+  check('an authorized admin can request access', first.ok, first.out.split('\n')[0]?.slice(0, 100))
+  // Give the org an ACT-SCOPED grant, then re-invite: the old code created a second row.
+  db.exec(`update public.artist_access set act_id = '${ACT_A}', status = 'active', actions = '{publish}', audience = '{booker}'
+            where organization_id = '${REQ_ORG}'`)
+  const again = db.try(`select public.request_artist_access('${REQ_ORG}'::uuid, '${SUBJ}'::uuid, array['view']::text[], null)`,
+    { role: 'authenticated', uid: REQ_ADMIN })
+  check('re-inviting over an Act-scoped grant succeeds', again.ok, again.out.split('\n')[0]?.slice(0, 100))
+  const rows = db.scalar(`select count(*) from public.artist_access where organization_id = '${REQ_ORG}' and artist_id = '${SUBJ}'`)
+  check('...and does NOT create a duplicate row (which would make rollback impossible)', rows === '1', `rows=${rows}`)
+  const st = db.scalar(`select status from public.artist_access where organization_id = '${REQ_ORG}' limit 1`)
+  check('...and actually resets the grant to pending, per 027 contract', st === 'pending', `status=${st}`)
+  db.exec(`delete from public.artist_access where organization_id = '${REQ_ORG}'`)
+} else {
+  check('a grantless management org + admin exist to test the re-invite (positive control)', false,
+    `org=${REQ_ORG} admin=${REQ_ADMIN}`)
+}
+
+
+console.log('\n[19] the bounds a grantee must NOT be able to move (QA C-1/C-2/H-8)')
+// Every case here was reproduced by independent QA against the previous draft.
+// The guard covered only the eight columns 043 added, so status, expires_at and the
+// revocation stamp were all grantee-writable — meaning revocation and time, the two
+// bounds the owner ruling names explicitly, were controlled by the party they bind.
+db.exec(`update public.artist_access
+            set act_id = '${ACT_A}', actions = '{publish}', audience = '{booker}',
+                status = 'revoked', revoked_at = now(), expires_at = null
+          where organization_id = '${ORG}'`)
+const GRANTEE = db.scalar(`select person_id from public.organization_membership
+  where organization_id = '${ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+const asGrantee = (sql) => db.try(sql, { role: 'authenticated', uid: GRANTEE })
+
+check('a revoked grant cannot be self-reinstated (status is guarded)',
+  !asGrantee(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`).ok)
+check('...so it still denies publish', !permits(ORG, ACT_A, 'publish', 'booker'))
+check('the revocation stamp survives (it is not erased by a grantee reinstate)',
+  db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't')
+check('a grantee cannot forge revocation attribution',
+  !asGrantee(`update public.artist_access set revoked_by = '${GRANTEE}', revoked_at = now() - interval '99 days' where organization_id = '${ORG}'`).ok)
+check('a grantee cannot DELETE the grant row and destroy the trail',
+  !asGrantee(`delete from public.artist_access where organization_id = '${ORG}'`).ok)
+
+db.exec(`update public.artist_access set status = 'active', revoked_at = null,
+            expires_at = now() - interval '1 day' where organization_id = '${ORG}'`)
+check('an expired grant denies', !permits(ORG, ACT_A, 'publish', 'booker'))
+check('a grantee cannot self-extend its own expiry',
+  !asGrantee(`update public.artist_access set expires_at = now() + interval '10 years' where organization_id = '${ORG}'`).ok)
+check('...so it still denies after the attempt', !permits(ORG, ACT_A, 'publish', 'booker'))
+
+console.log('\n[20] bounds that were declared but unenforced (QA H-5/H-6/C-4 + missed mutations)')
+db.exec(`update public.artist_access
+            set status = 'active', expires_at = null, revoked_at = null,
+                actions = '{publish}', audience = '{booker}', purpose = null,
+                version_binding = null, passport_version_id = null
+          where organization_id = '${ORG}'`)
+check('baseline: this grant publishes to booker (positive control)', permits(ORG, ACT_A, 'publish', 'booker'))
+// audience must be MANDATORY — a NULL used to short-circuit to true
+check('a NULL audience is DENIED, not waved through', !permits(ORG, ACT_A, 'publish', null))
+check('a different audience is denied', !permits(ORG, ACT_A, 'publish', 'producer'))
+// the grant and passport_versions must share one vocabulary
+check('artist_access accepts the passport_versions audience vocabulary',
+  db.try(`update public.artist_access set audience = '{booker,producer,private,programmer,brand,rep}' where organization_id = '${ORG}'`).ok)
+db.exec(`update public.artist_access set audience = '{booker}' where organization_id = '${ORG}'`)
+// purpose
+db.exec(`update public.artist_access set purpose = 'booking' where organization_id = '${ORG}'`)
+check('a purpose-bound grant permits its own purpose', permits(ORG, ACT_A, 'publish', 'booker', { purpose: 'booking' }))
+check('a purpose-bound grant denies another purpose', !permits(ORG, ACT_A, 'publish', 'booker', { purpose: 'review' }))
+check('a purpose-bound grant denies a publication carrying NO purpose',
+  !permits(ORG, ACT_A, 'publish', 'booker', { purpose: null }))
+db.exec(`update public.artist_access set purpose = null where organization_id = '${ORG}'`)
+// version binding
+const PV = db.scalar(`select id from public.passport_versions limit 1`)
+if (PV) {
+  db.exec(`update public.artist_access set version_binding = 'named', passport_version_id = '${PV}' where organization_id = '${ORG}'`)
+  check('a named version binding permits its own version', permits(ORG, ACT_A, 'publish', 'booker', { version: PV }))
+  check('a named version binding denies any other version',
+    !permits(ORG, ACT_A, 'publish', 'booker', { version: '00000000-0000-0000-0000-0000000000ff' }))
+  check('a named version binding denies a publication with no version',
+    !permits(ORG, ACT_A, 'publish', 'booker', { version: null }))
+  db.exec(`update public.artist_access set version_binding = null, passport_version_id = null where organization_id = '${ORG}'`)
+} else {
+  check('a passport_version exists to bind against (positive control)', false, 'none in fixture')
+}
+// status vocabulary beyond active/revoked
+// A row that says 'active' while still carrying a revocation stamp is
+// contradictory, and the decision function must not honour it. Written as the
+// owner, since a grantee cannot reach this state through the guard.
+db.exec(`update public.artist_access set status = 'active', revoked_at = now() - interval '1 day'
+          where organization_id = '${ORG}'`)
+check('an active row still carrying revoked_at is DENIED', !permits(ORG, ACT_A, 'publish', 'booker'))
+db.exec(`update public.artist_access set revoked_at = null where organization_id = '${ORG}'`)
+
+for (const st of ['pending', 'disputed']) {
+  db.exec(`update public.artist_access set status = '${st}' where organization_id = '${ORG}'`)
+  check(`status='${st}' denies publish`, !permits(ORG, ACT_A, 'publish', 'booker'))
+}
+db.exec(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`)
+// expiry boundary: expires_at exactly == the instant asked about must DENY
+const boundary = db.scalar(`select (now() + interval '1 hour')::text`)
+db.exec(`update public.artist_access set expires_at = '${boundary}'::timestamptz where organization_id = '${ORG}'`)
+check('expires_at exactly equal to the query instant DENIES (half-open interval)',
+  !permits(ORG, ACT_A, 'publish', 'booker', { at: boundary }))
+const justBefore = db.scalar(`select ('${boundary}'::timestamptz - interval '1 second')::text`)
+check('...and one second earlier permits (positive control for the boundary)',
+  permits(ORG, ACT_A, 'publish', 'booker', { at: justBefore }))
+db.exec(`update public.artist_access set expires_at = null where organization_id = '${ORG}'`)
+// per-(org,act) uniqueness must really be UNIQUE
+const dupAct = db.try(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status)
+  values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1), '${ACT_A}', 'manage', 'pending')`)
+check('a SECOND grant for the same (organization, Act) is refused', !dupAct.ok,
+  dupAct.out.split('\n')[0]?.slice(0, 100))
+
+console.log('\n[21] the rollback restores a WORKING access-request flow (QA C-4)')
+// The down migration drops act_id, and 043 had rewritten request_artist_access to
+// reference it — so rollback left the whole flow raising "column act_id does not
+// exist". Asserted by calling the function AFTER the rollback, not by reading it.
 
 console.log('\n[18] the migration stays atomic under the applier')
 {
@@ -268,7 +406,7 @@ const down = readFileSync('supabase/migrations/043_artist_access_act_scope.down.
 // and prove the rollback itself.
 db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, actions, audience)
   values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1),
-          '${ACT_B}', 'manage', 'active', '{request}', '{buyer}')
+          '${ACT_B}', 'manage', 'active', '{request}', '{booker}')
   on conflict do nothing`)
 const blocked = db.try(down)
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
@@ -308,6 +446,19 @@ if (downRes.ok) {
   check('pv_owner_insert is back to its shipped shape', /can_access_artist/.test(pol) && !/grant_permits/.test(pol), pol?.slice(0, 80))
   const rows = db.scalar(`select count(*) from public.artist_access`)
   check('no grant row was destroyed by the rollback', rows !== '0', `rows=${rows}`)
+  // C-4: the flow must still WORK after rollback. 043 rewrote this function to
+  // reference act_id; the down file must restore the 027 body before dropping it.
+  const postOrg = db.scalar(`select o.id from public.organization o
+     where o.workspace_type = 'management'
+       and not exists (select 1 from public.artist_access a where a.organization_id = o.id)
+     order by o.id limit 1`)
+  const postAdmin = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${postOrg}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  const postSubj = db.scalar(`select id from public.artists limit 1`)
+  const postCall = db.try(`select public.request_artist_access('${postOrg}'::uuid, '${postSubj}'::uuid, array['view']::text[], null)`,
+    { role: 'authenticated', uid: postAdmin })
+  check('request_artist_access still works AFTER the rollback', postCall.ok,
+    postCall.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 110))
 }
 
 console.log('')

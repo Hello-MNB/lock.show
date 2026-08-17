@@ -84,9 +84,16 @@ alter table public.artist_access drop constraint if exists artist_access_actions
 alter table public.artist_access add constraint artist_access_actions_check
   check (actions <@ array['request','prepare','propose','change','publish','negotiate','sign']::text[]);
 
+-- AUDIENCE VOCABULARY. These are the SAME values passport_versions.audience
+-- accepts (041:287). They diverged in the first draft — the grant spoke
+-- buyer/named_recipient/link while the thing it authorizes speaks
+-- booker/producer/programmer/brand — so PART B fed one vocabulary into the other
+-- and EVERY real audience was denied, while a publication with NO audience was
+-- allowed through a coalesce default. The bound was exactly inverted. A grant must
+-- speak the language of the object it authorizes.
 alter table public.artist_access drop constraint if exists artist_access_audience_check;
 alter table public.artist_access add constraint artist_access_audience_check
-  check (audience <@ array['buyer','rep','named_recipient','link','private']::text[]);
+  check (audience <@ array['booker','producer','private','programmer','brand','rep']::text[]);
 
 alter table public.artist_access drop constraint if exists artist_access_purpose_check;
 alter table public.artist_access add constraint artist_access_purpose_check
@@ -116,7 +123,13 @@ returns trigger
 language plpgsql
 set search_path = public, pg_temp
 as $$
+declare
+  table_owner name;
 begin
+  select r.rolname into table_owner
+    from pg_class c join pg_roles r on r.oid = c.relowner
+   where c.oid = 'public.artist_access'::regclass;
+
   if new.status = 'revoked' and new.revoked_at is null then
     new.revoked_at := now();
   end if;
@@ -129,7 +142,10 @@ begin
   -- tg_op, NOT `old is not null`: for a composite row that test is FALSE whenever
   -- ANY column is null (territory, purpose, expires_at are all nullable here), so
   -- the reinstate branch would almost never fire.
-  if tg_op = 'UPDATE' and new.status = 'active' and old.status = 'revoked' then
+  -- Only on the TRUSTED path. Clearing the stamp on any revoked->active transition
+  -- let a grantee erase its own revocation record simply by reinstating itself.
+  if tg_op = 'UPDATE' and current_user = table_owner
+     and new.status = 'active' and old.status = 'revoked' then
     new.revoked_at := null;
     new.revoked_by := null;
   end if;
@@ -174,6 +190,17 @@ create index if not exists idx_artist_access_act
 
 
 
+-- PURPOSE ON THE PUBLICATION. The grant can bound a purpose, but passport_versions
+-- had no purpose column, so PART B could only ever pass NULL — which made a grant
+-- carrying a purpose UNPUBLISHABLE rather than bounded. Additive and nullable:
+-- existing rows and writers are unaffected, and the bound becomes satisfiable.
+alter table public.passport_versions
+  add column if not exists purpose text;
+
+alter table public.passport_versions drop constraint if exists passport_versions_purpose_check;
+alter table public.passport_versions add constraint passport_versions_purpose_check
+  check (purpose is null or purpose in ('booking','availability','review','introduction','renewal'));
+
 -- ── PART A · REPAIR THE WRITER THE KEY REPLACEMENT BROKE ────────────────────
 -- Replacing `unique (organization_id, artist_id)` with partial indexes broke
 -- request_artist_access (027:246): its `on conflict (organization_id, artist_id)`
@@ -186,18 +213,34 @@ create index if not exists idx_artist_access_act
 -- legacy, act-less request may only collide with the legacy row.
 create or replace function public.request_artist_access(
   p_org uuid, p_artist uuid, p_scope text[] default '{view}', p_territory text default null
-) returns uuid language plpgsql security definer set search_path = public as $$
+) returns uuid language plpgsql security definer set search_path = public, pg_temp as $$
 declare v_id uuid;
 begin
   if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not authorized'; end if;
   if exists (select 1 from public.artists where id = p_artist and owner_organization_id = p_org) then
     raise exception 'org already owns this artist — no access grant needed';
   end if;
+  -- 027's documented contract is "idempotent per (organization_id, artist_id) —
+  -- re-inviting after a decline/revoke resets it to pending". With Act-scoped rows
+  -- an INSERT..ON CONFLICT on the legacy predicate no longer sees them, so a
+  -- re-invite silently created a SECOND row and left the Act-scoped grant active —
+  -- and the duplicate (org, artist) pair it produced is exactly the condition that
+  -- makes rollback refuse. Reset every existing row for the pair first; only insert
+  -- when the org holds none.
+  update public.artist_access
+     set scope = coalesce(p_scope, '{view}'), territory = p_territory,
+         status = 'pending', consent_at = null
+   where organization_id = p_org and artist_id = p_artist;
+
+  if found then
+    select id into v_id from public.artist_access
+     where organization_id = p_org and artist_id = p_artist
+     order by act_id nulls first, created_at limit 1;
+    return v_id;
+  end if;
+
   insert into public.artist_access(organization_id, artist_id, scope, territory, status, consent_at)
     values (p_org, p_artist, coalesce(p_scope, '{view}'), p_territory, 'pending', null)
-  on conflict (organization_id, artist_id) where act_id is null do update
-    set scope = excluded.scope, territory = excluded.territory,
-        status = 'pending', consent_at = null
   returning id into v_id;
   return v_id;
 end; $$;
@@ -214,6 +257,34 @@ revoke all on function public.request_artist_access(uuid, uuid, text[], text) fr
 revoke all on function public.request_artist_access(uuid, uuid, text[], text) from anon;
 grant execute on function public.request_artist_access(uuid, uuid, text[], text) to authenticated;
 grant execute on function public.request_artist_access(uuid, uuid, text[], text) to service_role;
+
+-- ACT-OWNERSHIP LOOKUP, SECURITY DEFINER. The linkage check below must not run
+-- with the caller's visibility: policy act_org (020:187) resolves through
+-- public.artists, and a NON-DEFAULT Act has no artists row, so an artist cannot
+-- even SELECT their own second Act. An invoker-visibility check therefore refused
+-- the artist's own Act-scoped grant with a data-integrity error about a violation
+-- that did not exist — making the multi-Act case issuable only by the table owner,
+-- which is the exact case this migration exists to enable.
+create or replace function public.act_belongs_to_artist(p_act uuid, p_artist uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1
+      from public.act a
+      join public.artists ar on ar.id = p_artist
+     where a.id = p_act
+       and a.person_id = ar.created_by
+  );
+$$;
+
+revoke all on function public.act_belongs_to_artist(uuid, uuid) from public;
+revoke all on function public.act_belongs_to_artist(uuid, uuid) from anon;
+grant execute on function public.act_belongs_to_artist(uuid, uuid) to authenticated;
+grant execute on function public.act_belongs_to_artist(uuid, uuid) to service_role;
 
 -- ── PART A · THE GRANTEE MUST NOT WRITE THEIR OWN GRANT ─────────────────────
 -- Independent QA reproduced the hole this closes: policy `aa_admin_write` (008:222)
@@ -249,14 +320,24 @@ begin
     from pg_class c join pg_roles r on r.oid = c.relowner
    where c.oid = 'public.artist_access'::regclass;
 
+  -- DELETE: only the trusted path or an owner/admin of the artist's org may remove
+  -- a grant row at all, because deletion destroys the revocation trail entirely.
+  if tg_op = 'DELETE' then
+    if current_user = table_owner then return old; end if;
+    if not exists (select 1 from public.artists ar
+                    where ar.id = old.artist_id
+                      and public.has_org_role(ar.owner_organization_id, array['owner','admin'])) then
+      raise exception 'artist_access: a grant may only be deleted by an owner/admin of the artist''s organization'
+        using errcode = '42501';
+    end if;
+    return old;
+  end if;
+
   -- LINKAGE FIRST, for EVERY writer including the owner. This is a data-integrity
   -- rule, not an authority rule: a grant pointing at an Act that belongs to someone
   -- else is malformed no matter who wrote it, and putting it after the trust
   -- short-circuit below would let consent RPCs and owner writes create exactly that.
-  if new.act_id is not null and not exists (
-       select 1 from public.act a
-        join public.artists ar on ar.id = new.artist_id
-       where a.id = new.act_id and a.person_id = ar.created_by) then
+  if new.act_id is not null and not public.act_belongs_to_artist(new.act_id, new.artist_id) then
     raise exception 'artist_access: act_id does not belong to the artist named by artist_id'
       using errcode = '23514';
   end if;
@@ -266,12 +347,23 @@ begin
     return new;
   end if;
 
+  -- The guarded set includes status, expires_at and the revocation stamp — NOT
+  -- only the columns 043 added. Independent QA proved why: with status unguarded a
+  -- grantee simply set status='active' on its own revoked grant and published, and
+  -- the reinstate branch then erased the record that it had ever been revoked; with
+  -- expires_at unguarded it pushed its own expiry out ten years. Revocation and
+  -- time are the two bounds the owner ruling names explicitly, and both were
+  -- grantee-controlled. revoked_at/revoked_by are guarded too, because QA forged
+  -- attribution by naming the artist as the revoker.
   if tg_op = 'INSERT' then
     touched := coalesce(array_length(new.actions, 1), 0) > 0
             or coalesce(array_length(new.audience, 1), 0) > 0
             or new.act_id is not null or new.purpose is not null
             or new.version_binding is not null or new.passport_version_id is not null
-            or new.granted_by is not null;
+            or new.granted_by is not null
+            or new.expires_at is not null
+            or new.revoked_at is not null or new.revoked_by is not null
+            or new.status = 'active';
   else
     touched := new.actions is distinct from old.actions
             or new.audience is distinct from old.audience
@@ -280,11 +372,22 @@ begin
             or new.version_binding is distinct from old.version_binding
             or new.passport_version_id is distinct from old.passport_version_id
             or new.granted_by is distinct from old.granted_by
-            or new.valid_from is distinct from old.valid_from;
+            or new.valid_from is distinct from old.valid_from
+            or new.status is distinct from old.status
+            or new.expires_at is distinct from old.expires_at
+            or new.revoked_at is distinct from old.revoked_at
+            or new.revoked_by is distinct from old.revoked_by;
   end if;
 
-  if touched and not public.owns_artist(new.artist_id) then
-    raise exception 'artist_access: authority columns may only be set by the artist who owns the subject (or a consent RPC)'
+  -- owns_artist() alone is too wide: 030:22-32 resolves to ANY active member of an
+  -- org that owns the artist, at any role — QA set actions='{publish,sign}' as a
+  -- plain 'member'. Authority over a grant requires owner/admin of the artist's
+  -- OWNING organization.
+  if touched and not exists (
+       select 1 from public.artists ar
+        where ar.id = new.artist_id
+          and public.has_org_role(ar.owner_organization_id, array['owner','admin'])) then
+    raise exception 'artist_access: authority columns may only be set by an owner/admin of the artist''s organization (or a consent RPC)'
       using errcode = '42501';
   end if;
 
@@ -293,8 +396,10 @@ end;
 $$;
 
 drop trigger if exists trg_artist_access_guard_authority on public.artist_access;
+-- DELETE is guarded as well: QA deleted a revoked grant row outright and destroyed
+-- the revocation trail. Removing the row is a stronger act than editing it.
 create trigger trg_artist_access_guard_authority
-  before insert or update on public.artist_access
+  before insert or update or delete on public.artist_access
   for each row execute function public.artist_access_guard_authority();
 
 revoke all on function public.artist_access_guard_authority() from public;
@@ -431,8 +536,8 @@ begin
                           m.organization_id,
                           coalesce(passport_versions.act_id, passport_versions.artist_id),
                           'publish',
-                          coalesce(passport_versions.audience, 'buyer'),
-                          null,
+                          passport_versions.audience,
+                          passport_versions.purpose,
                           passport_versions.id))
     );
 end;

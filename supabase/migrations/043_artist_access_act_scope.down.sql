@@ -7,7 +7,6 @@
 -- at all. Wrapped in a transaction so a failure cannot land half of that.
 -- ============================================================
 
-begin;
 
 
 -- ── PRECONDITION · rollback is not always possible, and must say so ─────────
@@ -43,11 +42,35 @@ end $$;
 
 drop trigger if exists trg_artist_access_guard_authority on public.artist_access;
 drop function if exists public.artist_access_guard_authority();
+drop function if exists public.act_belongs_to_artist(uuid, uuid);
 drop trigger if exists trg_artist_access_fill_revoked_at on public.artist_access;
 drop function if exists public.artist_access_fill_revoked_at();
 drop function if exists public.apply_act_scoped_publish();
 drop function if exists public.revert_act_scoped_publish();
 drop function if exists public.grant_permits(uuid, uuid, text, text, text, uuid, timestamptz);
+
+-- RESTORE THE 027 FUNCTION BODY BEFORE act_id DISAPPEARS.
+-- 043 rewrote request_artist_access to reference `where act_id is null`. Dropping
+-- the column without restoring the original body leaves the access-request flow
+-- dead on the rollback path — `ERROR: column "act_id" does not exist` — which is
+-- the very defect 043 exists to repair, reproduced by its own undo.
+create or replace function public.request_artist_access(
+  p_org uuid, p_artist uuid, p_scope text[] default '{view}', p_territory text default null
+) returns uuid language plpgsql security definer set search_path = public, pg_temp as $$
+declare v_id uuid;
+begin
+  if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not authorized'; end if;
+  if exists (select 1 from public.artists where id = p_artist and owner_organization_id = p_org) then
+    raise exception 'org already owns this artist — no access grant needed';
+  end if;
+  insert into public.artist_access(organization_id, artist_id, scope, territory, status, consent_at)
+    values (p_org, p_artist, coalesce(p_scope, '{view}'), p_territory, 'pending', null)
+  on conflict (organization_id, artist_id) do update
+    set scope = excluded.scope, territory = excluded.territory,
+        status = 'pending', consent_at = null
+  returning id into v_id;
+  return v_id;
+end; $$;
 
 drop index if exists public.idx_artist_access_org_act;
 drop index if exists public.idx_artist_access_org_artist_legacy;
@@ -75,4 +98,6 @@ alter table public.artist_access drop column if exists audience;
 alter table public.artist_access drop column if exists actions;
 alter table public.artist_access drop column if exists act_id;
 
-commit;
+alter table public.passport_versions drop constraint if exists passport_versions_purpose_check;
+alter table public.passport_versions drop column if exists purpose;
+

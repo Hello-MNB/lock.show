@@ -1175,3 +1175,67 @@ about Act scope.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope` now carries 50 executed
 assertions across 18 sections.
+
+## T-109.3 · SECOND QA REJECTION OF 043 — CLOSED (17 Aug 2026)
+
+Independent QA REJECTED 043 a second time. Every CRITICAL and HIGH is closed. 043 remains DRAFTED,
+NOT APPLIED.
+
+**C-1 · the grantee could un-revoke itself.** The guard covered only the eight columns 043 added —
+`status` was not among them. QA reproduced: an org owner set `status='active'` on its own revoked
+grant, published through PART B, and the reinstate branch then **erased the record that it had ever
+been revoked**. Closed: `status`, `expires_at`, `revoked_at`, `revoked_by` are all guarded, and the
+reinstate branch fires only on the trusted path.
+
+**C-2 · the grantee could self-extend an expired mandate.** `expires_at` was unguarded; QA pushed its
+own expiry out ten years and published. Same fix. Revocation and time are the two bounds the ruling
+names explicitly, and both were controlled by the party they bind.
+
+**C-3 · the artist could not scope a grant to their own second Act.** The linkage check ran
+SECURITY INVOKER, and policy `act_org` resolves through `public.artists`, so a non-default Act is
+invisible to its own owner — the check refused the artist's own grant with a data-integrity error
+about a violation that did not exist, making multi-Act grants issuable only by the table owner. That
+is precisely the case 043 exists to enable. Closed with a SECURITY DEFINER lookup
+(`act_belongs_to_artist`), the check still running before the trust short-circuit.
+
+**C-4 · rollback left the access-request flow dead.** The down file dropped `act_id` without restoring
+027's body of `request_artist_access`, which 043 had rewritten to reference it —
+`ERROR: column "act_id" does not exist`. The same class of defect 043 exists to repair, reproduced by
+its own undo. The down file now restores the 027 body first, and the suite CALLS the function after
+rollback rather than reading it.
+
+**H-5 · purpose was declared, not wired.** `passport_versions` had no purpose column, so PART B could
+only pass NULL — which made any grant carrying a purpose *unpublishable* rather than bounded. 043 now
+adds `passport_versions.purpose` (additive, nullable, vocabulary-checked) and PART B passes it.
+
+**H-6 · the audience bound was inverted.** `artist_access.audience` spoke
+`buyer/named_recipient/link` while `passport_versions.audience` speaks
+`booker/producer/programmer/brand/rep`, and PART B fed one into the other: every real audience was
+DENIED while a publication with no audience was ALLOWED through a coalesce default. The grant now
+speaks the vocabulary of the object it authorizes.
+
+**H-7 · re-invite manufactured un-rollbackable state.** With Act-scoped rows present, the legacy
+conflict predicate no longer matched, so an ordinary authorized re-invite created a SECOND row and
+left the Act-scoped grant active — and that duplicate `(org, artist)` pair is exactly what makes the
+rollback refuse. `request_artist_access` now resets every row for the pair and inserts only when none
+exists, restoring 027's documented idempotency.
+
+**H-8 · the authority principal was too wide, and DELETE was unguarded.** `owns_artist()` means any
+active member of an owning org at ANY role; QA set `actions='{publish,sign}'` as a plain member.
+Narrowed to owner/admin of the artist's owning organization. The trigger now also fires on DELETE —
+QA had deleted a revoked grant outright and destroyed the trail — and forged `revoked_by` attribution
+is refused.
+
+**M-9 · the suite was a false green in two places.** The anon check called a 3-argument
+`grant_permits` that does not exist, so it failed on function RESOLUTION rather than privilege — it
+passed as the owner and passed with anon explicitly granted EXECUTE. And one assertion was literally
+`!permits(...) || true`. Both fixed, with positive controls. Sections [19]–[21] add the negative cases
+the missed mutations named. **Re-mutation: 9 of 10 now caught.** The tenth — deleting the redundant
+`p_audience is not null` guard — is behaviourally equivalent, because `NULL = any(...)` already
+denies; recorded as defensive redundancy rather than contorting a test to prove a difference that
+does not exist.
+
+**M-10 · the down file still carried the begin/commit the up file bans.** Removed.
+**L-11 · `search_path` on the replaced RPC now includes `pg_temp`.**
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."**
