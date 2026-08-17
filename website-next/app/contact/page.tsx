@@ -222,7 +222,7 @@ export default function Contact() {
                 submit, and §10.1 replaces "free in the pilot" with "beta access
                 opens in waves" unless a current OfferVersion approves a free
                 offer. Found by the visual-baseline review, not by a gate. */}
-            Beta access opens in waves — tell us how you work and we'll invite you.
+            Beta access opens in waves — tell us how you work and we&rsquo;ll invite you.
           </p>
           <a
             href={`${conversionHref({ page: 'contact', placement: 'body' })}`}

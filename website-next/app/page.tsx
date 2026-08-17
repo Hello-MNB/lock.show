@@ -1245,7 +1245,7 @@ export default function HomePage() {
                 textDecoration: 'none',
               }}
             >
-              REQUEST ACCESS
+              {conversionLabel()}
               <Icon id="arrow" size={16} color="var(--color-ink)" />
             </a>
           </div>

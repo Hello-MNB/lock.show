@@ -55,14 +55,22 @@ if (addr === 0) ok('every id is addressed by its own page')
 // are exempt by declaration, which is why `voice` exists.
 const TECHNICAL = /\b(localStorage|API|RPC|JSON|env var|migration|Supabase|RLS|null|undefined|boolean|SDK|endpoint)\b/
 let tech = 0
-for (const m of src.matchAll(/\{\s*id:\s*'([^']+)'([\s\S]*?)\n\s*\},?\n/g)) {
+// ROW SPLIT, not a greedy block match. The first version used
+// /\{\s*id:'…'([\s\S]*?)\n\s*\},?\n/ which matched a SINGLE block spanning
+// every row, and one `voice: 'utility'` inside it skipped the whole file —
+// independent QA proved it by injecting "with our RPC endpoint" and watching
+// the gate stay green. Splitting on the id boundary makes each row its own unit.
+const blocks = src.split(/\n\s*\{\s*id:\s*'/).slice(1)
+  .map((b) => { const id = b.slice(0, b.indexOf("'")); return [null, id, b] })
+for (const m of blocks) {
   const [, id, block] = m
   if (/voice:\s*'utility'/.test(block)) continue
   for (const s of block.matchAll(/(en|he)\s*:\s*'((?:\\.|[^'])*)'/g)) {
     if (TECHNICAL.test(s[2])) { tech++; fail(`${id}: technical vocabulary in marketing copy — "${s[2].slice(0, 60)}"`) }
   }
 }
-if (tech === 0) ok('no engineering vocabulary in marketing-voice rows')
+if (blocks.length < 20) fail(`rule 4 inspected only ${blocks.length} row(s) — the row split collapsed, so this rule proves nothing`)
+else if (tech === 0) ok(`no engineering vocabulary across ${blocks.length} inspected rows`)
 
 // 5 · No raw phone number in any copy row (the harvesting rule).
 if (/\+?972[\s-]?5\d/.test(src)) fail('a phone number appears in the copy matrix — numbers belong in a link target, never in copy')

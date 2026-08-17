@@ -97,6 +97,40 @@ check('a later submission CANNOT withdraw a consent already recorded (false neve
   keepRow.startsWith('true|'), `stored="${keepRow}"`)
 check('...and the original consent record survives intact', keepRow === 'true|yes|v1', `stored="${keepRow}"`)
 
+console.log('\n[4b] a consent binds to the NUMBER it was given for (QA D3/D6)')
+// Independent QA broke the first version here: a second, unauthenticated
+// submission attached a brand-new number to a surviving `true` flag, so the row
+// asserted consent for a number nobody had agreed to.
+{
+  const E = 'swap@consent-bind.test'
+  call({ p_email: E, p_whatsapp: '+972500000021', p_whatsapp_consent: true, p_consent_text: 'yes', p_consent_version: 'v1' })
+  check('[4b] precondition: consent recorded for the FIRST number',
+    db.scalar(`select whatsapp_e164||'|'||whatsapp_consent::text from public.waitlist_signup where email='${E}'`) === '+972500000021|true')
+  // THE ATTACK: swap the number, claim no consent.
+  call({ p_email: E, p_whatsapp: '+972599999999', p_whatsapp_consent: false })
+  const after = db.scalar(`select whatsapp_e164||'|'||whatsapp_consent::text||'|'||coalesce(consent_text,'-') from public.waitlist_signup where email='${E}'`)
+  check('a NEW number cannot inherit the old number\'s consent', after === '+972599999999|false|-', `stored="${after}"`)
+  // And a complete consent for the new number IS accepted.
+  call({ p_email: E, p_whatsapp: '+972599999999', p_whatsapp_consent: true, p_consent_text: 'yes2', p_consent_version: 'v2' })
+  check('...while a COMPLETE consent for the new number is accepted',
+    db.scalar(`select whatsapp_consent::text||'|'||consent_version from public.waitlist_signup where email='${E}'`) === 'true|v2')
+
+  // D6: a re-consent must not stamp new wording with the OLD timestamp.
+  const E2 = 'stamp@consent-bind.test'
+  call({ p_email: E2, p_whatsapp: '+972500000031', p_whatsapp_consent: true, p_consent_text: 'TEXT-V1', p_consent_version: 'v1' })
+  const t1 = db.scalar(`select consent_at from public.waitlist_signup where email='${E2}'`)
+  call({ p_email: E2, p_whatsapp: '+972500000031', p_whatsapp_consent: true, p_consent_text: 'TEXT-V2', p_consent_version: 'v2' })
+  const t2 = db.scalar(`select consent_at from public.waitlist_signup where email='${E2}'`)
+  check('consent_at ADVANCES when the consent version changes — a timestamp must never describe wording the person had not seen',
+    t2 !== t1, `v1="${t1}" v2="${t2}"`)
+}
+
+console.log('\n[6b] table-level privileges are revoked, not merely policy-denied (QA D13)')
+for (const [role, verb] of [['anon','update'],['anon','delete'],['authenticated','update'],['authenticated','delete'],['authenticated','select']]) {
+  check(`${role} has NO ${verb.toUpperCase()} privilege on waitlist_signup`,
+    db.scalar(`select has_table_privilege('${role}','public.waitlist_signup','${verb}')`) === 'f')
+}
+
 console.log('\n[5] rate limiting')
 let limited = false
 for (let i = 0; i < 9; i++) if (/rate_limited/.test(call({ p_email: `r${i}@ratetest.com`, p_entity_role: 'venue' }))) limited = true

@@ -167,12 +167,53 @@ begin
      set name             = coalesce(excluded.name, w.name),
          entity_role      = coalesce(excluded.entity_role, w.entity_role),
          primary_need     = coalesce(excluded.primary_need, w.primary_need),
+         -- CONSENT BINDS TO THE NUMBER IT WAS GIVEN FOR (independent QA, D3).
+         -- The previous version let whatsapp_e164 move by coalesce while
+         -- whatsapp_consent latched one-way to true, so a second submission
+         -- could attach a NEVER-CONSENTED number to a surviving `true` — the
+         -- row then asserted consent for a number nobody agreed to, with a
+         -- consent record captured against a different one. A number change
+         -- now RESETS consent unless this same call carries a complete consent
+         -- for the new number.
          whatsapp_e164    = coalesce(excluded.whatsapp_e164, w.whatsapp_e164),
-         whatsapp_consent = w.whatsapp_consent or excluded.whatsapp_consent,
-         consent_text     = coalesce(excluded.consent_text, w.consent_text),
-         consent_version  = coalesce(excluded.consent_version, w.consent_version),
-         consent_locale   = coalesce(excluded.consent_locale, w.consent_locale),
-         consent_at       = coalesce(w.consent_at, excluded.consent_at),
+         whatsapp_consent = case
+           when excluded.whatsapp_e164 is not null
+            and excluded.whatsapp_e164 is distinct from w.whatsapp_e164
+             then coalesce(excluded.whatsapp_consent, false)
+           else w.whatsapp_consent or excluded.whatsapp_consent
+         end,
+         -- The consent RECORD travels with the flag: when a number change
+         -- resets consent, the old text/version/locale/timestamp must not
+         -- survive to describe a consent that no longer exists.
+         consent_text     = case
+           when excluded.whatsapp_e164 is not null
+            and excluded.whatsapp_e164 is distinct from w.whatsapp_e164
+             then excluded.consent_text
+           else coalesce(excluded.consent_text, w.consent_text) end,
+         consent_version  = case
+           when excluded.whatsapp_e164 is not null
+            and excluded.whatsapp_e164 is distinct from w.whatsapp_e164
+             then excluded.consent_version
+           else coalesce(excluded.consent_version, w.consent_version) end,
+         consent_locale   = case
+           when excluded.whatsapp_e164 is not null
+            and excluded.whatsapp_e164 is distinct from w.whatsapp_e164
+             then excluded.consent_locale
+           else coalesce(excluded.consent_locale, w.consent_locale) end,
+         -- D6: consent_at now ADVANCES whenever the consent TEXT or VERSION
+         -- changes, so a timestamp can never describe wording the person had
+         -- not yet seen. It stays pinned only while the record is unchanged.
+         consent_at       = case
+           when excluded.whatsapp_e164 is not null
+            and excluded.whatsapp_e164 is distinct from w.whatsapp_e164
+             then excluded.consent_at
+           when excluded.consent_version is not null
+            and excluded.consent_version is distinct from w.consent_version
+             then excluded.consent_at
+           when excluded.consent_text is not null
+            and excluded.consent_text is distinct from w.consent_text
+             then excluded.consent_at
+           else coalesce(w.consent_at, excluded.consent_at) end,
          locale           = coalesce(excluded.locale, w.locale),
          updated_at       = now();
 
@@ -212,3 +253,10 @@ create policy wl_definer_insert on public.waitlist_signup
   for insert with check (false);
 revoke insert on public.waitlist_signup from anon;
 revoke insert on public.waitlist_signup from authenticated;
+-- DEFENCE IN DEPTH (independent QA, D13). Only RLS default-deny stood between
+-- these roles and the rows; the table-level privileges were still granted, so a
+-- future policy mistake would have opened UPDATE/DELETE outright. 026 set this
+-- precedent for SELECT ("the anon role cannot SELECT this table even if a
+-- future policy mistake opens rows"); 048 now extends it to every verb.
+revoke update, delete on public.waitlist_signup from anon;
+revoke update, delete, select on public.waitlist_signup from authenticated;
