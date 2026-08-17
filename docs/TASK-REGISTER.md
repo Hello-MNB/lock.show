@@ -2215,9 +2215,10 @@ Runtime-before matrix, every row read from the working tree at HEAD:
 | Declaration | Before | After | Basis |
 |---|---|---|---|
 | `website-next/package.json:28` `engines.node` | `22.x` | `22.x` (unchanged) | already the machine-enforced authority |
+| `website-next/package.json:19` `@types/node` | `^20` | `^22` | **fifth site, missed by the first pass** — found by independent QA |
 | `website-next/.nvmrc:1` | `20` | `22` | contradicted `engines.node`; **not named in the ADR ruling** — see below |
 | `website-next/DEPLOY.md:51` | `Node.js version: 20.x` | `22.x` + authority note | the correction the ruling explicitly ordered |
-| `.github/workflows/verify.yml:24` | `node: [20, 22]` | **unchanged** | not runtime authority — see below |
+| `.github/workflows/verify.yml:24` | `node: [20, 22]` | **unchanged** | not runtime authority — see below; `engines` does NOT enforce it |
 | root `package.json` `engines` | absent | **unchanged** | absent is not drift; nothing to reconcile |
 | `vercel.json` (root and `website-next/`) | no Node declaration | **unchanged** | neither file declares one |
 | container runtime | `v22.22.2` (`npm` 10.9.7) | — | observed here, not the owner's machine |
@@ -2232,6 +2233,14 @@ value — but the register should record `.nvmrc` as a fourth declaration site.
 deploy target (website-next engines: 22.x); 20 guards the oldest still-supported LTS for the root
 toolchain."* That is a compatibility matrix, not a runtime-authority declaration, and the ruling is
 about the deploy target. Narrowing it would remove coverage the evidence does not ask to remove.
+
+**But the matrix is not guarded by `engines`, and the first pass did not say so.** `npm config get
+engine-strict` is `false` and no tracked `.npmrc` sets it, so a Node 20 CI leg emits `EBADENGINE`
+and *succeeds*. CI can therefore go green on a runtime `engines.node` forbids. A reader of the
+original entry could have concluded CI was enforcing the ruling; it is not. Whether to set
+`engine-strict` or drop the 20 leg is an owner call, not this packet's — it changes what CI
+accepts. **Not verified by execution: no Node 20 binary exists in this container** (only
+v22.22.2), so the EBADENGINE-warns-and-succeeds behaviour is inferred from npm config, not run.
 
 **Preview/Vercel runtime is UNOBSERVED and stays EVIDENCE OPEN.** The Vercel project's Node setting
 lives in a provider console this packet may not read or mutate. `DEPLOY.md` is an instruction to a
@@ -2270,7 +2279,10 @@ DEFECT-PKT-021A-EMBEDDED-APP.
 ### 3 · Proof, because lint going green proves only that the rule is satisfied
 
 `scripts/test-client-store.mjs` (new, wired into `verify` between `test:hero` and `test:visual`)
-drives 22 assertions through headless Chromium against the built export: banner renders with no stored
+drives **39 assertions** — 5 read the prerendered export off disk, the rest run in headless
+Chromium. **The commit message `d68f43f` says "22 rendered assertions"; that number was wrong
+twice over** — there were 21 contract assertions plus a non-vacuity check that was counting
+itself, and the suite has since grown. Assertions cover: banner renders with no stored
 choice · hidden for `denied` · hidden for `granted` with `#ga4-src` injected by the effect · accept and
 decline both dismiss without a reload, persist, and set GA correctly · reload re-applies both stored
 values · locale toggle writes `<html lang/dir>` and survives a reload and a toggle back.
@@ -2313,3 +2325,68 @@ and the first time my own harness caught it rather than a reviewer.
   brand corpus decision (internal docs in or out) is not this packet's to make.
 * `npm run lint` is still in no gate. Wiring it would fail the chain on the 55 committed-bundle errors,
   which is EMBEDDED-APP's call, not this packet's.
+
+### 6 · Independent Toolchain QA — verdict REVISE, and what it changed
+
+An independent reviewer with a rejection mandate audited `d68f43f`. **The repair itself survived
+intact**: ~45 executed browser probes found *zero* behavioural divergence from `63c40d6` — identical
+prerendered HTML (`index.html` 99,890 bytes on both sides; the only diff is the chunk hash and build
+id), zero hydration warnings, identical outcomes for private-mode storage, soft `next/link` navigation,
+six hostile stored-consent payloads, and the `Date.now()` expiry boundary crossed mid-session. Scope was
+clean (7 files, no secrets). `npm run verify` exit 0, nothing skipped.
+
+**The defects were in my gate's coverage and in two overstated claims — not in the component code.**
+That is the same lesson as the last three rounds, one layer up: the code was right and the *proof* was
+not, and I could not see it from inside.
+
+The one that matters:
+
+**[HIGH] the gate could not detect a wrong `getServerSnapshot` — the exact property the entry claims it
+protects.** Two mutations passed with exit 0. Consent's snapshot returning `null` bakes the consent
+banner into the static export of all 17 pages — a pre-hydration flash for visitors who already decided,
+and indexable consent chrome. Locale's returning `'he'` prerenders Hebrew nav and destroys the EN SEO
+baseline. Root cause: assertion B1 read `document.documentElement.lang` *after* the locale effect had
+already normalised it, so it reported the effect's output and never the server snapshot — a tautology
+with respect to its own name. There was no assertion against the prerendered HTML at all.
+
+Repairs, each mutation-proven against the reviewer's own mutation, all five now caught by the intended
+assertion:
+
+| QA mutation | Was | Now caught by |
+|---|---|---|
+| consent `getServerSnapshot` → `null` | exit 0 | `S1` (banner absent from all 17 exported pages) |
+| locale `getServerSnapshot` → `'he'` | exit 0 | `S4` + `S5` (no HE nav in prerendered `<header>`; EN nav present) |
+| drop `sessionChoice` override | exit 0 | `D2` (decline still dismisses when storage throws) |
+| `writeLocale` stops setting `sessionLocale` | exit 0 | `D3` (toggle still reaches `lang=he dir=rtl`) |
+| drop the 12-month expiry clause | exit 0 | `E1` + `E1b` (expired grant re-asks, loads no GA) |
+
+New sections: **S** reads the export off disk, because a browser *cannot* see this property. **D** runs a
+context where `localStorage` throws, so the session overrides are exercised rather than merely asserted
+in prose. **E** covers expiry, with a fresh-timestamp positive control so E1 cannot pass on an unreadable
+fixture. **P** is a precondition — a stub `out/` used to fail via an uncaught Playwright `TimeoutError`
+deep in section A; it now fails by name. The freshness corpus grew from 52 to 57 files: `next.config.ts`,
+`package.json`, `postcss.config.mjs`, `tsconfig.json` and `eslint.config.mjs` change the output without
+changing a component, and were the same stale-artifact hole one level down.
+
+**S4 was scoped to `<header>` after a false positive.** Whole-document matching flagged `nav.bookers`
+("מזמיני הופעות") because it also appears as a deliberate bilingual gloss inside the English meta
+description — EN copy doing its job, not a locale leak.
+
+Other findings, all repaired: `@types/node` was a **fifth** Node-declaration site the matrix missed, now
+`^22` (`tsc`, `eslint`, `next build` all still exit 0; `package-lock.json` updated) · the assertion count
+was self-inflating · `.github/workflows/verify.yml:60` still said "19 checks" for a 38-step chain · the
+`engines`-does-not-enforce-CI limitation is now disclosed above · `DEPLOY.md` lines 1 and 46 carried bare
+standalone `LOCK` and are corrected.
+
+**Still open, deliberately.** `DEPLOY.md:4` and `:32` contain `C:\Users\user\LOCK` — literal Windows
+paths on Maria's machine. They are bare `LOCK` *and* they disagree with CLAUDE.md, which records the
+local clone as `C:\Users\user\lock.show`. Rewriting a path I cannot observe would risk making the
+instruction wrong, so both are left for the owner. Added to OWNER-PENDING.
+
+**What QA could not verify, recorded so coverage is not confused with silence:** whether `npm ci` fails
+or merely warns under Node 20 (no Node 20 binary in this container — inferred, not executed) · the Vercel
+console's actual Node setting (out of bounds, already EVIDENCE OPEN) · the Drive authority itself, since
+the reviewer did not read Drive — from the repo alone, only `engines.node = 22.x` and a green Node 22
+build are re-derivable, **not** that Node 22 is *authorised* · and my own first-round mutation set, which
+was described in prose but not committed. The five QA mutations above are now recorded as exact
+file-and-text substitutions so a third party can replay them without a script.

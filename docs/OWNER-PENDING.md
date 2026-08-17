@@ -9,6 +9,7 @@ _Re-audited 9 Aug 2026. Ordered by how much each unblocks._
 | # | What | The one-line decision | Unblocks |
 |---|---|---|---|
 | **W** | **Witness walk + merge word** | Walk the app preview; one word ships 77 commits (Artist entity · Radar A+B · Passport v2 · Artist Home step 1 · pilot lanes) | Everything app-side; the free pilot |
+| **DEPLOY-PATH** | **`website-next/DEPLOY.md` local clone path** | It says `C:\Users\user\LOCK`; CLAUDE.md says `C:\Users\user\lock.show`. Which is real? (It is also a bare standalone `LOCK` under the 17 Aug brand ruling, but I will not rewrite a path on your machine that I cannot observe) | Closing the last bare-`LOCK` instances in DEPLOY.md |
 | **ENV** | **Restore `.env.local`** (2 min at the computer) | Copy VERCEL_TOKEN + SUPABASE_ACCESS_TOKEN etc. from Vercel → lock-app → Settings → Env Vars into a new `.env.local` | My ability to deploy or read the DB at all |
 | **C1** | **Recipient view switching** (v9 vs canon) | v9: one link = one view, no switcher · ours: persona toggle mandated + shipped. Pick one | ALL recipient/passport work (6 policies, dead-link states, share service) |
 | **C2** | **Artist-side Passport screens** | v9 adds 5 (Library/Composer/Preview/Publish-Review/Share) · canon ruled "no artist passport surface, redirect only". Pick one | The largest artist build |

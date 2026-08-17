@@ -57,5 +57,5 @@ jobs:
       - name: Install Playwright Chromium (for test:fit)
         run: npx playwright install --with-deps chromium
 
-      - name: Run full verify chain (19 checks)
+      - name: Run full verify chain (38 steps)
         run: npm run verify

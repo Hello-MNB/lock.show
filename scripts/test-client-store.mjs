@@ -40,8 +40,11 @@ const TOGGLE = 'header button[aria-label*="Hebrew"], header button[aria-label*="
 
 const findings = []
 let checks = 0
-function check(label, cond, detail = '') {
-  checks++
+// `checks` counts CONTRACT assertions only. The non-vacuity check at the end is
+// a meta-assertion about this file and must not inflate the number it reports —
+// independent QA caught it counting itself ("21 rendered" vs "22 hold").
+function check(label, cond, detail = '', meta = false) {
+  if (!meta) checks++
   if (cond) console.log(`  ✓ ${label}`)
   else findings.push(`${label}${detail ? ` — ${detail}` : ''}`)
 }
@@ -89,7 +92,14 @@ if (!existsSync(path.join(OUT, 'index.html'))) {
   const built = statSync(path.join(OUT, 'index.html')).mtimeMs
   const src = execSync(
     "git ls-files -- website-next/app website-next/components website-next/lib " +
-    "website-next/content website-next/messages website-next/styles",
+    "website-next/content website-next/messages website-next/styles " +
+    // Config files change the OUTPUT without changing a component. Independent
+    // QA found them missing from this corpus: editing next.config.ts and
+    // skipping the rebuild left exactly the stale-artifact hole this check
+    // exists to close.
+    "website-next/next.config.ts website-next/package.json " +
+    "website-next/postcss.config.mjs website-next/tsconfig.json " +
+    "website-next/eslint.config.mjs",
     { cwd: path.join(DIR, '..'), encoding: 'utf8' },
   ).split('\n').filter(Boolean)
   if (!src.length) fail('freshness: no tracked website sources enumerated — the freshness check itself is vacuous')
@@ -130,6 +140,86 @@ async function fresh(init) {
   if (init) await ctx.addInitScript(init)
   const page = await ctx.newPage()
   return { ctx, page }
+}
+
+// ── P · PRECONDITION ────────────────────────────────────────────────────────
+// Independent QA served a stub out/: the gate did exit non-zero, but via an
+// uncaught Playwright TimeoutError deep in section A rather than a named
+// failure. Exit codes were right, the diagnosis was noise. Fail here instead.
+console.log('\n[P] precondition — the export is actually being served')
+{
+  const ctx = await browser.newContext()
+  const page = await ctx.newPage()
+  const res = await page.goto(`${base}/`, { waitUntil: 'load' }).catch(() => null)
+  check('P1 GET / returns 200', !!res && res.status() === 200, `status ${res ? res.status() : 'no response'}`)
+  check('P2 the served home page carries the site header (not a 404 body)',
+    await page.locator('header').count() >= 1)
+  await ctx.close()
+  if (findings.length) {
+    console.error(`\n✖ CLIENT-STORE CONTRACT — precondition failed, not running the contract:`)
+    for (const f of findings) console.error(`  · ${f}`)
+    await browser.close()
+    server.close()
+    process.exit(1)
+  }
+}
+
+// ── S · SERVER SNAPSHOT / PRERENDERED HTML ──────────────────────────────────
+// These read the STATIC EXPORT off disk. No browser is involved, deliberately:
+// a browser CANNOT see this property. By the time any probe reads
+// document.documentElement.lang the locale effect has already normalised it, so
+// every rendered assertion below is blind to a wrong getServerSnapshot.
+//
+// Added after independent QA landed two mutations that the rendered suite waved
+// straight through with exit 0: consent's getServerSnapshot returning `null`
+// (which bakes the banner into the static export of every page — a pre-hydration
+// flash for visitors who already decided, and indexable consent chrome), and
+// locale's returning 'he' (which prerenders Hebrew nav and destroys the EN SEO
+// baseline). getServerSnapshot is the whole reason the repair is safe for a
+// static export; a gate that cannot see it break does not cover the claim.
+console.log('\n[S] server snapshot — the prerendered static export')
+{
+  const pages = execSync(`find ${JSON.stringify(OUT)} -name '*.html' -type f -not -path '*/app/*'`,
+    { encoding: 'utf8' }).split('\n').filter(Boolean)
+  check(`S0 non-vacuity: ${pages.length} exported pages enumerated (excluding the /app shells)`,
+    pages.length >= 15, `only ${pages.length}`)
+
+  const withBanner = pages.filter((f) => /consent-banner|role="dialog"/.test(readFileSync(f, 'utf8')))
+  check('S1 consent banner is ABSENT from every prerendered page (deny-by-default survives export)',
+    withBanner.length === 0, `${withBanner.length} page(s), e.g. ${withBanner[0]}`)
+
+  const badHtmlTag = pages.filter((f) => {
+    const m = readFileSync(f, 'utf8').match(/<html[^>]*>/)
+    return !m || !/lang="en"/.test(m[0]) || !/dir="ltr"/.test(m[0])
+  })
+  check('S2 every prerendered page is <html lang="en" dir="ltr"> (EN SEO baseline)',
+    badHtmlTag.length === 0, `${badHtmlTag.length} page(s), e.g. ${badHtmlTag[0]}`)
+
+  // Driven off the message catalogues so this cannot drift out of sync with the
+  // copy. The locale toggle's own label is hardcoded in nav.tsx, not a nav.*
+  // message, so no legitimately-Hebrew string is swept up here.
+  const en = JSON.parse(readFileSync(path.join(DIR, '..', 'website-next', 'messages', 'en.json'), 'utf8'))
+  const he = JSON.parse(readFileSync(path.join(DIR, '..', 'website-next', 'messages', 'he.json'), 'utf8'))
+  const keys = Object.keys(en.nav ?? {}).filter((k) => (he.nav ?? {})[k])
+  const home = readFileSync(path.join(OUT, 'index.html'), 'utf8')
+  check(`S3 non-vacuity: ${keys.length} nav keys carry both locales`, keys.length >= 6, `only ${keys.length}`)
+
+  // Scoped to <header>, NOT the whole document. Whole-document matching gave a
+  // FALSE positive on nav.bookers: "מזמיני הופעות" also appears as a deliberate
+  // bilingual gloss inside the English meta description, which is EN copy doing
+  // its job, not a locale leak. The header is where a wrong locale snapshot
+  // actually shows up.
+  const header = (home.match(/<header[\s\S]*?<\/header>/) ?? [''])[0]
+  check('S3b non-vacuity: the prerendered home page has a <header> to inspect',
+    header.length > 200, `header length ${header.length}`)
+  const heLeaks = keys.filter((k) => header.includes(he.nav[k]))
+  check('S4 no Hebrew nav copy in the prerendered <header>',
+    heLeaks.length === 0, `leaked: ${heLeaks.map((k) => `nav.${k}`).join(', ')}`)
+  // Positive control: if the nav were not prerendered at all, S4 would pass for
+  // the wrong reason.
+  const enPresent = keys.filter((k) => header.includes(en.nav[k]))
+  check('S5 positive control: the EN nav IS prerendered (so S4 is not passing on an empty header)',
+    enPresent.length >= 6, `only ${enPresent.length} of ${keys.length} EN nav strings found`)
 }
 
 // ── A · CONSENT BANNER ──────────────────────────────────────────────────────
@@ -246,9 +336,73 @@ console.log('\n[B] locale — persisted choice read on the client, <html> writte
   await ctx.close()
 }
 
+// ── D · DEGRADED STORAGE ────────────────────────────────────────────────────
+// The module-level session overrides (`sessionChoice`, `sessionLocale`) are the
+// reason a visitor whose localStorage THROWS — private mode, storage disabled,
+// sandboxed iframe — can still dismiss the banner and switch locale. The
+// register presents that as deliberate behaviour preservation, but independent
+// QA showed the claim was uncovered: deleting either override left the gate at
+// exit 0, because every context here had a working localStorage.
+console.log('\n[D] degraded storage — localStorage throws (private mode)')
+{
+  const BREAK_STORAGE =
+    "Object.defineProperty(window, 'localStorage', { configurable: true, get() { throw new Error('storage disabled') } })"
+  const { ctx, page } = await fresh(BREAK_STORAGE)
+  await page.goto(`${base}/`, { waitUntil: 'load' })
+  await page.waitForTimeout(400)
+  check('D0 non-vacuity: localStorage really does throw in this context',
+    await page.evaluate(() => { try { void window.localStorage; return false } catch { return true } }))
+  check('D1 storage throws → banner still renders (readChoice fails closed to null)',
+    await page.locator(BANNER).count() === 1)
+  check('D1b storage throws → gtag.js still NOT loaded', await page.locator(GA_SCRIPT).count() === 0)
+
+  await page.locator(`${BANNER} button`).first().click()
+  await page.waitForTimeout(400)
+  check('D2 storage throws → decline still dismisses the banner (session override)',
+    await page.locator(BANNER).count() === 0)
+  check('D2b storage throws → decline still keeps gtag.js out',
+    await page.locator(GA_SCRIPT).count() === 0)
+
+  await page.locator(TOGGLE).first().click()
+  await page.waitForTimeout(400)
+  const html = await page.evaluate(() => ({ lang: document.documentElement.lang, dir: document.documentElement.dir }))
+  check('D3 storage throws → locale toggle still reaches <html lang=he dir=rtl> (session override)',
+    html.lang === 'he' && html.dir === 'rtl', JSON.stringify(html))
+  await ctx.close()
+}
+
+// ── E · CONSENT EXPIRY ──────────────────────────────────────────────────────
+// MAX_AGE_MS re-asks after 12 months. Untested before independent QA: deleting
+// the expiry clause shipped green, so an indefinitely-valid stale grant would
+// have passed. Behaviour is unchanged from 63c40d6 — this closes the coverage
+// gap, not a regression.
+console.log('\n[E] consent expiry — a grant older than MAX_AGE_MS is not a grant')
+{
+  const YEAR_PLUS = 366 * 24 * 60 * 60 * 1000
+  const stale = `localStorage.setItem(${JSON.stringify(CONSENT_KEY)}, JSON.stringify({ value: 'granted', at: Date.now() - ${YEAR_PLUS} }))`
+  const { ctx, page } = await fresh(stale)
+  await page.goto(`${base}/`, { waitUntil: 'load' })
+  await page.waitForTimeout(400)
+  check('E1 expired grant → banner re-asks', await page.locator(BANNER).count() === 1)
+  check('E1b expired grant → gtag.js NOT loaded (an expired grant must not carry consent)',
+    await page.locator(GA_SCRIPT).count() === 0)
+  await ctx.close()
+}
+{
+  // Positive control for E1: the SAME payload with a fresh timestamp must
+  // behave as a live grant, so E1 cannot be passing because the fixture shape
+  // is simply unreadable.
+  const { ctx, page } = await fresh(seedConsent('granted'))
+  await page.goto(`${base}/`, { waitUntil: 'load' })
+  await page.waitForTimeout(500)
+  check('E2 positive control: the same payload with a fresh timestamp IS a live grant',
+    await page.locator(BANNER).count() === 0 && await page.locator(GA_SCRIPT).count() === 1)
+  await ctx.close()
+}
+
 // ── C · NON-VACUITY ─────────────────────────────────────────────────────────
 console.log('\n[C] non-vacuity')
-check(`C1 ran ${checks} rendered assertions (a collapsed corpus would show few)`, checks >= 18, `only ${checks}`)
+check(`C1 ran ${checks} contract assertions (a collapsed corpus would show few)`, checks >= 34, `only ${checks}`, true)
 
 await browser.close()
 server.close()
@@ -258,4 +412,4 @@ if (findings.length) {
   for (const f of findings) console.error(`  · ${f}`)
   process.exit(1)
 }
-console.log(`\n✓ CLIENT-STORE CONTRACT: ${checks} rendered assertions hold — consent banner and locale both read localStorage through useSyncExternalStore, persist across reload, and keep gtag.js and <html lang/dir> as effect-only external writes.`)
+console.log(`\n✓ CLIENT-STORE CONTRACT: ${checks} assertions hold — consent banner and locale both read localStorage through useSyncExternalStore, persist across reload, and keep gtag.js and <html lang/dir> as effect-only external writes.`)

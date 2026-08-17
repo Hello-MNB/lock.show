@@ -1,4 +1,4 @@
-# LOCK Marketing Site — Deploy Guide
+# LOCK SHOW Marketing Site — Deploy Guide
 
 **Project:** `lock.show` — Next.js static export  
 **Repo:** `C:\Users\user\LOCK` (GitHub)  
@@ -43,7 +43,7 @@ git push origin main
 ## Step 2: Create new Vercel project for lock.show
 
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import from GitHub → select the LOCK repo
+2. Import from GitHub → select the LOCK SHOW repo
 3. **Root Directory** → set to `website-next/` ← CRITICAL
 4. Framework: Next.js (auto-detected)
 5. Build Command: `npm run build` (default — do not override)
