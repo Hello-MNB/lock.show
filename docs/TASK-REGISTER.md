@@ -1878,7 +1878,7 @@ correctly-implemented index contract.
 **~~OBSERVED — no `hreflang` on the live home page~~ — CORRECTED 17 Aug, this framing was WRONG.** I read
 the absence as an open decision. In fact **hreflang + `x-default` are implemented and built at HEAD** on all
 10 index routes (`website-next/lib/site.ts:39-51`, present in `out/index.html`) and are simply **undeployed**
-— production is a 21-day-old build. There IS a genuine open decision nearby, but a different one: B4-95.10
+— production is a build older than this branch (**the “21-day” figure is RETRACTED — see SITE-DEPLOY; three ages are observable, none of them 21**). There IS a genuine open decision nearby, but a different one: B4-95.10
 **D-008** (*"Locale URL pattern, x-default and fallback policy"*, status **Open**), which means the code
 currently emits `x-default` **ahead of** the owner decision it depends on. That is the item for Maria, not
 the absence I reported.
@@ -1915,29 +1915,44 @@ legal/public prose and publicly-surfacing implementation comments. **LOCK.SHOW**
 domain or an explicitly approved logo/wordmark lockup. Recorded in `CLAUDE.md` as standing law and in
 `docs/OWNER-PENDING.md` as **BRAND-NAME**.
 
-### Measured scope — executed scan, not an estimate
+### Measured scope — **RE-CORRECTED THREE TIMES; the exact total is now EVIDENCE OPEN, deliberately**
 
-`364` bare-"LOCK" occurrences across `45` files. The regex excludes `LOCK.SHOW`/`LOCK SHOW` and any larger
-word (BLOCK, LOCKED, UNLOCK, lockup), so these are standalone brand tokens. **The single number is
-misleading and is deliberately split three ways:**
+**The honest headline: four independent scans have produced four different totals, and that is a defect in
+METHOD, not arithmetic.** Hand-derived counts in prose cannot be kept true across edits, and this section has
+now been wrong three times running. The number is therefore stated as a range with its method, and the
+authoritative count is delegated to the committed scanner that ships with the WEB-02 gate.
 
-| Class | Count | Where | In scope? |
-|---|---|---|---|
-| **A · website visible + metadata** | ~116 | `app/**` 87 · `components/**` 10 · `messages/*.json` 8 · `public/llms.txt` 7 · `lib/**` 4 (site name, JSON-LD) | **YES — primary** |
-| **B · app visible** | ~53 | `src/lib/i18n/en.js` 19 · `he.js` 17 · `ui.jsx` 3 · `publicPassport.js` `siteName: 'LOCK'` · root `index.html` `<title>` + `apple-mobile-web-app-title` | **YES** |
-| **C · data-layer tokens** | 193 | `src/lib/registryData.js` `source_brand: "LOCK"` — **no consumer found outside that file**, so not currently rendered | **YES, but not visible copy** — correct without claiming a visible fix |
+**What is SETTLED (all four passes agree):**
 
-Largest single files: `registryData.js` 193 (class C), `i18n/en.js` 19, `i18n/he.js` 17, `faq/page.tsx` 16,
-`layout.tsx` 13, `terms-content.tsx` 10.
+| Fact | Value |
+|---|---|
+| `source_brand": "LOCK"` exact tokens in `src/lib/registryData.js` | **190** (not 193) |
+| …plus `limitation_text` PROSE tokens in that same file, at `:4130 :4142 :7723` | **3** — rendered-class, **NOT exempt**, and currently outside every gate clause |
+| Public app shells `website-next/public/app/**/index.html` | **30 files / 60 tokens**, each `<title>LOCK — proof before booking</title>`, confirmed LIVE |
+| The 190 are dormant | `source_brand` has no consumer and is **absent from the shipped bundles** (`public/app/assets/*.js`, `dist/assets/*.js` → 0) |
 
-### Live violations CONFIRMED on the public site today (OBSERVED)
+**What is NOT settled — class A and class B totals.** Two strict scanners, both excluding `LOCK SHOW`
+uppercase-exact, disagree: **A = 116/28 vs 120/29** and **B = 56/17 vs 62/18**. The difference is corpus and
+file-extension scope, not the regex. Earlier figures (~116/~53, then 119/61) are superseded. **Do not quote a
+single total until the committed scanner produces it.**
 
-- `<title>LOCK — Build the Proof That Books You</title>` on `/`, and the `| LOCK` title suffix on all 14 routes.
-- JSON-LD `"name":"LOCK"` — **structured data is named explicitly in the ruling**.
-- `og:site_name` where present; root shell `apple-mobile-web-app-title` content="LOCK".
+**The 373/48 headline was itself misleading** and is withdrawn: it was the arithmetic sum A+B+C, never a
+corpus scan. A true `git ls-files` scan yields ~1538/211 (~516/102 excluding `docs/`), and neither figure
+included the 60 shell tokens.
 
-Note the interaction with **SITE-DEPLOY**: production is a 21-day-old build, so a naming fix has no live
-effect until the site is deployed. Fold the rename into the same train.
+**A REAL BUG the counting exposed, and the most valuable finding of the three passes:** my scanner applied
+the `LOCK SHOW` exclusion **case-INSENSITIVELY**, so `LOCK shows…` was silently treated as the brand phrase
+and dropped. "shows" is a **verb**; `LOCK shows` is a bare-LOCK violation. Two genuine live violations hid in
+exactly that blind spot for three passes:
+
+- `src/lib/i18n/en.js:42` — `disclaimer: 'LOCK shows evidence only — not a guarantee.'`
+- `website-next/app/faq/page.tsx:93` — `'…LOCK shows the review date and the p…'`
+
+Both are now in remediation scope, and **gate clause 2 is amended to require the brand-phrase exclusion to
+match `LOCK SHOW` UPPERCASE-EXACT** — otherwise the gate reproduces the same blindness.
+
+**Per-file corrections:** `i18n/en.js` = **19** (not 18, and not the original 19→18 flip-flop); `i18n/he.js`
+= **20** (not 17). Thirteen `src/**` files carrying bare LOCK were missing from the first record entirely.
 
 ### REGRESSION GATE — contract (to be BUILT WITH the remediation, not before)
 
@@ -1946,29 +1961,45 @@ first draft "necessary, not sufficient" and named seven blind spots. All seven a
 
 1. **Zero** bare-"LOCK" tokens across class A **and all of class B** — not only the i18n catalogues. The
    first draft gated "app i18n catalogues", leaving **23 of the 61** class-B tokens ungated.
-2. **CASE-SENSITIVE allowlist.** Per the refined ruling, **`lock.show` (lowercase) is the domain** and
-   **`LOCK.SHOW` (uppercase) is legal ONLY for an explicitly approved visual lockup** — so uppercase
-   `LOCK.SHOW` in running prose is a violation even though the same letters are legal as a URL. The
-   allowlist **may only shrink** (pattern already proven in `test-i18n-parity.mjs`).
-3. **Rendered output**, not just source: assert over built `website-next/out/**` for `<title>`,
+2. **CASE-SENSITIVE on BOTH sides — the allowlist AND the brand-phrase exclusion.** Per the refined ruling,
+   **`lock.show` (lowercase) is the domain** and **`LOCK.SHOW` (uppercase) is legal ONLY in an explicitly
+   approved visual lockup** — so uppercase `LOCK.SHOW` in running prose is a violation even though the same
+   letters are legal as a URL. Allowlist **may only shrink**.
+   ⚠️ **AMENDED after the third pass:** the `LOCK SHOW` **exclusion** must match **UPPERCASE-EXACT**. Written
+   case-insensitively it swallows `LOCK shows…`, `LOCK showcase…` — where "shows" is a **verb** and the token
+   is a genuine violation. That exact bug hid two live violations (`src/lib/i18n/en.js:42`,
+   `website-next/app/faq/page.tsx:93`) through three review passes. A case-insensitive exclusion reproduces
+   the blindness the gate exists to end.
+3. **Rendered output**, not just source: assert over built `website-next/out/**` **HTML ONLY** for `<title>`,
    `og:site_name`, **`meta description`, `og:description`, `twitter:*`**, JSON-LD `name`, `aria-label` and
-   `alt`. The description and twitter fields were missing from the first draft.
+   `alt`. Scoped to HTML deliberately — an unscoped `out/**` glob also sweeps the copied minified bundle
+   `public/app/assets/index-*.js` (1 incidental token) and binary `visual-baseline/*.png`, producing false
+   failures on files no reader ever sees.
 4. **The 30 `/app/*` shells** (`public/app/**/index.html`, 60 tokens, live). The build copies them into
    `out/app/**` so a rendered assertion catches them incidentally — named explicitly so scope cannot
    silently drop them a second time.
 5. **Non-HTML public surfaces**: `public/llms.txt` (7 tokens, publicly served), `robots.txt`, `sitemap.xml`.
 6. **Build-freshness assertion.** `out/` is untracked, so the gate must build first or it can assert against
    stale or absent output. A vacuous-pass guard catches "empty"; it does not catch "stale".
-7. **A ratchet on `registryData.js`.** Its 190 tokens are exempt only because nothing consumes them — the
-   gate must FAIL if a consumer is ever added, since that single event converts 190 dormant tokens into
-   rendered copy.
+7. **A ratchet on `registryData.js`, exempting LINES not the FILE.** Its 190 `source_brand` tokens are
+   exempt only because nothing consumes them, and the gate must FAIL if a consumer is ever added — one event
+   converts 190 dormant tokens into rendered copy.
+   ⚠️ **AMENDED:** exempting the whole file left the **3 `limitation_text` PROSE tokens** (`:4130 :4142
+   :7723`) outside every assertion, even though the record classifies them as rendered-class. Class B must be
+   defined as "`src/**` excluding `source_brand` LINES", not "excluding `registryData.js`".
 8. **A stated blind spot rather than a hidden one: text baked into images.** `public/og/og-default.svg`
    renders method labels as image text, and PNG social cards cannot be asserted at all. The ruling covers
    "social text", so this needs a human check in WEB-02 review — a rendered-HTML gate is structurally blind
    to it and must never be claimed to cover it.
 
+**Non-public surfaces explicitly OUT of scope** (so a later pass does not re-raise them):
+`website-next/.build-marker` and `setup.bat` carry bare-LOCK tokens but surface to nobody; the ruling covers
+public/display naming.
+
 **GATE DISCIPLINE applies:** the gate must be mutation-tested — inject a bare "LOCK" into a title, an
-`aria-label`, an `alt`, and a JSON-LD `name`, and confirm each turns it red, before the gate is trusted.
+`aria-label`, an `alt`, and a JSON-LD `name` — **plus a fifth: `LOCK <lowercase word>` (e.g. `LOCK shows`)**,
+which is the precise defect that survived three review passes and which four of the five mutations would not
+catch. Confirm each turns the gate red before it is trusted.
 It is NOT built yet, because a gate that fails cannot be committed green; it lands with the fix.
 
 ### Explicit trap, named by the owner
@@ -1995,9 +2026,9 @@ ten defects — most of them in MY RECORD rather than in the audits**, which is 
 | D1 | I recorded `FAQPage` JSON-LD as "built but undeployed" | **It is ALREADY LIVE** on `/faq` and `/pricing` — a GET returns it. I had repeated an audit claim without verifying it. Struck, not quietly edited |
 | D2 | "twelve `website-next` commits exist only on this branch" | **22** touch `website-next`; **10** touch nothing else. Twelve was neither figure |
 | D3 | WEB-EVENTS headline said "8 of 10" while its own body enumerated nine | **9 of 10**; the enumeration is authoritative |
-| D4 | Cited `lib/app-url.ts:8` for the UTM finding | That file is 8 lines and contains **no** `utm`. Re-cited to the **15 real call sites** |
+| D4 | Cited `lib/app-url.ts:8` for the UTM finding | That file is 8 lines and contains **no** `utm`. Re-cited to the **14 real call sites** (re-corrected: 15 contradicted its own enumeration; the phantom 15th was `footer.tsx:89`, a legitimate CROSS-ORIGIN shop link) |
 | D5 | "21 third-party trademarks are public" | **18** files, and they are **LOCK SHOW-drawn badges** — two rects plus text, zero third-party path data. Nominative name-as-text, materially lower exposure. Overstating it would have diluted the photograph finding, which stands |
-| D6 | *"free … always"* ×9; *"two minutes"* ×7 | **9 total, only 4 carry "always"**; *"two minutes"* is **×10** and *"twenty seconds"* **×9** |
+| D6 | *"free … always"* ×9; *"two minutes"* ×9 literal | **9 total, only 4 carry "always"**; *"two minutes"* is **×9** literal and *"twenty seconds"* **×9** |
 | D7 | CLAIM-HUMAN was refutable in ten seconds | An operator role and console **DO** exist (`003_operator_admin.sql`, `AdminDashboard.jsx` routed at `App.jsx:218`). The defensible core is narrower: **no claim-review write path** and **no `reviewed_at`/`reviewed_by` column in any migration**, so *"the date of that review is stamped on the claim"* is unimplementable today |
 | D8 | A finding the record dropped | **METHOD-LABELS** — the site's public label vocabulary matches the product's in only 1 of 4 cases. Restored as its own OWNER-PENDING row |
 | D9 | **The register was never updated** — WEB-01 lived only in OWNER-PENDING, and my two self-corrections existed only in chat | This section, plus both corrections written **in place** above. An unrecorded correction is not a correction |
