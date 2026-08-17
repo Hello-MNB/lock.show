@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 const players = [
   {
@@ -469,7 +469,7 @@ export default function HowItWorks() {
                 fontWeight: 700,
               }}
             >
-              BUILD YOUR PASSPORT →
+              {conversionLabel()}
             </a>
             <Link
               href="/passport/demo"

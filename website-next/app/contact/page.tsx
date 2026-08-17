@@ -5,7 +5,7 @@ import { Hero } from '@/components/hero'
 import ContactForm from '@/components/contact-form'
 import { ContactChannels } from '@/components/contact-channels'
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 
 export const metadata: Metadata = {
@@ -217,7 +217,12 @@ export default function Contact() {
             Ready to start without waiting?
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '28px', fontSize: '1rem', lineHeight: 1.6 }}>
-            Registration is open — free for artists during the pilot.
+            {/* Was: "Registration is open — free for artists during the pilot."
+                Both halves were false in waitlist mode — no account is created at
+                submit, and §10.1 replaces "free in the pilot" with "beta access
+                opens in waves" unless a current OfferVersion approves a free
+                offer. Found by the visual-baseline review, not by a gate. */}
+            Beta access opens in waves — tell us how you work and we'll invite you.
           </p>
           <a
             href={`${conversionHref({ page: 'contact', placement: 'body' })}`}
@@ -235,7 +240,7 @@ export default function Contact() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel()}
           </a>
         </div>
       </section>

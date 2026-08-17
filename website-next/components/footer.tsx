@@ -79,7 +79,7 @@ function pageSlug(pathname: string | null): string {
 }
 
 export function Footer() {
-  const { messages } = useLocale()
+  const { messages, locale } = useLocale()
   const t = messages.footer
   const pathname = usePathname()
   const slug = pageSlug(pathname)
@@ -176,7 +176,7 @@ export function Footer() {
               flexShrink: 0,
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel(locale)}
           </a>
         </div>
 

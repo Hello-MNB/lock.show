@@ -3,7 +3,7 @@ import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
@@ -294,7 +294,7 @@ export default function HomePage() {
                     textDecoration: 'none',
                   }}
                 >
-                  BUILD YOUR PASSPORT
+                  {conversionLabel()}
                   <Icon id="arrow" size={16} color="var(--color-ink)" />
                 </a>
                 <Link

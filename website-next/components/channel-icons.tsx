@@ -61,8 +61,18 @@ export function LinkedInGlyph({ size = 20 }: P) {
   )
 }
 
+export function EmailGlyph({ size = 20 }: P) {
+  return (
+    <svg {...base(size)}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.7" />
+      <path d="m3.8 7 7.3 5.4c.5.4 1.3.4 1.8 0L20.2 7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export const GLYPH: Record<string, (p: P) => React.JSX.Element> = {
   whatsapp: WhatsAppGlyph,
+  email: EmailGlyph,
   instagram: InstagramGlyph,
   facebook: FacebookGlyph,
   linkedin: LinkedInGlyph,

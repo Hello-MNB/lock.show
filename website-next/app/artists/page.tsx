@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 const ICON_PATHS: Record<string, string> = {
   arrow:
@@ -270,7 +270,7 @@ export default function ArtistsPage() {
                 textDecoration: 'none',
               }}
             >
-              BUILD YOUR PASSPORT
+              {conversionLabel()}
               <Icon id="arrow" size={15} color="var(--color-ink)" />
             </a>
             <Link
@@ -931,7 +931,7 @@ export default function ArtistsPage() {
                 textDecoration: 'none',
               }}
             >
-              BUILD YOUR PASSPORT
+              {conversionLabel()}
               <Icon id="arrow" size={15} color="var(--color-ink)" />
             </a>
             <Link

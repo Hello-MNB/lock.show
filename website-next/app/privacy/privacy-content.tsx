@@ -21,7 +21,14 @@ const content: LegalContent = {
     metaLabel: 'משפטי · מדיניות פרטיות',
     title: 'מדיניות פרטיות — LOCK SHOW',
     versionLine: 'טיוטה לבדיקת עו״ד — אינה ייעוץ משפטי. גרסה 0.2-מתוקנת · 8.7.2026',
-    taskNote: 'טיוטה זמנית בבדיקת יועץ משפטי — נוסח לא סופי (משימה #23). כפוף לחוק הגנת הפרטיות התשמ״א-1981 כולל תיקון 13 (בתוקף מ-14.8.2025). לאשר מול היועץ המשפטי לפני פרסום.',
+    // taskNote (internal dev note) REMOVED from the visible page, following the
+    // precedent already set on /terms. It published an internal task reference
+    // ("task #23") on a LIVE public legal page — verified on www.lock.show — which is
+    // the same class of defect as the "Languages: Hebrew · English" spec line the
+    // owner struck from /contact: internal notes are not public copy. The
+    // draft-review banner below stays, and the legal body is unchanged: the
+    // statute references remain in the document text where they carry meaning.
+
     draftNotice: 'טיוטה בבדיקת יועץ משפטי — נוסח לא סופי',
     sections: [
       {
@@ -414,7 +421,6 @@ const content: LegalContent = {
     metaLabel: 'LEGAL · PRIVACY POLICY',
     title: 'Privacy Policy — LOCK SHOW',
     versionLine: 'Draft for legal review — not legal advice. v0.2-corrected · 8 Jul 2026',
-    taskNote: 'Temporary draft under legal counsel review — not final wording (task #23). Subject to the Privacy Protection Law 5741-1981, including Amendment 13 (in effect from 14 Aug 2025). To be confirmed with legal counsel before publishing.',
     draftNotice: 'Draft under legal review — not final',
     sections: [
       {

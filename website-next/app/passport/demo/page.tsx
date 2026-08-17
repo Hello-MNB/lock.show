@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 // --- Demo data: Maya Vale, THE canonical demo persona (owner ruling 21 Jul
 // 2026, docs/LOCK-PRODUCT-SPECIFICATION.md §8.4 — supersedes "Dana Lev").
@@ -383,7 +383,7 @@ export default function PassportDemo() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel()}
           </a>
         </div>
       </div>

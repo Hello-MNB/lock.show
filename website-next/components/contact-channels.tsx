@@ -59,7 +59,7 @@ export function ContactChannels() {
                label={t('contact.channels.whatsapp.cta', locale)}
                aria={t('contact.channels.whatsapp.aria', locale)} />
 
-      <Channel glyph="whatsapp" href={`mailto:${EMAILS.hello}`}
+      <Channel glyph="email" href={`mailto:${EMAILS.hello}`}
                label={t('contact.channels.email.cta', locale)}
                aria={t('contact.channels.email.cta', locale)} />
 

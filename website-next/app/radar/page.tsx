@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
-import { conversionHref } from '@/lib/conversion'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 // Eyebrow lines are human words, not system dimension IDs (owner law:
 // no technical/system vocabulary on marketing surfaces).
@@ -558,7 +558,7 @@ export default function Radar() {
                 fontWeight: 700,
               }}
             >
-              BUILD YOUR PASSPORT →
+              {conversionLabel()}
             </a>
             <a
               href="/passport/demo"
