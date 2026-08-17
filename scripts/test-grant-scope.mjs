@@ -80,7 +80,10 @@ check('publish DENIED on the other Act of the same Person', !permits(ORG, ACT_B,
 console.log('\n[4] AUDIENCE bound')
 setGrant(`audience = '{booker}'`)
 check('publish to buyer permitted', permits(ORG, ACT_A, 'publish', 'booker'))
-check('publish to named_recipient DENIED', !permits(ORG, ACT_A, 'publish', 'named_recipient'))
+// 'producer' is a LEGAL audience the grant simply does not hold — the old value
+// here ('named_recipient') is no longer in the vocabulary at all, so the check
+// could never fail and asserted nothing.
+check('publish to a legal-but-ungranted audience DENIED', !permits(ORG, ACT_A, 'publish', 'producer'))
 check('publish to private DENIED', !permits(ORG, ACT_A, 'publish', 'private'))
 
 console.log('\n[5] TIME window — a mandate is not live before it starts or after it ends')
@@ -278,10 +281,17 @@ if (REQ_ORG && REQ_ADMIN) {
   const again = db.try(`select public.request_artist_access('${REQ_ORG}'::uuid, '${SUBJ}'::uuid, array['view']::text[], null)`,
     { role: 'authenticated', uid: REQ_ADMIN })
   check('re-inviting over an Act-scoped grant succeeds', again.ok, again.out.split('\n')[0]?.slice(0, 100))
-  const rows = db.scalar(`select count(*) from public.artist_access where organization_id = '${REQ_ORG}' and artist_id = '${SUBJ}'`)
-  check('...and does NOT create a duplicate row (which would make rollback impossible)', rows === '1', `rows=${rows}`)
-  const st = db.scalar(`select status from public.artist_access where organization_id = '${REQ_ORG}' limit 1`)
-  check('...and actually resets the grant to pending, per 027 contract', st === 'pending', `status=${st}`)
+  // The correct contract, after the H-2 fix: a LEGACY request touches only the
+  // legacy row. It creates one if absent (the access actually being asked for) and
+  // leaves any Act-scoped grant exactly as it was. Two rows for one (org, artist)
+  // is legitimate under the replaced key — one legacy, one per Act — and it is also
+  // the state in which rollback correctly refuses until consolidated.
+  const legacySt = db.scalar(`select status from public.artist_access
+     where organization_id = '${REQ_ORG}' and artist_id = '${SUBJ}' and act_id is null limit 1`)
+  check('the LEGACY row exists and is reset to pending, per the 027 contract', legacySt === 'pending', `status=${legacySt}`)
+  const actSt = db.scalar(`select status from public.artist_access
+     where organization_id = '${REQ_ORG}' and artist_id = '${SUBJ}' and act_id is not null limit 1`)
+  check('...and the Act-scoped grant is left ACTIVE, not silently downgraded', actSt === 'active', `status=${actSt}`)
   db.exec(`delete from public.artist_access where organization_id = '${REQ_ORG}'`)
 } else {
   check('a grantless management org + admin exist to test the re-invite (positive control)', false,
@@ -307,6 +317,28 @@ check('a revoked grant cannot be self-reinstated (status is guarded)',
 check('...so it still denies publish', !permits(ORG, ACT_A, 'publish', 'booker'))
 check('the revocation stamp survives (it is not erased by a grantee reinstate)',
   db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't')
+// The check above cannot see C-1 on its own: the grantee's write is refused by the
+// guard, so the fill trigger never runs and the stamp survives no matter what the
+// trust condition says. This reaches the trigger — a write that DOES land, from a
+// role that is NOT the table owner — and proves the narrowing itself.
+{
+  const before = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
+  db.exec(`grant update on public.artist_access to authenticated`)
+  db.exec(`alter table public.artist_access disable row level security`)
+  const landed = db.try(`update public.artist_access set status = 'active', actions = actions
+                          where organization_id = '${ORG}'`, { role: 'authenticated', uid: GRANTEE })
+  db.exec(`alter table public.artist_access enable row level security`)
+  // Still refused by the guard (authority column), which is correct — so assert the
+  // trust condition directly instead: only the owner path may clear the stamp.
+  const after = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
+  check('a non-owner write can never clear the revocation stamp', before === 't' && after === 't',
+    `before=${before} after=${after} landed=${landed.ok}`)
+  const trustGuarded = /current_user = table_owner/.test(
+    readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')
+      .split('artist_access_fill_revoked_at')[1].split('$$;')[0])
+  check('the fill trigger gates the reinstate branch on the owner path', trustGuarded,
+    'the reinstate branch is not owner-gated — a grantee reinstate would erase its own revocation record')
+}
 check('a grantee cannot forge revocation attribution',
   !asGrantee(`update public.artist_access set revoked_by = '${GRANTEE}', revoked_at = now() - interval '99 days' where organization_id = '${ORG}'`).ok)
 check('a grantee cannot DELETE the grant row and destroy the trail',
@@ -387,6 +419,79 @@ console.log('\n[21] the rollback restores a WORKING access-request flow (QA C-4)
 // reference it — so rollback left the whole flow raising "column act_id does not
 // exist". Asserted by calling the function AFTER the rollback, not by reading it.
 
+
+console.log('\n[22] the legitimate revoke -> re-invite -> approve cycle leaves a WORKING grant (QA H-1)')
+// revoked_at is a LIVENESS predicate: grant_permits requires it to be null. The
+// reinstate branch only watches revoked -> active, and a re-invite interposes
+// 'pending', so unless the re-invite itself clears the stamp the re-approved grant
+// is denied FOREVER while every surface reports it active.
+//
+// The grant under test must be LEGACY (act_id null): that is the row the re-invite
+// updates. An Act-scoped row is untouched by a legacy re-invite, so the final
+// approve would be a revoked -> active transition, the owner-path reinstate would
+// clear the stamp, and this test would pass for the wrong reason — it did, until
+// mutation M-H1 exposed it. A legacy grant may never publish, so the cycle is
+// asserted on a non-publish action.
+{
+  const CY_ORG = db.scalar(`select o.id from public.organization o where o.workspace_type = 'management'
+     and not exists (select 1 from public.artist_access a where a.organization_id = o.id) order by o.id limit 1`)
+  const CY_ADMIN = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${CY_ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  const CY_ART = db.scalar(`select id from public.artists limit 1`)
+  if (CY_ORG && CY_ADMIN) {
+    db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, scope, actions, audience)
+             values ('${CY_ORG}', '${CY_ART}', null, 'manage', 'active', '{view}', '{request}', '{booker}')`)
+    check('cycle baseline: the legacy grant permits its action', permits(CY_ORG, ACT_A, 'request', 'booker'))
+
+    db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${CY_ORG}'`)
+    check('after revoke: denied', !permits(CY_ORG, ACT_A, 'request', 'booker'))
+    check('...and the revocation is stamped',
+      db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${CY_ORG}' limit 1`) === 't')
+
+    const reinvite = db.try(`select public.request_artist_access('${CY_ORG}'::uuid, '${CY_ART}'::uuid, array['view']::text[], null)`,
+      { role: 'authenticated', uid: CY_ADMIN })
+    check('re-invite succeeds', reinvite.ok, reinvite.out.split('\n')[0]?.slice(0, 100))
+    check('re-invite leaves the row pending', db.scalar(`select status from public.artist_access where organization_id = '${CY_ORG}' limit 1`) === 'pending')
+
+    // pending -> active: NOT the revoked -> active transition, so the reinstate
+    // branch does not fire. Only the re-invite clearing the stamp can save this.
+    db.exec(`update public.artist_access set status = 'active', actions = '{request}', audience = '{booker}'
+              where organization_id = '${CY_ORG}'`)
+    check('after re-approve the grant WORKS again (not permanently dead)',
+      permits(CY_ORG, ACT_A, 'request', 'booker'),
+      `revoked_at=${db.scalar(`select coalesce(revoked_at::text,'null') from public.artist_access where organization_id = '${CY_ORG}' limit 1`)}`)
+    db.exec(`delete from public.artist_access where organization_id = '${CY_ORG}'`)
+  } else {
+    check('a grantless management org + admin exist for the cycle (positive control)', false,
+      `org=${CY_ORG} admin=${CY_ADMIN}`)
+  }
+}
+
+console.log('\n[23] a legacy re-invite must not touch Act-scoped grants (QA H-2)')
+{
+  const L_ORG = db.scalar(`select o.id from public.organization o where o.workspace_type = 'management'
+     and not exists (select 1 from public.artist_access a where a.organization_id = o.id) order by o.id limit 1`)
+  const L_ADMIN = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${L_ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  const L_ART = db.scalar(`select id from public.artists limit 1`)
+  if (L_ORG && L_ADMIN) {
+    db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, scope, consent_at, actions, audience)
+             values ('${L_ORG}', '${L_ART}', '${ACT_A}', 'manage', 'active', '{view,edit}', now(), '{publish}', '{booker}')`)
+    const r = db.try(`select public.request_artist_access('${L_ORG}'::uuid, '${L_ART}'::uuid, array['view']::text[], null)`,
+      { role: 'authenticated', uid: L_ADMIN })
+    check('a legacy request succeeds', r.ok, r.out.split('\n')[0]?.slice(0, 100))
+    const act = db.rows(`select status||'|'||coalesce(consent_at::text,'null')||'|'||scope::text
+                           from public.artist_access where organization_id = '${L_ORG}' and act_id = '${ACT_A}'`)[0]?.[0]
+    check('the Act-scoped grant is UNTOUCHED — status, consent and scope intact',
+      Boolean(act) && act.startsWith('active|') && !act.includes('|null|'), `act row = ${act}`)
+    const legacyRow = db.scalar(`select count(*) from public.artist_access where organization_id = '${L_ORG}' and act_id is null`)
+    check('...and the legacy row the caller actually asked for WAS created', legacyRow === '1', `rows=${legacyRow}`)
+    db.exec(`delete from public.artist_access where organization_id = '${L_ORG}'`)
+  } else {
+    check('a grantless management org + admin exist (positive control)', false, `org=${L_ORG} admin=${L_ADMIN}`)
+  }
+}
+
 console.log('\n[18] the migration stays atomic under the applier')
 {
   const mig = readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')
@@ -448,16 +553,21 @@ if (downRes.ok) {
   check('no grant row was destroyed by the rollback', rows !== '0', `rows=${rows}`)
   // C-4: the flow must still WORK after rollback. 043 rewrote this function to
   // reference act_id; the down file must restore the 027 body before dropping it.
-  const postOrg = db.scalar(`select o.id from public.organization o
-     where o.workspace_type = 'management'
-       and not exists (select 1 from public.artist_access a where a.organization_id = o.id)
-     order by o.id limit 1`)
+  // MUST be an org that HOLDS a grant. On a grantless org the RPC takes its INSERT
+  // branch, which never references act_id — so the assertion passed even with the
+  // down file's restore block deleted. The UPDATE/ON CONFLICT branch is the one
+  // that breaks after rollback, and only an org with an existing row reaches it.
+  const postOrg = db.scalar(`select organization_id from public.artist_access
+     where organization_id in (select id from public.organization where workspace_type = 'management')
+     order by organization_id limit 1`)
   const postAdmin = db.scalar(`select person_id from public.organization_membership
      where organization_id = '${postOrg}' and org_role in ('owner','admin') and status = 'active' limit 1`)
   const postSubj = db.scalar(`select id from public.artists limit 1`)
   const postCall = db.try(`select public.request_artist_access('${postOrg}'::uuid, '${postSubj}'::uuid, array['view']::text[], null)`,
     { role: 'authenticated', uid: postAdmin })
-  check('request_artist_access still works AFTER the rollback', postCall.ok,
+  check('the post-rollback org genuinely holds a grant (positive control)',
+    db.scalar(`select count(*) from public.artist_access where organization_id = '${postOrg}'`) !== '0')
+  check('request_artist_access still works AFTER the rollback, on its conflict branch', postCall.ok,
     postCall.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 110))
 }
 

@@ -227,15 +227,32 @@ begin
   -- and the duplicate (org, artist) pair it produced is exactly the condition that
   -- makes rollback refuse. Reset every existing row for the pair first; only insert
   -- when the org holds none.
+  -- SCOPED TO THE LEGACY ROW, and it clears the revocation stamp.
+  --
+  -- Two defects lived in this one statement. (1) Without `act_id is null` a single
+  -- legacy request reset EVERY Act-scoped grant for the pair — downgrading Acts it
+  -- never named and erasing `consent_at`, the artist's recorded consent — while
+  -- creating no legacy row at all, so the access actually requested was never made.
+  -- (2) Leaving `revoked_at` set meant the legitimate revoke -> re-invite -> approve
+  -- cycle produced a grant that reads `active` everywhere while `grant_permits`
+  -- denies it forever, because that predicate requires `revoked_at is null`. The
+  -- reinstate branch in the fill trigger only watches revoked -> active, and a
+  -- re-invite interposes `pending`, so it never fired.
+  --
+  -- On revocation history: `revoked_at` is a LIVENESS predicate here, not an audit
+  -- record — it cannot be both, and the direct revoke -> approve path already clears
+  -- it. Durable revocation history belongs in its own append-only record; that is
+  -- recorded for the owner rather than faked by overloading this column.
   update public.artist_access
      set scope = coalesce(p_scope, '{view}'), territory = p_territory,
-         status = 'pending', consent_at = null
-   where organization_id = p_org and artist_id = p_artist;
+         status = 'pending', consent_at = null,
+         revoked_at = null, revoked_by = null
+   where organization_id = p_org and artist_id = p_artist and act_id is null;
 
   if found then
     select id into v_id from public.artist_access
-     where organization_id = p_org and artist_id = p_artist
-     order by act_id nulls first, created_at limit 1;
+     where organization_id = p_org and artist_id = p_artist and act_id is null
+     limit 1;
     return v_id;
   end if;
 
@@ -323,7 +340,7 @@ begin
   -- DELETE: only the trusted path or an owner/admin of the artist's org may remove
   -- a grant row at all, because deletion destroys the revocation trail entirely.
   if tg_op = 'DELETE' then
-    if current_user = table_owner then return old; end if;
+    if current_user in (table_owner, 'service_role') then return old; end if;
     if not exists (select 1 from public.artists ar
                     where ar.id = old.artist_id
                       and public.has_org_role(ar.owner_organization_id, array['owner','admin'])) then
@@ -342,8 +359,12 @@ begin
       using errcode = '23514';
   end if;
 
-  -- Definer context (consent RPCs) and the owner itself are trusted.
-  if current_user = table_owner then
+  -- Trusted principals: the table owner (which is also what SECURITY DEFINER
+  -- consent RPCs run as) and service_role, the documented backend break-glass
+  -- identity used by scripts/seed.mjs. Omitting service_role silently removed the
+  -- backend's ability to write any authority column — INSERT of an active grant,
+  -- reinstatement and deletion all refused with 42501.
+  if current_user in (table_owner, 'service_role') then
     return new;
   end if;
 
@@ -363,6 +384,7 @@ begin
             or new.granted_by is not null
             or new.expires_at is not null
             or new.revoked_at is not null or new.revoked_by is not null
+            or new.valid_from is distinct from now()
             or new.status = 'active';
   else
     touched := new.actions is distinct from old.actions
@@ -466,6 +488,14 @@ as $$
       and (aa.purpose is null or (p_purpose is not null and p_purpose = aa.purpose))
       -- VERSION BINDING. 'named' pins the grant to ONE immutable PassportVersion;
       -- previously it was decorative and any version passed.
+      -- VERSION BINDING. 'latest_published' follows the Act's current published
+      -- version and places no version restriction here. 'named' pins the grant to
+      -- ONE existing PassportVersion, and therefore does NOT authorize creating a
+      -- new one: PART B passes the id of the row being inserted, which by
+      -- definition cannot equal an already-existing pinned id. That denial is the
+      -- intended rule and is stated here rather than emerging by accident — a
+      -- named-version mandate is authority over that version, not a licence to
+      -- publish further ones.
       and (
         aa.version_binding is distinct from 'named'
         or (p_version is not null and p_version = aa.passport_version_id)

@@ -203,10 +203,29 @@ async function main() {
   }).select().single()
 
   // Roster membership (artist_access) — what the agency RADAR + roster read.
-  await admin.from('artist_access').upsert([
-    { organization_id: org.agency, artist_id: rosterA.id, access_level: 'manage', status: 'active' },
-    { organization_id: org.agency, artist_id: rosterB.id, access_level: 'manage', status: 'active' },
-  ], { onConflict: 'organization_id,artist_id' })
+  // NOT upsert-on-conflict: migration 043 replaces `unique (organization_id,
+  // artist_id)` with PARTIAL unique indexes so an org can hold one grant per ACT,
+  // and PostgREST cannot express a partial index's predicate in onConflict — the
+  // old call raised "there is no unique or exclusion constraint matching the ON
+  // CONFLICT specification". Idempotence is kept explicitly instead: look for the
+  // legacy (act-less) row, update it if present, insert it if not.
+  for (const rosterId of [rosterA.id, rosterB.id]) {
+    const { data: existing } = await admin
+      .from('artist_access')
+      .select('id')
+      .eq('organization_id', org.agency)
+      .eq('artist_id', rosterId)
+      .is('act_id', null)
+      .maybeSingle()
+    if (existing) {
+      await admin.from('artist_access')
+        .update({ access_level: 'manage', status: 'active' })
+        .eq('id', existing.id)
+    } else {
+      await admin.from('artist_access')
+        .insert({ organization_id: org.agency, artist_id: rosterId, access_level: 'manage', status: 'active' })
+    }
+  }
 
   // 5. Availability requests (against published artists) → agency inbox + admin console data.
   await admin.from('availability_requests').insert([

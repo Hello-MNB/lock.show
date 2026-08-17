@@ -1239,3 +1239,58 @@ does not exist.
 **L-11 · `search_path` on the replaced RPC now includes `pg_temp`.**
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."**
+
+## T-109.4 · THIRD QA REJECTION OF 043 — CLOSED (17 Aug 2026)
+
+Third REJECT. QA's own summary of the pattern: *"every one of the three highest-severity defects was
+introduced by a claimed fix"*. That is the finding worth keeping — the suite passed 77 assertions
+while two of the three sat in blind spots it structurally could not see. 043 remains DRAFTED, NOT
+APPLIED.
+
+**H-1 · the legitimate revoke → re-invite → approve cycle killed the grant permanently.** My C-1 fix
+(reinstate only on `revoked → active`) and my H-7 rewrite (re-invite interposes `pending`) combined:
+the watched transition never happened, `revoked_at` stayed set, and `grant_permits` requires it to be
+null. The grant read `active` on every surface — `can_access_artist` included — while publish
+authority was silently dead. Closed: the re-invite clears the stamp. Recorded plainly: `revoked_at`
+is a **liveness predicate**, not an audit record, and cannot be both; durable revocation history needs
+its own append-only record and is now an owner item rather than a column overloaded to fake it.
+
+**H-2 · one legacy re-invite destroyed artist consent across every Act.** My rewritten UPDATE had no
+`act_id` predicate, so a single legacy request downgraded Act-scoped grants it never named, erased
+`consent_at` — the artist's recorded consent — wiped scope/territory, and created no legacy row, so
+the access actually requested was never made. Closed: the reset is scoped to the legacy row and
+inserts one when absent.
+
+**H-3 · `service_role` lost all authority writes.** My H-8 narrowing named the table owner but not
+`service_role`, the documented backend identity (`scripts/seed.mjs`). INSERT of an active grant,
+reinstatement and deletion all refused 42501. Closed: `service_role` is named in the trusted branch.
+
+**H-4 · `scripts/seed.mjs:206` carried the same broken `ON CONFLICT` I repaired in the RPC** and was
+never fixed — 043's own header documents the breakage. Replaced with an explicit
+find-then-update-or-insert against the legacy row; swept the repo for other users of that conflict
+target (none remain).
+
+**M-5 · `version_binding='named'` was a total denial rather than a bound** — PART B passes the id of
+the row being inserted, which can never equal an already-existing pinned id. Kept as a denial, but
+now a **stated rule**: a named-version mandate is authority over that version, not a licence to
+publish further ones.
+
+**M-6 / M-7 · two suite blind spots proved by mutation.** The post-rollback check called
+`request_artist_access` on an org with **no** grant, taking the INSERT branch that never references
+`act_id` — so deleting the down file's restore block did not fail the suite. And the C-1 assertion ran
+after the grantee's write was already refused, so the fill trigger never executed and the stamp
+survived regardless of the trust condition. Both closed.
+
+**L-8 · an audience assertion was a tautology** (`named_recipient` is no longer a legal value, so it
+could only ever be false). Replaced with a legal-but-ungranted audience. **L-9** `valid_from`
+asymmetry closed.
+
+**My own miss, caught by re-mutation:** the first H-1 cycle test passed for the wrong reason — it made
+the grant Act-scoped, so the re-invite never touched it and the owner-path reinstate cleared the stamp
+anyway. Restructured onto the legacy row, which is the path a re-invite actually updates. Mutation
+M-H1 now fails the suite; before restructuring it did not.
+
+**Mutation battery this round: M8, M9, M-H1, M-H2 all previously missed or absent — all four now
+caught, verified by landed diff.**
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."**
