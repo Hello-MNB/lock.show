@@ -1897,6 +1897,64 @@ excluded · B4-95.10's authoritative P0 route list (read in WEB-01, not assumed 
 explicit. **KPI: 11/11 P0 owner sources linked and revision-verified; zero assumed repo or deployment; zero
 duplicate authority created; duplicate candidates classified, not deleted.**
 
+## WEB-01b · BRAND NAMING — CROSS-SITE DEFECT, MEASURED AND SCOPED (17 Aug 2026)
+
+**Founder ruling (Maria, 17 Aug):** the brand is **LOCK SHOW**. Bare "LOCK" is banned in visible copy,
+navigation, footer, ARIA labels, alt text, titles, metadata, structured data, social text, WhatsApp labels,
+legal/public prose and publicly-surfacing implementation comments. **LOCK.SHOW** is permitted only as the
+domain or an explicitly approved logo/wordmark lockup. Recorded in `CLAUDE.md` as standing law and in
+`docs/OWNER-PENDING.md` as **BRAND-NAME**.
+
+### Measured scope — executed scan, not an estimate
+
+`364` bare-"LOCK" occurrences across `45` files. The regex excludes `LOCK.SHOW`/`LOCK SHOW` and any larger
+word (BLOCK, LOCKED, UNLOCK, lockup), so these are standalone brand tokens. **The single number is
+misleading and is deliberately split three ways:**
+
+| Class | Count | Where | In scope? |
+|---|---|---|---|
+| **A · website visible + metadata** | ~116 | `app/**` 87 · `components/**` 10 · `messages/*.json` 8 · `public/llms.txt` 7 · `lib/**` 4 (site name, JSON-LD) | **YES — primary** |
+| **B · app visible** | ~53 | `src/lib/i18n/en.js` 19 · `he.js` 17 · `ui.jsx` 3 · `publicPassport.js` `siteName: 'LOCK'` · root `index.html` `<title>` + `apple-mobile-web-app-title` | **YES** |
+| **C · data-layer tokens** | 193 | `src/lib/registryData.js` `source_brand: "LOCK"` — **no consumer found outside that file**, so not currently rendered | **YES, but not visible copy** — correct without claiming a visible fix |
+
+Largest single files: `registryData.js` 193 (class C), `i18n/en.js` 19, `i18n/he.js` 17, `faq/page.tsx` 16,
+`layout.tsx` 13, `terms-content.tsx` 10.
+
+### Live violations CONFIRMED on the public site today (OBSERVED)
+
+- `<title>LOCK — Build the Proof That Books You</title>` on `/`, and the `| LOCK` title suffix on all 14 routes.
+- JSON-LD `"name":"LOCK"` — **structured data is named explicitly in the ruling**.
+- `og:site_name` where present; root shell `apple-mobile-web-app-title` content="LOCK".
+
+Note the interaction with **SITE-DEPLOY**: production is a 21-day-old build, so a naming fix has no live
+effect until the site is deployed. Fold the rename into the same train.
+
+### REGRESSION GATE — contract (to be BUILT WITH the remediation, not before)
+
+`scripts/test-brand-naming.mjs`, wired into `verify`. Asserting:
+1. **Zero** bare-"LOCK" tokens in website visible/metadata surfaces and app i18n catalogues (classes A+B).
+2. `LOCK.SHOW` appears **only** in domain/URL positions or an allowlisted wordmark asset path — an
+   allowlist that **may only shrink**, the pattern already proven in `test-i18n-parity.mjs`.
+3. **Rendered check, not just source**: assert against the built `website-next/out/**` HTML for `<title>`,
+   `og:site_name`, JSON-LD `name`, `aria-label` and `alt` — the source-only version would miss composed
+   strings.
+4. A **vacuous-pass guard**: the scan must find a non-zero corpus, or fail.
+
+**GATE DISCIPLINE applies:** the gate must be mutation-tested — inject a bare "LOCK" into a title, an
+`aria-label`, an `alt`, and a JSON-LD `name`, and confirm each turns it red, before the gate is trusted.
+It is NOT built yet, because a gate that fails cannot be committed green; it lands with the fix.
+
+### Explicit trap, named by the owner
+
+**CLAIM-HUMAN must not be closed by renaming.** Correcting "A LOCK operator reviewed the document" to
+"A LOCK SHOW operator reviewed the document" changes the brand token and leaves the false capability claim
+intact. The two are tracked separately; CLAIM-HUMAN stays OPEN pending Maria's ruling on the actual review
+behaviour. Recorded in the OWNER-PENDING row itself so the trap cannot be lost.
+
+**Status: RECORDED and SCOPED. Remediation deferred to WEB-02 per the standing bar on visual
+implementation** (WEB-01 PASS + WEB-02/03 contracts first). Independent WEB-01 QA continues uninterrupted
+against HEAD `332c1e0`.
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this

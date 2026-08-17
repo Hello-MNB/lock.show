@@ -28,6 +28,15 @@ the narrower scope. Migrations 001–047 exist locally (highest `047_grant_decis
 048+; do not recreate existing tables. 043-047 are DRAFTED, NOT APPLIED. Canonical codebase: GitHub Hello-MNB/lock.show (source of truth);
 local clone C:\Users\user\lock.show; Drive B4-lock.show = collaboration/design only.
 
+BRAND NAMING (founder ruling, Maria, 17 Aug 2026 — binding on all surfaces): the brand is
+**LOCK SHOW**. Never use "LOCK" alone in visible copy, navigation, footer, ARIA labels, alt text,
+titles, metadata, structured data, social text, WhatsApp labels, legal/public prose, or
+implementation comments that surface publicly. "LOCK.SHOW" is permitted ONLY as the domain or an
+explicitly approved logo/wordmark lockup. This is a cross-site defect (website + app), tracked as
+BRAND-NAME in docs/OWNER-PENDING.md, and carries a regression gate. Renaming never resolves a
+CLAIM defect: correcting "LOCK operator" to "LOCK SHOW operator" does NOT address whether the
+review it describes actually happens.
+
 SOURCE OF TRUTH: ★ START HERE + CLAUDE.md + the CURRENT canon doc set (see README-INDEX for the
 named list). Build only from these — never from older/HTML/score docs.
 
