@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.0.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "b89204eaa20d8079caec900c66ee9d4b1fd64ace",
+  "head": "0daac4ab73bf0cd3a79b7605eca601c9d454033a",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/v6.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/v7.log)",
   "exitCode": 0,
   "result": "green-at-head",
   "gateCount": 32,
