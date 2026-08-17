@@ -4,6 +4,7 @@ import { localeAlternates } from '@/lib/site'
 import { Hero } from '@/components/hero'
 import ContactForm from '@/components/contact-form'
 import { ContactChannels } from '@/components/contact-channels'
+import { ContactEyebrow, ContactH1, ContactLead, ContactFormHeading } from '@/components/contact-hero'
 import { APP_URL } from '@/lib/app-url'
 import { conversionHref, conversionLabel } from '@/lib/conversion'
 
@@ -37,29 +38,23 @@ export default function Contact() {
       <Hero variant="compact" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
-          <p style={{
+          <ContactEyebrow style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
             marginBottom: 'var(--hero-gap-eyebrow)',
-          }}>
-            CONTACT · GET IN TOUCH
-          </p>
-          <h1 style={{
+          }} />
+          <ContactH1 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 400,
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
             margin: '0 0 var(--hero-gap-h1)',
-          }}>
-            Questions? Ideas? Collaboration?
-          </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            LOCK SHOW is in closed beta. We always want to hear from artists, booking managers, and producers.
-          </p>
+          }} />
+          <ContactLead style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }} />
           </div>
         </div>
       </Hero>
@@ -81,16 +76,14 @@ export default function Contact() {
 
           {/* FORM COLUMN */}
           <div>
-            <p style={{
+            <ContactFormHeading style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
               letterSpacing: '0.12em',
               color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
               marginBottom: '24px',
-            }}>
-              SEND A MESSAGE
-            </p>
+            }} />
 
             {/* First-party waitlist capture — writes to waitlist_signup
                 (migration 026; write-only for the public, operator-only read).

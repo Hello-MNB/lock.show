@@ -58,14 +58,14 @@ export const COPY: CopyRow[] = [
   // ── CONTACT · HEADER ──────────────────────────────────────────────────────
   { id: 'contact.header.hero.eyebrow', page: 'contact', section: 'header', component: 'Hero', element: 'eyebrow',
     note: 'Sets a human, open tone before the form. Not a claim.',
-    t: { en: 'TALK TO US', he: 'דברו איתנו' } },
+    t: { en: 'CONTACT · GET IN TOUCH', he: 'צור קשר · דברו איתנו' } },
   { id: 'contact.header.hero.h1', page: 'contact', section: 'header', component: 'Hero', element: 'h1',
     note: 'Invitation, not a support desk. Keep it short enough not to wrap past two lines at 390px.',
-    t: { en: 'Tell us how you work', he: 'ספרו לנו איך אתם עובדים' } },
+    t: { en: 'Questions? Ideas? Collaboration?', he: 'שאלות? רעיונות? שיתוף פעולה?' } },
   { id: 'contact.header.hero.lead', page: 'contact', section: 'header', component: 'Hero', element: 'lead',
     note: 'Promises a reply and names who we want to hear from. No capability claim.',
-    t: { en: 'Artists, booking managers, producers, venues and partners — we read everything and reply.',
-         he: 'אמנים, מזמיני הופעות, מפיקים, מקומות ושותפים — אנחנו קוראים הכול ומשיבים.' } },
+    t: { en: 'LOCK SHOW is in closed beta. We always want to hear from artists, booking managers, and producers.',
+         he: 'LOCK SHOW נמצאת בבטא סגורה. נשמח תמיד לשמוע מאמנים, ממזמיני הופעות וממפיקים.' } },
 
   // ── CONTACT · CHANNELS ────────────────────────────────────────────────────
   { id: 'contact.channels.block.h2', page: 'contact', section: 'channels', component: 'ChannelList', element: 'h2',
@@ -86,8 +86,9 @@ export const COPY: CopyRow[] = [
 
   // ── CONTACT · FORM ────────────────────────────────────────────────────────
   { id: 'contact.form.block.h2', page: 'contact', section: 'form', component: 'ContactForm', element: 'h2',
-    t: { en: 'Send a message', he: 'שליחת הודעה' } },
+    t: { en: 'SEND A MESSAGE', he: 'שליחת הודעה' } },
   { id: 'contact.form.block.lead', page: 'contact', section: 'form', component: 'ContactForm', element: 'lead',
+    note: 'NEW copy — no live counterpart. Rendered under the SEND A MESSAGE heading.',
     t: { en: 'A few details help us route it to the right person.', he: 'כמה פרטים יעזרו לנו להעביר את הפנייה לאדם הנכון.' } },
   { id: 'contact.form.subject.label', page: 'contact', section: 'form', component: 'ContactForm', element: 'label',
     note: 'Owner request 17 Aug: a subject field, placed FIRST so the rest of the form reads in context.',
