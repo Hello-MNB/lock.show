@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "20010bce4571c863ccff80834ee229b05ccecc3a",
+  "head": "95c35f4bcd588aed1c805b07a0cec97530ba8f12",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-final.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-043b.log)",
   "exitCode": 0,
   "result": "green-at-head",
-  "gateCount": 30,
+  "gateCount": 31,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -56,6 +56,10 @@
     },
     {
       "id": "SQL PRIVILEGES",
+      "result": "pass"
+    },
+    {
+      "id": "GRANT SCOPE",
       "result": "pass"
     },
     {
