@@ -63,16 +63,29 @@ $$;
 -- (act, artist) pair is linked, including a NON-DEFAULT Act that policy act_org hides
 -- from them -- which under the multi-Act rule is precisely "does this Person's
 -- psytrance Act and that techno Act belong to the same artist". Independent QA
--- executed it with a stranger holding no membership, organization or grant anywhere.
+-- executed it with a stranger holding no membership, organization or grant anywhere:
+-- any logged-in user can ask whether an arbitrary (act, artist) pair is linked, and
+-- get a true answer about an Act that RLS shows them zero rows for.
 -- It answers one boolean about ids the caller must already possess, and it cannot
 -- simply be revoked: the guard below is SECURITY INVOKER by design, so every client
--- write needs this EXECUTE and removing it refuses all of them. Narrowing it means
--- moving the linkage test into a DEFINER wrapper that also owns the write, which is a
--- larger change than a guard. `anon` IS revoked (Supabase grants EXECUTE to
--- anon/authenticated/service_role at CREATE time, and REVOKE FROM PUBLIC does not
--- remove it), and the limit is asserted as measured in scripts/test-grant-scope.mjs.
+-- write needs this EXECUTE and removing it refuses all of them -- verified by
+-- execution, both a write that touches act_id and one that does not fail with
+-- `permission denied for function act_belongs_to_artist`, because the ACL is checked
+-- when the IF expression is planned. Narrowing it means moving the linkage test into a
+-- DEFINER wrapper that also owns the write, which is a larger change than a guard.
+-- anon IS revoked (Supabase grants EXECUTE to anon/authenticated/service_role at
+-- CREATE time, and REVOKE FROM PUBLIC does not remove it), and the limit is asserted
+-- as measured in scripts/test-grant-scope.mjs [25f].
 revoke all on function public.act_belongs_to_artist(uuid, uuid) from public;
 revoke all on function public.act_belongs_to_artist(uuid, uuid) from anon;
+-- These two grants are DECLARED, not load-bearing, and no test can prove otherwise:
+-- scripts/sql/supabase-shim.sql:38-39 mirrors Supabase's default privileges, which
+-- already grant EXECUTE on new functions to anon, authenticated and service_role. QA
+-- deleted this line and nothing failed, because the privilege arrives either way. They
+-- are kept because a migration should not rely on a platform default it does not
+-- state -- and because the anon REVOKE above IS load-bearing precisely for that
+-- reason: the default hands anon the same EXECUTE, and only an explicit revoke removes
+-- it (proven by execution, removing it turns the suite red).
 grant execute on function public.act_belongs_to_artist(uuid, uuid) to authenticated;
 grant execute on function public.act_belongs_to_artist(uuid, uuid) to service_role;
 
@@ -167,7 +180,17 @@ begin
   -- check that can freeze it must never fire on data the statement is not touching.
   -- Any other linkage drift (ops correction, Person merge, ownership transfer) froze
   -- the row the same way. The enabling RLS hole is in 020 and is recorded in
-  -- docs/OWNER-PENDING.md; 046 must not convert it into an unrevocable grant.
+  -- docs/OWNER-PENDING.md as ACT-RLS; 046 must not convert it into an unrevocable grant.
+  --
+  -- WHAT THIS DOES NOT CLOSE, stated because the fix is easy to over-read. Gating the
+  -- linkage check buys REVOCABILITY. It does not close 020's act_org policy, so a
+  -- grantee can still drift the Act underneath a grant that is at that moment still
+  -- LIVE and still permits publish -- grant_permits() returns true on an Act that now
+  -- belongs to another Person, until someone revokes. The pre-fix state was that SAME
+  -- exposure PLUS no way to end it, so this is strictly better; strictly better is not
+  -- closed. Independent QA executed both halves. Asserted as a measured residual in
+  -- scripts/test-grant-scope.mjs [25f], which will fail if 020 is ever tightened and
+  -- this text goes stale.
   -- Of the three disjuncts, `tg_op = 'INSERT'` is REDUNDANT and kept deliberately for
   -- readability: on INSERT, OLD is NULL, so `new.act_id is distinct from old.act_id`
   -- is already true whenever new.act_id is not null, which the outer test requires.

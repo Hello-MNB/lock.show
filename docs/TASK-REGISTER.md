@@ -1713,6 +1713,68 @@ breaks (13 — proving it is no longer a tautology), and the fill trigger rename
 **DRAFTED — NOT APPLIED**. Round-11 independent QA is required; two rounds running, review has found real
 defects in the evidence rather than only in the code.
 
+## T-110.7 · ELEVENTH QA PASS — THE MUTATION EVIDENCE ITSELF WAS UNSOUND (17 Aug 2026)
+
+Round 11 was pointed at the pattern rounds 9 and 10 established: the code kept being right and the
+EVIDENCE kept being wrong. It found seven defects, and the most important one invalidates part of my own
+round-10 mutation claim.
+
+**D3 (MEDIUM-LOW) · `db.drop()` was not on "both exit paths", and the leak was the small half.** Any throw
+from `db.exec`/`db.scalar`/`db.rows` bypassed the `failures` path and the success path alike. The database
+leak was real (QA accumulated four before noticing) but the evidence consequence is what matters: **a throw
+aborts before the remaining blocks run while the process still exits 1**, so a mutation run reads as
+"caught" when the block the mutant targets was never reached, and as "survived" when the suite died before
+testing it. QA drew exactly that wrong conclusion from a `touched := false` mutant that looked like "1 kill,
+3 survivors in [25g]" when `[25g]` had never executed. Fixed with a `process.on('exit')` handler that drops
+on every path and, when the suite did not reach its end, prints a loud ABORTED banner naming the last
+section entered and stating that any mutation result from that run is invalid in both directions. **Every
+mutant in this round's battery is now checked for whether it REACHED the block it claims to kill.**
+
+**D1 (MEDIUM) · the linkage-oracle disclosure assertion tested a two-word HEADING.** QA kept
+`-- HONEST LIMIT (LINKAGE ORACLE).` and deleted the entire disclosure body; the assertion still passed.
+Testing a heading tests nothing. This is the same class round 10 found in the residual assertion — and the
+right tool already existed 200 lines earlier in the same file. Now anchored on load-bearing sentences over
+normalised prose.
+
+**D2 (MEDIUM-LOW) · three grantee-INSERT refusals asserted only `!ok`.** They pass for the right reason
+today only because a DIFFERENT block restores `act_id` on the ORG row. With the row in its fixture-default
+legacy shape, QA showed the same statements are refused by `idx_artist_access_org_artist_legacy`, so a guard
+neutered to `touched := false` still read as a pass. **A refusal assertion that passes because of a unique-index
+violation is a false green.** All three now test for the guard's own message. This is the third time state
+coupling between blocks has produced a wrong result in this file.
+
+**D5 (LOW) · two of the three residual conjuncts matched the REMOVED-escape paragraph.** `UNWRAPPED` and
+`authority columns present` each occur twice, the second time in the file's own history of what was deleted.
+QA kept all three phrases and replaced the consequence with "This is harmless and needs no action" — and it
+survived green. Now anchored on the consequence and the instruction: a disclosure that does not say what
+goes wrong, or what to do instead, is not a disclosure.
+
+**D7 (LOW) · the H-1 fix was disclosed as closing more than it closes.** Gating the linkage check bought
+REVOCABILITY; it did not close 020's `act_org`, so a grantee can still drift the Act underneath a grant
+that is at that moment **still live and still permitting publish** on an Act belonging to another Person.
+The pre-fix state was that same exposure PLUS no way to end it — strictly better, and "strictly better" is
+not "closed". `[25f]` measured only the post-revoke state. Now disclosed in-file and asserted as a measured
+residual that will fail if 020 is ever tightened and the text goes stale.
+
+**D4 (LOW)** `!/\n/.test(prose)` cannot fail — the normaliser strips every newline by construction; replaced
+with a conjunct proving it rejoined a sentence that genuinely wraps across comment lines. **D6 (LOW)** the
+`grant execute … to authenticated` line is indistinguishable from the platform default
+(`supabase-shim.sql:38-39` mirrors Supabase's default privileges), so no assertion can kill it — labelled
+DECLARED rather than left implying it is load-bearing, while noting the anon REVOKE **is** load-bearing for
+exactly that reason. **D8 (LOW)** `[12]` matched `/cannot roll back/` where three different down files raise
+`cannot roll back NNN`, so it would have accepted a refusal from the wrong file.
+
+**What round 11 CONFIRMED by execution:** the M-1 positive control is now real (breaking
+`request_artist_access` kills it); the new `artist_id` disjunct is load-bearing (2 FAIL) and moving the
+linkage check below the trust short-circuit costs 6; both prose assertions kill their mutants; the
+`pg_trigger` ordering assertion reads the catalogue; the anon revoke is load-bearing; the in-file honest
+limits are factually true, including that removing the `authenticated` EXECUTE refuses client writes because
+the ACL is checked when the IF expression is planned; and **the "120 permutations" claim reproduced
+independently** — 120 refused, 0 committed, 0 state-changed-after-refusal.
+
+**`test:grant-scope`: 206 executed assertions, 0 FAIL, exit 0** (was 203). Migration 046 remains
+**DRAFTED — NOT APPLIED** and NOT accepted.
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this

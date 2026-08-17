@@ -16,6 +16,11 @@
 import { ScratchDb, pgAvailable } from './lib/pgharness.mjs'
 import { readFileSync } from 'node:fs'
 
+// The guard's own refusal message. Refusal assertions test for THIS, not merely for
+// "something failed" — a unique-index violation or a syntax error is also a refusal,
+// and one that would let a neutered guard read as a pass.
+const GUARD_MSG = 'artist_access: authority columns may only be set by'
+
 let failures = 0
 const check = (name, cond, detail = '') => {
   if (cond) console.log(`  PASS  ${name}`)
@@ -30,6 +35,33 @@ if (!pgAvailable()) {
 }
 
 const db = ScratchDb.create('b4_grant')
+
+// ABORT DISCIPLINE. db.drop() used to sit on the `failures` path and the success path
+// only, so any throw from db.exec/db.scalar/db.rows (pgharness.mjs:55) bypassed both.
+// The leaked database was the small half. The evidence half is what matters: a throw
+// aborts before the remaining blocks run, while the process still exits 1 — so a
+// mutation run reads as "caught" when the block the mutant targets was never reached,
+// and as "survived" when the suite died before testing it. Independent QA hit exactly
+// that and drew a wrong conclusion from it. An exit handler covers every path, and an
+// aborted run now says so loudly instead of looking like an ordinary failure.
+let lastSection = '(before the first section)'
+let reachedEnd = false
+const _log = console.log
+console.log = (...a) => {
+  if (typeof a[0] === 'string' && /^\n\[/.test(a[0])) lastSection = a[0].trim()
+  _log(...a)
+}
+process.on('exit', (code) => {
+  db.drop()
+  if (!reachedEnd) {
+    console.error(`\n✗ GRANT SCOPE ABORTED (exit ${code}) — the suite did not reach its end.`)
+    console.error(`  Last section entered: ${lastSection}`)
+    console.error('  Every assertion AFTER that point NEVER RAN. Any mutation result from this')
+    console.error('  run is INVALID in both directions: a mutant can look "caught" while the')
+    console.error('  block it targets was never reached, and "survived" when the suite died')
+    console.error('  before testing it. Fix the abort, then re-run before drawing a conclusion.')
+  }
+})
 db.exec(readFileSync('scripts/sql/appsec-fixture.sql', 'utf8'))
 db.exec(readFileSync('scripts/sql/multiact-fixture.sql', 'utf8'))
 
@@ -917,12 +949,25 @@ console.log('\n[25d] 046 reverts ALONE in EVERY legitimate order, and the full c
   // across lines with `-- ` in the middle of it and a naive regex fails on formatting
   // rather than on content. Strip the comment markers and collapse whitespace first.
   const prose = down046.replace(/^\s*--\s?/gm, '').replace(/\s+/g, ' ')
+  // The second conjunct used to be `!/\n/.test(prose)`, which cannot fail: the
+  // normaliser strips every newline by construction. It now proves the normaliser did
+  // the job it exists for — rejoining a sentence that WRAPS across comment lines in
+  // the source (this one spans a line break in 046.down) — and that it did not simply
+  // return the raw file.
   check('[25d] the prose normaliser works (positive control)',
-    /A property proven by proxy is not proven/.test(prose) && !/\n/.test(prose))
+    /A property proven by proxy is not proven/.test(prose)
+      && /never being left LESS safe than they started — is served by ATOMICITY/.test(prose)
+      && !/^\s*--/.test(prose))
+  // Anchored on the CONSEQUENCE and the INSTRUCTION, not on phrases that also appear
+  // in the file's account of the removed escape (`UNWRAPPED` and `authority columns
+  // present` each occur twice, the second time in that history). QA kept all three
+  // phrases, replaced the consequence with "This is harmless and needs no action", and
+  // the old form survived green. A disclosure that does not say what goes wrong, or
+  // what to do instead, is not a disclosure.
   check('046.down states the UNWRAPPED residual in its own words, not by keyword',
-    /UNWRAPPED|without .*single-transaction/i.test(prose)
-      && /commit one by one/i.test(prose)
-      && /authority columns present/i.test(prose),
+    /commit one by one/i.test(prose)
+      && /self-issue publish scope and a ten-year expiry/i.test(prose)
+      && /If you are rolling this back, wrap it/i.test(prose),
     'the residual is real and undisclosed — an operator would meet it with no warning')
   check('...and qualifies the "nothing lost, in any file order" guarantee with the procedure it depends on',
     /in ANY file order,? WHEN RUN AS ONE TRANSACTION/i.test(prose),
@@ -975,6 +1020,21 @@ console.log('\n[25f] a broken Act linkage must not FREEZE a live grant (QA H-1)'
     check('...and the revocation actually landed, not merely reported ok',
       db.scalar(`select status from public.artist_access where organization_id = '${ORG}' limit 1`) === 'revoked')
     check('...so the grant no longer permits publish', !permits(ORG, ACT_A, 'publish', 'booker'))
+    // THE RESIDUAL, MEASURED. Gating the linkage check bought revocability; it did not
+    // close 020's act_org hole, and while the drifted grant is still LIVE it permits
+    // publish on an Act that now belongs to another Person. The pre-fix state was that
+    // PLUS unrevocability, so this is strictly better — but "strictly better" is not
+    // "closed", and asserting only the post-revoke state would hide the live window.
+    db.exec(`update public.act set person_id = '${OTHER}' where id = '${ACT_A}'`)
+    db.exec(`update public.artist_access set status = 'active', revoked_at = null, revoked_by = null
+              where organization_id = '${ORG}'`)
+    check('RESIDUAL (020 act_org, OWNER-PENDING ACT-RLS): a LIVE grant whose Act has drifted still permits publish',
+      permits(ORG, ACT_A, 'publish', 'booker'),
+      'if this now denies, 020 was tightened — update the disclosure at 046.sql and OWNER-PENDING ACT-RLS')
+    check('...and 046 DISCLOSES that live window, not only the unrevocability it fixed',
+      /still LIVE and still permits/i.test(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8')
+        .replace(/^\s*--\s?/gm, '').replace(/\s+/g, ' ')),
+      'the fix is disclosed as closing more than it closes')
     // The check must still BITE on the write that MOVES the linkage — otherwise the
     // H-1 fix has simply disabled it. ACT_B is legitimately this artist's second Act,
     // so aiming there would prove nothing; aim at the Act whose linkage this block
@@ -1037,18 +1097,28 @@ console.log('\n[25g] INSERT is guarded by construction too, and the guard is wir
       (id, organization_id, artist_id, access_level, status, scope, territory, created_at)
     values ('00000000-0000-0000-0000-0000000000fe', '${ORG}', '${SUBJ}', 'manage', 'pending', '{}',
             'Worldwide', now() - interval '5 years')`, { role: 'authenticated', uid: GRANTEE })
-  check('a grantee cannot INSERT a grant row with a chosen id and a forged created_at', !forged.ok,
+  // CAUSE, not merely refusal. QA proved these three are one fixture-state change away
+  // from being false greens: with the ORG row in its legacy shape (act_id null) the
+  // same statements are refused by idx_artist_access_org_artist_legacy, so a guard
+  // neutered to `touched := false` still read as a pass. The refusal must come from
+  // the guard, and the guard must be why.
+  check('a grantee cannot INSERT a grant row with a chosen id and a forged created_at',
+    !forged.ok && forged.out.includes(`${GUARD_MSG}`),
     forged.out.split('\n')[0]?.slice(0, 130))
   check('...and no such row exists',
     db.scalar(`select count(*) from public.artist_access where id = '00000000-0000-0000-0000-0000000000fe'`) === '0')
   // The two enumerated terms that were the ONLY thing blocking a grantee INSERT.
+  const insActive = db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status)
+             values ('${ORG}', '${SUBJ}', 'manage', 'active')`, { role: 'authenticated', uid: GRANTEE })
   check('a grantee cannot INSERT an already-active grant',
-    !db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status)
-             values ('${ORG}', '${SUBJ}', 'manage', 'active')`, { role: 'authenticated', uid: GRANTEE }).ok)
-  check('a grantee cannot INSERT a grant carrying scope',
-    !db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
+    !insActive.ok && insActive.out.includes(`${GUARD_MSG}`),
+    insActive.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 130))
+  const insScope = db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
              values ('${ORG}', '${SUBJ}', 'manage', 'pending', '{view,publish}')`,
-            { role: 'authenticated', uid: GRANTEE }).ok)
+            { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot INSERT a grant carrying scope',
+    !insScope.ok && insScope.out.includes(`${GUARD_MSG}`),
+    insScope.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 130))
   // THE POSITIVE CONTROL FOR M-1. `touched := true` deleted an enumeration on the
   // argument that no legitimate untrusted INSERT exists to preserve; this is the
   // assertion that argument rests on, so it has to be real. My first version was
@@ -1131,10 +1201,20 @@ console.log('\n[25g] INSERT is guarded by construction too, and the guard is wir
   // executed it with a stranger holding no membership, org or grant. It cannot simply
   // be revoked: the guard is SECURITY INVOKER by design, so every client write needs
   // this EXECUTE. Recorded here so the limit is measured rather than assumed away.
-  check('act_belongs_to_artist IS an authenticated-callable linkage oracle (measured limit, see 046.sql:65-74)',
+  // Matched against NORMALISED PROSE, not a heading. The first version tested
+  // /LINKAGE ORACLE/ — so QA kept the two-word heading, deleted the entire disclosure
+  // body, and this still passed. Testing a heading tests nothing; anchor on the
+  // load-bearing sentences instead, the way [25d] does.
+  const upProse = readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8')
+    .replace(/^\s*--\s?/gm, '').replace(/\s+/g, ' ')
+  check('[25f] the up-file prose normaliser works (positive control)',
+    /HONEST LIMIT \(LINKAGE ORACLE\)/.test(upProse) && /SECURITY INVOKER, deliberately/.test(upProse))
+  check('act_belongs_to_artist IS an authenticated-callable linkage oracle (measured limit, disclosed at 046.sql:61-73)',
     db.scalar(`select has_function_privilege('authenticated', 'public.act_belongs_to_artist(uuid,uuid)', 'execute')`) === 't'
-      && /LINKAGE ORACLE/.test(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8')),
-    'the oracle exists but 046 does not disclose it')
+      && /any logged-in user can ask whether an arbitrary/.test(upProse)
+      && /cannot simply be revoked/.test(upProse)
+      && /anon IS revoked/.test(upProse),
+    'the oracle exists but 046 does not disclose what it leaks or why it cannot be revoked')
 }
 
 console.log('\n[26] the 046 rollback removes everything it installed (QA D5)')
@@ -1228,8 +1308,11 @@ check('PART B is applied going into the rollback (so the restore block is load-b
 // that was withdrawn. The residual for an operator who does NOT wrap the chain is
 // measured and disclosed in [25d], not assumed away.
 const blocked = db.try(`begin;\n${down}\ncommit;`)
+// Named file, not the loose form: 043.down, 044.down and 045.down each raise
+// `cannot roll back NNN`, so `/cannot roll back/` would accept a refusal from the
+// wrong file and read as a pass.
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
-  !blocked.ok && /cannot roll back/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  !blocked.ok && /cannot roll back 044/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
 const survived = db.scalar(`select count(*) from public.artist_access where act_id = '${ACT_B}'`)
 check('...and the refused rollback destroyed no grant rows', survived !== '0', `rows=${survived}`)
 // A row count is NOT what "destroyed nothing" means. The refusal used to come from
@@ -1301,10 +1384,8 @@ if (downRes.ok) {
     postCall.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 110))
 }
 
-// The suite never dropped its own scratch database, so 80+ b4_grant_* databases had
-// accumulated on this host. Drop on BOTH exit paths — a failing run leaks too.
 console.log('')
-if (failures) { console.log(`✗ GRANT SCOPE: ${failures} failure(s).`); db.drop(); process.exit(1) }
-db.drop()
+reachedEnd = true   // past this point an exit is a VERDICT, not an abort
+if (failures) { console.log(`✗ GRANT SCOPE: ${failures} failure(s).`); process.exit(1) }
 console.log('✓ GRANT SCOPE: default-deny proven executed — action, Act, audience, time window, revocation and legacy-publish all denied on the negative side; PART B dormant and ungranted; anon has no oracle; the down migration reverses it on a real database.')
 process.exit(0)
