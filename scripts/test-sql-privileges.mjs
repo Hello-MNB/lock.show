@@ -55,7 +55,11 @@ const check = (cond, good, bad) => (cond ? ok(good) : fail(bad || good))
 const FILES = [
   'supabase/migrations/041_link_service_and_version_store.sql',
   'supabase/migrations/042_radar_audience_split.sql',
-  'supabase/migrations/043_artist_access_act_scope.sql',
+  'supabase/migrations/043_artist_access_columns.sql',
+  'supabase/migrations/044_artist_access_act_key.sql',
+  'supabase/migrations/045_artist_access_revocation.sql',
+  'supabase/migrations/046_artist_access_guard.sql',
+  'supabase/migrations/047_grant_decision.sql',
 ]
 
 // The ONE place a grant is declared to be intentional. A function that 041/042/043

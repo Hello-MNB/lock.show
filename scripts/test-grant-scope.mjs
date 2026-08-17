@@ -578,16 +578,23 @@ console.log('\n[23] a legacy re-invite must not touch Act-scoped grants (QA H-2)
 
 console.log('\n[18] the migration stays atomic under the applier')
 {
-  const mig = readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')
+  const mig = ['043_artist_access_columns', '044_artist_access_act_key', '045_artist_access_revocation',
+               '046_artist_access_guard', '047_grant_decision']
+    .map((f) => readFileSync(`supabase/migrations/${f}.sql`, 'utf8')).join('\n')
   const framed = (mig.match(/^\s*(begin|commit);\s*$/gim) || []).length
-  check('043 carries no explicit begin/commit (psql --single-transaction wraps it)', framed === 0,
+  check('none of the five migrations carries explicit begin/commit (psql --single-transaction wraps it)', framed === 0,
     `${framed} framing statement(s) found — an explicit COMMIT ends the applier transaction early and PART A can commit while PART B fails`)
 }
 
 console.log('\n[12] ROLLBACK — the down migration actually reverses this on a real database')
 // Rollback claimed in prose is not rollback. The down file is EXECUTED here, on a
 // database that has 043 applied, and the reversal is then observed column by column.
-const down = readFileSync('supabase/migrations/043_artist_access_act_scope.down.sql', 'utf8')
+// The rollback is now FIVE files and must run newest-first: each part references
+// the one below it, so reverting out of order leaves a policy or function pointing
+// at something that no longer exists.
+const down = ['047_grant_decision', '046_artist_access_guard', '045_artist_access_revocation',
+              '044_artist_access_act_key', '043_artist_access_columns']
+  .map((f) => readFileSync(`supabase/migrations/${f}.down.sql`, 'utf8')).join('\n')
 
 // Rollback is NOT unconditionally possible, and the down file must say so rather
 // than fail obscurely: once two Act-scoped grants exist for one artist, the 008
@@ -599,7 +606,7 @@ db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, a
   on conflict do nothing`)
 const blocked = db.try(down)
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
-  !blocked.ok && /cannot roll back 043/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  !blocked.ok && /cannot roll back 044/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
 const survived = db.scalar(`select count(*) from public.artist_access where act_id = '${ACT_B}'`)
 check('...and the refused rollback destroyed nothing', survived !== '0', `rows=${survived}`)
 // Consolidate to one row per (organization, artist) — the exact remediation the
@@ -615,7 +622,7 @@ const dupsLeft = db.scalar(`select count(*) from (
 check('consolidation leaves one grant per (organization, artist)', dupsLeft === '0', `pairs=${dupsLeft}`)
 
 const downRes = db.try(down)
-check('043 down runs without error', downRes.ok, downRes.out.split('\n').slice(0, 2).join(' | ').slice(0, 160))
+check('the five down files run without error', downRes.ok, downRes.out.split('\n').slice(0, 2).join(' | ').slice(0, 160))
 if (downRes.ok) {
   const cols = db.scalar(`select count(*) from information_schema.columns
     where table_name = 'artist_access'

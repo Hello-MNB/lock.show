@@ -1340,3 +1340,36 @@ grants it) · L-L rollback does not restore the RPC's original privileges.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** Mutations this round: 4 injected against the
 new fixes, 4 caught.
+
+## T-110 · MIGRATION 043 SPLIT INTO FIVE (17 Aug 2026)
+
+Executed QA's RECOMMENDED split. **This was a build decision, not a founder one** — the files are
+drafted and unapplied, so reorganising them is fully reversible engineering, and holding it for a
+ruling would have been the artificial limitation the controller forbids. M-E (grantee-initiated
+re-invite erasing revocation) remains an owner call: that one is product canon.
+
+| New migration | Contents | Depends on |
+|---|---|---|
+| `043_artist_access_columns` | the 10 columns, 5 CHECK vocabularies, `idx_artist_access_act`, `passport_versions.purpose` + check | — |
+| `044_artist_access_act_key` | drop the 008 key, the two partial unique indexes, `request_artist_access` + privileges | 043 |
+| `045_artist_access_revocation` | `artist_access_trusted_writer()`, the fill trigger, the NOT VALID stamp check | 043 |
+| `046_artist_access_guard` | `act_belongs_to_artist()`, `artist_access_guard_authority()` + trigger | 043, 045 |
+| `047_grant_decision` | `grant_permits()`, the dormant `apply_/revert_act_scoped_publish()` | 043, 045, 046 |
+
+**A naming landmine caught before writing anything:** the harness filter is `/^\d{3}_.*\.sql$/`, so
+QA's suggested `043a_…` names would have been **silently skipped** — never applied, no error, and a
+chain that still looked green. Numeric names (043–047) were used instead.
+
+**Split verified as behaviour-preserving, not assumed:** every `create function` / `create trigger` /
+`create index` / `alter table` / `revoke` / `grant` / `comment` statement in the original was diffed
+against the union of the five files — **zero missing, zero added**. Chain re-run: exit 0, 42
+assertions, "Nothing was skipped."
+
+**Mutation coverage survives the move**, re-proven across file boundaries: trust-set drift (045),
+guard losing the `scope` column (046), PART B blanket allow (047), re-invite liveness precondition
+(044) — all four caught. One initially read as MISSED; the anchor contained a literal `\n` and the
+mutation never landed. An unverified mutation is not evidence, so it was redone properly and caught.
+
+Rollback ordering is now explicit: the down files run newest-first (047→043), each part referencing
+the one below it. `044`'s down carries the "cannot roll back" precondition, and `043`'s down is
+labelled DESTRUCTIVE BY DESIGN — grant rows survive, what they were allowed to do does not.
