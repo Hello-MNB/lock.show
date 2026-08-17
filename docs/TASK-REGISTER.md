@@ -1799,6 +1799,104 @@ partially blind." Recorded here rather than quietly corrected.
 **`test:grant-scope`: 206 executed assertions, 0 FAIL, exit 0** (was 203). Migration 046 remains
 **DRAFTED — NOT APPLIED** and NOT accepted.
 
+## WEB-00 · WEBSITE LANE — INTAKE, TEAM & SOURCE LOCK (17 Aug 2026)
+
+Owner-issued WEBSITE DELIVERY LOG (WEB-00 … WEB-10) registered here, in the existing register, rather than
+in a new file — no second SSOT. This lane is **prototype-independent** and must not infer authenticated-app
+screen behaviour. Backend continuity preserved: **migration 046 stays DRAFTED / NOT APPLIED**, ACT-RLS and
+RPC-3 remain recorded in `docs/OWNER-PENDING.md`. Preflight: HEAD `858cc7f`, branch clean, no task running.
+
+### 1 · SOURCE LOCK — all 11 owner sources READ, revision-verified (OBSERVED)
+
+Drive read access is available on this session and was used read-only. Every source below was fetched and
+its live `modifiedTime` recorded, so a later divergence is detectable. **Titles/versions differ from the
+version snapshot quoted in the scheduled controller prompt** (which named Control Tower v3.1 etc.); the
+authority is the live document, and only the live revision is recorded here.
+
+| Owner doc | Drive title (as read) | Last modified (UTC) | Parent folder |
+|---|---|---|---|
+| Control Tower | B4-00.90 — Control Tower — A-Z Venture Workflow, Folder Gap Map & Founder Verification OS | 2026-08-17 09:54 | `1X4FXWMf…` |
+| Product | B4-30.10 — Complete Product Specification | 2026-08-16 08:06 | `17SVNeRl…` |
+| Measurement | B4-30.60 — Measurement, Analytics, KPI & Funnel Architecture (Sheet) | 2026-08-16 19:05 | `17SVNeRl…` |
+| Brand | B4-35.10 — Brand Foundation & Product Positioning | 2026-08-17 09:24 | `1OB0oPvw…` |
+| Language/Localization | B4-35.20 — Product Language & Localization Standard | 2026-08-17 09:32 | `1OB0oPvw…` |
+| Design System | B4-35.30 — Design System & Trust UX Component Standard | 2026-08-17 09:32 | `1OB0oPvw…` |
+| Technical | B4-40.10 — Technical, Trust & Data Specification | 2026-08-15 21:49 | `1wRLDSDm…` |
+| Build/Release | B4-40.20 — Build-State, Release & Decision Register | 2026-08-16 22:12 | `1wRLDSDm…` |
+| GTM | B4-70.10 — Positioning, Messaging, Funnel & Lifecycle GTM System | 2026-08-17 00:33 | `161Hl_mw…` |
+| Website role | B4-95.00 — Public Website, Publication & Legal-Package Delivery Role | 2026-08-15 21:46 | `13fVY0qE…` |
+| Website index | B4-95.10 — Public Website, Publication & Legal-Package Delivery Index (Sheet) | 2026-08-17 00:35 | `13fVY0qE…` |
+
+**FLAG (not a defect, a stale repo instruction):** `CLAUDE.md`'s DRIVE RULE names one folder,
+`1QyQtp-vVcqosKplB_zMmtWNweBH_PaS3`. **Zero** of the 11 live sources sit in it — they are spread across six
+other parents. The rule is not currently describable as true. **DECISION REQUIRED (Maria)** before any
+WEB-10 Drive write: which folder is canonical, or is the rule superseded? No Drive write will be attempted
+until this is answered.
+
+### 2 · THE TRUE WEBSITE PACKAGE, and the duplicate-infrastructure question (OBSERVED)
+
+**`website-next/`** is the website. Next 16.2.10 · React 19.2.4 · Tailwind 4 · TypeScript · Node 22.x ·
+App Router · **`output: 'export'` (static export)** · `images.unoptimized` · `trailingSlash: false`.
+14 routes: `/` `/artists` `/bookers` `/producers` `/how-it-works` `/methodology` `/pricing` `/radar` `/faq`
+`/contact` `/accessibility` `/privacy` `/terms` `/passport/demo`. Locale catalogues `messages/en.json` +
+`messages/he.json`.
+
+The repository root is a **separate** Vite/React app (the authenticated product), with its own
+`vercel.json`. **This is a deliberate boundary, NOT duplicate infrastructure**, and the evidence is in both
+configs: each carries an `ignoreCommand` that skips its build when the other's files change (root excludes
+`website-next`, `docs`, `*.md`). Root sets `X-Robots-Tag: noindex, nofollow` on everything; `website-next`
+sets it only on `/app/*`. **Classified, not deleted**, per the KPI.
+
+`next.config.ts` carries two hard-won invariants that must not be undone: `__dirname` must never be used
+bare (as ESM on Vercel it is undefined and every build failed SILENTLY, pinning production to an older
+build), and Turbopack's `root` must stay pinned (two lockfiles exist, so an inferred root differs between
+local and CI and emits HTML referencing chunks that were never built).
+
+### 3 · LIVE DEPLOYMENT (OBSERVED, read-only)
+
+`https://www.lock.show/` → **200**, `server: Vercel`, static, `x-vercel-cache: HIT`,
+`last-modified: 2026-08-11 08:10 UTC`, `age: 531232s` (≈6.1 days). Title: `LOCK — Build the Proof That
+Books You` — **the rebrand IS live**; the historical "production pinned pre-rebrand" failure is not the
+current state. Production being older than this branch is **expected, not a defect**: the named-train law
+(register rule 12) says the site never ships as cargo of an app merge.
+
+`robots.txt` 200, `Allow: /`, names the sitemap. `sitemap.xml` 200, **10 URLs**.
+
+**OBSERVED GAP — the public site serves almost no security headers.** A live GET on `/` returns only
+`strict-transport-security` and `access-control-allow-origin: *`. There is **no** Content-Security-Policy,
+`X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` or frame protection — while the app
+project defines a full set. This corroborates the existing OWNER-PENDING **M-15** item (site security
+headers, T-41); it is not a new finding and is recorded, not fixed, in this task.
+
+**OBSERVED GAP — sitemap covers 10 of 14 built routes.** Absent: `/accessibility`, `/privacy`, `/terms`,
+`/passport/demo`. Whether that is intended (legal pages are noindexed drafts pending counsel per
+OWNER-PENDING LEGAL/M-4) is **UNVERIFIED** and is a WEB-05 index-contract question.
+
+**OBSERVED — no `hreflang` on the live home page** although both locale catalogues exist. Consistent with
+the log's own "reciprocal hreflang/x-default **after decision**". **DECISION REQUIRED**, not a defect.
+
+### 4 · TEAM ROSTER (bounded, ≤4 active at once; QA never audits its own work)
+
+Roles 1–11 from the owner log are held as accountabilities. Agents are spawned per task, disjoint file
+ownership, and the Independent Website Release QA Lead is always a different agent from the author.
+
+### 5 · DEPENDENCY MAP
+
+WEB-00 → **WEB-01** (audit; no change) → WEB-02 + WEB-03 (source-backed contracts) → WEB-04/05/06 →
+**WEB-07 Slice 1** → WEB-08 → WEB-09 → WEB-10. Visual implementation is barred until WEB-01 PASS **and**
+WEB-02/03 contracts exist. WEB-10 Drive writes additionally blocked on the folder decision above.
+
+### 6 · UNKNOWNS, STATED
+
+Which Vercel projects/domains exist and which branch production tracks (**console access not authorized —
+EVIDENCE OPEN**) · GA4/GTM live container state · whether the 4 sitemap-absent routes are deliberately
+excluded · B4-95.10's authoritative P0 route list (read in WEB-01, not assumed here) · CI/CD gates for
+`website-next`.
+
+**DoD: MET** — one verified source map, one roster, one dependency map, **zero code change**, unknowns
+explicit. **KPI: 11/11 P0 owner sources linked and revision-verified; zero assumed repo or deployment; zero
+duplicate authority created; duplicate candidates classified, not deleted.**
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this
