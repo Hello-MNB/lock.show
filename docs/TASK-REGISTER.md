@@ -1897,8 +1897,10 @@ WEB-02/03 contracts exist. WEB-10 Drive writes additionally blocked on the folde
 ### 6 · UNKNOWNS, STATED
 
 Which Vercel projects/domains exist and which branch production tracks (**console access not authorized —
-EVIDENCE OPEN**) · GA4/GTM live container state · whether the 4 sitemap-absent routes are deliberately
-excluded · B4-95.10's authoritative P0 route list (read in WEB-01, not assumed here) · CI/CD gates for
+EVIDENCE OPEN**) · GA4/GTM live container state · ~~whether the 4 sitemap-absent routes are deliberately
+excluded~~ **RETRACTED 17 Aug — answered in this same section: they ARE deliberately excluded, documented at
+`app/sitemap.ts:19-25` against owner decisions D5 and D6. An unknown left standing below its own correction
+is the very defect D9 was raised to fix** · B4-95.10's authoritative P0 route list (read in WEB-01, not assumed here) · CI/CD gates for
 `website-next`.
 
 **DoD: MET** — one verified source map, one roster, one dependency map, **zero code change**, unknowns
@@ -1939,14 +1941,31 @@ effect until the site is deployed. Fold the rename into the same train.
 
 ### REGRESSION GATE — contract (to be BUILT WITH the remediation, not before)
 
-`scripts/test-brand-naming.mjs`, wired into `verify`. Asserting:
-1. **Zero** bare-"LOCK" tokens in website visible/metadata surfaces and app i18n catalogues (classes A+B).
-2. `LOCK.SHOW` appears **only** in domain/URL positions or an allowlisted wordmark asset path — an
-   allowlist that **may only shrink**, the pattern already proven in `test-i18n-parity.mjs`.
-3. **Rendered check, not just source**: assert against the built `website-next/out/**` HTML for `<title>`,
-   `og:site_name`, JSON-LD `name`, `aria-label` and `alt` — the source-only version would miss composed
-   strings.
-4. A **vacuous-pass guard**: the scan must find a non-zero corpus, or fail.
+`scripts/test-brand-naming.mjs`, wired into `verify`. **Contract EXTENDED 17 Aug — independent QA judged the
+first draft "necessary, not sufficient" and named seven blind spots. All seven are now in the contract.**
+
+1. **Zero** bare-"LOCK" tokens across class A **and all of class B** — not only the i18n catalogues. The
+   first draft gated "app i18n catalogues", leaving **23 of the 61** class-B tokens ungated.
+2. **CASE-SENSITIVE allowlist.** Per the refined ruling, **`lock.show` (lowercase) is the domain** and
+   **`LOCK.SHOW` (uppercase) is legal ONLY for an explicitly approved visual lockup** — so uppercase
+   `LOCK.SHOW` in running prose is a violation even though the same letters are legal as a URL. The
+   allowlist **may only shrink** (pattern already proven in `test-i18n-parity.mjs`).
+3. **Rendered output**, not just source: assert over built `website-next/out/**` for `<title>`,
+   `og:site_name`, **`meta description`, `og:description`, `twitter:*`**, JSON-LD `name`, `aria-label` and
+   `alt`. The description and twitter fields were missing from the first draft.
+4. **The 30 `/app/*` shells** (`public/app/**/index.html`, 60 tokens, live). The build copies them into
+   `out/app/**` so a rendered assertion catches them incidentally — named explicitly so scope cannot
+   silently drop them a second time.
+5. **Non-HTML public surfaces**: `public/llms.txt` (7 tokens, publicly served), `robots.txt`, `sitemap.xml`.
+6. **Build-freshness assertion.** `out/` is untracked, so the gate must build first or it can assert against
+   stale or absent output. A vacuous-pass guard catches "empty"; it does not catch "stale".
+7. **A ratchet on `registryData.js`.** Its 190 tokens are exempt only because nothing consumes them — the
+   gate must FAIL if a consumer is ever added, since that single event converts 190 dormant tokens into
+   rendered copy.
+8. **A stated blind spot rather than a hidden one: text baked into images.** `public/og/og-default.svg`
+   renders method labels as image text, and PNG social cards cannot be asserted at all. The ruling covers
+   "social text", so this needs a human check in WEB-02 review — a rendered-HTML gate is structurally blind
+   to it and must never be claimed to cover it.
 
 **GATE DISCIPLINE applies:** the gate must be mutation-tested — inject a bare "LOCK" into a title, an
 `aria-label`, an `alt`, and a JSON-LD `name`, and confirm each turns it red, before the gate is trusted.
@@ -2016,7 +2035,8 @@ routine): Control Tower v3.9 · Product B4-30.10 v6.4 · Language B4-35.20 v4.2 
 Experience B4-35.40 v6.14 · Design QA B4-35.60 v3.18. Treat as EVIDENCE OPEN for anything that would
 need the text itself.
 
-**Build/test surface — VERIFIED.** 33-step verify chain · 26 test scripts · 2 generators · 46 forward
+**Build/test surface — VERIFIED.** **34**-step verify chain (corrected 17 Aug — this record stated 33 here
+and 30 in the A11Y-CLAIM row; the parsed value is 34) · 26 test scripts · 2 generators · 46 forward
 migrations (highest `047_grant_decision`).
 
 **Owner entity vocabulary → repository support**
