@@ -2457,3 +2457,56 @@ reinstalled, so "still exit 0" is an absolute state at HEAD, not a before/after 
 non-vacuity guard, which was read but not fired because emptying `he.json` breaks the build and would
 produce a stale-`out/` false result · and the Drive authority itself — from the repo alone only
 `engines.node = 22.x` and a green Node 22 build are re-derivable, **not** that Node 22 is *authorised*.
+
+## T-112 · CROSS-ORGANIZATION DEMAND ISOLATION — GATE HARDENED, PROMOTION WAITING_FOR_FOUNDER (17 Aug 2026)
+
+**Status: WAITING_FOR_FOUNDER for the promotion; the gate work is COMPLETE with evidence.**
+
+`req_org_read` and `req_org_update` (008:266/269) gate `availability_requests` on
+`can_access_artist(artist_id)` alone. That is true for the owning organization AND for every
+organization holding an active grant, and two agencies on one artist is the ordinary state of a roster
+artist. `availability_requests.organization_id` has existed since 008:118 and **no policy has ever
+consulted it**. Executed, reproduced by `test:tenant-isolation`: ORG_A reads ORG_B's requester name,
+event type, location and contact fields (C1), and ORG_A can set ORG_B's request to `closed` (C2 — an
+integrity failure, not merely a privacy one).
+
+**I did not promote the fix, and that is deliberate.** `scripts/sql/candidate-req-org-scope.sql` already
+contains the narrowing, already passes C4–C8 executed, and its own header states that promotion needs an
+owner ruling first. It is a genuine product decision, not an implementation one: some agencies may rely
+on the shared inbox as a feature. The one sentence needed is recorded in OWNER-PENDING as **REQ-ORG**.
+Writing that ruling myself would be inventing canon.
+
+**What WAS ready: the assertions that would certify the promotion had never been mutation-tested.** Four
+mutations against the candidate, gate re-run each time:
+
+| mutation | result |
+|---|---|
+| MC1 revert both policies to bare `can_access_artist` | CAUGHT |
+| MC2 drop ARM 1 (the owner arm) | CAUGHT |
+| MC3 narrow SELECT, leave UPDATE at `can_access_artist` | **SURVIVED — real hole** |
+| MC4 drop the documented `is not null` asymmetry guard | SURVIVED — equivalent mutant |
+
+**MC3 is the finding.** C6 claims "ORG_A can no longer close ORG_B's request — the UPDATE now matches
+zero rows". It does — but for the wrong reason. Its `update … where id = …` reads a column, so
+PostgreSQL applies the **SELECT** policy as well, the narrowed read hides the row, and the UPDATE finds
+nothing. **C6 therefore never tests `req_org_update` at all.** Leave the write half leaky and C6 stays
+green; loosen the read half later and the integrity leak returns silently certified.
+
+`C6b` closes it: an **unqualified** `update … set status='closed'` references no column, so only the
+UPDATE policy's `USING` can filter it. That is the assertion that actually tests `req_org_update`.
+Mutation-proven — MC3 now exits 1 naming C6b, where it previously exited 0.
+
+The first version of C6b broke the gate: the blind update also closes ORG_A's own rows, and C7's
+open-request count read 0. It now snapshots every status, probes, restores, and **asserts the restore**
+(58 checks, was 56). A probe that corrupts the state of later assertions is its own defect class.
+
+**MC4 is an equivalent mutant, and the candidate's comment overstates it.** `organization_id in (select
+…)` yields NULL — not true — when the column is NULL, so ARM 2 already excludes NULL rows without the
+explicit guard. The guard is defensive and worth keeping, but the header's claim that removing it would
+"hand the artist's own private demand to every grant-holder" describes a *differently written* policy,
+not this one. Recorded rather than repaired: the code is correct, the prose is stronger than the code.
+
+**Unchanged and re-proven under the candidate:** the shipped inbox `listRequestsForAgency()` returns a
+byte-identical row set (C5) · the anonymous public-Passport insert path still works (C8) · a no-grant
+organization still reads nothing (C8) · the roster open-request count collapses to own-org **with no
+client change** (C7), confirming residual (b) was a symptom of this policy, not an independent defect.

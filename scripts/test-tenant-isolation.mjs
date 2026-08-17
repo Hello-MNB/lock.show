@@ -363,6 +363,31 @@ try {
       'C6 ORG_A can no longer close ORG_B\'s request — the UPDATE now matches zero rows (RLS filters rather than errors, which is the correct shape) (executed)',
       `C6 ⚠ ORG_A still closed it (${still}) — ok=${w.ok}`)
 
+    // C6b · ISOLATE THE WRITE HALF FROM THE READ HALF.
+    // C6 above passes even when req_org_update is left at can_access_artist:
+    // its `where id = …` reads a column, so PostgreSQL applies the SELECT
+    // policy too, the narrowed read hides the row, and the UPDATE matches zero
+    // rows for the WRONG REASON. Mutation-proven — MC3 (narrow SELECT, leave
+    // UPDATE leaky) SURVIVED C6 at exit 0. An UNQUALIFIED update references no
+    // column, so only the UPDATE policy's USING can filter it: this is the
+    // assertion that actually tests req_org_update.
+    // NON-DESTRUCTIVE: the blind update also closes ORG_A's OWN rows, which are
+    // still needed by C7's open-request count. Snapshot, probe, restore — the
+    // first version of this check left C7 counting 0 and failed the gate.
+    const statusBefore = db.rows(`select id, status from public.availability_requests order by id`)
+    db.try(`update public.availability_requests set status='closed'`, asUser(U.REP_A))
+    const bAfterBlind = db.scalar(`select status from public.availability_requests where id = '${REQ_B}'`)
+    for (const [id, st] of statusBefore) {
+      db.exec(`update public.availability_requests set status='${st}' where id = '${id}'`)
+    }
+    const restored = db.rows(`select id, status from public.availability_requests order by id`)
+    check(JSON.stringify(restored) === JSON.stringify(statusBefore),
+      `C6b probe restored every request status (${statusBefore.length} rows) — the blind update leaves no residue for C7/C8 (executed)`,
+      `C6b ⚠ the probe corrupted state: ${JSON.stringify(restored)} vs ${JSON.stringify(statusBefore)}`)
+    check(bAfterBlind !== 'closed',
+      `C6b req_org_update ITSELF refuses ORG_B's row — proven with an UNQUALIFIED update, which reads no column and so cannot be filtered by the SELECT policy (ORG_B row still '${bAfterBlind}') (executed)`,
+      `C6b ⚠ req_org_update is still can_access_artist — ORG_A blind-closed ORG_B's request (${bAfterBlind}). C6 alone cannot see this.`)
+
     check(rosterOpenCount(U.REP_A) === 1 && rosterOpenCount(U.REP_B) === 1,
       `C7 RESIDUAL (b) CLOSED BY THE SAME POLICY, WITH NO CLIENT CHANGE — rosterNextAction.js:88 now counts ${rosterOpenCount(U.REP_A)} for ORG_A and ${rosterOpenCount(U.REP_B)} for ORG_B: its own demand only. (b) was a symptom of (a), not an independent defect (executed)`,
       `C7 ⚠ the roster count is still cross-org (A=${rosterOpenCount(U.REP_A)} B=${rosterOpenCount(U.REP_B)})`)
