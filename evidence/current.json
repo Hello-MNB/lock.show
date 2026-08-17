@@ -1,14 +1,14 @@
 {
   "schemaVersion": "1.0.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "95c35f4bcd588aed1c805b07a0cec97530ba8f12",
+  "head": "49cc4b0619b39fa27c1257c1f2e5d4403c1abf1c",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-043b.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-qa.log)",
   "exitCode": 0,
   "result": "green-at-head",
-  "gateCount": 31,
+  "gateCount": 32,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -112,6 +112,10 @@
     },
     {
       "id": "S8",
+      "result": "pass"
+    },
+    {
+      "id": "S10",
       "result": "pass"
     },
     {
