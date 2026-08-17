@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * LOCK locale context — client-side only.
+ * LOCK SHOW locale context — client-side only.
  *
  * Static export (`output: 'export'`) means no server-side locale detection.
  * Strategy:

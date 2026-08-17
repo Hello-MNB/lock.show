@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',
   openGraph: {
     url: '/producers',
-    title: 'For Producers | LOCK',
+    title: 'For Producers | LOCK SHOW',
     description: 'You were there that night. Twenty seconds of your word turns one good show into something an artist can build on.',
     type: 'website',
     images: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: '/og/lockshow-og-source-confirmer-v1.png',
         width: 1200,
         height: 630,
-        alt: 'LOCK — Confirm one claim, nothing more implied. Confirm, correct, or reject.',
+        alt: 'LOCK SHOW — Confirm one claim, nothing more implied. Confirm, correct, or reject.',
         type: 'image/png',
       },
     ],
@@ -310,7 +310,7 @@ export default function ProducersPage() {
             >
               You&apos;re the <strong style={{ color: 'var(--color-ink)' }}>producer</strong> who
               ran that night and can vouch for it — the <strong style={{ color: 'var(--color-ink)' }}>booking
-              manager</strong> is the one deciding on the next one, and LOCK never mixes the two.
+              manager</strong> is the one deciding on the next one, and LOCK SHOW never mixes the two.
             </p>
           </div>
         </div>

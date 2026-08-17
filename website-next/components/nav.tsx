@@ -128,7 +128,7 @@ export function Nav() {
             minHeight: '44px',
             padding: '4px 0',
           }}
-          aria-label="LOCK home"
+          aria-label="LOCK SHOW home"
         >
           {/* Official spotlight-lens symbol — same drawing as the favicon
               (owner logo-consistency ruling; master-lime = transparent
@@ -141,7 +141,7 @@ export function Nav() {
             height={36}
             style={{ display: 'block', flexShrink: 0 }}
           />
-          LOCK
+          LOCK SHOW
         </Link>
 
         {/* Desktop links */}

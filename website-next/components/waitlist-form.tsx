@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 // ── First-party waitlist capture (Phase-1) ───────────────────────────────────
-// Writes straight into the LOCK Supabase (waitlist_signup, migration 026).
+// Writes straight into the LOCK SHOW Supabase (waitlist_signup, migration 026).
 // The values below are the PUBLISHABLE client credentials — they ship in every
 // browser bundle by design; the table is write-only for the public (RLS:
 // anon INSERT only, zero read columns). No third-party service touches the data.

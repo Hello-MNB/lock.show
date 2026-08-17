@@ -1,17 +1,17 @@
-# LOCK
+# LOCK SHOW
 
 > Pre-booking proof and risk-reduction tool for the live music industry.
 > Helps demand-side buyers — booking managers, promoters, event producers, planners, private and corporate clients (מזמיני הופעות) — evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
-> Formerly known as GIGPROOF, rebranded to LOCK in 2026 — same product, same team.
+> Formerly known as GIGPROOF, rebranded to LOCK SHOW in 2026 — same product, same team.
 
-## What LOCK is
+## What LOCK SHOW is
 
-LOCK is a verification system for independent artists seeking to prove their live performance track record to booking managers. It is NOT a booking marketplace, NOT an EPK generator, NOT a guarantee of any outcome, and NOT a comparison or ranking tool.
+LOCK SHOW is a verification system for independent artists seeking to prove their live performance track record to booking managers. It is NOT a booking marketplace, NOT an EPK generator, NOT a guarantee of any outcome, and NOT a comparison or ranking tool.
 
 ## Three actors
 
 - **Artist (אמן)** — builds and controls their own proof. Pays for the service. Uses the private Artist Radar workspace.
-- **Booking Manager (מזמין הופעות)** — the demand side: venue/club booker, festival programmer, promoter, talent buyer, or a private/corporate event client. Evaluates artists before booking. Free access. Views the public Passport. (Distinct from an אמרגן — the artist-side agent/management office, which manages a roster inside LOCK.)
+- **Booking Manager (מזמין הופעות)** — the demand side: venue/club booker, festival programmer, promoter, talent buyer, or a private/corporate event client. Evaluates artists before booking. Free access. Views the public Passport. (Distinct from an אמרגן — the artist-side agent/management office, which manages a roster inside LOCK SHOW.)
 - **Producer (מפיק)** — confirms a single claim via a bounded magic link. No account required.
 
 These roles are distinct. Booking manager ≠ producer ≠ artist agent. They are never merged.
@@ -25,11 +25,11 @@ These roles are distinct. Booking manager ≠ producer ≠ artist agent. They ar
 
 Every claim on a Passport carries a method label and reviewed date. Method labels:
 - PRODUCER-CONFIRMED — strongest. A producer verified via magic link.
-- TICKET EXPORT · REVIEWED — document verified by the LOCK team.
+- TICKET EXPORT · REVIEWED — document verified by the LOCK SHOW team.
 - PLATFORM DATA · REVIEWED — contextual data, not draw evidence.
 - SELF-REPORTED · UNVERIFIED — internal only, never public.
 
-## What LOCK does not do
+## What LOCK SHOW does not do
 
 - No score, rating, ranking, or prediction
 - No exact headcount (audience draw shown as a band: e.g. 70–150)

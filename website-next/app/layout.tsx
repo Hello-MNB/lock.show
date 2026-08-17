@@ -22,7 +22,7 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property LOCK (544738110), stream LOCK App; env can override
+// GA4 — property LOCK SHOW (544738110), stream LOCK SHOW App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
 // SITE_URL comes from lib/site.ts — the ONE place the canonical www origin
@@ -43,18 +43,18 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'LOCK — Booking Proof for Independent Artists',
-    template: '%s | LOCK',
+    default: 'LOCK SHOW — Booking Proof for Independent Artists',
+    template: '%s | LOCK SHOW',
   },
   description:
     'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
   // NO `keywords` meta: deprecated by every major engine (dead weight), and
   // the removed list carried the WRONG actor noun (אמרגן = artist-side agent —
-  // LOCK's buyer is the מזמין הופעות; the site's own FAQ says so). C4 fix,
+  // LOCK SHOW's buyer is the מזמין הופעות; the site's own FAQ says so). C4 fix,
   // authorized by the D2 execution-order metadata alignment.
-  authors: [{ name: 'LOCK', url: SITE_URL }],
-  creator: 'LOCK',
-  publisher: 'LOCK',
+  authors: [{ name: 'LOCK SHOW', url: SITE_URL }],
+  creator: 'LOCK SHOW',
+  publisher: 'LOCK SHOW',
   robots: {
     index: true,
     follow: true,
@@ -71,13 +71,13 @@ export const metadata: Metadata = {
     // No alternateLocale: page bodies are EN-only today (locale toggle covers
     // nav/footer/consent copy only, not page content — T-84 HE-scope note).
     // Claiming he_IL here would overclaim translated content that doesn't exist.
-    siteName: 'LOCK',
+    siteName: 'LOCK SHOW',
     images: [
       {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'LOCK — Booking Proof for Independent Artists',
+        alt: 'LOCK SHOW — Booking Proof for Independent Artists',
         type: 'image/png',
       },
     ],
@@ -108,7 +108,7 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       description:
         'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
@@ -119,7 +119,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
@@ -158,7 +158,7 @@ const jsonLd = {
         })),
       ],
       description:
-        'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK SHOW provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },
     {
       '@type': 'SoftwareApplication',

@@ -5,7 +5,7 @@ import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
   alternates: localeAlternates('/faq'),
-  title: 'FAQ — What LOCK Does (and Doesn\'t) Promise',
+  title: 'FAQ — What LOCK SHOW Does (and Doesn\'t) Promise',
   description: 'Straight answers on how verification works, what a Passport shows, and why there\'s no score, rank, or guarantee — ever.',
 }
 
@@ -14,12 +14,12 @@ const faqs = [
     category: 'WHAT IT IS',
     questions: [
       {
-        q: 'What is LOCK?',
-        a: 'LOCK helps independent artists prove their live draw before a booking manager ever calls. Instead of a bio or a follower count, you get a Passport — a record of what actually happened on stage, with each claim showing how it was checked.',
+        q: 'What is LOCK SHOW?',
+        a: 'LOCK SHOW helps independent artists prove their live draw before a booking manager ever calls. Instead of a bio or a follower count, you get a Passport — a record of what actually happened on stage, with each claim showing how it was checked.',
       },
       {
         q: 'What problem does it solve?',
-        a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
+        a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK SHOW gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
       },
       {
         q: 'What is a Bookability Passport?',
@@ -35,19 +35,19 @@ const faqs = [
     category: 'WHO IT IS FOR',
     questions: [
       {
-        q: 'Who is an "artist" in LOCK?',
-        a: 'Any live performer — solo musician, DJ, band, comedian, spoken-word artist. LOCK is artist-type-agnostic. The system adapts to the artist\'s context rather than assuming a specific genre or format.',
+        q: 'Who is an "artist" in LOCK SHOW?',
+        a: 'Any live performer — solo musician, DJ, band, comedian, spoken-word artist. LOCK SHOW is artist-type-agnostic. The system adapts to the artist\'s context rather than assuming a specific genre or format.',
       },
       {
         q: 'Who is a "booking manager" (mazmin hofa\'ot)?',
-        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. LOCK is free for booking managers — no account required to view a Passport.',
+        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. LOCK SHOW is free for booking managers — no account required to view a Passport.',
       },
       {
         q: 'Who is a "producer" (mefik)?',
-        a: 'A producer (mefik) is the person who actually ran that night — took the financial risk, sold the tickets, managed the venue. They confirm the gig with one tap on a private link. A producer is a different person doing a different job than a booking manager, and LOCK never mixes the two up.',
+        a: 'A producer (mefik) is the person who actually ran that night — took the financial risk, sold the tickets, managed the venue. They confirm the gig with one tap on a private link. A producer is a different person doing a different job than a booking manager, and LOCK SHOW never mixes the two up.',
       },
       {
-        q: 'Is LOCK free for booking managers?',
+        q: 'Is LOCK SHOW free for booking managers?',
         a: 'Yes. A booking manager never needs to create an account, sign up, or pay to view a Passport. They receive a link, open it in a browser, and see the evidence.',
       },
       {
@@ -65,11 +65,11 @@ const faqs = [
       },
       {
         q: 'What is a "magic link"?',
-        a: 'A magic link is a private one-time link LOCK creates for a specific gig. The artist sends it to the producer via WhatsApp, SMS, or email. The link shows only that gig record. The producer can confirm, flag, or decline. The link expires after use and can\'t be re-used to reach anything else.',
+        a: 'A magic link is a private one-time link LOCK SHOW creates for a specific gig. The artist sends it to the producer via WhatsApp, SMS, or email. The link shows only that gig record. The producer can confirm, flag, or decline. The link expires after use and can\'t be re-used to reach anything else.',
       },
       {
         q: 'Can a claim appear on the Passport without producer confirmation?',
-        a: 'Yes — if supported by another eligible method, such as a ticket export reviewed by a LOCK operator. The method label will reflect the actual verification source. A claim with a weaker method label is still visible to the booking manager with the full label shown.',
+        a: 'Yes — if supported by another eligible method, such as a ticket export reviewed by a LOCK SHOW operator. The method label will reflect the actual verification source. A claim with a weaker method label is still visible to the booking manager with the full label shown.',
       },
       {
         q: 'Who reviews ticket export documents?',
@@ -90,15 +90,15 @@ const faqs = [
       },
       {
         q: 'Why does every claim show a date?',
-        a: 'Evidence ages. A sold-out show in January 2026 carries different weight than one from 2022. LOCK shows the review date and the period of the evidence so a booking manager can assess relevance to their current decision.',
+        a: 'Evidence ages. A sold-out show in January 2026 carries different weight than one from 2022. LOCK SHOW shows the review date and the period of the evidence so a booking manager can assess relevance to their current decision.',
       },
       {
         q: 'What does it mean if a Passport section is missing?',
-        a: 'If a domain (e.g. streaming context) doesn\'t appear on a Passport, it means either no verified claim exists, or the artist chose not to publish it. LOCK never shows "developing" or "missing" or any weakness indicator on the public Passport. Omission is the policy — not a placeholder.',
+        a: 'If a domain (e.g. streaming context) doesn\'t appear on a Passport, it means either no verified claim exists, or the artist chose not to publish it. LOCK SHOW never shows "developing" or "missing" or any weakness indicator on the public Passport. Omission is the policy — not a placeholder.',
       },
       {
-        q: 'What does "LOCK doesn\'t guarantee anything" mean?',
-        a: 'LOCK provides method-labelled evidence. It does not predict, guarantee, or imply that an artist will fill a floor, sell tickets, or perform to any specific outcome. Booking decisions remain entirely with the booking manager. Evidence is not a guarantee.',
+        q: 'What does "LOCK SHOW doesn\'t guarantee anything" mean?',
+        a: 'LOCK SHOW provides method-labelled evidence. It does not predict, guarantee, or imply that an artist will fill a floor, sell tickets, or perform to any specific outcome. Booking decisions remain entirely with the booking manager. Evidence is not a guarantee.',
       },
     ],
   },
@@ -115,7 +115,7 @@ const faqs = [
       },
       {
         q: 'Is my contact information visible on my Passport?',
-        a: 'No. Your contact details never appear on your Passport — anyone opening the link simply can\'t see them. An interested booking manager can send an availability request through the Passport; LOCK passes it to you without ever revealing your contact information.',
+        a: 'No. Your contact details never appear on your Passport — anyone opening the link simply can\'t see them. An interested booking manager can send an availability request through the Passport; LOCK SHOW passes it to you without ever revealing your contact information.',
       },
     ],
   },

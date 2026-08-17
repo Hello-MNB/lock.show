@@ -14,7 +14,7 @@ export const SITE_URL = 'https://www.lock.show'
 // twitter:image (a separate metadata field) kept working, so the gap was
 // invisible on X and only showed on WhatsApp and Facebook.
 export const OG_DEFAULT_IMAGE = `${SITE_URL}/og/og-default.png`
-export const OG_DEFAULT_ALT = 'LOCK — Booking Proof for Independent Artists'
+export const OG_DEFAULT_ALT = 'LOCK SHOW — Booking Proof for Independent Artists'
 
 /** Absolute URL on the canonical origin: absoluteUrl('/pricing') → https://www.lock.show/pricing */
 export function absoluteUrl(path = '/'): string {

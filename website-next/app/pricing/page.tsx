@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     'Artists build and publish free during the pilot. Booking managers read Passports free, always. Producers never need an account. Agency roster plans come later.',
   openGraph: {
     url: '/pricing',
-    title: 'Pricing | LOCK',
+    title: 'Pricing | LOCK SHOW',
     description:
       'One page, four honest answers — artist, booking manager, producer, agency. And the things money can never buy here.',
     type: 'website',
@@ -37,15 +37,15 @@ export const metadata: Metadata = {
 const seats = [
   {
     label: 'FOR ARTISTS',
-    price: 'Free during the pilot',
+    price: 'Beta access opens in waves',
     line: 'Build your Radar, shape your story, publish your Passport — all of it free while the pilot runs.',
     points: [
-      'Share your links — LOCK reads them and drafts your first items for you to confirm',
+      'Share your links — LOCK SHOW reads them and drafts your first items for you to confirm',
       'Your private Radar workspace — only you see it',
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
     ],
-    cta: { text: 'START FREE IN THE PILOT →', href: `${conversionHref({ page: 'pricing', placement: 'seats' })}`, primary: true },
+    cta: { text: 'JOIN THE WAITLIST →', href: `${conversionHref({ page: 'pricing', placement: 'seats' })}`, primary: true },
     note: 'The pilot is a closed beta for Israeli artists. When pricing comes, it will be set with the artists already inside.',
   },
   {
@@ -57,7 +57,7 @@ const seats = [
       'Every claim carries its source and date',
       'Reply with an availability request in one tap',
     ],
-    cta: { text: 'How booking managers use LOCK →', href: '/bookers', primary: false },
+    cta: { text: 'How booking managers use LOCK SHOW →', href: '/bookers', primary: false },
     note: 'This one is permanent. A paywall between you and the proof would defeat the whole idea.',
   },
   {
@@ -97,7 +97,7 @@ const neverForSale = [
 /* ── FAQ (visible + JSON-LD share this source) ──────────── */
 const faq = [
   {
-    q: 'Is LOCK free for artists?',
+    q: 'Is LOCK SHOW free for artists?',
     a: 'Yes — free during the pilot. The pilot is a closed beta for Israeli artists: building your Radar and publishing your Passport cost nothing while it runs. When the pilot ends, pricing will be set together with the artists already inside — and we will say so clearly before anything changes.',
   },
   {
@@ -214,7 +214,7 @@ export default function Pricing() {
                   alignItems: 'center',
                 }}
               >
-                START FREE IN THE PILOT →
+                JOIN THE WAITLIST →
               </a>
               <Link
                 href="/passport/demo"
@@ -481,7 +481,7 @@ export default function Pricing() {
                 marginBottom: '1.75rem',
               }}
             >
-              Prices can change as LOCK grows — that&apos;s honest. What never changes is
+              Prices can change as LOCK SHOW grows — that&apos;s honest. What never changes is
               this: money moves nothing on a Passport. What it shows is decided by what
               actually happened, and by the artist&apos;s own approval.
             </p>
@@ -562,7 +562,7 @@ export default function Pricing() {
                 margin: 0,
               }}
             >
-              Right now LOCK is in a closed pilot with Israeli artists, and artists build
+              Right now LOCK SHOW is in a closed pilot with Israeli artists, and artists build
               free. When the pilot ends, artist pricing gets worked out with the founding
               artists — in the open, based on real use, before anything changes. Booking
               managers reading Passports stay free, producers never need an account, and
@@ -690,7 +690,7 @@ export default function Pricing() {
               display: 'inline-block',
             }}
           >
-            START FREE IN THE PILOT →
+            JOIN THE WAITLIST →
           </a>
         </div>
       </section>

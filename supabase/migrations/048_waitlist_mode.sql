@@ -192,7 +192,23 @@ grant execute on function public.join_waitlist(text,text,text,text,text,boolean,
 -- The RPC above is now the only public path in. 026's anon INSERT policy is
 -- withdrawn and the table-level grant revoked; existing rows are untouched.
 drop policy if exists wl_anon_insert on public.waitlist_signup;
+-- IDEMPOTENT. Caught by my own executed suite: without the drop, re-applying 048
+-- raises `policy "wl_definer_insert" already exists` and the whole migration
+-- aborts. A migration that cannot be re-run is a migration that fails the second
+-- time an operator touches it — the same lesson 046 recorded.
+drop policy if exists wl_definer_insert on public.waitlist_signup;
+-- `false`, DELIBERATELY, and NOT a call to 046's artist_access_trusted_writer().
+-- The first version of this policy did call it, which created a dependency that
+-- made artist_access_trusted_writer() undroppable and broke the 043-047 rollback
+-- chain — the existing grant-scope suite caught it immediately. A waitlist
+-- table must not couple itself to the grant-authority migrations.
+--
+-- `false` is correct on its own terms: join_waitlist() is SECURITY DEFINER and
+-- therefore runs as the table OWNER, and a table owner bypasses RLS unless the
+-- table is set FORCE ROW LEVEL SECURITY (it is not). So the RPC writes freely
+-- while every other principal is refused by this policy. The RPC is the only
+-- way in, which is exactly the contract.
 create policy wl_definer_insert on public.waitlist_signup
-  for insert with check (public.artist_access_trusted_writer());
+  for insert with check (false);
 revoke insert on public.waitlist_signup from anon;
 revoke insert on public.waitlist_signup from authenticated;

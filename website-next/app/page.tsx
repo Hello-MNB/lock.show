@@ -8,11 +8,11 @@ import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
   alternates: localeAlternates('/'),
-  title: 'LOCK — Build the Proof That Books You',
+  title: 'LOCK SHOW — Build the Proof That Books You',
   description:
     'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
   openGraph: {
-    title: 'LOCK — Build the Proof That Books You',
+    title: 'LOCK SHOW — Build the Proof That Books You',
     description:
       'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
@@ -264,7 +264,7 @@ export default function HomePage() {
                   marginBottom: 'var(--hero-gap-desc)',
                 }}
               >
-                The rooms you filled, the nights that sold out — LOCK turns them
+                The rooms you filled, the nights that sold out — LOCK SHOW turns them
                 into a Passport a booking manager can trust before the first call.
               </p>
 
@@ -380,7 +380,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                LOCK · BOOKABILITY PASSPORT
+                LOCK SHOW · BOOKABILITY PASSPORT
               </div>
 
               {/* Artist identity */}
@@ -633,7 +633,7 @@ export default function HomePage() {
               }}
             >
               The artist on stage, the booking manager on the line, the producer
-              who ran the room — LOCK gives each of you your own door in.
+              who ran the room — LOCK SHOW gives each of you your own door in.
             </p>
 
             <div
@@ -649,7 +649,7 @@ export default function HomePage() {
                   image: '/lockshow-persona-artist-v1.webp',
                   tag: 'ARTIST',
                   title: 'Your nights already tell the story',
-                  body: 'Turn the gigs you played into a Passport that opens the next room. Free during the pilot.',
+                  body: 'Turn the gigs you played into a Passport that opens the next room. Beta access opens in waves.',
                   href: '/artists',
                   cta: 'FOR ARTISTS',
                 },

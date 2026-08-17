@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // owner supplies the legal facts and review completes. Body text untouched.
   robots: { index: false, follow: false },
   title: 'Privacy Policy',
-  description: 'LOCK privacy policy — draft under legal review. What we collect, why, who we share it with, your rights, and cookie consent.',
+  description: 'LOCK SHOW privacy policy — draft under legal review. What we collect, why, who we share it with, your rights, and cookie consent.',
 }
 
 export default function Privacy() {

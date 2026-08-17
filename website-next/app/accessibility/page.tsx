@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   // owner supplies the legal facts and review completes. Body text untouched.
   robots: { index: false, follow: false },
   title: 'Accessibility',
-  description: 'LOCK accessibility statement — draft. Our commitment, what has been made accessible so far, known limitations, and how to reach us.',
+  description: 'LOCK SHOW accessibility statement — draft. Our commitment, what has been made accessible so far, known limitations, and how to reach us.',
 }
 
 export default function Accessibility() {

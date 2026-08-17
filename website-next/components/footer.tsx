@@ -45,7 +45,7 @@ const FOOTER_LINKS = [
   {
     heading: 'FOR ARTISTS',
     links: [
-      { href: '/artists',     label: 'Why LOCK' },
+      { href: '/artists',     label: 'Why LOCK SHOW' },
       { href: '/radar',       label: 'Artist Radar' },
       { href: '/methodology', label: 'Methodology' },
       { href: '/pricing',     label: 'Pricing' },
@@ -86,7 +86,7 @@ export function Footer() {
   // Central conversion helper — see lib/conversion.ts. Login and the shop
   // link are deliberately NOT routed through it.
   const signupHref = conversionHref({ page: slug, placement: 'footer' })
-  // Owner order 21 Jul: quiet footer link to the LOCK shop (top-nav slot waits
+  // Owner order 21 Jul: quiet footer link to the LOCK SHOW shop (top-nav slot waits
   // until the store is live + stocked). Attribution law applies to every
   // off-site CTA: source + per-page campaign + placement.
   const shopHref = `https://shop.lock.show/?utm_source=site&utm_campaign=${slug}&utm_content=footer-shop`
@@ -120,7 +120,7 @@ export function Footer() {
           <div>
             <Link
               href="/"
-              aria-label="LOCK home"
+              aria-label="LOCK SHOW home"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -148,7 +148,7 @@ export function Footer() {
                 height={36}
                 style={{ display: 'block', flexShrink: 0 }}
               />
-              LOCK
+              LOCK SHOW
             </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -328,7 +328,7 @@ export function Footer() {
                     padding: '0.75rem 0',
                   }}
                 >
-                  Message LOCK on WhatsApp
+                  Message LOCK SHOW on WhatsApp
                 </a>
               </li>
             </ul>
@@ -351,7 +351,7 @@ export function Footer() {
             margin: 0,
             lineHeight: 1.8,
           }}>
-            The booking manager and the producer are two different people doing two different jobs — LOCK never mixes them up.
+            The booking manager and the producer are two different people doing two different jobs — LOCK SHOW never mixes them up.
             {' '}Every claim says how it was checked. Every crowd is an honest range, never a guess dressed up as a number.
             {' '}The call is always yours.
           </p>
@@ -372,7 +372,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
           </p>
           <Link
             href="/contact"

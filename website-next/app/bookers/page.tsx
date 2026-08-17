@@ -8,10 +8,10 @@ export const metadata: Metadata = {
   alternates: localeAlternates('/bookers'),
   title: 'For Booking Managers — Book With Context, Not Guesswork',
   description:
-    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
+    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK SHOW Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
   openGraph: {
     url: '/bookers',
-    title: 'For Booking Managers | LOCK',
+    title: 'For Booking Managers | LOCK SHOW',
     description:
       'Book with context, not guesswork. Checked evidence in two minutes — free for booking managers, always.',
     type: 'website',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
         url: '/og/lockshow-og-professional-buyers-v1.png',
         width: 1200,
         height: 630,
-        alt: 'LOCK — Book with context, not guesswork. Recipient-safe artist context for venue, festival, club and promoter decisions.',
+        alt: 'LOCK SHOW — Book with context, not guesswork. Recipient-safe artist context for venue, festival, club and promoter decisions.',
         type: 'image/png',
       },
     ],
@@ -67,7 +67,7 @@ const passportFeatures = [
   {
     label: 'NO ACCOUNT, EVER',
     title: 'One link, two minutes, zero friction.',
-    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK is free for booking managers, always.',
+    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK SHOW is free for booking managers, always.',
   },
 ]
 
@@ -434,7 +434,7 @@ export default function BookersPage() {
         </div>
       </section>
 
-      {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
+      {/* ── WHAT LOCK SHOW DOESN'T PROMISE ────────────────── */}
       <section style={{
         background: 'var(--color-night)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
@@ -462,7 +462,7 @@ export default function BookersPage() {
               marginBottom: '1rem',
             }}
           >
-            LOCK makes no promises. That&apos;s the point.
+            LOCK SHOW makes no promises. That&apos;s the point.
           </h2>
           <p
             style={{
@@ -473,7 +473,7 @@ export default function BookersPage() {
               marginBottom: '2rem',
             }}
           >
-            LOCK will never tell you an artist will fill your floor. No score,
+            LOCK SHOW will never tell you an artist will fill your floor. No score,
             no ranking, no prediction — only what happened, how it was checked,
             and when. You read it in two minutes. The decision stays yours.
           </p>
@@ -525,7 +525,7 @@ export default function BookersPage() {
               lineHeight: 1.6,
             }}
           >
-            Open it. See the room before you say yes. LOCK is free for booking
+            Open it. See the room before you say yes. LOCK SHOW is free for booking
             managers — always. No signup, no account, no catch.
           </p>
           <Link

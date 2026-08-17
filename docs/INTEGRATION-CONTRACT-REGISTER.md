@@ -31,6 +31,9 @@ knob, no credential · `AMBIENT` = supplied by the runtime/framework · `TOOLING
 | Name | Class | Surface | Consumer | Activation | Required |
 |---|---|---|---|---|---|
 | `VITE_SUPABASE_URL` | PUBLIC | client+server+ops | src/lib/supabase.js, server/index.js, scripts/seed.mjs | DECLARED | required |
+| `NEXT_PUBLIC_CONVERSION_MODE` | CONFIG | website (build-time) | website-next/lib/conversion.ts | DECLARED | optional |
+| `NEXT_PUBLIC_SUPABASE_URL` | PUBLIC | website (build-time) | website-next/components/waitlist-join-form.tsx | DECLARED | optional |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | PUBLIC | website (build-time) | website-next/components/waitlist-join-form.tsx | DECLARED | optional |
 | `VITE_SUPABASE_ANON_KEY` | PUBLIC | client | src/lib/supabase.js | DECLARED | required |
 | `VITE_DEMO` | PUBLIC | client | src/lib/demo.js | DECLARED | optional |
 | `VITE_NO_API` | PUBLIC | client | src (test/preview switch) | DECLARED | optional |
@@ -67,6 +70,17 @@ knob, no credential · `AMBIENT` = supplied by the runtime/framework · `TOOLING
 | `W41_PORT` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED | optional |
 | `W41_QA_DIR` | TOOLING | test | scripts/verify-w41-payment-gate.mjs | DECLARED | optional |
 <!-- MACHINE:ENV:END -->
+
+**CODE-WEB-021A additions (17 Aug 2026).** `NEXT_PUBLIC_CONVERSION_MODE` is the single
+switch behind every public primary CTA (`waitlist` | `signup`); it is marked optional
+because an unset value deliberately **defaults to `waitlist`**, the safe state — a missing
+variable must never route visitors to a signup a release has not opened. The two
+`NEXT_PUBLIC_SUPABASE_*` entries are overrides for values that otherwise fall back to the
+**publishable** client credentials already shipped in the browser bundle by design; they
+are PUBLIC class, they are not secrets, and no value appears anywhere in this repo's
+documentation. All three are **build-time inlined** by the static export, so changing one
+requires a rebuild, not a runtime restart.
+
 
 **Requiredness is a fact recorded here, verified from code — the generated schema only projects it.**
 `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`: without both, `realConfig` is false and the client cannot

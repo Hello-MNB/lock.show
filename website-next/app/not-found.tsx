@@ -65,7 +65,7 @@ export default function NotFound() {
             padding: '0.5rem 0.75rem',
           }}
         >
-          Back to LOCK
+          Back to LOCK SHOW
         </Link>
       </main>
     </>
