@@ -690,6 +690,93 @@ console.log('\n[25] the SUBJECT of a grant, and who may reinstate it (QA D1 / D2
   }
 }
 
+console.log('\n[25b] the HOLDER of a grant may not be changed either (QA H-1)')
+// D1 guarded WHOSE grant it is (artist_id) and left WHO HOLDS IT open. RLS
+// aa_admin_write only requires owner/admin of the NEW organization_id, so a
+// grantee-org owner could create a second org through the shipped create_workspace
+// RPC and carry the entire consented grant onto a party the artist never granted
+// anything to. QA walked a live grant end to end as plain `authenticated`.
+{
+  db.exec(`update public.artist_access set act_id = null, status = 'active', revoked_at = null,
+              actions = '{publish}', audience = '{booker}', scope = '{view,edit}', consent_at = now()
+            where organization_id = '${ORG}'`)
+  db.exec(`insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e7','shell@fixture.test') on conflict (id) do nothing;
+           insert into public.person (id, email, display_name) values ('00000000-0000-0000-0000-0000000000e7','shell@fixture.test','Shell') on conflict (id) do nothing;
+           insert into public.organization (id, name, slug, plan, created_by, workspace_type)
+             values ('00000000-0000-0000-0000-0000000000e8','Attacker Shell','attacker-shell','agency','00000000-0000-0000-0000-0000000000e7','management') on conflict (id) do nothing;
+           insert into public.organization_membership (organization_id, person_id, org_role, status)
+             values ('00000000-0000-0000-0000-0000000000e8','${GRANTEE}','owner','active') on conflict do nothing`)
+  const holderBefore = db.scalar(`select organization_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const walkOrg = db.try(`update public.artist_access set organization_id = '00000000-0000-0000-0000-0000000000e8'
+                           where organization_id = '${ORG}'`, { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot move its grant to another organization it owns', !walkOrg.ok,
+    walkOrg.out.split('\n')[0]?.slice(0, 110))
+  check('...and the holder did not move', holderBefore === db.scalar(
+    `select organization_id from public.artist_access where organization_id = '${ORG}' limit 1`))
+  check('...so the shell org gained nothing',
+    db.scalar(`select count(*) from public.artist_access where organization_id = '00000000-0000-0000-0000-0000000000e8'`) === '0')
+}
+
+console.log('\n[25c] the re-point refusal is load-bearing for a two-org principal (QA G-1)')
+// D1's refusal block shipped UNMUTATED: the only case covered was the grantee, whom
+// the `touched` term already refuses, so deleting the block changed nothing the suite
+// could see. The principal it actually stops is a plain MEMBER of artist A's org who
+// OWNS artist B's org — they pass RLS (owns_artist on both sides) and pass the
+// touched check (owner/admin of the NEW subject), and only the block refuses them.
+{
+  const SUBJ_A = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const ORG_A = db.scalar(`select owner_organization_id from public.artists where id = '${SUBJ_A}'`)
+  const ART_B = '00000000-0000-0000-0000-0000000000e3'   // the victim artist created in [25]
+  const ORG_B = '00000000-0000-0000-0000-0000000000e2'
+  const TWO_ORG = '00000000-0000-0000-0000-0000000000e9'
+  db.exec(`insert into auth.users (id, email) values ('${TWO_ORG}','twoorg@fixture.test') on conflict (id) do nothing;
+           insert into public.person (id, email, display_name) values ('${TWO_ORG}','twoorg@fixture.test','Two Org Person') on conflict (id) do nothing;
+           insert into public.organization_membership (organization_id, person_id, org_role, status)
+             values ('${ORG_A}','${TWO_ORG}','member','active') on conflict do nothing;
+           insert into public.organization_membership (organization_id, person_id, org_role, status)
+             values ('${ORG_B}','${TWO_ORG}','owner','active') on conflict do nothing`)
+  const subjBefore = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const walk = db.try(`update public.artist_access set artist_id = '${ART_B}' where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: TWO_ORG })
+  check('a member of A\'s org who owns B\'s org cannot re-point A\'s grant onto B', !walk.ok,
+    walk.out.split('\n')[0]?.slice(0, 120))
+  check('...and the subject did not move',
+    db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`) === subjBefore)
+}
+
+console.log('\n[25d] 046 can still be reverted ALONE — the property the split exists to give (QA M-1)')
+// Hoisting 044's duplicate-pair precondition into 046.down protected the operator,
+// but it also blocked reverting 046 by itself — the legitimate move when the guard is
+// breaking a client — on a condition about a unique key the guard has nothing to do
+// with, while advising the operator to delete a legitimate Act-scoped grant. The
+// escape must therefore work, or the refusal has simply traded one defect for another.
+{
+  const dupOrg = db.scalar(`select organization_id from public.artist_access
+     group by organization_id, artist_id having count(*) > 1 limit 1`)
+  if (!dupOrg) {
+    db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status)
+             values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1),
+                     '${ACT_B}', 'manage', 'active')`)
+  }
+  const down046 = readFileSync('supabase/migrations/046_artist_access_guard.down.sql', 'utf8')
+  const refused = db.try(down046)
+  check('046.down refuses a FULL rollback while duplicate pairs exist', !refused.ok && /cannot roll back to 043/.test(refused.out),
+    refused.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  check('...and the guard is still installed after that refusal',
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+
+  const escaped = db.try(`select set_config('b4.partial_rollback', '046', false);\n${down046}`)
+  check('...but 046 CAN be reverted alone via the documented escape', escaped.ok,
+    escaped.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  check('...leaving 045 intact, so the partial revert is genuinely partial',
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'`) === '1')
+  // restore for the sections that follow
+  db.exec(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8'))
+  db.exec(`delete from public.artist_access where organization_id = '${ORG}' and act_id = '${ACT_B}'`)
+  check('046 re-applies cleanly after the partial revert',
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+}
+
 console.log('\n[26] the 046 rollback removes everything it installed (QA D5)')
 // The rollback assertion enumerated five function names and act_belongs_to_artist was
 // not among them, so an incomplete 046 revert was undetectable.

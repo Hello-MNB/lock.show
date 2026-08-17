@@ -14,9 +14,18 @@ begin
       from public.artist_access
      group by organization_id, artist_id
     having count(*) > 1) d;
-  if n > 0 then
+  -- ESCAPE for a PARTIAL rollback. 046's whole reason to be its own migration is that
+  -- it can be reverted alone — the legitimate move when the guard is breaking a
+  -- client. Blocking that on a duplicate-pair condition about a UNIQUE KEY the guard
+  -- has nothing to do with would remove the property the split exists to give, and
+  -- the old message told the operator to delete a legitimate Act-scoped grant in
+  -- order to drop a trigger. That is harmful advice, so it is gone.
+  --
+  --   select set_config('b4.partial_rollback', '046', false);   -- then run this file
+  --
+  if n > 0 and coalesce(current_setting('b4.partial_rollback', true), '') <> '046' then
     raise exception
-      'cannot roll back: % (organization, artist) pair(s) hold more than one grant, which only Act-scoped grants allow. 044 will refuse later in the sequence, so this refuses FIRST — the guard is still in place. Consolidate to one row per (organization, artist), then retry.', n
+      'cannot roll back to 043: % (organization, artist) pair(s) hold more than one grant, which only Act-scoped grants allow, so 044 cannot restore the 008 key. This refuses FIRST, while the guard is still installed, rather than leaving you unprotected when 044 refuses later. To revert 046 ALONE (keeping 043-045), set b4.partial_rollback to ''046'' and re-run. To complete the FULL rollback, consolidate to one row per (organization, artist) first.', n
       using errcode = '23505';
   end if;
 end $$;

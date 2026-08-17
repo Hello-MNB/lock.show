@@ -95,6 +95,13 @@ begin
 
   -- DELETE: only the trusted path or an owner/admin of the artist's org may remove
   -- a grant row at all, because deletion destroys the revocation trail entirely.
+  --
+  -- HONEST LIMIT: the artist-org half of this rule is currently RLS-UNREACHABLE. No
+  -- DELETE policy exists for that principal (aa_artist_owner_respond is FOR UPDATE,
+  -- aa_artist_owner_read is FOR SELECT), so an artist-org owner's DELETE is filtered
+  -- to zero rows and never reaches this branch — verified by execution. The DENY half
+  -- below is live and load-bearing. Adding a DELETE policy is a change to 027's
+  -- policy set, not to this migration.
   if tg_op = 'DELETE' then
     if public.artist_access_trusted_writer() then return old; end if;
     if not exists (select 1 from public.artists ar
@@ -184,7 +191,15 @@ begin
             -- guard sees touched=false, and the row is walked onto a different
             -- artist — conferring can_access_artist and scope on someone who never
             -- consented. Independent QA reproduced it end to end.
-            or new.artist_id is distinct from old.artist_id;
+            or new.artist_id is distinct from old.artist_id
+            -- organization_id is the HOLDER. Guarding artist_id alone protects WHOSE
+            -- grant it is and leaves WHO HOLDS IT open: RLS aa_admin_write only
+            -- requires owner/admin of the NEW organization_id, so a grantee-org owner
+            -- can create a second org through the shipped create_workspace RPC and
+            -- carry the whole consented grant — status, scope, consent_at, actions,
+            -- audience, act_id — onto a party the artist never granted anything to.
+            -- Independent QA walked a live grant end to end as plain `authenticated`.
+            or new.organization_id is distinct from old.organization_id;
   end if;
 
   -- owns_artist() alone is too wide: 030:22-32 resolves to ANY active member of an

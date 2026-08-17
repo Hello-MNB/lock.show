@@ -1469,3 +1469,44 @@ other, so only removing BOTH reproduces the vulnerable state. Corrected, both th
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope` now carries **133 executed
 assertions**.
+
+## T-110.3 · SEVENTH QA PASS — 045 ACCEPTED, 046 DEFECTS CLOSED (17 Aug 2026)
+
+**Four of five files are now accepted: 043, 044, 045, 047.** Only 046 remained rejected, on one HIGH.
+
+**D2 vindicated by measurement, not argument.** My riskiest change last round was a REMOVAL — deleting
+the `trusted_writer()` conjunct from the reinstate branch. QA enumerated every writer class against
+`revoked → active` and rebuilt the pre-D2 trigger to compare: the delta is **exactly** the artist-org
+owner/admin direct path, and no writer class gained the ability to erase a revocation. That is the
+right way to accept a removal.
+
+**H-1 (HIGH, mine) · I guarded the SUBJECT and left the HOLDER open.** `artist_id` was in the guarded
+set; `organization_id` was not. RLS `aa_admin_write` only requires owner/admin of the NEW
+`organization_id`, so a grantee-org owner could create a second organization through the shipped
+`create_workspace` RPC and carry the entire consented grant — status, scope, consent_at, actions,
+audience, act_id — onto a party the artist never granted anything to. QA walked a live grant end to end
+as plain `authenticated`; `can_access_artist` went false → true for an unrelated member. One line.
+
+**G-1 · D1's refusal block shipped UNMUTATED.** The only case my suite covered was the grantee, whom
+the `touched` term already refuses — so deleting the block changed nothing the gate could see. The
+principal it actually stops is a plain MEMBER of artist A's org who OWNS artist B's org: they pass RLS
+on both sides and pass the touched check, and only the block refuses them. Now asserted, and deleting
+or weakening the block turns the suite red.
+
+**M-1 · my D3 fix traded one defect for another.** Hoisting 044's duplicate-pair precondition into
+`046.down` protected the operator but destroyed 046's independent revertibility — the property the
+split exists to provide — and the message told the operator to delete a legitimate Act-scoped grant in
+order to drop a trigger. Now: an explicit `b4.partial_rollback` escape, an honest message that
+distinguishes the full rollback from a 046-only revert, and an executed test that the escape works and
+leaves 045 intact.
+
+**L-1 recorded in-file:** the DELETE branch's artist-org half is RLS-UNREACHABLE today (no DELETE
+policy for that principal), so an artist-org owner's DELETE is filtered to zero rows and never reaches
+the branch. The DENY half is live and load-bearing. **L-2 → `docs/OWNER-PENDING.md` ATTRIB:**
+`revoked_by`/`granted_by` are guarded and never written by any shipped path.
+
+**Accuracy note from QA, worth keeping:** `grant execute … to authenticated` at 045:50 is redundant in
+a Supabase-shaped database — default privileges already grant it — so its D6 liveness assertion passes
+regardless. Not a defect; recorded so no one counts it as a bound.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope`: **143 executed assertions**.
