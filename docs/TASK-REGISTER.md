@@ -2510,3 +2510,48 @@ not this one. Recorded rather than repaired: the code is correct, the prose is s
 byte-identical row set (C5) · the anonymous public-Passport insert path still works (C8) · a no-grant
 organization still reads nothing (C8) · the roster open-request count collapses to own-org **with no
 client change** (C7), confirming residual (b) was a symptom of this policy, not an independent defect.
+
+## T-113 · A NEW ACT IS BORN PUBLIC — CANDIDATE WRITTEN AND EXECUTED-PROVEN (17 Aug 2026)
+
+**Status: the candidate and its proof are COMPLETE with evidence; promotion is OWNER-PENDING ACT-PUBLIC.**
+
+`items_public_read` (001:172), `claims_public_read` (001:185) and `pv_public_read` (001:210) all gate on
+`artist_is_published(artist_id)` — a **Person-level** flag. A non-default Act has no `artists` row, so its
+evidence hangs off the same `artist_id`: the moment the FIRST Act is published, the SECOND Act is
+published too. Nobody decided that. Executed — anon reads ACT_B's `passport_versions`, ACT_B's
+passport-ok claim TEXT and ACT_B's profile items.
+
+It contradicts a ruling that already exists (owner, 16 Aug 2026: *"PASSPORT publication is Act-scoped"*)
+and the transfer canon in CLAUDE.md. This is why ACT-PUBLIC is filed as *"promote this?"* and not
+*"what should the behaviour be?"* — unlike REQ-ORG, the behaviour is not in question.
+
+**The blocking belief in the codebase was wrong, and that is what unlocked this.** Both `src/lib/db.js:564`
+and the A6 assertion record that anon "cannot be Act-scoped… 016/025 never granted anon `claims.act_id`,
+so naming the column raises 42501", concluding the fix needs a grant. True for a CLIENT query — and
+irrelevant to a policy: **an RLS predicate is evaluated as the policy owner, not as the querying role**,
+so a policy may reference `act_id` even though anon may not select it. `scripts/sql/candidate-act-public-scope.sql`
+therefore adds **no column grant**, and the gate asserts anon still gets 42501 on `claims.act_id` after
+the narrowing. The public column surface is unchanged.
+
+The scope — `(act_id = artist_id or act_id is null)` — is the same one `buildPassportSnapshot()`
+(`src/lib/db.js:554`) already applies on the owner side, now expressed on both sides of the boundary.
+
+**Mutation-proven 4/4**, each applied to the candidate with the gate re-run: drop the scope from
+`claims_public_read` alone → CAUGHT · from `pv_public_read` alone → CAUGHT · from `items_public_read`
+alone → CAUGHT · remove NULL-tolerance from all three → **SURVIVED at first**.
+
+**That survivor was the useful one.** The candidate's NULL-tolerance — *"a NULL `act_id` row is a legacy
+default-Act row, never another Act's, so tolerating NULL drops nothing that exists"* — is load-bearing
+and was asserted in prose with nothing testing it. The gate now reproduces a genuine pre-020 row and
+proves it stays anon-readable. Writing that fixture surfaced a detail worth recording: `trg_actfill_claims`
+(020:167) fills `act_id` on INSERT, so a legacy NULL has to be written by a follow-up UPDATE — and the
+gate asserts the row really is NULL before relying on it. MA4 now exits 1.
+
+**Two non-vacuity traps avoided, both caught by the gate rather than by review.** The fixture's only
+anon-visible claim WAS the leaking ACT_B one, so "the public Passport still has claims" was
+unsatisfiable — the first version of the control failed, correctly, and would have been meaningless if
+it had passed. A real default-Act passport-ok claim is now seeded so the control protects something.
+Both seeded rows are deleted at the end of the block and **the removal is asserted** — the same
+discipline C6b needed after its probe corrupted C7.
+
+**67 checks (was 58), `npm run verify` exit 0, nothing skipped.**

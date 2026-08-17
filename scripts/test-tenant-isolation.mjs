@@ -259,6 +259,81 @@ try {
       'A6 anon can reference claims.act_id — the client-side narrowing IS available after all')
   }
 
+  // A6.fix · the candidate, EXECUTED. Same convention as the C-section: apply a
+  // proposal to the throwaway database and measure it, rather than argue it.
+  {
+    console.log('\n  ── candidate applied: scripts/sql/candidate-act-public-scope.sql ──')
+    // The fixture's ONLY anon-visible claim is the LEAKING ACT_B one, so "the
+    // public Passport still has claims" would be unsatisfiable and the
+    // non-vacuity control would be theatre. Seed a genuine DEFAULT-Act
+    // passport-ok claim so the control has something real to protect, and
+    // remove it again at the end of the block so no later assertion inherits it.
+    const DEFAULT_CLAIM = '00000000-0000-0000-0000-00000000ca01'
+    db.exec(`insert into public.claims (id, artist_id, act_id, claim_type, value, verification_status, visibility, artist_approved, verified_by, verified_at)
+             values ('${DEFAULT_CLAIM}', '${ARTIST}', '${ARTIST}', 'headline', 'DEFAULT ACT PUBLIC HEADLINE', 'verified', 'passport-ok', true, 'system', now())
+             on conflict (id) do nothing`)
+    // LEGACY ROW. The candidate's NULL-tolerance is a load-bearing claim — "a NULL
+    // act_id row is a legacy default-Act row, never another Act's" — and it was
+    // asserted in prose and untested: removing `or act_id is null` from all three
+    // policies passed at exit 0. A pre-020 row is reproduced here. Note the
+    // UPDATE: trg_actfill_claims (020:167) fills act_id on INSERT, so the NULL
+    // has to be written afterwards, exactly as the backfill left nothing behind.
+    const LEGACY_CLAIM = '00000000-0000-0000-0000-00000000ca02'
+    db.exec(`insert into public.claims (id, artist_id, claim_type, value, verification_status, visibility, artist_approved, verified_by, verified_at)
+             values ('${LEGACY_CLAIM}', '${ARTIST}', 'headline', 'LEGACY NULL-ACT HEADLINE', 'verified', 'passport-ok', true, 'system', now())
+             on conflict (id) do nothing`)
+    db.exec(`update public.claims set act_id = null where id = '${LEGACY_CLAIM}'`)
+    check(db.scalar(`select act_id from public.claims where id = '${LEGACY_CLAIM}'`) === null ||
+          db.scalar(`select act_id is null from public.claims where id = '${LEGACY_CLAIM}'`) === 't',
+      'A6.fix non-vacuity: the legacy fixture row really does carry act_id IS NULL (trg_actfill fills on INSERT, so it is nulled afterwards) (executed)',
+      'A6.fix ⚠ the legacy row is not NULL — the NULL-tolerance control would be theatre')
+
+    const anonPvBefore = nOrDenied(`select count(*) from public.passport_versions where act_id = '${ACT_B}'`, { role: 'anon' })
+    const anonDefaultPvBefore = nOrDenied(`select count(*) from public.passport_versions where artist_id = '${ARTIST}' and (act_id = '${ARTIST}' or act_id is null)`, { role: 'service_role' })
+    db.exec(readFileSync('scripts/sql/candidate-act-public-scope.sql', 'utf8'))
+
+    const anonPvAfter = nOrDenied(`select count(*) from public.passport_versions where act_id = '${ACT_B}'`, { role: 'anon' })
+    check(anonPvBefore.n >= 1 && !anonPvAfter.denied && anonPvAfter.n === 0,
+      `A6.fix ANON no longer reads the second Act's passport_versions (${anonPvBefore.n} → ${anonPvAfter.n}) (executed)`,
+      `A6.fix ⚠ anon still reads ACT_B passport_versions (${anonPvBefore.n} → ${anonPvAfter.n})`)
+
+    const anonClaimsAfter = db.rows(`select value from public.claims where artist_id = '${ARTIST}'`, { role: 'anon' }).map((r) => r[0])
+    check(!anonClaimsAfter.some((v) => /ACT_B/.test(v)),
+      `A6.fix ANON no longer reads the second Act's claim TEXT — anon now sees ${JSON.stringify(anonClaimsAfter)} (executed)`,
+      `A6.fix ⚠ ACT_B claim text is still anon-readable: ${JSON.stringify(anonClaimsAfter)}`)
+
+    // NON-VACUITY: the narrowing must not simply blank the public Passport.
+    check(anonClaimsAfter.some((v) => /DEFAULT ACT PUBLIC HEADLINE/.test(v)),
+      `A6.fix the DEFAULT Act's public Passport SURVIVES — anon still reads it (${JSON.stringify(anonClaimsAfter)}) (executed)`,
+      `A6.fix ⚠ the narrowing emptied the public Passport — that is a break, not a fix (anon sees ${JSON.stringify(anonClaimsAfter)})`)
+    const anonPvDefault = nOrDenied(`select count(*) from public.passport_versions where artist_id = '${ARTIST}'`, { role: 'anon' })
+    check(!anonPvDefault.denied && anonPvDefault.n === anonDefaultPvBefore.n && anonPvDefault.n >= 1,
+      `A6.fix the DEFAULT Act's snapshots are untouched — anon reads ${anonPvDefault.n}, exactly the ${anonDefaultPvBefore.n} default-Act rows that exist (executed)`,
+      `A6.fix ⚠ default-Act snapshot count changed (${anonDefaultPvBefore.n} → ${anonPvDefault.n})`)
+
+    // anon's readable COLUMN set must be unchanged — the candidate adds no grant.
+    const anonActCol2 = db.try(`select id from public.claims where act_id is not null`, { role: 'anon' })
+    check(!anonActCol2.ok && /permission denied/i.test(anonActCol2.out),
+      'A6.fix anon STILL cannot name claims.act_id — the fix is a policy predicate evaluated as the policy owner, not a new column grant (executed)',
+      'A6.fix ⚠ anon gained access to claims.act_id — the candidate widened the column surface')
+
+    const anonItems = db.rows(`select title from public.profile_items where artist_id = '${ARTIST}'`, { role: 'anon' }).map((r) => r[0])
+    check(!anonItems.some((t) => /ACT_B/.test(t)),
+      `A6.fix ANON no longer reads the second Act's profile_items — anon sees ${JSON.stringify(anonItems)} (executed)`,
+      `A6.fix ⚠ ACT_B items still anon-readable: ${JSON.stringify(anonItems)}`)
+
+    check(anonClaimsAfter.some((v) => /LEGACY NULL-ACT HEADLINE/.test(v)),
+      `A6.fix NULL-TOLERANCE HOLDS — the pre-020 legacy row (act_id IS NULL) is still anon-readable, so the narrowing drops nothing that exists (executed)`,
+      `A6.fix ⚠ the narrowing dropped the legacy NULL-act_id row — anon sees ${JSON.stringify(anonClaimsAfter)}`)
+
+    // Restore: remove the seeded rows and prove they are gone, so nothing
+    // downstream inherits state this block invented.
+    db.exec(`delete from public.claims where id in ('${DEFAULT_CLAIM}', '${LEGACY_CLAIM}')`)
+    check(db.scalar(`select count(*) from public.claims where id in ('${DEFAULT_CLAIM}', '${LEGACY_CLAIM}')`) === '0',
+      'A6.fix both seeded claims were removed — this block leaves no residue (executed)',
+      'A6.fix ⚠ a seeded claim survived the block')
+  }
+
   // A7 · the buyer-facing merge, as the shipped server would serve it.
   {
     const newest = db.scalar(
