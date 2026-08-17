@@ -1636,6 +1636,83 @@ round-9 survivors and a re-introduction of the deleted `b4.partial_rollback` esc
 **DRAFTED — NOT APPLIED** to any environment. Round-10 independent QA (T-111C) is required before it can be
 called accepted: the implementer cannot accept their own work.
 
+## T-110.6 · TENTH QA PASS — REVISE: MY POSITIVE CONTROL WAS WORTHLESS (17 Aug 2026)
+
+Round 10 was an independent adversarial review of the round-9 repair. Verdict **REVISE**. It confirmed the
+three substantive fixes (H-1, M-1, H-2/H-3) as correct by execution, and rejected the *evidence* for one of
+them.
+
+**HIGH · the single assertion protecting the M-1 change was vacuous four times over.** M-1 deleted a column
+enumeration on the argument "there is no legitimate untrusted INSERT to preserve." That argument's entire
+empirical backing was one line, and it failed on every axis: `|| true` made the condition a tautology (the
+same defect this file had already fixed once and noted at [11]); the org and artist arguments were swapped;
+`'view'` was passed where `text[]` is required, so the call could not parse; and the principal owned the
+wrong organization, so even a corrected call would have raised `not authorized`. **It never reached the
+trigger at all.** The claim was true — QA verified it independently by enumerating every INSERT reachable
+from `src/lib/*.js`, `server/*.js` and `scripts/seed*.mjs` — but I had shipped a security argument backed by
+a test that could not fail. Replaced with a real `ORG_X` owner/admin, the real signature, and an assertion
+that the grant row was actually created.
+
+**MEDIUM · one of the H-1 gate's three disjuncts was load-bearing and completely uncovered.** Deleting
+`or new.artist_id is distinct from old.artist_id` survived QA's mutation battery with the suite fully green
+at 194/194. What it permits: a trusted writer re-points `artist_id` onto a different artist while leaving
+`act_id` on the original artist's Act, producing **a live grant whose Act belongs to another Person with
+`grant_permits` returning true** — precisely the malformed state the linkage check exists to refuse.
+Pristine code refuses it correctly, so this was a coverage defect, not a live hole; the assertion now kills
+that mutant. QA also found that **nothing anywhere asserted the INSERT half** of the linkage check — one
+grep hit, on the UPDATE path. Both are covered now.
+
+**MEDIUM · the residual was understated, and the assertion claiming to check disclosure was keyword-matching.**
+It tested for `/single-transaction/` and `/atomicity/`, both of which appear in the file's account of the
+*removed* escape — so QA deleted the entire present-day disclosure paragraph and the assertion still passed.
+`046.down` now states the unwrapped consequence in its own words, and the "nothing lost, in ANY file order"
+guarantee is qualified at the point it is claimed with "when run as ONE transaction". The assertion tests
+for that sentence and is mutation-proven by deleting it.
+
+**MEDIUM/LOW · `act_belongs_to_artist` is an authenticated-callable linkage oracle.** SECURITY DEFINER
+granted to `authenticated` means any logged-in user can ask whether an arbitrary (act, artist) pair is
+linked — including a non-default Act that RLS hides from them, which under the multi-Act rule is exactly
+"do this psytrance Act and that techno Act belong to the same artist". QA executed it with a stranger
+holding no membership, organization or grant. It cannot simply be revoked: the guard is SECURITY INVOKER by
+design, so every client write needs that EXECUTE. Disclosed in-file as an HONEST LIMIT and asserted as a
+**measured** limit, the way the file already handles its others.
+
+**LOW · a factually false comment.** "Every shipped creation path is `request_artist_access()`" is wrong:
+`scripts/seed-demo-agency.mjs:93` INSERTs directly through the anon key with a user session, i.e. as plain
+`authenticated`. It survives because that seeder owns the artists it links. The conclusion held; the reason
+given for it did not — and round 8 already shipped one false header claim, so it is corrected rather than
+left. **LOW · `tg_op = 'INSERT'` is a dead disjunct** (on INSERT, OLD is NULL, so the `act_id` term is
+already true); kept for readability and now documented as deliberately redundant, verified by QA's
+execution. **LOW · the trigger-ordering assertion compared two string literals**, reducing to "the fill
+trigger exists"; it now reads both names out of the catalogue.
+
+**Also fixed:** the suite never dropped its own scratch database, so 80+ `b4_grant_*` databases had
+accumulated on the host. It now drops on both exit paths.
+
+**What round 10 CONFIRMED, by execution:** H-1 buys revocability and grants the grantee **no new write**
+(every attempted write in the drifted state still refused; only a genuine no-op passes) — strictly better
+than the unrevocable-grant defect it replaced. M-1 is substantively true. The down file survived **all 120
+permutations** of the five down files under the single-transaction wrapper: none committed, none lost state
+(the author had tested 2). The `SECURITY INVOKER, deliberately` header is true — forcing DEFINER produces
+23 failures, exactly the "installed and inert" outcome it predicts. The `b4.partial_rollback` escape cannot
+come back (11 failures).
+
+**My own errors this round:** the two new disclosure assertions failed on their own prose because a sentence
+wraps across SQL comment lines — matched against normalised prose now, with a positive control. And my first
+mutant for the disclosure gate deleted only the paragraph's HEADING line, leaving the disclosure sentences
+intact — so it reported SURVIVED when the gate was in fact correct to pass. Re-run against a mutant that
+removes the whole paragraph: **CAUGHT**. A mutation result is only worth what the mutant is worth.
+
+**Mutation battery: 7/7 caught** — the round-10 `artist_id` survivor (2 FAIL), the `act_id` disjunct (3),
+the whole residual paragraph deleted (1), the "when run as ONE transaction" qualifier removed (1), the
+LINKAGE ORACLE disclosure removed (1), `request_artist_access` made to refuse so the M-1 positive control
+breaks (13 — proving it is no longer a tautology), and the fill trigger renamed so it sorts AFTER the guard
+(1 — the old two-literal assertion could not have caught this).
+
+**`test:grant-scope`: 203 executed assertions, 0 FAIL, exit 0** (was 194). Migration 046 remains
+**DRAFTED — NOT APPLIED**. Round-11 independent QA is required; two rounds running, review has found real
+defects in the evidence rather than only in the code.
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this

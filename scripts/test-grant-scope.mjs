@@ -909,9 +909,24 @@ console.log('\n[25d] 046 reverts ALONE in EVERY legitimate order, and the full c
   check('...and this is the residual: unwrapped, the guard IS gone while act_id remains — the reason the procedure is single-transaction',
     !guardInstalled() && strandedCols === '1',
     `guard=${guardInstalled()} act_id_present=${strandedCols}`)
-  check('046.down DISCLOSES that residual and names the single-transaction procedure',
-    /single-transaction/.test(down046) && /ATOMICITY|atomicity|ONE\s+transaction/.test(down046),
+  // TEST FOR THE SENTENCE, NOT FOR KEYWORDS. The first version matched
+  // /single-transaction/ and /atomicity/, both of which appear in the file's account
+  // of the REMOVED escape — so QA deleted the entire present-day disclosure paragraph
+  // and this assertion still passed. It must fail when the disclosure goes.
+  // Matched against NORMALISED prose: the file is SQL comments, so a sentence wraps
+  // across lines with `-- ` in the middle of it and a naive regex fails on formatting
+  // rather than on content. Strip the comment markers and collapse whitespace first.
+  const prose = down046.replace(/^\s*--\s?/gm, '').replace(/\s+/g, ' ')
+  check('[25d] the prose normaliser works (positive control)',
+    /A property proven by proxy is not proven/.test(prose) && !/\n/.test(prose))
+  check('046.down states the UNWRAPPED residual in its own words, not by keyword',
+    /UNWRAPPED|without .*single-transaction/i.test(prose)
+      && /commit one by one/i.test(prose)
+      && /authority columns present/i.test(prose),
     'the residual is real and undisclosed — an operator would meet it with no warning')
+  check('...and qualifies the "nothing lost, in any file order" guarantee with the procedure it depends on',
+    /in ANY file order,? WHEN RUN AS ONE TRANSACTION/i.test(prose),
+    'the guarantee reads unconditional at the point it is claimed')
   db.exec(mig('045_artist_access_revocation'))
   db.exec(mig('046_artist_access_guard'))
   db.exec(mig('047_grant_decision'))
@@ -1034,11 +1049,54 @@ console.log('\n[25g] INSERT is guarded by construction too, and the guard is wir
     !db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
              values ('${ORG}', '${SUBJ}', 'manage', 'pending', '{view,publish}')`,
             { role: 'authenticated', uid: GRANTEE }).ok)
-  // The shipped creation path is SECURITY DEFINER and must be unaffected — otherwise
-  // the assertions above are just a broken feature reported as security.
-  check('...while the shipped request_artist_access path still works (no false refusal)',
-    db.try(`select public.request_artist_access('${SUBJ}'::uuid, '${ORG_X}'::uuid, 'view')`,
-           { role: 'authenticated', uid: GRANTEE }).ok || true)
+  // THE POSITIVE CONTROL FOR M-1. `touched := true` deleted an enumeration on the
+  // argument that no legitimate untrusted INSERT exists to preserve; this is the
+  // assertion that argument rests on, so it has to be real. My first version was
+  // worthless four times over and independent QA caught all four: `|| true` made the
+  // condition a tautology (the same defect this file already fixed once, see the note
+  // at [11]); the org and artist arguments were swapped; 'view' was passed where
+  // text[] is required, so the call could not even parse; and GRANTEE owns ORG, not
+  // ORG_X, so a corrected call would still have raised 'not authorized'. It never
+  // reached the trigger at all.
+  const X_ADMIN = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${ORG_X}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  check('[25g] precondition: an owner/admin of the grantless org exists', Boolean(X_ADMIN), `got "${X_ADMIN}"`)
+  const xBefore = db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG_X}'`)
+  const shipped = db.try(`select public.request_artist_access('${ORG_X}'::uuid, '${SUBJ}'::uuid, array['view']::text[], null)`,
+    { role: 'authenticated', uid: X_ADMIN })
+  check('...while the shipped request_artist_access path still works (no false refusal)', shipped.ok,
+    shipped.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...and it actually CREATED the grant row, rather than reporting a hollow success',
+    Number(db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG_X}'`)) > Number(xBefore),
+    `before=${xBefore} after=${db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG_X}'`)}`)
+
+  // THE artist_id DISJUNCT IS LOAD-BEARING. Deleting it from the H-1 gate survived
+  // QA's mutation battery with the suite fully green: a trusted writer could re-point
+  // artist_id onto a different artist while leaving act_id on the ORIGINAL artist's
+  // Act, producing a live grant whose Act belongs to another Person with grant_permits
+  // returning true — exactly the malformed state the linkage check exists to refuse.
+  {
+    const VIC = db.scalar(`select id from public.artists where id <> '${SUBJ}' order by id limit 1`)
+    check('[25g] precondition: a second artist exists to re-point onto', Boolean(VIC) && VIC !== SUBJ)
+    if (VIC) {
+      db.exec(`update public.artist_access set act_id = '${ACT_A}' where organization_id = '${ORG}'`)
+      const stale = db.try(`update public.artist_access set artist_id = '${VIC}' where organization_id = '${ORG}'`)
+      check('re-pointing artist_id while act_id goes STALE is refused, for the table owner too',
+        !stale.ok && /does not belong to the artist/.test(stale.out),
+        stale.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+      check('...and the subject did not move',
+        db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`) === SUBJ)
+    }
+    // Nothing anywhere asserted the INSERT half of the linkage check — grep for the
+    // message returned exactly one hit, on the UPDATE path.
+    const badIns = db.try(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status)
+      values ('${ORG_X}', '${SUBJ}', (select id from public.act where person_id
+                is distinct from (select created_by from public.artists where id = '${SUBJ}') limit 1),
+              'manage', 'pending')`)
+    check('INSERTING a grant whose act_id belongs to another Person is refused',
+      !badIns.ok && /does not belong to the artist/.test(badIns.out),
+      badIns.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  }
 
   // M-2 survivor: `anon` retains EXECUTE. 045:111-117 documents that Supabase grants
   // EXECUTE to anon/authenticated/service_role at CREATE time and that REVOKE FROM
@@ -1053,9 +1111,30 @@ console.log('\n[25g] INSERT is guarded by construction too, and the guard is wir
   check('the guard fires BEFORE, per row, on insert/update/delete',
     db.scalar(`select tgtype from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '31',
     `tgtype=${db.scalar(`select tgtype from pg_trigger where tgname = 'trg_artist_access_guard_authority'`)} (expect 31 = ROW|BEFORE|INSERT|DELETE|UPDATE)`)
-  check('...and 045 fill trigger still sorts before it, so the guard sees the filled row',
-    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'
-       and tgname < 'trg_artist_access_guard_authority'`) === '1')
+  // ORDERING, actually measured. The first version of this compared two string
+  // LITERALS ('trg_...fill' < 'trg_...guard'), which is a constant-vs-constant test
+  // that reduces to "the fill trigger exists" — it could never have caught a rename.
+  // PostgreSQL fires same-timing row triggers in trigger-NAME order, so read both
+  // names out of the catalogue and compare what is actually installed.
+  const trgOrder = db.rows(`select tgname from pg_trigger t join pg_class c on c.oid = t.tgrelid
+     where c.relname = 'artist_access' and not t.tgisinternal
+       and t.tgtype & 2 = 2 order by t.tgname`).map((r) => r[0])
+  check('...and 045 fill trigger really does fire BEFORE the guard (catalogue order, not two literals)',
+    trgOrder.indexOf('trg_artist_access_fill_revoked_at') !== -1
+      && trgOrder.indexOf('trg_artist_access_fill_revoked_at') < trgOrder.indexOf('trg_artist_access_guard_authority'),
+    `installed BEFORE-row triggers in firing order: ${trgOrder.join(' , ')}`)
+
+  // MEASURED HONEST LIMIT, not a pass: act_belongs_to_artist is SECURITY DEFINER and
+  // granted to `authenticated`, so ANY logged-in user can ask whether an arbitrary
+  // (act, artist) pair is linked — including a NON-DEFAULT Act that RLS hides from
+  // them, which under the multi-Act rule is the psytrance-Act/techno-Act linkage. QA
+  // executed it with a stranger holding no membership, org or grant. It cannot simply
+  // be revoked: the guard is SECURITY INVOKER by design, so every client write needs
+  // this EXECUTE. Recorded here so the limit is measured rather than assumed away.
+  check('act_belongs_to_artist IS an authenticated-callable linkage oracle (measured limit, see 046.sql:65-74)',
+    db.scalar(`select has_function_privilege('authenticated', 'public.act_belongs_to_artist(uuid,uuid)', 'execute')`) === 't'
+      && /LINKAGE ORACLE/.test(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8')),
+    'the oracle exists but 046 does not disclose it')
 }
 
 console.log('\n[26] the 046 rollback removes everything it installed (QA D5)')
@@ -1222,7 +1301,10 @@ if (downRes.ok) {
     postCall.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 110))
 }
 
+// The suite never dropped its own scratch database, so 80+ b4_grant_* databases had
+// accumulated on this host. Drop on BOTH exit paths — a failing run leaks too.
 console.log('')
-if (failures) { console.log(`✗ GRANT SCOPE: ${failures} failure(s).`); process.exit(1) }
+if (failures) { console.log(`✗ GRANT SCOPE: ${failures} failure(s).`); db.drop(); process.exit(1) }
+db.drop()
 console.log('✓ GRANT SCOPE: default-deny proven executed — action, Act, audience, time window, revocation and legacy-publish all denied on the negative side; PART B dormant and ungranted; anon has no oracle; the down migration reverses it on a real database.')
 process.exit(0)

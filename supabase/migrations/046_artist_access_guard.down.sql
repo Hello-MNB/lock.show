@@ -35,10 +35,23 @@
 --
 -- Verified by execution with duplicate pairs present: 044.down raises, the whole
 -- transaction rolls back, and the guard, grant_permits, the trust helper and the
--- authority columns are all still in place — nothing lost, in any file order. That is
--- a stronger guarantee than the precondition gave, and it needs no escape, so a
--- 046-only revert is once again just this file. Asserted by
--- scripts/test-grant-scope.mjs [25d].
+-- authority columns are all still in place — nothing lost, in ANY file order, WHEN RUN
+-- AS ONE TRANSACTION. Independent QA executed all 120 permutations of the five down
+-- files under that wrapper: none committed, and none lost state after a refusal.
+--
+-- THE RESIDUAL, STATED PLAINLY BECAUSE IT IS REAL. That guarantee is about the
+-- PROCEDURE, not about this file. Run the five files UNWRAPPED — psql without
+-- --single-transaction, or five separate invocations — and 047, 046 and 045 commit one
+-- by one, 044 then refuses, and you are left with the authority columns present, the
+-- guard gone and the trust helper gone: a grantee can self-issue publish scope and a
+-- ten-year expiry until you re-apply. That is the same end state the removed
+-- precondition was hoisted here to prevent, and removing it did not make the state
+-- unreachable — it made it reachable only by ignoring the documented procedure, rather
+-- than by following one of two orderings the precondition itself got wrong. If you are
+-- rolling this back, wrap it.
+--
+-- Asserted by scripts/test-grant-scope.mjs [25d], which executes the unwrapped case
+-- and measures that outcome rather than assuming it away.
 
 -- DOWN 046 — remove the authority guard.
 --

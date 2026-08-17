@@ -58,6 +58,19 @@ as $$
   );
 $$;
 
+-- HONEST LIMIT (LINKAGE ORACLE). Granting EXECUTE to `authenticated` on a SECURITY
+-- DEFINER function makes it an oracle: any logged-in user can ask whether an arbitrary
+-- (act, artist) pair is linked, including a NON-DEFAULT Act that policy act_org hides
+-- from them -- which under the multi-Act rule is precisely "does this Person's
+-- psytrance Act and that techno Act belong to the same artist". Independent QA
+-- executed it with a stranger holding no membership, organization or grant anywhere.
+-- It answers one boolean about ids the caller must already possess, and it cannot
+-- simply be revoked: the guard below is SECURITY INVOKER by design, so every client
+-- write needs this EXECUTE and removing it refuses all of them. Narrowing it means
+-- moving the linkage test into a DEFINER wrapper that also owns the write, which is a
+-- larger change than a guard. `anon` IS revoked (Supabase grants EXECUTE to
+-- anon/authenticated/service_role at CREATE time, and REVOKE FROM PUBLIC does not
+-- remove it), and the limit is asserted as measured in scripts/test-grant-scope.mjs.
 revoke all on function public.act_belongs_to_artist(uuid, uuid) from public;
 revoke all on function public.act_belongs_to_artist(uuid, uuid) from anon;
 grant execute on function public.act_belongs_to_artist(uuid, uuid) to authenticated;
@@ -155,6 +168,14 @@ begin
   -- Any other linkage drift (ops correction, Person merge, ownership transfer) froze
   -- the row the same way. The enabling RLS hole is in 020 and is recorded in
   -- docs/OWNER-PENDING.md; 046 must not convert it into an unrevocable grant.
+  -- Of the three disjuncts, `tg_op = 'INSERT'` is REDUNDANT and kept deliberately for
+  -- readability: on INSERT, OLD is NULL, so `new.act_id is distinct from old.act_id`
+  -- is already true whenever new.act_id is not null, which the outer test requires.
+  -- Independent QA verified the equivalence by execution rather than by reading. The
+  -- other two are load-bearing and both are asserted: dropping the act_id term turns
+  -- the suite red, and dropping the artist_id term let a trusted writer re-point
+  -- artist_id onto a different artist while act_id went stale, producing a live grant
+  -- whose Act belongs to another Person with grant_permits returning true.
   if new.act_id is not null
      and (tg_op = 'INSERT'
           or new.act_id is distinct from old.act_id
@@ -197,12 +218,23 @@ begin
     -- screen. The row granted nothing until approved, but the artist then approved it
     -- and it reached their inbox carrying all four forged fields.
     --
-    -- There is no legitimate untrusted INSERT to preserve: every shipped creation path
-    -- is request_artist_access(), which is SECURITY DEFINER and so is already exempted
-    -- by the trust short-circuit above, as is service_role for scripts/seed.mjs. The
-    -- only principal that reaches this branch untrusted is the grantee writing their
-    -- own grant row directly, which is the act PART A exists to refuse. So the correct
-    -- test is not a better list -- it is that there is nothing to list.
+    -- No legitimate untrusted INSERT is lost. Enumerated and executed rather than
+    -- assumed: src/lib/orgs.js never INSERTs (:298, :349, :475 are SELECT/UPDATE);
+    -- server/*.js never INSERTs; scripts/seed.mjs:214-225 runs as service_role, which
+    -- the trust short-circuit above exempts; and the grantee-side creation path is
+    -- request_artist_access(), SECURITY DEFINER, likewise exempt.
+    --
+    -- ONE EXCEPTION, and the earlier wording here was WRONG to say "every shipped
+    -- creation path is request_artist_access()". scripts/seed-demo-agency.mjs:93
+    -- INSERTs DIRECTLY, through the anon key with a user session (:13) -- so as plain
+    -- `authenticated`, neither trusted nor via the RPC. It survives because that
+    -- seeder owns the artists it links, so the owner/admin test below passes on its
+    -- own merits. Verified by execution. The conclusion holds; the reason given for it
+    -- did not, and round 8 already shipped one header claim that was false.
+    --
+    -- The only principal that reaches this branch untrusted and unowning is the
+    -- grantee writing their own grant row, which is the act PART A exists to refuse.
+    -- So the correct test is not a better list -- it is that there is nothing to list.
     touched := true;
   else
     -- TOTAL ROW COMPARISON, deliberately — not an enumeration of columns.
