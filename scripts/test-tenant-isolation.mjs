@@ -130,19 +130,46 @@ console.log('\nSTATIC — buyer-facing Passport reads are Act-scoped')
   // candidate-act-public-scope.sql the moment it was added: independent QA
   // copied that file into supabase/migrations and the guard passed at exit 0
   // while still printing that the candidates are "applied nowhere else".
-  const candidates = readdirSync('scripts/sql').filter((f) => f.startsWith('candidate-') && f.endsWith('.sql'))
+  // RECURSIVE, and matched on CONTENT rather than filename. Independent QA
+  // defeated the previous version twice: a real promotion renames the file to
+  // `NNN_*.sql` (the only shape pgharness applies), so a same-filename check
+  // detects only the copy that has no effect and misses the one that does — and
+  // it then PRINTED that the candidates were unpromoted while one was live.
+  // Discovery was also shape-bound: `scripts/sql/proposals/candidate-hidden.sql`
+  // and `scripts/sql/proposal-act-public-scope.sql` were never read at all.
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`])
+  const candidates = walk('scripts/sql').filter((f) => /\/(candidate|proposal)[-_].*\.sql$/.test(f))
   check(candidates.length >= 3,
-    `non-vacuity: ${candidates.length} candidate file(s) discovered in scripts/sql`,
+    `non-vacuity: ${candidates.length} candidate file(s) discovered under scripts/sql (recursively)`,
     `only ${candidates.length} candidate(s) found — the guard below would be near-empty`)
-  for (const f of candidates.map((c) => `scripts/sql/${c}`)) {
+  for (const f of candidates) {
     check(/NOT A MIGRATION, NOT APPLIED/.test(readFileSync(f, 'utf8')),
       `${f} declares itself NOT APPLIED`,
       `${f} no longer declares that it is a proposal`)
   }
-  const promoted = candidates.filter((c) => existsSync(`supabase/migrations/${c}`))
+
+  // A candidate is "promoted" when its own POLICY STATEMENTS appear in
+  // supabase/migrations under ANY filename — that is the thing with an effect.
+  const squash = (x) => x.replace(/--[^\n]*/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase()
+  const migrationBlob = squash(walk('supabase/migrations').filter((f) => f.endsWith('.sql'))
+    .map((f) => readFileSync(f, 'utf8')).join('\n'))
+  const stmtsOf = (src) => squash(src).split(';')
+    .map((x) => x.trim()).filter((x) => x.startsWith('create policy'))
+  let sigChecked = 0
+  const promoted = []
+  for (const f of candidates) {
+    for (const stmt of stmtsOf(readFileSync(f, 'utf8'))) {
+      sigChecked++
+      if (migrationBlob.includes(stmt)) promoted.push(`${f} → ${stmt.slice(0, 60)}…`)
+    }
+  }
+  check(sigChecked >= 3,
+    `non-vacuity: ${sigChecked} candidate policy statement(s) searched against supabase/migrations`,
+    `only ${sigChecked} statement(s) extracted — the promotion check would be near-empty`)
   check(promoted.length === 0,
-    `all ${candidates.length} candidates live in scripts/sql and have NOT been promoted into supabase/migrations`,
-    `⚠ promoted into supabase/migrations: ${promoted.join(', ')} — promotion is the owner's act, not a side effect`)
+    `all ${candidates.length} candidates live under scripts/sql — none of their ${sigChecked} policy statements appears in supabase/migrations, under any filename`,
+    `⚠ PROMOTED: ${promoted.join(' | ')} — promotion is the owner's act, not a side effect`)
 }
 
 // ============================================================
@@ -315,29 +342,106 @@ try {
     // migration 031's `artist_approved` gate shipped green. Compare the
     // EFFECTIVE predicate before and after: the only permitted difference is
     // the act-scope conjunct.
-    const qualOf = (t, pol) => db.scalar(
-      `select qual from pg_policies where schemaname='public' and tablename='${t}' and policyname='${pol}'`)
-    const POLS = [['profile_items', 'items_public_read'], ['claims', 'claims_public_read'], ['passport_versions', 'pv_public_read']]
-    const qualBefore = POLS.map(([t, p2]) => [t, p2, qualOf(t, p2)])
+    // WHOLE-SURFACE SNAPSHOT, not three predicates. The first version of this
+    // block read `qual` for three NAMED policies and nothing else, and a second
+    // independent review defeated it three separate ways, each an executed leak
+    // shipping at `81 checks, all hold`:
+    //   · `for select` → `for all` — pg_policies.cmd was never read, and the shim
+    //     grants anon table-level insert/update/delete, so anon could DELETE
+    //     published claims outright.
+    //   · a candidate that ADDS `claims_backdoor` — permissive policies OR
+    //     together, so a policy outside the closed list widens the read without
+    //     touching the three inspected. Proven to expose an unpublished,
+    //     unapproved, internal claim to anon.
+    //   · `create or replace function public.artist_is_published … select true`
+    //     — the predicate TEXT is unchanged, so a textual comparison sees
+    //     nothing while the meaning inverts.
+    // So: snapshot every policy on the three tables INCLUDING cmd, permissive,
+    // roles and with_check, plus the definition of every public function, and
+    // allow exactly one difference — the act conjunct in the three quals.
+    const POLICY_SQL = `select tablename, policyname, cmd, permissive, roles::text,
+                               coalesce(qual,''), coalesce(with_check,'')
+                          from pg_policies
+                         where schemaname='public'
+                           and tablename in ('profile_items','claims','passport_versions')
+                         order by tablename, policyname`
+    const FN_SQL = `select p.proname, md5(pg_get_functiondef(p.oid))
+                      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                     where n.nspname='public' and p.prokind='f'
+                     order by p.proname, p.oid`
+    const policiesBefore = db.rows(POLICY_SQL)
+    const fnsBefore = db.rows(FN_SQL)
 
     db.exec(readFileSync('scripts/sql/candidate-act-public-scope.sql', 'utf8'))
 
-    const ACT_CONJUNCT = ' AND ((act_id = artist_id) OR (act_id IS NULL))'
-    // Whitespace- and outer-paren-tolerant: PostgreSQL re-prints a rewritten
-    // predicate with its own parenthesisation (pv_public_read gains a wrapping
-    // pair). Tolerating that cannot hide a dropped or added CONJUNCT, which is
-    // the whole point of the comparison.
-    const norm = (q) => String(q ?? '').replace(/\s+/g, '')
-    const same = (a, b) => a === b || a === `(${b})` || b === `(${a})`
-    for (const [t, pol, before] of qualBefore) {
-      const after = qualOf(t, pol)
-      check(norm(before).length > 20 && norm(after).includes(norm(ACT_CONJUNCT)),
-        `A6.fix qual-diff non-vacuity: ${pol} had a real predicate before and carries the act conjunct after (executed)`,
-        `A6.fix ⚠ ${pol}: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`)
-      const rebuilt = norm(after).replace(norm(ACT_CONJUNCT), '')
-      check(same(rebuilt, norm(before)),
-        `A6.fix ${pol} differs from the shipped policy by EXACTLY the act scope — no firewall term added, dropped or altered (executed)`,
-        `A6.fix ⚠ ${pol} CHANGED MORE THAN THE ACT SCOPE.\n        shipped: ${norm(before)}\n        candidate minus act scope: ${rebuilt}`)
+    const policiesAfter = db.rows(POLICY_SQL)
+    const fnsAfter = db.rows(FN_SQL)
+
+    // Split a printed predicate into its top-level AND conjuncts. Set-based, so
+    // reordering, re-parenthesisation and a leading (rather than trailing) act
+    // conjunct are all tolerated — the earlier string-strip rejected every one
+    // of those CORRECT forms, and a gate that fires on correct edits gets
+    // loosened sooner or later.
+    const conjuncts = (q) => {
+      let t = String(q ?? '').trim()
+      while (t.startsWith('(') && t.endsWith(')')) {
+        let d = 0, wraps = true
+        for (let k = 0; k < t.length; k++) {
+          if (t[k] === '(') d++
+          else if (t[k] === ')') { d--; if (d === 0 && k < t.length - 1) { wraps = false; break } }
+        }
+        if (!wraps) break
+        t = t.slice(1, -1).trim()
+      }
+      const out = []; let d = 0, buf = ''
+      for (let k = 0; k < t.length; k++) {
+        const c = t[k]
+        if (c === '(') d++
+        if (c === ')') d--
+        if (d === 0 && t.slice(k, k + 5) === ' AND ') { out.push(buf); buf = ''; k += 4; continue }
+        buf += c
+      }
+      if (buf.trim()) out.push(buf)
+      return out.map((x) => x.replace(/\s+/g, '').replace(/^\(+|\)+$/g, '')).filter(Boolean).sort()
+    }
+    const ACT = conjuncts('((act_id = artist_id) OR (act_id IS NULL))')[0]
+    const TARGETS = new Set(['items_public_read', 'claims_public_read', 'pv_public_read'])
+
+    check(policiesBefore.length >= 3 && fnsBefore.length >= 5,
+      `A6.fix snapshot non-vacuity: ${policiesBefore.length} policies and ${fnsBefore.length} functions captured before the candidate (executed)`,
+      `A6.fix ⚠ snapshot is near-empty (${policiesBefore.length} policies, ${fnsBefore.length} functions) — the comparison below would prove nothing`)
+
+    check(policiesAfter.length === policiesBefore.length,
+      `A6.fix the candidate ADDS and REMOVES no policy on the three public-read tables (${policiesBefore.length} before and after) (executed)`,
+      `A6.fix ⚠ policy COUNT changed ${policiesBefore.length} → ${policiesAfter.length}. Permissive policies OR together, so an added one widens the read.\n        after: ${policiesAfter.map((r) => r[1]).join(', ')}`)
+
+    check(JSON.stringify(fnsAfter) === JSON.stringify(fnsBefore),
+      `A6.fix the candidate redefines NO function — all ${fnsBefore.length} public function bodies are byte-identical, so no predicate's MEANING changed behind unchanged text (executed)`,
+      `A6.fix ⚠ a function was redefined: ${fnsBefore.filter((b, k) => JSON.stringify(b) !== JSON.stringify(fnsAfter[k])).map((b) => b[0]).join(', ') || '(list length changed)'}`)
+
+    const byName = (rows) => new Map(rows.map((r) => [`${r[0]}.${r[1]}`, r]))
+    const mBefore = byName(policiesBefore), mAfter = byName(policiesAfter)
+    for (const [key, before] of mBefore) {
+      const after = mAfter.get(key)
+      if (!after) { check(false, '', `A6.fix ⚠ policy ${key} was DROPPED and not recreated`); continue }
+      // cmd / permissive / roles / with_check must be untouched for EVERY policy.
+      check(String(after[2]) === String(before[2]) && String(after[3]) === String(before[3]) &&
+            String(after[4]) === String(before[4]) && String(after[6]) === String(before[6]),
+        `A6.fix ${key}: command, permissive flag, roles and WITH CHECK are unchanged (executed)`,
+        `A6.fix ⚠ ${key} CHANGED BEYOND ITS PREDICATE — cmd ${before[2]}→${after[2]}, permissive ${before[3]}→${after[3]}, roles ${before[4]}→${after[4]}, with_check ${JSON.stringify(before[6])}→${JSON.stringify(after[6])}. A \`for all\` recreation is an anon WRITE grant.`)
+
+      const cb = conjuncts(before[5]), ca = conjuncts(after[5])
+      const added = ca.filter((x) => !cb.includes(x))
+      const removed = cb.filter((x) => !ca.includes(x))
+      if (TARGETS.has(before[1])) {
+        check(removed.length === 0 && added.length === 1 && added[0] === ACT,
+          `A6.fix ${key}: predicate differs by EXACTLY the act conjunct — nothing added, dropped or altered (executed)`,
+          `A6.fix ⚠ ${key} predicate changed beyond the act scope. added=${JSON.stringify(added)} removed=${JSON.stringify(removed)}`)
+      } else {
+        check(added.length === 0 && removed.length === 0,
+          `A6.fix ${key}: untargeted policy, predicate untouched (executed)`,
+          `A6.fix ⚠ ${key} is not a target of this candidate but its predicate changed. added=${JSON.stringify(added)} removed=${JSON.stringify(removed)}`)
+      }
     }
 
     const anonPvAfter = nOrDenied(`select count(*) from public.passport_versions where act_id = '${ACT_B}'`, { role: 'anon' })
@@ -467,7 +571,7 @@ try {
     const w = db.try(`update public.availability_requests set status='closed' where id = '${REQ_B}'`, asUser(U.REP_A))
     const nowClosed = db.scalar(`select status from public.availability_requests where id = '${REQ_B}'`)
     check(w.ok && nowClosed === 'closed',
-      'C2 ⚠ REPRODUCED AND NOT PREVIOUSLY REPORTED — the WRITE half leaks too: req_org_update (008:269) let ORG_A CLOSE ORG_B\'s request. A read leak is a privacy failure; this is an integrity failure (executed)',
+      'C2 ⚠ REPRODUCED AND NOT PREVIOUSLY REPORTED — the WRITE half leaks too: req_org_update (008:268) let ORG_A CLOSE ORG_B\'s request. A read leak is a privacy failure; this is an integrity failure (executed)',
       'C2 the cross-org UPDATE was refused — good, and this gate is stale')
     db.exec(`update public.availability_requests set status='new' where id = '${REQ_B}'`)
 
@@ -548,6 +652,12 @@ try {
     const takeover = db.try(
       `update public.availability_requests set status='closed', organization_id='${ORG_A}'`, asUser(U.REP_A))
     const bOrgAfter = db.rows(`select organization_id::text, status from public.availability_requests where id = '${REQ_B}'`)[0]
+    // Positive control, matching C6b's. Without it C6c is correct only by
+    // accident of ordering: db.try swallows errors, so an aborted probe would
+    // leave ORG_B untouched and C6c green — the exact defect C6b had.
+    check(takeover.ok,
+      'C6c positive control: the takeover UPDATE actually executed (it is not passing because the statement aborted) (executed)',
+      `C6c ⚠ the takeover probe did not run — C6c below would certify falsely. out=${takeover.out}`)
     check(bOrgAfter[0] === ORG_B && bOrgAfter[1] !== 'closed',
       `C6c ORG_A cannot STEAL ORG_B's request by reassigning organization_id — it is still ORG_B's and still '${bOrgAfter[1]}' (executed)`,
       `C6c ⚠ TAKEOVER — ORG_B's request is now owned by ${bOrgAfter[0]} with status '${bOrgAfter[1]}' (probe ok=${takeover.ok})`)
@@ -557,6 +667,41 @@ try {
     check(JSON.stringify(db.rows(`select id, organization_id::text, status from public.availability_requests order by id`)) === JSON.stringify(ownerBeforeTakeover),
       `C6c probe restored every request's organization_id and status (${ownerBeforeTakeover.length} rows) (executed)`,
       'C6c ⚠ the takeover probe left residue')
+
+    // C6d · THE OUTBOUND DIRECTION — a cross-tenant PLANT. C6/C6b/C6c all test
+    // whether ORG_A can touch ORG_B's row; this tests whether ORG_A can push a
+    // row it legitimately owns INTO ORG_B's inbox.
+    //
+    // HONEST LIMIT, STATED BECAUSE IT WOULD OTHERWISE BE MISREAD. This does NOT
+    // isolate req_org_update's WITH CHECK, and an earlier version of this
+    // comment claimed it did. Executed: reverting WITH CHECK to the leaky
+    // `can_access_artist(artist_id)` leaves this assertion GREEN — the plant is
+    // still refused, with `can_access_artist` returning true, `with_check`
+    // confirmed leaky in pg_policies, and no RESTRICTIVE policy on the table
+    // (all five are PERMISSIVE). Something else refuses it and neither I nor
+    // independent QA could isolate what. So: the WITH CHECK half of
+    // req_org_update remains UNTESTED, the behaviour below is real and worth
+    // asserting, and the attribution is left open rather than guessed.
+    // Recorded in OWNER-PENDING REQ-ORG — promotion should not assume WITH
+    // CHECK is what is protecting this.
+    const reqABefore = db.rows(`select organization_id::text, status from public.availability_requests where id = '${REQ_A}'`)[0]
+    const plant = db.try(
+      `update public.availability_requests set organization_id='${ORG_B}' where id = '${REQ_A}'`, asUser(U.REP_A))
+    const reqAPlanted = db.rows(`select organization_id::text from public.availability_requests where id = '${REQ_A}'`)[0][0]
+    check(reqAPlanted === ORG_A,
+      `C6d the outbound plant is REFUSED — ORG_A cannot re-address its OWN request into ORG_B's inbox (still ${reqAPlanted}); mechanism not attributed, see the note above (executed)`,
+      `C6d ⚠ ORG_A PLANTED demand in ORG_B's inbox: REQ_A.organization_id is now ${reqAPlanted} (probe ok=${plant.ok})`)
+    // Positive control: the same shape of write MUST succeed for its own org,
+    // otherwise C6d could pass because updates are broken rather than refused.
+    const selfWrite = db.try(
+      `update public.availability_requests set organization_id='${ORG_A}' where id = '${REQ_A}'`, asUser(U.REP_A))
+    check(selfWrite.ok && db.rows(`select organization_id::text from public.availability_requests where id = '${REQ_A}'`)[0][0] === ORG_A,
+      'C6d positive control: the same UPDATE targeting ITS OWN org succeeds — C6d is a refusal, not a broken write path (executed)',
+      `C6d ⚠ ORG_A cannot write its own organization_id either — C6d above proves nothing. out=${selfWrite.out}`)
+    db.exec(`update public.availability_requests set organization_id=${reqABefore[0] ? `'${reqABefore[0]}'` : 'null'}, status='${reqABefore[1]}' where id = '${REQ_A}'`)
+    check(JSON.stringify(db.rows(`select organization_id::text, status from public.availability_requests where id = '${REQ_A}'`)[0]) === JSON.stringify(reqABefore),
+      'C6d probe restored REQ_A (executed)',
+      'C6d ⚠ the WITH CHECK probe left residue on REQ_A')
 
     check(rosterOpenCount(U.REP_A) === 1 && rosterOpenCount(U.REP_B) === 1,
       `C7 RESIDUAL (b) CLOSED BY THE SAME POLICY, WITH NO CLIENT CHANGE — rosterNextAction.js:88 now counts ${rosterOpenCount(U.REP_A)} for ORG_A and ${rosterOpenCount(U.REP_B)} for ORG_B: its own demand only. (b) was a symptom of (a), not an independent defect (executed)`,

@@ -12,7 +12,7 @@
 -- ── THE DEFECT ──────────────────────────────────────────────────────────────
 -- 008:266  create policy req_org_read on public.availability_requests
 --            for select using (public.can_access_artist(artist_id));
--- 008:269  create policy req_org_update ... same predicate, for UPDATE.
+-- 008:268  create policy req_org_update ... same predicate, for UPDATE.
 --
 -- can_access_artist() (027:166) is true for the owning org AND for EVERY
 -- organization holding an active artist_access grant. Two agencies representing

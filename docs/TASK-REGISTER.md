@@ -2515,7 +2515,7 @@ client change** (C7), confirming residual (b) was a symptom of this policy, not 
 
 **Status: the candidate and its proof are COMPLETE with evidence; promotion is OWNER-PENDING ACT-PUBLIC.**
 
-`items_public_read` (001:173), `claims_public_read` (001:185) and `pv_public_read` (001:210) all gate on
+`items_public_read` (001:172), `claims_public_read` (001:185) and `pv_public_read` (001:210) all gate on
 `artist_is_published(artist_id)` — a **Person-level** flag. A non-default Act has no `artists` row, so its
 evidence hangs off the same `artist_id`: the moment the FIRST Act is published, the SECOND Act is
 published too. Nobody decided that. Executed — anon reads ACT_B's `passport_versions`, ACT_B's
@@ -2636,3 +2636,65 @@ rather than assumed. And `src/lib/db.js:603` still cites "migration 043" for the
 which is `043_artist_access_columns.sql` — a pre-existing stale reference, untouched here.
 
 **81 checks (was 67). `npm run verify` exit 0, nothing skipped.**
+
+### THIRD INDEPENDENT REVIEW (`dbac7f0`) — verdict REVISE. The anti-hollow-gate assertion was hollow again.
+
+A third reviewer confirmed the three claimed HIGH repairs empirically — and then defeated the assertion
+written **that round to prevent exactly this**. The qual-diff block read `pg_policies.qual` for three
+NAMED policies and nothing else. Three mutations, each an executed leak, shipped at `81 checks, all hold`:
+
+| escape | what it actually did |
+|---|---|
+| `for select` → `for all` | `cmd` was never read. The shim grants anon table-level insert/update/delete, so **anon could DELETE published claims** |
+| candidate ADDS `claims_backdoor` | permissive policies OR together; a policy outside the closed list exposed an **unpublished, unapproved, internal** claim to anon |
+| `create or replace function artist_is_published … select true` | the predicate TEXT is unchanged, so a textual comparison sees nothing while the meaning inverts |
+
+The third is the sharpest: the register named `artist_is_published → true` among the mutations it
+claimed to catch. It is caught **only in its in-policy spelling**. Written one line lower, in the
+helper, it was not caught at all — so "catches any term added, dropped or altered" was false as a
+generalisation while true as a list.
+
+**Replaced, not patched.** The block now snapshots **every** policy on the three tables — `policyname`,
+`cmd`, `permissive`, `roles`, `qual`, `with_check` — plus an md5 of **every** public function
+definition, and permits exactly one difference: the act conjunct, in the three target quals. It also
+compares predicates as a **set of top-level conjuncts** rather than by string surgery, which fixes a
+real brittleness the reviewer demonstrated: the old comparison **rejected correct policies** — a
+reordered conjunct, a leading rather than trailing act scope, `is true` for `= true`. A gate that fires
+on correct edits gets loosened eventually. Now 10 policies and 85 function bodies are covered; all three
+escapes and the original `artist_approved` regression are caught, and the reordering case passes.
+
+**The promotion guard was a false affirmative, twice over.** It matched a verbatim filename, but a real
+promotion renames to `NNN_*.sql` — the only shape the harness applies — so it detected the copy with no
+effect and missed the one with effect, then **printed that the candidates were unpromoted while one was
+live**. Discovery was shape-bound too: `scripts/sql/proposals/candidate-hidden.sql` and
+`proposal-*.sql` were never read. Now it walks `scripts/sql` recursively, matches `candidate-|proposal-`,
+and detects promotion by searching **the candidates' own `create policy` statements** across every file
+in `supabase/migrations` under any name. All three escapes caught, and the renamed promotion is now
+named in the failure.
+
+**C6c got the positive control it was missing** — it was correct only by accident of ordering, since
+`db.try` swallows errors and an aborted probe would have left it green: the same defect C6b had.
+
+**C6d — added, then honestly downgraded.** The reviewer showed `req_org_update`'s `WITH CHECK` half is
+asserted by nothing: reverting it to the leaky `can_access_artist(artist_id)` leaves every gate green.
+I added C6d to isolate it and **it did not work** — the plant is still refused with the leaky predicate
+in place, `can_access_artist` returning **true**, `with_check` confirmed leaky in `pg_policies`, and all
+five policies on the table PERMISSIVE. Neither I nor two reviewers could isolate the refusing mechanism.
+So C6d now asserts only what it proves — *the outbound cross-tenant plant is refused* — and says
+explicitly that the mechanism is unattributed and the `WITH CHECK` half remains **UNTESTED**. That is
+recorded in OWNER-PENDING REQ-ORG: promotion must not assume `WITH CHECK` is what protects this.
+
+**Harness bug fixed, from the reviewer's side observation.** `buildTemplate()` threw on an unexpected
+migration failure and left the half-built database cached; the caller's `if (!exists)` then skipped the
+rebuild and every later run died with `relation "auth.users" does not exist` until someone dropped it by
+hand. It now drops the template before throwing. Mutation-proven: an injected failure in 001 leaves
+**0** `b4_tmpl%` databases and the next run rebuilds cleanly with no manual step.
+
+**Citations.** `008:269`→`268` had been corrected in the register but **not** in
+`test-tenant-isolation.mjs` or `candidate-req-org-scope.sql`, so the register asserted a fix two live
+artifacts contradicted; both are corrected now. `001:172`→`173` was reverted — 172 is the `create policy`
+line, consistent with how 185 and 210 are cited. And an attribution correction: *"Nothing was skipped"*
+is the SQL-migration gate's own summary line, not a verify-wide statement — no gate reported a skip, but
+the phrasing claimed more than the evidence.
+
+**103 checks (was 81).**

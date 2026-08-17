@@ -95,6 +95,13 @@ function buildTemplate(name) {
   }
   const unexpected = failures.filter((x) => !EXPECTED_MIGRATION_FAILURES.includes(x.file))
   if (unexpected.length) {
+    // DROP THE HALF-BUILT TEMPLATE BEFORE THROWING. Without this the poisoned,
+    // partially-migrated database stays cached, the caller's `if (!exists)`
+    // sees it on the next run and skips the rebuild, and every subsequent run
+    // dies with `relation "auth.users" does not exist` until someone drops it
+    // by hand. Found by independent QA, who hit exactly that and had to clear
+    // it manually. A cache that survives its own failed build is a trap.
+    su(`psql -q -c 'drop database if exists ${name}'`, { allowFail: true })
     throw new Error(`migration(s) failed to apply locally:\n${unexpected.map((u) => `  ${u.file}: ${u.error}`).join('\n')}`)
   }
   // Record the failure list INSIDE the template so a cached template still tells
