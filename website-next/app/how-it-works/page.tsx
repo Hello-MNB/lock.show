@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 
 const players = [
   {
@@ -454,7 +455,7 @@ export default function HowItWorks() {
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=how-it-works`}
+              href={`${conversionHref({ page: 'how-it-works', placement: 'body' })}`}
               style={{
                 display: 'inline-block',
                 padding: '0.95rem 2rem',

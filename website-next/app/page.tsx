@@ -3,6 +3,7 @@ import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
@@ -277,7 +278,7 @@ export default function HomePage() {
                 }}
               >
                 <a
-                  href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=hero`}
+                  href={`${conversionHref({ page: 'home', placement: 'hero' })}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -1228,7 +1229,7 @@ export default function HomePage() {
               Closed beta — Israeli artists only, free while we build this together.
             </p>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=final`}
+              href={`${conversionHref({ page: 'home', placement: 'final' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

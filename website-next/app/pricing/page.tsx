@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Hero } from '@/components/hero'
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 
 export const metadata: Metadata = {
   alternates: localeAlternates('/pricing'),
@@ -44,7 +45,7 @@ const seats = [
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
     ],
-    cta: { text: 'START FREE IN THE PILOT →', href: `${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=seats`, primary: true },
+    cta: { text: 'START FREE IN THE PILOT →', href: `${conversionHref({ page: 'pricing', placement: 'seats' })}`, primary: true },
     note: 'The pilot is a closed beta for Israeli artists. When pricing comes, it will be set with the artists already inside.',
   },
   {
@@ -198,7 +199,7 @@ export default function Pricing() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
               <a
-                href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=hero`}
+                href={`${conversionHref({ page: 'pricing', placement: 'hero' })}`}
                 style={{
                   background: 'var(--color-stamp)',
                   color: 'var(--color-ink)',
@@ -675,7 +676,7 @@ export default function Pricing() {
             play makes the next room easier to enter.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=final`}
+            href={`${conversionHref({ page: 'pricing', placement: 'final' })}`}
             style={{
               background: 'var(--color-stamp)',
               color: 'var(--color-ink)',

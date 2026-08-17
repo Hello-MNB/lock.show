@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 
 // --- Demo data: Maya Vale, THE canonical demo persona (owner ruling 21 Jul
 // 2026, docs/LOCK-PRODUCT-SPECIFICATION.md §8.4 — supersedes "Dana Lev").
@@ -366,7 +367,7 @@ export default function PassportDemo() {
             Build your own Passport. Get verified. Share with booking managers.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
+            href={`${conversionHref({ page: 'passport-demo', placement: 'body' })}`}
             style={{
               display: 'inline-flex',
               alignItems: 'center',

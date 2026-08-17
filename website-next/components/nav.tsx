@@ -7,6 +7,8 @@ import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel, conversionEvent } from '@/lib/conversion'
+import { track } from '@/lib/analytics'
 
 const NAV_LINK_KEYS = [
   { href: '/artists',      key: 'artists'      },
@@ -62,7 +64,7 @@ function LocaleToggle() {
 
 export function Nav() {
   const [open, setOpen] = useState(false)
-  const { messages } = useLocale()
+  const { messages, locale } = useLocale()
   const nav = messages.nav
   const pathname = usePathname()
 
@@ -75,8 +77,14 @@ export function Nav() {
     href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`)
 
   const slug = pageSlug(pathname)
+  // LOGIN is NOT a conversion CTA — it must keep reaching the app in BOTH
+  // modes (B4-70.10 §10.1: "Login remains available"), so it does not route
+  // through the conversion helper.
   const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${slug}&utm_content=nav`
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=nav`
+  // The primary CTA resolves centrally: /waitlist in waitlist mode, the app
+  // signup in signup mode. No page-level edit is needed to switch.
+  const signupHref = conversionHref({ page: slug, placement: 'nav' })
+  const ctaLabel = conversionLabel(locale)
 
   return (
     // <header> landmark wraps the site nav (T-97 P1 landmark fix) — sticky
@@ -203,7 +211,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted}
+            {ctaLabel}
           </a>
         </div>
 
@@ -309,7 +317,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted}
+            {ctaLabel}
           </a>
         </div>
       )}

@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 
 const ICON_PATHS: Record<string, string> = {
   arrow:
@@ -253,7 +254,7 @@ export default function ArtistsPage() {
           {/* CTAs */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?role=artist&utm_source=site&utm_campaign=artists&utm_content=hero`}
+              href={`${conversionHref({ page: 'artists', placement: 'hero', entity: 'artist' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -914,7 +915,7 @@ export default function ArtistsPage() {
             }}
           >
             <a
-              href={`${APP_URL}/signup?role=artist&utm_source=site&utm_campaign=artists&utm_content=final`}
+              href={`${conversionHref({ page: 'artists', placement: 'final', entity: 'artist' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

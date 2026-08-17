@@ -4,6 +4,7 @@ import { localeAlternates } from '@/lib/site'
 import { Hero } from '@/components/hero'
 import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
 
 export const metadata: Metadata = {
@@ -260,7 +261,7 @@ export default function Contact() {
             Registration is open — free for artists during the pilot.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
+            href={`${conversionHref({ page: 'contact', placement: 'body' })}`}
             style={{
               display: 'inline-block',
               padding: '14px 32px',

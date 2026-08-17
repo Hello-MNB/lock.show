@@ -56,9 +56,11 @@ const ROUTE_POLICY = {
     '/', '/artists', '/bookers', '/producers', '/how-it-works',
     '/methodology', '/pricing', '/radar', '/faq', '/contact',
   ],
-  // D6 legal (facts pending owner review) + D5 demo (fictional sample):
+  // D6 legal (facts pending owner review) + D5 demo (fictional sample) +
+  // /waitlist (B4-70.10 §10.1: "a focused utility route [that] should default
+  // to noindex unless Public Web/SEO explicitly approves indexation"):
   // robots noindex metadata AND absent from the sitemap.
-  noindex: ['/privacy', '/terms', '/accessibility', '/passport/demo'],
+  noindex: ['/privacy', '/terms', '/accessibility', '/passport/demo', '/waitlist'],
 }
 const NOINDEX_ROUTES = new Set(ROUTE_POLICY.noindex)
 const INDEX_ROUTES = new Set(ROUTE_POLICY.index)

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 }
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref } from '@/lib/conversion'
 
 // Eyebrow lines are human words, not system dimension IDs (owner law:
 // no technical/system vocabulary on marketing surfaces).
@@ -543,7 +544,7 @@ export default function Radar() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=radar`}
+              href={`${conversionHref({ page: 'radar', placement: 'body' })}`}
               style={{
                 display: 'inline-block',
                 padding: '15px 32px',

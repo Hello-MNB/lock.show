@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 import { useLocale } from '@/lib/locale-context'
 import { SOCIAL, WHATSAPP_URL } from '@/lib/social'
 
@@ -82,7 +83,9 @@ export function Footer() {
   const t = messages.footer
   const pathname = usePathname()
   const slug = pageSlug(pathname)
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=footer`
+  // Central conversion helper — see lib/conversion.ts. Login and the shop
+  // link are deliberately NOT routed through it.
+  const signupHref = conversionHref({ page: slug, placement: 'footer' })
   // Owner order 21 Jul: quiet footer link to the LOCK shop (top-nav slot waits
   // until the store is live + stocked). Attribution law applies to every
   // off-site CTA: source + per-page campaign + placement.
