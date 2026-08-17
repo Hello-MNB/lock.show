@@ -3,7 +3,8 @@
 --
 -- Same convention as candidate-req-org-scope.sql: a PROPOSAL that can be
 -- EXECUTED rather than argued about. scripts/test-tenant-isolation.mjs loads it
--- into a throwaway database on top of migrations 001–042 and re-runs the anon
+-- into a throwaway database on top of every migration the harness applies (001–048,
+-- not 001–042 as the first draft said) and re-runs the anon
 -- read paths, to prove two things at once — the cross-Act public leak closes,
 -- AND no shipped anonymous read loses a row. Promoting it is the owner's act.
 --
@@ -23,7 +24,11 @@
 -- per-Act and NON-transferable — a new Act starts empty." A new Act is currently
 -- born public.
 --
--- ── WHY THIS IS A POLICY CHANGE AND NOT A GRANT ─────────────────────────────
+-- ── WHY THIS IS A POLICY CHANGE AND NOT A GRANT (PRIOR ART: 031) ────────────
+-- This technique is NOT new here. Migration 031:14-16 already states it:
+-- "Policy predicates may reference artist_approved even though it is NOT in the
+-- anon column grants (RLS predicates run server-side, independent of SELECT
+-- column grants)." This file applies the same principle to act_id.
 -- src/lib/db.js:564 and the A6 assertion both record that anon "cannot be
 -- Act-scoped in the client either", because 016/025 never granted anon
 -- claims.act_id — naming the column raises 42501. True, and it is why the
@@ -67,11 +72,19 @@ create policy items_public_read on public.profile_items
     and (act_id = artist_id or act_id is null)
   );
 
+-- `artist_approved = true` is MIGRATION 031's approval gate and MUST be carried
+-- forward. The first draft of this file rebuilt claims_public_read from 001's
+-- text and silently dropped it — closing the Act leak while reopening 031's
+-- firewall breach ("once an artist publishes, every auto-labeled claim they
+-- NEVER reviewed becomes public") in the same statement. Independent QA caught
+-- it; the gate did not. Policy bodies here are the CURRENT ones plus one
+-- conjunct, never 001's text: 008, 017, 031 and 041 all touch these policies.
 drop policy if exists claims_public_read on public.claims;
 create policy claims_public_read on public.claims
   for select using (
     visibility = 'passport-ok'
     and verification_status in ('verified','supporting')
+    and artist_approved = true
     and public.artist_is_published(artist_id)
     and (act_id = artist_id or act_id is null)
   );

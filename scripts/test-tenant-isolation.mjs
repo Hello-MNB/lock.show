@@ -39,7 +39,7 @@
 //
 // Run: npm run test:tenant-isolation      (wired into `npm run verify`)
 // ============================================================
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { pgAvailable, ScratchDb } from './lib/pgharness.mjs'
 
 let failed = false
@@ -126,15 +126,23 @@ console.log('\nSTATIC — buyer-facing Passport reads are Act-scoped')
     'src/lib/db.js records WHY the anon read cannot be Act-scoped client-side (it needs a migration — owner decision)',
     'src/lib/db.js no longer records the anon Act-scope gap; a reader would think the fix is complete')
 
-  for (const f of ['scripts/sql/candidate-req-org-scope.sql', 'scripts/sql/candidate-share-link-columns.sql']) {
-    check(existsSync(f) && /NOT A MIGRATION, NOT APPLIED/.test(readFileSync(f, 'utf8')),
-      `${f} exists and declares itself NOT APPLIED`,
-      `${f} is missing or no longer declares that it is a proposal`)
+  // DISCOVERED, not enumerated. The hand-written list silently excluded
+  // candidate-act-public-scope.sql the moment it was added: independent QA
+  // copied that file into supabase/migrations and the guard passed at exit 0
+  // while still printing that the candidates are "applied nowhere else".
+  const candidates = readdirSync('scripts/sql').filter((f) => f.startsWith('candidate-') && f.endsWith('.sql'))
+  check(candidates.length >= 3,
+    `non-vacuity: ${candidates.length} candidate file(s) discovered in scripts/sql`,
+    `only ${candidates.length} candidate(s) found — the guard below would be near-empty`)
+  for (const f of candidates.map((c) => `scripts/sql/${c}`)) {
+    check(/NOT A MIGRATION, NOT APPLIED/.test(readFileSync(f, 'utf8')),
+      `${f} declares itself NOT APPLIED`,
+      `${f} no longer declares that it is a proposal`)
   }
-  check(!existsSync('supabase/migrations/candidate-req-org-scope.sql') &&
-        !existsSync('supabase/migrations/candidate-share-link-columns.sql'),
-    'the candidates live in scripts/sql and have NOT been promoted into supabase/migrations',
-    '⚠ a candidate was copied into supabase/migrations — promotion is the owner\'s act, not a side effect')
+  const promoted = candidates.filter((c) => existsSync(`supabase/migrations/${c}`))
+  check(promoted.length === 0,
+    `all ${candidates.length} candidates live in scripts/sql and have NOT been promoted into supabase/migrations`,
+    `⚠ promoted into supabase/migrations: ${promoted.join(', ')} — promotion is the owner's act, not a side effect`)
 }
 
 // ============================================================
@@ -278,6 +286,14 @@ try {
     // policies passed at exit 0. A pre-020 row is reproduced here. Note the
     // UPDATE: trg_actfill_claims (020:167) fills act_id on INSERT, so the NULL
     // has to be written afterwards, exactly as the backfill left nothing behind.
+    // profile_items has ONE seeded row in the whole fixture — the ACT_B one — so
+    // "anon no longer sees ACT_B items" passed on an EMPTY SET, and dropping
+    // items_public_read entirely survived at exit 0. Seed a default-Act item so
+    // the assertion protects something.
+    const DEFAULT_ITEM = '00000000-0000-0000-0000-00000000ca03'
+    db.exec(`insert into public.profile_items (id, artist_id, act_id, item_type, title, visibility)
+             values ('${DEFAULT_ITEM}', '${ARTIST}', '${ARTIST}', 'link', 'DEFAULT ACT PUBLIC ITEM', 'passport-ok')
+             on conflict (id) do nothing`)
     const LEGACY_CLAIM = '00000000-0000-0000-0000-00000000ca02'
     db.exec(`insert into public.claims (id, artist_id, claim_type, value, verification_status, visibility, artist_approved, verified_by, verified_at)
              values ('${LEGACY_CLAIM}', '${ARTIST}', 'headline', 'LEGACY NULL-ACT HEADLINE', 'verified', 'passport-ok', true, 'system', now())
@@ -290,7 +306,39 @@ try {
 
     const anonPvBefore = nOrDenied(`select count(*) from public.passport_versions where act_id = '${ACT_B}'`, { role: 'anon' })
     const anonDefaultPvBefore = nOrDenied(`select count(*) from public.passport_versions where artist_id = '${ARTIST}' and (act_id = '${ARTIST}' or act_id is null)`, { role: 'service_role' })
+    // QUAL DIFF — the assertion that would have caught the defect this block
+    // shipped with. The candidate DROPS AND RECREATES the three most sensitive
+    // anon-read policies, and the first version of this block only ever checked
+    // the ACT dimension: independent QA replaced artist_is_published() with
+    // `true`, and separately dropped `visibility` and `verification_status`,
+    // and all three passed at exit 0 — which is exactly how a silent revert of
+    // migration 031's `artist_approved` gate shipped green. Compare the
+    // EFFECTIVE predicate before and after: the only permitted difference is
+    // the act-scope conjunct.
+    const qualOf = (t, pol) => db.scalar(
+      `select qual from pg_policies where schemaname='public' and tablename='${t}' and policyname='${pol}'`)
+    const POLS = [['profile_items', 'items_public_read'], ['claims', 'claims_public_read'], ['passport_versions', 'pv_public_read']]
+    const qualBefore = POLS.map(([t, p2]) => [t, p2, qualOf(t, p2)])
+
     db.exec(readFileSync('scripts/sql/candidate-act-public-scope.sql', 'utf8'))
+
+    const ACT_CONJUNCT = ' AND ((act_id = artist_id) OR (act_id IS NULL))'
+    // Whitespace- and outer-paren-tolerant: PostgreSQL re-prints a rewritten
+    // predicate with its own parenthesisation (pv_public_read gains a wrapping
+    // pair). Tolerating that cannot hide a dropped or added CONJUNCT, which is
+    // the whole point of the comparison.
+    const norm = (q) => String(q ?? '').replace(/\s+/g, '')
+    const same = (a, b) => a === b || a === `(${b})` || b === `(${a})`
+    for (const [t, pol, before] of qualBefore) {
+      const after = qualOf(t, pol)
+      check(norm(before).length > 20 && norm(after).includes(norm(ACT_CONJUNCT)),
+        `A6.fix qual-diff non-vacuity: ${pol} had a real predicate before and carries the act conjunct after (executed)`,
+        `A6.fix ⚠ ${pol}: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`)
+      const rebuilt = norm(after).replace(norm(ACT_CONJUNCT), '')
+      check(same(rebuilt, norm(before)),
+        `A6.fix ${pol} differs from the shipped policy by EXACTLY the act scope — no firewall term added, dropped or altered (executed)`,
+        `A6.fix ⚠ ${pol} CHANGED MORE THAN THE ACT SCOPE.\n        shipped: ${norm(before)}\n        candidate minus act scope: ${rebuilt}`)
+    }
 
     const anonPvAfter = nOrDenied(`select count(*) from public.passport_versions where act_id = '${ACT_B}'`, { role: 'anon' })
     check(anonPvBefore.n >= 1 && !anonPvAfter.denied && anonPvAfter.n === 0,
@@ -312,15 +360,22 @@ try {
       `A6.fix ⚠ default-Act snapshot count changed (${anonDefaultPvBefore.n} → ${anonPvDefault.n})`)
 
     // anon's readable COLUMN set must be unchanged — the candidate adds no grant.
-    const anonActCol2 = db.try(`select id from public.claims where act_id is not null`, { role: 'anon' })
-    check(!anonActCol2.ok && /permission denied/i.test(anonActCol2.out),
-      'A6.fix anon STILL cannot name claims.act_id — the fix is a policy predicate evaluated as the policy owner, not a new column grant (executed)',
-      'A6.fix ⚠ anon gained access to claims.act_id — the candidate widened the column surface')
+    // Both tables, because db.js:565 names both. Independent QA showed a grant
+    // added on profile_items.act_id survived when only claims was asserted.
+    for (const tbl of ['claims', 'profile_items']) {
+      const probe = db.try(`select id from public.${tbl} where act_id is not null`, { role: 'anon' })
+      check(!probe.ok && /permission denied/i.test(probe.out),
+        `A6.fix anon STILL cannot name ${tbl}.act_id — the fix is a policy predicate evaluated as the policy owner, not a new column grant (executed)`,
+        `A6.fix ⚠ anon gained access to ${tbl}.act_id — the candidate widened the column surface`)
+    }
 
     const anonItems = db.rows(`select title from public.profile_items where artist_id = '${ARTIST}'`, { role: 'anon' }).map((r) => r[0])
     check(!anonItems.some((t) => /ACT_B/.test(t)),
       `A6.fix ANON no longer reads the second Act's profile_items — anon sees ${JSON.stringify(anonItems)} (executed)`,
       `A6.fix ⚠ ACT_B items still anon-readable: ${JSON.stringify(anonItems)}`)
+    check(anonItems.some((t) => /DEFAULT ACT PUBLIC ITEM/.test(t)),
+      `A6.fix the DEFAULT Act's profile_items SURVIVE — anon still reads ${JSON.stringify(anonItems)} (so the item assertion above is not passing on an empty set) (executed)`,
+      `A6.fix ⚠ the narrowing dropped the default Act's items — anon sees ${JSON.stringify(anonItems)}`)
 
     check(anonClaimsAfter.some((v) => /LEGACY NULL-ACT HEADLINE/.test(v)),
       `A6.fix NULL-TOLERANCE HOLDS — the pre-020 legacy row (act_id IS NULL) is still anon-readable, so the narrowing drops nothing that exists (executed)`,
@@ -329,9 +384,17 @@ try {
     // Restore: remove the seeded rows and prove they are gone, so nothing
     // downstream inherits state this block invented.
     db.exec(`delete from public.claims where id in ('${DEFAULT_CLAIM}', '${LEGACY_CLAIM}')`)
-    check(db.scalar(`select count(*) from public.claims where id in ('${DEFAULT_CLAIM}', '${LEGACY_CLAIM}')`) === '0',
-      'A6.fix both seeded claims were removed — this block leaves no residue (executed)',
-      'A6.fix ⚠ a seeded claim survived the block')
+    db.exec(`delete from public.profile_items where id = '${DEFAULT_ITEM}'`)
+    check(db.scalar(`select count(*) from public.claims where id in ('${DEFAULT_CLAIM}', '${LEGACY_CLAIM}')`) === '0' &&
+          db.scalar(`select count(*) from public.profile_items where id = '${DEFAULT_ITEM}'`) === '0',
+      'A6.fix all three seeded rows were removed — this block leaves no ROW residue (executed)',
+      'A6.fix ⚠ a seeded row survived the block')
+    // HONEST LIMIT: the three narrowed POLICIES are deliberately left in place
+    // for the rest of the run — this block cannot restore the schema without
+    // discarding what it just proved. Nothing downstream depends on them today
+    // (A7 reads as service_role, B/C as authenticated, D through SECURITY
+    // DEFINER), but that is a property of the current file, not a guarantee.
+    // Independent QA raised it; recorded rather than silently relied upon.
   }
 
   // A7 · the buyer-facing merge, as the shipped server would serve it.
@@ -450,8 +513,9 @@ try {
     // still needed by C7's open-request count. Snapshot, probe, restore — the
     // first version of this check left C7 counting 0 and failed the gate.
     const statusBefore = db.rows(`select id, status from public.availability_requests order by id`)
-    db.try(`update public.availability_requests set status='closed'`, asUser(U.REP_A))
+    const blind = db.try(`update public.availability_requests set status='closed'`, asUser(U.REP_A))
     const bAfterBlind = db.scalar(`select status from public.availability_requests where id = '${REQ_B}'`)
+    const aAfterBlind = db.scalar(`select status from public.availability_requests where id = '${REQ_A}'`)
     for (const [id, st] of statusBefore) {
       db.exec(`update public.availability_requests set status='${st}' where id = '${id}'`)
     }
@@ -459,9 +523,40 @@ try {
     check(JSON.stringify(restored) === JSON.stringify(statusBefore),
       `C6b probe restored every request status (${statusBefore.length} rows) — the blind update leaves no residue for C7/C8 (executed)`,
       `C6b ⚠ the probe corrupted state: ${JSON.stringify(restored)} vs ${JSON.stringify(statusBefore)}`)
+    // POSITIVE CONTROL. Without these two, C6b certifies falsely: `db.try`
+    // swallows every error, so ANY mutation that makes the probe abort leaves
+    // ORG_B's row untouched and C6b green. Independent QA proved it — leaving
+    // req_org_update's USING leaky and narrowing only WITH CHECK aborted the
+    // statement, and C6b printed "req_org_update ITSELF refuses ORG_B's row"
+    // while the leak was live. The probe must be shown to have RUN and to have
+    // REACHED rows before its refusal means anything.
+    check(blind.ok,
+      'C6b positive control: the blind UPDATE actually executed (it is not passing because the statement aborted) (executed)',
+      `C6b ⚠ the blind UPDATE did not run — C6b below would certify falsely. out=${blind.out}`)
+    check(aAfterBlind === 'closed',
+      `C6b positive control: the blind UPDATE DID reach rows — ORG_A's own request is now '${aAfterBlind}' (executed)`,
+      `C6b ⚠ the blind UPDATE touched nothing (ORG_A's own row is '${aAfterBlind}') — a no-op cannot prove a refusal`)
     check(bAfterBlind !== 'closed',
       `C6b req_org_update ITSELF refuses ORG_B's row — proven with an UNQUALIFIED update, which reads no column and so cannot be filtered by the SELECT policy (ORG_B row still '${bAfterBlind}') (executed)`,
       `C6b ⚠ req_org_update is still can_access_artist — ORG_A blind-closed ORG_B's request (${bAfterBlind}). C6 alone cannot see this.`)
+
+    // C6c · THE TAKEOVER VECTOR. Independent QA showed that an unqualified
+    // update which ALSO reassigns organization_id lets ORG_A both steal and
+    // close ORG_B's demand when the USING half is leaky — a strictly worse
+    // outcome than C6's read leak, and one no assertion covered.
+    const ownerBeforeTakeover = db.rows(`select id, organization_id::text, status from public.availability_requests order by id`)
+    const takeover = db.try(
+      `update public.availability_requests set status='closed', organization_id='${ORG_A}'`, asUser(U.REP_A))
+    const bOrgAfter = db.rows(`select organization_id::text, status from public.availability_requests where id = '${REQ_B}'`)[0]
+    check(bOrgAfter[0] === ORG_B && bOrgAfter[1] !== 'closed',
+      `C6c ORG_A cannot STEAL ORG_B's request by reassigning organization_id — it is still ORG_B's and still '${bOrgAfter[1]}' (executed)`,
+      `C6c ⚠ TAKEOVER — ORG_B's request is now owned by ${bOrgAfter[0]} with status '${bOrgAfter[1]}' (probe ok=${takeover.ok})`)
+    for (const [id, org, st] of ownerBeforeTakeover) {
+      db.exec(`update public.availability_requests set status='${st}', organization_id=${org ? `'${org}'` : 'null'} where id = '${id}'`)
+    }
+    check(JSON.stringify(db.rows(`select id, organization_id::text, status from public.availability_requests order by id`)) === JSON.stringify(ownerBeforeTakeover),
+      `C6c probe restored every request's organization_id and status (${ownerBeforeTakeover.length} rows) (executed)`,
+      'C6c ⚠ the takeover probe left residue')
 
     check(rosterOpenCount(U.REP_A) === 1 && rosterOpenCount(U.REP_B) === 1,
       `C7 RESIDUAL (b) CLOSED BY THE SAME POLICY, WITH NO CLIENT CHANGE — rosterNextAction.js:88 now counts ${rosterOpenCount(U.REP_A)} for ORG_A and ${rosterOpenCount(U.REP_B)} for ORG_B: its own demand only. (b) was a symptom of (a), not an independent defect (executed)`,

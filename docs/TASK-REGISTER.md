@@ -2462,7 +2462,7 @@ produce a stale-`out/` false result · and the Drive authority itself — from t
 
 **Status: WAITING_FOR_FOUNDER for the promotion; the gate work is COMPLETE with evidence.**
 
-`req_org_read` and `req_org_update` (008:266/269) gate `availability_requests` on
+`req_org_read` and `req_org_update` (008:266/268) gate `availability_requests` on
 `can_access_artist(artist_id)` alone. That is true for the owning organization AND for every
 organization holding an active grant, and two agencies on one artist is the ordinary state of a roster
 artist. `availability_requests.organization_id` has existed since 008:118 and **no policy has ever
@@ -2515,7 +2515,7 @@ client change** (C7), confirming residual (b) was a symptom of this policy, not 
 
 **Status: the candidate and its proof are COMPLETE with evidence; promotion is OWNER-PENDING ACT-PUBLIC.**
 
-`items_public_read` (001:172), `claims_public_read` (001:185) and `pv_public_read` (001:210) all gate on
+`items_public_read` (001:173), `claims_public_read` (001:185) and `pv_public_read` (001:210) all gate on
 `artist_is_published(artist_id)` — a **Person-level** flag. A non-default Act has no `artists` row, so its
 evidence hangs off the same `artist_id`: the moment the FIRST Act is published, the SECOND Act is
 published too. Nobody decided that. Executed — anon reads ACT_B's `passport_versions`, ACT_B's
@@ -2525,16 +2525,29 @@ It contradicts a ruling that already exists (owner, 16 Aug 2026: *"PASSPORT publ
 and the transfer canon in CLAUDE.md. This is why ACT-PUBLIC is filed as *"promote this?"* and not
 *"what should the behaviour be?"* — unlike REQ-ORG, the behaviour is not in question.
 
-**The blocking belief in the codebase was wrong, and that is what unlocked this.** Both `src/lib/db.js:564`
-and the A6 assertion record that anon "cannot be Act-scoped… 016/025 never granted anon `claims.act_id`,
-so naming the column raises 42501", concluding the fix needs a grant. True for a CLIENT query — and
-irrelevant to a policy: **an RLS predicate is evaluated as the policy owner, not as the querying role**,
-so a policy may reference `act_id` even though anon may not select it. `scripts/sql/candidate-act-public-scope.sql`
+**RETRACTED — the original framing of this entry was false, and the headline claim was unsupported.**
+It said "THE BLOCKING BELIEF IN THE CODEBASE WAS WRONG", asserting that `src/lib/db.js:564` and the A6
+assertion had concluded the fix "needs a grant". **Neither artifact says that.** `db.js:566` says
+"Closing that half needs a **migration**; it is an OWNER DECISION, not a query", and the A6 assertion
+says "Closing A6 needs a **MIGRATION** (owner decision), not a query change". The word "grant" in that
+sense appears nowhere in either — the only occurrence of the phrase in the repo was in this entry. The
+belief as actually written is correct, and is exactly what T-113 delivered. Nothing was unlocked by
+overturning it.
+
+**Nor is the RLS mechanism a discovery here — it is documented prior art in a SHIPPED migration.**
+`031_passport_approval_gate.sql:14-16`: "Policy predicates may reference `artist_approved` even though
+it is NOT in the anon column grants (RLS predicates run server-side, independent of SELECT column
+grants)." The same principle, four migrations earlier. The correct, smaller claim is: **the anon read
+can be Act-scoped by a policy alone, with no new column grant** — an RLS predicate is evaluated as the
+policy owner, not as the querying role. `scripts/sql/candidate-act-public-scope.sql`
 therefore adds **no column grant**, and the gate asserts anon still gets 42501 on `claims.act_id` after
 the narrowing. The public column surface is unchanged.
 
 The scope — `(act_id = artist_id or act_id is null)` — is the same one `buildPassportSnapshot()`
-(`src/lib/db.js:554`) already applies on the owner side, now expressed on both sides of the boundary.
+(`src/lib/db.js:577`, inside the function that starts at 554) already applies on the owner side. One
+correction to that comparison: `db.js:577` has **two** branches — a NULL-tolerant one for the default
+Act and a strict `act_id.eq` one for a non-default Act — and this candidate mirrors only the default
+branch, because only the default Act is publishable today.
 
 **Mutation-proven 4/4**, each applied to the candidate with the gate re-run: drop the scope from
 `claims_public_read` alone → CAUGHT · from `pv_public_read` alone → CAUGHT · from `items_public_read`
@@ -2555,3 +2568,71 @@ Both seeded rows are deleted at the end of the block and **the removal is assert
 discipline C6b needed after its probe corrupted C7.
 
 **67 checks (was 58), `npm run verify` exit 0, nothing skipped.**
+
+### T-112 / T-113 · SECOND INDEPENDENT ADVERSARIAL REVIEW — verdict REVISE, three HIGH defects
+
+An independent reviewer with a rejection mandate audited `d8057bf..a77655d`. **Both PostgreSQL
+semantics claims the increments rest on were confirmed empirically** — a narrowed SELECT policy really
+does mask an untested UPDATE policy when the statement reads a column, and an RLS predicate really is
+evaluated as the policy owner. **All five reported mutations reproduced exactly.** And the product was
+still wrong in three ways I could not see from inside.
+
+**[HIGH-1] The candidate silently reverted migration 031's approval gate.** I rebuilt
+`claims_public_read` from **001's** text, so `and artist_approved = true` — added by 031 to close a
+firewall breach it describes as *"once an artist publishes, every auto-labeled claim they NEVER
+reviewed becomes public"* — vanished. The candidate closed the Act leak and reopened 031's breach in
+the same statement, and the gate printed `67 checks, all hold`. Executed proof: with the candidate
+applied, anon read a claim titled `UNREVIEWED AUTO-LABELLED CLAIM`. Fixed, and the candidate now states
+that policy bodies must be derived from the CURRENT policy, never from 001 — 008, 017, 031 and 041 all
+touch these three.
+
+**[HIGH-2] The gate validated only the Act dimension of a five-term policy rewrite.** The candidate
+DROPS AND RECREATES the three most sensitive anon-read policies, and nothing checked that the other
+terms survived. Three reviewer mutations passed at exit 0: `artist_is_published(artist_id)` → `true`
+(unpublished artists become public), and dropping `visibility` and `verification_status` from
+`claims_public_read`. That is *why* HIGH-1 shipped green.
+
+Fixed structurally rather than term-by-term: the block now captures each policy's effective `qual` from
+`pg_policies` **before and after** applying the candidate and asserts the only difference is the
+act-scope conjunct. It catches any term added, dropped or altered — including HIGH-1 itself, and
+including a candidate file that does nothing at all. Re-proven against all four reviewer mutations plus
+a no-op candidate: **5/5 caught.**
+
+**[HIGH-3] C6b — the assertion written to stop hollow gates — was itself defeatable.** It never checked
+that the blind UPDATE *ran* or *reached a row*, and `db.try` swallows errors, so any mutation that made
+the probe abort left ORG_B's row untouched and C6b green. The reviewer proved it by leaving
+`req_org_update`'s `USING` leaky and narrowing only `WITH CHECK`: C6b printed *"req_org_update ITSELF
+refuses ORG_B's row"* while the leak was live. Two positive controls added — the probe must have
+executed, and ORG_A's OWN request must have been closed by it. That mutation now exits 1.
+
+The same work surfaced a **worse attack than the one C6 described**, which nothing covered: an
+unqualified update that also reassigns `organization_id` lets ORG_A both **steal and close** ORG_B's
+demand. `C6c` now asserts ORG_B's row keeps its owner and its status, and restores both.
+
+**MED, all repaired.** The `profile_items` assertion was the exact vacuity this increment claimed to
+have eliminated — the fixture's only item was the leaking ACT_B one, so "anon sees []" was the passing
+state and dropping `items_public_read` entirely survived; a default-Act item is now seeded and asserted
+to survive. The promotion guard enumerated candidates **by hand** and so never covered the file this
+increment added — copying it into `supabase/migrations` passed at exit 0; the guard now discovers
+`scripts/sql/candidate-*.sql` and asserts the discovery is non-empty. The "no new grant" assertion
+named `claims.act_id` only, though `db.js:565` names `profile_items.act_id` too — a grant on the latter
+survived; both are now asserted.
+
+**Corrections to this register, recorded rather than quietly edited.** The claim that the codebase
+"concluded the fix needs a grant" was **false** — see the retraction in T-113 above; the artifacts say
+*migration, owner decision*, which is what was delivered. The RLS-predicate mechanism was **not** a
+discovery: `031:14-16` documents it, in the very migration the candidate reverted. Citation drift
+fixed: `001:172`→`173`, `008:269`→`268`, `db.js:554`→`577`. The candidate said it applies on top of
+"001–042"; the harness applies **001–048**.
+
+**Disclosed, not repaired.** The candidate's NULL-tolerance premise — *"a NULL `act_id` row is a legacy
+default-Act row, never another Act's"* — is **falsifiable by an ordinary UPDATE**: `trg_actfill_claims`
+is `BEFORE INSERT` only, so one `update claims set act_id = null` reopens exactly the leak T-113 closes.
+The gate proves the tolerance works; it cannot prove the premise. Enforcing it needs a constraint or an
+UPDATE trigger and belongs in the promotion, not here. Separately, the A6.fix block leaves the three
+narrowed **policies** in place for the rest of the run — it cannot restore the schema without
+discarding what it proved; nothing downstream depends on them today, and that is now stated in the code
+rather than assumed. And `src/lib/db.js:603` still cites "migration 043" for the act-scoped anon read,
+which is `043_artist_access_columns.sql` — a pre-existing stale reference, untouched here.
+
+**81 checks (was 67). `npm run verify` exit 0, nothing skipped.**
