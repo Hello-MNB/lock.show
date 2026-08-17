@@ -1868,12 +1868,20 @@ current state. Production being older than this branch is **expected, not a defe
 project defines a full set. This corroborates the existing OWNER-PENDING **M-15** item (site security
 headers, T-41); it is not a new finding and is recorded, not fixed, in this task.
 
-**OBSERVED GAP — sitemap covers 10 of 14 built routes.** Absent: `/accessibility`, `/privacy`, `/terms`,
-`/passport/demo`. Whether that is intended (legal pages are noindexed drafts pending counsel per
-OWNER-PENDING LEGAL/M-4) is **UNVERIFIED** and is a WEB-05 index-contract question.
+**~~OBSERVED GAP — sitemap covers 10 of 14 built routes~~ — CORRECTED 17 Aug, this was WRONG.** I called
+the 10-of-14 coverage UNVERIFIED. It is **VERIFIED and deliberate**: `website-next/app/sitemap.ts:19-25`
+documents every exclusion against a named owner decision — *"DELIBERATELY ABSENT (do not re-add without an
+owner ruling): /privacy /terms /accessibility — D6 … /passport/demo — D5: fictional sample profile … /app/*
+— private product surface"*. The live legal pages really do carry `noindex, nofollow`. Not a gap; a
+correctly-implemented index contract.
 
-**OBSERVED — no `hreflang` on the live home page** although both locale catalogues exist. Consistent with
-the log's own "reciprocal hreflang/x-default **after decision**". **DECISION REQUIRED**, not a defect.
+**~~OBSERVED — no `hreflang` on the live home page~~ — CORRECTED 17 Aug, this framing was WRONG.** I read
+the absence as an open decision. In fact **hreflang + `x-default` are implemented and built at HEAD** on all
+10 index routes (`website-next/lib/site.ts:39-51`, present in `out/index.html`) and are simply **undeployed**
+— production is a 21-day-old build. There IS a genuine open decision nearby, but a different one: B4-95.10
+**D-008** (*"Locale URL pattern, x-default and fallback policy"*, status **Open**), which means the code
+currently emits `x-default` **ahead of** the owner decision it depends on. That is the item for Maria, not
+the absence I reported.
 
 ### 4 · TEAM ROSTER (bounded, ≤4 active at once; QA never audits its own work)
 
@@ -1954,6 +1962,52 @@ behaviour. Recorded in the OWNER-PENDING row itself so the trap cannot be lost.
 **Status: RECORDED and SCOPED. Remediation deferred to WEB-02 per the standing bar on visual
 implementation** (WEB-01 PASS + WEB-02/03 contracts first). Independent WEB-01 QA continues uninterrupted
 against HEAD `332c1e0`.
+
+## WEB-01 · HOLISTIC CURRENT-STATE AUDIT — **REVISE**, then corrected (17 Aug 2026)
+
+Three owner agents with disjoint scope (platform/CI/security · SEO/IA/index-contract · analytics/consent/
+claims/assets), then an **independent Release QA Lead who authored none of it**. QA returned **REVISE with
+ten defects — most of them in MY RECORD rather than in the audits**, which is the point of the role.
+
+### What QA corrected in the record (all re-verified by me before applying)
+
+| # | Defect | Correction |
+|---|---|---|
+| D1 | I recorded `FAQPage` JSON-LD as "built but undeployed" | **It is ALREADY LIVE** on `/faq` and `/pricing` — a GET returns it. I had repeated an audit claim without verifying it. Struck, not quietly edited |
+| D2 | "twelve `website-next` commits exist only on this branch" | **22** touch `website-next`; **10** touch nothing else. Twelve was neither figure |
+| D3 | WEB-EVENTS headline said "8 of 10" while its own body enumerated nine | **9 of 10**; the enumeration is authoritative |
+| D4 | Cited `lib/app-url.ts:8` for the UTM finding | That file is 8 lines and contains **no** `utm`. Re-cited to the **15 real call sites** |
+| D5 | "21 third-party trademarks are public" | **18** files, and they are **LOCK SHOW-drawn badges** — two rects plus text, zero third-party path data. Nominative name-as-text, materially lower exposure. Overstating it would have diluted the photograph finding, which stands |
+| D6 | *"free … always"* ×9; *"two minutes"* ×7 | **9 total, only 4 carry "always"**; *"two minutes"* is **×10** and *"twenty seconds"* **×9** |
+| D7 | CLAIM-HUMAN was refutable in ten seconds | An operator role and console **DO** exist (`003_operator_admin.sql`, `AdminDashboard.jsx` routed at `App.jsx:218`). The defensible core is narrower: **no claim-review write path** and **no `reviewed_at`/`reviewed_by` column in any migration**, so *"the date of that review is stamped on the claim"* is unimplementable today |
+| D8 | A finding the record dropped | **METHOD-LABELS** — the site's public label vocabulary matches the product's in only 1 of 4 cases. Restored as its own OWNER-PENDING row |
+| D9 | **The register was never updated** — WEB-01 lived only in OWNER-PENDING, and my two self-corrections existed only in chat | This section, plus both corrections written **in place** above. An unrecorded correction is not a correction |
+| D10 | CLAUDE.md migration range | `001–047` correct. Noted: `036` exists only as `036_token_hash.sql.DRAFT`, so a future agent must not "fix" the gap by writing a new 036 |
+
+### What QA CONFIRMED (re-derived independently, not taken on trust)
+
+`app.lock.show` public and crawlable — every element, including that the two origins serve **different
+bundles** · the named-person photograph (200, 162,846 bytes, referenced by no code) **and** that no rights
+record exists anywhere — QA searched `docs/legal/`, the full repo and git history before accepting "none" ·
+the website is analytically mute under a **wider** grep than the one that produced the finding, including
+the embedded bundle · the embed is 21 days stale and `test:embed` is green on it · production is a 21-day-old
+build.
+
+### What all three audits MISSED, caught only by QA
+
+**Accessibility was never audited** — zero a11y tooling in either `package.json`, no gate in the chain — while
+the live `/accessibility` page asserts SI 5568 / WCAG AA conformance and lists keyboard nav, contrast, alt
+text and *"correct RTL rendering"* as done. Same untested-public-claim class as CLAIM-HUMAN, on a
+legally-framed page. Plus: no skip link anywhere (WCAG 2.4.1 fails on every page); the HE toggle flips
+`dir='rtl'` over an English body; the live page ships `[name]` / `[___]` placeholders. Recorded as
+**A11Y-CLAIM**. Also missed: **`shop.lock.show` is a live third public origin** carrying product and price
+surfaces, outside every audit's scope — recorded as **SHOP-ORIGIN**, untouched per the standing instruction.
+
+### Verdict
+
+**WEB-01 = REVISE → record corrected. It is NOT yet PASS**: the corrections have not themselves been
+independently verified, and the execution law is explicit that an author cannot accept their own work. A
+re-verification pass is required before WEB-02 begins. No visual implementation has started.
 
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
