@@ -55,9 +55,10 @@ const check = (cond, good, bad) => (cond ? ok(good) : fail(bad || good))
 const FILES = [
   'supabase/migrations/041_link_service_and_version_store.sql',
   'supabase/migrations/042_radar_audience_split.sql',
+  'supabase/migrations/043_artist_access_act_scope.sql',
 ]
 
-// The ONE place a grant is declared to be intentional. A function that 041/042
+// The ONE place a grant is declared to be intentional. A function that 041/042/043
 // create and that is missing from this map fails the run: "we forgot to decide"
 // is not a privilege model.
 const EXPECTED = {
@@ -77,6 +78,11 @@ const EXPECTED = {
   generate_radar_rep_projection: { roles: [], why: 'trigger/definer-reached only' },
   radar_signal_rep_update_guard: { roles: [], why: 'trigger function' },
   radar_recompute_for_artist: { roles: [], why: 'trigger function (created by 010, body replaced by 042)' },
+  // 043 — the act-scoped grant
+  grant_permits: { roles: ['authenticated', 'service_role'], why: 'the authority question itself; anon has no org and no grant, so the only thing it could learn is who represents whom' },
+  apply_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — it replaces an RLS policy. No RPC surface at all' },
+  revert_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — the reverse policy swap' },
+  artist_access_fill_revoked_at: { roles: [], why: 'trigger function — fills revoked_at so no existing writer breaks' },
 }
 
 // ── which functions do these two files actually create? ─────────────────────

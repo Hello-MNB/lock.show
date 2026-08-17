@@ -1043,3 +1043,46 @@ decision ledger, any permission CSV.
 
 **verify: exit 0, 40 assertions, "Nothing was skipped."** No migration applied, no deploy, no
 provider-console change, no secret touched, no Drive write.
+
+## T-109 · ARTIST_ACCESS ACT-SCOPE GRANT SEMANTICS (migration 043, DRAFTED — NOT APPLIED)
+
+Owner ruling (16 Aug 2026): "extend artist_access with explicit Act scope plus audience/purpose/
+action/version/time/expiry/revocation semantics. Default deny; membership/roster/title/previous
+access grants nothing." This is the dependency that unblocks representation publishing, which the API
+currently refuses outright because three of the contract's four bounds were inexpressible.
+
+**Shape.** PART A additive: `act_id`, `actions[]`, `audience[]`, `purpose`, `valid_from`,
+`version_binding`, `passport_version_id`, `granted_by`, `revoked_at`, `revoked_by`; bounded-vocabulary
+CHECKs; partial unique `(organization_id, act_id)`; and `grant_permits(org, act, action, audience, at)`
+— default deny, every early exit a denial. PART B (adopting it inside RLS) is the breaking half and is
+installed DORMANT with no grant to any role, following the 041/042 pattern.
+
+**Three defects found by EXECUTING the migration, invisible to any text check:**
+1. **It would have failed to apply live.** The `revoked_at` CHECK validates existing rows; a shipped
+   fixture carries a legacy revoked grant with no timestamp, so `ADD CONSTRAINT` errored outright.
+2. **It would have broken existing writers.** A second gate revokes by setting `status` alone — any
+   app path doing `update artist_access set status='revoked'` would fail the moment 043 applied. A
+   runtime outage introduced by a migration calling itself additive. Fixed by moving the invariant
+   into a BEFORE trigger (`artist_access_fill_revoked_at`) so no writer changes, plus `NOT VALID` so
+   pre-043 rows keep an honestly-missing timestamp instead of an invented one.
+3. **anon could call the authority function as an oracle.** `REVOKE … FROM PUBLIC` is insufficient:
+   Supabase default privileges grant EXECUTE to anon/authenticated/service_role individually at CREATE
+   time. Observed `proacl` immediately after create: `anon=X/postgres,…`. Every role is now revoked by
+   name before anything is granted back; anon gets nothing.
+
+**Defect in my own test, corrected:** it hardcoded fixture org ids that do not exist, so its UPDATEs
+touched zero rows — and a constraint that refuses nothing then reads as "refused". Ids are now
+discovered from the database, and every mutating statement proves it addressed a row.
+
+**Rollback proven, not asserted** — the down migration is EXECUTED on a real database: 10 columns, 3
+functions and 2 indexes gone, `pv_owner_insert` restored to its shipped expression, no grant row
+destroyed.
+
+**Gate:** `scripts/test-grant-scope.mjs` (`test:grant-scope`, in the chain) — 30 executed assertions
+covering default deny, action ladder, Act scope, audience bound, time window, revocation, legacy
+act_id NULL never publishing, membership-alone granting nothing, vocabulary refusals, PART B dormancy
+and the anon oracle. `test:sql-privileges` EXPECTED map extended to the four 043 functions.
+
+**verify: exit 0, 41 assertions, "Nothing was skipped."** Independent adversarial QA was dispatched in
+parallel and its verdict is NOT yet recorded here; this entry states only what was observed.
+NOT applied to any live environment. No deploy, no console change, no secret touched.
