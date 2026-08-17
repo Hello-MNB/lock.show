@@ -43,6 +43,7 @@ end $$;
 drop trigger if exists trg_artist_access_guard_authority on public.artist_access;
 drop function if exists public.artist_access_guard_authority();
 drop function if exists public.act_belongs_to_artist(uuid, uuid);
+drop function if exists public.artist_access_trusted_writer();
 drop trigger if exists trg_artist_access_fill_revoked_at on public.artist_access;
 drop function if exists public.artist_access_fill_revoked_at();
 drop function if exists public.apply_act_scoped_publish();

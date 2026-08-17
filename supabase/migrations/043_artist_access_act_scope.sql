@@ -118,18 +118,44 @@ alter table public.artist_access add constraint artist_access_named_version_chec
 -- runtime outage introduced by a migration that calls itself additive. The trigger
 -- makes the invariant true for every writer, old and new, without asking any of
 -- them to change; the constraint below then simply cannot be violated.
+-- TRUSTED WRITER — the single definition of "may write authority state".
+--
+-- This exists because the guard and the fill trigger each carried their own copy
+-- of the test and they DRIFTED: the guard was widened to accept service_role while
+-- the fill trigger was not. A service_role reinstate was then permitted by the
+-- guard but refused a stamp-clear by the fill trigger, leaving a grant that reads
+-- `active` to the UI and to can_access_artist while grant_permits denies it
+-- forever. Two copies of one rule is the defect; one function is the fix.
+--
+-- NOTE ON STRENGTH: service_role is materially weaker trust than the table owner.
+-- SET ROLE authorizes against session_user, so a PostgREST connection can reach
+-- service_role but cannot reach the owner. It is included because the backend
+-- genuinely writes authority state (scripts/seed.mjs), and that reduced strength is
+-- recorded here rather than left implicit.
+create or replace function public.artist_access_trusted_writer()
+returns boolean
+language sql
+stable
+set search_path = public, pg_temp
+as $$
+  select current_user in (
+    (select r.rolname from pg_class c join pg_roles r on r.oid = c.relowner
+      where c.oid = 'public.artist_access'::regclass),
+    'service_role'
+  );
+$$;
+
+revoke all on function public.artist_access_trusted_writer() from public;
+revoke all on function public.artist_access_trusted_writer() from anon;
+grant execute on function public.artist_access_trusted_writer() to authenticated;
+grant execute on function public.artist_access_trusted_writer() to service_role;
+
 create or replace function public.artist_access_fill_revoked_at()
 returns trigger
 language plpgsql
 set search_path = public, pg_temp
 as $$
-declare
-  table_owner name;
 begin
-  select r.rolname into table_owner
-    from pg_class c join pg_roles r on r.oid = c.relowner
-   where c.oid = 'public.artist_access'::regclass;
-
   if new.status = 'revoked' and new.revoked_at is null then
     new.revoked_at := now();
   end if;
@@ -144,7 +170,7 @@ begin
   -- the reinstate branch would almost never fire.
   -- Only on the TRUSTED path. Clearing the stamp on any revoked->active transition
   -- let a grantee erase its own revocation record simply by reinstating itself.
-  if tg_op = 'UPDATE' and current_user = table_owner
+  if tg_op = 'UPDATE' and public.artist_access_trusted_writer()
      and new.status = 'active' and old.status = 'revoked' then
     new.revoked_at := null;
     new.revoked_by := null;
@@ -239,20 +265,36 @@ begin
   -- reinstate branch in the fill trigger only watches revoked -> active, and a
   -- re-invite interposes `pending`, so it never fired.
   --
+  -- BOTH liveness columns are cleared. Clearing only revoked_at left the expired
+  -- case still permanently dead after a legitimate re-approve — the same defect,
+  -- one column over. And the reset skips an ACTIVE grant: re-inviting over live,
+  -- artist-consented access silently downgraded it to pending and discarded the
+  -- consent, which is a self-inflicted outage reachable by a mis-click.
+  --
   -- On revocation history: `revoked_at` is a LIVENESS predicate here, not an audit
   -- record — it cannot be both, and the direct revoke -> approve path already clears
   -- it. Durable revocation history belongs in its own append-only record; that is
   -- recorded for the owner rather than faked by overloading this column.
-  update public.artist_access
-     set scope = coalesce(p_scope, '{view}'), territory = p_territory,
-         status = 'pending', consent_at = null,
-         revoked_at = null, revoked_by = null
-   where organization_id = p_org and artist_id = p_artist and act_id is null;
+  -- EXISTENCE and RESET are separate questions. Testing `found` on the UPDATE
+  -- conflates them: when the legacy row exists but is skipped by the liveness
+  -- precondition, `found` is false and control falls through to the INSERT, which
+  -- then violates idx_artist_access_org_artist_legacy — turning a no-op re-invite
+  -- into an error. Look the row up first, then decide whether to disturb it.
+  select id into v_id from public.artist_access
+   where organization_id = p_org and artist_id = p_artist and act_id is null
+   limit 1;
 
-  if found then
-    select id into v_id from public.artist_access
-     where organization_id = p_org and artist_id = p_artist and act_id is null
-     limit 1;
+  if v_id is not null then
+    -- LIVE access is left alone. "Live" is not `status = 'active'` on its own: an
+    -- expired grant is still stored as active, and skipping it would leave the
+    -- expired-then-re-approved cycle permanently dead. Live means active AND
+    -- inside its window.
+    update public.artist_access
+       set scope = coalesce(p_scope, '{view}'), territory = p_territory,
+           status = 'pending', consent_at = null,
+           revoked_at = null, revoked_by = null, expires_at = null
+     where id = v_id
+       and not (status = 'active' and (expires_at is null or expires_at > now()));
     return v_id;
   end if;
 
@@ -330,17 +372,13 @@ security invoker
 set search_path = public, pg_temp
 as $$
 declare
-  table_owner name;
   touched boolean;
 begin
-  select r.rolname into table_owner
-    from pg_class c join pg_roles r on r.oid = c.relowner
-   where c.oid = 'public.artist_access'::regclass;
 
   -- DELETE: only the trusted path or an owner/admin of the artist's org may remove
   -- a grant row at all, because deletion destroys the revocation trail entirely.
   if tg_op = 'DELETE' then
-    if current_user in (table_owner, 'service_role') then return old; end if;
+    if public.artist_access_trusted_writer() then return old; end if;
     if not exists (select 1 from public.artists ar
                     where ar.id = old.artist_id
                       and public.has_org_role(ar.owner_organization_id, array['owner','admin'])) then
@@ -364,7 +402,7 @@ begin
   -- identity used by scripts/seed.mjs. Omitting service_role silently removed the
   -- backend's ability to write any authority column — INSERT of an active grant,
   -- reinstatement and deletion all refused with 42501.
-  if current_user in (table_owner, 'service_role') then
+  if public.artist_access_trusted_writer() then
     return new;
   end if;
 
@@ -385,6 +423,13 @@ begin
             or new.expires_at is not null
             or new.revoked_at is not null or new.revoked_by is not null
             or new.valid_from is distinct from now()
+            -- scope and consent_at are the columns can_access_artist() and
+            -- artist_access_has_scope() gate on TODAY, while actions/audience gate
+            -- only the dormant PART B. Guarding the future bound and leaving the
+            -- live one open let a grantee self-grant 'publish' scope and forge the
+            -- artist's recorded consent.
+            or coalesce(array_length(new.scope, 1), 0) > 0
+            or new.consent_at is not null
             or new.status = 'active';
   else
     touched := new.actions is distinct from old.actions
@@ -398,7 +443,9 @@ begin
             or new.status is distinct from old.status
             or new.expires_at is distinct from old.expires_at
             or new.revoked_at is distinct from old.revoked_at
-            or new.revoked_by is distinct from old.revoked_by;
+            or new.revoked_by is distinct from old.revoked_by
+            or new.scope is distinct from old.scope
+            or new.consent_at is distinct from old.consent_at;
   end if;
 
   -- owns_artist() alone is too wide: 030:22-32 resolves to ANY active member of an
@@ -477,10 +524,11 @@ as $$
                            and a.person_id = ar.created_by))
       )
       and p_action = any (aa.actions)
-      -- AUDIENCE IS MANDATORY. It used to default to NULL and short-circuit to
-      -- true, so a grant with an EMPTY audience permitted publishing to anyone —
-      -- and PART B called it without an audience at all, meaning the one decision
-      -- the bound governs never applied it. NULL now denies.
+      -- AUDIENCE IS MANDATORY. The denial for a NULL audience actually comes from
+      -- SQL NULL semantics on the comparison below (`null = any(...)` is NULL, which
+      -- WHERE treats as false); this line is explicit documentation of the intent,
+      -- not the mechanism, and removing it changes no behaviour. It is kept for
+      -- readability and must NOT be counted as an independent bound.
       and p_audience is not null
       and p_audience = any (aa.audience)
       -- PURPOSE. Stored and vocabulary-checked but never consulted before; a grant

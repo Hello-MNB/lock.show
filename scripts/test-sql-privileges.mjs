@@ -84,6 +84,7 @@ const EXPECTED = {
   revert_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — the reverse policy swap' },
   artist_access_fill_revoked_at: { roles: [], why: 'trigger function — fills revoked_at so no existing writer breaks' },
   artist_access_guard_authority: { roles: [], why: 'trigger function (SECURITY DEFINER) — stops a grantee writing their own authority columns' },
+  artist_access_trusted_writer: { roles: ['authenticated', 'service_role'], why: 'the single definition of "may write authority state", called BY two invoker triggers, so the caller role must hold EXECUTE. Discloses only whether the CURRENT role is trusted — nothing about any grant' },
   act_belongs_to_artist: { roles: ['authenticated', 'service_role'], why: 'SECURITY DEFINER linkage lookup called BY the guard trigger, which runs SECURITY INVOKER — so the caller role must hold EXECUTE. Discloses only a boolean about two ids the caller already supplied, and a non-default Act is invisible to its own owner under act_org, which is why the lookup must be definer at all' },
   request_artist_access: { roles: ['authenticated', 'service_role'], why: 'the requesting org acts as a logged-in operator; 043 replaced this function and tightened it off the PUBLIC+anon default it inherited from 027' },
 }

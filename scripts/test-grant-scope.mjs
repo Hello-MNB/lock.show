@@ -317,39 +317,71 @@ check('a revoked grant cannot be self-reinstated (status is guarded)',
 check('...so it still denies publish', !permits(ORG, ACT_A, 'publish', 'booker'))
 check('the revocation stamp survives (it is not erased by a grantee reinstate)',
   db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't')
-// The check above cannot see C-1 on its own: the grantee's write is refused by the
-// guard, so the fill trigger never runs and the stamp survives no matter what the
-// trust condition says. This reaches the trigger — a write that DOES land, from a
-// role that is NOT the table owner — and proves the narrowing itself.
+// The check above cannot see the reinstate rule on its own: the grantee's write is
+// refused by the guard, so the fill trigger never runs and the stamp survives no
+// matter what the trust condition says. What follows EXECUTES both sides.
+//
+// This replaces a regex over the migration text that asserted the trust condition
+// was literally `current_user = table_owner`. That gate did not witness behaviour,
+// and worse, it FAILED the correct fix — widening trust to service_role, which a
+// live defect required. A gate that rejects the repair is worse than no gate.
 {
-  const before = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
-  db.exec(`grant update on public.artist_access to authenticated`)
-  db.exec(`alter table public.artist_access disable row level security`)
-  const landed = db.try(`update public.artist_access set status = 'active', actions = actions
-                          where organization_id = '${ORG}'`, { role: 'authenticated', uid: GRANTEE })
-  db.exec(`alter table public.artist_access enable row level security`)
-  // Still refused by the guard (authority column), which is correct — so assert the
-  // trust condition directly instead: only the owner path may clear the stamp.
-  const after = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
-  check('a non-owner write can never clear the revocation stamp', before === 't' && after === 't',
-    `before=${before} after=${after} landed=${landed.ok}`)
-  const trustGuarded = /current_user = table_owner/.test(
-    readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')
-      .split('artist_access_fill_revoked_at')[1].split('$$;')[0])
-  check('the fill trigger gates the reinstate branch on the owner path', trustGuarded,
-    'the reinstate branch is not owner-gated — a grantee reinstate would erase its own revocation record')
-}
-check('a grantee cannot forge revocation attribution',
-  !asGrantee(`update public.artist_access set revoked_by = '${GRANTEE}', revoked_at = now() - interval '99 days' where organization_id = '${ORG}'`).ok)
-check('a grantee cannot DELETE the grant row and destroy the trail',
-  !asGrantee(`delete from public.artist_access where organization_id = '${ORG}'`).ok)
+  // 1 · a TRUSTED writer (service_role) reinstating revoked -> active MUST clear the
+  //     stamp. Leaving it set produced a grant that read `active` to the UI and to
+  //     can_access_artist while grant_permits denied it permanently.
+  db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${ORG}'`)
+  const stampedBefore = db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`)
+  check('a revoked grant is stamped (positive control)', stampedBefore === 't')
+  const svc = db.try(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`, { role: 'service_role' })
+  check('service_role may reinstate (it is a trusted writer)', svc.ok, svc.out.split('\n')[0]?.slice(0, 110))
+  check('...and the stamp is CLEARED, so the grant is live again, not silently dead',
+    db.scalar(`select revoked_at is null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't',
+    'trusted reinstate left revoked_at set — grant_permits will deny this grant forever')
 
-db.exec(`update public.artist_access set status = 'active', revoked_at = null,
-            expires_at = now() - interval '1 day' where organization_id = '${ORG}'`)
-check('an expired grant denies', !permits(ORG, ACT_A, 'publish', 'booker'))
-check('a grantee cannot self-extend its own expiry',
-  !asGrantee(`update public.artist_access set expires_at = now() + interval '10 years' where organization_id = '${ORG}'`).ok)
-check('...so it still denies after the attempt', !permits(ORG, ACT_A, 'publish', 'booker'))
+  // 2 · an UNTRUSTED writer must not be able to reinstate at all.
+  db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${ORG}'`)
+  const untrusted = db.try(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: GRANTEE })
+  check('the grantee still cannot reinstate itself', !untrusted.ok, untrusted.out.split('\n')[0]?.slice(0, 110))
+  check('...and the stamp survives that attempt',
+    db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't')
+}
+
+console.log('\n[19b] service_role is a trusted writer for the whole authority surface')
+// H-3 is load-bearing — without it the backend cannot seed an active grant — and it
+// had ZERO coverage: two mutations removing it were both missed.
+{
+  const SUBJ = db.scalar(`select artist_id from public.artist_access limit 1`)
+  const FRESH = db.scalar(`select o.id from public.organization o where o.workspace_type = 'management'
+     and not exists (select 1 from public.artist_access a where a.organization_id = o.id) order by o.id limit 1`)
+  if (FRESH) {
+    const ins = db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
+      values ('${FRESH}', '${SUBJ}', 'manage', 'active', '{view}')`, { role: 'service_role' })
+    check('service_role may INSERT an active grant (the seed path)', ins.ok, ins.out.split('\n')[0]?.slice(0, 110))
+    const del = db.try(`delete from public.artist_access where organization_id = '${FRESH}'`, { role: 'service_role' })
+    check('service_role may DELETE a grant', del.ok, del.out.split('\n')[0]?.slice(0, 110))
+  } else {
+    check('a grantless management org exists for the service_role checks (positive control)', false, 'none')
+  }
+  // ...and an untrusted role still cannot do either.
+  const badIns = db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
+    values ('${ORG}', '${SUBJ}', 'manage', 'active', '{view,publish}')`, { role: 'authenticated', uid: GRANTEE })
+  check('an untrusted role may NOT insert an active, publish-scoped grant', !badIns.ok,
+    badIns.out.split('\n')[0]?.slice(0, 110))
+}
+
+console.log('\n[19c] the LIVE authority columns are guarded, not only the dormant ones (QA H-C)')
+// scope and consent_at are what can_access_artist()/artist_access_has_scope() gate on
+// today; actions/audience gate only the dormant PART B.
+{
+  db.exec(`update public.artist_access set status = 'active', revoked_at = null, scope = '{view}' where organization_id = '${ORG}'`)
+  const esc = db.try(`update public.artist_access set scope = '{view,upload,edit,share,publish}' where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot widen its own scope to publish', !esc.ok, esc.out.split('\n')[0]?.slice(0, 110))
+  const forge = db.try(`update public.artist_access set consent_at = now() where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot forge the artist\'s recorded consent', !forge.ok, forge.out.split('\n')[0]?.slice(0, 110))
+}
 
 console.log('\n[20] bounds that were declared but unenforced (QA H-5/H-6/C-4 + missed mutations)')
 db.exec(`update public.artist_access
@@ -464,6 +496,58 @@ console.log('\n[22] the legitimate revoke -> re-invite -> approve cycle leaves a
   } else {
     check('a grantless management org + admin exist for the cycle (positive control)', false,
       `org=${CY_ORG} admin=${CY_ADMIN}`)
+  }
+}
+
+
+console.log('\n[22b] the EXPIRED grant cycle must also come back to life (QA H-B)')
+// revoked_at was cleared on re-invite but expires_at was not — the same permanent
+// death, one liveness column over, and invisible because [22] only revokes.
+{
+  const E_ORG = db.scalar(`select o.id from public.organization o where o.workspace_type = 'management'
+     and not exists (select 1 from public.artist_access a where a.organization_id = o.id) order by o.id limit 1`)
+  const E_ADMIN = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${E_ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  const E_ART = db.scalar(`select id from public.artists limit 1`)
+  if (E_ORG && E_ADMIN) {
+    db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, scope, actions, audience, expires_at)
+             values ('${E_ORG}', '${E_ART}', null, 'manage', 'active', '{view}', '{request}', '{booker}', now() - interval '1 day')`)
+    check('expired baseline: denied', !permits(E_ORG, ACT_A, 'request', 'booker'))
+    const rv = db.try(`select public.request_artist_access('${E_ORG}'::uuid, '${E_ART}'::uuid, array['view']::text[], null)`,
+      { role: 'authenticated', uid: E_ADMIN })
+    check('re-invite over an EXPIRED grant succeeds', rv.ok, rv.out.split('\n')[0]?.slice(0, 100))
+    db.exec(`update public.artist_access set status = 'active', actions = '{request}', audience = '{booker}'
+              where organization_id = '${E_ORG}'`)
+    check('after re-approve the previously-EXPIRED grant works again',
+      permits(E_ORG, ACT_A, 'request', 'booker'),
+      `expires_at=${db.scalar(`select coalesce(expires_at::text,'null') from public.artist_access where organization_id = '${E_ORG}' limit 1`)}`)
+    db.exec(`delete from public.artist_access where organization_id = '${E_ORG}'`)
+  } else {
+    check('a grantless org + admin exist for the expiry cycle (positive control)', false, `org=${E_ORG}`)
+  }
+}
+
+console.log('\n[22c] a re-invite must NOT silently downgrade LIVE consented access (QA M-H)')
+{
+  const A_ORG = db.scalar(`select o.id from public.organization o where o.workspace_type = 'management'
+     and not exists (select 1 from public.artist_access a where a.organization_id = o.id) order by o.id limit 1`)
+  const A_ADMIN = db.scalar(`select person_id from public.organization_membership
+     where organization_id = '${A_ORG}' and org_role in ('owner','admin') and status = 'active' limit 1`)
+  const A_ART = db.scalar(`select id from public.artists limit 1`)
+  if (A_ORG && A_ADMIN) {
+    db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, scope, consent_at)
+             values ('${A_ORG}', '${A_ART}', null, 'manage', 'active', '{view,edit}', now())`)
+    const r = db.try(`select public.request_artist_access('${A_ORG}'::uuid, '${A_ART}'::uuid, array['view']::text[], null)`,
+      { role: 'authenticated', uid: A_ADMIN })
+    check('re-invite over a LIVE grant is accepted (no error surfaced to the caller)', r.ok,
+      r.out.split('\n')[0]?.slice(0, 100))
+    const row = db.rows(`select status||'|'||coalesce(consent_at::text,'null')||'|'||scope::text
+                           from public.artist_access where organization_id = '${A_ORG}'`)[0]?.[0]
+    check('...but the ACTIVE grant is not downgraded to pending', Boolean(row) && row.startsWith('active|'), `row=${row}`)
+    check('...and the artist consent record is preserved', Boolean(row) && !row.includes('|null|'), `row=${row}`)
+    db.exec(`delete from public.artist_access where organization_id = '${A_ORG}'`)
+  } else {
+    check('a grantless org + admin exist for the live-reset check (positive control)', false, `org=${A_ORG}`)
   }
 }
 

@@ -1294,3 +1294,49 @@ M-H1 now fails the suite; before restructuring it did not.
 caught, verified by landed diff.**
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."**
+
+## T-109.5 · FOURTH QA REJECTION OF 043 — HIGH DEFECTS CLOSED; SPLIT RECOMMENDED (17 Aug 2026)
+
+Fourth REJECT. **All four mutations QA found missed were this round's own claimed fixes** — the
+round's deliverables were the least-covered surface in the file. 043 remains DRAFTED, NOT APPLIED.
+
+**H-A (new, introduced by my H-3) · the two trust tests drifted apart.** I widened the *guard* to
+accept `service_role` but not the *fill trigger*. A `service_role` reinstate was then permitted by the
+guard and refused a stamp-clear by the trigger, leaving a grant that reads `active` to the UI and to
+`can_access_artist` while `grant_permits` denies it forever. Reachable from `scripts/seed.mjs`.
+Closed with **one** `artist_access_trusted_writer()` helper consumed by both — two copies of one rule
+was the defect; one function is the fix. QA also recorded that `service_role` is materially weaker
+trust than the owner (`SET ROLE` authorizes against `session_user`, so a PostgREST connection can
+reach it), and that note is now in the migration.
+
+**H-B · my H-1 fix was half a fix** — the re-invite cleared `revoked_at` but not `expires_at`, so the
+expired-then-re-approved cycle stayed permanently dead. Same defect, one liveness column over.
+
+**H-C · the guard protected the DORMANT columns and left the LIVE ones open.** `actions`/`audience`
+gate only PART B; `scope` and `consent_at` are what `can_access_artist` and `artist_access_has_scope`
+gate on *today*. A grantee could self-grant `publish` scope and **forge the artist's recorded
+consent**. Both are now guarded; no shipped writer sets them directly, so nothing regressed.
+
+**H-D · my own gate blocked the correct fix.** The "assertion" for the trust rule was a regex over the
+migration text, and widening trust to `service_role` — required by a live defect — made it FAIL.
+Replaced with executed proof on both sides, plus the `service_role` actor the suite never had.
+
+**M-H, and a defect my own new test caught.** Adding a `status <> 'active'` precondition to the
+re-invite introduced a fresh bug: with the UPDATE skipped, `found` was false and control fell through
+to the INSERT, violating the legacy unique index — a no-op re-invite became an error. Existence and
+reset are now separate questions, and "live" is `active AND inside its window`, because an expired
+grant is still stored as active.
+
+**Recorded for the owner, not decided here:** the five-way split of 043 (QA's RECOMMENDED judgement,
+with the evidence that every round's defect was a coupling defect between objects sharing one file),
+and M-E — an unlimited grantee-initiated re-invite loop that erases revocation, decline and dispute
+with no append-only record anywhere. Both are in `docs/OWNER-PENDING.md`.
+
+**Also recorded, unfixed:** M-F `revoked_by`/`granted_by` are guarded columns no path ever writes ·
+M-G one ordinary access request on a multi-Act artist makes 043 permanently unrollable · L-I the
+`p_audience is not null` line is inert (SQL NULL semantics do the work) and is now labelled as
+documentation, not a bound · L-K the guard's DELETE allow-branch is unreachable (no DELETE policy
+grants it) · L-L rollback does not restore the RPC's original privileges.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."** Mutations this round: 4 injected against the
+new fixes, 4 caught.
