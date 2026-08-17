@@ -68,10 +68,21 @@ begin
   -- tg_op, NOT `old is not null`: for a composite row that test is FALSE whenever
   -- ANY column is null (territory, purpose, expires_at are all nullable here), so
   -- the reinstate branch would almost never fire.
-  -- Only on the TRUSTED path. Clearing the stamp on any revoked->active transition
-  -- let a grantee erase its own revocation record simply by reinstating itself.
-  if tg_op = 'UPDATE' and public.artist_access_trusted_writer()
-     and new.status = 'active' and old.status = 'revoked' then
+  -- ANY writer who is ALLOWED to make this transition clears the stamp.
+  --
+  -- This deliberately does NOT gate on artist_access_trusted_writer(). That term was
+  -- added to stop a grantee erasing its own revocation record — but reaching this
+  -- branch requires changing `status`, and migration 046's guard already refuses that
+  -- for the grantee. The term therefore blocked nobody it needed to and excluded the
+  -- one principal 046 explicitly authorises: the artist-org owner/admin. Independent
+  -- QA reproduced the result — an artist reinstating their own revoked grant left
+  -- revoked_at behind, so the row read `active` to the UI and to can_access_artist
+  -- while grant_permits denied it forever. That is precisely the defect described at
+  -- the top of this file, reintroduced by the guard against it.
+  --
+  -- Authorisation lives in 046. This trigger's job is to keep the stamp consistent
+  -- with the status it is being moved to, for whoever was permitted to move it.
+  if tg_op = 'UPDATE' and new.status = 'active' and old.status = 'revoked' then
     new.revoked_at := null;
     new.revoked_by := null;
   end if;

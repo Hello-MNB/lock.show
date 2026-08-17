@@ -1421,3 +1421,51 @@ one-way). Both in `docs/OWNER-PENDING.md`. **L-4** noted in-file: the `revoked_a
 unfalsifiable while its own trigger is installed — the trigger enforces the invariant, not the check.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."**
+
+## T-110.2 · SIXTH QA PASS — 045/046 DEFECTS CLOSED (17 Aug 2026)
+
+Both files REJECTED again, but with a change worth recording: **all five of the previous round's fixes
+held and none regressed** — the first round in six where my repairs introduced no new defect of their
+own. QA also verified section [24]'s simulation restores the database byte-identically (ACLs, secdef,
+volatility, proconfig, trigger types and OID order, every constraint name and validity, relacl).
+
+**D1 (HIGH, 046) · a grantee could re-point its grant at any artist.** `artist_id` — the SUBJECT of the
+grant — was not in the guarded set, and RLS `aa_admin_write` keys only on `organization_id`. So the
+grantee-org owner passed RLS, the guard saw `touched = false`, and the row could be walked onto a
+different artist, carrying the existing consent, scope and status onto a party who never granted
+anything. `can_access_artist(victim)` went false → true. Closed two ways: `artist_id` is now guarded,
+and re-pointing is refused outright unless the writer holds owner/admin on **both** subjects.
+
+**D2 (HIGH, 045) · my own fix caused the defect it was meant to prevent.** I gated the reinstate branch
+on `artist_access_trusted_writer()` to stop a grantee self-reinstating — but reaching that branch
+requires changing `status`, which 046 already refuses for the grantee. The term blocked nobody it
+needed to and excluded the one principal 046 explicitly authorises: the artist-org owner. So when an
+ARTIST reinstated their own revoked grant, the stamp survived and the row read `active` to the UI and
+to `can_access_artist` while `grant_permits` denied it forever — word for word the defect described at
+the top of that file. The term is removed; authorisation lives in 046, and this trigger only keeps the
+stamp consistent with the status it is being moved to.
+
+**D3 (MEDIUM) · a refused rollback left the operator LESS safe.** Down files run newest-first, and the
+only blocking precondition lived in `044.down` — by which point `046.down` and `045.down` had already
+committed. An operator told "refused, nothing destroyed" was left with the authority columns present
+and **the guard gone**, and QA then self-issued publish scope and a ten-year expiry in that state. The
+precondition is now evaluated in `046.down`, before the first security control is dropped. My covering
+assertion was also dishonest — it measured `count(*)` of grant rows only; it now asserts the guard, the
+fill trigger and the authority columns all survive a refusal.
+
+**D4 recorded, not silently patched:** the effective bound on the live columns is **any active member**,
+because `respond_to_access_request` is SECURITY DEFINER and admits them. 046 narrows the direct path
+only, and the file now says so instead of implying otherwise. Tightening 027's contract is an owner
+call — `docs/OWNER-PENDING.md` RPC-2.
+
+**D5/D6/D7 coverage closed:** `act_belongs_to_artist` was absent from the post-rollback function sweep;
+the `EXECUTE` grant on the trust helper had no liveness assertion (revoking it kills every
+authenticated write through the fill trigger, including the only `expires_at` writer in `src/`); and the
+INSERT `touched` terms were individually dead because one test row set two of them at once.
+
+**Two of my mutations were wrong, not the code:** removing a `grant` is not a revoke — Supabase's
+default privileges already grant `authenticated` at CREATE time — and D1's two guards each cover the
+other, so only removing BOTH reproduces the vulnerable state. Corrected, both then CAUGHT.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope` now carries **133 executed
+assertions**.

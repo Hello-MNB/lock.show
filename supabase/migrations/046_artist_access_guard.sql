@@ -106,6 +106,21 @@ begin
     return old;
   end if;
 
+  -- THE SUBJECT MAY NOT BE WALKED. Even an owner/admin of the CURRENT subject's org
+  -- must not be able to retarget a grant at a different artist: that would carry the
+  -- existing consent, scope and status onto a party who never granted anything.
+  -- Re-pointing requires authority over BOTH the old and the new subject.
+  if tg_op = 'UPDATE' and new.artist_id is distinct from old.artist_id
+     and not public.artist_access_trusted_writer() then
+    if not (exists (select 1 from public.artists ar where ar.id = old.artist_id
+                     and public.has_org_role(ar.owner_organization_id, array['owner','admin']))
+        and exists (select 1 from public.artists ar where ar.id = new.artist_id
+                     and public.has_org_role(ar.owner_organization_id, array['owner','admin']))) then
+      raise exception 'artist_access: a grant may not be re-pointed at a different artist'
+        using errcode = '42501';
+    end if;
+  end if;
+
   -- LINKAGE FIRST, for EVERY writer including the owner. This is a data-integrity
   -- rule, not an authority rule: a grant pointing at an Act that belongs to someone
   -- else is malformed no matter who wrote it, and putting it after the trust
@@ -163,13 +178,26 @@ begin
             or new.revoked_at is distinct from old.revoked_at
             or new.revoked_by is distinct from old.revoked_by
             or new.scope is distinct from old.scope
-            or new.consent_at is distinct from old.consent_at;
+            or new.consent_at is distinct from old.consent_at
+            -- artist_id is the SUBJECT of the grant. RLS aa_admin_write keys only on
+            -- organization_id, so without this a grantee-org owner passes RLS, the
+            -- guard sees touched=false, and the row is walked onto a different
+            -- artist — conferring can_access_artist and scope on someone who never
+            -- consented. Independent QA reproduced it end to end.
+            or new.artist_id is distinct from old.artist_id;
   end if;
 
   -- owns_artist() alone is too wide: 030:22-32 resolves to ANY active member of an
   -- org that owns the artist, at any role — QA set actions='{publish,sign}' as a
   -- plain 'member'. Authority over a grant requires owner/admin of the artist's
-  -- OWNING organization.
+  -- OWNING organization on THIS path.
+  --
+  -- HONEST LIMIT: that is not the effective bound on the live columns. 027's
+  -- respond_to_access_request() is SECURITY DEFINER and authorises any ACTIVE MEMBER
+  -- of the artist's org, so a plain member can still set scope and consent_at through
+  -- it — verified by execution. This guard narrows the DIRECT path only. Tightening
+  -- the consent RPCs is a separate change to 027's contract and is recorded in
+  -- docs/OWNER-PENDING.md rather than smuggled into a migration about Act scope.
   if touched and not exists (
        select 1 from public.artists ar
         where ar.id = new.artist_id

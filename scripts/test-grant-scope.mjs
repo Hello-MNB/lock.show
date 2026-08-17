@@ -611,6 +611,93 @@ console.log('\n[18] the migration stays atomic under the applier')
 }
 
 
+
+console.log('\n[25] the SUBJECT of a grant, and who may reinstate it (QA D1 / D2)')
+{
+  const ART_ADMIN = db.scalar(`select m.person_id from public.organization_membership m
+     join public.artists ar on ar.owner_organization_id = m.organization_id
+    where ar.id = (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1)
+      and m.org_role in ('owner','admin') and m.status = 'active' limit 1`)
+  const asArtistOrg = (sql) => db.try(sql, { role: 'authenticated', uid: ART_ADMIN })
+  check('the artist-org owner/admin exists (positive control)', Boolean(ART_ADMIN), `got "${ART_ADMIN}"`)
+
+  // D1 · the grantee must not be able to walk the grant onto another artist.
+  db.exec(`update public.artist_access set act_id = null, status = 'active', revoked_at = null,
+              actions = '{request}', audience = '{booker}', scope = '{view}'
+            where organization_id = '${ORG}'`)
+  // A VICTIM artist in a DIFFERENT org, created as the owner: the fixture ships one
+  // artists row, so without this the re-point test has nothing to aim at and the
+  // assertion would be vacuous.
+  db.exec(`insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e1','victim@fixture.test') on conflict (id) do nothing;
+           insert into public.person (id, email, display_name) values ('00000000-0000-0000-0000-0000000000e1','victim@fixture.test','Victim Person') on conflict (id) do nothing;
+           insert into public.organization (id, name, slug, plan, created_by, workspace_type)
+             values ('00000000-0000-0000-0000-0000000000e2','Victim Org','victim-org','solo','00000000-0000-0000-0000-0000000000e1','artist') on conflict (id) do nothing;
+           insert into public.artists (id, created_by, owner_organization_id, organization_id, name, stage_name)
+             values ('00000000-0000-0000-0000-0000000000e3','00000000-0000-0000-0000-0000000000e1','00000000-0000-0000-0000-0000000000e2','00000000-0000-0000-0000-0000000000e2','Victim','Victim Act') on conflict (id) do nothing`)
+  const victim = db.scalar(`select id from public.artists where id <> (
+     select artist_id from public.artist_access where organization_id = '${ORG}' limit 1) limit 1`)
+  if (victim) {
+    const subjBefore = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+    const walk = db.try(`update public.artist_access set artist_id = '${victim}' where organization_id = '${ORG}'`,
+      { role: 'authenticated', uid: GRANTEE })
+    check('a grantee cannot re-point its grant at a different artist', !walk.ok, walk.out.split('\n')[0]?.slice(0, 110))
+    check('...and the subject did not move',
+      db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`) === subjBefore)
+  } else {
+    check('a second artist exists to re-point at (positive control)', false, 'only one artist in fixture')
+  }
+
+  // D2 · the artist-org owner MAY reinstate, and the stamp must clear so the grant
+  // is actually live again rather than reading active while denied forever.
+  db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${ORG}'`)
+  check('a revoked grant is stamped (positive control)',
+    db.scalar(`select revoked_at is not null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't')
+  const reinstate = asArtistOrg(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`)
+  check('the ARTIST-org owner may reinstate a revoked grant', reinstate.ok, reinstate.out.split('\n')[0]?.slice(0, 110))
+  check('...and the stamp is cleared, so the grant is genuinely live again',
+    db.scalar(`select revoked_at is null from public.artist_access where organization_id = '${ORG}' limit 1`) === 't',
+    'artist reinstate left revoked_at set — the row reads active everywhere while grant_permits denies it forever')
+  check('...and grant_permits agrees the grant is live', permits(ORG, ACT_A, 'request', 'booker'))
+
+  // D6 · an authenticated principal must be able to write the table at all. Revoking
+  // EXECUTE on the trust helper kills every authenticated write via the fill trigger,
+  // and nothing noticed — src/lib/orgs.js is the only expires_at writer.
+  const legit = asArtistOrg(`update public.artist_access set expires_at = now() + interval '90 days' where organization_id = '${ORG}'`)
+  check('an authenticated artist-org owner CAN still write expires_at (D6 liveness)', legit.ok,
+    legit.out.split('\n')[0]?.slice(0, 110))
+  db.exec(`update public.artist_access set expires_at = null where organization_id = '${ORG}'`)
+
+  // D4 · the effective bound on the LIVE columns is any active member via the consent
+  // RPC. Asserted so the limit is measured rather than assumed away by a comment.
+  // A PLAIN MEMBER of the artist's org, created as the owner for the same reason.
+  const ARTIST_ORG = db.scalar(`select ar.owner_organization_id from public.artists ar
+     where ar.id = (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1)`)
+  db.exec(`insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000e4','member@fixture.test') on conflict (id) do nothing;
+           insert into public.person (id, email, display_name) values ('00000000-0000-0000-0000-0000000000e4','member@fixture.test','Plain Member') on conflict (id) do nothing;
+           insert into public.organization_membership (organization_id, person_id, org_role, status)
+             values ('${ARTIST_ORG}','00000000-0000-0000-0000-0000000000e4','member','active') on conflict do nothing`)
+  const MEMBER = db.scalar(`select m.person_id from public.organization_membership m
+     join public.artists ar on ar.owner_organization_id = m.organization_id
+    where ar.id = (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1)
+      and m.org_role = 'member' and m.status = 'active' limit 1`)
+  if (MEMBER) {
+    const direct = db.try(`update public.artist_access set scope = '{view,publish}' where organization_id = '${ORG}'`,
+      { role: 'authenticated', uid: MEMBER })
+    check('a plain member cannot set authority columns on the DIRECT path', !direct.ok,
+      direct.out.split('\n')[0]?.slice(0, 110))
+  } else {
+    console.log('  ~ no plain member in the fixture — the D4 direct-path bound is UNVERIFIED here')
+  }
+}
+
+console.log('\n[26] the 046 rollback removes everything it installed (QA D5)')
+// The rollback assertion enumerated five function names and act_belongs_to_artist was
+// not among them, so an incomplete 046 revert was undetectable.
+check('046.down names act_belongs_to_artist',
+  /drop function if exists public\.act_belongs_to_artist/.test(
+    readFileSync('supabase/migrations/046_artist_access_guard.down.sql', 'utf8')),
+  'the 046 rollback leaves act_belongs_to_artist behind')
+
 console.log('\n[24] the split ENFORCES its dependency order, it does not merely document it')
 // The split created dependencies between files. Independent QA proved that stating
 // them in a header comment is not enforcement: 046 applied without 045 and left the
@@ -688,9 +775,24 @@ check('PART B is applied going into the rollback (so the restore block is load-b
 
 const blocked = db.try(down)
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
-  !blocked.ok && /cannot roll back 044/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  !blocked.ok && /cannot roll back/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
 const survived = db.scalar(`select count(*) from public.artist_access where act_id = '${ACT_B}'`)
-check('...and the refused rollback destroyed nothing', survived !== '0', `rows=${survived}`)
+check('...and the refused rollback destroyed no grant rows', survived !== '0', `rows=${survived}`)
+// A row count is NOT what "destroyed nothing" means. The refusal used to come from
+// 044.down, by which point 046.down and 045.down had already committed — so the
+// operator was told nothing was destroyed while the GUARD had been removed, leaving
+// the database strictly less safe than before the attempt. Independent QA then
+// self-issued publish scope and a ten-year expiry in that state. The refusal now
+// fires from the first file that removes a security control, and this asserts the
+// control is still standing afterwards.
+check('...and the AUTHORITY GUARD is still installed after the refusal',
+  db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1',
+  'a refused rollback removed the guard — the operator is left less safe than before trying')
+check('...and the fill trigger is still installed after the refusal',
+  db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'`) === '1')
+check('...and the authority columns are still present after the refusal',
+  db.scalar(`select count(*) from information_schema.columns where table_name='artist_access'
+             and column_name in ('act_id','actions','audience','scope')`) === '4')
 // Consolidate to one row per (organization, artist) — the exact remediation the
 // refusal message asks the operator to perform. Done generically rather than by
 // deleting a known id, so this keeps working as earlier sections change shape.
@@ -712,8 +814,9 @@ if (downRes.ok) {
   check('all 10 added columns are gone', cols === '0', `still present: ${cols}`)
   const fns = db.scalar(`select count(*) from pg_proc where proname in
     ('grant_permits','apply_act_scoped_publish','revert_act_scoped_publish',
-     'artist_access_fill_revoked_at','artist_access_guard_authority')`)
-  check('all 5 added functions are gone', fns === '0', `still present: ${fns}`)
+     'artist_access_fill_revoked_at','artist_access_guard_authority',
+     'artist_access_trusted_writer','act_belongs_to_artist')`)
+  check('all 7 added functions are gone', fns === '0', `still present: ${fns}`)
   const idx = db.scalar(`select count(*) from pg_indexes where indexname in
     ('idx_artist_access_org_act','idx_artist_access_act','idx_artist_access_org_artist_legacy')`)
   check('all added indexes are gone', idx === '0', `still present: ${idx}`)
