@@ -94,9 +94,21 @@ function extractMetadataBlock(src, file) {
   if (start === -1) return null
   const open = src.indexOf('{', start)
   if (open === -1) return null
-  let depth = 0, inStr = null
+  let depth = 0, inStr = null, inComment = null
   for (let i = open; i < src.length; i++) {
     const c = src[i]
+    // COMMENTS FIRST. Without this the matcher treats an apostrophe inside a
+    // comment — "the layout's images" — as an opening quote, then swallows every
+    // brace until the next apostrophe and reports the literal as unbalanced. The
+    // file compiles and ships correctly; only this gate misreads it, which makes
+    // the failure look like a code defect and sends the reader to the wrong file.
+    if (inComment) {
+      if (inComment === 'line' && c === '\n') inComment = null
+      else if (inComment === 'block' && c === '*' && src[i + 1] === '/') { inComment = null; i++ }
+      continue
+    }
+    if (!inStr && c === '/' && src[i + 1] === '/') { inComment = 'line'; i++; continue }
+    if (!inStr && c === '/' && src[i + 1] === '*') { inComment = 'block'; i++; continue }
     if (inStr) {
       if (c === '\\') i++
       else if (c === inStr) inStr = null
@@ -492,6 +504,39 @@ if (!existsSync(join(OUT, 'index.html'))) {
     else fail(`S8 · ${s}: /app shell without <meta name="robots" content="noindex, nofollow"> — re-inject after any embed rebuild`)
   }
   if (!failed) console.log(`✓ S8: route-class robots policy — ${INDEX_ROUTES.size} index + ${NOINDEX_ROUTES.size} noindex routes enforced, /app X-Robots-Tag configured, ${shellsOk}/${shells.length} app shells carry meta noindex`)
+}
+
+// ── S10 · every index-class page ships a resolvable og:image ──────────────────
+// Why this exists: a page-level `openGraph` block REPLACES the layout's images
+// rather than merging with them. `/`, `/artists` and `/pricing` each declared one
+// without `images` and shipped with NO og:image, while `twitter:image` — a
+// separate metadata field — kept resolving. So X previews looked fine and only
+// WhatsApp and Facebook rendered the most-shared URLs imageless. Nothing in S1-S8
+// looked at og:image, so a green chain said nothing about it.
+{
+  const OG_RE = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i
+  let ogOk = 0
+  for (const route of INDEX_ROUTES) {
+    const file = route === '/' ? 'index.html' : `${route.replace(/^\//, '')}.html`
+    const abs = join(OUT, file)
+    if (!existsSync(abs)) { fail(`S10 · ${file}: built page missing — cannot check og:image`); continue }
+    const m = OG_RE.exec(readFileSync(abs, 'utf8'))
+    if (!m) { fail(`S10 · ${route}: no og:image. A page-level openGraph block without \`images\` drops the layout default — re-state it.`); continue }
+    const url = m[1]
+    if (!url.startsWith(`https://${EXPECTED_HOST}`)) {
+      fail(`S10 · ${route}: og:image "${url}" is not absolute on https://${EXPECTED_HOST} — scrapers do not resolve relative card URLs`)
+      continue
+    }
+    // The referenced file must actually exist: a 404 card is the same broken
+    // preview as no card, and costs a round-trip to discover in production.
+    const rel = url.slice(`https://${EXPECTED_HOST}`.length)
+    if (!existsSync(join(SITE, 'public', rel)) && !existsSync(join(OUT, rel))) {
+      fail(`S10 · ${route}: og:image ${rel} is declared but no such file ships`)
+      continue
+    }
+    ogOk++
+  }
+  if (!failed) console.log(`✓ S10: og:image — ${ogOk}/${INDEX_ROUTES.size} index pages carry an absolute, shipped social card`)
 }
 
 // ── verdict ──────────────────────────────────────────────────────────────────

@@ -18,13 +18,20 @@ begin
   end if;
 end $$;
 
+drop trigger if exists trg_artist_access_guard_authority on public.artist_access;
+drop function if exists public.artist_access_guard_authority();
 drop trigger if exists trg_artist_access_fill_revoked_at on public.artist_access;
 drop function if exists public.artist_access_fill_revoked_at();
 drop function if exists public.apply_act_scoped_publish();
 drop function if exists public.revert_act_scoped_publish();
-drop function if exists public.grant_permits(uuid, uuid, text, text, timestamptz);
+drop function if exists public.grant_permits(uuid, uuid, text, text, text, uuid, timestamptz);
 
 drop index if exists public.idx_artist_access_org_act;
+drop index if exists public.idx_artist_access_org_artist_legacy;
+-- Restore the 008 key that PART A replaced.
+alter table public.artist_access drop constraint if exists artist_access_organization_id_artist_id_key;
+alter table public.artist_access add constraint artist_access_organization_id_artist_id_key
+  unique (organization_id, artist_id);
 drop index if exists public.idx_artist_access_act;
 
 alter table public.artist_access drop constraint if exists artist_access_actions_check;

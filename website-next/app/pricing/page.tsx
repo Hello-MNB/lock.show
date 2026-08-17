@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { localeAlternates } from '@/lib/site'
+import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
 import { Hero } from '@/components/hero'
@@ -17,6 +17,18 @@ export const metadata: Metadata = {
     description:
       'One page, four honest answers — artist, booking manager, producer, agency. And the things money can never buy here.',
     type: 'website',
+    // Re-stated deliberately: declaring a page-level openGraph block REPLACES the
+    // the layout images rather than merging with them, so omitting this ships a page
+    // with no og:image.
+    images: [
+      {
+        url: OG_DEFAULT_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: OG_DEFAULT_ALT,
+        type: 'image/png',
+      },
+    ],
   },
 }
 

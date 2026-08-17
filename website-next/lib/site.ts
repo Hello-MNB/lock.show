@@ -7,6 +7,15 @@ import { ACTIVE_LOCALES } from './locales'
 // minted on this origin and nowhere else.
 export const SITE_URL = 'https://www.lock.show'
 
+// The default social card. ONE source: the layout sets it as the site-wide
+// default, and any page that declares its own `openGraph` block must re-state an
+// image or Next.js replaces the layout's images wholesale — which is exactly how
+// `/`, `/artists` and `/pricing` shipped with no og:image at all while
+// twitter:image (a separate metadata field) kept working, so the gap was
+// invisible on X and only showed on WhatsApp and Facebook.
+export const OG_DEFAULT_IMAGE = `${SITE_URL}/og/og-default.png`
+export const OG_DEFAULT_ALT = 'LOCK — Booking Proof for Independent Artists'
+
 /** Absolute URL on the canonical origin: absoluteUrl('/pricing') → https://www.lock.show/pricing */
 export function absoluteUrl(path = '/'): string {
   return new URL(path, SITE_URL).toString()

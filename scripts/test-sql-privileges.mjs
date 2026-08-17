@@ -83,6 +83,7 @@ const EXPECTED = {
   apply_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — it replaces an RLS policy. No RPC surface at all' },
   revert_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — the reverse policy swap' },
   artist_access_fill_revoked_at: { roles: [], why: 'trigger function — fills revoked_at so no existing writer breaks' },
+  artist_access_guard_authority: { roles: [], why: 'trigger function (SECURITY DEFINER) — stops a grantee writing their own authority columns' },
 }
 
 // ── which functions do these two files actually create? ─────────────────────

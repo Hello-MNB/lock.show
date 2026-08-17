@@ -7,7 +7,7 @@ import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
 import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
-import { SITE_URL } from '@/lib/site'
+import { SITE_URL, OG_DEFAULT_IMAGE } from '@/lib/site'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -27,7 +27,7 @@ const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
 // SITE_URL comes from lib/site.ts — the ONE place the canonical www origin
 // is declared (owner ruling D2). Do not re-declare a host string here.
-const OG_IMAGE = `${SITE_URL}/og/og-default.png`
+const OG_IMAGE = OG_DEFAULT_IMAGE
 // Square brand mark for Organization.logo — a real logo asset, not an OG card
 // (C9 fix). SVG is valid as an ImageObject URL per schema.org; this is the
 // self-contained spotlight-lens symbol on its ink background (1000×1000).

@@ -1086,3 +1086,51 @@ and the anon oracle. `test:sql-privileges` EXPECTED map extended to the four 043
 **verify: exit 0, 41 assertions, "Nothing was skipped."** Independent adversarial QA was dispatched in
 parallel and its verdict is NOT yet recorded here; this entry states only what was observed.
 NOT applied to any live environment. No deploy, no console change, no secret touched.
+
+## T-109.1 · QA REJECTION OF 043 — CLOSED (17 Aug 2026)
+
+Independent adversarial QA **REJECTED** the first 043 submission. Its findings were more serious than
+my own. All CRITICAL and HIGH items are closed; the migration remains DRAFTED, NOT APPLIED.
+
+| # | Finding | Closure |
+|---|---|---|
+| **C1 CRITICAL** | **The grantee writes their own grant.** Policy `aa_admin_write` (008:222) is FOR ALL on `has_org_role(owner/admin)` and governs every column 043 adds, so an agency owner could `update artist_access set actions='{publish,sign}'` and self-issue the authority the migration exists to bound — reachable from the shipped client (`src/lib/orgs.js:349`). Compounding: **no legitimate writer populates the new columns at all**, so the self-write path was the ONLY path. | `artist_access_guard_authority()` BEFORE INSERT/UPDATE trigger: the 8 authority columns may be set only by the artist who owns the subject, or by a SECURITY DEFINER consent RPC. **My first attempt was inert** — I wrote it SECURITY DEFINER, which makes `current_user` the function owner inside the body, so the trust check short-circuited for every caller. Corrected to SECURITY INVOKER and proven by execution. |
+| **C2 HIGH** | `act_id` FK allowed a grant to be re-pointed at ANY Act in the database. | Linkage check in the same trigger, placed BEFORE the trust short-circuit — a malformed grant is malformed regardless of who writes it, including the owner and consent RPCs. |
+| **C3 HIGH** | `unique (organization_id, artist_id)` (008:66) capped an org at ONE grant per artist, so the multi-Act case 043 exists for was **structurally unreachable**. | The 008 key is replaced by two narrower keys: unique per (org, act) for Act-scoped rows, unique per (org, artist) for legacy NULL rows. Executed proof that two Act-scoped grants now coexist and do not cross. |
+| **C4 HIGH** | `p_audience` defaulted to NULL and short-circuited to true, and PART B called `grant_permits` with no audience — so the audience bound never applied to the one decision it governs. | Audience is mandatory; NULL denies. PART B passes audience, purpose and version from the row being written. |
+| **C5 HIGH** | `purpose` and `version_binding` were stored, vocabulary-checked and never consulted — decorative. | Both are now parameters and are enforced: a grant naming a purpose permits only that purpose; `version_binding='named'` permits only its pinned version. |
+| **C6 MEDIUM** | `revert_act_scoped_publish()` recreated the policy `to authenticated` where 017 created it for PUBLIC, so rollback silently NARROWED the shipped policy — invisible to a substring check. | `to` clause removed; the suite now compares the FULL policy tuple (expression **and** `polroles`) before/after. |
+| **C7 MEDIUM** | The gate missed 6 mutations, including a PART B body of `with check (true)` — a total publish bypass — because the suite only asserted dormancy and never executed PART B. | Section [16] applies PART B, asserts it consults `grant_permits` and is not a blanket allow, reverts, and compares the full tuple. Sections [13]–[15] add QA's C1/C2/C3 reproductions as standing negative assertions. |
+
+**QA also credited, verified by execution:** the privilege model is exactly right (`proacl` per function,
+all three roles denied on the dormant callables); idempotent apply ×3 and down ×2; and **no existing
+writer breaks** — QA executed `request_artist_access` (both paths), `respond_to_access_request`,
+`revoke_artist_access`, `orgs.js:349` and the seed insert against the migrated database.
+
+**Open, deliberately not closed in this increment** (recorded so they are not lost): C8 the down
+migration destroys stored authority data by design; C9 a re-invite clears the revocation stamp;
+C10 the file uses two `begin/commit` pairs and is therefore not atomic under `--single-transaction`;
+C11 the legacy `act_id is null` branch matches only the DEFAULT Act — fail-closed, but the join is an
+identity coincidence rather than a semantic relation.
+
+**C12 — process, accepted:** I committed 043 and an evidence record while adversarial review was still
+open. QA flagged it. The rule is the implementer does not accept their own work; committing before the
+verdict is the same error in a smaller form, and the correct sequence is to hold.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."**
+
+## T-110 · SITE og:image RESTORED + S10 GATE (Team B item 1)
+
+`/`, `/artists` and `/pricing` shipped with **no og:image**: a page-level `openGraph` block REPLACES
+the layout's images rather than merging, and each declared one without `images`. `twitter:image` is a
+separate field and kept resolving, so X previews looked correct while WhatsApp and Facebook rendered
+the three most-shared URLs imageless — on a site whose own llms.txt sells "WhatsApp-scannable".
+
+Fixed by exporting ONE `OG_DEFAULT_IMAGE`/`OG_DEFAULT_ALT` from `lib/site.ts`, consumed by the layout
+and the three pages, so the card has a single source rather than four literals. New **S10** assertion
+in `test-seo-contract.mjs`: every index-class page carries an absolute og:image on the canonical host
+AND the referenced file actually ships. Mutation-tested — removing `images` from one page turns it red.
+
+Also fixed a latent trap in that gate: its metadata brace-matcher tracked strings but **not comments**,
+so an apostrophe inside a comment ("the layout's images") opened a phantom string, swallowed braces and
+reported a valid file as an unbalanced literal. The parser is now comment-aware.
