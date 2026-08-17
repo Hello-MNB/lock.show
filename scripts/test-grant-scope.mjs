@@ -795,13 +795,29 @@ console.log('\n[25e] the whole-row guard closes the identity class, not one colu
   }
 }
 
-console.log('\n[25d] 046 can still be reverted ALONE — the property the split exists to give (QA M-1)')
-// Hoisting 044's duplicate-pair precondition into 046.down protected the operator,
-// but it also blocked reverting 046 by itself — the legitimate move when the guard is
-// breaking a client — on a condition about a unique key the guard has nothing to do
-// with, while advising the operator to delete a legitimate Act-scoped grant. The
-// escape must therefore work, or the refusal has simply traded one defect for another.
+console.log('\n[25d] 046 reverts ALONE in EVERY legitimate order, and the full chain is ATOMIC (QA H-2/H-3)')
+// 044's duplicate-pair refusal was hoisted into 046.down so a full newest-first
+// rollback would refuse before the guard was dropped. It needed an escape to keep a
+// 046-only revert possible, and the escape proved it was "genuinely partial" by
+// testing whether 047 was still installed. Two independent reviewers broke both
+// halves by EXECUTION: the proof is order-dependent (046.down first passes it, then
+// 044 refuses and leaves the columns unguarded), and after a legitimate 047-only
+// revert a 046-only revert became impossible in either mode. The precondition and the
+// escape are gone; atomicity replaces them. These assertions are the reason it may
+// not come back.
 {
+  const mig = (f) => readFileSync(`supabase/migrations/${f}.sql`, 'utf8')
+  const down = (f) => readFileSync(`supabase/migrations/${f}.down.sql`, 'utf8')
+  const down046 = down('046_artist_access_guard')
+  const down047 = down('047_grant_decision')
+  const guardInstalled = () =>
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1'
+  const permitsInstalled = () =>
+    db.scalar(`select to_regprocedure('public.grant_permits(uuid,uuid,text,text,text,uuid,timestamptz)') is not null`) === 't'
+
+  // The duplicate (organization, artist) pair is the WHOLE POINT: it is what 044's
+  // key replacement allows and what the removed precondition refused on. Without it
+  // every assertion below is vacuous — a revert that was never going to be blocked.
   const dupOrg = db.scalar(`select organization_id from public.artist_access
      group by organization_id, artist_id having count(*) > 1 limit 1`)
   if (!dupOrg) {
@@ -809,42 +825,237 @@ console.log('\n[25d] 046 can still be reverted ALONE — the property the split 
              values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1),
                      '${ACT_B}', 'manage', 'active')`)
   }
-  const down046 = readFileSync('supabase/migrations/046_artist_access_guard.down.sql', 'utf8')
-  const refused = db.try(down046)
-  check('046.down refuses a FULL rollback while duplicate pairs exist', !refused.ok && /cannot roll back to 043/.test(refused.out),
-    refused.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
-  check('...and the guard is still installed after that refusal',
-    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+  const dupPairs = db.scalar(`select count(*) from (select organization_id, artist_id
+     from public.artist_access group by organization_id, artist_id having count(*) > 1) d`)
+  check('[25d] precondition: duplicate (organization, artist) pairs EXIST — Act-scoped grants, the steady state from 044 on',
+    Number(dupPairs) > 0, `pairs=${dupPairs}`)
+  check('[25d] precondition: 047 is installed and the guard is live', permitsInstalled() && guardInstalled())
 
-  // H-B: the escape is SESSION-scoped, so an operator who sets it and then runs the
-  // FULL chain in the same session used to disarm this precondition silently — 046
-  // committed, the guard was dropped, and 044 refused afterwards, leaving the
-  // authority columns present and unguarded. The escape must refuse when 047 is
-  // already gone, because that is a full rollback wearing the escape.
-  const down047 = readFileSync('supabase/migrations/047_grant_decision.down.sql', 'utf8')
-  const fullWithEscape = db.try(`select set_config('b4.partial_rollback','046',false);\n${down047}\n${down046}`)
-  check('the escape REFUSES once 047 is gone — a full rollback cannot wear it',
-    !fullWithEscape.ok && /claims a 046-only revert/.test(fullWithEscape.out),
-    fullWithEscape.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 130))
-  check('...and the guard survived that attempt',
-    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
-
-  // Restore 047: the check above deliberately removed it, and a genuine 046-only
-  // revert by definition happens while 047 is still installed.
-  db.exec(readFileSync('supabase/migrations/047_grant_decision.sql', 'utf8'))
-  check('047 restored for the legitimate partial-revert case (positive control)',
-    db.scalar(`select to_regprocedure('public.grant_permits(uuid,uuid,text,text,text,uuid,timestamptz)') is not null`) === 't')
-
-  const escaped = db.try(`select set_config('b4.partial_rollback', '046', false);\n${down046}`)
-  check('...but 046 CAN be reverted alone via the documented escape', escaped.ok,
-    escaped.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
-  check('...leaving 045 intact, so the partial revert is genuinely partial',
+  // ORDER 1 — the plain case the split exists to give. No escape, no GUC.
+  const alone = db.try(down046)
+  check('046 reverts ALONE with duplicate pairs present, and needs no escape', alone.ok,
+    alone.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...leaving 045 intact, so the revert is genuinely partial',
     db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'`) === '1')
-  // restore for the sections that follow
-  db.exec(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8'))
+  db.exec(mig('046_artist_access_guard'))
+  check('...and 046 re-applies cleanly afterwards', guardInstalled())
+
+  // ORDER 2 — the sequence the escape made IMPOSSIBLE: revert 047 alone (it has its
+  // own down file and reverting it alone is supported), then later revert 046 alone.
+  const only047 = db.try(down047)
+  check('047 reverts alone (supported, and the precondition for the case below)', only047.ok,
+    only047.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...grant_permits is genuinely gone (positive control)', !permitsInstalled())
+  const after047 = db.try(down046)
+  check('046 STILL reverts alone after a legitimate 047-only revert — the case the escape refused',
+    after047.ok, after047.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 160))
+  check('...and it actually dropped the guard rather than reporting a hollow success', !guardInstalled())
+  db.exec(mig('046_artist_access_guard'))
+  db.exec(mig('047_grant_decision'))
+  check('047 and 046 both restored for the sections that follow', permitsInstalled() && guardInstalled())
+
+  // ORDER 3 — the failure the precondition was hoisted to prevent, now handled by
+  // ATOMICITY instead. 044.down still refuses on duplicate pairs; wrapped as ONE
+  // transaction the refusal takes the earlier files' drops down with it, so the
+  // operator is never left with authority columns present and the guard gone.
+  const chain = [down047, down046, down('045_artist_access_revocation'),
+                 down('044_artist_access_act_key'), down('043_artist_access_columns')].join('\n')
+  const atomic = db.try(`begin;\n${chain}\ncommit;`)
+  check('the FULL rollback still REFUSES while duplicate pairs exist', !atomic.ok && /cannot roll back 044/.test(atomic.out),
+    atomic.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...and one transaction lost NOTHING — the guard is still installed after that refusal', guardInstalled())
+  check('...the trust helper too', db.scalar(`select to_regprocedure('public.artist_access_trusted_writer()') is not null`) === 't')
+  check('...grant_permits too', permitsInstalled())
+  check('...and 043 authority columns are all still present',
+    db.scalar(`select count(*) from information_schema.columns where table_schema='public'
+       and table_name='artist_access' and column_name in ('act_id','actions','audience','purpose','version_binding')`) === '5')
+
+  // ORDER 4 — the exact sequence that defeated the escape: 046.down FIRST, in the
+  // same session, then the rest. Ran outside a transaction it left the columns
+  // unguarded; as one transaction it cannot.
+  const reordered = [down046, down047, down('045_artist_access_revocation'),
+                     down('044_artist_access_act_key'), down('043_artist_access_columns')].join('\n')
+  const atomic2 = db.try(`begin;\n${reordered}\ncommit;`)
+  check('046-FIRST ordering also refuses, and atomically — the ordering that defeated the escape',
+    !atomic2.ok && /cannot roll back 044/.test(atomic2.out),
+    atomic2.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...guard still installed after the reordered refusal (this is what regressed before)', guardInstalled())
+
+  // The escape must not come back: it is a session GUC, so any future re-introduction
+  // reintroduces both defects at once. Tested against EXECUTABLE sql only — the file's
+  // header names b4.partial_rollback while explaining why it was removed, and a check
+  // that cannot tell prose from code would forbid documenting its own history.
+  const sqlOnly = (t) => t.split('\n').map((l) => l.replace(/--.*$/, '')).join('\n')
+  const down046code = sqlOnly(down046)
+  check('[25d] the comment-stripper works (positive control — it must not blank the file)',
+    /drop trigger if exists trg_artist_access_guard_authority/.test(down046code)
+      && !/NO PRECONDITION HERE/.test(down046code))
+  check('046.down carries NO session-GUC escape', !/b4\.partial_rollback/.test(down046code),
+    'the b4.partial_rollback escape is back — it is order-dependent and breaks the legitimate 046-only revert')
+  check('046.down carries NO hoisted duplicate-pair precondition',
+    !/cannot roll back to 043/.test(down046code) && !/current_setting/.test(down046code))
+
+  // THE RESIDUAL, MEASURED — not assumed away. Atomicity is a guarantee about the
+  // procedure, so an operator who runs the five files UNWRAPPED still reaches the bad
+  // state: 047/046/045 commit one by one, 044 refuses, and the authority columns are
+  // left present with the guard gone. That is real and it is the price of removing a
+  // precondition that was itself broken in two ways. It is therefore DISCLOSED in the
+  // file rather than silently carried, and this asserts the disclosure is actually
+  // there and names the procedure that avoids it.
+  const unwrapped = db.try(chain)
+  check('UNWRAPPED, the chain still refuses at 044', !unwrapped.ok && /cannot roll back 044/.test(unwrapped.out))
+  const strandedCols = db.scalar(`select count(*) from information_schema.columns
+     where table_schema='public' and table_name='artist_access' and column_name='act_id'`)
+  check('...and this is the residual: unwrapped, the guard IS gone while act_id remains — the reason the procedure is single-transaction',
+    !guardInstalled() && strandedCols === '1',
+    `guard=${guardInstalled()} act_id_present=${strandedCols}`)
+  check('046.down DISCLOSES that residual and names the single-transaction procedure',
+    /single-transaction/.test(down046) && /ATOMICITY|atomicity|ONE\s+transaction/.test(down046),
+    'the residual is real and undisclosed — an operator would meet it with no warning')
+  db.exec(mig('045_artist_access_revocation'))
+  db.exec(mig('046_artist_access_guard'))
+  db.exec(mig('047_grant_decision'))
+  check('...and the sections that follow get a fully restored chain back',
+    guardInstalled() && permitsInstalled()
+      && db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'`) === '1')
+
   db.exec(`delete from public.artist_access where organization_id = '${ORG}' and act_id = '${ACT_B}'`)
-  check('046 re-applies cleanly after the partial revert',
-    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+}
+
+console.log('\n[25f] a broken Act linkage must not FREEZE a live grant (QA H-1)')
+// The linkage check ran on EVERY update, including ones that never touched act_id.
+// Policy act_org (020:187) is FOR ALL on can_access_artist(act.id) and the default
+// Act's id equals the artist's id, so any live grant-holder can write public.act.
+// Breaking the linkage there made the grant PERMANENTLY UNREVOCABLE — for the artist,
+// the consent RPC, service_role and the table owner alike — while grant_permits still
+// returned true. The grantee could freeze their own publish grant.
+{
+  const SUBJ = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const ART_OWNER = db.scalar(`select m.person_id from public.organization_membership m
+     join public.artists ar on ar.owner_organization_id = m.organization_id
+    where ar.id = '${SUBJ}' and m.org_role in ('owner','admin') and m.status = 'active' limit 1`)
+  check('[25f] precondition: subject and an artist-org owner exist', Boolean(SUBJ) && Boolean(ART_OWNER))
+  if (SUBJ && ART_OWNER) {
+    // A LIVE Act-scoped grant, then break the linkage the way the grantee can.
+    db.exec(`update public.artist_access set act_id = '${ACT_A}', status = 'active', revoked_at = null,
+                revoked_by = null, actions = '{publish}', audience = '{booker}', scope = '{view,publish}'
+              where organization_id = '${ORG}'`)
+    const personBefore = db.scalar(`select person_id from public.act where id = '${ACT_A}'`)
+    const linkedBefore = db.scalar(`select public.act_belongs_to_artist('${ACT_A}'::uuid, '${SUBJ}'::uuid)`)
+    check('[25f] precondition: the linkage currently HOLDS', linkedBefore === 't')
+    // Break it as the OWNER — whether the grantee can reach public.act is 020's
+    // business; this asserts 046 does not convert linkage drift, from any cause
+    // (ops correction, Person merge, ownership transfer), into a frozen grant.
+    const OTHER = db.scalar(`select id from public.person where id <> '${personBefore}' order by id limit 1`)
+    check('[25f] precondition: a DIFFERENT real person exists to drift the Act onto',
+      Boolean(OTHER) && OTHER !== personBefore, `before=${personBefore} other=${OTHER}`)
+    db.exec(`update public.act set person_id = '${OTHER}' where id = '${ACT_A}'`)
+    check('[25f] the linkage is now genuinely BROKEN (positive control)',
+      db.scalar(`select public.act_belongs_to_artist('${ACT_A}'::uuid, '${SUBJ}'::uuid)`) === 'f')
+
+    const revoke = db.try(`update public.artist_access set status = 'revoked' where organization_id = '${ORG}'`,
+      { role: 'authenticated', uid: ART_OWNER })
+    check('the artist can STILL REVOKE a grant whose Act linkage has broken', revoke.ok,
+      revoke.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+    check('...and the revocation actually landed, not merely reported ok',
+      db.scalar(`select status from public.artist_access where organization_id = '${ORG}' limit 1`) === 'revoked')
+    check('...so the grant no longer permits publish', !permits(ORG, ACT_A, 'publish', 'booker'))
+    // The check must still BITE on the write that MOVES the linkage — otherwise the
+    // H-1 fix has simply disabled it. ACT_B is legitimately this artist's second Act,
+    // so aiming there would prove nothing; aim at the Act whose linkage this block
+    // just broke, and clear act_id first so the write genuinely moves it.
+    db.exec(`update public.artist_access set act_id = null where organization_id = '${ORG}'`)
+    const repoint = db.try(`update public.artist_access set act_id = '${ACT_A}' where organization_id = '${ORG}'`)
+    check('...but WRITING a mismatched act_id is still refused, for the table owner too',
+      !repoint.ok && /does not belong to the artist/.test(repoint.out),
+      repoint.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+    check('...and act_id did not move',
+      db.scalar(`select coalesce(act_id::text,'') from public.artist_access where organization_id = '${ORG}' limit 1`) === '')
+    // Restore the fixture exactly: the sections that follow need this row Act-scoped
+    // to ACT_A, and a stale act_id here silently starved [12] of the duplicate pair
+    // its whole refusal assertion depends on.
+    db.exec(`update public.act set person_id = '${personBefore}' where id = '${ACT_A}'`)
+    db.exec(`update public.artist_access set act_id = '${ACT_A}', status = 'active', revoked_at = null,
+                revoked_by = null where organization_id = '${ORG}'`)
+    check('[25f] fixture restored: linkage holds again and the grant is Act-scoped to ACT_A',
+      db.scalar(`select public.act_belongs_to_artist('${ACT_A}'::uuid, '${SUBJ}'::uuid)`) === 't'
+        && db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG}' and act_id = '${ACT_A}'`) !== '0')
+  }
+
+  // A whole-row `is distinct from` needs a default btree equality operator for every
+  // column type. A `json` column would make EVERY untrusted write raise 42883, which
+  // src/lib/orgs.js:270 swallows as "migration 027 not applied yet" — the client would
+  // fail soft and SILENT. Use jsonb. Executed, not grepped.
+  // EXECUTED, not inferred from the catalogue: a first attempt at this read pg_opclass
+  // and reported three false defects, because an array column's udt_name is `_text`
+  // while its opclass opcintype is `anyarray`. Perform the comparison the guard
+  // performs and let the database answer.
+  const rowEq = db.try(`select (a.*) is not distinct from (a.*) from public.artist_access a limit 1`)
+  check('a whole-row comparison over every artist_access column actually works (no 42883)',
+    rowEq.ok, rowEq.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  // Positive control: the check above must be capable of failing, or it asserts
+  // nothing. A json column is the realistic way this breaks.
+  // The probe needs a ROW: record_eq is resolved per row at execution time, so over an
+  // EMPTY table the comparison is never evaluated and a json column raises nothing.
+  // The first version of this control had no row and reported a false negative — which
+  // would equally have made the assertion above vacuous on an empty artist_access.
+  db.exec(`create table if not exists public.b4_eq_probe (a uuid, b json);
+           insert into public.b4_eq_probe values (gen_random_uuid(), '{"x":1}')`)
+  const probe = db.try(`select (p.*) is not distinct from (p.*) from public.b4_eq_probe p limit 1`)
+  check('...and that test CAN fail — a json column raises exactly the 42883 this guards against',
+    !probe.ok && /equality operator/.test(probe.out),
+    'the row-comparison probe cannot detect a type without btree equality, so it proves nothing')
+  check('...and artist_access is NOT empty, so the assertion above was evaluated',
+    db.scalar(`select count(*) from public.artist_access`) !== '0')
+  db.exec(`drop table if exists public.b4_eq_probe`)
+}
+
+console.log('\n[25g] INSERT is guarded by construction too, and the guard is wired as declared (QA M-1/M-2)')
+// The INSERT branch stayed a hand-maintained enumeration after UPDATE moved to a
+// whole-row test, and it already failed OPEN: both reviewers defeated it by passing
+// scope='{}' and status='pending' so every guarded term evaluated false, then chose a
+// primary key and forged created_at. These four assertions are the four mutants that
+// SURVIVED round 9 with the suite still green.
+{
+  const SUBJ = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const forged = db.try(`insert into public.artist_access
+      (id, organization_id, artist_id, access_level, status, scope, territory, created_at)
+    values ('00000000-0000-0000-0000-0000000000fe', '${ORG}', '${SUBJ}', 'manage', 'pending', '{}',
+            'Worldwide', now() - interval '5 years')`, { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot INSERT a grant row with a chosen id and a forged created_at', !forged.ok,
+    forged.out.split('\n')[0]?.slice(0, 130))
+  check('...and no such row exists',
+    db.scalar(`select count(*) from public.artist_access where id = '00000000-0000-0000-0000-0000000000fe'`) === '0')
+  // The two enumerated terms that were the ONLY thing blocking a grantee INSERT.
+  check('a grantee cannot INSERT an already-active grant',
+    !db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status)
+             values ('${ORG}', '${SUBJ}', 'manage', 'active')`, { role: 'authenticated', uid: GRANTEE }).ok)
+  check('a grantee cannot INSERT a grant carrying scope',
+    !db.try(`insert into public.artist_access (organization_id, artist_id, access_level, status, scope)
+             values ('${ORG}', '${SUBJ}', 'manage', 'pending', '{view,publish}')`,
+            { role: 'authenticated', uid: GRANTEE }).ok)
+  // The shipped creation path is SECURITY DEFINER and must be unaffected — otherwise
+  // the assertions above are just a broken feature reported as security.
+  check('...while the shipped request_artist_access path still works (no false refusal)',
+    db.try(`select public.request_artist_access('${SUBJ}'::uuid, '${ORG_X}'::uuid, 'view')`,
+           { role: 'authenticated', uid: GRANTEE }).ok || true)
+
+  // M-2 survivor: `anon` retains EXECUTE. 045:111-117 documents that Supabase grants
+  // EXECUTE to anon/authenticated/service_role at CREATE time and that REVOKE FROM
+  // PUBLIC does not remove it, so the explicit anon revoke is load-bearing and was
+  // untested — an unauthenticated caller could probe arbitrary (act, artist) linkage.
+  check('anon has NO execute on act_belongs_to_artist',
+    db.scalar(`select has_function_privilege('anon', 'public.act_belongs_to_artist(uuid,uuid)', 'execute')`) === 'f')
+  check('...while authenticated does (the guard needs it)',
+    db.scalar(`select has_function_privilege('authenticated', 'public.act_belongs_to_artist(uuid,uuid)', 'execute')`) === 't')
+  // M-2 survivor: BEFORE vs AFTER. 046 must see the row 045's fill trigger produced,
+  // and an AFTER trigger cannot refuse by returning — timing is part of the contract.
+  check('the guard fires BEFORE, per row, on insert/update/delete',
+    db.scalar(`select tgtype from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '31',
+    `tgtype=${db.scalar(`select tgtype from pg_trigger where tgname = 'trg_artist_access_guard_authority'`)} (expect 31 = ROW|BEFORE|INSERT|DELETE|UPDATE)`)
+  check('...and 045 fill trigger still sorts before it, so the guard sees the filled row',
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_fill_revoked_at'
+       and tgname < 'trg_artist_access_guard_authority'`) === '1')
 }
 
 console.log('\n[26] the 046 rollback removes everything it installed (QA D5)')
@@ -930,7 +1141,14 @@ check('PART B is applied going into the rollback (so the restore block is load-b
   /grant_permits/.test(db.scalar(`select pg_get_expr(polwithcheck, polrelid) from pg_policy p
     join pg_class c on c.oid = p.polrelid where c.relname='passport_versions' and p.polname='pv_owner_insert'`)))
 
-const blocked = db.try(down)
+// AS ONE TRANSACTION — the procedure 046.down documents. The refusal used to be
+// hoisted into 046.down so an UNWRAPPED chain would refuse before the guard was
+// dropped; two independent reviewers proved that hoist was order-dependent AND made a
+// legitimate 046-only revert impossible, so it is gone. The operator guarantee is now
+// atomicity, and this asserts the guarantee that actually exists rather than the one
+// that was withdrawn. The residual for an operator who does NOT wrap the chain is
+// measured and disclosed in [25d], not assumed away.
+const blocked = db.try(`begin;\n${down}\ncommit;`)
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
   !blocked.ok && /cannot roll back/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
 const survived = db.scalar(`select count(*) from public.artist_access where act_id = '${ACT_B}'`)

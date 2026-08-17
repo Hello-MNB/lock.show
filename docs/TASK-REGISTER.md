@@ -1556,6 +1556,86 @@ that actually changes.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope`: **156 executed assertions**.
 
+## T-110.5 · NINTH QA PASS — TWO INDEPENDENT REVIEWERS, BOTH REVISE (17 Aug 2026)
+
+Round 9 was reviewed **twice, independently**, by two agents that never saw each other's work. Both
+returned **REVISE** on 046 and both endorsed the round-8 whole-row UPDATE change standing alone. Four
+defects were found by both; two were found by only one — which is the argument for the second reviewer.
+
+**H-1 (HIGH, found by ONE reviewer) · the linkage check made a live grant PERMANENTLY UNREVOCABLE.**
+`act_belongs_to_artist` was re-validated on EVERY update, including ones that never touched `act_id`.
+Policy `act_org` (020:187) is `FOR ALL` on `can_access_artist(act.id)` and the default Act's `id` equals
+the artist's `id`, so any org holding a live grant can UPDATE `public.act`. QA set `act.person_id` to
+itself and then no principal could revoke — not the artist's org owner, not the consent RPC, not
+`service_role`, not the table owner — while `grant_permits` still returned true. **A grantee could freeze
+its own publish grant.** Revocation is a bound the owner ruling names explicitly. Fixed by validating the
+linkage only when it is being written (`tg_op = 'INSERT'` or `act_id`/`artist_id` actually changed): a
+data-integrity rule must never fire on data the statement is not touching. The enabling RLS hole belongs
+to 020 and is now `docs/OWNER-PENDING.md` **ACT-RLS**.
+
+**M-1 (MEDIUM, found by BOTH) · the round-8 fix was applied to UPDATE only, and INSERT already failed
+open.** Both reviewers independently executed the same escape: pass `scope='{}'` and `status='pending'` so
+every enumerated term evaluates false, and a grantee-org admin inserts a grant row with a **chosen primary
+key** (the consent RPCs address rows BY id), a **forged `created_at`** (which orders the artist's inbox),
+an arbitrary `territory` and `access_level` — all of which then reached the artist's screen after
+approval. The header claiming "a whole-row test fails CLOSED" was false as written; it was UPDATE-only.
+Fixed as a class: creating a grant row **is** an authority act, so the INSERT branch is now
+`touched := true`. There was no legitimate untrusted INSERT to preserve — every shipped creation path is
+the SECURITY DEFINER `request_artist_access`, already exempt via the trust short-circuit. Neither branch
+enumerates now.
+
+**H-2 + H-3 (HIGH, found by BOTH) · my round-8 escape was broken in two directions at once.** It proved
+"this is a genuinely partial rollback" by testing whether 047 was still installed — a proxy that only
+holds newest-first. Running `046.down` FIRST in the same session passed the test, and the chain then died
+at 044, leaving authority columns present and the guard gone: verbatim the state the hoist existed to
+prevent. And after a legitimate 047-only revert (047 has its own down file; reverting it alone is
+supported), a 046-only revert became **impossible in either mode**, with a factually false message that
+repeated the harmful advice the file had already withdrawn. The property the five-way split exists to give
+was destroyed in exactly the steady state where it matters.
+
+**Repaired by deleting the precondition and the escape entirely.** A property proven by proxy is not
+proven. The operator's real concern — never being left LESS safe than they started — is served by
+ATOMICITY, which is already the documented procedure and which the migration headers already assert. One
+`--single-transaction` run over 047→043 with duplicate pairs present refuses at 044 and rolls back
+everything, in ANY file order, losing nothing. That is a stronger guarantee than the precondition gave and
+it needs no escape, so a 046-only revert is once again just this file. The two reviewers proposed different
+fixes here (delete it vs. make it `SET LOCAL`); deletion was taken because it removes the whole
+session-GUC problem class rather than narrowing it.
+
+**The residual is MEASURED, not assumed away.** Atomicity is a guarantee about the *procedure*, so an
+operator who runs the five files unwrapped still reaches the bad state. Suite block [25d] executes that
+case, asserts the unsafe outcome is real, and asserts the down file discloses it and names the procedure
+that avoids it. An honest bound beats a broken guard.
+
+**M-2 (MEDIUM) · four round-9 mutation survivors, all now killed.** The INSERT `status='active'` term, the
+INSERT `scope` term, the `anon` revoke on `act_belongs_to_artist`, and the trigger's `BEFORE` timing were
+all untested — the suite stayed green with each removed. Block [25g] now covers all four by execution.
+
+**Disclosures, not fixes:** RPC-3 (an artist-org member's approval half-commits into an active, ENDLESS
+mandate — the T-103 defect reintroduced for that role, found by BOTH reviewers) and ACT-RLS are recorded in
+`docs/OWNER-PENDING.md` as Product calls. The `json`-column bound on whole-row comparison (found by one
+reviewer) is documented in-file and asserted executably in [25f], with a positive control proving the
+assertion can fail.
+
+**My own errors this round, all caught by my own gates before QA:** the [25d] regression guard grepped the
+comment explaining the removal and failed on its own prose (fixed to test executable SQL only, with a
+positive control that the stripper does not blank the file); the [25f] linkage test aimed at an Act that
+legitimately belonged to the artist, so it proved nothing AND left a stale `act_id` that silently starved
+block [12] of the duplicate pair its whole refusal assertion depends on; the equality-operator check read
+`pg_opclass` and reported three FALSE defects because an array column's `udt_name` is `_text` while its
+opclass `opcintype` is `anyarray` (replaced with the executed comparison); its positive control ran against
+an EMPTY table, where `record_eq` is never evaluated and nothing raises — which would equally have made the
+real assertion vacuous, so a non-emptiness assertion was added; and the mutation harness's own replacement
+string was mangled because `String.replace` reads `$$` as an escape, which the harness's landed-check
+caught and reported as NOT APPLIED rather than as a survivor.
+
+**Mutation battery: 9/9 caught**, each verified to have landed before the suite ran — including all four
+round-9 survivors and a re-introduction of the deleted `b4.partial_rollback` escape (9 FAIL).
+
+**`test:grant-scope`: 194 executed assertions, 0 FAIL, exit 0** (was 156; +38). Migration 046 remains
+**DRAFTED — NOT APPLIED** to any environment. Round-10 independent QA (T-111C) is required before it can be
+called accepted: the implementer cannot accept their own work.
+
 ## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
 
 Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this

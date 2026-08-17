@@ -141,7 +141,25 @@ begin
   -- rule, not an authority rule: a grant pointing at an Act that belongs to someone
   -- else is malformed no matter who wrote it, and putting it after the trust
   -- short-circuit below would let consent RPCs and owner writes create exactly that.
-  if new.act_id is not null and not public.act_belongs_to_artist(new.act_id, new.artist_id) then
+  --
+  -- ONLY WHEN THE LINKAGE IS BEING WRITTEN. Re-validating an UNCHANGED act_id on
+  -- every UPDATE made a live grant PERMANENTLY UNREVOCABLE, and independent QA
+  -- executed it: policy act_org (020:187) is FOR ALL on can_access_artist(act.id) and
+  -- the default Act's id equals the artist's id, so any active grant-holder can write
+  -- public.act. Setting act.person_id to themselves broke the linkage on a row they
+  -- did not own, after which revocation raised 23514 for EVERY principal -- the
+  -- artist's org owner, the consent RPC, service_role and the table owner alike --
+  -- while grant_permits() still returned true. A grantee could make their own publish
+  -- grant unrevocable. Revocation is a bound the owner ruling names explicitly, so a
+  -- check that can freeze it must never fire on data the statement is not touching.
+  -- Any other linkage drift (ops correction, Person merge, ownership transfer) froze
+  -- the row the same way. The enabling RLS hole is in 020 and is recorded in
+  -- docs/OWNER-PENDING.md; 046 must not convert it into an unrevocable grant.
+  if new.act_id is not null
+     and (tg_op = 'INSERT'
+          or new.act_id is distinct from old.act_id
+          or new.artist_id is distinct from old.artist_id)
+     and not public.act_belongs_to_artist(new.act_id, new.artist_id) then
     raise exception 'artist_access: act_id does not belong to the artist named by artist_id'
       using errcode = '23514';
   end if;
@@ -164,22 +182,28 @@ begin
   -- grantee-controlled. revoked_at/revoked_by are guarded too, because QA forged
   -- attribution by naming the artist as the revoker.
   if tg_op = 'INSERT' then
-    touched := coalesce(array_length(new.actions, 1), 0) > 0
-            or coalesce(array_length(new.audience, 1), 0) > 0
-            or new.act_id is not null or new.purpose is not null
-            or new.version_binding is not null or new.passport_version_id is not null
-            or new.granted_by is not null
-            or new.expires_at is not null
-            or new.revoked_at is not null or new.revoked_by is not null
-            or new.valid_from is distinct from now()
-            -- scope and consent_at are the columns can_access_artist() and
-            -- artist_access_has_scope() gate on TODAY, while actions/audience gate
-            -- only the dormant PART B. Guarding the future bound and leaving the
-            -- live one open let a grantee self-grant 'publish' scope and forge the
-            -- artist's recorded consent.
-            or coalesce(array_length(new.scope, 1), 0) > 0
-            or new.consent_at is not null
-            or new.status = 'active';
+    -- CREATING A GRANT ROW IS ITSELF AN AUTHORITY ACT. This was an enumeration for
+    -- three rounds and it failed OPEN exactly as the UPDATE comment below predicts:
+    -- both independent reviewers executed the same insert as a plain `authenticated`
+    -- grantee-org admin, defeating the list by passing scope='{}' and status='pending'
+    -- so that every guarded term evaluated false --
+    --   insert into artist_access (id, organization_id, artist_id, access_level,
+    --                              status, scope, territory, created_at)
+    --   values (<chosen uuid>, <own org>, <subject>, 'manage', 'pending', '{}',
+    --           'Worldwide', now() - interval '5 years');            -- ACCEPTED
+    -- A CHOSEN primary key (the consent RPCs address rows BY id), a FORGED created_at
+    -- (which orders the artist's inbox -- 027:270 `order by aa.created_at desc`), an
+    -- arbitrary territory and access_level rendered back to the artist on their own
+    -- screen. The row granted nothing until approved, but the artist then approved it
+    -- and it reached their inbox carrying all four forged fields.
+    --
+    -- There is no legitimate untrusted INSERT to preserve: every shipped creation path
+    -- is request_artist_access(), which is SECURITY DEFINER and so is already exempted
+    -- by the trust short-circuit above, as is service_role for scripts/seed.mjs. The
+    -- only principal that reaches this branch untrusted is the grantee writing their
+    -- own grant row directly, which is the act PART A exists to refuse. So the correct
+    -- test is not a better list -- it is that there is nothing to list.
+    touched := true;
   else
     -- TOTAL ROW COMPARISON, deliberately — not an enumeration of columns.
     --
@@ -198,10 +222,20 @@ begin
     -- is added, and it fails OPEN when someone forgets. A whole-row test fails CLOSED
     -- — a new column is guarded the moment it exists. It also closed `created_at`
     -- (attribution of the same class as the guarded revoked_at) and `territory` (a
-    -- consented bound the artist's own screen renders back to them).
+    -- consented bound the artist's own screen renders back to them). The INSERT branch
+    -- above reaches the same failure mode by the other route: there, EVERY column is
+    -- authority, so the test is unconditional. Neither branch enumerates.
     --
     -- Row-wise IS DISTINCT FROM is NULL-correct, so a genuine no-op UPDATE on a
     -- NULL-bearing row still passes and raises no false refusal.
+    --
+    -- KNOWN BOUND (record comparison): `is distinct from` on a whole row needs a
+    -- default btree equality operator for every column type. Adding a column of a type
+    -- that has none — `json` is the realistic case, `xml` the other — makes EVERY
+    -- untrusted write raise 42883 (`could not identify an equality operator for type
+    -- json`), which src/lib/orgs.js:270 swallows as "migration 027 not applied yet", so
+    -- the client would fail soft and silent. No such column exists on this table today;
+    -- use `jsonb`, which has one. Asserted by scripts/test-grant-scope.mjs [25f].
     touched := new is distinct from old;
   end if;
 
