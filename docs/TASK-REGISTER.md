@@ -1555,3 +1555,58 @@ value — a genuine no-op the guard correctly allows — so it proved nothing un
 that actually changes.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope`: **156 executed assertions**.
+
+## T-111A · IMPLEMENTATION READINESS BASELINE (17 Aug 2026) — inventory only, no readiness inferred
+
+Owner-provided source pack recorded for traceability, **not read** (no Drive connector authorized on this
+routine): Control Tower v3.9 · Product B4-30.10 v6.4 · Language B4-35.20 v4.2 · DS B4-35.30 v4.8 ·
+Experience B4-35.40 v6.14 · Design QA B4-35.60 v3.18. Treat as EVIDENCE OPEN for anything that would
+need the text itself.
+
+**Build/test surface — VERIFIED.** 33-step verify chain · 26 test scripts · 2 generators · 46 forward
+migrations (highest `047_grant_decision`).
+
+**Owner entity vocabulary → repository support**
+
+| Entity | Status | Evidence |
+|---|---|---|
+| Person · Organization · Membership · Role · Workspace | VERIFIED | 008 tables; `workspace_type` in 3 migrations |
+| Artist / Act | VERIFIED | `artists` 001 + `act` 020 |
+| Mandate / Access | PARTIAL | no `representation_mandate` table — vocabulary over `artist_access`; Act scope drafted 043–047, NOT applied |
+| PassportVersion + lifecycle | PARTIAL | 041 has `version_no`/`state`(draft·preview·review·published·superseded)/`supersedes_id`/`published_at`/`superseded_at`/`audience` — authored, unapplied, and no writer sets them |
+| SourceRecord / EvidenceItem | **MISSING as named objects** | zero occurrences; `evidence_artifacts`/`profile_items`/`claims` carry the function under other names |
+| Fact | **MISSING as a named object** | one incidental match |
+| Receipt / outcome | PARTIAL | `share_link_event` (041, unapplied); `audit_log` exists but **nothing writes `artist_access` to it** |
+| Correction / revoke / replace / expiry | PARTIAL | revoke+expiry in drafted 043–047; replace/supersede unapplied |
+
+**Flags.** 21 of 46 migrations have **no down file** (incl. 001, 008, 010, 016, 017, 030, 031) — rollback
+is only real for the recent range · stale GIGPROOF naming in **59 files**, including runtime storage keys
+(`gigproof_consent`, `gigproof_active_act`, `gigproof_pp_dirty_*`) where renaming changes meaning ·
+duplicate infra already logged (two locale registries; one GA4 ID, two loaders) · **10 test scripts carry
+skip-on-absence branches** — each a place a green chain could mean "not run"; the chain currently reports
+"Nothing was skipped".
+
+## T-111B · HE/EN KEY PARITY GATE (17 Aug 2026)
+
+**Grounded, not guessed:** 1332 EN keys vs 1328 HE — exactly 4 missing in Hebrew, 0 missing in English.
+And `scripts/i18n-purity.mjs:2` says it catches mixing *"that parity can't"*, which reads as though a
+parity gate exists elsewhere. It did not: nothing in the chain compared the two catalogues, while Hebrew
+is the declared launch language.
+
+`scripts/test-i18n-parity.mjs` (new, wired into `verify`) asserts: both catalogues load non-empty (a
+vacuous-pass guard) · every EN key exists in HE or is an allowlisted dated gap · no orphan HE key without
+an EN counterpart · **the allowlist may only shrink**.
+
+**No Hebrew copy was invented.** Translation needs native review, so the four existing gaps —
+`dashboard.managePassport`, `dashboard.readinessBlock`, `consent.contextualNote`, `status.found` — are a
+dated allowlist. Adding to it is a deliberate act visible in a diff; any NEW divergence fails at once.
+
+**The gate caught my own error first:** my initial allowlist used `T.`-prefixed paths the loader does not
+produce, and check [4] (allowlist accuracy) flagged all four as stale. Mutation-proven on four injected
+defects — new untranslated EN key · orphan HE key · a silently removed HE key · a loader returning
+nothing — all caught.
+
+**verify: exit 0, 43 assertions, "Nothing was skipped."**
+
+**Round-9 note:** the first round-9 QA agent produced no verdict — 162-byte transcript, no activity, no
+completion. Treated as stalled, not as a pass; re-spawned. No result was assumed from it.
