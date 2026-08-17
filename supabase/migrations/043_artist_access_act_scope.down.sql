@@ -9,6 +9,29 @@
 
 begin;
 
+
+-- ── PRECONDITION · rollback is not always possible, and must say so ─────────
+-- PART A replaced `unique (organization_id, artist_id)` so an org could hold one
+-- grant per ACT. The moment a second Act-scoped grant exists for one artist, that
+-- old key can no longer be restored — two rows legitimately share (org, artist).
+-- Dropping act_id first would turn them into indistinguishable duplicates and the
+-- ADD CONSTRAINT would fail with a bare uniqueness error pointing at nothing.
+-- Refuse up front, name the rows, and destroy nothing.
+do $$
+declare n integer;
+begin
+  select count(*) into n from (
+    select organization_id, artist_id
+      from public.artist_access
+     group by organization_id, artist_id
+    having count(*) > 1) d;
+  if n > 0 then
+    raise exception
+      'cannot roll back 043: % (organization, artist) pair(s) hold more than one grant, which only Act-scoped grants allow. Consolidate them to a single row per (organization, artist) first — rolling back would either destroy grants or leave the 008 unique key unrestorable.', n
+      using errcode = '23505';
+  end if;
+end $$;
+
 -- Restore the shipped policy if PART B was applied. Guarded: running this where
 -- PART B was never called is a no-op, not an error.
 do $$

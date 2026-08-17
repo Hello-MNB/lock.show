@@ -23,7 +23,16 @@
 -- judgement about a person.
 -- ============================================================
 
-begin;
+-- ATOMICITY. This file carries NO explicit begin/commit.
+--
+-- Independent QA observed the earlier version emitting "there is already a
+-- transaction in progress" / "there is no transaction in progress" under the
+-- repo's own applier, which runs psql --single-transaction: the explicit COMMIT
+-- ended the applier's transaction early, so PART A could commit while PART B
+-- failed and leave the database half-migrated. Leaving the framing to the caller
+-- makes the file atomic under BOTH paths — psql --single-transaction wraps it, and
+-- the Supabase SQL editor runs a submitted script as a single implicit transaction.
+-- Do not reintroduce begin/commit here.
 
 -- ── PART A · additive grant semantics ───────────────────────────────────────
 
@@ -111,9 +120,16 @@ begin
   if new.status = 'revoked' and new.revoked_at is null then
     new.revoked_at := now();
   end if;
-  -- Reinstating a grant clears the revocation stamp, so a later time-window read
-  -- cannot see an active row that still claims to have been revoked.
-  if new.status <> 'revoked' then
+  -- Reinstating a grant clears the revocation stamp so a later time-window read
+  -- cannot see an active row still claiming to have been revoked — but ONLY when
+  -- the row is genuinely being reinstated to active. A re-invite sets status back
+  -- to 'pending' (027:246-249 ON CONFLICT DO UPDATE), and erasing the stamp there
+  -- would delete the record that this org was once revoked, which is exactly the
+  -- history the ruling says revocation must preserve.
+  -- tg_op, NOT `old is not null`: for a composite row that test is FALSE whenever
+  -- ANY column is null (territory, purpose, expires_at are all nullable here), so
+  -- the reinstate branch would almost never fire.
+  if tg_op = 'UPDATE' and new.status = 'active' and old.status = 'revoked' then
     new.revoked_at := null;
     new.revoked_by := null;
   end if;
@@ -155,6 +171,49 @@ create unique index if not exists idx_artist_access_org_artist_legacy
 create index if not exists idx_artist_access_act
   on public.artist_access (act_id) where act_id is not null;
 
+
+
+
+-- ── PART A · REPAIR THE WRITER THE KEY REPLACEMENT BROKE ────────────────────
+-- Replacing `unique (organization_id, artist_id)` with partial indexes broke
+-- request_artist_access (027:246): its `on conflict (organization_id, artist_id)`
+-- can no longer infer an index, because PostgreSQL only matches a PARTIAL unique
+-- index when the statement repeats the index predicate. Reproduced executed:
+--   ERROR: there is no unique or exclusion constraint matching the ON CONFLICT specification
+-- That is the entire access-request flow, so the key replacement is not safe to
+-- apply without this. The body is otherwise identical to 027 — only the conflict
+-- target gains `where act_id is null`, which is also semantically right: a
+-- legacy, act-less request may only collide with the legacy row.
+create or replace function public.request_artist_access(
+  p_org uuid, p_artist uuid, p_scope text[] default '{view}', p_territory text default null
+) returns uuid language plpgsql security definer set search_path = public as $$
+declare v_id uuid;
+begin
+  if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not authorized'; end if;
+  if exists (select 1 from public.artists where id = p_artist and owner_organization_id = p_org) then
+    raise exception 'org already owns this artist — no access grant needed';
+  end if;
+  insert into public.artist_access(organization_id, artist_id, scope, territory, status, consent_at)
+    values (p_org, p_artist, coalesce(p_scope, '{view}'), p_territory, 'pending', null)
+  on conflict (organization_id, artist_id) where act_id is null do update
+    set scope = excluded.scope, territory = excluded.territory,
+        status = 'pending', consent_at = null
+  returning id into v_id;
+  return v_id;
+end; $$;
+
+-- PRIVILEGE, while we are replacing it. 027 declared no grants for this function,
+-- so it inherited Supabase's default privileges: PUBLIC plus anon — on a
+-- SECURITY DEFINER function. The internal has_org_role() check is what actually
+-- stops an anonymous caller, so this is defence-in-depth rather than a live hole,
+-- but a definer function reachable by anon should not be the resting state.
+-- Scoped here to the one function this migration already rewrites; the sibling
+-- consent RPCs share the posture and are recorded for the owner rather than
+-- silently retightened by a migration about Act scope.
+revoke all on function public.request_artist_access(uuid, uuid, text[], text) from public;
+revoke all on function public.request_artist_access(uuid, uuid, text[], text) from anon;
+grant execute on function public.request_artist_access(uuid, uuid, text[], text) to authenticated;
+grant execute on function public.request_artist_access(uuid, uuid, text[], text) to service_role;
 
 -- ── PART A · THE GRANTEE MUST NOT WRITE THEIR OWN GRANT ─────────────────────
 -- Independent QA reproduced the hole this closes: policy `aa_admin_write` (008:222)
@@ -277,9 +336,18 @@ as $$
       -- the act the ruling requires to be Act-explicit.
       and (
         aa.act_id = p_act
+        -- LEGACY (act_id NULL) grants cover the artist's Acts, never for publish.
+        -- The relation is resolved through the artist's OWNER, not through the
+        -- id coincidence act.id = artists.id that migration 020's backfill happens
+        -- to produce: that identity holds only for the DEFAULT Act, so the old
+        -- form silently meant "the default Act only" while claiming to mean "every
+        -- Act of the artist". Fail-closed either way, but it now says what it does.
         or (aa.act_id is null and p_action <> 'publish'
-            and exists (select 1 from public.act a
-                         where a.id = p_act and a.id = aa.artist_id))
+            and exists (select 1
+                          from public.act a
+                          join public.artists ar on ar.id = aa.artist_id
+                         where a.id = p_act
+                           and a.person_id = ar.created_by))
       )
       and p_action = any (aa.actions)
       -- AUDIENCE IS MANDATORY. It used to default to NULL and short-circuit to
@@ -328,8 +396,6 @@ grant execute on function public.grant_permits(uuid, uuid, text, text, text, uui
 comment on function public.grant_permits(uuid, uuid, text, text, text, uuid, timestamptz) is
   'Default-deny authority decision for a representation grant: Act x action x audience x time. Membership, roster entry, job title and prior access grant nothing.';
 
-commit;
-
 -- ============================================================
 -- PART B — DORMANT. The tightening half. Installed as a callable with NO GRANT,
 -- so it cannot run until the owner executes it as the table owner:
@@ -340,7 +406,6 @@ commit;
 -- positively permits 'publish' on that exact Act. Until it is called, the shipped
 -- policy pv_owner_insert is untouched and behaviour is byte-identical.
 -- ============================================================
-begin;
 
 create or replace function public.apply_act_scoped_publish() returns void
 language plpgsql
@@ -403,5 +468,3 @@ revoke all on function public.revert_act_scoped_publish() from public;
 revoke all on function public.revert_act_scoped_publish() from anon;
 revoke all on function public.revert_act_scoped_publish() from authenticated;
 revoke all on function public.revert_act_scoped_publish() from service_role;
-
-commit;

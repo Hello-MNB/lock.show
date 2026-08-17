@@ -225,10 +225,68 @@ const afterTuple = db.scalar(tupleSql)
 check('revert restores the ORIGINAL policy tuple byte-for-byte (expression AND roles)',
   afterTuple === beforeTuple, `before="${beforeTuple}" after="${afterTuple}"`)
 
+
+console.log('\n[17] the KEY REPLACEMENT did not break the access-request writer')
+// Replacing `unique (organization_id, artist_id)` with partial indexes broke
+// request_artist_access: PostgreSQL only infers a PARTIAL unique index when the
+// statement repeats its predicate, so `on conflict (organization_id, artist_id)`
+// stopped matching anything and the whole access-request flow raised. This asserts
+// BOTH conflict targets: the repaired one works, and the bare one is genuinely
+// unusable — so the repair is load-bearing rather than incidental.
+const ARTIST2 = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+const bare = db.try(`insert into public.artist_access(organization_id, artist_id, scope, status)
+  values ('${ORG}', '${ARTIST2}', '{view}', 'pending')
+  on conflict (organization_id, artist_id) do update set status = 'pending'`)
+check('the BARE conflict target no longer infers an index (proves the repair matters)',
+  !bare.ok && /no unique or exclusion constraint/.test(bare.out), bare.out.split('\n')[0]?.slice(0, 100))
+const repaired = db.try(`insert into public.artist_access(organization_id, artist_id, scope, status)
+  values ('${ORG}', '${ARTIST2}', '{view}', 'pending')
+  on conflict (organization_id, artist_id) where act_id is null do update set status = 'pending'`)
+check('the repaired conflict target (matching the partial index) works', repaired.ok,
+  repaired.out.split('\n')[0]?.slice(0, 100))
+check('request_artist_access in 043 uses the repaired target',
+  /on conflict \(organization_id, artist_id\) where act_id is null/.test(
+    readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')),
+  'the shipped function no longer carries the predicate — the flow will raise on re-invite')
+
+console.log('\n[18] the migration stays atomic under the applier')
+{
+  const mig = readFileSync('supabase/migrations/043_artist_access_act_scope.sql', 'utf8')
+  const framed = (mig.match(/^\s*(begin|commit);\s*$/gim) || []).length
+  check('043 carries no explicit begin/commit (psql --single-transaction wraps it)', framed === 0,
+    `${framed} framing statement(s) found — an explicit COMMIT ends the applier transaction early and PART A can commit while PART B fails`)
+}
+
 console.log('\n[12] ROLLBACK — the down migration actually reverses this on a real database')
 // Rollback claimed in prose is not rollback. The down file is EXECUTED here, on a
 // database that has 043 applied, and the reversal is then observed column by column.
 const down = readFileSync('supabase/migrations/043_artist_access_act_scope.down.sql', 'utf8')
+
+// Rollback is NOT unconditionally possible, and the down file must say so rather
+// than fail obscurely: once two Act-scoped grants exist for one artist, the 008
+// unique key cannot be restored. Prove the refusal first, then clear the condition
+// and prove the rollback itself.
+db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, access_level, status, actions, audience)
+  values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1),
+          '${ACT_B}', 'manage', 'active', '{request}', '{buyer}')
+  on conflict do nothing`)
+const blocked = db.try(down)
+check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
+  !blocked.ok && /cannot roll back 043/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+const survived = db.scalar(`select count(*) from public.artist_access where act_id = '${ACT_B}'`)
+check('...and the refused rollback destroyed nothing', survived !== '0', `rows=${survived}`)
+// Consolidate to one row per (organization, artist) — the exact remediation the
+// refusal message asks the operator to perform. Done generically rather than by
+// deleting a known id, so this keeps working as earlier sections change shape.
+db.exec(`delete from public.artist_access aa
+          where aa.ctid not in (
+            select min(x.ctid) from public.artist_access x
+             group by x.organization_id, x.artist_id)`)
+const dupsLeft = db.scalar(`select count(*) from (
+  select organization_id, artist_id from public.artist_access
+   group by organization_id, artist_id having count(*) > 1) d`)
+check('consolidation leaves one grant per (organization, artist)', dupsLeft === '0', `pairs=${dupsLeft}`)
+
 const downRes = db.try(down)
 check('043 down runs without error', downRes.ok, downRes.out.split('\n').slice(0, 2).join(' | ').slice(0, 160))
 if (downRes.ok) {

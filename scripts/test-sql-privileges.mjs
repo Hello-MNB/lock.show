@@ -84,6 +84,7 @@ const EXPECTED = {
   revert_act_scoped_publish: { roles: [], why: 'owner-signed DDL act — the reverse policy swap' },
   artist_access_fill_revoked_at: { roles: [], why: 'trigger function — fills revoked_at so no existing writer breaks' },
   artist_access_guard_authority: { roles: [], why: 'trigger function (SECURITY DEFINER) — stops a grantee writing their own authority columns' },
+  request_artist_access: { roles: ['authenticated', 'service_role'], why: 'the requesting org acts as a logged-in operator; 043 replaced this function and tightened it off the PUBLIC+anon default it inherited from 027' },
 }
 
 // ── which functions do these two files actually create? ─────────────────────

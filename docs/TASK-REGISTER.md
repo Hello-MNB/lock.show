@@ -1134,3 +1134,44 @@ AND the referenced file actually ships. Mutation-tested — removing `images` fr
 Also fixed a latent trap in that gate: its metadata brace-matcher tracked strings but **not comments**,
 so an apostrophe inside a comment ("the layout's images") opened a phantom string, swallowed braces and
 reported a valid file as an unbalanced literal. The parser is now comment-aware.
+
+## T-109.2 · 043 OPEN ITEMS CLOSED + A REGRESSION I INTRODUCED (17 Aug 2026)
+
+Finishing the current increment before starting new work. 043 remains DRAFTED, NOT APPLIED.
+
+**The important one — a regression I introduced while fixing QA's C3.** Replacing
+`unique (organization_id, artist_id)` with partial indexes broke `request_artist_access` (027:246):
+PostgreSQL infers a PARTIAL unique index for `ON CONFLICT` only when the statement repeats the index
+predicate, so the bare `on conflict (organization_id, artist_id)` stopped matching anything.
+Reproduced executed: `ERROR: there is no unique or exclusion constraint matching the ON CONFLICT
+specification`. That is the whole access-request flow, and it was already committed and pushed.
+043 now replaces the function with `... where act_id is null` — also semantically right, since a
+legacy act-less request may only collide with the legacy row. Section [17] asserts BOTH targets: the
+repaired one works and the bare one genuinely fails, so the repair is load-bearing, not incidental.
+
+QA's four open items, closed:
+- **C10 atomicity** — the file carried two `begin/commit` pairs while the repo's applier runs
+  `psql --single-transaction`, so an explicit COMMIT ended the applier's transaction early and PART A
+  could commit while PART B failed. All framing removed; section [18] fails if it returns.
+- **C11 legacy-branch semantics** — the `act_id is null` branch joined on `a.id = aa.artist_id`, an
+  identity coincidence from 020's backfill that silently meant "the default Act only" while claiming
+  "every Act of the artist". Now resolved through `act.person_id = artists.created_by`.
+- **C9 revocation history** — my reinstate branch erased `revoked_at` on ANY non-revoked status, so a
+  re-invite (which sets `pending`) deleted the record that an org had been revoked. Now only a genuine
+  `revoked → active` transition clears it. The first fix was also wrong for a second reason:
+  `old is not null` on a composite row is FALSE whenever any column is null, so the branch would
+  almost never have fired. Uses `tg_op` instead.
+- **C8 destructive rollback** — the down migration now REFUSES with a named, actionable error while
+  any (organization, artist) pair holds more than one grant, because once Act-scoped grants exist the
+  008 key cannot be restored and dropping `act_id` first would turn legitimate rows into
+  indistinguishable duplicates. Section [12] proves the refusal, proves it destroys nothing, performs
+  the consolidation the message asks for, and only then proves the rollback.
+
+**Surfaced, pre-existing, not introduced here:** the consent-RPC family is `SECURITY DEFINER` and
+PUBLIC+anon-executable because 027 declared no grants at all. Their internal `has_org_role` checks are
+what actually refuse. 043 tightens only `request_artist_access` — the function it already rewrites —
+and the rest is recorded in `docs/OWNER-PENDING.md` rather than silently retightened by a migration
+about Act scope.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope` now carries 50 executed
+assertions across 18 sections.
