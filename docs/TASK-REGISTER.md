@@ -1510,3 +1510,48 @@ a Supabase-shaped database — default privileges already grant it — so its D6
 regardless. Not a defect; recorded so no one counts it as a bound.
 
 **verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope`: **143 executed assertions**.
+
+## T-110.4 · EIGHTH QA PASS — THE IDENTITY CLASS CLOSED BY CONSTRUCTION (17 Aug 2026)
+
+QA was asked to break the pattern rather than re-check it, and did: a per-column enumeration of all 21
+`artist_access` columns found the THIRD instance of the same class.
+
+**H-A (HIGH) · `id` itself was unguarded — and the consent RPCs address rows BY id.** A grantee could
+renumber their own rows so the artist, shown a modest legacy request in their inbox, approved an id
+that by then carried a **revoked publish grant**: resurrected with a fresh `consent_at`, while the row
+they meant to approve stayed pending. QA executed the three-step primary-key shuffle end to end as
+plain `authenticated`. `created_at` (attribution) and `territory` (a consented bound the artist's own
+screen renders back to them) were open by the same omission.
+
+**Fixed as a class, not an instance:** the hand-maintained UPDATE enumeration is replaced by
+`touched := new is distinct from old`. An enumeration is wrong by construction — it must be revisited
+whenever a column is added and it fails OPEN when someone forgets; a whole-row test fails CLOSED, so a
+new column is guarded the moment it exists. Verified NULL-correct: a genuine no-op UPDATE still passes,
+so no false refusal. Mutation-proven — restoring any enumeration turns the suite red on 8 assertions.
+
+**H-B (HIGH, mine) · my own escape disarmed the precondition it sat behind.** `set_config(...,false)` is
+SESSION-scoped, so an operator who set `b4.partial_rollback` and then ran the full newest-first chain in
+the same session skipped the check entirely: 046.down committed, the guard was dropped, and 044.down
+refused afterwards — leaving the authority columns present and unguarded, the exact state the hoist
+exists to prevent. The escape now refuses when 047 is already gone, because that is a full rollback
+wearing the escape.
+
+**H-C (HIGH) · the down file's safety claim was false in the mode it had just introduced.** It said
+reverting is "safe only because 047's decision function is gone by then" — but the escape is precisely
+the mode where 047 is NOT gone. QA then, as plain `authenticated`, self-issued publish scope, a ten-year
+expiry and **pointed `act_id` at another Person's Act** (the linkage check leaves with
+`act_belongs_to_artist`), with `grant_permits` returning true. The file now states that a 046-only
+revert is an operator-supervised window, not a safe resting state, and lists what stays standing.
+
+**M-D disclosed, not hidden:** FK cascade triggers run as the table owner, so the DELETE guard cannot
+see them — a grantee-org owner deleting their own organization through the shipped flow takes the grant
+row and its revocation trail with it. Recorded in-file and as `docs/OWNER-PENDING.md` CASCADE, because
+closing it means distinguishing a cascade from an owner write or moving the trail out of the table —
+the same append-only record M-E and ATTRIB already ask about.
+
+**My own errors this round:** a bad slice deleted the entire `touched` block and its raise, which the
+suite caught immediately (guard stopped firing); and one new assertion set `access_level` to its current
+value — a genuine no-op the guard correctly allows — so it proved nothing until corrected to a value
+that actually changes.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."** `test:grant-scope`: **156 executed assertions**.

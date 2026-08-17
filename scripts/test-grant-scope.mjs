@@ -725,7 +725,14 @@ console.log('\n[25c] the re-point refusal is load-bearing for a two-org principa
 // touched check (owner/admin of the NEW subject), and only the block refuses them.
 {
   const SUBJ_A = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
-  const ORG_A = db.scalar(`select owner_organization_id from public.artists where id = '${SUBJ_A}'`)
+  const ORG_A = SUBJ_A ? db.scalar(`select coalesce(owner_organization_id::text,'') from public.artists where id = '${SUBJ_A}'`) : ''
+  // Stated as a precondition rather than assumed: an earlier section can legitimately
+  // leave this grant absent, and a missing id would otherwise surface as a raw uuid
+  // cast error from deep inside the harness instead of a named failure.
+  check('the [25c] precondition holds: a grant and an owning org exist',
+    Boolean(SUBJ_A) && Boolean(ORG_A), `subject="${SUBJ_A}" owning_org="${ORG_A}"`)
+  if (!SUBJ_A || !ORG_A) { console.log('  ~ [25c] skipped — precondition above failed'); }
+  else {
   const ART_B = '00000000-0000-0000-0000-0000000000e3'   // the victim artist created in [25]
   const ORG_B = '00000000-0000-0000-0000-0000000000e2'
   const TWO_ORG = '00000000-0000-0000-0000-0000000000e9'
@@ -742,6 +749,50 @@ console.log('\n[25c] the re-point refusal is load-bearing for a two-org principa
     walk.out.split('\n')[0]?.slice(0, 120))
   check('...and the subject did not move',
     db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`) === subjBefore)
+}
+
+}
+
+console.log('\n[25e] the whole-row guard closes the identity class, not one column (QA H-A)')
+// Three rounds, three different columns that identify or bound a grant were found
+// outside a hand-maintained list. `id` was the worst: the consent RPCs address rows
+// BY id, so renumbering lets a grantee swap what the artist is actually approving.
+{
+  const SUBJ = db.scalar(`select artist_id from public.artist_access where organization_id = '${ORG}' limit 1`)
+  check('[25e] precondition: a grant exists', Boolean(SUBJ), `subject="${SUBJ}"`)
+  if (SUBJ) {
+    const asG = (sql) => db.try(sql, { role: 'authenticated', uid: GRANTEE })
+    const idBefore = db.scalar(`select id from public.artist_access where organization_id = '${ORG}' limit 1`)
+    // THE HIJACK: renumber the row so a later approve-by-id lands on different data.
+    const renumber = asG(`update public.artist_access set id = '00000000-0000-0000-0000-0000000000ff' where id = '${idBefore}'`)
+    check('a grantee cannot renumber its own grant (id is guarded)', !renumber.ok,
+      renumber.out.split('\n')[0]?.slice(0, 110))
+    check('...and the primary key did not move',
+      db.scalar(`select id from public.artist_access where organization_id = '${ORG}' limit 1`) === idBefore)
+    // The same class, other members: attribution and a consented bound.
+    check('a grantee cannot forge created_at',
+      !asG(`update public.artist_access set created_at = '2021-01-01' where organization_id = '${ORG}'`).ok)
+    check('a grantee cannot rewrite the consented territory',
+      !asG(`update public.artist_access set territory = 'WORLDWIDE' where organization_id = '${ORG}'`).ok)
+    // Must be a value that actually CHANGES: the row is already 'manage', and setting
+    // a column to its current value is a genuine no-op the whole-row test correctly
+    // allows. Asserting the no-op would have proved nothing.
+    const lvlBefore = db.scalar(`select access_level from public.artist_access where organization_id = '${ORG}' limit 1`)
+    check('access_level precondition: currently manage', lvlBefore === 'manage', `got ${lvlBefore}`)
+    check('a grantee cannot change access_level',
+      !asG(`update public.artist_access set access_level = 'view' where organization_id = '${ORG}'`).ok)
+    // A genuine no-op must still pass: the whole-row test must not refuse writes that
+    // change nothing, or ordinary client retries would start failing.
+    check('a no-op UPDATE still passes (no false refusal)',
+      asG(`update public.artist_access set territory = territory where organization_id = '${ORG}'`).ok)
+    // The two-step walk that a single-column `status` guard missed.
+    db.exec(`update public.artist_access set status = 'revoked' where organization_id = '${ORG}'`)
+    const step1 = asG(`update public.artist_access set status = 'pending' where organization_id = '${ORG}'`)
+    const step2 = asG(`update public.artist_access set status = 'active' where organization_id = '${ORG}'`)
+    check('a grantee cannot walk revoked -> pending -> active', !(step1.ok && step2.ok),
+      `step1=${step1.ok} step2=${step2.ok}`)
+    db.exec(`update public.artist_access set status = 'active', revoked_at = null where organization_id = '${ORG}'`)
+  }
 }
 
 console.log('\n[25d] 046 can still be reverted ALONE — the property the split exists to give (QA M-1)')
@@ -764,6 +815,25 @@ console.log('\n[25d] 046 can still be reverted ALONE — the property the split 
     refused.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
   check('...and the guard is still installed after that refusal',
     db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+
+  // H-B: the escape is SESSION-scoped, so an operator who sets it and then runs the
+  // FULL chain in the same session used to disarm this precondition silently — 046
+  // committed, the guard was dropped, and 044 refused afterwards, leaving the
+  // authority columns present and unguarded. The escape must refuse when 047 is
+  // already gone, because that is a full rollback wearing the escape.
+  const down047 = readFileSync('supabase/migrations/047_grant_decision.down.sql', 'utf8')
+  const fullWithEscape = db.try(`select set_config('b4.partial_rollback','046',false);\n${down047}\n${down046}`)
+  check('the escape REFUSES once 047 is gone — a full rollback cannot wear it',
+    !fullWithEscape.ok && /claims a 046-only revert/.test(fullWithEscape.out),
+    fullWithEscape.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 130))
+  check('...and the guard survived that attempt',
+    db.scalar(`select count(*) from pg_trigger where tgname = 'trg_artist_access_guard_authority'`) === '1')
+
+  // Restore 047: the check above deliberately removed it, and a genuine 046-only
+  // revert by definition happens while 047 is still installed.
+  db.exec(readFileSync('supabase/migrations/047_grant_decision.sql', 'utf8'))
+  check('047 restored for the legitimate partial-revert case (positive control)',
+    db.scalar(`select to_regprocedure('public.grant_permits(uuid,uuid,text,text,text,uuid,timestamptz)') is not null`) === 't')
 
   const escaped = db.try(`select set_config('b4.partial_rollback', '046', false);\n${down046}`)
   check('...but 046 CAN be reverted alone via the documented escape', escaped.ok,

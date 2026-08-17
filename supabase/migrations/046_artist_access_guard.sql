@@ -96,6 +96,15 @@ begin
   -- DELETE: only the trusted path or an owner/admin of the artist's org may remove
   -- a grant row at all, because deletion destroys the revocation trail entirely.
   --
+  -- HONEST LIMIT 2 (FK CASCADE): this branch cannot see a cascade. Referential-action
+  -- triggers run as the table owner, so artist_access_trusted_writer() is TRUE inside
+  -- them and the short-circuit below returns before any check. A grantee-org owner
+  -- deleting their OWN organization — a shipped client flow (src/lib/orgs.js) — takes
+  -- the grant row, and its revocation trail, with it. Verified by execution. Closing
+  -- this means distinguishing a cascade from a genuine owner write (pg_trigger_depth)
+  -- or moving the trail out of this table entirely; both are larger than a guard, and
+  -- the second is the same append-only record OWNER-PENDING already asks about.
+  --
   -- HONEST LIMIT: the artist-org half of this rule is currently RLS-UNREACHABLE. No
   -- DELETE policy exists for that principal (aa_artist_owner_respond is FOR UPDATE,
   -- aa_artist_owner_read is FOR SELECT), so an artist-org owner's DELETE is filtered
@@ -172,34 +181,28 @@ begin
             or new.consent_at is not null
             or new.status = 'active';
   else
-    touched := new.actions is distinct from old.actions
-            or new.audience is distinct from old.audience
-            or new.act_id is distinct from old.act_id
-            or new.purpose is distinct from old.purpose
-            or new.version_binding is distinct from old.version_binding
-            or new.passport_version_id is distinct from old.passport_version_id
-            or new.granted_by is distinct from old.granted_by
-            or new.valid_from is distinct from old.valid_from
-            or new.status is distinct from old.status
-            or new.expires_at is distinct from old.expires_at
-            or new.revoked_at is distinct from old.revoked_at
-            or new.revoked_by is distinct from old.revoked_by
-            or new.scope is distinct from old.scope
-            or new.consent_at is distinct from old.consent_at
-            -- artist_id is the SUBJECT of the grant. RLS aa_admin_write keys only on
-            -- organization_id, so without this a grantee-org owner passes RLS, the
-            -- guard sees touched=false, and the row is walked onto a different
-            -- artist — conferring can_access_artist and scope on someone who never
-            -- consented. Independent QA reproduced it end to end.
-            or new.artist_id is distinct from old.artist_id
-            -- organization_id is the HOLDER. Guarding artist_id alone protects WHOSE
-            -- grant it is and leaves WHO HOLDS IT open: RLS aa_admin_write only
-            -- requires owner/admin of the NEW organization_id, so a grantee-org owner
-            -- can create a second org through the shipped create_workspace RPC and
-            -- carry the whole consented grant — status, scope, consent_at, actions,
-            -- audience, act_id — onto a party the artist never granted anything to.
-            -- Independent QA walked a live grant end to end as plain `authenticated`.
-            or new.organization_id is distinct from old.organization_id;
+    -- TOTAL ROW COMPARISON, deliberately — not an enumeration of columns.
+    --
+    -- A hand-maintained list was wrong three rounds running. Each round an
+    -- independent review found a different column that identifies or bounds the
+    -- grant sitting outside it: first `artist_id` (the subject could be walked onto
+    -- another artist), then `organization_id` (the holder could be walked to another
+    -- org), then `id` itself — the worst of the three, because the consent RPCs
+    -- address rows BY id. A grantee could renumber their own rows so the artist,
+    -- shown a modest legacy request in their inbox, approved an id that by then
+    -- carried a REVOKED publish grant: resurrected with a fresh consent_at, while the
+    -- row they meant to approve stayed pending. QA executed that hijack end to end as
+    -- plain `authenticated`.
+    --
+    -- An enumeration is wrong by construction: it must be revisited whenever a column
+    -- is added, and it fails OPEN when someone forgets. A whole-row test fails CLOSED
+    -- — a new column is guarded the moment it exists. It also closed `created_at`
+    -- (attribution of the same class as the guarded revoked_at) and `territory` (a
+    -- consented bound the artist's own screen renders back to them).
+    --
+    -- Row-wise IS DISTINCT FROM is NULL-correct, so a genuine no-op UPDATE on a
+    -- NULL-bearing row still passes and raises no false refusal.
+    touched := new is distinct from old;
   end if;
 
   -- owns_artist() alone is too wide: 030:22-32 resolves to ANY active member of an
