@@ -1772,6 +1772,30 @@ limits are factually true, including that removing the `authenticated` EXECUTE r
 the ACL is checked when the IF expression is planned; and **the "120 permutations" claim reproduced
 independently** — 120 refused, 0 committed, 0 state-changed-after-refusal.
 
+**Round-11 battery: 7/7 caught, every mutant verified to have REACHED the block it targets.** The D2 mutant
+(guard raise message reworded, so a refusal still happens but the cause changes) produced 3 FAIL, proving the
+new cause assertions bite; the D3 mutant (a throw injected mid-suite) was announced as an ABORT rather than
+counted as a kill.
+
+**RE-VALIDATION OF THE ROUND-10 CLAIM — my "7/7 caught" was overstated.** QA's third next-action was to re-run
+that battery and confirm each kill reached the block it claims to kill. Re-run under the new abort discipline:
+
+| mutant | re-validated verdict |
+|---|---|
+| R10-1 `artist_id` disjunct dropped | CAUGHT (2 FAIL) **but ABORTED at [12]** — later blocks never ran |
+| R10-2 `act_id` disjunct dropped | CAUGHT (3 FAIL, ran to the end) |
+| R10-3 residual paragraph "deleted" | **SURVIVED** — and correctly so: this mutant only ever removed the paragraph's HEADING, which was already known (see T-110.6) and separately re-tested as CAUGHT with a mutant that removes the body |
+| R10-4 "when run as ONE transaction" removed | CAUGHT (1 FAIL, ran to the end) |
+| R10-5 LINKAGE ORACLE disclosure removed | CAUGHT (1 FAIL, ran to the end) |
+| R10-6 `request_artist_access` broken | CAUGHT (13 FAIL, ran to the end) |
+| R10-7 fill trigger renamed | CAUGHT (1 FAIL) **but ABORTED at [25d]** — later blocks never ran |
+
+Honest reading: **no kill was fabricated** — a FAIL line only prints from an assertion that actually executed, so
+every CAUGHT verdict stands. But two of the seven runs went blind partway through, so they could not have
+detected further damage from the same mutant, and the round-10 report did not say so because the harness could
+not tell an abort from an ordinary failure. The claim should have read "6 caught, 1 broken mutant, 2 runs
+partially blind." Recorded here rather than quietly corrected.
+
 **`test:grant-scope`: 206 executed assertions, 0 FAIL, exit 0** (was 203). Migration 046 remains
 **DRAFTED — NOT APPLIED** and NOT accepted.
 
