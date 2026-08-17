@@ -18,6 +18,23 @@
 -- explicit COMMIT would end the applier's transaction early.
 -- ============================================================
 
+-- DEPENDENCY ASSERTION. 046 applies cleanly without 045 and then leaves
+-- artist_access UNWRITABLE: artist_access_guard_authority() is plpgsql, so its call
+-- to artist_access_trusted_writer() resolves at RUN time, not at CREATE, and CREATE
+-- TRIGGER does not resolve it either. Independent QA reproduced it — 043+046 applies
+-- OK and the very next write raises
+--   ERROR: function public.artist_access_trusted_writer() does not exist
+-- from inside the guard, so every INSERT/UPDATE/DELETE fails. A migration that can
+-- brick a table by being applied out of order must refuse; a header comment is not
+-- enforcement.
+do $$
+begin
+  if to_regprocedure('public.artist_access_trusted_writer()') is null then
+    raise exception 'migration 046 requires 045 (artist_access_trusted_writer). Apply 045 first.'
+      using errcode = '42883';
+  end if;
+end $$;
+
 -- ACT-OWNERSHIP LOOKUP, SECURITY DEFINER. The linkage check below must not run
 -- with the caller's visibility: policy act_org (020:187) resolves through
 -- public.artists, and a NON-DEFAULT Act has no artists row, so an artist cannot

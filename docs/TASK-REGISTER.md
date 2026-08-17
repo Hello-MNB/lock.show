@@ -1373,3 +1373,51 @@ mutation never landed. An unverified mutation is not evidence, so it was redone 
 Rollback ordering is now explicit: the down files run newest-first (047→043), each part referencing
 the one below it. `044`'s down carries the "cannot roll back" precondition, and `043`'s down is
 labelled DESTRUCTIVE BY DESIGN — grant rows survive, what they were allowed to do does not.
+
+## T-110.1 · FIFTH QA PASS — FIRST PER-FILE VERDICT (17 Aug 2026)
+
+The split paid off immediately: for the first time QA could accept part of the work and reject the
+rest, instead of rejecting 605 lines as a whole.
+
+| file | verdict |
+|---|---|
+| `043_artist_access_columns` | **ACCEPT** |
+| `044_artist_access_act_key` | **ACCEPT** (2 non-blocking) |
+| `045_artist_access_revocation` | **REJECT** → fixed here |
+| `046_artist_access_guard` | **REJECT** → fixed here |
+| `047_grant_decision` | **ACCEPT** (1 LOW → fixed here) |
+
+**Split integrity verified independently:** 76 statements each side, identical multiset, and a
+`pg_dump -s` diff of **8 lines, every one pg_dump's own random token** — byte-identical schema. Two
+reorderings found and both shown harmless. My statement-level diff had been the right check but not a
+sufficient one; the schema dump is the proof.
+
+**The two REJECTs shared one root cause: the split created dependencies it did not enforce.**
+- **H-2** — 046 applied cleanly without 045 and left `artist_access` **unwritable**. The guard is
+  plpgsql, so its call to `artist_access_trusted_writer()` resolves at RUN time and `CREATE TRIGGER`
+  does not resolve it either: both files report success and the next write raises. Now refuses.
+- **H-1** — reverting 045 before 046 bricked the table the same way, again with both files reporting
+  success. Now refuses.
+- **043.down** additionally reported success while dropping `act_id`, which **cascade-drops both of
+  044's replacement indexes** — removing the 008 uniqueness guarantee and both replacements at once.
+  Now refuses while any dependent survives, naming them.
+
+Header comments stated all three rules and enforced none. Section **[24]** now proves each refusal by
+execution, including that a refused rollback destroys nothing.
+
+**Three coverage gaps closed, each proven by re-injecting QA's mutation:** the `expires_at` bound
+(M14) and the DELETE deny branch (M22) had **no assertion at all** — they were lost when I rewrote
+that block in an earlier round, which is exactly why those mutations passed unnoticed; and the
+rollback-from-PART-B-applied path (M27) was vacuous because section [16] reverted PART B before [12]
+ran. PART B is now left applied going into the rollback.
+
+**My own error, again:** I used `git checkout -- supabase/migrations/` to restore after a mutation and
+destroyed the uncommitted assertion work in this same run. Second time this session. Mutations are now
+restored from an explicit backup covering forward **and** down files.
+
+**Recorded for the owner, not patched:** M-G (one ordinary access request makes 044 unrevertible, and
+newest-first rollback strands the operator mid-way) and L-L (rollback tightens the RPC's privileges
+one-way). Both in `docs/OWNER-PENDING.md`. **L-4** noted in-file: the `revoked_at` CHECK is
+unfalsifiable while its own trigger is installed — the trigger enforces the invariant, not the check.
+
+**verify: exit 0, 42 assertions, "Nothing was skipped."**

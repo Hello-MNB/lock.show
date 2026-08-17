@@ -381,6 +381,30 @@ console.log('\n[19c] the LIVE authority columns are guarded, not only the dorman
   const forge = db.try(`update public.artist_access set consent_at = now() where organization_id = '${ORG}'`,
     { role: 'authenticated', uid: GRANTEE })
   check('a grantee cannot forge the artist\'s recorded consent', !forge.ok, forge.out.split('\n')[0]?.slice(0, 110))
+
+  // M14 — the expires_at bound had NO covering assertion: deleting that term from the
+  // guard left both gates green while a grantee-org owner pushed its own expiry out
+  // ten years, verbatim the defect the guard exists to stop. Prove the WRITE is
+  // refused and the stored value did not move, not merely that a later read denies.
+  db.exec(`update public.artist_access set expires_at = now() + interval '30 days' where organization_id = '${ORG}'`)
+  const beforeExp = db.scalar(`select expires_at::text from public.artist_access where organization_id = '${ORG}' limit 1`)
+  const ext = db.try(`update public.artist_access set expires_at = now() + interval '10 years' where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot self-extend its own expiry', !ext.ok, ext.out.split('\n')[0]?.slice(0, 110))
+  check('...and the stored expiry did not move',
+    db.scalar(`select expires_at::text from public.artist_access where organization_id = '${ORG}' limit 1`) === beforeExp,
+    `before=${beforeExp}`)
+
+  // M22 — the DELETE deny branch had NO covering assertion: replacing its raise with
+  // `null;` left both gates green, so a grantee could delete its own grant and
+  // destroy the revocation trail.
+  const rowsBefore = db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG}'`)
+  const del = db.try(`delete from public.artist_access where organization_id = '${ORG}'`,
+    { role: 'authenticated', uid: GRANTEE })
+  check('a grantee cannot DELETE its grant and destroy the trail', !del.ok, del.out.split('\n')[0]?.slice(0, 110))
+  check('...and the row survives the attempt',
+    db.scalar(`select count(*) from public.artist_access where organization_id = '${ORG}'`) === rowsBefore, `before=${rowsBefore}`)
+  db.exec(`update public.artist_access set expires_at = null where organization_id = '${ORG}'`)
 }
 
 console.log('\n[20] bounds that were declared but unenforced (QA H-5/H-6/C-4 + missed mutations)')
@@ -586,6 +610,56 @@ console.log('\n[18] the migration stays atomic under the applier')
     `${framed} framing statement(s) found — an explicit COMMIT ends the applier transaction early and PART A can commit while PART B fails`)
 }
 
+
+console.log('\n[24] the split ENFORCES its dependency order, it does not merely document it')
+// The split created dependencies between files. Independent QA proved that stating
+// them in a header comment is not enforcement: 046 applied without 045 and left the
+// table unwritable, and 045.down before 046.down bricked it the same way — both
+// reporting success, both surfacing only at the next write.
+{
+  const downFile = (f) => readFileSync(`supabase/migrations/${f}.down.sql`, 'utf8')
+
+  // H-1 · reverting 045 while 046's guard still calls into it must REFUSE.
+  const early045 = db.try(downFile('045_artist_access_revocation'))
+  check('045.down REFUSES while 046 is still installed', !early045.ok && /cannot roll back 045/.test(early045.out),
+    early045.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  check('...and the refusal destroyed nothing — the trust helper is still callable',
+    db.scalar(`select public.artist_access_trusted_writer()`) !== '')
+
+  // 043.down must refuse while ANY dependent survives, including because dropping
+  // act_id cascade-drops both of 044's replacement indexes — silently removing every
+  // (organization, artist) uniqueness the table has.
+  const early043 = db.try(downFile('043_artist_access_columns'))
+  check('043.down REFUSES while later migrations still depend on its columns',
+    !early043.ok && /cannot roll back 043/.test(early043.out),
+    early043.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 140))
+  check('...and act_id survives, so the replacement indexes were not cascade-dropped',
+    db.scalar(`select count(*) from information_schema.columns where table_name='artist_access' and column_name='act_id'`) === '1')
+  check('...and both replacement indexes are intact',
+    db.scalar(`select count(*) from pg_indexes where indexname in ('idx_artist_access_org_act','idx_artist_access_org_artist_legacy')`) === '2')
+
+  // H-2 · 046's own dependency assertion must fire when 045's helper is absent.
+  // Simulated by removing the helper rather than building a partial stack, because
+  // the harness always applies every migration.
+  db.exec(`drop trigger if exists trg_artist_access_guard_authority on public.artist_access;
+           drop function if exists public.artist_access_guard_authority();
+           drop function if exists public.artist_access_trusted_writer()`)
+  const assertion = readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8')
+    .split('-- ACT-OWNERSHIP LOOKUP')[0]
+  const dep = db.try(assertion)
+  check('046 REFUSES to install when 045 has not run', !dep.ok && /requires 045/.test(dep.out),
+    dep.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+
+  // RESTORE. The simulation above removed 045's helper and 046's guard; leaving the
+  // database in that state would poison every later section with a failure that has
+  // nothing to do with what those sections assert.
+  db.exec(readFileSync('supabase/migrations/045_artist_access_revocation.sql', 'utf8'))
+  db.exec(readFileSync('supabase/migrations/046_artist_access_guard.sql', 'utf8'))
+  check('the simulation restored 045 + 046 cleanly',
+    db.scalar(`select count(*) from pg_trigger where tgname in
+      ('trg_artist_access_fill_revoked_at','trg_artist_access_guard_authority')`) === '2')
+}
+
 console.log('\n[12] ROLLBACK — the down migration actually reverses this on a real database')
 // Rollback claimed in prose is not rollback. The down file is EXECUTED here, on a
 // database that has 043 applied, and the reversal is then observed column by column.
@@ -604,6 +678,14 @@ db.exec(`insert into public.artist_access (organization_id, artist_id, act_id, a
   values ('${ORG}', (select artist_id from public.artist_access where organization_id = '${ORG}' limit 1),
           '${ACT_B}', 'manage', 'active', '{request}', '{booker}')
   on conflict do nothing`)
+// M27 — section [16] applied AND reverted PART B before this point, so the down
+// file's restore block was never load-bearing and deleting it went unnoticed. Apply
+// PART B here and leave it applied: the rollback must genuinely restore the policy.
+db.exec(`select public.apply_act_scoped_publish()`)
+check('PART B is applied going into the rollback (so the restore block is load-bearing)',
+  /grant_permits/.test(db.scalar(`select pg_get_expr(polwithcheck, polrelid) from pg_policy p
+    join pg_class c on c.oid = p.polrelid where c.relname='passport_versions' and p.polname='pv_owner_insert'`)))
+
 const blocked = db.try(down)
 check('rollback REFUSES while Act-scoped grants make the 008 key unrestorable',
   !blocked.ok && /cannot roll back 044/.test(blocked.out), blocked.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))

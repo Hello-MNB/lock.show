@@ -89,6 +89,10 @@ create trigger trg_artist_access_fill_revoked_at
 -- and now() would assert it was revoked at migration time. Both invent history.
 -- New and updated rows are still enforced, and the trigger above guarantees they
 -- satisfy it.
+-- NOTE: this constraint is UNFALSIFIABLE while the trigger above is installed —
+-- every route to a revoked row with a null stamp is refilled before the check runs,
+-- and convalidated is false. It documents the invariant; the TRIGGER enforces it.
+-- Do not read it as an independently enforced bound.
 alter table public.artist_access drop constraint if exists artist_access_revoked_at_check;
 alter table public.artist_access add constraint artist_access_revoked_at_check
   check (status <> 'revoked' or revoked_at is not null) not valid;
