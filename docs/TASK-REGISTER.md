@@ -3151,3 +3151,38 @@ off `supabase.auth` · sign-out clearing through a helper · `publicSessionId()`
 LAYOUT route guard.
 
 **28 static checks (was 26).** No app behaviour changed; no dependency added.
+
+## T-122 · OAUTH CALLBACK & SESSION RESTORE — the auth band's last uncovered surface (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** Measurement and pinning; no behaviour changed. One hazard filed as
+**OWNER-PENDING OAUTH-CODE-RESIDUE**.
+
+`AuthProvider`'s boot effect (`AuthProvider.jsx:63-110`) exchanges a PKCE `?code=` **before any
+routing**, then restores the session and awaits the profile. It was the last part of the controller's
+top-priority band with no coverage. Five properties are now pinned, each mutation-proven:
+
+* **C1** — the exchange is conditional on a `?code` being present, and the check precedes the call, so
+  it does not fire on ordinary page loads.
+* **C2 — an OBSERVED ASYMMETRY.** `history.replaceState` sits INSIDE the `try`, after the `await`, so
+  the single-use code is stripped only when the exchange **succeeds**. A failed exchange leaves the code
+  in the address bar and in browser history. Low severity — a code that failed to exchange is normally
+  already spent or invalid — and one line in a `finally` closes it. Pinned, not endorsed.
+* **C3** — the failure handler logs `e?.message` only, never the code or the callback URL. This one is
+  a genuine good property of the existing code, and it is now protected.
+* **C4** — boot always reaches `setLoading(false)` through a `finally`, so a transient
+  `getSession`/profile failure cannot strand the app on the spinner with no recovery.
+* **C5** — the profile is **awaited**, so `loading` covers the ROLE too and `RequireRole` cannot race
+  `role=null` on a hard reload (the broken-refresh defect the code comments record).
+
+**Mutation-proven 5/5**, each caught by the intended assertion: removing the `?code` guard · moving the
+cleanup into the failure path (the gate declares *itself* stale and names the open decision) · logging
+the callback URL · taking `setLoading(false)` out of the `finally` · dropping the `await` on
+`loadProfile`.
+
+**One false positive of my own, caught before it shipped.** C3 first stripped only single-quoted string
+literals before testing, and esbuild normalises to double quotes — so the log LABEL
+`"[oauth] code exchange failed:"` tripped the word "code" and reported a clean handler as leaking.
+Literals of all three quote styles are now removed before the test. Same class as the earlier
+harness-shape errors: measure the shape, do not assume it.
+
+**34 static checks (was 28).**

@@ -72,6 +72,7 @@ for (const f of files) {
 // Callers pass file CONTENT. An unknown string means someone scanned something
 // that was never transformed — fail rather than silently scanning raw text,
 // which is the blind spot this whole block exists to remove.
+const code = (f) => CODE.get(readFileSync(f, 'utf8'))
 const strip = (t) => {
   if (CODE.has(t)) return CODE.get(t)
   console.log('  ✗ B0 ⚠ strip() received text that was never transformed — refusing to scan raw source')
@@ -326,6 +327,57 @@ for (const f of ['src/features/artist/RadarUniverse.jsx', 'src/features/artist/A
   check(bad.length === 0,
     `B5 ${f} adopts the stored Act ONLY under a membership check on this artist's own Acts (LANE-A T-106 regression pin; any membership spelling accepted)`,
     `B5 ⚠ ${f}: ${bad.length} UNGUARDED adoption(s) of the stored Act — T-106 (stale cross-Person context) is reachable again. ${bad.join(' | ')}`)
+}
+
+// ── C · OAUTH CALLBACK & SESSION RESTORE ────────────────────────────────────
+// AuthProvider's boot effect exchanges a PKCE `?code=` BEFORE any routing, then
+// restores the session and awaits the profile. It is the last uncovered part of
+// the auth band and it carries several properties worth pinning.
+console.log('\n  C · OAuth callback & session restore')
+{
+  const boot = (code('src/features/auth/AuthProvider.jsx').match(/useEffect\(\(\) => \{[\s\S]*?onAuthStateChange/) ?? [''])[0]
+  check(boot.length > 400,
+    `C0 non-vacuity: the boot effect was located (${boot.length} chars)`,
+    'C0 ⚠ the boot effect could not be located — every assertion below would be vacuous')
+
+  // The exchange is CONDITIONAL on a ?code being present — it does not fire on
+  // every page load.
+  check(/params\.get\('code'\)|params\.get\("code"\)/.test(boot) &&
+        boot.indexOf("params.get('code')") < boot.indexOf('exchangeCodeForSession'),
+    'C1 the PKCE exchange runs ONLY when a ?code is present, and the check precedes the call',
+    'C1 ⚠ the ?code guard no longer precedes exchangeCodeForSession — the exchange would fire on ordinary page loads')
+
+  // THE ASYMMETRY. `history.replaceState` sits INSIDE the try, after the await,
+  // so the URL is cleaned only when the exchange SUCCEEDS. On failure the
+  // single-use code stays in the address bar and in browser history.
+  const tryBlock = (boot.match(/try \{[\s\S]*?\} catch/) ?? [''])[0]
+  const cleanInsideTry = /history\.replaceState/.test(tryBlock)
+  const cleanInCatchOrFinally = /catch[\s\S]{0,300}?history\.replaceState/.test(boot)
+  check(cleanInsideTry && !cleanInCatchOrFinally,
+    'C2 ⚠ OBSERVED ASYMMETRY — the ?code is stripped from the address bar only on SUCCESS. history.replaceState is inside the try, after the await, so a FAILED exchange leaves a single-use OAuth/recovery code in the URL and in browser history. Pinned, not endorsed — OWNER-PENDING OAUTH-CODE-RESIDUE',
+    'C2 the cleanup now runs on the failure path too — good, and this gate is stale: update it and close OAUTH-CODE-RESIDUE')
+
+  // The failure handler must not log the code or the full callback URL.
+  const catchBlock = (boot.match(/catch \(e\) \{[\s\S]*?\}/) ?? [''])[0]
+  // String LITERALS are removed before testing — including double-quoted ones.
+  // The first version stripped only single quotes, and esbuild normalises to
+  // double, so the log LABEL "[oauth] code exchange failed:" tripped the word
+  // "code" and reported a false positive on a handler that logs e?.message only.
+  const catchCode = catchBlock.replace(/"[^"]*"|'[^']*'|`[^`]*`/g, '""')
+  check(/console\.error/.test(catchBlock) && !/location\.href|params|\bcode\b/.test(catchCode),
+    'C3 the exchange failure handler logs the error only — never the callback URL or the code itself',
+    `C3 ⚠ the failure handler may log the code or callback URL: ${catchBlock.replace(/\s+/g, ' ').slice(0, 120)}`)
+
+  // A transient boot failure must never strand the app on the spinner.
+  check(/finally \{[\s\S]{0,80}setLoading\(false\)/.test(boot),
+    'C4 boot always reaches setLoading(false) via `finally` — a transient getSession/profile failure cannot strand the app on the loading spinner with no recovery',
+    'C4 ⚠ setLoading(false) is no longer in a finally — a boot failure could leave the app spinning forever')
+
+  // The profile must be AWAITED before loading clears, or RequireRole races
+  // role=null on every hard reload (the broken-refresh Maria hit).
+  check(/await loadProfile\(/.test(boot),
+    'C5 the profile is AWAITED during boot, so `loading` covers the ROLE too — RequireRole cannot race role=null on a hard reload',
+    'C5 ⚠ loadProfile is no longer awaited in boot — every hard reload can bounce the user to /select')
 }
 
 console.log(`
