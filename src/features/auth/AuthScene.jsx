@@ -34,7 +34,15 @@ export default function AuthScene({ children, tagline }) {
       <div className="relative hidden flex-1 overflow-hidden lg:block" aria-hidden="true">
         <img src="/assets/gigproof-live-hero.webp" alt=""
           className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-bg/30 via-bg/45 to-bg" />
+        {/* The veil's JOB is to blend the photo into the form panel beside it, so
+            it has to mirror with the panel. Measured at 1440: in LTR the photo
+            occupies x 0→920 and the opaque end lands on the seam at 920; in RTL
+            the panel moves to x 520→1440 while a physical `to-r` kept ramping
+            toward 1440 — the OUTER screen edge — leaving the seam at 520 under
+            `from-bg/30`, the most transparent stop. Tailwind has no logical
+            gradient direction, so the `rtl:` variant is the idiom; identical in
+            LTR. (Independent review P1, reasoned there, measured here.) */}
+        <div className="absolute inset-0 bg-gradient-to-r rtl:bg-gradient-to-l from-bg/30 via-bg/45 to-bg" />
         <div className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-bg/25" />
         <div className="absolute bottom-10 start-10 end-16 max-w-md">
           <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">

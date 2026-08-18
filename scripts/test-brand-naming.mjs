@@ -194,13 +194,23 @@ if (existsSync(`${OUT}/index.html`)) {
 }
 
 // ── CLAUSE 5 · NON-HTML PUBLIC SURFACES.
+// NON-VACUITY (independent review finding F14). `if (!existsSync(f)) continue`
+// meant that with all four files absent this clause scanned nothing and printed
+// a clean verdict — and three of the four live in gitignored `out/`, so a run
+// before any build would have reported "clean" about files it never opened.
+// A surface that is supposed to exist and does not is a FAILURE, not a skip.
+const PUBLIC_SURFACES = ['website-next/public/llms.txt', `${OUT}/llms.txt`, `${OUT}/robots.txt`, `${OUT}/sitemap.xml`]
 let pubHits = 0
-for (const f of ['website-next/public/llms.txt', `${OUT}/llms.txt`, `${OUT}/robots.txt`, `${OUT}/sitemap.xml`]) {
-  if (!existsSync(f)) continue
+const pubMissing = []
+let pubScanned = 0
+for (const f of PUBLIC_SURFACES) {
+  if (!existsSync(f)) { pubMissing.push(f); continue }
+  pubScanned++
   const m = readFileSync(f, 'utf8').match(BARE)
   if (m) { pubHits += m.length; fail(`C5 ${f}: ${m.length} bare "LOCK"`) }
 }
-if (pubHits === 0) ok('C5 non-HTML public surfaces clean (llms.txt, robots.txt, sitemap.xml)')
+if (pubMissing.length) fail(`C5 ${pubMissing.length} public surface(s) MISSING, so nothing was scanned for them: ${pubMissing.join(', ')} — build the site first; an unopened file is not a clean one`)
+else if (pubHits === 0) ok(`C5 all ${pubScanned} non-HTML public surfaces opened and clean (llms.txt ×2, robots.txt, sitemap.xml)`)
 
 // ── CLAUSE 2 · uppercase LOCK.SHOW only in an approved lockup.
 let upper = 0

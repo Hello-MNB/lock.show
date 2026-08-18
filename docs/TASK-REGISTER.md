@@ -3942,3 +3942,71 @@ directory-index imports. The chain parser handles one level of `npm run` indirec
 that exists today; a script that shells out to another npm script inside a compound command would be
 recorded as unclassified rather than followed — which fails loudly, as intended.
 
+---
+
+## REVIEW-TAIL — the last three QA-INDEP-01 conditions
+
+**Files:** `src/features/auth/AuthScene.jsx` · `scripts/test-logical-direction.mjs` ·
+`scripts/test-brand-naming.mjs`.
+
+### P1 — reasoned by the reviewer, MEASURED here, and it is real
+
+The reviewer flagged, without reproducing it, that `AuthScene` mirrors its tagline block but not the
+gradient beneath it. Measured at 1440 on the built app:
+
+| dir | photo panel | veil ramps toward | opaque edge | seam with the form panel |
+|---|---|---|---|---|
+| ltr | x **0 → 920** | to right | 920 | 920 — **match** |
+| rtl (before) | x **520 → 1440** | to right | 1440 (outer screen edge) | 520 — **mismatch** |
+| rtl (after) | x 520 → 1440 | to left | 520 | 520 — **match** |
+
+So it was not a matter of taste. The veil exists to blend the photo into the form panel beside it; the
+row is a `flex`, so the panel mirrors, and a physical `to-r` left the seam under `from-bg/30` — the
+most transparent stop — while spending the opaque end on the outer screen edge. Fixed with
+`rtl:bg-gradient-to-l`, which is byte-identical in LTR, and verified in **both** directions by
+re-running the probe.
+
+### A limit that was true and still not a reason to leave it unchecked
+
+`test-logical-direction` had named gradients as an accepted limit: *"bg-gradient-to-r has no logical
+form in Tailwind 3"*. True — and the `rtl:` variant is the idiom, so the check is possible. New **R5**:
+any gradient with a HORIZONTAL component must carry an `rtl:` counterpart on the same element;
+vertical `to-t`/`to-b` are exempt. Scope named and deliberately wider than the token scan — the `src/`
+list **plus** `website-next/{app,components}`, because a marketing-site gradient has the same failure
+mode. Measured across the tree: **one** horizontal gradient, now mirrored, so the ratchet starts at
+zero debt.
+
+### F14 — CLAUSE 5 reported "clean" about files it never opened
+
+`if (!existsSync(f)) continue` meant that with all four public surfaces absent the clause scanned
+nothing and printed a clean verdict — and **three of the four live in gitignored `out/`**, so a run
+before any build would have reported clean about `llms.txt`, `robots.txt` and `sitemap.xml` without
+reading a byte. A surface that is supposed to exist and does not is now a FAILURE, and the success
+line states how many files were actually opened.
+
+### F17 — a correction to a commit message, recorded because the commit cannot be edited
+
+The **ONB-RESUME-STORAGE** commit body said the function-boundary mutation was *"confirmed a real
+behaviour change"*. The register entry for that increment was accurate — it said the rule *"changes no
+verdict on the tree as it stands"* — but the commit message was stronger than the evidence, and the
+reviewer was right to flag the pair. The measured position, re-confirmed by the reviewer at both HEAD
+and the parent commit: **33 guarded either way at HEAD, 30 either way at the parent — zero verdict
+changes.** The rule is still correct and still worth having; what it is not is a mutation the tree
+currently exercises.
+
+**Mutation battery — 3/3 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **K1** | revert the P1 fix — the veil stops mirroring | **R5**, naming `AuthScene.jsx:45` |
+| **K2** | break the gradient rule so it cannot fire | **S5** self-test, before any file verdict |
+| **K3** | the F14 injection — a public surface absent | **C5**: *"1 public surface(s) MISSING … an unopened file is not a clean one"* |
+
+**All 18 QA-INDEP-01 findings are now closed.** F1, F2a, F2b, F3, F4, F5, F6, F7–F11, F13, F14, F15,
+F16, F17 and P1 — repaired, or corrected in place where the finding was a claim rather than code.
+
+**Scope limits.** R5 is static: it proves an `rtl:` counterpart is DECLARED, not that the resulting
+composition is right — that came from the probe, which is not part of any gate. Gradients written
+through a CSS file rather than a utility class are not covered. The P1 probe itself was a throwaway
+script, not committed; the standing regression protection is R5 plus `test-fit`'s RTL geometry pass.
+

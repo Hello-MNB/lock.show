@@ -308,6 +308,62 @@ check('R3 CSS ratchet — the physical-declaration set matches CSS_BASELINE exac
 const cssTotal = Object.values(cssFound).flat().length
 check('R4 non-vacuity — the CSS scanner did find declarations in this tree', cssTotal > 0, `found ${cssTotal}`)
 
+// ── R5 · HORIZONTAL GRADIENTS MUST MIRROR ───────────────────────────────────
+// This gate used to name gradients as an accepted limit ("bg-gradient-to-r has
+// no logical form in Tailwind 3"). True — and not a reason to leave them
+// unchecked, because the `rtl:` variant IS the idiom. Measured consequence,
+// AuthScene at 1440: in LTR the photo panel occupies x 0→920 and the veil's
+// opaque end lands on the seam with the form at 920; in RTL the panel moves to
+// x 520→1440 while a physical `to-r` kept ramping toward 1440, the OUTER screen
+// edge, leaving the seam under the most transparent stop. The veil's whole job
+// is that seam. So: any gradient with a HORIZONTAL component must carry an
+// `rtl:` counterpart on the same element. Vertical (`to-t` / `to-b`) is exempt.
+//
+// SCOPE, named: the src/ token list PLUS website-next/{app,components}. The
+// token scan above is src-only; this check is deliberately wider because a
+// marketing-site gradient has exactly the same failure mode. Measured today:
+// one horizontal gradient in the whole tree, already mirrored.
+const GRAD_H = /(?:^|[\s"'`{:])(?:!?(?:[a-zA-Z0-9_@\[\]./-]+:)*)bg-gradient-to-(?:r|l|tr|tl|br|bl)\b/
+const GRAD_RTL = /rtl:bg-gradient-to-/
+function gradientViolations(text) {
+  const out = []
+  text.split('\n').forEach((line, i) => {
+    if (!GRAD_H.test(line)) return
+    // A line that only carries the rtl: counterpart is the counterpart.
+    const bare = line.replace(/rtl:bg-gradient-to-(?:r|l|tr|tl|br|bl)\b/g, '')
+    if (!GRAD_H.test(bare)) return
+    if (!GRAD_RTL.test(line)) out.push({ line: i + 1, text: line.trim().slice(0, 100) })
+  })
+  return out
+}
+{
+  // Self-test first: the rule must fire on an unmirrored horizontal gradient,
+  // stay silent on a mirrored one, and never fire on a vertical one.
+  const CASES = [
+    ['<div className="bg-gradient-to-r from-a to-b" />', 1],
+    ['<div className="bg-gradient-to-l from-a to-b" />', 1],
+    ['<div className="md:bg-gradient-to-br from-a to-b" />', 1],
+    ['<div className="bg-gradient-to-r rtl:bg-gradient-to-l from-a to-b" />', 0],
+    ['<div className="bg-gradient-to-t from-a to-b" />', 0],
+    ['<div className="bg-gradient-to-b from-a to-b" />', 0],
+    ['<div className="rtl:bg-gradient-to-l from-a to-b" />', 0],
+    ['<div className="bg-linear-to-r from-a to-b" />', 0],
+  ]
+  const wrong = CASES.filter(([src, want]) => gradientViolations(src).length !== want)
+  check('S5 gradient-mirror self-test — fires on an unmirrored horizontal gradient, silent on a mirrored or vertical one',
+    wrong.length === 0, wrong.map(([src]) => src).join(' · '))
+}
+const GRAD_FILES = [...files, ...execSync("git ls-files 'website-next/app' 'website-next/components'", { encoding: 'utf8' })
+  .split('\n').filter((f) => f && /\.(jsx?|tsx?)$/.test(f))]
+let gradSites = 0
+for (const f of GRAD_FILES) {
+  for (const v of gradientViolations(readFileSync(f, 'utf8'))) {
+    gradSites++
+    findings.push(`R5 ${f}:${v.line} horizontal gradient with no rtl: counterpart — add \`rtl:bg-gradient-to-<mirror>\`; identical in LTR, correct in RTL — ${v.text}`)
+  }
+}
+check('R5 every horizontal gradient carries an rtl: counterpart', gradSites === 0, `${gradSites} unmirrored`)
+
 console.log(`\n  scanned ${files.length} tracked src files · ${totalFound} physical direction utilities, all baselined as direction-neutral`)
 console.log(`  scanned ${cssFiles.length} authored stylesheet(s) · ${cssTotal} physical direction declaration(s), all baselined as direction-neutral`)
 if (findings.length) {
