@@ -3048,3 +3048,70 @@ executed. They pin the SHAPE of what persists so it cannot drift silently; they 
 storage behaviour. Whether GoTrue itself clears its own session keys is separate and untested here.
 
 **19 static checks (was 12).**
+
+### SIXTH INDEPENDENT REVIEW (`b4fa3dc..73389e2`) — verdict REVISE. The static gate was the problem; section F was sound.
+
+Section F (the EXECUTED role-context test) survived unchanged: the reviewer independently re-ran its
+mutation, confirmed F3 catches the escalation by name, and — importantly — **checked the scope word I
+was most likely to have overstated**. "Nothing downstream trusts it" holds: `set_artist_org()` is the
+only DB reader of `active_role_context` (009/021 only INSERT at bootstrap, 035 explicitly does not touch
+it), and on the client `OrgContext.jsx:78` re-derives the active org from memberships before exposing
+it. Check counts re-derived at all four commits; every cited line number accurate.
+
+**The static gate was wrong in four HIGH ways, all of the same family: a claim broader than what was
+measured.**
+
+**[HIGH-1] "exactly 7 browser-storage keys" — there are 19 expressions.** The scan matched only
+single-quoted literals, missing the repo's dominant idiom (a named `const` or template literal). Ten
+keys were invisible, and three are worse than the two the register named — `gigproof_pp_dirty_<artistId>`
+and `gigproof_onboarding_step_<userId>` carry an identifier in the KEY NAME, and `gp_confirm_<claimId>`
+holds **the evidence URL the previous artist pasted**. This falsified the very finding SIGNOUT-SCOPE
+exists to decide: it told Maria "all 7 keys… Two matter". The scan now resolves same-file `const`
+declarations and template keys and pins **14 resolvable + 5 helper-resolved** separately, so a move in
+either half is visible. OWNER-PENDING corrected: at least five matter.
+
+**[HIGH-2] The T-106 regression pin was wrong in BOTH directions.** It matched one exact spelling, so a
+semantically identical `.find()` refactor made the gate scream that a live security defect was back —
+the kind of false alarm that gets a gate loosened — while computing the membership check and then
+**ignoring** it genuinely re-opened T-106 with the gate green. It is now structural: every site that
+ADOPTS `stored` must be governed by a condition containing a membership test, with one level of
+identifier resolution so a hoisted guard (`const owns = rows.find(…)`) is accepted and a computed-then-
+discarded one is not. Verified in both directions.
+
+**[HIGH-3] `strip()` deleted real code, and it was introduced as a FIX.** It stripped block comments
+BEFORE line comments, so a `/*` written inside a `//` comment opened a phantom block that swallowed
+everything to the next `*/`. The reviewer hid an entire second password-change surface AND a new storage
+key behind two ordinary TODO comments and the gate stayed green. It now removes line comments first,
+quote-aware so `https://` and protocol-relative URLs survive. **T-118 presented comment-stripping as the
+remedy for a contamination incident; it introduced a worse class of bug than the one it closed.**
+
+**[HIGH-4] A4 tested three tokens.** Supabase has no "verify current password" primitive, so the
+realistic remedy for AUTH-REAUTH is an OTP step — the reviewer added exactly that and A4 went on
+asserting that no re-authentication exists, which would have kept the row open after the defect was
+fixed. A4 now enumerates every `supabase.auth.*` call inside `onSubmit` and requires the set to be
+exactly `{updateUser}`.
+
+**MED, all repaired:** the file scan excluded `.ts`/`.tsx` although the repo tracks three such files
+(a planted `.tsx` surface was invisible) and missed destructuring off `supabase.auth` · B1 was defeated
+by one level of indirection, so a helper that really did clear `gp_session` and `gigproof_events` left
+B1 reporting the opposite · "never cleared" was prose in B3/B4 and is now measured across all source
+files · B2's message asserted a clause ("and none is cleared on sign-out") the check never evaluated,
+now a real assertion · A2's `[^>]*` could not see a parent LAYOUT route guard, so a guarded recovery
+route read as public.
+
+**Two claim corrections.** "No browser storage at all" is literally false — supabase-js clears its own
+auth-token key; the claim is about the APP's keys. And `/reset-password` is the only **client-side**
+password-change surface; `scripts/seed.mjs:73` uses `admin.updateUserById` under the service role.
+`db.js:459` → `458`.
+
+**T-120's "mutation-proven 5/5" was not supported for one of the five.** The reviewer showed a realistic
+`gp_session` mutation that the assertion as written does not catch. The claim is withdrawn; B3b now
+measures it, and the repaired gate catches that mutation.
+
+**8/8 of the reviewer's mutations now caught** — and my first attempt at that battery was itself invalid
+for the SECOND time: I created the planted files UNTRACKED, and the scan reads `git ls-files`, so two
+"survivors" were my harness error rather than gate holes. Re-run with `git add -N`, both are caught. The
+gate now prints its own scope limit — **tracked files only** — because that is a real blind spot a
+reader would otherwise not know about.
+
+**26 static checks (was 19).**
