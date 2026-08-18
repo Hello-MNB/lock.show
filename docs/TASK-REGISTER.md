@@ -2838,3 +2838,35 @@ The candidate now revokes exactly two: `internal_confidence` (001:89) and `extra
 displayed, and the fix costs five call-site edits rather than three. What has not changed is the
 substance — `authenticated` can still select a column `001:89` says is never returned to any client, and
 `016:9` says that was deliberate. Which statement is canon is still Maria's to settle.
+
+## T-117 · THE WIRE FORMAT, MEASURED — the five-call-site claim no longer rests on inference (18 Aug 2026)
+
+**Status: COMPLETE with evidence** for the client half; the server half stays **EVIDENCE OPEN** and is
+now named precisely instead of vaguely.
+
+T-116 claimed promoting `candidate-claims-internal-columns.sql` breaks **five** call sites. That rested
+on an assumption about what the client sends. PostgREST itself is not installed here, but
+`@supabase/postgrest-js` — the query builder those call sites actually use — is, so the client half is
+checkable offline against the real library rather than reasoned about:
+
+```
+select('*')                     ?select=*&artist_id=eq.…
+select() [bare, after a write]  ?select=*
+select('id, value')             ?select=id,value
+```
+
+Both shapes emit a **full projection**, so all five call sites do request every column, and an explicit
+list does narrow the wire format — which confirms the proposed remedy is the right one. Pinned in the
+gate so a library change that altered this would be caught rather than silently invalidating the claim.
+
+**It fails closed.** If `@supabase/postgrest-js` cannot be imported the assertion FAILS rather than
+skipping, because a skip here would turn "measured" back into "assumed" without saying so.
+Mutation-proven: pointing the import at a non-existent package exits 1 naming the assertion.
+
+**What is still unverified, stated exactly.** Whether PostgREST's server side turns `select=*` into a
+projection over ALL table columns (→ permission denied under a column grant, which is what every
+candidate assumes) or filters it to the granted ones. That is the single remaining unknown behind the
+breakage story, it needs a running PostgREST, and this container has none. It is no longer "PostgREST is
+unverified" in general — it is one named question.
+
+**137 checks (was 134).**

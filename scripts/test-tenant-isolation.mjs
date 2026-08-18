@@ -864,6 +864,35 @@ try {
       `E2 and ${bareSelect.length} WRITE path(s) return a bare .select() (src/lib/db.js:${bareSelect.map((x) => x[0]).join(', ')}) — claim creation and claim update expand to every column too, so promotion breaks ${starClaims.length + bareSelect.length} call sites, not ${starClaims.length} (executed)`,
       `E2 the bare-.select() write paths changed (${bareSelect.length} found) — re-derive before trusting the breakage count`)
 
+    // THE WIRE FORMAT, measured rather than inferred. E2 above claims five call
+    // sites break under a column grant. That claim rests on what the CLIENT
+    // actually sends: if `.select('*')` and a bare `.select()` did not emit
+    // `select=*`, the breakage count would be wrong. Asserted against the real
+    // @supabase/postgrest-js query builder, offline, no server needed.
+    //
+    // FAILS CLOSED if the library is unavailable — a skip is not a pass, and
+    // this is the only thing standing between "measured" and "assumed" here.
+    {
+      let PostgrestClient = null
+      try { ({ PostgrestClient } = await import('@supabase/postgrest-js')) } catch { /* handled below */ }
+      check(!!PostgrestClient,
+        'E2 wire-format check is RUNNABLE — @supabase/postgrest-js resolved (executed)',
+        'E2 ⚠ @supabase/postgrest-js could not be imported, so the five-call-site breakage claim is UNMEASURED. Not skipping: this fails.')
+      if (PostgrestClient) {
+        const c = new PostgrestClient('http://local.invalid')
+        const q = (b) => decodeURIComponent(b.url.search || '')
+        const star = q(c.from('claims').select('*').eq('artist_id', ARTIST))
+        const bare = q(c.from('claims').insert({ artist_id: ARTIST }).select())
+        const list = q(c.from('claims').select('id, value'))
+        check(star.includes('select=*') && bare.includes('select=*'),
+          `E2 both shapes emit a FULL projection on the wire — select('*') → "${star}" and a bare .select() after a write → "${bare}" — so all five call sites request every column and all five break under a column grant (executed)`,
+          `E2 ⚠ the wire format is not select=* (star="${star}" bare="${bare}") — the five-call-site breakage claim does not hold`)
+        check(list.includes('select=id,value') && !list.includes('*'),
+          'E2 positive control: an EXPLICIT column list emits only those columns, so the fix (explicit lists) is the right remedy (executed)',
+          `E2 ⚠ an explicit list did not narrow the wire format: "${list}"`)
+      }
+    }
+
     // THE RENDER QUESTION, answered rather than left open. T-115 recorded
     // "nothing renders it" as UNVERIFIED; this is the check that settles it.
     const INTERNAL_COLS = ['internal_confidence', 'extraction_provenance', 'extraction_method', 'model_version']
