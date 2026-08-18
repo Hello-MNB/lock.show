@@ -13,7 +13,14 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const HEBREW = /[֐-׿]/
-const HE_ALLOW = new Set(['LOCK', 'RADAR', 'SEC', 'OAuth', 'Stripe', 'slug', 'Phase', 'PWA', 'EN', 'HE', 'EPK', 'DJ', 'CSV', 'PDF', 'XLSX', 'OK'])
+// 'SHOW' is the second half of the brand name, a proper noun that is never
+// translated (founder ruling: the visible brand is LOCK SHOW on every surface).
+// SCOPE OF THIS SET, stated because it is narrower than it looks: check 2 below
+// returns early on any line containing Hebrew, so HE_ALLOW only ever applies to
+// he.js lines that are PURELY Latin — like `brand: 'LOCK SHOW'`. Adding SHOW
+// therefore widens exactly one thing: a purely-Latin value may now contain it.
+// A purely-Latin value carrying any OTHER English word still fails.
+const HE_ALLOW = new Set(['LOCK', 'SHOW', 'RADAR', 'SEC', 'OAuth', 'Stripe', 'slug', 'Phase', 'PWA', 'EN', 'HE', 'EPK', 'DJ', 'CSV', 'PDF', 'XLSX', 'OK'])
 
 function walk(dir, out = []) {
   for (const f of readdirSync(dir)) {

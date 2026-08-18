@@ -62,10 +62,15 @@ const LOCKUP_ALLOWLIST = []
 // below MAY ONLY SHRINK: fixing tokens is always allowed, adding any is a gate
 // failure. Recorded 17 Aug 2026.
 //
-// The largest entries are user-visible app strings (i18n/en.js 19, he.js 17),
-// so this is real debt against the founder ruling, not cosmetic residue.
-const SRC_APP_DEFERRAL = 57
-const SRC_APP_DEFERRAL_DATE = '2026-08-17'
+// SHRUNK 57 → 18 on 2026-08-18 (BRAND-APP-I18N). The two i18n catalogues and the
+// RENDERED WORDMARK are done: 39 user-visible tokens repaired, including
+// `ui.jsx` Wordmark, which is the `<b>` element eleven screens draw their brand
+// from and which still read a bare "LOCK". What remains is 18 tokens across 14
+// files — code identifiers, contracts, analytics labels and one CSS comment —
+// each of which needs a per-site judgement about whether it is a brand mention
+// at all, rather than a catalogue sweep. The budget MAY ONLY SHRINK.
+const SRC_APP_DEFERRAL = 18
+const SRC_APP_DEFERRAL_DATE = '2026-08-18'
 
 let failed = false
 const fail = (m) => { failed = true; console.error(`  ✗ ${m}`) }
@@ -136,9 +141,17 @@ for (const f of SRC) {
 if (webHits === 0) ok(`C1 website + public app shells: zero bare "LOCK" across ${SRC.filter((f) => !f.startsWith('src/')).length} files`)
 else fail(`C1 website + public app shells: ${webHits} bare "LOCK" token(s) — this must be zero`)
 
+// EXACT, not "within" (found by mutation L3 of BRAND-APP-I18N). `appHits <=
+// SRC_APP_DEFERRAL` meant the budget could be RAISED and the gate stayed green —
+// a stale budget silently pre-authorises every regression up to its number, and
+// nothing failed when L3 widened 18 back to 57. Exact equality makes the budget
+// self-truthing: it can only move by actually changing the tokens, and fixing a
+// token without lowering it is a STALE-budget failure, which is the same
+// discipline the storage and logical-direction ratchets already use.
 if (appHits === 0) ok('C1 src/** (app lane): zero — the deferral can now be deleted')
-else if (appHits <= SRC_APP_DEFERRAL) ok(`C1 src/** (app lane): ${appHits} deferred token(s) — within the ${SRC_APP_DEFERRAL} budget dated ${SRC_APP_DEFERRAL_DATE}; NON-SCOPE for CODE-WEB-021A, owned by the app lane`)
-else fail(`C1 src/** (app lane): ${appHits} token(s) EXCEEDS the ${SRC_APP_DEFERRAL} budget — the deferral may only shrink; a new bare "LOCK" was introduced`)
+else if (appHits === SRC_APP_DEFERRAL) ok(`C1 src/** (app lane): ${appHits} deferred token(s) — exactly the ${SRC_APP_DEFERRAL} budget dated ${SRC_APP_DEFERRAL_DATE}; NON-SCOPE for CODE-WEB-021A, owned by the app lane`)
+else if (appHits > SRC_APP_DEFERRAL) fail(`C1 src/** (app lane): ${appHits} token(s) EXCEEDS the ${SRC_APP_DEFERRAL} budget — the deferral may only shrink; a new bare "LOCK" was introduced`)
+else fail(`C1 src/** (app lane): only ${appHits} token(s) remain but the budget still says ${SRC_APP_DEFERRAL} — lower it to ${appHits}. A budget larger than reality pre-authorises regressions up to its number`)
 
 // CLAUSE 7b · the ratchet. The source_brand exemption holds ONLY while nothing
 // consumes it; one consumer converts ~190 dormant tokens into rendered copy.

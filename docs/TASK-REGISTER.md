@@ -4010,3 +4010,66 @@ composition is right — that came from the probe, which is not part of any gate
 through a CSS file rather than a utility class are not covered. The P1 probe itself was a throwaway
 script, not committed; the standing regression protection is R5 plus `test-fit`'s RTL geometry pass.
 
+---
+
+## BRAND-APP-I18N — the app's own brand debt, and the wordmark nobody had looked at
+
+**Band:** brand ruling enforcement, app lane. **Files:** `src/lib/i18n/en.js` · `src/lib/i18n/he.js` ·
+`src/components/ui.jsx` · `scripts/test-brand-naming.mjs` · `scripts/i18n-purity.mjs`.
+
+**Context.** The brand gate has carried a dated, budgeted deferral since 17 Aug: 57 bare `LOCK`
+tokens in `src/**`, declared NON-SCOPE for the website task and **owned by the app lane** — which is
+this lane. The budget "MAY ONLY SHRINK". This increment spends it.
+
+**The finding that changed the scope.** Inspecting the 57 before touching any of them:
+`T.brand = 'LOCK'` has **no consumer** — `grep -rn "\.brand\b"` outside `i18n/` returns nothing. The
+brand users actually see is **hardcoded** at `src/components/ui.jsx:408`:
+`<b className="…">LOCK</b>`, inside `Wordmark`, which is rendered on **11 screens** — the sidebar,
+every auth screen, invite acceptance, the role picker. The most visible brand surface in the
+application still read a bare `LOCK`, and it was sitting in the deferred pile as an ordinary token.
+
+**39 tokens repaired:** `en.js` 19, `he.js` 17, `ui.jsx` 3 (the rendered wordmark plus the two
+comments that describe it). Every one was read before it was changed; all 39 are genuine brand
+mentions in user-visible copy — taglines, ARIA labels, consent text, the WhatsApp outbound message,
+the pilot pricing note — none is a code identifier or an unrelated word.
+
+**One line where the brand fix alone would read badly**, recorded rather than slipped in:
+`en.js:42` was *"LOCK shows evidence only — not a guarantee."* — the exact line the gate's own header
+cites as the historic case-insensitivity false-negative. *"LOCK SHOW shows"* stutters, so the verb
+moved with the brand: **"LOCK SHOW presents evidence only — not a guarantee."** The Hebrew needed no
+such change.
+
+**Budget 57 → 18**, and the remainder is named: 18 tokens across 14 files — `registryData.js`,
+`publicPassport`, contracts, analytics labels, `tokens.ts`, `types.ts`, one CSS comment — each
+needing a per-site judgement about whether it is a brand mention at all. That is a second increment,
+not a catalogue sweep.
+
+**A knock-on in the language gate, and a claim I had to correct.** `brand: 'LOCK SHOW'` is a purely
+Latin value in `he.js`, so `i18n-purity` flagged `SHOW` as untranslated English. `SHOW` is now in
+`HE_ALLOW` as half of a proper noun. My first comment claimed the guard stays tight because the set
+is uppercase-only — **that was wrong**: check 2 returns early on any line containing Hebrew, so
+`HE_ALLOW` only ever applies to purely-Latin lines, and a lowercase `show` inside Hebrew copy was
+never flagged with or without this change. My first "negative control" injected `show` into a Hebrew
+line and proved nothing. The corrected control — a purely-Latin `he.js` value reading
+`'Booking Manager'` — **does** fail, which is the real boundary.
+
+**Mutation battery — 4/4 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **L1** | revert one i18n brand token | C1: *"19 token(s) EXCEEDS the 18 budget"* |
+| **L2** | revert the RENDERED wordmark | same, and this is the 11-screen surface |
+| **L3** | widen the budget back to 57 | **nothing, at first** — see below |
+| **L4** | fix a token without lowering the budget | C1 STALE: *"only 17 remain but the budget still says 18"* |
+
+**L3 found a hole in the ratchet itself.** The check was `appHits <= SRC_APP_DEFERRAL`, so the budget
+could be **raised** and the gate stayed green — a stale budget silently pre-authorises every
+regression up to its number. It is now **exact equality**, which makes the budget self-truthing and
+matches the STALE discipline the storage and logical-direction ratchets already use. L3 and L4 are
+the two directions of that one repair.
+
+**Scope limits.** This is copy, not behaviour: no data, permission or event contract changes, and
+i18n KEYS are untouched — parity holds at 1332 EN / 1328 HE. The wordmark is now wider, which is a
+layout change on 11 screens; `test-fit` renders those at 360/390/430/1360 in both directions and is
+the evidence for it. `docs/**` is still out of scope (BRAND-DOCS-SCOPE, owner call).
+
