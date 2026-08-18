@@ -3439,3 +3439,60 @@ still unmeasured by this gate: every screen here renders in whatever the demo bu
 is, and no assertion pins direction. `test-i18n-parity` and `test-copy-matrix` cover strings, not
 rendered geometry under `dir="rtl"`. Recorded as the next action, not claimed as done.
 
+---
+
+## FIT-RTL — the gate had only ever rendered English, and Hebrew was hiding a real tap-target defect
+
+**Band:** HE/EN + RTL/LTR + 360/390/430/desktop. **Files:** `src/components/layout/AppShell.jsx` ·
+`scripts/test-fit.mjs`.
+
+**OBSERVED — a product defect, not only a coverage gap.** English is the default locale
+(`LangContext.jsx`: `saved === 'he' ? 'he' : 'en'`), Hebrew is opt-in via `gigproof_lang` and flips
+`<html dir="rtl" lang="he">`. Every rendered gate in this repo had only ever booted the default, so
+the entire Hebrew/RTL surface was unmeasured. The first RTL run failed **18 of 33 renders**.
+
+The cause, **measured rather than inferred** — the header Settings link at 360px:
+
+| locale | label | box |
+|---|---|---|
+| en | `Settings` | **52 × 44** — passes |
+| he | `הגדרות` | **40 × 44** — fails the 44px floor on WIDTH |
+
+`AppShell.jsx:45` carried `min-h-[44px]` and **no minimum width**. The English word happened to be
+9px wider than the floor and carried the control over it; the shorter Hebrew word did not. Sizing a
+hit area by the length of one locale's word is not sizing it at all. Fixed with
+`min-w-[44px] justify-center`, which changes nothing visible except in the case that was failing.
+
+**Gate change.** `test-fit.mjs` gains a `LOCALES` dimension (`en/ltr`, `he/rtl`) crossed with the four
+viewports: **88 screen renders**, ~3m07s (was 44, ~91s). The locale is seeded through
+`context.addInitScript`, so it is in place before any page script on every navigation — a post-load
+`setItem` would render the first paint in the wrong locale.
+
+**The assertion that makes the new dimension real.** Each render now reports the `<html dir>`/`lang`
+it actually got, and a mismatch with the expected direction is a FAILURE with its own message. Without
+it, a seed that quietly stopped working would re-measure LTR twice and report green — a gate claiming
+RTL coverage it does not have is worse than one claiming none. A second self-pin rejects a locale set
+that does not cover both directions.
+
+**Mutation battery — 3/3 caught, restores verified by sha256:**
+
+| # | injected defect | result |
+|---|---|---|
+| P3 | drop the `he` locale | self-pin fails before the browser launches: *"RTL geometry is not implied by LTR geometry"* |
+| P2 | locale seed silently always writes `en` | every HE render reported *"locale did NOT apply — `<html dir>` is ltr … it is not a pass"* |
+| P1 | revert the `min-w-[44px]` fix, rebuild | **27 failures, all HE, zero EN** — the LTR dimension is structurally incapable of seeing this defect |
+
+P1 is the one that matters: it proves both that the fix is what made the gate green, and that the new
+dimension catches something the old one could not. (27 = 9 chrome-bearing screens × 3 mobile widths;
+`login` and `confirm` render no AppShell chrome.)
+
+**Scope limits, stated.** This measures **geometry** under RTL — box sizes, overflow, overlap, tap
+targets. It does not assert *mirroring correctness* (that a back arrow points the right way, that
+`ps-`/`pe-` logical properties were used instead of `pl-`/`pr-`), and it does not check Hebrew
+**copy** quality — `he.js` deliberately falls back to English per key until a native pass, so an
+untranslated string renders English and this gate is content with that. It covers the 11 screens in
+`test-fit`'s list, not every route.
+
+**RECOMMENDED, not done:** the same locale blindness applies to `test-visual-regression` (baselines
+are LTR-only) and `test-hero-contract` (website, renders the default locale). Neither was touched.
+

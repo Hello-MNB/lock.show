@@ -42,7 +42,12 @@ export default function AppShell() {
         <LanguageToggle />
         <NotificationBell />
         <ContextSwitcher />
-        <Link to="/settings" className="flex min-h-[44px] items-center text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
+        {/* min-w matters as much as min-h, and only Hebrew showed it: measured
+            at 360px, "Settings" is 52×44 (passes) while "הגדרות" is 40×44 —
+            the English label scraped past the 44px tap-target floor on its own
+            width, the shorter Hebrew one did not. Sizing a hit area by the
+            length of one locale's word is not sizing it at all. */}
+        <Link to="/settings" className="flex min-h-[44px] min-w-[44px] items-center justify-center text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
       </header>
 
       {/* Scrollable content — offset for sidebar on desktop, padded bottom for nav on mobile */}

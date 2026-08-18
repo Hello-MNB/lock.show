@@ -1,9 +1,11 @@
 // L1 FIT INSPECTOR (HOW-TO-BUILD-A-TASK Part 2/Part 4 — owner governance 18 Jul).
 // Verify checks SEMANTICS; this checks SPACE. Renders the DEMO build (fixtures,
-// no network) headlessly at every viewport in VIEWPORTS below and asserts:
+// no network) headlessly at every VIEWPORTS × LOCALES combination below and asserts:
 //   1. no truncated text (clipped scrollWidth/Height on leaf text nodes)
 //   2. no overlap between positioned control-layer elements (rails/docks)
 //   3. no horizontal scroll
+//   0. the locale really applied (<html dir>/<html lang>) — without this a
+//      failed seed would silently re-measure LTR twice and report green
 //   4. tap targets >= 44px on mobile (elements with the .tap-target hit-area
 //      expansion are compliant by construction and excluded; a violation FAILS
 //      — promoted from WARN after the T-68 sweep reached zero)
@@ -54,7 +56,7 @@ await new Promise((r) => server.listen(0, r))
 const port = server.address().port
 
 const ASSERT = () => {
-  const out = { truncated: [], overlaps: [], hscroll: false, smallTaps: [], primaryCtas: 0 }
+  const out = { truncated: [], overlaps: [], hscroll: false, smallTaps: [], primaryCtas: 0, dir: document.documentElement.dir, lang: document.documentElement.lang }
   for (const el of document.querySelectorAll('span,p,button,a,h1,h2,h3')) {
     if (!el.offsetParent || el.children.length > 0) continue
     const cs = getComputedStyle(el)
@@ -118,12 +120,28 @@ const VIEWPORTS = [
   [430, 932, 'MOBILE-430'],
   [1360, 850, 'DESKTOP-1360'],
 ]
+// The locale dimension (FIT-RTL). English is the default and the only one this
+// gate used to render, so every screen's RTL geometry was unmeasured — and the
+// first RTL run found a real defect the LTR runs could not see (the Settings
+// hit area was sized by the width of the English word). `dir`/`lang` are set on
+// <html> by LangContext from the `gigproof_lang` key, so the locale is seeded
+// through an init script that runs before any page script, on every navigation.
+const LOCALES = [
+  ['en', 'ltr', 'EN'],
+  ['he', 'rtl', 'HE'],
+]
+
 // SELF-PIN: the set may grow, never silently shrink. Dropping a breakpoint is a
 // real reduction in what this gate proves, so it must be a deliberate edit here
 // and not a quiet deletion in the loop.
 const REQUIRED_WIDTHS = [360, 390, 430]
 const declared = VIEWPORTS.map(([w]) => w)
 const missing = REQUIRED_WIDTHS.filter((w) => !declared.includes(w))
+const dirs = LOCALES.map(([, d]) => d)
+if (!dirs.includes('ltr') || !dirs.includes('rtl')) {
+  console.error(`✗ FIT: the declared locale set must cover both directions — got ${dirs.join(', ') || '(none)'}. RTL geometry is not implied by LTR geometry.`)
+  process.exit(1)
+}
 if (missing.length || !declared.some((w) => w >= 1280)) {
   console.error(`✗ FIT: the declared breakpoint set is narrower than the contract — missing ${missing.join(', ') || '(none)'}${declared.some((w) => w >= 1280) ? '' : ' and no desktop width >= 1280'}. Declared: ${declared.join(', ')}.`)
   process.exit(1)
@@ -131,8 +149,14 @@ if (missing.length || !declared.some((w) => w >= 1280)) {
 
 let failures = 0
 const browser = await chromium.launch()
-for (const [w, h, label] of VIEWPORTS) {
-  const page = await (await browser.newContext({ viewport: { width: w, height: h } })).newPage()
+for (const [lang, expectDir, tag] of LOCALES) {
+for (const [w, h, base] of VIEWPORTS) {
+  const label = `${tag}-${base}`
+  const ctx = await browser.newContext({ viewport: { width: w, height: h } })
+  // Seed BEFORE any page script, on every navigation — a post-load setItem
+  // would render the first paint in the wrong locale.
+  await ctx.addInitScript((l) => { try { localStorage.setItem('gigproof_lang', l) } catch { /* storage-blocked browser: the dir assertion below will catch it */ } }, lang)
+  const page = await ctx.newPage()
   // Screen 1: login (demo persona chooser)
   await page.goto(`http://127.0.0.1:${port}/login`, { waitUntil: 'networkidle' })
   const login = await page.evaluate(ASSERT)
@@ -174,11 +198,14 @@ for (const [w, h, label] of VIEWPORTS) {
     repScreens.push([route, await page.evaluate(ASSERT)])
   }
   for (const [screen, r] of [['login', login], ['radar', radar], ['radar-panel', panel], ['onboarding', onboarding], ['confirm', confirm], ...repScreens]) {
-    const bad = r.truncated.length || r.overlaps.length || r.hscroll || r.primaryCtas > 1 || r.smallTaps.length
+    const wrongDir = r.dir !== expectDir
+    if (wrongDir) console.log(`  ✗ [${label} ${screen}] locale did NOT apply — <html dir> is "${r.dir || '(unset)'}" lang "${r.lang || '(unset)'}", expected "${expectDir}"/"${lang}". This run measured the wrong direction; it is not a pass.`)
+    const bad = r.truncated.length || r.overlaps.length || r.hscroll || r.primaryCtas > 1 || r.smallTaps.length || wrongDir
     if (bad) failures++
-    console.log(`${bad ? '  ✗' : '  ·'} [${label} ${screen}] truncated: ${r.truncated.length}${r.truncated.length ? ' ' + JSON.stringify(r.truncated.slice(0, 3)) : ''} · overlaps: ${r.overlaps.length}${r.overlaps.length ? ' ' + JSON.stringify(r.overlaps.slice(0, 3)) : ''} · h-scroll: ${r.hscroll ? 'YES' : 'none'} · primary CTAs: ${r.primaryCtas}${r.smallTaps.length ? ` · ✗ taps<44: ${r.smallTaps.length} ${JSON.stringify(r.smallTaps.slice(0, 8))}` : ''}`)
+    console.log(`${bad ? '  ✗' : '  ·'} [${label} ${screen}] truncated: ${r.truncated.length}${r.truncated.length ? ' ' + JSON.stringify(r.truncated.slice(0, 3)) : ''} · overlaps: ${r.overlaps.length}${r.overlaps.length ? ' ' + JSON.stringify(r.overlaps.slice(0, 3)) : ''} · dir: ${r.dir || '(unset)'}/${r.lang || '(unset)'} · h-scroll: ${r.hscroll ? 'YES' : 'none'} · primary CTAs: ${r.primaryCtas}${r.smallTaps.length ? ` · ✗ taps<44: ${r.smallTaps.length} ${JSON.stringify(r.smallTaps.slice(0, 8))}` : ''}`)
   }
   await page.context().close()
+}
 }
 await browser.close()
 server.close()
@@ -187,5 +214,5 @@ if (failures) {
   console.log(`✗ FIT: ${failures} screen render(s) with fit defects — the pixels collide even though semantics pass. Fix before witness handoff (HOW-TO-BUILD-A-TASK).`)
   process.exit(1)
 }
-console.log(`✓ FIT: all screens fit at ${declared.map((w) => `${w}px`).join(', ')} — no truncation, no overlap, no h-scroll, never more than one primary CTA.`)
+console.log(`✓ FIT: all screens fit at ${declared.map((w) => `${w}px`).join(', ')} in ${LOCALES.map(([l, d]) => `${l}/${d}`).join(' + ')} — no truncation, no overlap, no h-scroll, never more than one primary CTA, and every render confirmed the direction it claimed.`)
 process.exit(0)
