@@ -3573,9 +3573,12 @@ installed had a hole exactly the width of one `@layer components` block. This cl
 **Scope, with the evidence for each exclusion rather than a silent filter.** Every tracked `.css` is
 scanned except two, and both exclusions were checked, not assumed:
 · `docs/reference/LOCK_DESIGN_SYSTEM_THEME.v8.css` — `grep -rn LOCK_DESIGN_SYSTEM_THEME` outside
-  `docs/reference/` returns **nothing**: no import, no build step, no `<link>`. It ships nowhere, and
-  it holds 30 of the 36 raw matches in the tree, so scanning it would have produced a baseline of
-  noise about a document.
+  `docs/reference/` returns **4 lines** — this register, two comment lines in the gate itself, and
+  `docs/prototypes/REGISTRY.md:51`, which is prose describing the file as a "prototype SKIN". None is
+  an import, a build step or a `<link>`, so the substantive claim (it ships nowhere) holds; the
+  evidence as originally stated ("returns nothing") did not, and was corrected after an independent
+  reviewer ran the command. By the gate's own scanner it holds **23 of 92** physical declarations in
+  the tree — the earlier "30 of the 36" reproduced under no counting method tried.
 · `website-next/public/app/assets/*.css` — the **pre-built** embed bundle that `embed-post.mjs`
   copies around. Generated output, not authored source.
 Anything else with a `.css` extension is in scope by default, so a NEW stylesheet is scanned the
@@ -3596,7 +3599,7 @@ physical declaration. Custom properties are skipped by name (`--left-rail` is a 
 |---|---|---|
 | R-Q1 | a new `padding-left` in a shipped stylesheet | R3 (set changed) |
 | R-Q2 | quietly convert a baselined declaration to `inset-inline-start` | R3 STALE |
-| R-Q3 | un-exclude the pre-built embed bundle (scope silently widened) | R3 NEW — 11 declarations from generated output |
+| R-Q3 | un-exclude the pre-built embed bundle (scope silently widened) | R3 NEW — **64** declarations from generated output (the original entry said 11; re-run by an independent reviewer and again by the author, the figure is 64) |
 | R-Q4 | stop stripping CSS comments | S4b — **only after the probe was fixed; see below** |
 
 **R-Q4 survived its first run, and that was the finding.** The gate's own false-friend probe was
@@ -3682,4 +3685,83 @@ others) — that is the dated, budgeted deferral from 17 Aug, still owned by the
 debt against the founder ruling. It also does not touch `docs/**`, where `docs/legal/TERMS-HE.md` and
 `docs/legal/ACCESSIBILITY-HE.md` open with a bare `LOCK`; those are source documents for legal pages,
 and whether the ruling binds them is an owner call, recorded not decided.
+
+---
+
+## QA-INDEP-01 — the first genuinely independent review of this lane, and the repairs it forced
+
+**Roles:** author = this session (self-check only, no verdict). **Verifier = a separate agent instance
+in a fresh context**, which did not author any of the seven commits, ran 81 tool calls over ~26
+minutes, and was instructed to REFUTE. It is a subagent, not an external organisation — that is the
+independence available here, and it is stated rather than dressed up.
+
+**Scope:** `cc018ce~1..e8d9eb4` — ONB-RESUME-STORAGE, VERIFY-CLOSED, FIT-BREAKPOINTS, FIT-RTL,
+RTL-MIRROR, RTL-MIRROR-CSS, BRAND-HE. Tree clean at start and end; HEAD unchanged; every tracked file
+it touched restored and `sha256sum -c` verified.
+
+**Verdicts returned:** FIT-RTL **ACCEPT** · ONB-RESUME-STORAGE, VERIFY-CLOSED, FIT-BREAKPOINTS
+**ACCEPT WITH CONDITIONS** · RTL-MIRROR, RTL-MIRROR-CSS, BRAND-HE **REVISE**.
+
+Its summary of the pattern is worth keeping verbatim, because it is the useful part:
+
+> *"The recurring weakness is not sloppiness — it is that the batteries mutate the mechanism the gate
+> already models, and stop there. … in three cases the blind spot is the mirror image of the one just
+> fixed: the lookbehind was corrected and the lookahead was not; class tokens were handled and
+> variant-prefixed class tokens were not; longhand declarations were handled and shorthands were not."*
+
+### Repaired in this run, each mutation-proven with the reviewer's own injection
+
+| # | finding | repair | proof |
+|---|---|---|---|
+| **F1** HIGH | the BRAND-HE fix corrected only the **lookbehind**; the identical hyphen bug remained in the **lookahead**, so a Hebrew SUFFIX particle (`ה-LOCK-שלנו`, `ב-LOCK-ים`) hid a bare LOCK and the gate printed *"zero bare LOCK"* over a string present in the shipped bundle | trailing guard made symmetric: `(?![A-Za-z0-9_])(?!-[A-Za-z0-9_-])` | re-ran the reviewer's exact injection (`ו-LOCK-שלנו` into `messages/he.json`, site rebuilt): gate now **exit 1**, naming file and line. 0 such sites exist today, so this was a ratchet hole, not a live defect |
+| **F2a** HIGH | the token boundary rejected any variant chain, so `sm:pl-5`, `hover:ml-2`, `md:text-left`, `!pl-5` were invisible — and variants are how most layout here is written | boundary consumes `!` and any `xxx:` chain, and the reported token **keeps** them so a baseline entry names the breakpoint | injected `sm:pl-8 md:text-left` → **exit 1**, both named. Tree count unchanged at 6, confirming none exists today |
+| **F2b** HIGH | `PHYSICAL_PROP` listed only longhands, so `padding: 0 0 0 24px` was invisible | shorthand rule: a box shorthand is physical only when the RESOLVED left ≠ right (so 1-, 2- and 3-value forms, and equal 4-value forms, are correctly ignored); `border-radius` when TL≠TR or BL≠BR | injected all five of the reviewer's shorthands → **exit 1**, all five named |
+| **F6** MED | S3's non-vacuity check was **tautological** — it asked whether `cssFiles` contained an excluded file, but `cssFiles` was produced by filtering with those same patterns; widening `CSS_EXCLUDE` halved the scope and still passed | scope **pinned by name** (`EXPECTED_CSS_SCOPE`), plus S3b requiring every exclusion pattern to still match a real tracked file | injected the reviewer's `CSS_EXCLUDE` widening → **exit 1** on S3 |
+| **F10** MED | `test-fit`'s summary said *"all screens"* for 11 of the 38 routes in `src/App.jsx`, and *"no truncation"/"no overlap"* for two narrow predicates | summary now states the covered count, names both predicates precisely, and ends *"NOT all routes: src/App.jsx declares 38"* | printed output verified |
+| **F11** MED | the brand gate printed *"LOCK SHOW **everywhere**"* three lines below its own *"57 deferred token(s)"* | summary now says *"zero bare LOCK in the GATED scope"* and names both exclusions inline | printed output verified |
+| **F16** LOW | CLAUSE 0 counted "17 cases" where the regex has no per-particle branch — seven Hebrew particles are **one equivalence class** | restructured into 5 named classes over 27 strings; the count reported is classes, not cases | the reviewer's own B1 result (one edit → "7 cases wrong") was the proof |
+| **F7/F8/F9/F15** MED–LOW | four numeric claims that do not reproduce | corrected in place: R-Q3 is **64** not 11; the `grep` cited as returning "nothing" returns **4 lines** (the substantive claim still holds, the stated evidence did not); "30 of the 36" is **23 of 92** by the gate's own scanner; `border-line` is 186 including `border-line2`, and the bare-token figure was not measurable the way it was quoted | each re-run by the author before editing |
+
+Also repaired en route: `!important` counted as a value component, which made
+`border-radius: 0 !important` read as asymmetric — a false positive the new self-test now pins.
+
+### Accepted conditions — recorded, NOT repaired in this run
+
+These are the reviewer's ACCEPT-WITH-CONDITIONS items. They are real and they are open; naming them
+here is the action the verdict asked for, and each is a candidate increment on its own terms.
+
+- **F4** (MED) `test-storage-resilience` measures try-block **ancestry**, not fail-soft **behaviour**:
+  a `catch` that rethrows counts as GUARDED, so the original ONB-RESUME-STORAGE defect can be
+  reintroduced with the gate green. The S5 check label is honest; the commit headline *"onboarding
+  survives a browser that refuses site data"* is not backed by any regression gate.
+- **F5** (MED) the storage ratchet keys on `file → multiset`, so debt **relocated within the same
+  file** — guarding the baselined site and adding an unguarded one elsewhere — passes silently.
+- **F3** (MED) `test-chain-closed` C1 detects playwright by literal text in each gate file, so a
+  rendered gate importing a browser through a shared helper joins the chain undetected; the chain
+  parser likewise misses `node ./scripts/…` and `npx`.
+- **F13** (LOW) `test-visual-regression` seeds any missing baseline and exits 0 — with all 28 absent
+  it reports *"0 screenshot(s) match … 28 seeded"*, which is verbatim the class VERIFY-CLOSED was
+  written to end, in a file that commit edited. `generate-evidence.mjs:57` still detects skips by
+  scraping console text rather than reading exit codes.
+- **F14** (LOW) brand CLAUSE 5 has no non-vacuity guard; three of its four files live in gitignored
+  `out/`.
+- **F17** (LOW) two mutations are caught only by the gate's own synthetic probes — the storage
+  function-boundary rule changes **no** verdict on the real tree (33 guarded either way, at HEAD and
+  at the parent), and the CSS comment strip is behaviour-neutral on all four authored stylesheets.
+  The register disclosed the first honestly; the **commit message did not**, and said *"confirmed a
+  real behaviour change"*. That wording was too strong.
+- **P1** (LOW, reasoned not reproduced) `AuthScene.jsx:39` mirrors the tagline block but not the
+  `bg-gradient-to-r` it sits on, so in RTL the text now sits over the opaque end.
+
+### What held under attack
+
+`npm run verify` green at HEAD with *"Nothing was skipped."* · `test-fit` reproduced to the second
+(88 renders, 3m06.9s vs the claimed ~3m07s) · **the AppShell claim measured, not asserted**: EN
+`Settings` 52×44, HE `הגדרות` intrinsic 40 and box now 44, and `justify-center` byte-identical in LTR
+· all seven logical conversions correct against real Tailwind 3.4.19 output, no `left-1/2` centring
+case converted, no mis-mapping · BRAND-HE's 0→2 / 57→59 arithmetic exact, and the refusal to
+re-baseline the budget verifiable · storage counts 96/48/30→33 exact · the 28 visual baselines
+unchanged across the whole range, so the LTR positive control is genuine and not re-seeded · C3's
+independence from C2 confirmed **accidentally on the live tree** · check counts and file:line
+citations exact · FIT-RTL's HE dimension better than its own caveat (1219 of 1230 keys translated).
 

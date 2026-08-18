@@ -32,11 +32,21 @@ import { globSync } from 'node:fs'
 // ruling forbids — and the old guard silently swallowed every one of them.
 // The site is Israel-first, so this was not an edge case; it was the main case.
 //
-// The rule is now: a hyphen suppresses the match only when the hyphen is part
-// of an ASCII identifier, i.e. when the character BEFORE the hyphen is itself
-// an identifier character (`FOO-LOCK`, `--LOCK`). A hyphen preceded by a
-// Hebrew letter is a prefix particle, and the LOCK after it is bare.
-const BARE = /(?<![A-Za-z0-9_])(?<![A-Za-z0-9_-]-)LOCK(?![A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g
+// The rule is: a hyphen suppresses the match only when the hyphen is part of an
+// ASCII identifier — when the character on the OTHER side of it is itself an
+// identifier character (`FOO-LOCK`, `--LOCK`, `LOCK-SHOW`, `LOCK-1`). A hyphen
+// whose other side is a Hebrew letter is a particle, and the LOCK is bare.
+//
+// BOTH GUARDS, not one (independent review finding F1). The first repair fixed
+// only the LOOKBEHIND, which left the mirror image of the same bug in the
+// LOOKAHEAD: Hebrew SUFFIX particles attach exactly as prefixes do, so
+// `ה-LOCK-שלנו` ("our LOCK") and `ב-LOCK-ים` ("in LOCKs") are bare uses that
+// the trailing `(?![A-Za-z0-9_-])` swallowed whole. Reproduced end to end: the
+// reviewer put `ו-LOCK-שלנו` into messages/he.json, rebuilt, and this gate
+// printed "zero bare LOCK" while the string sat in the shipped bundle. No such
+// form exists in the tree today, so this was a hole in the ratchet rather than
+// a live defect — which is exactly when it is cheapest to close.
+const BARE = /(?<![A-Za-z0-9_])(?<![A-Za-z0-9_-]-)LOCK(?![A-Za-z0-9_])(?!-[A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g
 // Uppercase LOCK.SHOW is legal ONLY in an approved lockup context.
 const UPPER_DOTTED = /(?<![A-Za-z0-9_-])LOCK\.SHOW(?![A-Za-z0-9_-])/g
 
@@ -71,34 +81,29 @@ const lines = (t) => t ? t.split('\n').filter(Boolean) : []
 // violations it must catch AND the legal forms it must never flag, and a
 // failure here exits before any file is read.
 {
-  const CASES = [
-    // MUST match — bare standalone LOCK, including every Hebrew prefix particle
-    ['LOCK is bare', true],
-    ['ו-LOCK שומר אותם נפרדים', true],   // "and LOCK"
-    ['שמורות ל-LOCK.', true],            // "to LOCK"
-    ['בקשת זמינות ב-LOCK.', true],       // "in LOCK"
-    ['מ-LOCK אל הלקוח', true],           // "from LOCK"
-    ['ה-LOCK של האמן', true],            // "the LOCK"
-    ['ש-LOCK מציג', true],               // "that LOCK"
-    ['כ-LOCK מודד', true],               // "as LOCK"
-    // MUST NOT match — the approved forms and ASCII identifiers
-    ['LOCK SHOW is the brand', false],
-    ['LOCK.SHOW lockup', false],
-    ['lock.show domain', false],
-    ['FOO-LOCK identifier', false],
-    ['--LOCK css var', false],
-    ['MY_LOCK identifier', false],
-    ['LOCK-SHOW hyphenated', false],
-    ['BLOCK contains it', false],
-    ['LOCKED contains it', false],
+  // BY EQUIVALENCE CLASS, not by count (review finding F16). The regex has no
+  // per-particle branch, so ו/ל/ב/מ/ה/ש/כ are ONE class, not seven cases —
+  // reporting "17 cases" overstated how much this table discriminates. What it
+  // really covers is five classes; the extra members are there because a future
+  // edit could plausibly special-case one of them.
+  const CLASSES = [
+    ['bare', true, ['LOCK is bare', 'LOCK.', 'a LOCK, then']],
+    ['non-ASCII PREFIX + hyphen (Hebrew particles ו/ל/ב/מ/ה/ש/כ, and any other script)', true,
+      ['ו-LOCK שומר', 'ל-LOCK.', 'ב-LOCK.', 'מ-LOCK אל', 'ה-LOCK של', 'ש-LOCK מציג', 'כ-LOCK מודד', '好-LOCK']],
+    ['non-ASCII SUFFIX + hyphen (the F1 mirror image)', true,
+      ['ה-LOCK-שלנו', 'זה LOCK-שלנו', 'ב-LOCK-ים', 'LOCK-שלנו']],
+    ['approved forms', false, ['LOCK SHOW is the brand', 'LOCK.SHOW lockup', 'lock.show domain']],
+    ['ASCII identifiers on either side', false,
+      ['FOO-LOCK', 'FOO-LOCK-BAR', '--LOCK', 'MY_LOCK', 'LOCK_SHOW', 'LOCK-SHOW', 'LOCK-1', 'BLOCK', 'LOCKED']],
   ]
+  const CASES = CLASSES.flatMap(([, want, strs]) => strs.map((s2) => [s2, want]))
   const bad = CASES.filter(([str, want]) => { BARE.lastIndex = 0; return BARE.test(str) !== want })
   if (bad.length) {
     console.error(`  ✗ C0 matcher self-test: ${bad.length} case(s) wrong — ${bad.map(([s2, w]) => `${JSON.stringify(s2)} should ${w ? '' : 'NOT '}match`).join(' · ')}`)
     console.error('\n✖ BRAND NAMING: the matcher is wrong, so no verdict below would mean anything.')
     process.exit(1)
   }
-  ok(`C0 matcher self-test: ${CASES.length} cases — every Hebrew prefix form (ו/ל/ב/מ/ה/ש/כ-LOCK) is caught, every approved form and ASCII identifier is not`)
+  ok(`C0 matcher self-test: ${CLASSES.length} equivalence classes over ${CASES.length} strings — bare, non-ASCII prefix AND suffix particles caught; approved forms and ASCII identifiers on either side not`)
 }
 
 // ── CLAUSE 1 · SOURCE: website visible/metadata + ALL of the app's visible
@@ -218,5 +223,5 @@ if (!'LOCK is here'.match(BARE) || 'LOCK SHOW is here'.match(BARE) || 'lock.show
 
 console.log('')
 if (failed) { console.error('✗ BRAND NAMING: violations above.'); process.exit(1) }
-console.log('✓ BRAND NAMING: public/display name is LOCK SHOW everywhere — source, rendered HTML, app shells and non-HTML public surfaces; lowercase lock.show URLs preserved.')
+console.log(`✓ BRAND NAMING: zero bare LOCK in the GATED scope — website source, rendered HTML, public app shells and non-HTML public surfaces; lowercase lock.show URLs preserved. NOT "everywhere": ${appHits} token(s) remain deferred in src/**, and docs/** is out of scope entirely.`)
 process.exit(0)

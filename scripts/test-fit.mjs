@@ -214,5 +214,12 @@ if (failures) {
   console.log(`✗ FIT: ${failures} screen render(s) with fit defects — the pixels collide even though semantics pass. Fix before witness handoff (HOW-TO-BUILD-A-TASK).`)
   process.exit(1)
 }
-console.log(`✓ FIT: all screens fit at ${declared.map((w) => `${w}px`).join(', ')} in ${LOCALES.map(([l, d]) => `${l}/${d}`).join(' + ')} — no truncation, no overlap, no h-scroll, never more than one primary CTA, and every render confirmed the direction it claimed.`)
+// SAY WHAT WAS MEASURED (review finding F10). "all screens" covered 11 of the
+// 38 routes declared in src/App.jsx, and "no truncation"/"no overlap" are two
+// narrow predicates: truncation is checked only on leaf text nodes that already
+// clamp, and overlap only between elements drawn from `.relative.z-10,
+// [class*="md:absolute"]`. FIT-BREAKPOINTS repaired exactly this sentence for
+// the WIDTHS it named; the screen count and the predicates were left overstated.
+const COVERED = 5 + REP_ROUTES.length
+console.log(`✓ FIT: ${COVERED} covered screens fit at ${declared.map((w) => `${w}px`).join(', ')} in ${LOCALES.map(([l, d]) => `${l}/${d}`).join(' + ')} — no clamped text overflowing, no overlap among control-layer elements, no h-scroll, no tap target under 44px, never more than one primary CTA, and every render confirmed the direction it claimed. NOT all routes: src/App.jsx declares 38.`)
 process.exit(0)

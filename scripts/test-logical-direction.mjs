@@ -15,7 +15,9 @@
  * the physical ones.
  *
  * PRECISION IS THE WHOLE PROBLEM. A naive scan for "border-l" matches
- * `border-line` (a colour token used 185 times here), "rounded-l" matches
+ * `border-line` (a colour token; `border-line`+`border-line2` occur 186 times
+ * here — an earlier comment said 185 for the bare token, which does not
+ * reproduce), "rounded-l" matches
  * `rounded-lg`, and "left-" matches the words `left-panel` and `left-to-right`
  * in prose. Every candidate is therefore matched as a full Tailwind token and
  * its VALUE shape is checked, and the classifier is self-tested (S1) against
@@ -50,13 +52,22 @@ import { readFileSync } from 'node:fs'
 // token text, not merely "something was found", so that cannot recur silently.
 const NUM = String.raw`(?:-(?:\d+\/\d+|\d+(?:\.\d+)?|px|auto|full|reverse|\[[^\]]+\]))`
 const SIZE = String.raw`(?:-(?:none|sm|md|lg|xl|2xl|3xl|full|\[[^\]]+\]))`
+// VARIANT PREFIXES (independent review finding F2). The boundary used to be a
+// bare `(?:^|[\s"'\`{])`, so any Tailwind variant chain or `!` important marker
+// in front of the token suppressed the match entirely: `sm:pl-5`, `hover:ml-2`,
+// `md:text-left`, `lg:border-l-4`, `dark:right-0` and `!pl-5` were all invisible
+// — and responsive variants are how most layout in this repo is written, so the
+// hole sat exactly where new physical utilities would appear. The boundary now
+// consumes an optional `!` and any number of `xxx:` variants, and the reported
+// token KEEPS them, so a baseline entry names which breakpoint the debt is at.
+const VARIANT = String.raw`(?:!?(?:[a-zA-Z0-9_@\[\]./-]+:)*)`
 const RULES = [
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(-?(?:pl|pr|ml|mr)${NUM})(?![\w-])`, 'g'), fix: 'ps-/pe-, ms-/me-' },
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(-?(?:left|right)${NUM})(?![\w-])`, 'g'), fix: 'start-/end-' },
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(text-(?:left|right))(?![\w-])`, 'g'), fix: 'text-start/text-end' },
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(border-[lr]${NUM}?)(?![\w-])`, 'g'), fix: 'border-s/border-e' },
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(rounded-(?:[lr]|t[lr]|b[lr])${SIZE}?)(?![\w-])`, 'g'), fix: 'rounded-s/rounded-e (or the -ss/-se/-es/-ee corners)' },
-  { re: new RegExp(String.raw`(?:^|[\s"'\`{])((?:float|clear|origin)-(?:left|right))(?![\w-])`, 'g'), fix: 'the logical equivalent' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}-?(?:pl|pr|ml|mr)${NUM})(?![\w-])`, 'g'), fix: 'ps-/pe-, ms-/me-' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}-?(?:left|right)${NUM})(?![\w-])`, 'g'), fix: 'start-/end-' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}text-(?:left|right))(?![\w-])`, 'g'), fix: 'text-start/text-end' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}border-[lr]${NUM}?)(?![\w-])`, 'g'), fix: 'border-s/border-e' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}rounded-(?:[lr]|t[lr]|b[lr])${SIZE}?)(?![\w-])`, 'g'), fix: 'rounded-s/rounded-e (or the -ss/-se/-es/-ee corners)' },
+  { re: new RegExp(String.raw`(?:^|[\s"'\`{])(${VARIANT}(?:float|clear|origin)-(?:left|right))(?![\w-])`, 'g'), fix: 'the logical equivalent' },
 ]
 
 const findings = []
@@ -80,10 +91,14 @@ function scan(text) {
 // ── S1 classifier self-test — the real utilities AND the exact false friends ──
 {
   const REAL = ['pl-5', 'pr-4', 'ml-auto', 'mr-2', 'left-10', 'right-1.5', 'left-1/2', 'text-left', 'text-right',
-    'border-l', 'border-l-4', 'border-r-2', 'rounded-l', 'rounded-r-xl', 'rounded-tl-lg', 'float-right', '-ml-1']
+    'border-l', 'border-l-4', 'border-r-2', 'rounded-l', 'rounded-r-xl', 'rounded-tl-lg', 'float-right', '-ml-1',
+    // variant-prefixed forms (F2) — the token keeps its variants, so a baseline
+    // entry says which breakpoint or state the debt lives at
+    'sm:pl-5', 'md:text-left', 'lg:border-l-4', 'dark:right-0', 'hover:ml-2', '!pl-5', 'sm:hover:pr-3', 'max-md:left-4']
   const FALSE_FRIENDS = ['border-line', 'border-line2', 'rounded-lg', 'left-panel', 'right-rail', 'left-to-right',
     'ps-5', 'pe-4', 'ms-auto', 'me-2', 'start-10', 'end-16', 'text-start', 'text-end', 'border-s-4', 'rounded-e-xl',
-    'leftovers', 'copyright-notice']
+    'leftovers', 'copyright-notice',
+    'sm:ps-5', 'md:text-start', 'hover:ms-auto', '!pe-4', 'sm:border-line', 'md:rounded-lg']
   // Compare the exact token, not just "found something": a regex that matches
   // `left-1` inside `left-1/2` would pass a mere detection check and then report
   // and baseline the wrong string.
@@ -153,15 +168,54 @@ check('R2 non-vacuity — the scanner did find physical utilities in this tree (
 const CSS_EXCLUDE = [/^docs\/reference\//, /^website-next\/public\//]
 const cssFiles = execSync("git ls-files '*.css'", { encoding: 'utf8' })
   .split('\n').filter(Boolean).filter((f) => !CSS_EXCLUDE.some((re) => re.test(f)))
-check('S3 non-vacuity — authored stylesheets were enumerated, and the two excluded ones really are excluded',
-  cssFiles.length > 0 && !cssFiles.some((f) => CSS_EXCLUDE.some((re) => re.test(f))),
-  `scanned: ${cssFiles.join(', ') || '(none)'}`)
+// The old S3 asked whether `cssFiles` contained an excluded file — but
+// `cssFiles` was PRODUCED by filtering with those same patterns, so the second
+// conjunct could never be false (review finding F6). Worse, widening
+// CSS_EXCLUDE silently shrank the scope and S3 still passed. The scope is now
+// PINNED by name: adding an exclusion, or losing a stylesheet, changes this list
+// and fails. Adding a NEW stylesheet also fails, deliberately — a new authored
+// stylesheet must be looked at once, not swept in silently.
+const EXPECTED_CSS_SCOPE = [
+  'src/index.css',
+  'website-next/app/globals.css',
+  'website-next/styles/design-system.css',
+  'website-next/styles/hero.css',
+]
+check('S3 the scanned stylesheet set is exactly the pinned scope (widening CSS_EXCLUDE cannot shrink it silently)',
+  JSON.stringify([...cssFiles].sort()) === JSON.stringify([...EXPECTED_CSS_SCOPE].sort()),
+  `pinned ${JSON.stringify(EXPECTED_CSS_SCOPE)}, scanned ${JSON.stringify(cssFiles)}`)
+// And each exclusion must still be doing work — a dead pattern is a pattern
+// nobody notices has stopped matching.
+const allCss = execSync("git ls-files '*.css'", { encoding: 'utf8' }).split('\n').filter(Boolean)
+const deadExclusions = CSS_EXCLUDE.filter((re) => !allCss.some((f) => re.test(f)))
+check('S3b every CSS_EXCLUDE pattern still matches a real tracked file (no dead exclusions)',
+  deadExclusions.length === 0, `dead: ${deadExclusions.map(String).join(', ')}`)
 
 // A declaration, not a substring: the property must follow `{`, `;` or the start
 // of a line. That is what keeps `[style*="right: 14px"]` inside a SELECTOR, and
 // a `.left-panel` class name, from reading as a physical declaration.
 const PHYSICAL_PROP = /^(?:padding-(?:left|right)|margin-(?:left|right)|border-(?:left|right)(?:-(?:width|color|style))?|left|right|scroll-(?:margin|padding)-(?:left|right))$/
 const VALUE_PROP = /^(?:text-align|float|clear)$/
+// SHORTHANDS (review finding F2). `padding: 0 0 0 24px` is every bit as physical
+// as `padding-left: 24px`, and the longhand-only list could not see it. A
+// shorthand is direction-sensitive only when its RESOLVED left and right differ:
+// the 1-, 2- and 3-value forms are all horizontally symmetric, so only the
+// 4-value form can be, and `padding: 4px 4px 4px 4px` still is not.
+const BOX_SHORTHAND = /^(?:padding|margin|inset|border-width|border-color|border-style|scroll-margin|scroll-padding)$/
+// `!important` is a flag, not a component. Counting it as one made
+// `border-radius: 0 !important` parse as two corners and read asymmetric — a
+// false positive this file's own self-test now pins.
+const parts = (value) => value.replace(/!\s*important/gi, '').split('/')[0].trim().split(/\s+/).filter(Boolean)
+function boxIsAsymmetric(value) {
+  const p = parts(value)
+  return p.length === 4 && p[1] !== p[3] // [top, RIGHT, bottom, LEFT]
+}
+function radiusIsAsymmetric(value) {
+  // corners resolve as [TL, TR, BR, BL]; mirroring swaps TL<->TR and BL<->BR
+  const p = parts(value)
+  const [tl, tr = tl, br = tl, bl = tr] = p
+  return p.length > 1 && (tl !== tr || bl !== br)
+}
 function scanCss(text) {
   // Strip comments FIRST — "/* pinned to the left */" is prose, not a rule.
   const src = text.replace(/\/\*[\s\S]*?\*\//g, '')
@@ -173,6 +227,8 @@ function scanCss(text) {
     if (prop.startsWith('--')) continue // a custom property named --left-rail is a NAME, not a direction
     if (PHYSICAL_PROP.test(prop)) out.push(prop)
     else if (VALUE_PROP.test(prop) && /^(left|right)\b/.test(value)) out.push(`${prop}:${value.split(/\s/)[0]}`)
+    else if (BOX_SHORTHAND.test(prop) && boxIsAsymmetric(value)) out.push(`${prop}(asymmetric)`)
+    else if (prop === 'border-radius' && radiusIsAsymmetric(value)) out.push('border-radius(asymmetric)')
   }
   return out
 }
@@ -188,12 +244,24 @@ function scanCss(text) {
     ['a{text-align:left}', ['text-align:left']],
     ['a{float:right}', ['float:right']],
     ['a{color:red;right:0}', ['right']],
+    // asymmetric shorthands (F2)
+    ['a{padding:0 0 0 24px}', ['padding(asymmetric)']],
+    ['a{margin:0 0 0 16px}', ['margin(asymmetric)']],
+    ['a{border-width:1px 1px 1px 4px}', ['border-width(asymmetric)']],
+    ['a{inset:0 auto 0 12px}', ['inset(asymmetric)']],
+    ['a{border-radius:0 8px 8px 0}', ['border-radius(asymmetric)']],
+    ['a{padding:0 0 0 24px !important}', ['padding(asymmetric)']],
   ]
   const FRIENDS = [
     'a{padding-inline-start:4px}', 'a{border-inline-end:1px solid red}', 'a{inset-inline-start:0}',
     'a{--left-rail:4px}', 'a{border-radius:4px}', 'a{text-align:center}', 'a{float:none}',
     '.left-panel{color:red}', '[style*="right: 14px"]{color:red}', 'a{/* on the left */color:red}',
     'a{background:left}',
+    // SYMMETRIC shorthands must NOT be flagged — 1/2/3-value forms and equal
+    // 4-value forms are identical mirrored
+    'a{padding:4px}', 'a{padding:4px 8px}', 'a{padding:1px 2px 3px}', 'a{padding:2px 2px 2px 2px}',
+    'a{margin:0 auto}', 'a{border-radius:8px}', 'a{border-radius:4px 4px}', 'a{inset:0}',
+    'a{border-radius:0 !important}', 'a{padding:4px !important}', 'a{margin:0 auto !important}',
     // A COMMENTED-OUT RULE is the case that actually needs the comment strip:
     // the `{` inside the comment satisfies the declaration anchor, so without
     // stripping this reads as a live `left:` declaration. The weaker probe
