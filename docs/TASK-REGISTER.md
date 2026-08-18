@@ -3391,3 +3391,51 @@ chain's posture on machines with no database — a policy call, not an engineeri
 **360 / 390 / 430 / desktop**; 390 and 430 are unmeasured. Grounded but not yet measured — adding
 them may surface real layout findings, which is its own increment.
 
+---
+
+## FIT-BREAKPOINTS — the span between the narrow floor and the desktop case was assumed, not rendered
+
+**Band:** HE/EN + RTL/LTR + 360/390/430/desktop. **File:** `scripts/test-fit.mjs`.
+
+**OBSERVED.** The spatial gate rendered **360** and **1360** only. The two most common real handset
+widths — **390** (iPhone 12–15, and most current Android) and **430** (Pro Max / large Android) — were
+never rendered, so every layout decision in the 376–440px band was inferred from the endpoints rather
+than measured. The controller names 360 / 390 / 430 / desktop; the gate covered half of it.
+
+**Measured before editing** (a probe copy of the gate, repo file untouched): 22 screen renders at 390
+and 430, **zero** defects — no truncation, no overlap, no h-scroll, no tap target under 44px. So the
+band was in fact clean; what was missing was the *proof*, and the ability to notice when it stops
+being clean. Adding the breakpoints therefore needed no layout change.
+
+**A second defect the probe exposed by accident.** The closing summary was a string literal —
+`'✓ FIT: all screens fit at 360px and 1360px'`. The probe rendered **390 and 430** and printed that
+same sentence unchanged. A gate that reports widths it did not render is worse than one that reports
+nothing. `VIEWPORTS` is now the single source for both the loop and the message.
+
+**Also corrected in passing:** the header claimed the gate asserts *"exactly ONE visible primary
+CTA"*. The code is `primaryCtas > 1`, and **zero** passes — several rep and production screens are
+legitimately list-first and render no primary CTA. The comment claimed more than the code enforces;
+it now says "never MORE THAN one".
+
+**Self-pin.** `REQUIRED_WIDTHS = [360, 390, 430]` plus at least one width ≥ 1280, checked before the
+browser launches. The set may grow; it cannot silently shrink, because dropping a breakpoint is a real
+reduction in what the gate proves and must be a deliberate edit.
+
+**Mutation battery — 3/3 caught, restores verified by sha256:**
+
+| # | injected defect | result |
+|---|---|---|
+| M1 | drop 390 from the declared set | self-pin fails before the browser launches: *"the declared breakpoint set is narrower than the contract — missing 390"* |
+| M2 | change the desktop width 1360 → 1440 | summary printed `360px, 390px, 430px, 1440px` — the message really is derived, not a literal |
+| M3 | a layout defect that exists **only** between 376px and 440px (`width:200vw` under a media query, injected into `dist/`, which is gitignored and rebuilt) | **360 and 1360 stayed clean**; 390 and 430 both reported `h-scroll: YES`; 22 screen renders failed. The old two-viewport set could not have seen it |
+
+M3 is the one that matters: it proves the added breakpoints measure something the previous set was
+structurally incapable of catching, rather than merely running more of the same.
+
+**Cost.** 44 screen renders, ~91s (was 22 renders, ~50s).
+
+**Scope limit, stated.** This is *width* coverage. The band's other half — **HE/EN and RTL/LTR** — is
+still unmeasured by this gate: every screen here renders in whatever the demo build's default language
+is, and no assertion pins direction. `test-i18n-parity` and `test-copy-matrix` cover strings, not
+rendered geometry under `dir="rtl"`. Recorded as the next action, not claimed as done.
+

@@ -1,13 +1,15 @@
 // L1 FIT INSPECTOR (HOW-TO-BUILD-A-TASK Part 2/Part 4 — owner governance 18 Jul).
 // Verify checks SEMANTICS; this checks SPACE. Renders the DEMO build (fixtures,
-// no network) headlessly at 360px and 1360px and asserts:
+// no network) headlessly at every viewport in VIEWPORTS below and asserts:
 //   1. no truncated text (clipped scrollWidth/Height on leaf text nodes)
 //   2. no overlap between positioned control-layer elements (rails/docks)
 //   3. no horizontal scroll
 //   4. tap targets >= 44px on mobile (elements with the .tap-target hit-area
 //      expansion are compliant by construction and excluded; a violation FAILS
 //      — promoted from WARN after the T-68 sweep reached zero)
-//   5. exactly ONE visible primary CTA
+//   5. never MORE THAN one visible primary CTA (zero passes — several rep and
+//      production screens are legitimately list-first; the check is `> 1`, and
+//      the old wording "exactly ONE" claimed more than the code enforces)
 // Runs on `dist` AFTER build:demo (verify order guarantees the demo build is
 // the one on disk).
 //
@@ -101,9 +103,35 @@ const REP_ROUTES = [
   ['producer', '/production/requests'],
 ]
 
+// ── the declared breakpoint set (FIT-BREAKPOINTS) ───────────────────────────
+// One source of truth: the loop AND the closing message both read this, so the
+// summary can never name a width that was not rendered. It used to say "360px
+// and 1360px" as a string literal — running the same file over 390/430 printed
+// that sentence unchanged, which is how the drift was found.
+//
+// 360 is the narrow floor; 390 (iPhone 12–15) and 430 (Pro Max / large Android)
+// are the two most common real handsets and were previously unmeasured — the
+// whole span between the floor and the desktop case was assumed, not rendered.
+const VIEWPORTS = [
+  [360, 780, 'MOBILE-360'],
+  [390, 844, 'MOBILE-390'],
+  [430, 932, 'MOBILE-430'],
+  [1360, 850, 'DESKTOP-1360'],
+]
+// SELF-PIN: the set may grow, never silently shrink. Dropping a breakpoint is a
+// real reduction in what this gate proves, so it must be a deliberate edit here
+// and not a quiet deletion in the loop.
+const REQUIRED_WIDTHS = [360, 390, 430]
+const declared = VIEWPORTS.map(([w]) => w)
+const missing = REQUIRED_WIDTHS.filter((w) => !declared.includes(w))
+if (missing.length || !declared.some((w) => w >= 1280)) {
+  console.error(`✗ FIT: the declared breakpoint set is narrower than the contract — missing ${missing.join(', ') || '(none)'}${declared.some((w) => w >= 1280) ? '' : ' and no desktop width >= 1280'}. Declared: ${declared.join(', ')}.`)
+  process.exit(1)
+}
+
 let failures = 0
 const browser = await chromium.launch()
-for (const [w, h, label] of [[360, 780, 'MOBILE-360'], [1360, 850, 'DESKTOP-1360']]) {
+for (const [w, h, label] of VIEWPORTS) {
   const page = await (await browser.newContext({ viewport: { width: w, height: h } })).newPage()
   // Screen 1: login (demo persona chooser)
   await page.goto(`http://127.0.0.1:${port}/login`, { waitUntil: 'networkidle' })
@@ -159,5 +187,5 @@ if (failures) {
   console.log(`✗ FIT: ${failures} screen render(s) with fit defects — the pixels collide even though semantics pass. Fix before witness handoff (HOW-TO-BUILD-A-TASK).`)
   process.exit(1)
 }
-console.log('✓ FIT: all screens fit at 360px and 1360px — no truncation, no overlap, no h-scroll, one primary CTA.')
+console.log(`✓ FIT: all screens fit at ${declared.map((w) => `${w}px`).join(', ')} — no truncation, no overlap, no h-scroll, never more than one primary CTA.`)
 process.exit(0)
