@@ -3613,3 +3613,73 @@ does not — this one found a self-test asserting nothing.
 and says nothing about `bg-gradient-to-r` or `background-position: left` — both direction-sensitive,
 neither with a logical form in Tailwind 3 / CSS. Passing does not mean the UI mirrors correctly.
 
+---
+
+## BRAND-HE — the brand gate could not see standalone LOCK behind a Hebrew prefix particle
+
+**Band:** HE/EN + brand ruling enforcement. **Files:** `scripts/test-brand-naming.mjs` ·
+`src/lib/i18n/he.js` · `website-next/messages/he.json` ·
+`website-next/app/terms/terms-content.tsx`.
+
+**OBSERVED.** The gate's one ruler was
+`/(?<![A-Za-z0-9_-])LOCK(?![A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g`. That leading guard puts the HYPHEN
+in the same class as identifier characters, which is right for `FOO-LOCK` and wrong for Hebrew: a
+Hebrew prefix particle attaches to a Latin word with a hyphen and no space, so *"and LOCK"*,
+*"to LOCK"* and *"in LOCK"* are written **`ו-LOCK`**, **`ל-LOCK`**, **`ב-LOCK`**. Every one of those
+is a standalone use of the bare name — exactly what the founder ruling (Maria, 17 Aug 2026, binding
+on all surfaces) forbids — and the guard swallowed all of them silently. The product is Israel-first,
+so this was not an edge case; it was the main case.
+
+**Independently corroborated.** B4-40.20 v2.11 (read 18 Aug 2026,
+`docs.google.com/document/d/1qwCdgdg4P5TBON5c7Xb3GPbb9ttRNoZnIgyEYtkX1Eo`), line 928 and evidence row
+EV-WEB-021A1-001, records the same two website files as REVISE: *"messages/he.json and
+app/terms/terms-content.tsx still contain visible standalone LOCK"*. The gate reported those files
+clean at the same commit.
+
+**Four visible Hebrew strings corrected** — all `…-LOCK` → `…-LOCK SHOW`, the form the rest of the
+Hebrew copy already uses:
+
+| file:line | surface |
+|---|---|
+| `src/lib/i18n/he.js:479` | the outbound **WhatsApp** availability message — a sent communication |
+| `src/lib/i18n/he.js:971` | pilot pricing note |
+| `website-next/messages/he.json:37` | booker/producer distinction on the marketing site |
+| `website-next/app/terms/terms-content.tsx:59` | **legal prose** — rights reservation |
+
+**The corrected rule.** A hyphen suppresses the match only when the hyphen is itself part of an ASCII
+identifier — i.e. when the character before it is an identifier character (`FOO-LOCK`, `--LOCK`). A
+hyphen preceded by a Hebrew letter is a prefix particle, and the LOCK after it is bare:
+`/(?<![A-Za-z0-9_])(?<![A-Za-z0-9_-]-)LOCK(?![A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g`
+
+**The deferral budget did NOT move, deliberately.** The corrected ruler revealed 2 more tokens in the
+website scope (0 → 2) and 2 more in `src/**` (57 → 59). The website ones are now fixed, so that scope
+is genuinely zero rather than zero-by-blindness. The two app ones were **fixed rather than absorbed**,
+so `SRC_APP_DEFERRAL` stays **57** and the "MAY ONLY SHRINK" contract is untouched — correcting a
+ruler must not become a licence to re-baseline a budget.
+
+**New CLAUSE 0 — matcher self-test, 17 cases, before any file is read.** Every verdict in this gate is
+that one regex; if the ruler is wrong the gate reports confidently about nothing, which is precisely
+what happened here. It now asserts all seven Hebrew prefix particles (ו/ל/ב/מ/ה/ש/כ) match, and that
+`LOCK SHOW`, `LOCK.SHOW`, `lock.show`, `FOO-LOCK`, `--LOCK`, `MY_LOCK`, `LOCK-SHOW`, `BLOCK` and
+`LOCKED` do not.
+
+**Mutation battery — 4/4 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| B1 | restore the pre-BRAND-HE lookbehind | C0 — **7 cases wrong**, exits before reading a file |
+| B2 | reintroduce `ו-LOCK` in `messages/he.json` | C1 website — named the file and line |
+| B3 | reintroduce `ב-LOCK` in `src/lib/i18n/he.js` | C1 src — *"58 token(s) EXCEEDS the 57 budget"* |
+| B4 | drop `(?! SHOW)` so the APPROVED form is flagged | C0 — 1 case wrong, proving the must-not-match half is independently non-vacuous |
+
+**Observed during the battery, worth recording:** restoring files with `cp` bumps their mtime, and
+CLAUSE 6 correctly failed with *"out/ is OLDER than website source"* until `website-next` was rebuilt.
+The freshness clause is not decorative.
+
+**Scope limits, stated.** This fixes the RULER and the four strings the corrected ruler reveals. It
+does **not** clear the app lane's remaining **57** deferred tokens (`src/lib/i18n/en.js`, `he.js` and
+others) — that is the dated, budgeted deferral from 17 Aug, still owned by the app lane and still real
+debt against the founder ruling. It also does not touch `docs/**`, where `docs/legal/TERMS-HE.md` and
+`docs/legal/ACCESSIBILITY-HE.md` open with a bare `LOCK`; those are source documents for legal pages,
+and whether the ruling binds them is an owner call, recorded not decided.
+

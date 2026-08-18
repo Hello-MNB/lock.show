@@ -476,7 +476,7 @@ export const T = {
     confirmBody: (name) => `${name} יחזור אליך בקרוב. תודה.`,
     whatsappCta: 'שלח הודעת וואטסאפ',
     whatsappHint: 'מהיר יותר — ישר לאמן',
-    whatsappMsg: (artistName, requesterName) => `היי ${artistName}, כאן ${requesterName} — מעניין אותי לתאם הופעה. שלחתי גם בקשת זמינות ב-LOCK.`,
+    whatsappMsg: (artistName, requesterName) => `היי ${artistName}, כאן ${requesterName} — מעניין אותי לתאם הופעה. שלחתי גם בקשת זמינות ב-LOCK SHOW.`,
     // ── פלייסהולדרים ואימות טופס (AvailabilityRequest) ──
     namePlaceholder: 'השם המלא שלך',
     orgPlaceholder: 'מועדון, סוכנות או הפקה',
@@ -968,7 +968,7 @@ export const T = {
     newWorkspaceMigrationNote: 'יצירת מרחב עבודה דורשת עדכון מסד נתונים (מיגרציה 035). דבר לא נוצר — פרטים בקונסולה.',
     // ── G8 · N10 — הצגת התוכנית בלבד (פסיקת הפיילוט החינמי G17) ──
     planPilotName: 'פספורט — פיילוט חינם',
-    planPilotNote: 'הפיילוט חינם — לא נדרש שום תשלום כדי לפרסם או להשתמש ב-LOCK.',
+    planPilotNote: 'הפיילוט חינם — לא נדרש שום תשלום כדי לפרסם או להשתמש ב-LOCK SHOW.',
     acceptTitle: 'קבלת הזמנה',
     acceptBody: (name, role) => `הוזמנת להצטרף ל${name} כ${role}.`,
     join: 'הצטרף',

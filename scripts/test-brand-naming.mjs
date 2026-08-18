@@ -22,7 +22,21 @@ import { globSync } from 'node:fs'
 // Standalone uppercase LOCK, NOT followed by " SHOW" or ".SHOW" — both
 // UPPERCASE-EXACT. Lowercase `lock.show` can never match: the token itself is
 // uppercase, so domain URLs are structurally safe.
-const BARE = /(?<![A-Za-z0-9_-])LOCK(?![A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g
+//
+// THE HEBREW BLIND SPOT (BRAND-HE). The leading guard used to be a single
+// `(?<![A-Za-z0-9_-])`, which put the HYPHEN in the same class as identifier
+// characters. That is correct for `FOO-LOCK`, and wrong for Hebrew: a Hebrew
+// prefix particle attaches to a Latin word with a hyphen and no space, so
+// "and LOCK", "to LOCK", "in LOCK" are written `ו-LOCK`, `ל-LOCK`, `ב-LOCK`.
+// Those are STANDALONE uses of the bare name — the exact thing the founder
+// ruling forbids — and the old guard silently swallowed every one of them.
+// The site is Israel-first, so this was not an edge case; it was the main case.
+//
+// The rule is now: a hyphen suppresses the match only when the hyphen is part
+// of an ASCII identifier, i.e. when the character BEFORE the hyphen is itself
+// an identifier character (`FOO-LOCK`, `--LOCK`). A hyphen preceded by a
+// Hebrew letter is a prefix particle, and the LOCK after it is bare.
+const BARE = /(?<![A-Za-z0-9_])(?<![A-Za-z0-9_-]-)LOCK(?![A-Za-z0-9_-])(?! SHOW)(?!\.SHOW)/g
 // Uppercase LOCK.SHOW is legal ONLY in an approved lockup context.
 const UPPER_DOTTED = /(?<![A-Za-z0-9_-])LOCK\.SHOW(?![A-Za-z0-9_-])/g
 
@@ -49,6 +63,43 @@ const ok = (m) => console.log(`  ✓ ${m}`)
 
 const sh = (c) => execSync(c, { encoding: 'utf8' }).trim()
 const lines = (t) => t ? t.split('\n').filter(Boolean) : []
+
+// ── CLAUSE 0 · MATCHER SELF-TEST ────────────────────────────────────────────
+// Every verdict below is this one regex. If the ruler is wrong the whole gate
+// reports confidently about nothing — which is what happened for the Hebrew
+// prefix forms until BRAND-HE. So the ruler is measured first, against both the
+// violations it must catch AND the legal forms it must never flag, and a
+// failure here exits before any file is read.
+{
+  const CASES = [
+    // MUST match — bare standalone LOCK, including every Hebrew prefix particle
+    ['LOCK is bare', true],
+    ['ו-LOCK שומר אותם נפרדים', true],   // "and LOCK"
+    ['שמורות ל-LOCK.', true],            // "to LOCK"
+    ['בקשת זמינות ב-LOCK.', true],       // "in LOCK"
+    ['מ-LOCK אל הלקוח', true],           // "from LOCK"
+    ['ה-LOCK של האמן', true],            // "the LOCK"
+    ['ש-LOCK מציג', true],               // "that LOCK"
+    ['כ-LOCK מודד', true],               // "as LOCK"
+    // MUST NOT match — the approved forms and ASCII identifiers
+    ['LOCK SHOW is the brand', false],
+    ['LOCK.SHOW lockup', false],
+    ['lock.show domain', false],
+    ['FOO-LOCK identifier', false],
+    ['--LOCK css var', false],
+    ['MY_LOCK identifier', false],
+    ['LOCK-SHOW hyphenated', false],
+    ['BLOCK contains it', false],
+    ['LOCKED contains it', false],
+  ]
+  const bad = CASES.filter(([str, want]) => { BARE.lastIndex = 0; return BARE.test(str) !== want })
+  if (bad.length) {
+    console.error(`  ✗ C0 matcher self-test: ${bad.length} case(s) wrong — ${bad.map(([s2, w]) => `${JSON.stringify(s2)} should ${w ? '' : 'NOT '}match`).join(' · ')}`)
+    console.error('\n✖ BRAND NAMING: the matcher is wrong, so no verdict below would mean anything.')
+    process.exit(1)
+  }
+  ok(`C0 matcher self-test: ${CASES.length} cases — every Hebrew prefix form (ו/ל/ב/מ/ה/ש/כ-LOCK) is caught, every approved form and ASCII identifier is not`)
+}
 
 // ── CLAUSE 1 · SOURCE: website visible/metadata + ALL of the app's visible
 // surfaces — not only the i18n catalogues. Gating i18n alone left 23 of the
