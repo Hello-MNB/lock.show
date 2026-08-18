@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
-  alternates: { canonical: '/methodology' },
+  alternates: localeAlternates('/methodology'),
   title: 'Methodology — How Evidence Is Verified',
-  description: 'Every claim in a LOCK Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
+  description: 'Every claim in a LOCK SHOW Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 
 const methodLabels = [
@@ -17,7 +20,7 @@ const methodLabels = [
   {
     label: 'TICKET EXPORT · REVIEWED',
     title: 'Ticket sales data, reviewed by a human.',
-    body: 'The artist or their representative exported a sales report from the ticketing platform (Eventim, Tikaway, or similar). A LOCK operator reviewed the document against the stated claim, and the date of that review is stamped on the claim.',
+    body: 'The artist or their representative exported a sales report from the ticketing platform (Eventim, Tikaway, or similar). A LOCK SHOW operator reviewed the document against the stated claim, and the date of that review is stamped on the claim.',
     strength: 'Strong',
   },
   {
@@ -36,51 +39,52 @@ const methodLabels = [
 
 const pipelineSteps = [
   {
-    phase: 'DISCOVER',
+    phase: 'LOGGED',
     title: 'A gig is logged.',
     body: 'The artist adds a gig to their Artist Radar — date, venue, estimated audience. The claim enters the system as self-reported.',
   },
   {
-    phase: 'CONFIRM',
+    phase: 'BACKED UP',
     title: 'A producer verifies.',
-    body: 'LOCK generates a unique, bounded magic link for that gig. The artist sends it to the producer; the producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
+    body: 'LOCK SHOW generates a unique, bounded magic link for that gig. The artist sends it to the producer; the producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
   },
   {
-    phase: 'METHOD-LABEL',
+    phase: 'LABELED',
     title: 'The method is stamped.',
     body: 'The claim now carries its full label: what was verified, by whom, through which method, and when the review was completed. The label is not fine print — it is the claim.',
   },
   {
-    phase: 'ARTIST APPROVES',
+    phase: 'YOUR CALL',
     title: 'The artist controls publication.',
     body: 'Nothing crosses to the public Passport without the artist\'s explicit approval. Every claim waits in the private Radar until the artist decides to publish it.',
   },
   {
-    phase: 'PUBLISH',
+    phase: 'LIVE',
     title: 'The claim appears on the Passport — if eligible.',
     body: 'Only claims that meet the firewall rules appear publicly: band range (not an exact figure), method visible, date stamped, artist-approved. A claim that fails any rule is left off the public surface entirely.',
   },
 ]
 
 const firewallItems = [
-  'Audience draw is always expressed as a band (e.g. 70–150) — never an exact count.',
-  'Every public claim shows its method label. "Verified" never stands alone.',
-  'Every claim shows a date and geographic area. Evidence from 2023 ≠ evidence from 2026.',
-  'Self-reported data appears only with an explicit SELF-REPORTED label — never disguised as verified.',
-  'Streaming figures appear as secondary context only — never as draw evidence.',
-  'LOCK publishes no score, ranking, percentile, prediction, or guarantee.',
-  'A domain with no supported, verified claim is removed from the Passport entirely — never shown as "developing" or "missing".',
+  // ⁦…⁩ (LRI…PDI) keep the range reading "70–150" in RTL (Hebrew) mode
+  'Every crowd shows as an honest range, like ⁦70–150⁩ — never a made-up exact number.',
+  'Every claim tells you plainly how it was checked. "Verified" never gets to stand there on its own.',
+  'Every claim carries its date and place. A great night in 2023 doesn\'t speak for who the artist is today.',
+  'If it\'s the artist\'s own word and nobody\'s confirmed it yet, we say so — it never gets dressed up as checked.',
+  'Streaming numbers are background color, never proof of who shows up live.',
+  'There\'s no score, no ranking, no prediction here — just what happened.',
+  'If there\'s nothing solid to show in an area, it\'s simply left off — never flagged as a weak spot.',
 ]
 
 export default function Methodology() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO — compact full-bleed image header ──────────────────────── */}
-      <section
+      {/* ── HERO — standard variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="standard"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(56svh, 560px)',
           background: `
             linear-gradient(180deg,
               rgba(10,13,11,0.55) 0%,
@@ -90,13 +94,9 @@ export default function Methodology() {
             url('/lockshow-evidence-review.webp') center 25% / cover no-repeat
           `,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: 'clamp(2rem, 5vw, 3.5rem) max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
           <div style={{ maxWidth: '720px', position: 'relative' }}>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -104,7 +104,7 @@ export default function Methodology() {
               letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
-              marginBottom: '1rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}>
               METHODOLOGY · HOW CLAIMS ARE VERIFIED
             </p>
@@ -115,7 +115,7 @@ export default function Methodology() {
               lineHeight: 1.02,
               letterSpacing: '-0.045em',
               color: 'var(--color-paper)',
-              margin: '0 0 1.25rem',
+              margin: '0 0 var(--hero-gap-h1)',
             }}>
               The method
               <br />
@@ -124,7 +124,7 @@ export default function Methodology() {
               </em>
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'rgba(243,245,239,0.72)', maxWidth: '540px', lineHeight: 1.65, margin: '0 0 1rem' }}>
-              Every piece of evidence in a LOCK Passport carries a method label —
+              Every piece of evidence in a LOCK SHOW Passport carries a method label —
               the source and process by which it was verified. A number without
               a method is an assertion. A method-labelled claim is evidence.
             </p>
@@ -133,14 +133,14 @@ export default function Methodology() {
             </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── METHOD LABELS — paper ────────────────────────────────────────── */}
       <section style={{
         background: 'var(--color-paper)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -252,7 +252,7 @@ export default function Methodology() {
             textTransform: 'uppercase',
             marginBottom: '1rem',
           }}>
-            CLAIM PIPELINE
+            HOW A CLAIM GETS THERE
           </p>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
@@ -336,7 +336,7 @@ export default function Methodology() {
         background: 'var(--color-paper)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -346,7 +346,7 @@ export default function Methodology() {
               textTransform: 'uppercase',
               marginBottom: '1rem',
             }}>
-              THE FIREWALL
+              THE GROUND RULES
             </p>
             <h2 style={{
               fontFamily: 'Georgia, "Times New Roman", serif',
@@ -360,8 +360,8 @@ export default function Methodology() {
               What is always true about every public claim.
             </h2>
             <p style={{ color: 'var(--color-tally-onlight)', fontSize: '1rem', lineHeight: 1.65, marginBottom: 'clamp(2rem, 5vw, 3rem)' }}>
-              These rules are not guidelines — they are structural. A claim
-              that breaks any one of them is simply never published.
+              This isn&apos;t fine print — it&apos;s the whole point. If a claim can&apos;t
+              meet these, it simply doesn&apos;t make the cut.
             </p>
           </div>
 
@@ -405,13 +405,14 @@ export default function Methodology() {
         </div>
       </section>
 
-      {/* ── WHAT WE DON'T DO — paper ─────────────────────────────────────── */}
+      {/* ── WHAT WE DON'T DO — white ─────────────────────────────────────── */}
+      {/* container-contrast law: white band after the paper firewall band */}
       <section style={{
-        background: 'var(--color-paper)',
+        background: '#ffffff',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderTop: '1px solid #dde3d9',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <h2 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 400,
@@ -422,13 +423,13 @@ export default function Methodology() {
             marginBottom: 'clamp(1.5rem, 4vw, 2.5rem)',
             maxWidth: '600px',
           }}>
-            And what LOCK will never do.
+            And what LOCK SHOW will never do.
           </h2>
           <div
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: '12px',
             }}
           >
@@ -472,8 +473,10 @@ export default function Methodology() {
       </section>
 
       {/* ── CLOSING CTA — dark ───────────────────────────────────────────── */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section style={{
-        backgroundColor: 'var(--color-night)',
+        backgroundColor: 'var(--color-ink)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         textAlign: 'center',
       }}>
@@ -519,7 +522,7 @@ export default function Methodology() {
                 padding: '0.95rem 2rem',
                 backgroundColor: 'transparent',
                 color: 'var(--color-paper)',
-                border: '1px solid rgba(243,245,239,0.22)',
+                border: '1px solid var(--ghost-border-on-dark)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.78rem',
                 letterSpacing: '0.08em',

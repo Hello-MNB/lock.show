@@ -1,69 +1,46 @@
 import type { Metadata } from 'next'
+import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
-import { APP_URL } from '@/lib/app-url'
-
-const SITE_URL = 'https://lock.show'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
+import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/' },
-  title: 'LOCK — Build the Proof That Books You',
+  alternates: localeAlternates('/'),
+  title: 'LOCK SHOW — Build the Proof That Books You',
   description:
     'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
   openGraph: {
-    title: 'LOCK — Build the Proof That Books You',
+    title: 'LOCK SHOW — Build the Proof That Books You',
     description:
       'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
-    url: `${SITE_URL}/`,
+    // Relative — resolved against metadataBase (lib/site.ts www origin), same
+    // convention as every other page. The old absolute apex URL here was the
+    // one mixed og:url on the site.
+    url: '/',
+    // Re-stated deliberately: declaring a page-level openGraph block REPLACES the
+    // the layout images rather than merging with them, so omitting this ships a page
+    // with no og:image.
+    images: [
+      {
+        url: OG_DEFAULT_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: OG_DEFAULT_ALT,
+        type: 'image/png',
+      },
+    ],
   },
 }
 
-// Page-level JSON-LD: FAQPage ONLY. WebSite/Organization live in the root
-// layout's graph — duplicating them here with different @ids/urls created a
-// conflicting entity graph (audit G8 finding).
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is a Bookability Passport?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Is LOCK free for booking managers?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Booking managers (מזמיני הופעות) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'How is evidence verified?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Each claim carries a method label — TICKET EXPORT, PRODUCER-CONFIRMED, PLATFORM DATA, OPERATOR-REVIEWED, or SELF-REPORTED — alongside a review date. The label is always visible. Producers confirm individual claims via a bounded magic link; no account required.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'What does LOCK not do?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'LOCK does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
-          },
-        },
-      ],
-    },
-  ],
-}
+// NO page-level JSON-LD here. The homepage's FAQPage block was REMOVED
+// (T-96 step ③ / C5, owner-ruled): its questions had no visible Q&A
+// counterpart in the page body — invisible FAQ markup violates Google's
+// structured-data policy and is a manual-action risk. The visible-content
+// FAQPage blocks on /faq and /pricing remain. Do not re-add a FAQPage here
+// unless the homepage actually renders those questions as visible text
+// (scripts/test-seo-contract.mjs enforces this — C5 flag is now true).
 
 // ─── Inline icon helper ────────────────────────────────────────────────────
 // Paths sourced from gigproof-icons.svg (Codex design system)
@@ -153,16 +130,13 @@ function MethodBadge({ label }: { label: string }) {
 export default function HomePage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
       <main>
-        {/* ── HERO ─────────────────────────────────────────────────────── */}
-        <section
+        {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+        <Hero
+          variant="feature"
+          align="center"
           style={{
-                        background: `
+            background: `
               linear-gradient(100deg,
                 rgba(10,13,11,0.95) 0%,
                 rgba(10,13,11,0.82) 30%,
@@ -172,12 +146,6 @@ export default function HomePage() {
               url('/lockshow-hero-live.webp') center 35%/cover no-repeat
             `,
             color: 'var(--color-paper)',
-            minHeight: 'min(92svh, 880px)',
-            padding: 'clamp(3.5rem, 8vw, 5.5rem) clamp(1.5rem, 4vw, 4rem)',
-            position: 'relative',
-            overflow: 'hidden',
-            display: 'flex',
-            alignItems: 'center',
           }}
         >
           {/* Lime ambient glow */}
@@ -219,7 +187,7 @@ export default function HomePage() {
               margin: '0 auto',
               width: '100%',
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(300px, 0.7fr)',
+              gridTemplateColumns: 'minmax(0, 1.1fr) minmax(min(300px, 100%), 0.7fr)',
               gap: 'clamp(2rem, 6vw, 5rem)',
               alignItems: 'center',
               position: 'relative',
@@ -233,7 +201,7 @@ export default function HomePage() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  marginBottom: '1.75rem',
+                  marginBottom: 'var(--hero-gap-eyebrow)',
                 }}
               >
                 <span
@@ -270,7 +238,7 @@ export default function HomePage() {
                   lineHeight: 0.96,
                   letterSpacing: '-0.055em',
                   color: 'var(--color-paper)',
-                  marginBottom: '1.5rem',
+                  marginBottom: 'var(--hero-gap-h1)',
                 }}
               >
                 Build the proof
@@ -291,11 +259,11 @@ export default function HomePage() {
                   fontSize: 'clamp(1rem, 2vw, 1.1rem)',
                   lineHeight: 1.7,
                   color: 'rgba(243,245,239,0.68)',
-                  maxWidth: '480px',
-                  marginBottom: '2.25rem',
+                  maxWidth: 'var(--hero-desc-max-w)',
+                  marginBottom: 'var(--hero-gap-desc)',
                 }}
               >
-                The rooms you filled, the nights that sold out — LOCK turns them
+                The rooms you filled, the nights that sold out — LOCK SHOW turns them
                 into a Passport a booking manager can trust before the first call.
               </p>
 
@@ -309,7 +277,7 @@ export default function HomePage() {
                 }}
               >
                 <a
-                  href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=hero`}
+                  href={`${conversionHref({ page: 'home', placement: 'hero' })}`}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -325,7 +293,7 @@ export default function HomePage() {
                     textDecoration: 'none',
                   }}
                 >
-                  BUILD YOUR PASSPORT
+                  {conversionLabel()}
                   <Icon id="arrow" size={16} color="var(--color-ink)" />
                 </a>
                 <Link
@@ -411,7 +379,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                LOCK · BOOKABILITY PASSPORT
+                LOCK SHOW · BOOKABILITY PASSPORT
               </div>
 
               {/* Artist identity */}
@@ -424,19 +392,19 @@ export default function HomePage() {
                   marginBottom: '0.2rem',
                 }}
               >
-                Lior Noy
+                Maya Vale
               </div>
               <div
                 style={{
                   fontFamily: 'var(--font-space-mono)',
                   fontSize: '0.6rem',
                   letterSpacing: '0.1em',
-                  color: 'rgba(243,245,239,0.35)',
+                  color: 'rgba(243,245,239,0.55)',
                   marginBottom: '1.25rem',
                   textTransform: 'uppercase',
                 }}
               >
-                Electronic · Tel Aviv
+                Underground Techno · Tel Aviv
               </div>
 
               {/* Audience draw */}
@@ -452,7 +420,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.55rem',
                     letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '0.4rem',
                     textTransform: 'uppercase',
                   }}
@@ -468,7 +436,7 @@ export default function HomePage() {
                     marginBottom: '0.5rem',
                   }}
                 >
-                  200–350
+                  <bdi dir="ltr">200–350</bdi>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <MethodBadge label="TICKET EXPORT" />
@@ -498,7 +466,7 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.55rem',
                     letterSpacing: '0.12em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '0.4rem',
                     textTransform: 'uppercase',
                   }}
@@ -514,7 +482,7 @@ export default function HomePage() {
                     marginBottom: '0.2rem',
                   }}
                 >
-                  Zappa Tel Aviv — headline
+                  Club Vela, Tel Aviv — headline
                 </div>
                 <div
                   style={{
@@ -552,14 +520,13 @@ export default function HomePage() {
               >
                 <span
                   style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.52rem',
-                    letterSpacing: '0.06em',
-                    color: 'rgba(243,245,239,0.18)',
-                    textTransform: 'uppercase',
+                    fontFamily: 'var(--font-heebo)',
+                    fontSize: '0.7rem',
+                    letterSpacing: '0.02em',
+                    color: 'rgba(243,245,239,0.55)',
                   }}
                 >
-                  Sample · Fictional artist
+                  Sample — a fictional artist
                 </span>
                 <Link
                   href="/passport/demo"
@@ -593,12 +560,14 @@ export default function HomePage() {
               .hero-passport-card { display: none !important; }
             }
           `}</style>
-        </section>
+        </Hero>
 
         {/* ── FIREWALL BANNER ──────────────────────────────────────────── */}
+        {/* container-contrast law: white strip between dark hero and paper
+            actors band — no two adjacent containers share a tone */}
         <section
           style={{
-            background: 'var(--color-paper)',
+            background: '#ffffff',
             borderBottom: '1px solid rgba(10,13,11,0.1)',
             padding: '0.85rem max(24px, 4vw)',
             textAlign: 'center',
@@ -663,14 +632,14 @@ export default function HomePage() {
               }}
             >
               The artist on stage, the booking manager on the line, the producer
-              who ran the room — LOCK gives each of you your own door in.
+              who ran the room — LOCK SHOW gives each of you your own door in.
             </p>
 
             <div
               className="m-divide"
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
                 gap: 'clamp(1rem, 2vw, 1.5rem)',
               }}
             >
@@ -679,7 +648,7 @@ export default function HomePage() {
                   image: '/lockshow-persona-artist-v1.webp',
                   tag: 'ARTIST',
                   title: 'Your nights already tell the story',
-                  body: 'Turn the gigs you played into a Passport that opens the next room. Free during the pilot.',
+                  body: 'Turn the gigs you played into a Passport that opens the next room. Beta access opens in waves.',
                   href: '/artists',
                   cta: 'FOR ARTISTS',
                 },
@@ -751,8 +720,9 @@ export default function HomePage() {
                         letterSpacing: '0.08em',
                         color: 'var(--color-ink)',
                         textDecoration: 'none',
-                        padding: '0.6rem 0',
-                        marginBottom: '-0.6rem',
+                        minHeight: '44px',
+                        padding: '0.75rem 0',
+                        marginBottom: '-0.75rem',
                         marginTop: 'auto',
                       }}
                     >
@@ -779,7 +749,7 @@ export default function HomePage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
                 gap: 'clamp(1.5rem, 4vw, 3rem)',
                 alignItems: 'center',
               }}
@@ -833,7 +803,8 @@ export default function HomePage() {
                     letterSpacing: '0.08em',
                     color: 'var(--color-paper)',
                     textDecoration: 'none',
-                    padding: '0.6rem 0',
+                    minHeight: '44px',
+                    padding: '0.75rem 0',
                   }}
                 >
                   READ THE METHODOLOGY
@@ -855,12 +826,12 @@ export default function HomePage() {
                     fontFamily: 'var(--font-space-mono)',
                     fontSize: '0.75rem',
                     letterSpacing: '0.1em',
-                    color: 'rgba(243,245,239,0.3)',
+                    color: 'rgba(243,245,239,0.55)',
                     marginBottom: '1.5rem',
                     textTransform: 'uppercase',
                   }}
                 >
-                  Sample Claims — Fictional Artist
+                  Sample Claims — Fictional Artist &amp; Venues
                 </p>
 
                 {/* BandPill proof unit */}
@@ -880,10 +851,10 @@ export default function HomePage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    200–350
+                    <bdi dir="ltr">200–350</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
-                    Headline audience draw, Zappa Club TLV, Feb 2025
+                    Headline audience draw, Club Vela, Tel Aviv, Feb 2025
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <MethodBadge label="TICKET EXPORT" />
@@ -891,7 +862,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -928,7 +899,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -953,10 +924,10 @@ export default function HomePage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    70–120
+                    <bdi dir="ltr">70–120</bdi>
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(243,245,239,0.5)', marginBottom: '0.5rem' }}>
-                    Capacity, Shapira Arts Hub, support slot, Dec 2024
+                    Capacity, The Attic Stage, support slot, Dec 2024
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <MethodBadge label="PRODUCER-CONFIRMED" />
@@ -964,7 +935,7 @@ export default function HomePage() {
                       style={{
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
-                        color: 'rgba(243,245,239,0.35)',
+                        color: 'rgba(243,245,239,0.55)',
                         letterSpacing: '0.06em',
                       }}
                     >
@@ -1120,7 +1091,8 @@ export default function HomePage() {
                   letterSpacing: '0.08em',
                   color: 'var(--color-ink)',
                   textDecoration: 'none',
-                  padding: '0.6rem 0',
+                  minHeight: '44px',
+                  padding: '0.75rem 0',
                 }}
               >
                 SEE THE FULL WALKTHROUGH
@@ -1131,9 +1103,12 @@ export default function HomePage() {
         </section>
 
         {/* ── TRUST STATEMENT ──────────────────────────────────────────── */}
+        {/* T-97.1 dark-adjacency law: night here, ink on the final CTA below —
+            the dark tail of the page rotates night → ink → night(footer) so
+            no two adjacent dark containers share a tone */}
         <section
           style={{
-            background: 'var(--color-ink)',
+            background: 'var(--color-night)',
             padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
             textAlign: 'center',
             borderTop: '1px solid rgba(243,245,239,0.1)',
@@ -1205,7 +1180,7 @@ export default function HomePage() {
                   fontWeight: 700,
                   letterSpacing: '0.08em',
                   color: 'var(--color-paper)',
-                  border: '1px solid rgba(243,245,239,0.3)',
+                  border: '1px solid var(--ghost-border-on-dark)',
                   borderRadius: '10px',
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
@@ -1218,6 +1193,9 @@ export default function HomePage() {
         </section>
 
         {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
+        {/* container-contrast law (dark side, T-97.1): ink after the night
+            trust band and before the night footer — adjacent dark containers
+            must not share the same tone */}
         <section
           style={{
             background: 'var(--color-ink)',
@@ -1250,7 +1228,7 @@ export default function HomePage() {
               Closed beta — Israeli artists only, free while we build this together.
             </p>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=final`}
+              href={`${conversionHref({ page: 'home', placement: 'final' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1266,7 +1244,7 @@ export default function HomePage() {
                 textDecoration: 'none',
               }}
             >
-              REQUEST ACCESS
+              {conversionLabel()}
               <Icon id="arrow" size={16} color="var(--color-ink)" />
             </a>
           </div>

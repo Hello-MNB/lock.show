@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
-  alternates: { canonical: '/how-it-works' },
+  alternates: localeAlternates('/how-it-works'),
   title: 'How It Works — From Gig to Verified Evidence',
   description: 'See exactly how a gig becomes evidence a booking manager can trust — three people, three simple steps, no signup required to view.',
 }
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 const players = [
   {
@@ -41,7 +44,7 @@ const steps = [
   {
     num: '03',
     title: 'Send the producer one link.',
-    body: 'LOCK gives you a unique link for that night. WhatsApp it to the producer who ran the show — that\'s the whole ask.',
+    body: 'LOCK SHOW gives you a unique link for that night. WhatsApp it to the producer who ran the show — that\'s the whole ask.',
   },
   {
     num: '04',
@@ -77,11 +80,11 @@ export default function HowItWorks() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO — compact full-bleed image header ──────────────────────── */}
-      <section
+      {/* ── HERO — standard variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="standard"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(56svh, 560px)',
           background: `
             linear-gradient(180deg,
               rgba(10,13,11,0.55) 0%,
@@ -91,13 +94,9 @@ export default function HowItWorks() {
             url('/lockshow-evidence-review.webp') center 30% / cover no-repeat
           `,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: 'clamp(2rem, 5vw, 3.5rem) max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
           <div style={{ maxWidth: '720px', position: 'relative' }}>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -105,7 +104,7 @@ export default function HowItWorks() {
               letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
-              marginBottom: '1rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}>
               HOW IT WORKS
             </p>
@@ -116,7 +115,7 @@ export default function HowItWorks() {
               lineHeight: 1.02,
               letterSpacing: '-0.045em',
               color: 'var(--color-paper)',
-              margin: '0 0 1.25rem',
+              margin: '0 0 var(--hero-gap-h1)',
             }}>
               From a night you played
               <br />
@@ -130,7 +129,7 @@ export default function HowItWorks() {
             </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── THREE PLAYERS — paper ────────────────────────────────────────── */}
       <section style={{
@@ -138,7 +137,7 @@ export default function HowItWorks() {
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderBottom: '1px solid #dde3d9',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -165,7 +164,7 @@ export default function HowItWorks() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
               gap: 'clamp(1rem, 2vw, 1.5rem)',
             }}
           >
@@ -220,14 +219,15 @@ export default function HowItWorks() {
           }}>
             Worth knowing: the producer who ran your show and the booking
             manager deciding on the next one are two different people with two
-            different jobs. LOCK never mixes them up.
+            different jobs. LOCK SHOW never mixes them up.
           </p>
         </div>
       </section>
 
-      {/* ── STEP BY STEP — paper, narrow text column ─────────────────────── */}
+      {/* ── STEP BY STEP — white, narrow text column ─────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section style={{
-        background: 'var(--color-paper)',
+        background: '#ffffff',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
       }}>
         <div style={{ maxWidth: '680px', margin: '0 auto' }}>
@@ -320,7 +320,7 @@ export default function HowItWorks() {
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         borderTop: '1px solid #dde3d9',
       }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -357,7 +357,7 @@ export default function HowItWorks() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
               gap: '1px',
               background: 'var(--color-mist)',
             }}
@@ -404,6 +404,11 @@ export default function HowItWorks() {
                 color: 'var(--color-ink)',
                 textDecoration: 'underline',
                 textUnderlineOffset: '3px',
+                // ≥44px hit area (T-97 P1)
+                display: 'inline-flex',
+                alignItems: 'center',
+                minHeight: '44px',
+                padding: '0.25rem 0',
               }}
             >
               CURIOUS HOW THE CHECKING WORKS? READ THE METHODOLOGY →
@@ -449,7 +454,7 @@ export default function HowItWorks() {
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=how-it-works`}
+              href={`${conversionHref({ page: 'how-it-works', placement: 'body' })}`}
               style={{
                 display: 'inline-block',
                 padding: '0.95rem 2rem',
@@ -463,7 +468,7 @@ export default function HowItWorks() {
                 fontWeight: 700,
               }}
             >
-              BUILD YOUR PASSPORT →
+              {conversionLabel()}
             </a>
             <Link
               href="/passport/demo"

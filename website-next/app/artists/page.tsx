@@ -1,21 +1,36 @@
 import type { Metadata } from 'next'
+import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
-  alternates: { canonical: '/artists' },
+  alternates: localeAlternates('/artists'),
   title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
   description:
-    'The nights you already played can open the rooms you want next. LOCK turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
+    'The nights you already played can open the rooms you want next. LOCK SHOW turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
   openGraph: {
     url: '/artists',
-    title: 'For Artists | LOCK',
+    title: 'For Artists | LOCK SHOW',
     description:
-      'Your talent is real. LOCK makes it visible — one link that carries your best nights into rooms you haven\'t played yet.',
+      'Your talent is real. LOCK SHOW makes it visible — one link that carries your best nights into rooms you haven\'t played yet.',
     type: 'website',
+    // Re-stated deliberately: declaring a page-level openGraph block REPLACES the
+    // the layout images rather than merging with them, so omitting this ships a page
+    // with no og:image.
+    images: [
+      {
+        url: OG_DEFAULT_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: OG_DEFAULT_ALT,
+        type: 'image/png',
+      },
+    ],
   },
 }
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 const ICON_PATHS: Record<string, string> = {
   arrow:
@@ -122,7 +137,9 @@ const radarFeatures = [
 
 const passportFeatures = [
   'Only what\'s been checked — with how it was checked, in plain sight',
-  'Your crowd shown as an honest range, e.g. 200–350 — never a made-up exact number',
+  // ⁦…⁩ (LRI…PDI) keep the range reading "200–350" (not "350–200")
+  // when the page is toggled to Hebrew (RTL)
+  'Your crowd shown as an honest range, e.g. ⁦200–350⁩ — never a made-up exact number',
   'Every night dated, so it reads fresh, not recycled',
   'Always free for booking managers to open — no wall between you and the yes',
 ]
@@ -130,12 +147,12 @@ const passportFeatures = [
 export default function ArtistsPage() {
   return (
     <main>
-      {/* ── HERO — floating dark card ──────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         className="persona-hero-artist"
         style={{
-                    overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `
             linear-gradient(180deg,
               rgba(10,13,11,0.55) 0%,
@@ -145,10 +162,6 @@ export default function ArtistsPage() {
             url('/lockshow-persona-artist-v1.webp') center/cover no-repeat
           `,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4.5rem)',
         }}
       >
         {/* Lime ambient glow */}
@@ -167,6 +180,7 @@ export default function ArtistsPage() {
           }}
         />
 
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           {/* Eyebrow with pulsing dot */}
           <div
@@ -174,7 +188,7 @@ export default function ArtistsPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             <span
@@ -211,7 +225,7 @@ export default function ArtistsPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             Your sets fill rooms.
@@ -227,19 +241,19 @@ export default function ArtistsPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.05rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.72)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             The nights you&apos;ve already played can open the rooms you
-            haven&apos;t. LOCK turns your real gig history into one link a
+            haven&apos;t. LOCK SHOW turns your real gig history into one link a
             booking manager can trust — and it starts tonight.
           </p>
 
           {/* CTAs */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?role=artist`}
+              href={`${conversionHref({ page: 'artists', placement: 'hero', entity: 'artist' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -255,7 +269,7 @@ export default function ArtistsPage() {
                 textDecoration: 'none',
               }}
             >
-              BUILD YOUR PASSPORT
+              {conversionLabel()}
               <Icon id="arrow" size={15} color="var(--color-ink)" />
             </a>
             <Link
@@ -292,6 +306,7 @@ export default function ArtistsPage() {
             FREE FOR ISRAELI ARTISTS DURING THE PILOT · REAL NIGHTS, CHECKED
           </p>
         </div>
+        </div>
 
         <style>{`
           @keyframes gp-pulse {
@@ -300,7 +315,7 @@ export default function ArtistsPage() {
           }
           .pulse-dot { animation: gp-pulse 2.4s ease-in-out infinite; }
         `}</style>
-      </section>
+      </Hero>
 
       {/* ── PAIN SECTION — paper surface (DS surface contract: paper does the
              work; dark regions shorten — this was a full dark band) ── */}
@@ -312,7 +327,7 @@ export default function ArtistsPage() {
           borderBottom: '1px solid #dde3d9',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
@@ -345,7 +360,7 @@ export default function ArtistsPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1px',
               background: 'var(--color-mist)',
             }}
@@ -399,13 +414,14 @@ export default function ArtistsPage() {
       </section>
 
       {/* ── TWO TOOLS ─────────────────────────────────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
+          background: '#ffffff',
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono)',
@@ -435,7 +451,7 @@ export default function ArtistsPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
               gap: 'clamp(1rem, 2vw, 1.5rem)',
             }}
           >
@@ -621,7 +637,7 @@ export default function ArtistsPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(220px, 100%), 1fr))',
                 gap: '1px',
                 background: 'rgba(10,13,11,0.06)',
               }}
@@ -630,13 +646,13 @@ export default function ArtistsPage() {
                 {
                   label: 'Audience Draw',
                   value: '200–350',
-                  detail: 'Headline slot, Zappa Club TLV, Feb 2025',
+                  detail: 'Headline slot, Club Vela, Tel Aviv, Feb 2025',
                   badge: 'TICKET EXPORT',
                   date: 'REVIEWED MAR 2025',
                 },
                 {
                   label: 'Gig',
-                  value: 'Barby — support slot',
+                  value: 'The Attic Stage — support slot',
                   detail: 'Booked it herself, Dec 2024',
                   badge: 'PRODUCER-CONFIRMED',
                   date: 'REVIEWED DEC 2024',
@@ -671,7 +687,7 @@ export default function ArtistsPage() {
                       marginBottom: '0.2rem',
                     }}
                   >
-                    {item.value}
+                    <bdi dir="ltr">{item.value}</bdi>
                   </div>
                   <div
                     style={{
@@ -898,7 +914,7 @@ export default function ArtistsPage() {
             }}
           >
             <a
-              href={`${APP_URL}/signup?role=artist`}
+              href={`${conversionHref({ page: 'artists', placement: 'final', entity: 'artist' })}`}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -914,7 +930,7 @@ export default function ArtistsPage() {
                 textDecoration: 'none',
               }}
             >
-              BUILD YOUR PASSPORT
+              {conversionLabel()}
               <Icon id="arrow" size={15} color="var(--color-ink)" />
             </a>
             <Link

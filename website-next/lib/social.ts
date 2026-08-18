@@ -1,4 +1,4 @@
-// Official LOCK channels — the single source of truth for social + contact
+// Official LOCK SHOW channels — the single source of truth for social + contact
 // links. Used by the footer, the JSON-LD `sameAs` (SEO/GEO/AEO — search engines
 // and AI answer-engines use sameAs to tie the brand to its verified profiles),
 // and the contact page. Update here, everywhere follows.

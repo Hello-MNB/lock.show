@@ -1,88 +1,96 @@
 ﻿import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
+
+import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/radar' },
+  alternates: localeAlternates('/radar'),
   title: 'Artist Radar — Your Private Evidence Workspace',
   description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
 }
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
+// Eyebrow lines are human words, not system dimension IDs (owner law:
+// no technical/system vocabulary on marketing surfaces).
 const dimensions = [
   {
-    id: 'IDENTITY',
+    id: 'WHO YOU ARE',
     title: 'Identity',
-    body: 'Who you are — name, act, aliases, genre, geographic base. The foundation every other dimension builds on.',
+    body: 'Who you are — name, act, aliases, genre, geographic base. The foundation everything else builds on.',
   },
   {
-    id: 'LIVE DRAW',
+    id: 'WHO SHOWS UP FOR YOU',
     title: 'Live Draw',
     body: 'Audience evidence from real events — confirmed by the producer who ran the night, or backed by documents. Always shown as an honest range.',
   },
   {
-    id: 'COMMUNITY',
+    id: 'WHO FOLLOWS YOU',
     title: 'Community',
     body: 'Organic audience signals — social following, mailing list, press mentions. Secondary context, never draw evidence.',
   },
   {
-    id: 'PERFORMANCE',
+    id: 'WHERE YOU\u2019VE PLAYED',
     title: 'Live Performance',
     body: 'Your track record — years active, venue types, geographic reach, notable events. Real gigs that stand up to a second look.',
   },
   {
-    id: 'READINESS',
+    id: 'THE PRACTICAL DETAILS',
     title: 'Readiness',
     body: 'Practical booking factors — rider, tech spec, travel availability, agent or self-managed. Makes evaluation faster for booking managers.',
   },
   {
-    id: 'FEE CONTEXT',
+    id: 'YOUR FEE RANGE',
     title: 'Fee Context',
     body: 'A fee range, not an exact figure. Gives a booking manager a realistic frame for decision — never a committed price.',
   },
 ]
 
+// Human words, not system state codes (owner law: no technical vocabulary
+// on marketing surfaces) — same four rows, same layout.
 const evidenceStates = [
   {
-    state: 'CONFIRMED',
-    label: 'Producer-confirmed or document-backed',
-    desc: 'The strongest state. Someone who was there — or the paperwork itself — has backed the claim up.',
+    state: 'Confirmed',
+    label: 'Someone who was there said yes',
+    desc: 'The strongest a claim can stand. The producer who ran the night — or the paperwork itself — has backed it up.',
     color: 'var(--color-stamp)',
   },
   {
-    state: 'SUBMITTED',
-    label: 'In review',
-    desc: 'You\'ve submitted a document or sent a confirmation link. The claim is in the queue.',
+    state: 'Being checked',
+    label: 'Sent in, being looked at',
+    desc: 'You\'ve sent a document or a confirmation link. Nothing more for you to do — it\'s being looked at.',
     color: 'rgba(200,240,77,0.75)',
   },
   {
-    state: 'PENDING',
+    state: 'Waiting for a yes',
     label: 'Logged, not yet confirmed',
-    desc: 'You\'ve added the gig. No producer link sent yet. The next step is clear.',
+    desc: 'You\'ve added the show, and no one has confirmed it yet. The next step is clear: send the link.',
     color: 'var(--color-tally)',
   },
   {
-    state: 'ABSENT',
-    label: 'Nothing here yet',
-    desc: 'Nothing logged for this area. The Radar surfaces this so you can decide whether it\'s worth your time.',
+    state: 'Not added yet',
+    label: 'Nothing here so far',
+    desc: 'Nothing logged for this area yet. The Radar shows it to you — and only you — so you can decide whether it\'s worth your time.',
     color: 'rgba(255,255,255,0.6)',
   },
 ]
 
+// ⁦…⁩ (LRI…PDI) keeps "70–150" reading correctly in RTL (Hebrew) mode.
 const radarVsPassport = [
-  { dimension: 'Audience', radar: 'Radar — the exact estimate you logged', passport: 'Passport — band range only (e.g. 70–150)' },
-  { dimension: 'Verification status', radar: 'Radar — all states, including pending', passport: 'Passport — confirmed claims, or self-reported when explicitly labelled' },
-  { dimension: 'Gaps', radar: 'Radar — what\'s missing, and your next step', passport: 'Passport — gaps simply don\'t appear' },
-  { dimension: 'Scores & rankings', radar: 'Radar — none, by design', passport: 'Passport — none, by design' },
-  { dimension: 'Who sees it', radar: 'Radar — you alone (private)', passport: 'Passport — anyone with the link' },
+  { dimension: 'Your audience numbers', radar: 'The exact estimate you logged — for your eyes', passport: 'An honest range only (e.g. ⁦70–150⁩)' },
+  { dimension: 'Confirmation', radar: 'Everything, including what\'s still waiting', passport: 'Confirmed claims — or your own word, clearly marked as yours' },
+  { dimension: 'Gaps', radar: 'What\'s missing, and your next step', passport: 'Gaps simply don\'t appear' },
+  { dimension: 'Scores & rankings', radar: 'None, by design', passport: 'None, by design' },
+  { dimension: 'Who sees it', radar: 'You alone', passport: 'Anyone you send the link to' },
 ]
 
 export default function Radar() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* PAGE HEADER — standard variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="standard" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -90,7 +98,7 @@ export default function Radar() {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             ARTIST RADAR · PRIVATE WORKSPACE
           </p>
@@ -100,7 +108,7 @@ export default function Radar() {
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             See what you&apos;ve got. Build what&apos;s next.
           </h1>
@@ -119,14 +127,15 @@ export default function Radar() {
           </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* WHAT IT IS */}
-      <section style={{ padding: '80px 24px', backgroundColor: 'var(--color-paper)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* container-contrast law: white band after the paper page header */}
+      <section style={{ padding: '80px 24px', backgroundColor: '#ffffff' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
             gap: '32px',
             alignItems: 'start',
           }}>
@@ -206,7 +215,7 @@ export default function Radar() {
 
       {/* DIMENSIONS */}
       <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -232,7 +241,7 @@ export default function Radar() {
 
           <div className="m-divide" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
             gap: '16px',
           }}>
             {dimensions.map((d) => (
@@ -290,7 +299,7 @@ export default function Radar() {
           padding: 'clamp(2.5rem, 6vw, 4rem) 24px',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto', width: '100%' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -317,8 +326,11 @@ export default function Radar() {
       </section>
 
       {/* EVIDENCE STATES — dark */}
-      <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* T-97.1 dark-adjacency law: the atmosphere image band above ends in a
+          near-ink veil — a structural seam marks where the photo stops and
+          the flat night panel starts */}
+      <section style={{ backgroundColor: 'var(--color-night)', color: 'var(--color-paper)', padding: '80px 24px', borderTop: '1px solid #2a342d' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -327,7 +339,7 @@ export default function Radar() {
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
-            EVIDENCE STATES
+            WHERE THINGS STAND
           </p>
           <h2 style={{
             fontFamily: 'var(--font-archivo)',
@@ -394,7 +406,7 @@ export default function Radar() {
 
       {/* RADAR VS PASSPORT */}
       <section style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
@@ -440,7 +452,7 @@ export default function Radar() {
                     textTransform: 'uppercase',
                     borderBottom: '2px solid rgba(10,13,11,0.1)',
                     whiteSpace: 'nowrap',
-                  }}>Dimension</th>
+                  }}>What</th>
                   <th style={{
                     padding: '12px 16px',
                     textAlign: 'left',
@@ -531,7 +543,7 @@ export default function Radar() {
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=radar`}
+              href={`${conversionHref({ page: 'radar', placement: 'body' })}`}
               style={{
                 display: 'inline-block',
                 padding: '15px 32px',
@@ -545,7 +557,7 @@ export default function Radar() {
                 fontWeight: 700,
               }}
             >
-              BUILD YOUR PASSPORT →
+              {conversionLabel()}
             </a>
             <a
               href="/passport/demo"

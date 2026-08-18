@@ -1,19 +1,34 @@
 import type { Metadata } from 'next'
+import { localeAlternates, OG_DEFAULT_IMAGE, OG_DEFAULT_ALT } from '@/lib/site'
 import Link from 'next/link'
 
-import { APP_URL } from '@/lib/app-url'
+import { Hero } from '@/components/hero'
+
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/pricing' },
+  alternates: localeAlternates('/pricing'),
   title: 'Pricing — What Each Person Pays',
   description:
     'Artists build and publish free during the pilot. Booking managers read Passports free, always. Producers never need an account. Agency roster plans come later.',
   openGraph: {
     url: '/pricing',
-    title: 'Pricing | LOCK',
+    title: 'Pricing | LOCK SHOW',
     description:
       'One page, four honest answers — artist, booking manager, producer, agency. And the things money can never buy here.',
     type: 'website',
+    // Re-stated deliberately: declaring a page-level openGraph block REPLACES the
+    // the layout images rather than merging with them, so omitting this ships a page
+    // with no og:image.
+    images: [
+      {
+        url: OG_DEFAULT_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: OG_DEFAULT_ALT,
+        type: 'image/png',
+      },
+    ],
   },
 }
 
@@ -21,15 +36,15 @@ export const metadata: Metadata = {
 const seats = [
   {
     label: 'FOR ARTISTS',
-    price: 'Free during the pilot',
+    price: 'Beta access opens in waves',
     line: 'Build your Radar, shape your story, publish your Passport — all of it free while the pilot runs.',
     points: [
-      'A full first scan of your gig and platform history',
+      'Share your links — LOCK SHOW reads them and drafts your first items for you to confirm',
       'Your private Radar workspace — only you see it',
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
     ],
-    cta: { text: 'START FREE IN THE PILOT →', href: `${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=seats`, primary: true },
+    cta: { text: conversionLabel(), href: `${conversionHref({ page: 'pricing', placement: 'seats' })}`, primary: true },
     note: 'The pilot is a closed beta for Israeli artists. When pricing comes, it will be set with the artists already inside.',
   },
   {
@@ -41,7 +56,7 @@ const seats = [
       'Every claim carries its source and date',
       'Reply with an availability request in one tap',
     ],
-    cta: { text: 'How booking managers use LOCK →', href: '/bookers', primary: false },
+    cta: { text: 'How booking managers use LOCK SHOW →', href: '/bookers', primary: false },
     note: 'This one is permanent. A paywall between you and the proof would defeat the whole idea.',
   },
   {
@@ -81,7 +96,7 @@ const neverForSale = [
 /* ── FAQ (visible + JSON-LD share this source) ──────────── */
 const faq = [
   {
-    q: 'Is LOCK free for artists?',
+    q: 'Is LOCK SHOW free for artists?',
     a: 'Yes — free during the pilot. The pilot is a closed beta for Israeli artists: building your Radar and publishing your Passport cost nothing while it runs. When the pilot ends, pricing will be set together with the artists already inside — and we will say so clearly before anything changes.',
   },
   {
@@ -128,21 +143,16 @@ export default function Pricing() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      {/* ── HERO — live-crowd band with dark veil ─────────── */}
-      <section
+      {/* ── HERO — primary variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="primary"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(78svh, 720px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-hero-live.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        <div style={{ maxWidth: '1120px', width: '100%', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', width: '100%', margin: '0 auto' }}>
           <div style={{ maxWidth: '640px' }}>
             <p
               style={{
@@ -151,7 +161,7 @@ export default function Pricing() {
                 letterSpacing: '0.14em',
                 color: 'rgba(243,245,239,0.72)',
                 textTransform: 'uppercase',
-                marginBottom: '1.75rem',
+                marginBottom: 'var(--hero-gap-eyebrow)',
               }}
             >
               PRICING
@@ -164,7 +174,7 @@ export default function Pricing() {
                 lineHeight: 0.96,
                 letterSpacing: '-0.055em',
                 color: 'var(--color-paper)',
-                marginBottom: '1.5rem',
+                marginBottom: 'var(--hero-gap-h1)',
               }}
             >
               Four people make a booking happen.
@@ -179,16 +189,16 @@ export default function Pricing() {
                 fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
                 lineHeight: 1.65,
                 color: 'rgba(243,245,239,0.78)',
-                maxWidth: '520px',
-                marginBottom: '2.25rem',
+                maxWidth: 'var(--hero-desc-max-w)',
+                marginBottom: 'var(--hero-gap-desc)',
               }}
             >
               The short version: during the pilot, almost nobody pays anything. And the
               things that make proof worth trusting are never for sale — to anyone.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
               <a
-                href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=hero`}
+                href={`${conversionHref({ page: 'pricing', placement: 'hero' })}`}
                 style={{
                   background: 'var(--color-stamp)',
                   color: 'var(--color-ink)',
@@ -199,10 +209,11 @@ export default function Pricing() {
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                   borderRadius: '10px',
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
-                START FREE IN THE PILOT →
+                {conversionLabel()}
               </a>
               <Link
                 href="/passport/demo"
@@ -216,7 +227,8 @@ export default function Pricing() {
                   padding: '0.95rem 1.75rem',
                   textDecoration: 'none',
                   borderRadius: '10px',
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
                 }}
               >
                 SEE A SAMPLE PASSPORT
@@ -236,11 +248,11 @@ export default function Pricing() {
             </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* ── THE FOUR ANSWERS ──────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: mono,
@@ -280,7 +292,7 @@ export default function Pricing() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1.25rem',
             }}
           >
@@ -397,6 +409,10 @@ export default function Pricing() {
                       color: 'var(--color-ink)',
                       textDecoration: 'none',
                       borderBottom: '2px solid var(--color-stamp)',
+                      // ≥44px hit area (T-97 P1): padding, not font-size
+                      display: 'inline-flex',
+                      alignItems: 'flex-end',
+                      minHeight: '44px',
                       paddingBottom: '3px',
                       alignSelf: 'flex-start',
                       marginTop: 'auto',
@@ -421,10 +437,10 @@ export default function Pricing() {
       >
         <div
           style={{
-            maxWidth: '1120px',
+            maxWidth: '1100px',
             margin: '0 auto',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
             gap: 'clamp(2rem, 5vw, 4rem)',
             alignItems: 'center',
           }}
@@ -464,7 +480,7 @@ export default function Pricing() {
                 marginBottom: '1.75rem',
               }}
             >
-              Prices can change as LOCK grows — that&apos;s honest. What never changes is
+              Prices can change as LOCK SHOW grows — that&apos;s honest. What never changes is
               this: money moves nothing on a Passport. What it shows is decided by what
               actually happened, and by the artist&apos;s own approval.
             </p>
@@ -512,7 +528,7 @@ export default function Pricing() {
           borderBottom: '1px solid var(--color-mist)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p
               style={{
@@ -545,7 +561,7 @@ export default function Pricing() {
                 margin: 0,
               }}
             >
-              Right now LOCK is in a closed pilot with Israeli artists, and artists build
+              Right now LOCK SHOW is in a closed pilot with Israeli artists, and artists build
               free. When the pilot ends, artist pricing gets worked out with the founding
               artists — in the open, based on real use, before anything changes. Booking
               managers reading Passports stay free, producers never need an account, and
@@ -556,8 +572,9 @@ export default function Pricing() {
       </section>
 
       {/* ── PRICING FAQ ───────────────────────────────────── */}
-      <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* container-contrast law: white band after the paper after-pilot band */}
+      <section style={{ background: '#ffffff', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
             <p
               style={{
@@ -589,16 +606,18 @@ export default function Pricing() {
                   }}
                 >
                   <span>{item.q}</span>
+                  {/* .faq-glyph (globals.css): '+' closed, '−' open — same
+                      pattern as the FAQ page's accordion */}
                   <span
+                    className="faq-glyph"
+                    aria-hidden
                     style={{
                       fontFamily: mono,
                       fontSize: '0.85rem',
                       color: 'var(--color-stamp-onlight)',
                       flexShrink: 0,
                     }}
-                  >
-                    +
-                  </span>
+                  />
                 </summary>
                 <p
                   style={{
@@ -620,9 +639,11 @@ export default function Pricing() {
       </section>
 
       {/* ── DARK CLOSING CTA ──────────────────────────────── */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section
         style={{
-          background: 'var(--color-night)',
+          background: 'var(--color-ink)',
           color: 'var(--color-paper)',
           padding: 'clamp(3.5rem, 9vw, 6.5rem) max(24px, 4vw)',
           textAlign: 'center',
@@ -654,7 +675,7 @@ export default function Pricing() {
             play makes the next room easier to enter.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=final`}
+            href={`${conversionHref({ page: 'pricing', placement: 'final' })}`}
             style={{
               background: 'var(--color-stamp)',
               color: 'var(--color-ink)',
@@ -668,7 +689,7 @@ export default function Pricing() {
               display: 'inline-block',
             }}
           >
-            START FREE IN THE PILOT →
+            {conversionLabel()}
           </a>
         </div>
       </section>

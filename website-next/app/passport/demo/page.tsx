@@ -2,18 +2,25 @@
 
 export const metadata: Metadata = {
   alternates: { canonical: '/passport/demo' },
+  // D5 (owner ruling): the demo Passport is a FICTIONAL sample — noindex +
+  // out of sitemap.ts. A fabricated history must never be an indexation
+  // target or a factual-implying search result.
+  robots: { index: false, follow: false },
   title: 'Sample Passport — Verified Live Performance Evidence',
-  description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
+  description: 'A sample LOCK SHOW Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 
-// --- Demo data: fictional artist "Dana Lev" ---
+// --- Demo data: Maya Vale, THE canonical demo persona (owner ruling 21 Jul
+// 2026, docs/LOCK-PRODUCT-SPECIFICATION.md §8.4 — supersedes "Dana Lev").
+// Every venue/festival below is INVENTED (D5): no name may be mistakable for
+// a real Israeli venue, so no real room ever appears in a fabricated history.
+// Brand/stage names stay Latin in both languages (src/lib/demo.js purity law).
 
 const artist = {
-  name: 'Dana Lev',
-  nameHe: 'דנה לב',
-  genre: 'Singer-songwriter · Indie',
+  name: 'Maya Vale',
+  genre: 'Underground Techno',
   base: 'Tel Aviv',
   since: '2019',
 }
@@ -25,22 +32,24 @@ interface ProofUnitData {
   reviewed: string
 }
 
+// Fictional venues only (D5): Club Vela, The Attic Stage and Horizon
+// Gathering are invented for this sample and do not exist.
 const drawUnits: ProofUnitData[] = [
   {
     claim: '200–350',
-    context: 'Sold-out headline show · Barby, Tel Aviv',
+    context: 'Sold-out headline night · Club Vela, Tel Aviv',
     method: 'TICKET EXPORT · REVIEWED',
     reviewed: 'JAN 2025',
   },
   {
     claim: '70–120',
-    context: 'Recurring Friday residency · Levontin 7, Tel Aviv',
+    context: 'Recurring Friday residency · The Attic Stage, Tel Aviv',
     method: 'PRODUCER-CONFIRMED',
     reviewed: 'MAR 2025',
   },
   {
     claim: '400–600',
-    context: 'Festival support slot · Meteor Festival, Galilee',
+    context: 'Festival support slot · Horizon Gathering, Galilee',
     method: 'PRODUCER-CONFIRMED',
     reviewed: 'AUG 2024',
   },
@@ -64,7 +73,7 @@ const performanceUnits: ProofUnitData[] = [
 const communityUnits: ProofUnitData[] = [
   {
     claim: '4,200 followers',
-    context: 'Instagram @dana.lev.music — organic, no paid promotion',
+    context: 'Instagram @maya.vale.music — organic, no paid promotion',
     method: 'PLATFORM DATA · REVIEWED',
     reviewed: 'APR 2025',
   },
@@ -88,8 +97,9 @@ const readinessUnits: ProofUnitData[] = [
 // ---- Sub-components (inline, no imports needed) ----
 
 function BandPill({ value }: { value: string }) {
+  // dir="ltr": ranges like "200–350" must never visually reverse in RTL mode
   return (
-    <span style={{
+    <span dir="ltr" style={{
       fontFamily: 'var(--font-space-mono)',
       fontSize: '1.35rem',
       fontWeight: 700,
@@ -132,7 +142,7 @@ function ProofUnitBlock({ unit, isDrawUnit = false }: { unit: ProofUnitData; isD
           fontWeight: 600,
           color: 'var(--color-ink)',
           margin: '2px 0 4px',
-        }}>{unit.claim}</p>
+        }}><bdi dir="ltr">{unit.claim}</bdi></p>
       )}
       <p style={{
         fontFamily: 'var(--font-heebo)',
@@ -169,19 +179,23 @@ function SectionHeader({ label, title }: { label: string; title: string }) {
 
 export default function PassportDemo() {
   return (
-    <div style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
+    // <main> landmark (T-97 P1) — page content wrapper; sizing is structural
+    // (full-viewport dark stage behind the floating passport card).
+    <main style={{ backgroundColor: 'var(--color-night)', minHeight: '100vh' }}>
 
-      {/* DEMO BANNER */}
+      {/* DEMO BANNER — warm, normal-case (mono-caps rule-strips are banned on
+          marketing surfaces, owner exhibit 21 Jul). D5: the fictional nature
+          must be visible right at the top. */}
       <div style={{
         backgroundColor: 'var(--color-stamp)',
         color: 'var(--color-ink)',
         textAlign: 'center',
         padding: '10px 16px',
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.7rem',
-        letterSpacing: '0.1em',
+        fontFamily: 'var(--font-heebo)',
+        fontSize: '0.85rem',
+        fontWeight: 600,
       }}>
-        SAMPLE PASSPORT — FICTIONAL ARTIST FOR ILLUSTRATION ONLY
+        Sample profile — a fictional artist, here to show you around.
       </div>
 
       {/* PASSPORT DOCUMENT — floats as a card on wide viewports, full-bleed on mobile */}
@@ -201,7 +215,7 @@ export default function PassportDemo() {
         maxWidth: '480px',
         margin: '0 auto',
       }}>
-        {/* LOCK stamp */}
+        {/* LOCK SHOW stamp */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -215,7 +229,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
           }}>
-            LOCK · BOOKABILITY PASSPORT
+            LOCK SHOW · BOOKABILITY PASSPORT
           </span>
         </div>
 
@@ -229,12 +243,14 @@ export default function PassportDemo() {
           color: 'var(--color-ink)',
           lineHeight: 1,
         }}>{artist.name}</h1>
+        {/* No Hebrew transliteration line: stage names stay Latin in both
+            languages (src/lib/demo.js language-purity law). */}
         <p style={{
           fontFamily: 'var(--font-heebo)',
           fontSize: '0.85rem',
           color: 'var(--color-tally-onlight)',
           margin: '4px 0 12px',
-        }}>{artist.nameHe}</p>
+        }}>Fictional artist — for demonstration only</p>
         <p style={{
           fontFamily: 'var(--font-space-mono)',
           fontSize: '0.65rem',
@@ -252,14 +268,17 @@ export default function PassportDemo() {
         {/* LIVE DRAW */}
         <div style={{ paddingTop: '28px', marginBottom: '24px' }}>
           <SectionHeader label="LIVE DRAW" title="Audience evidence from real events" />
+          {/* Warm sentence, normal case — mono-caps rule-strips are banned
+              on marketing surfaces (owner exhibit, 21 Jul) */}
           <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
+            fontFamily: 'var(--font-heebo)',
+            fontSize: '0.8rem',
+            fontStyle: 'italic',
             color: 'var(--color-tally-onlight)',
             margin: '6px 0 0',
+            lineHeight: 1.5,
           }}>
-            FIGURES SHOWN AS BAND — NO EXACT HEADCOUNT
+            Crowds appear as honest ranges — nobody can count a room to the person.
           </p>
           <div style={{ marginTop: '4px' }}>
             {drawUnits.map((u, i) => (
@@ -287,14 +306,17 @@ export default function PassportDemo() {
         {/* COMMUNITY — contextual only */}
         <div style={{ marginBottom: '24px' }}>
           <SectionHeader label="COMMUNITY" title="Audience signals" />
+          {/* Warm sentence, normal case — mono-caps rule-strips are banned
+              on marketing surfaces (owner exhibit, 21 Jul) */}
           <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
+            fontFamily: 'var(--font-heebo)',
+            fontSize: '0.8rem',
+            fontStyle: 'italic',
             color: 'var(--color-tally-onlight)',
             margin: '6px 0 0',
+            lineHeight: 1.5,
           }}>
-            CONTEXTUAL — NOT DRAW EVIDENCE
+            Background colour only — a following says who listens, not who shows up.
           </p>
           <div style={{ marginTop: '4px' }}>
             {communityUnits.map((u, i) => (
@@ -314,35 +336,6 @@ export default function PassportDemo() {
               <ProofUnitBlock key={i} unit={u} />
             ))}
           </div>
-        </div>
-
-        {/* PASSPORT FOOTER — firewall notice */}
-        <div style={{
-          borderTop: '2px solid var(--color-ink)',
-          paddingTop: '20px',
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
-            color: 'var(--color-tally-onlight)',
-            margin: '0 0 8px',
-            lineHeight: 1.7,
-          }}>
-            THIS PASSPORT SHOWS VERIFIED STRENGTHS ONLY.
-            NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE.
-            EVERY CLAIM CARRIES ITS VERIFICATION METHOD AND DATE.
-            AUDIENCE DRAW IS SHOWN AS A BAND — NEVER AN EXACT FIGURE.
-          </p>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.6rem',
-            letterSpacing: '0.08em',
-            color: 'var(--color-stamp-onlight)',
-            margin: 0,
-          }}>
-            LOCK · lock.show
-          </p>
         </div>
 
         {/* CTA */}
@@ -373,9 +366,11 @@ export default function PassportDemo() {
             Build your own Passport. Get verified. Share with booking managers.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
+            href={`${conversionHref({ page: 'passport-demo', placement: 'body' })}`}
             style={{
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
               padding: '12px 28px',
               backgroundColor: 'var(--color-stamp)',
               color: 'var(--color-ink)',
@@ -387,7 +382,7 @@ export default function PassportDemo() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel()}
           </a>
         </div>
       </div>
@@ -405,6 +400,6 @@ export default function PassportDemo() {
           }
         }
       `}</style>
-    </div>
+    </main>
   )
 }

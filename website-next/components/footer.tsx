@@ -3,10 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
 import { useLocale } from '@/lib/locale-context'
-import { DoorStamp } from '@/components/door-stamp'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
+import { SOCIAL, WHATSAPP_URL } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -25,7 +24,7 @@ function ConsentPrefsButton({ label }: { label: string }) {
       style={{
         display: 'block',
         marginTop: '2px',
-        padding: '0.4rem 0',
+        padding: '0.75rem 0',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
@@ -45,14 +44,14 @@ const FOOTER_LINKS = [
   {
     heading: 'FOR ARTISTS',
     links: [
-      { href: '/artists',     label: 'Why LOCK' },
+      { href: '/artists',     label: 'Why LOCK SHOW' },
       { href: '/radar',       label: 'Artist Radar' },
       { href: '/methodology', label: 'Methodology' },
       { href: '/pricing',     label: 'Pricing' },
     ],
   },
   {
-    heading: 'FOR BOOKERS',
+    heading: 'FOR BOOKING MANAGERS',
     links: [
       { href: '/bookers',       label: 'For Booking Managers' },
       { href: '/producers',     label: 'For Producers' },
@@ -79,10 +78,17 @@ function pageSlug(pathname: string | null): string {
 }
 
 export function Footer() {
-  const { messages } = useLocale()
+  const { messages, locale } = useLocale()
   const t = messages.footer
   const pathname = usePathname()
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=footer`
+  const slug = pageSlug(pathname)
+  // Central conversion helper — see lib/conversion.ts. Login and the shop
+  // link are deliberately NOT routed through it.
+  const signupHref = conversionHref({ page: slug, placement: 'footer' })
+  // Owner order 21 Jul: quiet footer link to the LOCK SHOW shop (top-nav slot waits
+  // until the store is live + stocked). Attribution law applies to every
+  // off-site CTA: source + per-page campaign + placement.
+  const shopHref = `https://shop.lock.show/?utm_source=site&utm_campaign=${slug}&utm_content=footer-shop`
 
   return (
     <footer
@@ -90,6 +96,10 @@ export function Footer() {
         backgroundColor: 'var(--color-night)',
         color: 'rgba(255,255,255,0.7)',
         padding: '56px max(24px, 4vw) 32px',
+        // T-97.1 dark-adjacency law: the footer is always night, so its top
+        // edge carries a structural seam — the boundary stays visible even
+        // when the preceding band is dark (image CTA bands, 404, ink CTAs).
+        borderTop: '1px solid #2a342d',
       }}
       aria-label="Site footer"
     >
@@ -109,7 +119,7 @@ export function Footer() {
           <div>
             <Link
               href="/"
-              aria-label="LOCK home"
+              aria-label="LOCK SHOW home"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -121,10 +131,23 @@ export function Footer() {
                 color: 'var(--color-paper)',
                 textDecoration: 'none',
                 marginBottom: '6px',
+                // ≥44px hit area (T-97 P1 tap targets)
+                minHeight: '44px',
+                padding: '4px 0',
               }}
             >
-              <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-              LOCK
+              {/* Official spotlight-lens symbol — same drawing as the favicon
+                  (owner logo-consistency ruling; master-lime = transparent
+                  variant for dark surfaces) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+                alt=""
+                width={36}
+                height={36}
+                style={{ display: 'block', flexShrink: 0 }}
+              />
+              LOCK SHOW
             </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -152,14 +175,14 @@ export function Footer() {
               flexShrink: 0,
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel(locale)}
           </a>
         </div>
 
         {/* Link columns */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(160px, 100%), 1fr))',
           gap: '32px',
           marginBottom: '48px',
         }}>
@@ -176,7 +199,7 @@ export function Footer() {
               </p>
               <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                 {links.map(({ href, label }) => (
-                  <li key={href} style={{ marginBottom: '4px' }}>
+                  <li key={href} style={{ marginBottom: 0 }}>
                     <Link
                       href={href}
                       style={{
@@ -185,13 +208,32 @@ export function Footer() {
                         color: 'rgba(243,245,239,0.7)',
                         textDecoration: 'none',
                         display: 'inline-block',
-                        padding: '0.4rem 0',
+                        minWidth: '44px',
+                        padding: '0.75rem 0',
                       }}
                     >
                       {label}
                     </Link>
                   </li>
                 ))}
+                {heading === 'LEARN MORE' && (
+                  <li style={{ marginBottom: 0 }}>
+                    <a
+                      href={shopHref}
+                      style={{
+                        fontFamily: 'var(--font-heebo)',
+                        fontSize: '0.875rem',
+                        color: 'rgba(243,245,239,0.7)',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                        minWidth: '44px',
+                        padding: '0.75rem 0',
+                      }}
+                    >
+                      Shop
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           ))}
@@ -213,7 +255,7 @@ export function Footer() {
                 { href: '/terms',         label: t.terms },
                 { href: '/accessibility', label: t.accessibility },
               ].map(({ href, label }) => (
-                <li key={href} style={{ marginBottom: '4px' }}>
+                <li key={href} style={{ marginBottom: 0 }}>
                   <Link
                     href={href}
                     style={{
@@ -222,14 +264,15 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '0.4rem 0',
+                      minWidth: '44px',
+                      padding: '0.75rem 0',
                     }}
                   >
                     {label}
                   </Link>
                 </li>
               ))}
-              <li style={{ marginBottom: '4px' }}>
+              <li style={{ marginBottom: 0 }}>
                 <ConsentPrefsButton label={t.consentPrefs} />
               </li>
             </ul>
@@ -248,7 +291,7 @@ export function Footer() {
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {SOCIAL.map(({ key, label, href }) => (
-                <li key={key} style={{ marginBottom: '4px' }}>
+                <li key={key} style={{ marginBottom: 0 }}>
                   <a
                     href={href}
                     target="_blank"
@@ -259,14 +302,18 @@ export function Footer() {
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
                       display: 'inline-block',
-                      padding: '0.4rem 0',
+                      minWidth: '44px',
+                      padding: '0.75rem 0',
                     }}
                   >
                     {label}
                   </a>
                 </li>
               ))}
-              <li style={{ marginBottom: '4px' }}>
+              {/* Footer contact rule (21 Jul): channel links only — no raw
+                  phone number or email address rendered in the footer. The
+                  contact page carries the full details. */}
+              <li style={{ marginBottom: 0 }}>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
@@ -277,26 +324,10 @@ export function Footer() {
                     color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
                     display: 'inline-block',
-                    padding: '0.4rem 0',
+                    padding: '0.75rem 0',
                   }}
                 >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-              </li>
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={`mailto:${EMAILS.hello}`}
-                  dir="ltr"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  {EMAILS.hello}
+                  Message LOCK SHOW on WhatsApp
                 </a>
               </li>
             </ul>
@@ -319,9 +350,9 @@ export function Footer() {
             margin: 0,
             lineHeight: 1.8,
           }}>
-            BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.
-            {' '}EVERY CLAIM SHOWS HOW IT WAS CHECKED. AUDIENCE SIZE ALWAYS SHOWN AS A RANGE.
-            {' '}THE DECISION ALWAYS STAYS WITH THE PERSON BOOKING.
+            The booking manager and the producer are two different people doing two different jobs — LOCK SHOW never mixes them up.
+            {' '}Every claim says how it was checked. Every crowd is an honest range, never a guess dressed up as a number.
+            {' '}The call is always yours.
           </p>
         </div>
 
@@ -340,7 +371,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
           </p>
           <Link
             href="/contact"
@@ -350,7 +381,9 @@ export function Footer() {
               letterSpacing: '0.08em',
               color: 'rgba(243,245,239,0.7)',
               textDecoration: 'none',
-              display: 'inline-block',
+              display: 'inline-flex',
+              alignItems: 'center',
+              minHeight: '44px',
               padding: '0.5rem 0',
             }}
           >

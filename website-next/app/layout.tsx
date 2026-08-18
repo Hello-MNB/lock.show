@@ -6,7 +6,8 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
+import { SAME_AS, CONTACT_POINTS } from '@/lib/social'
+import { SITE_URL, OG_DEFAULT_IMAGE } from '@/lib/site'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -21,11 +22,16 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property LOCK (544738110), stream LOCK App; env can override
+// GA4 — property LOCK SHOW (544738110), stream LOCK SHOW App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
-const SITE_URL = 'https://lock.show'
-const OG_IMAGE = `${SITE_URL}/og/og-default.png`
+// SITE_URL comes from lib/site.ts — the ONE place the canonical www origin
+// is declared (owner ruling D2). Do not re-declare a host string here.
+const OG_IMAGE = OG_DEFAULT_IMAGE
+// Square brand mark for Organization.logo — a real logo asset, not an OG card
+// (C9 fix). SVG is valid as an ImageObject URL per schema.org; this is the
+// self-contained spotlight-lens symbol on its ink background (1000×1000).
+const LOGO_URL = `${SITE_URL}/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg`
 
 // Next.js App Router viewport export
 export const viewport = {
@@ -37,25 +43,18 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'LOCK — Booking Proof for Independent Artists',
-    template: '%s | LOCK',
+    default: 'LOCK SHOW — Booking Proof for Independent Artists',
+    template: '%s | LOCK SHOW',
   },
   description:
     'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
-  keywords: [
-    'artist booking proof',
-    'live performance verification',
-    'booking manager',
-    'artist passport',
-    'אמרגן',
-    'אמן',
-    'LOCK',
-    'verified gig history',
-    'music industry verification',
-  ],
-  authors: [{ name: 'LOCK', url: SITE_URL }],
-  creator: 'LOCK',
-  publisher: 'LOCK',
+  // NO `keywords` meta: deprecated by every major engine (dead weight), and
+  // the removed list carried the WRONG actor noun (אמרגן = artist-side agent —
+  // LOCK SHOW's buyer is the מזמין הופעות; the site's own FAQ says so). C4 fix,
+  // authorized by the D2 execution-order metadata alignment.
+  authors: [{ name: 'LOCK SHOW', url: SITE_URL }],
+  creator: 'LOCK SHOW',
+  publisher: 'LOCK SHOW',
   robots: {
     index: true,
     follow: true,
@@ -72,13 +71,13 @@ export const metadata: Metadata = {
     // No alternateLocale: page bodies are EN-only today (locale toggle covers
     // nav/footer/consent copy only, not page content — T-84 HE-scope note).
     // Claiming he_IL here would overclaim translated content that doesn't exist.
-    siteName: 'LOCK',
+    siteName: 'LOCK SHOW',
     images: [
       {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'LOCK — Booking Proof for Independent Artists',
+        alt: 'LOCK SHOW — Booking Proof for Independent Artists',
         type: 'image/png',
       },
     ],
@@ -109,7 +108,7 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       description:
         'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
@@ -120,11 +119,11 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: OG_IMAGE,
+        url: LOGO_URL,
       },
       foundingLocation: {
         '@type': 'Place',
@@ -146,7 +145,13 @@ const jsonLd = {
         {
           '@type': 'ContactPoint',
           contactType: 'customer support',
-          telephone: WHATSAPP_E164,
+          // telephone REMOVED (owner, 17 Aug). A JSON-LD `telephone` field is the
+          // most machine-readable form a number can take — it is structured,
+          // labelled and trivially harvested at scale by the scrapers that build
+          // spam and voice-phishing lists. The WhatsApp route is still published
+          // to search and answer engines through the wa.me URL in `sameAs`, which
+          // is a link target rather than a bare number, so discoverability is kept
+          // and the harvestable field is not.
           areaServed: 'IL',
           availableLanguage: ['he', 'en'],
         },
@@ -159,13 +164,15 @@ const jsonLd = {
         })),
       ],
       description:
-        'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK SHOW provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#software`,
-      name: 'LOCK — Bookability Passport',
-      url: SITE_URL,
+      // url = where the APPLICATION actually lives today: the embedded SPA at
+      // /app on the www origin (C8 fix). Not the marketing homepage, and not
+      // app.lock.show — that migration is D3-gated and has not shipped.
+      url: `${SITE_URL}/app`,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
@@ -177,12 +184,15 @@ const jsonLd = {
       },
       // 'en' only — see WebSite node above for the same HE-scope note.
       inLanguage: ['en'],
+      // Offer text matches /pricing's actual published truth (C7 fix):
+      // artists free during the pilot, booking managers free always. No
+      // invented tiers, no "by arrangement" contradiction.
       offers: {
         '@type': 'Offer',
         price: '0',
-        priceCurrency: 'USD',
+        priceCurrency: 'ILS',
         description:
-          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
+          'Free during the pilot: artists build and publish their Passport at no cost while the closed pilot runs. Booking managers read Passports free, always. Post-pilot artist pricing is not set yet.',
       },
     },
   ],

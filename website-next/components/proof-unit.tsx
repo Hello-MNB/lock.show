@@ -4,7 +4,7 @@
 
 interface ProofUnitProps {
   claim: string          // e.g. "200–350" or "Self-managed touring"
-  context: string        // e.g. "Headline capacity, Zappa Club TLV, Feb 2025"
+  context: string        // e.g. "Headline capacity, Club Vela TLV, Feb 2025"
   method: string         // e.g. "TICKET EXPORT" or "OPERATOR-REVIEWED"
   reviewed: string       // e.g. "REVIEWED OCT 2025"
   isBand?: boolean       // true → render claim as BandPill style
@@ -20,7 +20,8 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
         marginBottom: '1.25rem',
       }}
     >
-      {/* Claim */}
+      {/* Claim — <bdi> so band ranges ("200–350") never visually reverse
+          in RTL (Hebrew) mode */}
       <div
         style={{
           fontFamily: isBand ? 'var(--font-space-mono)' : 'var(--font-archivo)',
@@ -31,7 +32,7 @@ export function ProofUnit({ claim, context, method, reviewed, isBand = false, no
           marginBottom: '0.25rem',
         }}
       >
-        {claim}
+        <bdi dir="ltr">{claim}</bdi>
       </div>
 
       {/* Context */}

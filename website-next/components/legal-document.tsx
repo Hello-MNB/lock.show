@@ -12,6 +12,7 @@
 
 import { useLocale } from '@/lib/locale-context'
 import { renderInline } from '@/lib/inline-markdown'
+import { Hero } from '@/components/hero'
 
 export interface LegalSection {
   heading: string
@@ -46,16 +47,16 @@ export function LegalDocument({ content }: { content: LegalContent }) {
         fontFamily: 'var(--font-heebo)',
       }}
     >
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 32px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+      {/* PAGE HEADER — compact legal variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" legal align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.7rem',
             letterSpacing: '0.12em',
-            color: 'var(--color-stamp)',
+            color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             {t.metaLabel}
           </p>
@@ -64,14 +65,14 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             fontSize: 'clamp(1.9rem, 5vw, 2.9rem)',
             lineHeight: 1.1,
             letterSpacing: '-0.02em',
-            margin: '0 0 16px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             {t.title}
           </h1>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.8rem',
-            color: 'var(--color-tally)',
+            color: 'var(--color-tally-onlight)',
             fontWeight: 700,
             margin: 0,
           }}>
@@ -80,7 +81,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
           {t.taskNote && (
             <p style={{
               fontSize: '0.85rem',
-              color: 'var(--color-tally)',
+              color: 'var(--color-tally-onlight)',
               marginTop: '10px',
               fontStyle: 'italic',
               lineHeight: 1.6,
@@ -90,7 +91,7 @@ export function LegalDocument({ content }: { content: LegalContent }) {
             </p>
           )}
         </div>
-      </section>
+      </Hero>
 
       {/* DRAFT NOTICE */}
       <section style={{ padding: '32px 24px 0' }}>
@@ -138,14 +139,14 @@ export function LegalDocument({ content }: { content: LegalContent }) {
                 </h2>
               )}
               {s.paragraphs?.map((p, j) => (
-                <p key={j} style={{ fontSize: '0.925rem', color: 'var(--color-tally)', lineHeight: 1.7, margin: '0 0 10px' }}>
+                <p key={j} style={{ fontSize: '0.925rem', color: 'var(--color-tally-onlight)', lineHeight: 1.7, margin: '0 0 10px' }}>
                   {renderInline(p)}
                 </p>
               ))}
               {s.bullets && (
                 <ul style={{ margin: '8px 0 0', paddingInlineStart: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {s.bullets.map((b, k) => (
-                    <li key={k} style={{ fontSize: '0.925rem', color: 'var(--color-tally)', lineHeight: 1.7 }}>
+                    <li key={k} style={{ fontSize: '0.925rem', color: 'var(--color-tally-onlight)', lineHeight: 1.7 }}>
                       {renderInline(b)}
                     </li>
                   ))}

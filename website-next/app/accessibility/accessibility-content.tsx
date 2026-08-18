@@ -12,15 +12,22 @@ import { LegalDocument, type LegalContent } from '@/components/legal-document'
 const content: LegalContent = {
   he: {
     metaLabel: 'משפטי · נגישות',
-    title: 'הצהרת נגישות — LOCK',
+    title: 'הצהרת נגישות — LOCK SHOW',
     versionLine: 'טיוטה · גרסה 0.1 · 8.7.2026',
-    taskNote: 'לפי חוק שוויון זכויות לאנשים עם מוגבלות ותקנותיו + ת״י 5568 (מבוסס WCAG 2.0) ברמה AA. לעדכן לאחר מעבר-הנגשה בפועל (משימה #27).',
+    // taskNote (internal dev note) REMOVED from the visible page, following the
+    // precedent already set on /terms. It published an internal task reference
+    // ("task #27") on a LIVE public legal page — verified on www.lock.show — which is
+    // the same class of defect as the "Languages: Hebrew · English" spec line the
+    // owner struck from /contact: internal notes are not public copy. The
+    // draft-review banner below stays, and the legal body is unchanged: the
+    // statute references remain in the document text where they carry meaning.
+
     draftNotice: 'טיוטה בבדיקת יועץ משפטי — נוסח לא סופי',
     sections: [
       {
         heading: 'המחויבות שלנו',
         paragraphs: [
-          'LOCK פועל להנגיש את השירות לכלל המשתמשים, לרבות אנשים עם מוגבלות, בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע״ג-2013, ולתקן הישראלי ת״י 5568 ברמה AA.',
+          'LOCK SHOW פועל להנגיש את השירות לכלל המשתמשים, לרבות אנשים עם מוגבלות, בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע״ג-2013, ולתקן הישראלי ת״י 5568 ברמה AA.',
         ],
       },
       {
@@ -53,15 +60,14 @@ const content: LegalContent = {
   },
   en: {
     metaLabel: 'LEGAL · ACCESSIBILITY',
-    title: 'Accessibility Statement — LOCK',
+    title: 'Accessibility Statement — LOCK SHOW',
     versionLine: 'Draft · v0.1 · 8 Jul 2026',
-    taskNote: 'Per the Equal Rights for Persons with Disabilities Law and its regulations, plus Israeli Standard SI 5568 (based on WCAG 2.0), Level AA. To be updated after the accessibility remediation pass is complete (task #27).',
     draftNotice: 'Draft under legal review — not final',
     sections: [
       {
         heading: 'Our Commitment',
         paragraphs: [
-          'LOCK is working to make the service accessible to all users, including people with disabilities, in accordance with the Equal Rights for Persons with Disabilities Regulations (Service Accessibility Adjustments), 5773-2013, and Israeli Standard SI 5568, Level AA.',
+          'LOCK SHOW is working to make the service accessible to all users, including people with disabilities, in accordance with the Equal Rights for Persons with Disabilities Regulations (Service Accessibility Adjustments), 5773-2013, and Israeli Standard SI 5568, Level AA.',
         ],
       },
       {

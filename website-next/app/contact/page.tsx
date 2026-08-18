@@ -1,12 +1,17 @@
 ﻿import type { Metadata } from 'next'
-import WaitlistForm from '../../components/waitlist-form'
-import { APP_URL } from '@/lib/app-url'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
+import { localeAlternates } from '@/lib/site'
+
+import { Hero } from '@/components/hero'
+import ContactForm from '@/components/contact-form'
+import { ContactChannels } from '@/components/contact-channels'
+import { ContactEyebrow, ContactH1, ContactLead, ContactFormHeading } from '@/components/contact-hero'
+import { conversionHref, conversionLabel } from '@/lib/conversion'
+
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/contact' },
+  alternates: localeAlternates('/contact'),
   title: 'Contact — Get in Touch',
-  description: 'LOCK is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
+  description: 'LOCK SHOW is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }
 
 const lookingFor = [
@@ -19,50 +24,47 @@ const lookingFor = [
 const contactDetails = [
   { label: 'Location', value: 'Tel Aviv, Israel' },
   { label: 'Stage', value: 'Closed Beta 2026' },
-  { label: 'Languages', value: 'Hebrew · English' },
+  // 'Languages: Hebrew · English' REMOVED (owner, 17 Aug): a technical note,
+  // not marketing copy. The site already announces its languages by BEING in
+  // them — the locale toggle is the affordance, a spec line is not.
 ]
 
 export default function Contact() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* PAGE HEADER — compact variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
-          <p style={{
+          <ContactEyebrow style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: '0.75rem',
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
-          }}>
-            CONTACT · GET IN TOUCH
-          </p>
-          <h1 style={{
+            marginBottom: 'var(--hero-gap-eyebrow)',
+          }} />
+          <ContactH1 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
             fontWeight: 400,
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
-          }}>
-            Questions? Ideas? Collaboration?
-          </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            LOCK is in closed beta. We always want to hear from artists, booking managers, and producers.
-          </p>
+            margin: '0 0 var(--hero-gap-h1)',
+          }} />
+          <ContactLead style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }} />
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* CONTACT GRID */}
-      <section style={{ padding: '64px 24px 80px' }}>
+      {/* container-contrast law: white body after the paper page header */}
+      <section style={{ padding: '64px 24px 80px', backgroundColor: '#ffffff' }}>
         <div
           className="contact-grid"
           style={{
-            maxWidth: '1120px',
+            maxWidth: '1100px',
             margin: '0 auto',
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
@@ -73,21 +75,19 @@ export default function Contact() {
 
           {/* FORM COLUMN */}
           <div>
-            <p style={{
+            <ContactFormHeading style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
               letterSpacing: '0.12em',
               color: 'var(--color-tally-onlight)',
               textTransform: 'uppercase',
               marginBottom: '24px',
-            }}>
-              SEND A MESSAGE
-            </p>
+            }} />
 
             {/* First-party waitlist capture — writes to waitlist_signup
                 (migration 026; write-only for the public, operator-only read).
                 No Formspree, no third parties — matching the promise below. */}
-            <WaitlistForm />
+            <ContactForm />
           </div>
 
           {/* INFO COLUMN */}
@@ -137,48 +137,9 @@ export default function Contact() {
                 ))}
               </div>
 
-              {/* Direct channels */}
+              {/* Direct channels — icon-first, no plain-text phone number */}
               <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(10,13,11,0.08)' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    backgroundColor: 'var(--color-night)',
-                    color: 'var(--color-paper)',
-                    borderRadius: 'var(--radius-sm)',
-                    textDecoration: 'none',
-                    marginBottom: '14px',
-                  }}
-                >
-                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                    WHATSAPP
-                  </span>
-                  <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-                <div style={{ display: 'flex', gap: '18px' }}>
-                  {SOCIAL.map(({ key, label, href }) => (
-                    <a
-                      key={key}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontFamily: 'var(--font-space-mono)',
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.06em',
-                        color: 'var(--color-tally-onlight)',
-                        textDecoration: 'none',
-                      }}
-                    >
-                      {label}
-                    </a>
-                  ))}
-                </div>
+                <ContactChannels />
               </div>
             </div>
 
@@ -230,8 +191,10 @@ export default function Contact() {
       </section>
 
       {/* CTA BAND */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section style={{
-        backgroundColor: 'var(--color-night)',
+        backgroundColor: 'var(--color-ink)',
         color: 'var(--color-paper)',
         padding: '56px 24px',
         textAlign: 'center',
@@ -246,16 +209,21 @@ export default function Contact() {
             Ready to start without waiting?
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '28px', fontSize: '1rem', lineHeight: 1.6 }}>
-            Registration is open — free for artists during the pilot.
+            {/* Was: "Registration is open — free for artists during the pilot."
+                Both halves were false in waitlist mode — no account is created at
+                submit, and §10.1 replaces "free in the pilot" with "beta access
+                opens in waves" unless a current OfferVersion approves a free
+                offer. Found by the visual-baseline review, not by a gate. */}
+            Beta access opens in waves — tell us how you work and we&rsquo;ll invite you.
           </p>
           <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
+            href={`${conversionHref({ page: 'contact', placement: 'body' })}`}
             style={{
               display: 'inline-block',
               padding: '14px 32px',
               backgroundColor: 'transparent',
               color: 'var(--color-paper)',
-              border: '1px solid rgba(243,245,239,0.35)',
+              border: '1px solid var(--ghost-border-on-dark)',
               fontFamily: 'var(--font-space-mono)',
               fontWeight: 700,
               fontSize: '0.75rem',
@@ -264,7 +232,7 @@ export default function Contact() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            {conversionLabel()}
           </a>
         </div>
       </section>

@@ -9,7 +9,7 @@
  * Vocabulary note: the Hebrew source uses "Mirror" for the artist's private
  * view; that word is kept verbatim in the Hebrew (it's a legal draft, flagged
  * elsewhere), but the English translation below says "the artist's private
- * view" instead, per the LOCK vocabulary canon.
+ * view" instead, per the LOCK SHOW vocabulary canon.
  */
 
 import { LegalDocument, type LegalContent } from '@/components/legal-document'
@@ -17,21 +17,22 @@ import { LegalDocument, type LegalContent } from '@/components/legal-document'
 const content: LegalContent = {
   he: {
     metaLabel: 'משפטי · תנאי שימוש',
-    title: 'תנאי שימוש — LOCK',
+    title: 'תנאי שימוש — LOCK SHOW',
     versionLine: 'טיוטה לבדיקת עו״ד — אינה ייעוץ משפטי. גרסה 0.1 · 8.7.2026',
-    taskNote: 'לאשר מול היועץ המשפטי לפני פרסום (משימה #23).',
+    // taskNote (internal dev note, "משימה #23") removed from the visible page —
+    // the draft-review banner below stays; the legal body is unchanged.
     draftNotice: 'טיוטה בבדיקת יועץ משפטי — נוסח לא סופי',
     sections: [
       {
         heading: '1. השירות',
         paragraphs: [
-          'LOCK מספק תצוגת-ראיות מתויגת-שיטה לגבי אמנים ("פספורט" ציבורי לקונה; תצוגת אמן פרטית), לצורך הפחתת-סיכון בהחלטות הזמנה.',
+          'LOCK SHOW מספק תצוגת-ראיות מתויגת-שיטה לגבי אמנים ("פספורט" ציבורי לקונה; תצוגת אמן פרטית), לצורך הפחתת-סיכון בהחלטות הזמנה.',
         ],
       },
       {
         heading: '2. הבהרה מהותית — חשוב — אין ציון, אין דירוג, אין הבטחה',
         paragraphs: [
-          '**LOCK אינו מספק ציון/אחוז/דירוג/חיזוי של "היתכנות-הזמנה".** המידע מוצג כ**ראיות מתויגות בלבד** (bands + binaries עם תוויות-שיטה). LOCK **אינו מבטיח** ביצועי-אמן, מכירות-כרטיסים, נוכחות-קהל או תוצאה עסקית כלשהי. ההחלטה וההסתמכות — על אחריות המשתמש בלבד. "check, don\'t trust".',
+          '**LOCK SHOW אינו מספק ציון/אחוז/דירוג/חיזוי של "היתכנות-הזמנה".** המידע מוצג כ**ראיות מתויגות בלבד** (bands + binaries עם תוויות-שיטה). LOCK SHOW **אינו מבטיח** ביצועי-אמן, מכירות-כרטיסים, נוכחות-קהל או תוצאה עסקית כלשהי. ההחלטה וההסתמכות — על אחריות המשתמש בלבד. "check, don\'t trust".',
         ],
       },
       {
@@ -55,7 +56,7 @@ const content: LegalContent = {
       {
         heading: '6. קניין רוחני',
         paragraphs: [
-          'כל הזכויות בשירות, בעיצוב ובקאנון שמורות ל-LOCK.',
+          'כל הזכויות בשירות, בעיצוב ובקאנון שמורות ל-LOCK SHOW.',
         ],
       },
       {
@@ -86,21 +87,22 @@ const content: LegalContent = {
   },
   en: {
     metaLabel: 'LEGAL · TERMS OF USE',
-    title: 'Terms of Use — LOCK',
+    title: 'Terms of Use — LOCK SHOW',
     versionLine: 'Draft for legal review — not legal advice. v0.1 · 8 Jul 2026',
-    taskNote: 'To be confirmed with legal counsel before publishing (task #23).',
+    // taskNote (internal dev note, "task #23") removed from the visible page —
+    // the draft-review banner below stays; the legal body is unchanged.
     draftNotice: 'Draft under legal review — not final',
     sections: [
       {
         heading: '1. The Service',
         paragraphs: [
-          'LOCK provides method-labelled evidence about artists — a public "Passport" for buyers and the artist\'s private view — for the purpose of reducing risk in booking decisions.',
+          'LOCK SHOW provides method-labelled evidence about artists — a public "Passport" for buyers and the artist\'s private view — for the purpose of reducing risk in booking decisions.',
         ],
       },
       {
         heading: '2. Material Clarification — No Score, No Ranking, No Guarantee',
         paragraphs: [
-          '**LOCK does not provide a score, percentage, ranking, or prediction of "bookability."** Information is presented only as **labelled evidence** (bands and binaries with method labels). LOCK **does not guarantee** artist performance, ticket sales, audience attendance, or any business outcome. Reliance on the information, and any decision made from it, is the user\'s sole responsibility. "Check, don\'t trust."',
+          '**LOCK SHOW does not provide a score, percentage, ranking, or prediction of "bookability."** Information is presented only as **labelled evidence** (bands and binaries with method labels). LOCK SHOW **does not guarantee** artist performance, ticket sales, audience attendance, or any business outcome. Reliance on the information, and any decision made from it, is the user\'s sole responsibility. "Check, don\'t trust."',
         ],
       },
       {
@@ -124,7 +126,7 @@ const content: LegalContent = {
       {
         heading: '6. Intellectual Property',
         paragraphs: [
-          'All rights in the service, its design, and its canon are reserved to LOCK.',
+          'All rights in the service, its design, and its canon are reserved to LOCK SHOW.',
         ],
       },
       {

@@ -1,4 +1,4 @@
-# LOCK Marketing Site — Deploy Guide
+# LOCK SHOW Marketing Site — Deploy Guide
 
 **Project:** `lock.show` — Next.js static export  
 **Repo:** `C:\Users\user\LOCK` (GitHub)  
@@ -43,12 +43,17 @@ git push origin main
 ## Step 2: Create new Vercel project for lock.show
 
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import from GitHub → select the LOCK repo
+2. Import from GitHub → select the LOCK SHOW repo
 3. **Root Directory** → set to `website-next/` ← CRITICAL
 4. Framework: Next.js (auto-detected)
 5. Build Command: `npm run build` (default — do not override)
 6. Output Directory: `out` (auto-detected from next.config.ts export)
-7. Node.js version: 20.x
+7. Node.js version: 22.x — must match `package.json` `engines.node` (`22.x`) and
+   `website-next/.nvmrc`. Authority: the Runtime ADR ruling recorded in
+   B4-40.20 (BUILD-STATE, RELEASE & DECISION REGISTER) — 22.x is the
+   lowest-drift target because it is the machine-enforced one. Verified by
+   execution on Node 22: `npx next build` exits 0 and generates 20 static
+   pages. This is a RUNTIME target, not a release claim.
 8. Environment variables: **none needed** (marketing site has no Supabase/API keys)
 9. Click Deploy
 

@@ -1,18 +1,32 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
-import { DoorStamp } from '@/components/door-stamp'
+
+import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/bookers' },
+  alternates: localeAlternates('/bookers'),
   title: 'For Booking Managers — Book With Context, Not Guesswork',
   description:
-    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
+    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK SHOW Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
   openGraph: {
     url: '/bookers',
-    title: 'For Booking Managers | LOCK',
+    title: 'For Booking Managers | LOCK SHOW',
     description:
       'Book with context, not guesswork. Checked evidence in two minutes — free for booking managers, always.',
     type: 'website',
+    images: [
+      {
+        url: '/og/lockshow-og-professional-buyers-v1.png',
+        width: 1200,
+        height: 630,
+        alt: 'LOCK SHOW — Book with context, not guesswork. Recipient-safe artist context for venue, festival, club and promoter decisions.',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    images: ['/og/lockshow-og-professional-buyers-v1.png'],
   },
 }
 
@@ -38,7 +52,7 @@ const passportFeatures = [
   {
     label: 'DRAW AS A BAND, NOT A BOAST',
     title: 'A range the evidence can actually carry.',
-    body: 'Audience draw appears as a band — 60–100, 100–200 — not a flattering number someone typed into a bio. It’s a quieter claim, and that’s exactly why you can lean on it.',
+    body: 'Audience draw appears as a band — ⁦60–100⁩, ⁦100–200⁩ — not a flattering number someone typed into a bio. It’s a quieter claim, and that’s exactly why you can lean on it.',
   },
   {
     label: 'HOW IT WAS CHECKED',
@@ -53,7 +67,7 @@ const passportFeatures = [
   {
     label: 'NO ACCOUNT, EVER',
     title: 'One link, two minutes, zero friction.',
-    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK is free for booking managers, always.',
+    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK SHOW is free for booking managers, always.',
   },
 ]
 
@@ -61,21 +75,17 @@ export default function BookersPage() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         style={{
-          overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-manager-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
-        {/* Stamp watermarks */}
+        {/* Spotlight-lens watermarks — official symbol only (owner
+            logo-consistency ruling: one drawing everywhere) */}
         <div
           aria-hidden="true"
           style={{
@@ -83,12 +93,18 @@ export default function BookersPage() {
             top: '-15px',
             right: '-55px',
             transform: 'rotate(-11deg)',
-            color: 'var(--color-paper)',
             opacity: 0.07,
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={310} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-white.svg"
+            alt=""
+            width={280}
+            height={280}
+            style={{ display: 'block' }}
+          />
         </div>
         <div
           aria-hidden="true"
@@ -97,13 +113,20 @@ export default function BookersPage() {
             bottom: '-20px',
             left: '-70px',
             transform: 'rotate(7deg)',
-            color: 'var(--color-paper)',
             opacity: 0.03,
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={240} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-white.svg"
+            alt=""
+            width={220}
+            height={220}
+            style={{ display: 'block' }}
+          />
         </div>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
             style={{
@@ -112,7 +135,7 @@ export default function BookersPage() {
               letterSpacing: '0.14em',
               color: 'var(--color-stamp)',
               textTransform: 'uppercase',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             FOR BOOKING MANAGERS
@@ -125,7 +148,7 @@ export default function BookersPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             Book with context,
@@ -140,8 +163,8 @@ export default function BookersPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.72)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             An unfamiliar artist wants your stage. Before your name goes on
@@ -196,7 +219,8 @@ export default function BookersPage() {
             FREE FOR BOOKING MANAGERS — ALWAYS. NO ACCOUNT, NO SIGNUP.
           </p>
         </div>
-      </section>
+        </div>
+      </Hero>
 
       {/* ── THE RISK ─────────────────────────────────────── */}
       <section
@@ -206,7 +230,7 @@ export default function BookersPage() {
           borderBottom: '1px solid var(--color-mist)',
         }}
       >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -233,7 +257,7 @@ export default function BookersPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
               gap: '1px',
               background: 'rgba(10,13,11,0.08)',
               border: '1px solid rgba(10,13,11,0.08)',
@@ -245,12 +269,17 @@ export default function BookersPage() {
                 className="m-flat"
                 style={{ background: 'var(--color-paper)', padding: 'clamp(1.25rem, 3vw, 2rem)' }}
               >
+                {/* Decorative index number — aria-hidden (the heading below
+                    already conveys the risk) AND at full opacity: the
+                    previous halved opacity dropped var(--color-tally-onlight)
+                    from its designed ~5.5:1 to ~2.1:1, a WCAG 1.4.3 fail for
+                    sighted low-vision users regardless of the AT exemption. */}
                 <span
+                  aria-hidden="true"
                   style={{
                     fontFamily: 'var(--font-space-mono), monospace',
                     fontSize: '0.75rem',
                     color: 'var(--color-tally-onlight)',
-                    opacity: 0.5,
                     display: 'block',
                     marginBottom: '0.75rem',
                   }}
@@ -285,13 +314,14 @@ export default function BookersPage() {
 
       {/* ── EVIDENCE ANCHOR IMAGE ────────────────────────── */}
       {/* TODO: swap for a lockshow-atmosphere-* scene if a better booker-desk shot arrives from Codex's Drive */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
-          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) 0',
+          background: '#ffffff',
+          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw) clamp(3rem, 8vw, 6rem)',
         }}
       >
-        <figure style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <figure style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div
             style={{
               borderRadius: '16px',
@@ -303,7 +333,10 @@ export default function BookersPage() {
             <img
               src="/lockshow-evidence-review.webp"
               alt="A booking manager reading an artist's checked evidence before saying yes"
+              width={1672}
+              height={941}
               style={{
+                height: 'auto',
                 display: 'block',
                 width: '100%',
                 maxHeight: '440px',
@@ -329,7 +362,7 @@ export default function BookersPage() {
 
       {/* ── WHAT YOU SEE IN THE PASSPORT ─────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -401,7 +434,7 @@ export default function BookersPage() {
         </div>
       </section>
 
-      {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
+      {/* ── WHAT LOCK SHOW DOESN'T PROMISE ────────────────── */}
       <section style={{
         background: 'var(--color-night)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
@@ -429,7 +462,7 @@ export default function BookersPage() {
               marginBottom: '1rem',
             }}
           >
-            LOCK makes no promises. That&apos;s the point.
+            LOCK SHOW makes no promises. That&apos;s the point.
           </h2>
           <p
             style={{
@@ -440,7 +473,7 @@ export default function BookersPage() {
               marginBottom: '2rem',
             }}
           >
-            LOCK will never tell you an artist will fill your floor. No score,
+            LOCK SHOW will never tell you an artist will fill your floor. No score,
             no ranking, no prediction — only what happened, how it was checked,
             and when. You read it in two minutes. The decision stays yours.
           </p>
@@ -492,7 +525,7 @@ export default function BookersPage() {
               lineHeight: 1.6,
             }}
           >
-            Open it. See the room before you say yes. LOCK is free for booking
+            Open it. See the room before you say yes. LOCK SHOW is free for booking
             managers — always. No signup, no account, no catch.
           </p>
           <Link

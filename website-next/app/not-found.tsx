@@ -6,7 +6,16 @@
 // router mounts (src/main.jsx). Same-origin only — the script never uses a
 // caller-controlled host, only location.pathname/search of THIS origin.
 // Every other path gets a warm site 404 instead of Next's bare default.
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+// A 404 must never be an indexation target (C27 fix). App Router supports a
+// static `metadata` export on not-found.tsx — this renders
+// <meta name="robots" content="noindex, nofollow"> into the built out/404.html.
+export const metadata: Metadata = {
+  title: 'Page not found',
+  robots: { index: false, follow: false },
+}
 
 const BOUNCE = `(function(){var p=location.pathname;
 if(p.indexOf('/app/')===0||p==='/app'){
@@ -44,8 +53,19 @@ export default function NotFound() {
         <p style={{ maxWidth: 420, opacity: 0.75 }}>
           The address you opened doesn&apos;t exist here. The proof you&apos;re after is one click away.
         </p>
-        <Link href="/" style={{ textDecoration: 'underline', fontWeight: 600 }}>
-          Back to LOCK
+        <Link
+          href="/"
+          style={{
+            textDecoration: 'underline',
+            fontWeight: 600,
+            // ≥44px hit area (T-97 P1)
+            display: 'inline-flex',
+            alignItems: 'center',
+            minHeight: '44px',
+            padding: '0.5rem 0.75rem',
+          }}
+        >
+          Back to LOCK SHOW
         </Link>
       </main>
     </>

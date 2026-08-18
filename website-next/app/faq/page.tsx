@@ -1,8 +1,11 @@
 ﻿import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
+
+import { Hero } from '@/components/hero'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/faq' },
-  title: 'FAQ — What LOCK Does (and Doesn\'t) Promise',
+  alternates: localeAlternates('/faq'),
+  title: 'FAQ — What LOCK SHOW Does (and Doesn\'t) Promise',
   description: 'Straight answers on how verification works, what a Passport shows, and why there\'s no score, rank, or guarantee — ever.',
 }
 
@@ -11,12 +14,12 @@ const faqs = [
     category: 'WHAT IT IS',
     questions: [
       {
-        q: 'What is LOCK?',
-        a: 'LOCK helps independent artists prove their live draw before a booking manager ever calls. Instead of a bio or a follower count, you get a Passport — a record of what actually happened on stage, with each claim showing how it was checked.',
+        q: 'What is LOCK SHOW?',
+        a: 'LOCK SHOW helps independent artists prove their live draw before a booking manager ever calls. Instead of a bio or a follower count, you get a Passport — a record of what actually happened on stage, with each claim showing how it was checked.',
       },
       {
         q: 'What problem does it solve?',
-        a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
+        a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK SHOW gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
       },
       {
         q: 'What is a Bookability Passport?',
@@ -32,19 +35,19 @@ const faqs = [
     category: 'WHO IT IS FOR',
     questions: [
       {
-        q: 'Who is an "artist" in LOCK?',
-        a: 'Any live performer — solo musician, DJ, band, comedian, spoken-word artist. LOCK is artist-type-agnostic. The system adapts to the artist\'s context rather than assuming a specific genre or format.',
+        q: 'Who is an "artist" in LOCK SHOW?',
+        a: 'Any live performer — solo musician, DJ, band, comedian, spoken-word artist. LOCK SHOW is artist-type-agnostic. The system adapts to the artist\'s context rather than assuming a specific genre or format.',
       },
       {
         q: 'Who is a "booking manager" (mazmin hofa\'ot)?',
-        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. LOCK is free for booking managers — no account required to view a Passport.',
+        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. LOCK SHOW is free for booking managers — no account required to view a Passport.',
       },
       {
         q: 'Who is a "producer" (mefik)?',
-        a: 'A producer (mefik) is the person who ran a specific event — took financial risk, sold tickets, managed the venue. They confirm the gig record via a bounded magic link. A producer is NOT the same as a booking manager. These are distinct roles and are never merged in this system.',
+        a: 'A producer (mefik) is the person who actually ran that night — took the financial risk, sold the tickets, managed the venue. They confirm the gig with one tap on a private link. A producer is a different person doing a different job than a booking manager, and LOCK SHOW never mixes the two up.',
       },
       {
-        q: 'Is LOCK free for booking managers?',
+        q: 'Is LOCK SHOW free for booking managers?',
         a: 'Yes. A booking manager never needs to create an account, sign up, or pay to view a Passport. They receive a link, open it in a browser, and see the evidence.',
       },
       {
@@ -62,15 +65,15 @@ const faqs = [
       },
       {
         q: 'What is a "magic link"?',
-        a: 'A magic link is a private one-time link LOCK creates for a specific gig. The artist sends it to the producer via WhatsApp, SMS, or email. The link shows only that gig record. The producer can confirm, flag, or decline. The link expires after use and can\'t be re-used to reach anything else.',
+        a: 'A magic link is a private one-time link LOCK SHOW creates for a specific gig. The artist sends it to the producer via WhatsApp, SMS, or email. The link shows only that gig record. The producer can confirm, flag, or decline. The link expires after use and can\'t be re-used to reach anything else.',
       },
       {
         q: 'Can a claim appear on the Passport without producer confirmation?',
-        a: 'Yes — if supported by another eligible method, such as a ticket export reviewed by a LOCK operator. The method label will reflect the actual verification source. A claim with a weaker method label is still visible to the booking manager with the full label shown.',
+        a: 'Yes — if supported by another eligible method, such as a ticket export reviewed by a LOCK SHOW operator. The method label will reflect the actual verification source. A claim with a weaker method label is still visible to the booking manager with the full label shown.',
       },
       {
         q: 'Who reviews ticket export documents?',
-        a: 'Submitted documents run through LOCK\'s automated review pipeline, which reads the document and assigns the method label the evidence actually supports. During the current beta the founding team keeps an eye on every result before it stands.',
+        a: 'Ticket export documents are read and matched to the right label automatically. During this early beta, the founding team also double-checks every result by hand before it goes live.',
       },
       {
         q: 'Can an artist remove a claim from their Passport?',
@@ -83,19 +86,19 @@ const faqs = [
     questions: [
       {
         q: 'What is a BandPill?',
-        a: 'A BandPill is the way audience draw is expressed on the Passport — as a text range (e.g. "70–150") rather than an exact number. This is by design. An exact figure implies precision that live attendance data rarely supports. A band is honest about what can actually be known. There is no fill bar, no gauge, and no visual representation of the number as a fraction of anything.',
+        a: 'Audience draw on a Passport always shows as a range, like ⁦70–150⁩, instead of one exact number. That\'s on purpose — nobody can count a room to the person, and pretending otherwise would be dishonest. It\'s just plain text — no bars, no dials, nothing dressed up to look more precise than it is.',
       },
       {
         q: 'Why does every claim show a date?',
-        a: 'Evidence ages. A sold-out show in January 2026 carries different weight than one from 2022. LOCK shows the review date and the period of the evidence so a booking manager can assess relevance to their current decision.',
+        a: 'Evidence ages. A sold-out show in January 2026 carries different weight than one from 2022. LOCK SHOW shows the review date and the period of the evidence so a booking manager can assess relevance to their current decision.',
       },
       {
         q: 'What does it mean if a Passport section is missing?',
-        a: 'If a domain (e.g. streaming context) doesn\'t appear on a Passport, it means either no verified claim exists, or the artist chose not to publish it. LOCK never shows "developing" or "missing" or any weakness indicator on the public Passport. Omission is the policy — not a placeholder.',
+        a: 'If a domain (e.g. streaming context) doesn\'t appear on a Passport, it means either no verified claim exists, or the artist chose not to publish it. LOCK SHOW never shows "developing" or "missing" or any weakness indicator on the public Passport. Omission is the policy — not a placeholder.',
       },
       {
-        q: 'What does "LOCK doesn\'t guarantee anything" mean?',
-        a: 'LOCK provides method-labelled evidence. It does not predict, guarantee, or imply that an artist will fill a floor, sell tickets, or perform to any specific outcome. Booking decisions remain entirely with the booking manager. Evidence is not a guarantee.',
+        q: 'What does "LOCK SHOW doesn\'t guarantee anything" mean?',
+        a: 'LOCK SHOW provides method-labelled evidence. It does not predict, guarantee, or imply that an artist will fill a floor, sell tickets, or perform to any specific outcome. Booking decisions remain entirely with the booking manager. Evidence is not a guarantee.',
       },
     ],
   },
@@ -104,27 +107,46 @@ const faqs = [
     questions: [
       {
         q: 'Is my data stored before I give consent?',
-        a: 'No. Real data is not stored before explicit, contextual consent. Consents are separate — account terms, data connection, public publication, and counterparty-name disclosure are each separate consent events. They are never pre-checked or bundled.',
+        a: 'No. Nothing real gets stored before you\'ve clearly said yes to it. And every yes is its own — agreeing to the account terms doesn\'t quietly agree to publishing, or to naming who confirmed your show. Nothing comes pre-checked, and nothing gets bundled together.',
       },
       {
         q: 'Can booking managers see my exact audience numbers?',
-        a: 'No. Exact figures are never shown on the public Passport — only bands. The internal Radar may hold a more precise estimate for operational purposes, but this is never surfaced to buyers.',
+        a: 'No. Exact figures are never shown on the public Passport — only honest ranges. Your own private Radar may keep the more precise estimate you logged, but that stays with you — a booking manager never sees it.',
       },
       {
         q: 'Is my contact information visible on my Passport?',
-        a: 'No. Artist contact details are never accessible via a public session. An interested booking manager can send an availability request through the Passport; LOCK routes it to the artist without exposing contact information.',
+        a: 'No. Your contact details never appear on your Passport — anyone opening the link simply can\'t see them. An interested booking manager can send an availability request through the Passport; LOCK SHOW passes it to you without ever revealing your contact information.',
       },
     ],
   },
 ]
 
+// FAQPage structured data — same pattern as /pricing. Bidi isolate marks
+// (U+2066/U+2069, used for RTL-safe ranges in the visible copy) are stripped
+// so the schema text stays clean.
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.flatMap((section) =>
+    section.questions.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a.replace(/[⁦⁩]/g, '') },
+    })),
+  ),
+}
+
 export default function FAQ() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
-      {/* PAGE HEADER */}
-      <section style={{ padding: '72px 24px 56px', borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* PAGE HEADER — compact variant (T-97 hero system: styles/hero.css) */}
+      <Hero variant="compact" align="start" style={{ borderBottom: '1px solid rgba(10,13,11,0.08)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           <p style={{
             fontFamily: 'var(--font-space-mono)',
@@ -132,7 +154,7 @@ export default function FAQ() {
             letterSpacing: '0.12em',
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
-            marginBottom: '16px',
+            marginBottom: 'var(--hero-gap-eyebrow)',
           }}>
             FAQ · FREQUENTLY ASKED QUESTIONS
           </p>
@@ -142,7 +164,7 @@ export default function FAQ() {
             fontSize: 'clamp(2rem, 5vw, 3.25rem)',
             lineHeight: 1.05,
             letterSpacing: '-0.03em',
-            margin: '0 0 20px',
+            margin: '0 0 var(--hero-gap-h1)',
           }}>
             Common questions, direct answers.
           </h1>
@@ -151,11 +173,12 @@ export default function FAQ() {
           </p>
           </div>
         </div>
-      </section>
+      </Hero>
 
       {/* FAQ SECTIONS */}
-      <section style={{ padding: '64px 24px 80px' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+      {/* container-contrast law: white body after the paper page header */}
+      <section style={{ padding: '64px 24px 80px', backgroundColor: '#ffffff' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ maxWidth: '720px' }}>
           {faqs.map((section, si) => (
             <div key={si} style={{ marginBottom: '64px' }}>
@@ -220,8 +243,10 @@ export default function FAQ() {
       </section>
 
       {/* STILL HAVE QUESTIONS? */}
+      {/* T-97.1 dark-adjacency law: ink, not night — the footer below is
+          night, adjacent dark containers must not share the same tone */}
       <section style={{
-        backgroundColor: 'var(--color-night)',
+        backgroundColor: 'var(--color-ink)',
         color: 'var(--color-paper)',
         padding: '64px 24px',
         textAlign: 'center',
@@ -263,7 +288,7 @@ export default function FAQ() {
                 padding: '14px 28px',
                 backgroundColor: 'transparent',
                 color: 'rgba(255,255,255,0.7)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: '1px solid var(--ghost-border-on-dark)',
                 fontFamily: 'var(--font-space-mono)',
                 fontSize: '0.75rem',
                 letterSpacing: '0.08em',

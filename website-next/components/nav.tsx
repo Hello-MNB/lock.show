@@ -5,9 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
-import { DoorStamp } from '@/components/door-stamp'
 
-import { APP_URL } from '@/lib/app-url'
+import { conversionHref, conversionLabel, loginHref } from '@/lib/conversion'
 
 const NAV_LINK_KEYS = [
   { href: '/artists',      key: 'artists'      },
@@ -63,7 +62,7 @@ function LocaleToggle() {
 
 export function Nav() {
   const [open, setOpen] = useState(false)
-  const { messages } = useLocale()
+  const { messages, locale } = useLocale()
   const nav = messages.nav
   const pathname = usePathname()
 
@@ -76,10 +75,24 @@ export function Nav() {
     href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`)
 
   const slug = pageSlug(pathname)
-  const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${slug}&utm_content=nav`
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=nav`
+  // LOGIN is NOT a conversion CTA — it must keep reaching the app in BOTH
+  // modes (B4-70.10 §10.1: "Login remains available"), so it does not route
+  // through the conversion helper.
+  // Single source: lib/conversion.ts owns the login target so the "identical in
+  // both modes" contract lives in ONE place. It previously had zero importers
+  // while this line duplicated it — two sources for one contract is how they
+  // drift apart silently. Login still does NOT route through conversionHref().
+  const loginTarget = `${loginHref()}?utm_source=site&utm_campaign=${slug}&utm_content=nav`
+  // The primary CTA resolves centrally: /waitlist in waitlist mode, the app
+  // signup in signup mode. No page-level edit is needed to switch.
+  const signupHref = conversionHref({ page: slug, placement: 'nav' })
+  const ctaLabel = conversionLabel(locale)
 
   return (
+    // <header> landmark wraps the site nav (T-97 P1 landmark fix) — sticky
+    // positioning lives on the landmark so the nav band behaves exactly as
+    // before.
+    <header style={{ position: 'sticky', top: 0, zIndex: 100 }}>
     <nav
       role="navigation"
       aria-label="Main navigation"
@@ -88,9 +101,6 @@ export function Nav() {
         backdropFilter: 'var(--nav-blur)',
         WebkitBackdropFilter: 'var(--nav-blur)',
         borderBottom: '1px solid var(--nav-border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
       }}
     >
       <div style={{
@@ -116,11 +126,24 @@ export function Nav() {
             color: 'var(--color-paper)',
             textDecoration: 'none',
             flexShrink: 0,
+            // ≥44px hit area (T-97 P1 tap targets) — padding, not font-size
+            minHeight: '44px',
+            padding: '4px 0',
           }}
-          aria-label="LOCK home"
+          aria-label="LOCK SHOW home"
         >
-          <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-          LOCK
+          {/* Official spotlight-lens symbol — same drawing as the favicon
+              (owner logo-consistency ruling; master-lime = transparent
+              variant for the dark nav) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg"
+            alt=""
+            width={36}
+            height={36}
+            style={{ display: 'block', flexShrink: 0 }}
+          />
+          LOCK SHOW
         </Link>
 
         {/* Desktop links */}
@@ -147,7 +170,9 @@ export function Nav() {
                   textDecoration: 'none',
                   whiteSpace: 'nowrap',
                   position: 'relative',
-                  paddingBottom: '4px',
+                  // ≥44px hit area (T-97 P1 tap targets): 21px line + 12/10
+                  // padding + 2px active-rule ≈ 45px — visual look unchanged.
+                  padding: '12px 0 10px',
                   borderBottom: active
                     ? '2px solid var(--color-stamp)'
                     : '2px solid transparent',
@@ -159,7 +184,7 @@ export function Nav() {
           })}
           <LocaleToggle />
           <a
-            href={loginHref}
+            href={loginTarget}
             style={{
               fontFamily: 'var(--font-space-mono)',
               fontSize: '0.75rem',
@@ -188,7 +213,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted}
+            {ctaLabel}
           </a>
         </div>
 
@@ -259,7 +284,7 @@ export function Nav() {
             <LocaleToggle />
           </div>
           <a
-            href={loginHref}
+            href={loginTarget}
             style={{
               display: 'block',
               marginTop: '12px',
@@ -294,7 +319,7 @@ export function Nav() {
               fontWeight: 700,
             }}
           >
-            {nav.getStarted}
+            {ctaLabel}
           </a>
         </div>
       )}
@@ -309,5 +334,6 @@ export function Nav() {
         }
       `}</style>
     </nav>
+    </header>
   )
 }

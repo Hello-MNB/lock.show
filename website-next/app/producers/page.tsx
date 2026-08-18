@@ -1,16 +1,31 @@
 import type { Metadata } from 'next'
+import { localeAlternates } from '@/lib/site'
 import Link from 'next/link'
 
+import { Hero } from '@/components/hero'
+
 export const metadata: Metadata = {
-  alternates: { canonical: '/producers' },
+  alternates: localeAlternates('/producers'),
   title: 'For Producers — 20 Seconds, No Account',
   description:
     'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',
   openGraph: {
     url: '/producers',
-    title: 'For Producers | LOCK',
+    title: 'For Producers | LOCK SHOW',
     description: 'You were there that night. Twenty seconds of your word turns one good show into something an artist can build on.',
     type: 'website',
+    images: [
+      {
+        url: '/og/lockshow-og-source-confirmer-v1.png',
+        width: 1200,
+        height: 630,
+        alt: 'LOCK SHOW — Confirm one claim, nothing more implied. Confirm, correct, or reject.',
+        type: 'image/png',
+      },
+    ],
+  },
+  twitter: {
+    images: ['/og/lockshow-og-source-confirmer-v1.png'],
   },
 }
 
@@ -69,20 +84,16 @@ export default function ProducersPage() {
   return (
     <main style={{ backgroundColor: 'var(--color-paper)', color: 'var(--color-ink)', fontFamily: 'var(--font-heebo)' }}>
 
-      {/* ── HERO ─────────────────────────────────────────── */}
-      <section
+      {/* ── HERO — feature variant (T-97 hero system: styles/hero.css) ── */}
+      <Hero
+        variant="feature"
+        align="end"
         style={{
-                    overflow: 'hidden',
-          minHeight: 'min(92svh, 880px)',
           background: `linear-gradient(180deg, rgba(10,13,11,0.55) 0%, rgba(10,13,11,0.86) 55%, rgba(10,13,11,0.97) 100%), url('/lockshow-persona-producer-v1.webp') center/cover no-repeat`,
           color: 'var(--color-paper)',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          padding: 'clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem)',
         }}
       >
+        <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%', position: 'relative' }}>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
             style={{
@@ -91,7 +102,7 @@ export default function ProducersPage() {
               letterSpacing: '0.14em',
               color: 'rgba(243,245,239,0.72)',
               textTransform: 'uppercase',
-              marginBottom: '1.75rem',
+              marginBottom: 'var(--hero-gap-eyebrow)',
             }}
           >
             FOR PRODUCERS
@@ -104,7 +115,7 @@ export default function ProducersPage() {
               lineHeight: 0.96,
               letterSpacing: '-0.055em',
               color: 'var(--color-paper)',
-              marginBottom: '1.5rem',
+              marginBottom: 'var(--hero-gap-h1)',
             }}
           >
             You know what happened that night.
@@ -119,8 +130,8 @@ export default function ProducersPage() {
               fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
               lineHeight: 1.65,
               color: 'rgba(243,245,239,0.78)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
+              maxWidth: 'var(--hero-desc-max-w)',
+              marginBottom: 'var(--hero-gap-desc)',
             }}
           >
             An artist you booked is asking a small favor between professionals: open one link,
@@ -164,11 +175,12 @@ export default function ProducersPage() {
             </Link>
           </div>
         </div>
-      </section>
+        </div>
+      </Hero>
 
       {/* ── THE FAVOR ────────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <p
             style={{
               fontFamily: 'var(--font-space-mono), monospace',
@@ -196,7 +208,7 @@ export default function ProducersPage() {
             className="m-divide"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
               gap: '1px',
               background: 'rgba(10,13,11,0.08)',
               border: '1px solid rgba(10,13,11,0.08)',
@@ -286,7 +298,7 @@ export default function ProducersPage() {
                 marginBottom: '0.5rem',
               }}
             >
-              PRODUCER ≠ BOOKING MANAGER
+              TWO DIFFERENT JOBS
             </p>
             <p
               style={{
@@ -298,16 +310,17 @@ export default function ProducersPage() {
             >
               You&apos;re the <strong style={{ color: 'var(--color-ink)' }}>producer</strong> who
               ran that night and can vouch for it — the <strong style={{ color: 'var(--color-ink)' }}>booking
-              manager</strong> is the one deciding on the next one, and LOCK never mixes the two.
+              manager</strong> is the one deciding on the next one, and LOCK SHOW never mixes the two.
             </p>
           </div>
         </div>
       </section>
 
       {/* ── WHY YOUR WORD MATTERS ────────────────────────── */}
+      {/* container-contrast law: white band between two paper bands */}
       <section
         style={{
-          background: 'var(--color-paper)',
+          background: '#ffffff',
           padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
           borderTop: '1px solid var(--color-mist)',
           borderBottom: '1px solid var(--color-mist)',
