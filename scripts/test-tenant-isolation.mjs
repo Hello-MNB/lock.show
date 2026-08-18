@@ -739,7 +739,64 @@ try {
   }
 
   console.log('\n  ── candidate applied: scripts/sql/candidate-share-link-columns.sql ──')
+  // PRIVILEGE-SURFACE SNAPSHOT — the column-grant analogue of the policy
+  // snapshot in A6.fix, and added for the same reason. D3 below names four
+  // columns; a candidate that revoked from the wrong role, widened
+  // service_role, or touched a DIFFERENT table entirely would pass every
+  // assertion in this section. This candidate's whole mechanism IS a privilege
+  // change, so the privilege surface is what has to be measured.
+  const GRANT_SQL = `select grantee, table_name, column_name, privilege_type
+                       from information_schema.role_column_grants
+                      where table_schema='public' and grantee in ('anon','authenticated','service_role')
+                      order by grantee, table_name, column_name, privilege_type`
+  const grantsBefore = db.rows(GRANT_SQL)
   db.exec(readFileSync('scripts/sql/candidate-share-link-columns.sql', 'utf8'))
+  const grantsAfter = db.rows(GRANT_SQL)
+  {
+    const key = (r) => r.join('|')
+    const setB = new Set(grantsBefore.map(key)), setA = new Set(grantsAfter.map(key))
+    const removed = grantsBefore.map(key).filter((k) => !setA.has(k))
+    const added = grantsAfter.map(key).filter((k) => !setB.has(k))
+
+    check(grantsBefore.length > 200,
+      `D6 non-vacuity: ${grantsBefore.length} column privileges captured before the candidate (executed)`,
+      `D6 ⚠ only ${grantsBefore.length} privileges captured — the comparison below would prove nothing`)
+    check(added.length === 0,
+      `D6 the candidate GRANTS nothing new anywhere — no role gains a privilege it did not already hold (executed)`,
+      `D6 ⚠ the candidate ADDED privileges: ${added.slice(0, 6).join(', ')}`)
+    check(removed.length > 0 && removed.every((k) => k.startsWith('authenticated|share_link|')),
+      `D6 every one of the ${removed.length} privilege changes is a REVOKE on authenticated/share_link — anon, service_role and every other table are untouched (executed)`,
+      `D6 ⚠ the candidate changed privileges outside authenticated/share_link: ${removed.filter((k) => !k.startsWith('authenticated|share_link|')).slice(0, 6).join(', ')}`)
+
+    // The candidate's own load-bearing claim, verified rather than trusted:
+    // "THE COLUMN LIST IS share_link_delivery_v's OWN PROJECTION, exactly — so
+    // the sanctioned view becomes the practical maximum instead of a parallel
+    // option." Nothing tested it.
+    const viewCols = db.rows(
+      `select column_name from information_schema.columns
+        where table_schema='public' and table_name='share_link_delivery_v' order by column_name`).map((r) => r[0]).sort()
+    const grantedCols = grantsAfter
+      .filter((r) => r[0] === 'authenticated' && r[1] === 'share_link' && r[3] === 'SELECT')
+      .map((r) => r[2]).sort()
+    check(viewCols.length >= 8 && grantedCols.length >= 8,
+      `D7 non-vacuity: share_link_delivery_v projects ${viewCols.length} columns and authenticated is granted ${grantedCols.length} on share_link (executed)`,
+      `D7 ⚠ near-empty comparison (view ${viewCols.length}, granted ${grantedCols.length})`)
+    const grantedNotInView = grantedCols.filter((c) => !viewCols.includes(c))
+    check(grantedNotInView.length === 0,
+      `D7 the granted column list is a SUBSET of share_link_delivery_v's projection — the sanctioned view is the practical maximum, exactly as the candidate claims (executed)`,
+      `D7 ⚠ authenticated may select column(s) the sanctioned view does NOT project: ${grantedNotInView.join(', ')} — the candidate's "exactly the view's projection" claim is false`)
+    const viewNotGranted = viewCols.filter((c) => !grantedCols.includes(c))
+    check(viewNotGranted.length === 0,
+      `D7 and it is not NARROWER than the view either — every projected column is still directly readable, so the view cannot outrun the grant (executed)`,
+      `D7 ⚠ share_link_delivery_v projects column(s) authenticated can no longer select: ${viewNotGranted.join(', ')} — the view will fail for its intended caller`)
+
+    // The firewall columns, named explicitly so a future widening is loud.
+    for (const c of ['open_count', 'opened_at', 'token_hash', 'mint_request_key', 'wrong_recipient_at']) {
+      check(!grantedCols.includes(c),
+        `D7 firewall column ${c} is NOT in the granted list (executed)`,
+        `D7 ⚠ ${c} was granted to authenticated — the firewall the candidate exists to build is open`)
+    }
+  }
   {
     for (const [label, col] of [['open_count', 'open_count'], ['opened_at', 'opened_at'], ['token_hash (the link secret\'s digest)', 'token_hash'], ['select *', '*']]) {
       const r = db.try(`select ${col} from public.share_link where artist_id='${ARTIST}'`, asUser(U.OWNER))

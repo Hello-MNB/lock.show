@@ -2698,3 +2698,58 @@ is the SQL-migration gate's own summary line, not a verify-wide statement — no
 the phrasing claimed more than the evidence.
 
 **103 checks (was 81).**
+
+## T-114 · PRIVILEGE-SURFACE SNAPSHOT FOR THE SHARE-LINK CANDIDATE (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** Gate hardening only — no candidate promoted, no schema changed.
+
+**A correction to my own work selection, made before editing rather than after.** I opened this run
+intending to prove `candidate-share-link-columns.sql`, having described it in the last three reports as
+"the last unproven candidate". **It is not unproven** — the gate applies it and D3/D4/D5 already assert
+that `open_count`, `opened_at`, `token_hash` and `select *` become un-SELECTable, that the sanctioned
+projection still resolves for the owner and still returns nothing to a stranger, and that minting,
+revoking, `service_role` and the anonymous recipient door are unaffected. Reading it first is what
+caught that; three reports had repeated the wrong characterisation.
+
+**The real gap was the same defect class three reviewers found in my policy work, one layer over.** The
+candidate's entire mechanism is a PRIVILEGE change, and nothing measured the privilege surface. D3 names
+four columns; a candidate that revoked from the wrong role, widened `service_role`, or touched a
+different table would have passed every assertion in the section — exactly how `for all`, an added
+backdoor policy and a redefined helper all passed the old qual-diff.
+
+**D6 · privilege-surface snapshot.** All 3,964 column privileges for `anon`, `authenticated` and
+`service_role` across the public schema, captured before and after the candidate. Asserts nothing is
+GRANTED anywhere, and that every one of the 10 changes is a REVOKE on `authenticated`/`share_link`.
+
+**D7 · the candidate's own claim, verified instead of trusted.** Its header states *"THE COLUMN LIST IS
+share_link_delivery_v's OWN PROJECTION, exactly — so the sanctioned view becomes the practical maximum
+instead of a parallel option."* Nothing tested it. It holds, executed and in both directions: the view
+projects 14 columns, `authenticated` is granted exactly those 14 — no column granted that the view does
+not project (or the view stops being the maximum), and none projected that was revoked (or the view
+breaks for its intended caller). The five firewall columns are asserted absent by name.
+
+**Mutation results — 4 caught, 3 equivalent mutants, 0 holes.** Every survivor was diagnosed by
+measurement rather than assumed, which is the part that has gone wrong repeatedly in this session:
+
+| mutation | outcome |
+|---|---|
+| sneak `open_count` into the granted list | CAUGHT (D7 subset + D7 firewall) |
+| granted list NARROWER than the view | CAUGHT (D7 not-narrower) |
+| grant `anon` SELECT on `share_link` | CAUGHT (D6 added) |
+| revoke SELECT from `service_role` | CAUGHT (D6 outside-scope) |
+| also revoke from `anon` | EQUIVALENT — `anon` holds no SELECT on `share_link` at all (only INSERT/UPDATE), so the statement removes nothing |
+| grant `authenticated` a column it already holds | EQUIVALENT — it already holds SELECT on that column |
+| `revoke select (value) on claims from authenticated` | EQUIVALENT — **a no-op**: measured, SELECT is still present afterwards. The same table-level trap D2 documents for `share_link`, reproduced on a second table |
+
+That last one is worth keeping: the trap the candidate documents is not specific to `share_link`. Any
+future column-revoke written against a table where the role holds a table-level grant will silently do
+nothing, and only revoke-then-regrant works.
+
+**Observation, recorded and NOT acted on.** `authenticated` holds SELECT on `claims.internal_confidence`.
+The candidate's header says the 016/025 pattern is "what makes claims.internal_confidence and
+gigs.exact_count physically un-SELECTable rather than merely unselected" — true for **anon** (016:26-28
+revokes and re-grants a list that excludes it) and under-qualified as written, because it does not say
+"by anon". Whether an artist's own organization should read a column named `internal_confidence` is a
+firewall question I have not grounded and am not deciding here.
+
+**114 checks (was 103). `npm run verify` — see the checkpoint.**
