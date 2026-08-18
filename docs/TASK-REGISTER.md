@@ -3883,3 +3883,62 @@ regenerated from a saved log via `--from-log` for measurement and **restored**; 
 exact HEAD, not hand-edited. The gate/sub-check split is a parse of console text, which remains a
 weaker signal than an exit code per gate — the chain still reports one exit code for the whole run.
 
+---
+
+## CHAIN-TRANSITIVE — closing QA-INDEP-01 finding F3
+
+**Band:** isolated test environment / observability. **File:** `scripts/test-chain-closed.mjs`.
+
+**F3, as the reviewer proved it.** C1's claim was *"a new rendered gate cannot join the chain without a
+fail-closed path"*, but detection was a **text scan of each gate file**. The reviewer added a
+realistic gate whose playwright import lived in a shared local helper — `grep -c playwright` on the
+gate file returned **0** — wired it into `verify`, and this gate still printed
+*"✓ CHAIN CLOSED — 14 checks hold: 4 browser-dependent gates … each proven to fail closed"*. It also
+noted the chain parser missed `node ./scripts/…` (a leading `./`) and `npx`.
+
+**Two repairs.**
+
+**1 · Reachability, not literal text.** The scan follows RELATIVE imports through the local module
+graph — static and dynamic — with a visited set, and reports the PATH by which playwright is
+reachable so the reason is legible. A gate importing a helper that imports a helper that imports
+playwright is now browser-dependent.
+
+**2 · Every chain step is accounted for.** The chain is split into steps and each is classified;
+an unclassified step is a FAILURE (C0c) rather than a silent gap, and every gate file the chain names
+must exist on disk (C0d).
+
+**S1 reachability self-test on fixtures, before any real verdict**: direct import, one helper deep,
+two helpers deep, and two negative controls, written to a temp directory and removed in a `finally`
+so they never enter the real module graph.
+
+**Mutation battery — 4/4 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **J1** | the reviewer's F3 injection verbatim — a rendered gate whose playwright import is behind a shared helper (0 occurrences of the token in the gate file) | **C1**, which names the file, plus C3 |
+| **J2** | a chain step in a shape the old parser dropped: `node ./scripts/test-qa-unknown.mjs` | **C0d** — see below |
+| **J3** | break the reachability scan (stop following relative imports) | **S1**, before any real verdict |
+| **J4** | a step the parser cannot classify at all: `npx some-tool --check` | **C0c** |
+
+**J2 was NOT caught by the first version of this repair, and that is the finding worth recording.**
+The parser classified `node ./scripts/test-qa-unknown.mjs` as a gate file, `playwrightPath` returned
+null because the file does not exist, and nothing failed. *Accounting for* a step is not the same as
+the step being real. C0d now requires every named gate file to exist. This is the third increment in
+a row where the mutation battery found a hole in **my own repair** rather than in the original code —
+which is the argument for running the battery against the repair, not only against the defect.
+
+**A second self-inflicted defect, caught by attributing the failures rather than the exit codes.**
+The S1 hard-exit tested `findings.length`, which by that point also holds C0/C0b/C0c/C0d — so a
+chain-parsing failure was announced as *"the reachability scan is broken"*. J2 and J4 both exited 1
+for the right reason under the wrong banner. The exit is now scoped to S1's own finding; verified by
+re-running J2, J3 and J4 and reading which check fired, not just the exit code.
+
+**17 checks** (was 14). Static analysis plus the existing executed fail-closed probes; no runtime cost
+beyond the four spawns already there.
+
+**Scope limits.** Reachability follows RELATIVE specifiers only: a gate reaching a browser through a
+*package* dependency that itself imports playwright is not seen. It does not resolve extensionless or
+directory-index imports. The chain parser handles one level of `npm run` indirection, which is all
+that exists today; a script that shells out to another npm script inside a compound command would be
+recorded as unclassified rather than followed — which fails loudly, as intended.
+
