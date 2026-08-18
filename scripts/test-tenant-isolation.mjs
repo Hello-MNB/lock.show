@@ -827,6 +827,83 @@ try {
     check(anonDoor.ok && /not_found/.test(anonDoor.out),
       'D5 the anonymous recipient\'s door is still open: resolve_share_link() is SECURITY DEFINER and runs as the owner (executed)')
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  console.log('\nE · FIREWALL COLUMN — claims.internal_confidence reaches `authenticated` (EXECUTED)')
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    // 001:89 declares internal_confidence "DB-only; never returned to any
+    // client". 016 enforced that for ANON only, and says so deliberately at
+    // 016:9. So the contract is one role short of what it claims.
+    const ownerIC = db.try(`select internal_confidence from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER))
+    check(ownerIC.ok,
+      'E1 ⚠ REPRODUCED — the artist\'s own organization SELECTs claims.internal_confidence, a column 001:89 says is "never returned to any client". 016 revoked it from anon only (executed)',
+      'E1 internal_confidence was already denied to authenticated — this gate is stale')
+    const anonIC = db.try(`select internal_confidence from public.claims`, { role: 'anon' })
+    check(!anonIC.ok && /permission denied/i.test(anonIC.out),
+      'E1 anon is correctly denied — 016 works, for the one role it covered (executed)',
+      'E1 ⚠ anon can read internal_confidence — 016 is broken, which is a bigger finding')
+
+    // The column only matters if a shipped path returns it. These three do.
+    const dbjs = readFileSync('src/lib/db.js', 'utf8').split('\n')
+    const starClaims = dbjs.map((l, i) => [i + 1, l])
+      .filter(([, l]) => /from\('claims'\)\s*\.select\('\*'\)/.test(l))
+    check(starClaims.length >= 3,
+      `E2 ${starClaims.length} shipped client read(s) are select('*') on claims (src/lib/db.js:${starClaims.map((x) => x[0]).join(', ')}) — each returns every column the role may select, so the score is delivered to the browser (executed)`,
+      `E2 the select('*') call sites changed (${starClaims.length} found) — re-derive this residual before trusting it`)
+  }
+
+  console.log('\n  ── candidate applied: scripts/sql/candidate-claims-internal-columns.sql ──')
+  const icGrantsBefore = db.rows(GRANT_SQL)
+  db.exec(readFileSync('scripts/sql/candidate-claims-internal-columns.sql', 'utf8'))
+  const icGrantsAfter = db.rows(GRANT_SQL)
+  {
+    const INTERNAL = ['internal_confidence', 'extraction_method', 'model_version', 'extraction_provenance']
+    for (const col of INTERNAL) {
+      const r = db.try(`select ${col} from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER))
+      check(!r.ok && /permission denied/i.test(r.out),
+        `E3 ${col} is now physically un-SELECTable by the artist's own organization (executed)`,
+        `E3 ⚠ ${col} is still readable by authenticated`)
+    }
+    check(db.try(`select internal_confidence from public.claims`, asUser(U.REP_A)).ok === false,
+      'E3 and by every representing organization too (executed)')
+
+    // CONSEQUENCE, measured rather than described: this is what breaks.
+    const star = db.try(`select * from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER))
+    check(!star.ok && /permission denied/i.test(star.out),
+      'E4 `select *` on claims now FAILS for authenticated — the three src/lib/db.js call sites break LOUDLY rather than leak quietly, and must be changed to explicit column lists in the same commit as any promotion (executed)',
+      'E4 ⚠ select * still succeeds — the candidate did not narrow anything')
+    check(db.try(`select id, claim_type, value, verification_status, visibility, artist_approved from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER)).ok,
+      'E4 an EXPLICIT column list still works — the narrowing is a narrowing, not a blackout (executed)',
+      'E4 ⚠ the candidate broke ordinary claim reads')
+    check(db.try(`select internal_confidence from public.claims`, { role: 'service_role' }).ok,
+      'E4 service_role — the server and the AI pipeline that WRITES the number — is untouched (executed)',
+      'E4 ⚠ the candidate cut off service_role')
+    check(db.try(`update public.claims set artist_approved = true where artist_id='${ARTIST}'`, asUser(U.OWNER)).ok,
+      'E4 the artist can still APPROVE a claim — SELECT and UPDATE are separate privileges (executed)',
+      'E4 ⚠ the candidate broke the approval gate')
+
+    // Privilege-surface snapshot, same shape as D6.
+    const key = (r) => r.join('|')
+    const setB = new Set(icGrantsBefore.map(key)), setA = new Set(icGrantsAfter.map(key))
+    const added = icGrantsAfter.map(key).filter((k) => !setB.has(k))
+    const removed = icGrantsBefore.map(key).filter((k) => !setA.has(k))
+    check(icGrantsBefore.length > 200,
+      `E5 non-vacuity: ${icGrantsBefore.length} column privileges captured before the candidate (executed)`,
+      `E5 ⚠ only ${icGrantsBefore.length} captured`)
+    check(added.length === 0,
+      'E5 the candidate GRANTS nothing new anywhere (executed)',
+      `E5 ⚠ the candidate ADDED privileges: ${added.slice(0, 6).join(', ')}`)
+    check(removed.length === INTERNAL.length && removed.every((k) => k.startsWith('authenticated|claims|')),
+      `E5 exactly ${INTERNAL.length} privileges were revoked, all on authenticated/claims — anon, service_role and every other table untouched (executed)`,
+      `E5 ⚠ unexpected privilege changes: ${removed.join(', ')}`)
+    const stillGranted = icGrantsAfter.filter((r) => r[0] === 'authenticated' && r[1] === 'claims' && r[3] === 'SELECT').map((r) => r[2])
+    const leaked = INTERNAL.filter((c) => stillGranted.includes(c))
+    check(leaked.length === 0 && stillGranted.length >= 10,
+      `E5 authenticated keeps ${stillGranted.length} claims columns and none of the ${INTERNAL.length} internal ones — the computed keep-list did not silently drop a needed column or retain a private one (executed)`,
+      `E5 ⚠ internal column(s) still granted: ${leaked.join(', ')} (keep-list size ${stillGranted.length})`)
+  }
+
 } finally {
   db.drop()
 }

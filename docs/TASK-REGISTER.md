@@ -2753,3 +2753,49 @@ revokes and re-grants a list that excludes it) and under-qualified as written, b
 firewall question I have not grounded and am not deciding here.
 
 **114 checks (was 103). `npm run verify` — see the checkpoint.**
+
+## T-115 · `claims.internal_confidence` REACHES `authenticated` — MEASURED, CANDIDATE WRITTEN, NOT PROMOTED (18 Aug 2026)
+
+**Status: the measurement and the candidate are COMPLETE with evidence; the decision is OWNER-PENDING CONF-COL.**
+
+**Two statements in this repo disagree, and I am not the one who gets to pick.** `001:89` declares
+`internal_confidence numeric, -- DB-only; never returned to any client`. `016:6` calls it "a SCORE —
+firewall!". But 016 revoked and re-granted for **anon only**, and says so deliberately at `016:9`: *"the
+OWNER still reads their own private fields via the org policy + the `authenticated` grant."* So the
+contract at 001:89 is one role short of what it claims, and whether that is a defect or a decision is a
+canon question.
+
+**What is measured, not inferred.** `authenticated` holds SELECT on the column (E1, executed) while
+`anon` is correctly denied — 016 works for the one role it covered. And the gap is not academic: **three
+shipped client reads are `select('*')` on claims** — `src/lib/db.js:177`, `:260`, `:788` — enumerated
+from source by the gate rather than quoted, so the count re-derives. A `select *` returns every column
+the role may select, so the AI's private confidence number is delivered into the artist's browser today.
+
+**What is NOT true, stated so the finding is not read as bigger than it is.** Nothing renders it.
+`scripts/test-guardrails.mjs [4]` holds the buyer-facing payload clean and still passes, and
+`server/index.js:451` excludes all four internal columns from the public payload by hand. This is a
+column in a network response, not a score on a screen. It is still not what 001:89 wrote, and a
+score-shaped number sitting in the network tab is inspectable by exactly the person the firewall exists
+to keep scores away from.
+
+**The candidate computes its keep-list instead of writing one out.** That is a direct consequence of
+this session's most expensive defect: the first draft of `candidate-act-public-scope.sql` hand-copied a
+policy body from 001 and silently reverted migration 031's approval gate. So
+`candidate-claims-internal-columns.sql` revokes, then re-grants every column of `public.claims` **except**
+the four internal ones, computed from `information_schema` at apply time. A column added by a future
+migration is granted automatically and cannot be forgotten; making one private requires editing a
+visible list. `extraction_method`, `model_version` and `extraction_provenance` travel with
+`internal_confidence` because `039:76` records provenance as internal-only "like internal_confidence".
+
+**The cost is proven, not described.** `select *` on claims FAILS for authenticated once applied (E4,
+executed), so the three call sites break **loudly** rather than leak quietly — and any promotion must
+change them to explicit column lists in the same commit. Also proven: an explicit column list still
+works, `service_role` (the pipeline that writes the number) is untouched, and the artist can still
+approve a claim, because SELECT and UPDATE are separate privileges.
+
+**Mutation-proven 4/4, no equivalent mutants:** dropping `internal_confidence` from the internal list →
+caught · a no-op candidate → caught · also revoking from `anon` → caught · cutting off `service_role` →
+caught. E5 snapshots all 3,954 column privileges and asserts exactly four revokes, all on
+`authenticated/claims`, with nothing granted anywhere.
+
+**131 checks (was 114).**
