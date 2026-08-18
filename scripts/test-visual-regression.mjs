@@ -108,7 +108,19 @@ async function main() {
 
   const failures = []
   const seeded = []
+  const missing = []
   let compared = 0
+  // Every route × viewport must actually be compared. The first version of this
+  // floor derived EXPECTED from ROUTES.length × VIEWPORTS.length — which is
+  // TAUTOLOGICAL: deleting a route shrank both sides and the check still passed
+  // (caught by mutation I2, the same defect class as the CSS-scope check the
+  // previous increment repaired). The count is now a PINNED LITERAL, and the
+  // declared lists must agree with it, so shrinking either one fails.
+  const EXPECTED = 28 // 14 routes × 2 viewports
+  if (ROUTES.length * VIEWPORTS.length !== EXPECTED) {
+    console.error(`\n✗ VISUAL REGRESSION: the declared matrix is ${ROUTES.length} routes × ${VIEWPORTS.length} viewports = ${ROUTES.length * VIEWPORTS.length}, but the pinned expectation is ${EXPECTED}. Adding coverage is welcome — update the literal deliberately. Removing it is a reduction in what this gate proves.`)
+    process.exit(1)
+  }
 
   for (const [w, h] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 })
@@ -125,7 +137,20 @@ async function main() {
       const name = `${slug}-${w}.png`
       const baselinePath = path.join(BASELINE, name)
 
-      if (UPDATE || !existsSync(baselinePath)) {
+      // SEEDING IS NEVER IMPLICIT (independent review finding F13). A missing
+      // baseline used to be written silently and skipped, so a run with every
+      // baseline absent compared NOTHING and still exited 0 —
+      // "✓ VISUAL REGRESSION: 0 screenshot(s) match … 28 seeded". That is
+      // verbatim the class VERIFY-CLOSED was written to end, in this very file.
+      // A new route's baseline is a deliberate act: re-run with --update,
+      // review the images, commit them.
+      if (!existsSync(baselinePath)) {
+        if (!UPDATE) { missing.push(name); continue }
+        writeFileSync(baselinePath, shot)
+        seeded.push(name)
+        continue
+      }
+      if (UPDATE) {
         writeFileSync(baselinePath, shot)
         seeded.push(name)
         continue
@@ -158,14 +183,24 @@ async function main() {
     console.log(`${UPDATE ? 'Re-seeded' : 'Seeded new'} baseline(s) → website-next/visual-baseline/ (commit them):`)
     for (const s of seeded) console.log(`  + ${s}`)
   }
+  if (!UPDATE && missing.length) {
+    console.error(`\n✗ VISUAL REGRESSION: ${missing.length} baseline(s) MISSING — nothing was compared for them, and a seeded baseline is not a passing comparison:\n`)
+    for (const m of missing) console.error(`  ✗ ${m}`)
+    console.error('\nIf these are NEW routes: re-run with --update, review every image, and commit them with attribution.')
+    process.exit(1)
+  }
+  if (!UPDATE && compared !== EXPECTED) {
+    console.error(`\n✗ VISUAL REGRESSION: compared ${compared} of ${EXPECTED} expected screenshots (${ROUTES.length} routes × ${VIEWPORTS.length} viewports). A subset is not a pass.`)
+    process.exit(1)
+  }
   if (failures.length) {
     console.error(`\n✗ VISUAL REGRESSION: ${failures.length} route(s) changed materially (diffs in ${DIFF_DIR})\n`)
     for (const f of failures) console.error(`  ✗ ${f}`)
     console.error('\nIf the change is INTENTIONAL: re-run with --update, review, and commit the new baselines (see header).')
     process.exit(1)
   }
-  console.log(`\n✓ VISUAL REGRESSION: ${compared} screenshot(s) match the committed baselines (≤1% pixel drift)` +
-    (seeded.length ? ` · ${seeded.length} seeded` : ''))
+  console.log(`\n✓ VISUAL REGRESSION: ${compared} of ${EXPECTED} screenshot(s) match the committed baselines (≤1% pixel drift)` +
+    (seeded.length ? ` · ${seeded.length} re-seeded via --update (review and commit them)` : ''))
 }
 
 main().catch((err) => {

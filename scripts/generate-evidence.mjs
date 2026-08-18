@@ -46,16 +46,42 @@ if (logIdx > -1) {
 
 // Gate IDs are read out of the run, not from a hand-kept list — a gate that stops
 // printing disappears from the evidence instead of being silently assumed green.
+//
+// TWO PARSER DEFECTS, both found by an independent reviewer's F13 and both
+// measured against a real green chain log before this was changed:
+//   1. `line.trim()` destroyed the only signal separating a GATE summary
+//      (printed at column 0) from an indented sub-check, so both were recorded
+//      as gates.
+//   2. The separator was `:` only, so every gate whose summary reads
+//      "✓ NAME — n checks hold" was silently ABSENT from the evidence while
+//      passing. Five real gates were missing on the last green run: STORAGE
+//      RESILIENCE, LOGICAL DIRECTION, REGISTRY VALID, DELTAS VALID and CHAIN
+//      CLOSED. The comment above promised exactly what the code failed to do.
+// The separator accepts `:` or a SPACED em/en dash — a bare hyphen would split
+// hyphenated ids (WIDGET-STATES became WIDGET).
+//
+// Sub-checks are still recorded, as `checks`, because they are real evidence —
+// they are simply not gates, and conflating them inflated the gate count.
+const SUBCHECK_ID = /^[A-Z]\d+(?:-[A-Z]?\d+)?$/
 const gates = []
+const checks = []
 for (const line of log.split('\n')) {
-  const m = /^([✓✗])\s+([A-Z][A-Z0-9 ·/\-+]*?):/.exec(line.trim())
-  if (m) gates.push({ id: m[2].trim(), result: m[1] === '✓' ? 'pass' : 'fail' })
+  const m = /^([✓✗])\s+([A-Z][A-Z0-9 ·/\-+]*?)(?::|\s[—–]\s)/.exec(line)
+  if (!m) continue
+  const entry = { id: m[2].trim(), result: m[1] === '✓' ? 'pass' : 'fail' }
+  ;(SUBCHECK_ID.test(entry.id) ? checks : gates).push(entry)
 }
 // "Nothing was skipped." is a chain ASSERTION, not a skip — counting it would
 // report a skip on exactly the runs that prove there were none.
+// A line that PASSES an assertion about skipping is not a skip. Both exclusions
+// below are for exactly that: "Nothing was skipped." is the chain's own summary,
+// and "✓ S3 … (fail closed, never skipped)" is a gate asserting it never skips —
+// recorded as a skip until this filter was added, which meant every green run
+// reported one.
 const skips = log.split('\n')
   .filter((l) => /SKIPPED|did not run|UNPROVEN in this run/i.test(l))
   .filter((l) => !/nothing was skipped/i.test(l))
+  .filter((l) => !/^\s*✓/.test(l))
   .map((l) => l.trim())
 
 const evidence = {
@@ -72,6 +98,8 @@ const evidence = {
       : 'red',
   gateCount: gates.length,
   gates,
+  subCheckCount: checks.length,
+  subChecks: checks,
   skips,
   // Negative controls: gates that prove themselves by catching an injected defect.
   // Listed because a suite that has never failed is not evidence of anything.

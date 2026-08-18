@@ -3824,3 +3824,62 @@ are still only inspected, so "onboarding survives" is now supported for the stor
 inferred for the screen. The 15 baselined sites are untouched — each still needs its own
 fallback-semantics decision. Nothing here has been exercised in a real storage-refusing browser.
 
+---
+
+## VISUAL-CLOSED — closing QA-INDEP-01 finding F13, both halves
+
+**Band:** observability / isolated test environment. **Files:**
+`scripts/test-visual-regression.mjs` · `scripts/generate-evidence.mjs`.
+
+### A · a gate that seeded its own baselines and called that a pass
+
+A missing baseline was written silently and skipped, so a run with every baseline absent compared
+**nothing** and exited 0: `✓ VISUAL REGRESSION: 0 screenshot(s) match the committed baselines · 28
+seeded`. That is verbatim the class VERIFY-CLOSED was written to end — **in a file that commit
+edited** and did not list in its scope limits. Seeding is now never implicit: without `--update` a
+missing baseline is a FAILURE that names the file and says how to seed it deliberately.
+
+**And the floor I added to go with it was tautological.** The first version computed
+`EXPECTED = ROUTES.length * VIEWPORTS.length`, so deleting a route shrank both sides and the check
+still passed — mutation **I2 caught it, exactly the defect class the previous increment repaired in
+the CSS-scope check**. The expectation is now a pinned literal (`28 // 14 routes × 2 viewports`), and
+the declared lists must agree with it, so removing coverage fails while adding it is a deliberate
+edit of one number.
+
+### B · the evidence file was silently omitting five green gates
+
+`generate-evidence.mjs` carried the comment *"a gate that stops printing disappears from the evidence
+instead of being silently assumed green."* Measured against the last green chain log, the parser did
+the opposite of what that promised, for two reasons:
+
+1. `line.trim()` destroyed the only signal separating a GATE summary (printed at column 0) from an
+   indented sub-check, so both were recorded as gates.
+2. The separator was `:` only, so every gate whose summary reads `✓ NAME — n checks hold` was
+   **absent from the evidence while passing**: `STORAGE RESILIENCE`, `LOGICAL DIRECTION`,
+   `REGISTRY VALID`, `DELTAS VALID`, `CHAIN CLOSED`.
+
+The separator now accepts `:` or a **spaced** em/en dash — a bare hyphen split hyphenated ids
+(`WIDGET-STATES` became `WIDGET`), which is why the first attempt was measured before it was kept.
+Sub-checks are still recorded, as `subChecks`, because they are real evidence; they are simply not
+gates, and conflating them inflated the count. On the same log: **31 gates + 12 sub-checks** where
+there were 38 undifferentiated entries, five of them missing entirely.
+
+**A false positive in the skip detector, found while measuring B.** Every green run recorded one
+skip — the line `✓ S3 every tracked src file transformed and parsed (fail closed, never skipped)`,
+i.e. a gate ASSERTING that it never skips. Lines that are themselves `✓` assertions are now excluded;
+a green run records **0** skips.
+
+**Mutation battery — 3/3 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **I1** | the reviewer's F13 injection — a baseline absent | *"1 baseline(s) MISSING — … a seeded baseline is not a passing comparison"* |
+| **I2** | a route silently dropped from `ROUTES` | the pinned literal — **after** it caught the tautological first version of my own floor |
+| **I3** | revert the evidence parser to `trim()` + colon-only | the same five gates disappear from `evidence/current.json` again (31 → 26); restored, all five return |
+
+**Scope limits.** The `--update` re-seeding path was **not** exercised this run — running it rewrites
+all 28 baselines, which is an attributed review action, not a test step. `evidence/current.json` was
+regenerated from a saved log via `--from-log` for measurement and **restored**; it is generated per
+exact HEAD, not hand-edited. The gate/sub-check split is a parse of console text, which remains a
+weaker signal than an exit code per gate — the chain still reports one exit code for the whole run.
+
