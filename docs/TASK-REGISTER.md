@@ -2870,3 +2870,60 @@ breakage story, it needs a running PostgREST, and this container has none. It is
 unverified" in general — it is one named question.
 
 **137 checks (was 134).**
+
+### FIFTH INDEPENDENT REVIEW (`4f8bb03..8abeb8d`) — verdict REVISE. Two HIGH, and one of them inverted my own rationale.
+
+Every check count re-derived (103 → 114 → 131 → 134 → 137), every cited line number re-derived, all seven
+claimed mutations were genuinely caught, `npm run verify` exit 0, nothing promoted, no secrets. The
+defects were again in the descriptions and in what the gates could not see.
+
+**[HIGH-1] The candidate's single load-bearing rationale was exactly backwards, and I wrote it twice.**
+The header claimed computing the keep-list means "a column added by a future migration is granted
+automatically and cannot be forgotten; a column that must be private has to be added to INTERNAL, which
+is a visible, reviewable act." Both halves are false, because replacing a TABLE-level grant with
+COLUMN-level grants inverts the default — `relacl` goes from `authenticated=arwd` to `authenticated=awd`,
+losing the `r`. I re-measured it myself before repairing: after the candidate, a newly added column is
+**not** readable by `authenticated`. So a future column is silently invisible to the app, and a private
+column that already exists IS granted automatically — the exact failure the wording claimed to prevent.
+The real property is the opposite of self-maintaining: promotion makes `claims` a **closed column list**,
+and every future migration touching it inherits an obligation. Corrected in the candidate and in
+OWNER-PENDING, and now asserted by **E6** rather than described.
+
+**[HIGH-2] "GRANTS nothing new anywhere" measured a narrow slice, and section E had no behavioural
+control at all.** The snapshot filtered to three named grantees and omitted `is_grantable`, and a
+privilege snapshot cannot see a policy, RLS state, or ownership. Five mutations passed at
+`137 checks, all hold`: a permissive `using (true)` backdoor policy on claims (which handed every claim
+row to every logged-in user), `disable row level security`, `with grant option`,
+`grant select on share_link to public`, and `grant select on artists to public` — the last bypassing
+migration 016's anon column firewall entirely.
+
+**That last one also refutes T-114's "0 holes" claim, which I recorded as a clean result.** It was clean
+only against the mutations I chose.
+
+Repaired structurally: the grant snapshot now covers **every** grantee in the public schema including
+PUBLIC and grant-option state; a **security snapshot** (`pg_policy` + `relrowsecurity` +
+`relforcerowsecurity`, 124 rows) is compared around **both** candidates; and section E gained the
+behavioural read-backs section D already had — a no-grant organization and `anon` both read back after
+the candidate. All five mutations now caught.
+
+**[MED-3] "There is no generic renderer over claims" was FALSE.** `src/features/admin/AdminDashboard.jsx`
+serialises the entire `adminExportArtist()` result — `src/lib/db.js:788`, one of the five `select('*')`
+sites this same commit enumerated — into a downloadable JSON file. The column-name scan cannot see it
+because the file never names a column. It is operator-gated, so the narrow claim ("no artist-facing UI
+NAMES the columns") survives; but the export exists to be handed to the data subject under
+right-to-access, which makes CONF-COL **larger**, not smaller — the opposite of how T-116 framed it.
+Now named and asserted, so a second serializer would fail.
+
+**[MED-4] The call-site enumeration under-counted by construction.** The regex carried `[\s\S]*` while
+being applied line by line, so a multi-line chain — `db.js`'s own house style at 190, 532, 582, 665 —
+could never match, and the guards were one-directional (`>= 3`). A sixth call site was invisible. Now a
+whole-file, chain-aware scan across all 28 `src/lib` files with **exact** counts; the sixth site is
+caught.
+
+**[LOW] Also fixed:** `check()` printed the SUCCESS wording on a failing assertion wherever no failure
+message was supplied — observed live as `✗ E3 and by every representing organization too (executed)`.
+And the wire-format check imported `@supabase/postgrest-js`, which is not in `package.json` and resolved
+only through hoisting; it now measures through `@supabase/supabase-js`, the declared dependency the app
+imports, which QA confirmed emits identical URLs.
+
+**146 checks (was 137).**

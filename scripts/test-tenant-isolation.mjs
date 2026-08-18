@@ -49,7 +49,7 @@ let failed = false
 let checks = 0
 const fail = (m) => { checks++; console.log(`  ✗ ${m}`); failed = true }
 const ok = (m) => { checks++; console.log(`  · ${m}`) }
-const check = (cond, good, bad) => (cond ? ok(good) : fail(bad || good))
+const check = (cond, good, bad) => (cond ? ok(good) : fail(bad || `FAILED (no failure message supplied) — the assertion below did NOT hold: ${good}`))
 
 // Fixture identities — literals, so a failing assertion names something greppable.
 const U = {
@@ -748,13 +748,33 @@ try {
   // service_role, or touched a DIFFERENT table entirely would pass every
   // assertion in this section. This candidate's whole mechanism IS a privilege
   // change, so the privilege surface is what has to be measured.
-  const GRANT_SQL = `select grantee, table_name, column_name, privilege_type
+  // EVERY grantee, not three named ones, and is_grantable too. Independent QA
+  // defeated the narrower version: `grant select on public.share_link to public`
+  // and `grant … with grant option` both passed at exit 0 while the assertion
+  // printed that nothing was granted ANYWHERE. PUBLIC is a grantee like any
+  // other and it is the one that hands a privilege to every role at once.
+  const GRANT_SQL = `select grantee, table_name, column_name, privilege_type, is_grantable
                        from information_schema.role_column_grants
-                      where table_schema='public' and grantee in ('anon','authenticated','service_role')
+                      where table_schema='public'
                       order by grantee, table_name, column_name, privilege_type`
+  // A privilege snapshot CANNOT see a policy, RLS being switched off, or a
+  // permissive backdoor. QA proved all three pass a privilege-only comparison:
+  // `create policy qa_backdoor … using (true)` handed every claim row to every
+  // logged-in user at "137 checks, all hold".
+  const SECURITY_SQL = `select c.relname, c.relrowsecurity, c.relforcerowsecurity,
+                               coalesce(p.polname,'-'), coalesce(p.polpermissive::text,'-'),
+                               coalesce(pg_get_expr(p.polqual, p.polrelid),'-'),
+                               coalesce(pg_get_expr(p.polwithcheck, p.polrelid),'-')
+                          from pg_class c
+                          join pg_namespace n on n.oid = c.relnamespace and n.nspname='public'
+                          left join pg_policy p on p.polrelid = c.oid
+                         where c.relkind='r'
+                         order by c.relname, coalesce(p.polname,'-')`
   const grantsBefore = db.rows(GRANT_SQL)
+  const secBefore = db.rows(SECURITY_SQL)
   db.exec(readFileSync('scripts/sql/candidate-share-link-columns.sql', 'utf8'))
   const grantsAfter = db.rows(GRANT_SQL)
+  const secAfter = db.rows(SECURITY_SQL)
   {
     const key = (r) => r.join('|')
     const setB = new Set(grantsBefore.map(key)), setA = new Set(grantsAfter.map(key))
@@ -765,8 +785,11 @@ try {
       `D6 non-vacuity: ${grantsBefore.length} column privileges captured before the candidate (executed)`,
       `D6 ⚠ only ${grantsBefore.length} privileges captured — the comparison below would prove nothing`)
     check(added.length === 0,
-      `D6 the candidate GRANTS nothing new anywhere — no role gains a privilege it did not already hold (executed)`,
+      `D6 the candidate GRANTS nothing new to ANY grantee in the public schema — including PUBLIC, and including grant-option changes (executed)`,
       `D6 ⚠ the candidate ADDED privileges: ${added.slice(0, 6).join(', ')}`)
+    check(JSON.stringify(secAfter) === JSON.stringify(secBefore) && secBefore.length > 20,
+      `D6 the candidate adds/removes NO policy and changes no RLS flag — ${secBefore.length} policy/RLS rows byte-identical. A privilege snapshot alone cannot see a permissive backdoor or `+"`disable row level security`"+` (executed)`,
+      `D6 ⚠ the SECURITY surface changed: ${secBefore.length} → ${secAfter.length} rows. A permissive policy ORs in and a disabled RLS removes the row gate entirely.`)
     check(removed.length > 0 && removed.every((k) => k.startsWith('authenticated|share_link|')),
       `D6 every one of the ${removed.length} privilege changes is a REVOKE on authenticated/share_link — anon, service_role and every other table are untouched (executed)`,
       `D6 ⚠ the candidate changed privileges outside authenticated/share_link: ${removed.filter((k) => !k.startsWith('authenticated|share_link|')).slice(0, 6).join(', ')}`)
@@ -848,6 +871,21 @@ try {
       'E1 ⚠ anon can read internal_confidence — 016 is broken, which is a bigger finding')
 
     // The column only matters if a shipped path returns it. These three do.
+    // WHOLE-FILE and chain-aware, across all of src/lib — not per-line over one
+    // file. The previous regex carried a useless `[\s\S]*` while being applied
+    // line by line, so a multi-line chain (db.js's own house style at 190, 532,
+    // 582, 665) was invisible: independent QA added a sixth select('*') call
+    // site and the gate still reported five. src/lib/orgs.js reads claims too
+    // and was never scanned.
+    const libFiles = execSyncList("git ls-files -- 'src/lib'").filter((f) => f.endsWith('.js'))
+    const countIn = (re) => libFiles.reduce((acc, f) => {
+      const txt = readFileSync(f, 'utf8')
+      return acc.concat([...txt.matchAll(re)].map(() => f))
+    }, [])
+    const STAR_RE = /from\(['"]claims['"]\)[\s\S]{0,200}?\.select\(\s*['"]\*['"]\s*\)/g
+    const BARE_RE = /from\(['"]claims['"]\)\s*\.(insert|update)\([\s\S]{0,300}?\)\s*\.select\(\s*\)/g
+    const starHits = countIn(STAR_RE)
+    const bareHits = countIn(BARE_RE)
     const dbjs = readFileSync('src/lib/db.js', 'utf8').split('\n')
     // A BARE `.select()` after a write expands to every column exactly as
     // `select('*')` does. The first version of this assertion counted only the
@@ -857,12 +895,14 @@ try {
       .filter(([, l]) => /from\('claims'\)[\s\S]*\.select\('\*'\)/.test(l))
     const bareSelect = dbjs.map((l, i) => [i + 1, l])
       .filter(([, l]) => /from\('claims'\)\.(insert|update)\([\s\S]*\)\.select\(\)/.test(l))
-    check(starClaims.length >= 3,
-      `E2 ${starClaims.length} shipped client READ(s) are select('*') on claims (src/lib/db.js:${starClaims.map((x) => x[0]).join(', ')}) — each returns every column the role may select, so the score is delivered to the browser (executed)`,
-      `E2 the select('*') call sites changed (${starClaims.length} found) — re-derive this residual before trusting it`)
-    check(bareSelect.length >= 2,
-      `E2 and ${bareSelect.length} WRITE path(s) return a bare .select() (src/lib/db.js:${bareSelect.map((x) => x[0]).join(', ')}) — claim creation and claim update expand to every column too, so promotion breaks ${starClaims.length + bareSelect.length} call sites, not ${starClaims.length} (executed)`,
-      `E2 the bare-.select() write paths changed (${bareSelect.length} found) — re-derive before trusting the breakage count`)
+    // EXACT counts, not `>=`. A one-directional floor catches a REMOVED call
+    // site and is blind to an ADDED one, which is how a sixth site slipped past.
+    check(starHits.length === 3 && starClaims.length === 3,
+      `E2 exactly 3 shipped client READ(s) are select('*') on claims (src/lib/db.js:${starClaims.map((x) => x[0]).join(', ')}; whole-file scan of ${libFiles.length} src/lib files agrees) — each returns every column the role may select (executed)`,
+      `E2 the select('*') call-site COUNT changed: whole-file scan found ${starHits.length} in [${[...new Set(starHits)].join(', ')}], per-line found ${starClaims.length}. Re-derive the breakage count before trusting it.`)
+    check(bareHits.length === 2 && bareSelect.length === 2,
+      `E2 and exactly 2 WRITE path(s) return a bare .select() (src/lib/db.js:${bareSelect.map((x) => x[0]).join(', ')}) — claim creation and claim update expand to every column too, so promotion breaks 5 call sites, not 3 (executed)`,
+      `E2 the bare-.select() COUNT changed: whole-file scan found ${bareHits.length} in [${[...new Set(bareHits)].join(', ')}], per-line found ${bareSelect.length}`)
 
     // THE WIRE FORMAT, measured rather than inferred. E2 above claims five call
     // sites break under a column grant. That claim rests on what the CLIENT
@@ -874,12 +914,19 @@ try {
     // this is the only thing standing between "measured" and "assumed" here.
     {
       let PostgrestClient = null
-      try { ({ PostgrestClient } = await import('@supabase/postgrest-js')) } catch { /* handled below */ }
+      // Through @supabase/supabase-js — the DECLARED dependency the app
+      // actually imports. The first draft imported @supabase/postgrest-js by
+      // bare specifier; that package is not in package.json and resolved only
+      // through npm hoisting, so the gate depended on a phantom.
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        PostgrestClient = { make: () => createClient('http://local.invalid', 'anon-key-not-a-secret') }
+      } catch { /* handled below */ }
       check(!!PostgrestClient,
-        'E2 wire-format check is RUNNABLE — @supabase/postgrest-js resolved (executed)',
-        'E2 ⚠ @supabase/postgrest-js could not be imported, so the five-call-site breakage claim is UNMEASURED. Not skipping: this fails.')
+        'E2 wire-format check is RUNNABLE — @supabase/supabase-js (a declared dependency) resolved (executed)',
+        'E2 ⚠ @supabase/supabase-js could not be imported, so the five-call-site breakage claim is UNMEASURED. Not skipping: this fails.')
       if (PostgrestClient) {
-        const c = new PostgrestClient('http://local.invalid')
+        const c = PostgrestClient.make()
         const q = (b) => decodeURIComponent(b.url.search || '')
         const star = q(c.from('claims').select('*').eq('artist_id', ARTIST))
         const bare = q(c.from('claims').insert({ artist_id: ARTIST }).select())
@@ -905,6 +952,21 @@ try {
       const src = readFileSync(f, 'utf8')
       for (const c of INTERNAL_COLS) if (src.includes(c)) renders.push(`${f}:${c}`)
     }
+    // THE GENERIC SERIALIZER. T-116 stated "there is no generic renderer over
+    // claims" — FALSE. src/features/admin/AdminDashboard.jsx writes the whole
+    // adminExportArtist() result (src/lib/db.js:788, a select('*')) to a
+    // downloadable JSON file. The name-based scan below cannot see it because
+    // the file never names a column. It is operator-gated, but the file exists
+    // to be HANDED TO THE DATA SUBJECT under right-to-access/portability, which
+    // makes CONF-COL larger rather than smaller.
+    const serializers = uiFiles.filter((f) => {
+      const t = readFileSync(f, 'utf8')
+      return /adminExportArtist/.test(t) && /JSON\.stringify/.test(t)
+    })
+    check(serializers.length === 1 && serializers[0] === 'src/features/admin/AdminDashboard.jsx',
+      `E2 exactly ONE generic serializer consumes a select('*') claims read — ${serializers.join(', ')} (the OP12 portability export). It is known and named; a NEW one would fail this assertion (executed)`,
+      `E2 ⚠ the generic-serializer set changed: ${JSON.stringify(serializers)} — a serializer writes whole claims rows to a file the data subject receives, and a column-name scan cannot see it`)
+
     check(renders.length === 0,
       `E2 NO artist-facing UI file names any of the four internal columns — this is a column in a network response, NOT a score on a screen (executed over ${uiFiles.length} files)`,
       `E2 ⚠ an internal column is referenced in artist-facing UI: ${renders.join(', ')} — that would be a firewall breach, not a defence-in-depth gap`)
@@ -912,8 +974,10 @@ try {
 
   console.log('\n  ── candidate applied: scripts/sql/candidate-claims-internal-columns.sql ──')
   const icGrantsBefore = db.rows(GRANT_SQL)
+  const icSecBefore = db.rows(SECURITY_SQL)
   db.exec(readFileSync('scripts/sql/candidate-claims-internal-columns.sql', 'utf8'))
   const icGrantsAfter = db.rows(GRANT_SQL)
+  const icSecAfter = db.rows(SECURITY_SQL)
   {
     // Exactly two. The first draft revoked four; src/types.ts:76-77 declares
     // extraction_method and model_version as fields of the client-facing Claim
@@ -949,6 +1013,27 @@ try {
       'E4 the artist can still APPROVE a claim — SELECT and UPDATE are separate privileges (executed)',
       'E4 ⚠ the candidate broke the approval gate')
 
+    // E6 · THE CLOSED-LIST CONSEQUENCE, measured. The candidate replaces a
+    // TABLE-level grant with COLUMN-level grants, so `authenticated` loses the
+    // `r` bit in relacl and a column added AFTERWARDS is not covered by any
+    // grant. An earlier draft of the candidate's header claimed the exact
+    // opposite — that future columns would be granted automatically — and
+    // independent QA measured it false. This is the assertion that would have
+    // caught the claim.
+    const relacl = String(db.scalar(`select relacl::text from pg_class where relname='claims'`) ?? '')
+    check(/authenticated=[a-z]*w/.test(relacl) && !/authenticated=[a-z]*r[a-z]*w/.test(relacl),
+      `E6 authenticated no longer holds TABLE-wide SELECT on claims — relacl is ${relacl} (executed)`,
+      `E6 ⚠ authenticated still holds table-level SELECT: ${relacl} — then the revoke did not take effect`)
+    db.exec(`alter table public.claims add column if not exists qa_future_col text`)
+    const futureRead = db.try(`select qa_future_col from public.claims`, asUser(U.OWNER))
+    check(!futureRead.ok && /permission denied/i.test(futureRead.out),
+      'E6 a column added AFTER promotion is NOT readable by authenticated — promotion makes claims a CLOSED column list, so every future migration adding a claims column must extend the grant or the column is invisible to the app. This is an ongoing cost, not a self-maintaining design (executed)',
+      'E6 ⚠ a newly added column IS readable — re-derive E6, the closed-list property does not hold')
+    db.exec(`alter table public.claims drop column if exists qa_future_col`)
+    check(db.scalar(`select count(*) from information_schema.columns where table_schema='public' and table_name='claims' and column_name='qa_future_col'`) === '0',
+      'E6 probe column removed — the block leaves no schema residue (executed)',
+      'E6 ⚠ qa_future_col survived the probe')
+
     // Privilege-surface snapshot, same shape as D6.
     const key = (r) => r.join('|')
     const setB = new Set(icGrantsBefore.map(key)), setA = new Set(icGrantsAfter.map(key))
@@ -960,6 +1045,31 @@ try {
     check(added.length === 0,
       'E5 the candidate GRANTS nothing new anywhere (executed)',
       `E5 ⚠ the candidate ADDED privileges: ${added.slice(0, 6).join(', ')}`)
+    check(JSON.stringify(icSecAfter) === JSON.stringify(icSecBefore) && icSecBefore.length > 20,
+      `E5 the candidate adds/removes NO policy and changes no RLS flag — ${icSecBefore.length} policy/RLS rows byte-identical (executed)`,
+      `E5 ⚠ the SECURITY surface changed: ${icSecBefore.length} → ${icSecAfter.length} rows`)
+    // BEHAVIOURAL read-back. Section D has one (D4's stranger); section E copied
+    // D's privilege snapshot and not its control, so nothing here actually READ
+    // anything after the candidate. A backdoor policy would have passed.
+    // NOT "a stranger reads zero claims" — a published artist's passport-ok
+    // claim IS public, so zero would be the wrong contract and the first draft
+    // of this control asserted it and failed correctly. What must hold is that
+    // no PRIVATE claim reaches a no-grant organization.
+    // ONE column deliberately: a multi-column row whose first field is empty
+    // collapses in the harness's row parser, and the first draft of this check
+    // read the wrong index and failed on a correct database.
+    const strangerRows = db.rows(`select visibility from public.claims where artist_id='${ARTIST}'`, asUser(U.STRANGER))
+    const strangerPrivate = strangerRows.filter((r) => r[0] !== 'passport-ok')
+    check(strangerPrivate.length === 0,
+      `E5 behavioural control — a no-grant organization reads ONLY passport-ok claims after the candidate (${strangerRows.length} row(s), 0 private) (executed)`,
+      `E5 ⚠ a stranger reads ${strangerPrivate.length} PRIVATE claim(s): ${JSON.stringify(strangerPrivate)} — a permissive policy or disabled RLS looks exactly like this`)
+    check(strangerRows.length >= 1,
+      `E5 positive control: the stranger's read path WORKS (${strangerRows.length} public claim(s)), so the assertion above is not passing on a dead query (executed)`,
+      'E5 ⚠ the stranger read nothing at all — the private-claim assertion above would be vacuous')
+    const anonClaims = db.rows(`select value from public.claims`, { role: 'anon' }).map((r) => r[0])
+    check(!anonClaims.some((v) => /SECRET|ACT_B/.test(String(v))),
+      `E5 behavioural control — anon still reads no private claim text after the candidate (sees ${JSON.stringify(anonClaims)}) (executed)`,
+      `E5 ⚠ anon reads private claim text after the candidate: ${JSON.stringify(anonClaims)}`)
     check(removed.length === INTERNAL.length && removed.every((k) => k.startsWith('authenticated|claims|')),
       `E5 exactly ${INTERNAL.length} privileges were revoked, all on authenticated/claims — anon, service_role and every other table untouched (executed)`,
       `E5 ⚠ unexpected privilege changes: ${removed.join(', ')}`)

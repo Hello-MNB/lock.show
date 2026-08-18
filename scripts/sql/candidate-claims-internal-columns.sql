@@ -41,15 +41,36 @@
 -- the buyer boundary, not the artist one, and conflating the two is what the
 -- first draft did.
 --
--- ── WHY THE LIST IS COMPUTED, NOT WRITTEN OUT ───────────────────────────────
+-- ── WHY THE LIST IS COMPUTED, AND WHAT THAT ACTUALLY BUYS ───────────────────
 -- A hand-written column list is the defect that shipped in the first draft of
 -- candidate-act-public-scope.sql: it was copied from 001 and silently dropped
 -- migration 031's `artist_approved` gate. So this file does NOT enumerate the
 -- keep-list. It revokes, then re-grants every column of public.claims EXCEPT
--- the internal four, computed from information_schema at apply time. A column
--- added by a future migration is therefore granted automatically and cannot be
--- forgotten; a column that must be private has to be added to INTERNAL below,
--- which is a visible, reviewable act.
+-- the internal ones, computed from information_schema at apply time. That
+-- removes the stale-list defect: the file cannot forget a column that exists
+-- when it runs.
+--
+-- CORRECTION — an earlier draft of this header claimed the opposite of the
+-- truth, and independent QA measured it. It said "a column added by a future
+-- migration is therefore granted automatically and cannot be forgotten; a
+-- column that must be private has to be added to INTERNAL, which is a visible,
+-- reviewable act." BOTH HALVES ARE FALSE, because this replaces a TABLE-level
+-- grant with COLUMN-level grants and that inverts the default:
+--     relacl before:  authenticated=arwd    (r = table-wide SELECT)
+--     relacl after:   authenticated=awd     (the r is GONE)
+--   · A column added by a FUTURE migration is NOT granted. It is silently
+--     un-readable, and any explicit-list client read naming it fails with
+--     "permission denied for table claims".
+--   · A column that must be private but already exists when this runs IS
+--     granted automatically, with no edit to INTERNAL — the very failure the
+--     old wording claimed the design prevents.
+--
+-- THE REAL PROPERTY, STATED HONESTLY: promotion converts public.claims to a
+-- CLOSED column list for `authenticated`. Every future migration that adds a
+-- claims column acquires a new obligation to extend that grant, or the column
+-- is invisible to the app. That is a real ongoing cost and the owner should
+-- price it before promoting. The gate asserts it (E6) rather than describing
+-- it.
 --
 -- ── WHAT THIS BREAKS, STATED PLAINLY ────────────────────────────────────────
 -- `select *` on claims will FAIL for every authenticated caller — permission
