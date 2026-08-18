@@ -97,6 +97,50 @@ check(/history\.replaceState/.test(strip(provider)),
   'A6 the code is stripped from the address bar after exchange (no ?code left in history)',
   'A6 ⚠ the ?code is no longer stripped — a single-use recovery code would linger in browser history')
 
+// ── B · WHAT SURVIVES SIGN-OUT ──────────────────────────────────────────────
+// signOut() (AuthProvider.jsx:156-158) awaits supabase.auth.signOut() and clears
+// the profile state. It clears NO browser storage. Everything the app persists
+// therefore outlives the session and greets whoever signs in next on that
+// device. None of this is a breach — it is first-party, device-local state —
+// but it is a decision nobody made, so it is measured and pinned here.
+console.log('\n  B · what survives sign-out')
+const signOutBody = (provider.match(/const signOut = useCallback\([\s\S]*?\}, \[\]\)/) ?? [''])[0]
+check(signOutBody.length > 20,
+  'B0 non-vacuity: the signOut() implementation was located in AuthProvider.jsx',
+  'B0 ⚠ signOut() could not be located — every assertion below would be vacuous')
+check(!/localStorage|sessionStorage/.test(signOutBody),
+  `B1 signOut() clears the Supabase session and the profile, and NO browser storage — pinned so adding a clear is a visible change (body: ${signOutBody.replace(/\s+/g, ' ').slice(0, 90)}…)`,
+  'B1 signOut() now touches browser storage — good, and this gate is stale: update it and close SIGNOUT-SCOPE')
+
+// The exact surviving set, so a NEW persisted key becomes visible rather than
+// silently joining the list.
+const KEYS = [...new Set(files.flatMap((f) =>
+  [...strip(read(f)).matchAll(/(?:local|session)Storage\.(?:set|get|remove)Item\(\s*'([^']+)'/g)].map((m) => m[1])))].sort()
+check(KEYS.length === 7,
+  `B2 exactly ${KEYS.length} browser-storage keys exist and none is cleared on sign-out: ${KEYS.join(', ')}`,
+  `B2 ⚠ the persisted-key set changed (${KEYS.length}): ${KEYS.join(', ')} — a new key that outlives sign-out must be reviewed on its own terms`)
+
+// The two that carry user-identifying material.
+check(/gp_session/.test(read('src/lib/db.js')) && /crypto\.randomUUID/.test(read('src/lib/db.js')),
+  'B3 gp_session is a UUID minted ONCE into localStorage and never cleared — so two different signed-in people on one browser share one measurement identifier. The id itself carries no PII, as db.js:459 says; the LINKAGE between two people is the part that is not stated',
+  'B3 ⚠ the gp_session mint path changed — re-derive this contract')
+check(/props\?\.artist_id|props\.artist_id/.test(read('src/lib/db.js')),
+  'B4 the gigproof_events ring buffer carries artist_id in event props (db.js hasShareEvent reads it) and is never cleared — the previous user\'s activity, including which artists they worked on, stays on the device',
+  'B4 ⚠ the event-props shape changed — re-derive what survives sign-out')
+
+// ── B5 · the stale-Act hazard is ALREADY closed; pin it so it stays closed ──
+// LANE-A T-106: the stored Act id was once adopted UNVERIFIED, so a leftover
+// value from another Person on the same browser made the editor address an Act
+// the artist does not hold. Both consumers now validate ownership first. That
+// is why the surviving `gigproof_active_act` above is harmless — and this is
+// the assertion that keeps it that way.
+for (const f of ['src/features/artist/RadarUniverse.jsx', 'src/features/artist/ActEditor.jsx']) {
+  const t = strip(read(f))
+  check(/gigproof_active_act/.test(t) && /\.some\(\s*\(?\s*[ar]\)?\s*=>\s*[ar]\.id === stored\)/.test(t),
+    `B5 ${f} adopts the stored Act ONLY after checking it is one of this artist's own Acts (LANE-A T-106 regression pin)`,
+    `B5 ⚠ ${f} no longer validates the stored Act against the artist's own Acts — T-106 (stale cross-Person context) is reachable again`)
+}
+
 console.log(`
   EVIDENCE OPEN, not asserted: whether GoTrue revokes OTHER sessions on a
   password change, whether the recovery code is single-use in practice, and
@@ -105,5 +149,5 @@ console.log(`
 
 console.log(failed
   ? `\n✗ AUTH · SESSION · RECOVERY: FAILED (${checks} checks)\n`
-  : `\n✓ AUTH · SESSION · RECOVERY: ${checks} static checks hold — one password-change surface, public by design, ready on any session, with no re-authentication in front of it.\n`)
+  : `\n✓ AUTH · SESSION · RECOVERY: ${checks} static checks hold — one password-change surface, public by design, ready on any session, with no re-authentication in front of it; and sign-out clears the session but none of the 7 persisted browser keys, with the T-106 stale-Act validation pinned at both consumers.\n`)
 process.exit(failed ? 1 : 0)

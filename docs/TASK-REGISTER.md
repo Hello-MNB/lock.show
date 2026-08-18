@@ -3011,3 +3011,40 @@ session a harness-shape assumption produced a false red — the same class as th
 check.
 
 **151 checks (was 146).**
+
+## T-120 · WHAT SURVIVES SIGN-OUT (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** Measurement and regression-pinning; no behaviour changed. The
+decision is **OWNER-PENDING SIGNOUT-SCOPE**, filed as a hazard rather than a defect.
+
+`signOut()` (`AuthProvider.jsx:156-158`) awaits `supabase.auth.signOut()` and clears the profile state.
+It clears **no browser storage**, so all **seven** persisted keys outlive the session and greet whoever
+signs in next on that device. None of this is a breach — it is first-party, device-local state — but it
+is a decision nobody made, so it is now measured and pinned rather than incidental.
+
+**Two of the seven carry user-identifying material.**
+* **`gp_session`** — a UUID minted once into localStorage and never cleared. `db.js:459` calls it an
+  "Anonymous browser session id … (no PII)", which is true **of the id**; what is not stated anywhere is
+  that it survives sign-out, so two different signed-in people on one browser share one measurement
+  identifier.
+* **`gigproof_events`** — a 100-event ring buffer whose props include `artist_id` (`hasShareEvent()`
+  reads exactly that). The previous user's activity, including which artists they worked on, stays on
+  the device.
+
+**The stale-Act key is harmless, and this is why.** `gigproof_active_act` also survives, but both
+consumers validate ownership before adopting it — `RadarUniverse.jsx:337` and `ActEditor.jsx:339`, the
+latter citing **LANE-A T-106** by name: *"the stored id was adopted UNVERIFIED, so a leftover value from
+another Person/workspace on this browser made the editor address an Act this artist does not hold."*
+That hazard was found and fixed once. **B5 now regression-pins both consumers**, so removing either
+validation fails the chain instead of quietly re-opening T-106.
+
+**Mutation-proven 5/5**, each caught by the intended assertion: `signOut()` starting to clear storage
+(the gate declares *itself* stale and names SIGNOUT-SCOPE) · a new persisted key appearing · the
+ownership validation removed from `RadarUniverse` · and from `ActEditor` · the `gp_session` mint path
+changing.
+
+**Honest scope.** These are static assertions over source — no browser is driven, and sign-out is not
+executed. They pin the SHAPE of what persists so it cannot drift silently; they do not prove runtime
+storage behaviour. Whether GoTrue itself clears its own session keys is separate and untested here.
+
+**19 static checks (was 12).**
