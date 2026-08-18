@@ -2927,3 +2927,49 @@ only through hoisting; it now measures through `@supabase/supabase-js`, the decl
 imports, which QA confirmed emits identical URLs.
 
 **146 checks (was 137).**
+
+## T-118 · FIRST GATE FOR AUTH / SESSION / RECOVERY (18 Aug 2026)
+
+**Status: COMPLETE with evidence** for what static analysis can prove; the decision is
+**OWNER-PENDING AUTH-REAUTH**.
+
+auth/session/recovery is **first** in the controller's priority list and had **zero** coverage — no gate
+in `scripts/` touched it. Five consecutive runs had been hardening proofs for four candidates that are
+all owner-blocked, so the tenancy lane could not advance; this band could.
+
+**What was found, grounded in four files.** `/reset-password` is the ONLY password-change surface in the
+app — exactly one `auth.updateUser()` call site, and `Settings.jsx` has no password flow at all. It is a
+**public route** (correctly: a recovery link must open without a prior session). And it becomes ready on
+**any** live session, not only a `PASSWORD_RECOVERY` one: `ResetPassword.jsx:26-31` treats
+`getSession()` returning a session, or a `SIGNED_IN` event, as sufficient.
+
+The consequence, stated plainly and **pinned, not endorsed**: anyone holding a live session can set a
+new password without presenting the old one, and the page tells them *"you'll stay signed in"*. The only
+`signInWithPassword` in the app is the login path, so nothing re-authenticates in front of it. The
+broadening is deliberate and documented at `ResetPassword.jsx:19-24` — the PKCE recovery code is
+exchanged by `AuthProvider` on boot and can consume `PASSWORD_RECOVERY` before this listener mounts,
+which would hang the form on "verifying…" forever. That reasoning is sound; what is missing is any
+acknowledgement of what the fix costs. Recorded as **AUTH-REAUTH** so it is a decision rather than an
+accident.
+
+**Also pinned:** exactly one `exchangeCodeForSession()` consumer (two would race for a single-use code),
+and the `?code` is stripped from the address bar after exchange.
+
+**Mutation-proven 6/6**, each caught by the intended assertion: a second password-change surface · the
+route becoming guarded · the `getSession→setReady` path removed · a re-auth step appearing (the gate
+declares *itself* stale and names AUTH-REAUTH) · a second code-exchange consumer · the `?code` no longer
+stripped.
+
+**The first battery was INVALID and I caught it only afterwards.** I contaminated `Login.jsx` before the
+run and my restore set omitted that file, so all six "catches" were A1 firing on the contamination
+rather than on the intended mutations. Redone with a `git checkout` restore covering every touched file
+and a post-restore green check between mutations. The contamination did surface a real defect: the
+matcher counted a **commented-out** `auth.updateUser(` as a live surface. Comments are now stripped
+before matching, with a positive control proving a commented-out call is ignored.
+
+**What this gate does NOT prove, named so its absence is visible:** whether GoTrue revokes other sessions
+on a password change, whether the recovery code is single-use in practice, and token lifetimes. All three
+need a running auth server; this container has none. These are static assertions over source — they pin
+the SHAPE of the surface so it cannot drift silently, which is not the same as proving runtime behaviour.
+
+**12 static checks. Wired into `verify` (39 steps, was 38).**
