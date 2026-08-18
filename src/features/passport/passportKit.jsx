@@ -758,7 +758,7 @@ export function PassportFooter() {
   return (
     <footer className="mt-12 border-t border-line pt-5 pb-2">
       <Link to="/" className="tap-target inline-block font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-gold">
-        LOCK · lock.show
+        LOCK SHOW · lock.show
       </Link>
     </footer>
   )

@@ -426,7 +426,7 @@ export function openGraphFor(projection, { locale = X_DEFAULT_LOCALE, result = n
     type: 'profile',
     locale: meta.og,
     alternateLocale: Object.freeze(alternates),
-    siteName: 'LOCK',
+    siteName: 'LOCK SHOW',
     title: projection?.actName ?? null,
     description: null,     // supplied by the locale message file, never derived from evidence
     url: projection?.slug ? publicUrlFor(projection.slug, { locale }) : null,

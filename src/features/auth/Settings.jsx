@@ -601,7 +601,7 @@ export default function Settings() {
 
       <div className="flex items-center justify-center gap-2 pt-2 text-[11px] text-faint">
         <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">{T.settings.betaBadge}</span>
-        <span>LOCK v1</span>
+        <span>LOCK SHOW v1</span>
       </div>
       {/* Build stamp (W-2#5) — Settings is reachable from every role/breakpoint
           (header link), so it's the one guaranteed mobile home for this too —

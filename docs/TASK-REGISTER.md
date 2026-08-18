@@ -4073,3 +4073,95 @@ i18n KEYS are untouched — parity holds at 1332 EN / 1328 HE. The wordmark is n
 layout change on 11 screens; `test-fit` renders those at 360/390/430/1360 in both directions and is
 the evidence for it. `docs/**` is still out of scope (BRAND-DOCS-SCOPE, owner call).
 
+---
+
+## BRAND-APP-EMBED — the repaired strings never reached the artifact users load
+
+**Trigger:** QA-INDEP-02, an independent adversarial review of `e8d9eb4..74f623e` by a separate agent
+instance (109 tool calls). It returned ACCEPT for STORAGE-BEHAVIOUR, ACCEPT WITH CONDITIONS for three,
+and **REVISE for BRAND-APP-I18N** — *"not because the edits are wrong … because the commit's account
+of its own scope does not survive execution."* That is the correct verdict and this closes it.
+
+### H1 — the headline claim failed at the only place it is observable
+
+`website-next/public/app/assets/index-B0moPvgL.js` is committed, copied to `out/`, and referenced by
+all 29 shipped app shells. It still contained, verbatim:
+
+```
+brand:"LOCK"   disclaimer:"LOCK מציג עדויות בלבד — לא ערובה."   homeAria:"LOCK — מעבר לדף הבית"
+```
+
+— the **exact tokens** BRAND-APP-I18N edited in `src/lib/i18n/*.js`. The bundle was last built
+**27 July** (`045ffc2`), `npm run verify` never runs `build:embed`, and no gate compared the two. So
+the artifact a real visitor loads from `lock.show/app` rendered the prohibited form while the chain
+reported green. Rebuilt: **0 bare LOCK** in the shipped bundle.
+
+### Three rendered surfaces I had omitted from my own enumeration
+
+The reviewer enumerated the 18 I had deferred and found at least six were unambiguous rendered brand
+surfaces, not the *"code identifiers, contracts, analytics labels and one CSS comment"* I described.
+Two were **absent from my list entirely**, and both were in the shipped bundle:
+
+| file | surface |
+|---|---|
+| `passportKit.jsx:761` | **PassportFooter** — rendered on all four public buyer views. The product's core artifact |
+| `Settings.jsx:604` | visible build badge `LOCK v1` |
+| `publicPassport.js:429` | `og:site_name` — the ruling names metadata and social text explicitly |
+
+Because the budget had just been made **exact equality**, the gate was green *because* these were
+still broken. Budget **18 → 15**, and the description of the remainder is now marked as a claim to
+re-check rather than a settled classification.
+
+### H2 + M4 — the gate named surfaces no clause opened
+
+C1's file list covered `website-next/{app,components,lib,messages}` and `src` — not
+`website-next/content/` (which holds `copy-matrix.ts`, the site's own copy source of truth) and not
+one of the 29 public app shells or their bundle, while the summary line said *"website source …
+public app shells"*. Scope widened: **49 → 82 files**.
+
+### M3 + M5 — two exemptions that were wider than their justification
+
+- The `"source_brand":` skip discarded the **whole line**, reproducing at line granularity the exact
+  whole-file hole its own comment says it replaced. It now strips only the source_brand **value**.
+- `SHOW` in `HE_ALLOW` hid untranslated English in Hebrew copy: the reviewer put `liveDraw: 'SHOW'`
+  into `he.js` and the gate passed, where the pre-change gate caught it. The brand is now exempt as
+  the **phrase** `LOCK SHOW`, stripped before word extraction, so a bare `SHOW` fails again.
+
+### M8 — the new gradient rule could not fire on the current spelling
+
+`website-next/package.json` pins `tailwindcss: ^4`, where `bg-gradient-to-*` is renamed
+`bg-linear-to-*` — and `website-next/{app,components}` is **half of R5's own scope**. R5 matched only
+the v3 spelling, and its self-test **pinned that blindness as correct**. Both spellings now match.
+
+### M2 — a claim corrected, with the reviewer's evidence
+
+I wrote that the wordmark change was covered by *"test-fit … 11 screens"*. There are 11 `<Wordmark>`
+sites and test-fit covers 11 screens, **and they are not the same 11**. The reviewer measured
+test-fit's actual routes: at 360px, 8 of 10 show no wordmark at all (SideNav is `hidden md:flex`), so
+test-fit covers **3 of 11** sites, and **2** at the mobile widths I cited. The claim was wrong.
+**The code was not**: the reviewer rendered all eleven at 360 and 1360 in both locales and measured
+`scrollWidth/clientWidth = 78/78`, no wrap, no overflow, no collision, anywhere.
+
+### One finding NOT accepted, with evidence
+
+**L1** claims the AuthScene comment states its measurement backwards. It does not. My own probe
+printed `rtl  panel 520→1440 · gradient ramps to left · opaque edge at 520 · seam with form at 520 ·
+MATCH`, and the comment says the photo panel moves to 520→1440 with the seam at 520. The reviewer
+measured a different element and named it "panel". Recorded rather than "fixed", because changing a
+correct statement to match an incorrect report would be the worse error.
+
+**Mutation battery — 3/3 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **N1** | restore the 27 July bundle | C1: **44 bare LOCK** in the website scope — the widened scope is load-bearing |
+| **N2** | `bg-linear-to-r` unmirrored in `consent-banner.tsx` | R5, which could not see it before |
+| **N3** | bare `SHOW` in a purely-Latin `he.js` value | `HE-ENGLISH he.js:11 "SHOW"` |
+
+**Still open from this review, recorded not repaired:** M6 (chain-closed cannot see non-literal
+import specifiers — the limit must be stated the way the storage gate states its own), M7 (the
+evidence parser still drops 8 of 39 gates whose summaries lack a leading `✓` or a recognised
+separator), L2/L3 (`test-visual-regression`'s header still documents the removed seeding behaviour,
+and `--update` still prints "0 of 28 match"), L4 (the `@scope` key churns on a no-op rename), L5, L7,
+P1 (`og-default.svg` carries a bare LOCK wordmark; the served PNG unverified), P2.
+

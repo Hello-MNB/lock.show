@@ -62,14 +62,17 @@ const LOCKUP_ALLOWLIST = []
 // below MAY ONLY SHRINK: fixing tokens is always allowed, adding any is a gate
 // failure. Recorded 17 Aug 2026.
 //
-// SHRUNK 57 → 18 on 2026-08-18 (BRAND-APP-I18N). The two i18n catalogues and the
-// RENDERED WORDMARK are done: 39 user-visible tokens repaired, including
-// `ui.jsx` Wordmark, which is the `<b>` element eleven screens draw their brand
-// from and which still read a bare "LOCK". What remains is 18 tokens across 14
-// files — code identifiers, contracts, analytics labels and one CSS comment —
-// each of which needs a per-site judgement about whether it is a brand mention
-// at all, rather than a catalogue sweep. The budget MAY ONLY SHRINK.
-const SRC_APP_DEFERRAL = 18
+// SHRUNK 57 → 18 (BRAND-APP-I18N) → 15 (BRAND-APP-EMBED), both 2026-08-18.
+// The two i18n catalogues, the RENDERED WORDMARK, and three rendered surfaces an
+// independent reviewer caught me omitting from my own enumeration: the
+// PassportFooter (`passportKit.jsx`, on all four public buyer views — the
+// product's core artifact), the Settings build badge, and `og:site_name` in
+// `publicPassport.js`. My earlier note called the remainder "code identifiers,
+// contracts, analytics labels and one CSS comment"; that was wrong, and the
+// exact-equality budget was freezing real rendered copy behind it. What remains
+// is 15 tokens, and each still needs a per-site judgement — it is a claim to
+// re-check, not a settled classification. The budget MAY ONLY SHRINK.
+const SRC_APP_DEFERRAL = 15
 const SRC_APP_DEFERRAL_DATE = '2026-08-18'
 
 let failed = false
@@ -114,8 +117,18 @@ const lines = (t) => t ? t.split('\n').filter(Boolean) : []
 // ── CLAUSE 1 · SOURCE: website visible/metadata + ALL of the app's visible
 // surfaces — not only the i18n catalogues. Gating i18n alone left 23 of the
 // app's tokens ungated in the first draft of this contract.
+// SCOPE MUST MATCH THE SENTENCE THIS GATE PRINTS (independent review H2/M4).
+// It claimed "website source … and public app shells" while opening neither
+// `website-next/content/` — which holds copy-matrix.ts, the site's own copy
+// source of truth, whose header says it exists because "~446 user-visible
+// strings sat hardcoded in components" — nor any of the 29 shipped app shells
+// and their JS bundle. The bundle was the expensive one: it is what users
+// actually load from lock.show/app, it is committed, `verify` never rebuilds
+// it, and it still carried `brand:"LOCK"` from 27 July while this gate reported
+// the brand clean. A gate that names a surface must read it.
 const SRC = [
-  ...lines(sh("git ls-files 'website-next/app' 'website-next/components' 'website-next/lib' 'website-next/messages'")),
+  ...lines(sh("git ls-files 'website-next/app' 'website-next/components' 'website-next/lib' 'website-next/messages' 'website-next/content'")),
+  ...lines(sh("git ls-files 'website-next/public/app'")),
   ...lines(sh("git ls-files 'src'")),
   'index.html',
 ].filter((f) => /\.(tsx|ts|jsx|js|json|css|html)$/.test(f) && existsSync(f))
@@ -128,8 +141,12 @@ for (const f of SRC) {
     // CLAUSE 7 · exempt source_brand LINES, not the whole file. Exempting
     // registryData.js wholesale left its 3 limitation_text PROSE tokens —
     // rendered-class copy — outside every assertion.
-    if (/"source_brand"\s*:/.test(line)) return
-    const m = line.match(BARE)
+    // Strip the source_brand VALUE, not the whole line (review M3). The
+    // line-level skip reproduced at line granularity exactly the whole-file
+    // hole it replaced: a `limitation_text` value sharing a physical line with
+    // `"source_brand":` was invisible, and one reformat of that generated file
+    // would open ~190 of them.
+    const m = line.replace(/"source_brand"\s*:\s*"[^"]*"/g, '').match(BARE)
     if (!m) return
     if (isApp) { appHits += m.length; return }
     webHits += m.length

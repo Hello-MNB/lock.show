@@ -323,14 +323,19 @@ check('R4 non-vacuity — the CSS scanner did find declarations in this tree', c
 // token scan above is src-only; this check is deliberately wider because a
 // marketing-site gradient has exactly the same failure mode. Measured today:
 // one horizontal gradient in the whole tree, already mirrored.
-const GRAD_H = /(?:^|[\s"'`{:])(?:!?(?:[a-zA-Z0-9_@\[\]./-]+:)*)bg-gradient-to-(?:r|l|tr|tl|br|bl)\b/
-const GRAD_RTL = /rtl:bg-gradient-to-/
+// BOTH SPELLINGS (independent review M8). Tailwind v4 renamed
+// `bg-gradient-to-*` to `bg-linear-to-*`, and `website-next/package.json` pins
+// `tailwindcss: ^4` — which is HALF THIS RULE'S OWN SCOPE. As shipped, R5 could
+// not fire on the current spelling in the marketing site it had just been
+// widened to cover, and the self-test pinned that blindness as correct.
+const GRAD_H = /(?:^|[\s"'`{:])(?:!?(?:[a-zA-Z0-9_@\[\]./-]+:)*)bg-(?:gradient|linear)-to-(?:r|l|tr|tl|br|bl)\b/
+const GRAD_RTL = /rtl:bg-(?:gradient|linear)-to-/
 function gradientViolations(text) {
   const out = []
   text.split('\n').forEach((line, i) => {
     if (!GRAD_H.test(line)) return
     // A line that only carries the rtl: counterpart is the counterpart.
-    const bare = line.replace(/rtl:bg-gradient-to-(?:r|l|tr|tl|br|bl)\b/g, '')
+    const bare = line.replace(/rtl:bg-(?:gradient|linear)-to-(?:r|l|tr|tl|br|bl)\b/g, '')
     if (!GRAD_H.test(bare)) return
     if (!GRAD_RTL.test(line)) out.push({ line: i + 1, text: line.trim().slice(0, 100) })
   })
@@ -347,7 +352,9 @@ function gradientViolations(text) {
     ['<div className="bg-gradient-to-t from-a to-b" />', 0],
     ['<div className="bg-gradient-to-b from-a to-b" />', 0],
     ['<div className="rtl:bg-gradient-to-l from-a to-b" />', 0],
-    ['<div className="bg-linear-to-r from-a to-b" />', 0],
+    ['<div className="bg-linear-to-r from-a to-b" />', 1],
+    ['<div className="bg-linear-to-r rtl:bg-linear-to-l from-a to-b" />', 0],
+    ['<div className="bg-linear-to-t from-a to-b" />', 0],
   ]
   const wrong = CASES.filter(([src, want]) => gradientViolations(src).length !== want)
   check('S5 gradient-mirror self-test — fires on an unmirrored horizontal gradient, silent on a mirrored or vertical one',
