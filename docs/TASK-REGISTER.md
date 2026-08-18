@@ -3115,3 +3115,39 @@ gate now prints its own scope limit — **tracked files only** — because that 
 reader would otherwise not know about.
 
 **26 static checks (was 19).**
+
+## T-121 · A REAL TRANSFORM REPLACES THE HAND-ROLLED STRIPPER (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** Root-cause fix for the sixth review's HIGH-3, not another patch on
+the instance.
+
+Three of that review's six defects were **regex limitations rather than logic errors**, and the worst —
+HIGH-3 — was a comment stripper I wrote by hand, which **deleted live code**: it removed block comments
+before line comments, so a `/*` written inside a `//` comment opened a phantom block that swallowed
+everything to the next `*/`. An entire second password-change surface and a new storage key hid behind
+two ordinary TODO comments while the gate stayed green. It had been introduced as the FIX for a
+contamination incident and created a worse class of bug than the one it closed.
+
+**Comments and TypeScript types are now removed by esbuild**, with `jsx: 'preserve'` so the route
+assertions still see real JSX. It arrives with **`vite ^5.4.8`, a declared devDependency** — deliberately
+not `acorn` or `@babel/parser`, both of which are present in `node_modules` but declared nowhere, and
+depending on a hoisted phantom is a mistake this same file already made once with
+`@supabase/postgrest-js`. (acorn also cannot parse this codebase's JSX/TSX without further plugins.)
+
+**It fails closed, twice over.** If esbuild cannot be imported the gate exits 1 rather than scanning raw
+text — proven by pointing the import at a non-existent package. If any tracked file fails to transform,
+the gate names the file and exits 1 rather than falling back. And `strip()` refuses text it has never
+transformed instead of quietly passing it through, so a future caller cannot reintroduce raw-text
+scanning by accident.
+
+**A self-test guards the mechanism itself (T0).** It transforms the exact shape that defeated the hand-
+rolled version — a `/*` inside a `//` comment with live code between — and asserts both halves: real code
+SURVIVES, comments are REMOVED. A transform that silently became a no-op would fail here rather than
+quietly restoring the blind spot.
+
+**No regression: all 8 of the sixth review's mutations remain caught** — new key via a named const · the
+comment-hidden surface (the HIGH-3 trap itself) · an OTP re-auth step · a `.tsx` surface · destructuring
+off `supabase.auth` · sign-out clearing through a helper · `publicSessionId()` clearing keys · a parent
+LAYOUT route guard.
+
+**28 static checks (was 26).** No app behaviour changed; no dependency added.

@@ -36,32 +36,70 @@ const read = (f) => readFileSync(f, 'utf8')
 // not a password-change surface, and an early version of this gate counted one
 // — which produced a battery of FALSE catches until the contamination was
 // noticed. Strip line and block comments, then match.
-// LINE comments first, THEN block comments. The original did the reverse, and a
-// `/*` written inside a `//` comment opened a phantom block that swallowed
-// everything up to the next `*/` — independent QA hid an entire second
-// password-change surface AND a new storage key behind two ordinary TODO
-// comments, and the gate stayed green. Introduced as the fix for a
-// contamination incident, it created a worse class of bug than it closed.
-const strip = (t) => t
-  .split('\n')
-  .map((line) => {
-    // Remove a // comment, but never one inside a URL (https:// or //cdn.host).
-    let out = '', q = null
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i]
-      if (q) { out += c; if (c === q && line[i - 1] !== '\\') q = null; continue }
-      if (c === '"' || c === "'" || c === '`') { q = c; out += c; continue }
-      if (c === '/' && line[i + 1] === '/') break
-      out += c
-    }
-    return out
-  })
-  .join('\n')
-  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+// COMMENTS AND TYPES ARE REMOVED BY A REAL TRANSFORM, not by hand. The previous
+// implementation was hand-rolled and independent QA proved it DELETED LIVE CODE:
+// it stripped block comments before line comments, so a `/*` written inside a
+// `//` comment opened a phantom block that swallowed everything to the next
+// `*/`. An entire second password-change surface and a new storage key hid
+// behind two ordinary TODO comments while the gate stayed green. It had been
+// introduced as the FIX for a contamination incident and created a worse bug
+// than the one it closed.
+//
+// esbuild arrives with `vite ^5.4.8`, a DECLARED devDependency — not a phantom
+// resolved through hoisting, which is the mistake this file already made once
+// with @supabase/postgrest-js. `jsx: 'preserve'` keeps JSX intact so the route
+// assertions still see <Route …>, while comments and TypeScript types go.
+//
+// FAILS CLOSED: if the transform is unavailable or any file fails to parse, the
+// gate exits non-zero. A skip is not a pass, and silently falling back to raw
+// text would restore the exact blind spot this replaces.
+let esbuild = null
+try { esbuild = (await import('esbuild')).default ?? (await import('esbuild')) } catch { /* handled */ }
+if (!esbuild) {
+  console.log('  ✗ B0 ⚠ esbuild (via vite) could not be imported — comments and types cannot be removed reliably, so every source assertion below would be UNSOUND. Not skipping: this fails.')
+  process.exit(1)
+}
+const CODE = new Map()   // raw source -> transformed source, keyed by content
+for (const f of files) {
+  const raw = readFileSync(f, 'utf8')
+  try {
+    CODE.set(raw, (await esbuild.transform(raw, { loader: 'tsx', jsx: 'preserve' })).code)
+  } catch (e) {
+    console.log(`  ✗ B0 ⚠ ${f} failed to transform (${String(e).split('\n')[0]}) — refusing to scan it as raw text`)
+    process.exit(1)
+  }
+}
+// Callers pass file CONTENT. An unknown string means someone scanned something
+// that was never transformed — fail rather than silently scanning raw text,
+// which is the blind spot this whole block exists to remove.
+const strip = (t) => {
+  if (CODE.has(t)) return CODE.get(t)
+  console.log('  ✗ B0 ⚠ strip() received text that was never transformed — refusing to scan raw source')
+  process.exit(1)
+}
 const hits = (re) => files.flatMap((f) => [...strip(read(f)).matchAll(re)].map(() => f))
 
 console.log('\nAUTH · SESSION · RECOVERY — static contract (GoTrue not runnable here)')
 console.log('  · scope: TRACKED files only (git ls-files). An untracked working-tree file is invisible to every check below.')
+
+// SELF-TEST of the transform, so it cannot silently become a no-op and quietly
+// restore the blind spot it replaced. Uses the exact shape that defeated the
+// hand-rolled stripper: a `/*` inside a `//` comment, with real code between.
+{
+  const trap = [
+    '// TODO: strip a leading /* from the pasted snippet',
+    'await supabase.auth.updateUser({ password })',
+    "localStorage.setItem('gp_selftest_key', '1')",
+    '// ...and the trailing */ too',
+  ].join('\n')
+  const t = (await esbuild.transform(trap, { loader: 'tsx', jsx: 'preserve' })).code
+  check(/updateUser/.test(t) && /gp_selftest_key/.test(t),
+    'T0 transform self-test: real code SURVIVES a `/*` written inside a `//` comment — the exact shape that made the previous hand-rolled stripper delete a live password-change surface',
+    `T0 ⚠ the transform deleted real code — every source assertion below is unsound. Got: ${JSON.stringify(t)}`)
+  check(!/TODO/.test(t),
+    'T0 transform self-test: comments ARE removed, so a commented-out call site is not counted as live',
+    `T0 ⚠ comments survive the transform — commented-out code would count as a real surface. Got: ${JSON.stringify(t)}`)
+}
 
 // ── vacuity guards ──────────────────────────────────────────────────────────
 check(files.length >= 50,
