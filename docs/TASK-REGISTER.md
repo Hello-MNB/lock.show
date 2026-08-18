@@ -3765,3 +3765,62 @@ unchanged across the whole range, so the LTR positive control is genuine and not
 independence from C2 confirmed **accidentally on the live tree** · check counts and file:line
 citations exact · FIT-RTL's HE dimension better than its own caveat (1219 of 1230 keys translated).
 
+---
+
+## STORAGE-BEHAVIOUR — closing QA-INDEP-01 findings F4 and F5
+
+**Band:** resumable onboarding / isolated test environment. **Files:** new `src/lib/safeStorage.js` ·
+`src/features/artist/Onboarding.jsx` · `scripts/test-storage-resilience.mjs`.
+
+**F4 — the gate proved SHAPE, never BEHAVIOUR.** The independent reviewer showed that a `catch` which
+RETHROWS satisfies every ancestry rule in the gate, so ONB-RESUME-STORAGE's own defect could be
+reintroduced with S5 printing *"ZERO unguarded web-storage access"*. The three helpers were local
+functions inside a React component module, which cannot be imported by a test without pulling in the
+router, the Supabase client and the component tree — so there was no way to execute them.
+
+They now live in **`src/lib/safeStorage.js`**, exported, with the store resolved **inside** the try:
+`globalThis.sessionStorage` is reached for within the guarded region, because the failure a
+site-data-disabled browser actually produces is the **property access** throwing, not the method.
+`Onboarding.jsx` keeps `stepStorageKey` and `readSavedStep` and routes the three touches through the
+module; behaviour is identical.
+
+**Four executed checks (E1–E4)** replace inspection with execution:
+· **E1** property access throws → helpers return `null`/`false`/`false`, nothing propagates
+· **E2** the store resolves but every method throws → same (a helper that resolved the store outside
+  its try would pass E2 and fail E1)
+· **E3 positive control** with a working in-memory store the helpers really read, write and remove —
+  without it, helpers hard-coded to return `null`/`false` would satisfy E1 and E2 while storing nothing
+· **E4** `Number(safeSessionGet(missing))` falls outside `1..STEPS`, so a lost pointer resumes at step 1
+
+**F5 — the ratchet was defeated by relocation.** Keying on `file → multiset of object.property` meant
+debt could MOVE inside a baselined file — guard the listed site, add an unguarded one in another
+function — with the multiset unchanged, so neither NEW nor STALE fired. The key is now
+**`object.property@enclosingNamedScope`**. The nearest NAMED scope is the right discriminator: it
+changes when a site moves to a different function, and it does not churn when anonymous callbacks are
+reordered, because an anonymous function inherits its nearest named ancestor rather than an index.
+All 15 baseline entries were re-keyed from the gate's own output, not by hand.
+
+**A limit that stopped being acceptable the moment code landed on the other side of it.** The gate
+documented that a `globalThis.` spelling would not be seen. `safeStorage.js` is written in exactly
+that spelling, and the scanner counted **zero** sites in the module that now carries the fail-soft
+path — 45 sites where there should have been 51. Hosts are now `window` / `globalThis` / `self`, with
+S6 cases for each. Aliasing (`const ls = localStorage`) and computed hosts remain unseen and remain
+stated.
+
+**Mutation battery — 4/4 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **H1** | the reviewer's F4 injection verbatim — a `catch` that rethrows | **E1 and E2**, where the shape checks still pass |
+| **H2** | the reviewer's F5 injection — guard the baselined site, add an unguarded one elsewhere in the same file | **S4**, naming `sessionStorage.setItem@Signup` → `@__qaRelocated` |
+| **H3** | fail-soft but return the wrong fallback (`true` on failure) | E1 + E2 |
+| **H4** | hard-code the helpers to do nothing | **E3 alone** — E1 and E2 passed, proving the positive control independently load-bearing |
+
+**Counts:** 97 tracked src files · **51** storage sites · 36 guarded · 15 open (baselined, unchanged) ·
+**13 checks** (was 9).
+
+**Scope limits.** E1–E4 execute the HELPERS, not the component: `readSavedStep` and the mount effect
+are still only inspected, so "onboarding survives" is now supported for the storage layer and remains
+inferred for the screen. The 15 baselined sites are untouched — each still needs its own
+fallback-semantics decision. Nothing here has been exercised in a real storage-refusing browser.
+

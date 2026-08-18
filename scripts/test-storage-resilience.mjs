@@ -22,11 +22,15 @@
  *   · fixing a baselined one ALSO fails until the baseline is tightened
  *     (a ratchet that can silently loosen is not a ratchet).
  *
- * KNOWN LIMITS, stated rather than implied: the scan is static and lexical, so
- * it sees `localStorage.*` / `window.localStorage.*` written out. An alias
- * (`const ls = localStorage`), a computed host (`window['localStorage']`) or a
- * `globalThis.` spelling would not be seen. None appears in this tree today;
- * the point is that the gate's green does not deny they could.
+ * KNOWN LIMITS, stated rather than implied: the scan is static and lexical. It
+ * sees the bare token and the `window.` / `globalThis.` / `self.` spellings.
+ * `globalThis.` used to be outside that list — until src/lib/safeStorage.js was
+ * written in exactly that spelling and this scanner counted ZERO sites in the
+ * module that now carries the fail-soft path. A documented limit is not the same
+ * as an acceptable one once real code lands on the other side of it. An alias
+ * (`const ls = localStorage`) or a computed host (`window['localStorage']`)
+ * still would not be seen; neither appears in this tree today, and the gate's
+ * green does not deny that they could.
  *
  * The baseline is DEBT, listed openly — not a claim that those sites are safe.
  * Each needs its own fallback-semantics decision (what does publicSessionId()
@@ -43,6 +47,7 @@
  */
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import * as esbuild from 'esbuild'
 import * as acorn from 'acorn'
 
@@ -50,14 +55,16 @@ import * as acorn from 'acorn'
 // Tracked as follow-up ONB-RESUME-STORAGE-DEBT. Line numbers are deliberately
 // NOT part of the key — they churn on every unrelated edit; the file + call
 // shape is what identifies the debt.
+// Entries are `object.property@enclosingNamedScope`. The scope half is what
+// stops debt relocating inside a listed file without the ratchet noticing.
 const BASELINE = {
-  'src/context/LangContext.jsx': ['localStorage.getItem', 'localStorage.setItem'],
-  'src/features/artist/ClaimReview.jsx': ['localStorage.getItem', 'localStorage.removeItem', 'localStorage.removeItem', 'localStorage.setItem'],
-  'src/features/artist/RadarUniverse.jsx': ['localStorage.getItem'],
-  'src/features/auth/AuthProvider.jsx': ['localStorage.getItem', 'localStorage.removeItem', 'localStorage.setItem'],
-  'src/features/auth/Signup.jsx': ['sessionStorage.setItem'],
-  'src/features/auth/UserTypeSelect.jsx': ['sessionStorage.getItem', 'sessionStorage.removeItem'],
-  'src/lib/db.js': ['localStorage.getItem', 'localStorage.setItem'],
+  'src/context/LangContext.jsx': ['localStorage.getItem@saved', 'localStorage.setItem@setLang'],
+  'src/features/artist/ClaimReview.jsx': ['localStorage.getItem@ClaimRow', 'localStorage.removeItem@ClaimRow', 'localStorage.removeItem@setLink', 'localStorage.setItem@setLink'],
+  'src/features/artist/RadarUniverse.jsx': ['localStorage.getItem@stored'],
+  'src/features/auth/AuthProvider.jsx': ['localStorage.getItem@DemoAuthProvider', 'localStorage.removeItem@setDemoRole', 'localStorage.setItem@setDemoRole'],
+  'src/features/auth/Signup.jsx': ['sessionStorage.setItem@Signup'],
+  'src/features/auth/UserTypeSelect.jsx': ['sessionStorage.getItem@hint', 'sessionStorage.removeItem@UserTypeSelect'],
+  'src/lib/db.js': ['localStorage.getItem@s', 'localStorage.setItem@publicSessionId'],
 }
 // Files whose storage touches must ALL be guarded (the increment's DOD).
 const MUST_BE_CLEAN = ['src/features/artist/Onboarding.jsx']
@@ -129,13 +136,30 @@ function collect(ast) {
     if (typeof node.type !== 'string') return
     if (node.type === 'MemberExpression') {
       const o = node.object
+      // HOSTS: bare, `window.*`, `globalThis.*`, `self.*`.
+      const HOSTS = new Set(['window', 'globalThis', 'self'])
       const name = o?.type === 'Identifier'
         ? o.name
-        : (o?.type === 'MemberExpression' && o.object?.type === 'Identifier' && o.object.name === 'window' && o.property?.type === 'Identifier')
+        : (o?.type === 'MemberExpression' && o.object?.type === 'Identifier' && HOSTS.has(o.object.name) && o.property?.type === 'Identifier')
           ? o.property.name
           : null
       if (name === 'localStorage' || name === 'sessionStorage') {
         const prop = node.property?.type === 'Identifier' && !node.computed ? node.property.name : '[computed]'
+        // ENCLOSING NAMED SCOPE (review finding F5). Keying only on
+        // `file -> multiset of object.property` meant debt could MOVE inside a
+        // baselined file — guard the listed site, add an unguarded one in
+        // another function — and the multiset was unchanged, so neither NEW nor
+        // STALE fired. The nearest NAMED scope is the discriminator: it changes
+        // when the site moves to a different function, and it does NOT churn
+        // when anonymous callbacks are reordered, because an anonymous function
+        // inherits the nearest named ancestor rather than an index.
+        let scope = 'module'
+        for (let i = stack.length - 1; i >= 0; i--) {
+          const { node: anc, key } = stack[i]
+          if (anc.type === 'FunctionDeclaration' && anc.id?.name) { scope = anc.id.name; break }
+          if (anc.type === 'VariableDeclarator' && key === 'init' && anc.id?.type === 'Identifier') { scope = anc.id.name; break }
+          if ((anc.type === 'Property' || anc.type === 'MethodDefinition') && key === 'value' && anc.key?.name) { scope = anc.key.name; break }
+        }
         let guarded = false
         for (let i = stack.length - 1; i >= 0; i--) {
           const { node: anc, key } = stack[i]
@@ -145,7 +169,7 @@ function collect(ast) {
           // CALLED, so an enclosing try around the declaration protects nothing.
           if (anc.type === 'TryStatement' && key === 'block') { guarded = true; break }
         }
-        found.push({ object: name, expr: `${name}.${prop}`, guarded, line: node.loc.start.line, column: node.loc.start.column })
+        found.push({ object: name, expr: `${name}.${prop}`, scope, key: `${name}.${prop}@${scope}`, guarded, line: node.loc.start.line, column: node.loc.start.column })
       }
     }
     for (const k of Object.keys(node)) {
@@ -166,6 +190,8 @@ function collect(ast) {
     function c() { try { noop() } finally { sessionStorage.setItem('k','v') } } // OPEN (finally)
     function d() { window.localStorage.removeItem('x') }               // OPEN, window-qualified
     function e() { try { window.sessionStorage.clear() } catch {} }    // GUARD, window-qualified
+    function h() { try { globalThis.sessionStorage.getItem('x') } catch {} } // GUARD, globalThis-qualified
+    function i() { return self.localStorage.getItem('x') }             // OPEN, self-qualified
     function f() { try { on('x', () => localStorage.key(0)) } catch {} } // OPEN — callback runs after the try exits
     function g() { try { (() => localStorage.length)() } catch {} }    // OPEN too: conservative, an IIFE is not special-cased
   `
@@ -177,6 +203,8 @@ function collect(ast) {
     'sessionStorage.setItem:OPEN',
     'localStorage.removeItem:OPEN',
     'sessionStorage.clear:GUARD',
+    'sessionStorage.getItem:GUARD',
+    'localStorage.getItem:OPEN',
     'localStorage.key:OPEN',
     'localStorage.length:OPEN',
   ]
@@ -218,7 +246,7 @@ for (const f of files) {
       mapFail++
       findings.push(`S1 source-map self-test — ${f}: ${s.expr} mapped to line ${line ?? 'null'}, which does not contain "${s.object}"`)
     }
-    if (!s.guarded) (open[f] ||= []).push(s.expr)
+    if (!s.guarded) (open[f] ||= []).push(s.key)
   }
 }
 
@@ -252,6 +280,69 @@ for (const f of MUST_BE_CLEAN) {
   const sitesHere = files.includes(f)
   check(`S5 ${f} is scanned`, sitesHere)
   check(`S5 ${f} has ZERO unguarded web-storage access`, !open[f], open[f] ? open[f].join(', ') : '')
+}
+
+// ── E · EXECUTED: the fail-soft path, run rather than inspected ─────────────
+// Everything above is SHAPE. Independent review (QA-INDEP-01, F4) showed why
+// that is not enough: a `catch` that RETHROWS satisfies every ancestry rule in
+// this file, so the exact defect ONB-RESUME-STORAGE exists to prevent could be
+// reintroduced with S5 green. The helpers now live in an importable module, so
+// the path can be executed against a store that refuses.
+//
+// TWO REAL FAILURE MODES, both exercised: the PROPERTY ACCESS throwing (what a
+// site-data-disabled browser actually does) and the METHOD throwing (quota,
+// or a partially crippled store). A helper that resolved the store outside its
+// try would pass the second and fail the first.
+{
+  const SAFE = await import(pathToFileURL(new URL('../src/lib/safeStorage.js', import.meta.url).pathname).href)
+  const install = (impl) => { Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, get: impl }) }
+  const uninstall = () => { delete globalThis.sessionStorage }
+  const ran = (fn) => { try { return { ok: true, value: fn() } } catch (e) { return { ok: false, error: String(e).split('\n')[0] } } }
+
+  // E1 — property access throws
+  install(() => { throw new Error('SecurityError: site data is disabled') })
+  const g1 = ran(() => SAFE.safeSessionGet('k'))
+  const s1 = ran(() => SAFE.safeSessionSet('k', 'v'))
+  const r1 = ran(() => SAFE.safeSessionRemove('k'))
+  check('E1 EXECUTED — the property access throwing does not propagate, and the documented fallbacks are returned',
+    g1.ok && g1.value === null && s1.ok && s1.value === false && r1.ok && r1.value === false,
+    `get=${JSON.stringify(g1)} set=${JSON.stringify(s1)} remove=${JSON.stringify(r1)}`)
+
+  // E2 — the store resolves but every method throws
+  install(() => ({
+    getItem() { throw new Error('QuotaExceededError') },
+    setItem() { throw new Error('QuotaExceededError') },
+    removeItem() { throw new Error('QuotaExceededError') },
+  }))
+  const g2 = ran(() => SAFE.safeSessionGet('k'))
+  const s2 = ran(() => SAFE.safeSessionSet('k', 'v'))
+  const r2 = ran(() => SAFE.safeSessionRemove('k'))
+  check('E2 EXECUTED — a throwing METHOD does not propagate either',
+    g2.ok && g2.value === null && s2.ok && s2.value === false && r2.ok && r2.value === false,
+    `get=${JSON.stringify(g2)} set=${JSON.stringify(s2)} remove=${JSON.stringify(r2)}`)
+
+  // E3 — POSITIVE CONTROL. Without this, a helper hard-coded to return
+  // null/false would pass E1 and E2 while storing nothing at all.
+  const mem = new Map()
+  install(() => ({
+    getItem: (k) => (mem.has(k) ? mem.get(k) : null),
+    setItem: (k, v) => { mem.set(k, String(v)) },
+    removeItem: (k) => { mem.delete(k) },
+  }))
+  const wrote = SAFE.safeSessionSet('gigproof_probe', '3')
+  const readBack = SAFE.safeSessionGet('gigproof_probe')
+  const removed = SAFE.safeSessionRemove('gigproof_probe')
+  const afterRemove = SAFE.safeSessionGet('gigproof_probe')
+  check('E3 positive control — with a WORKING store the helpers really read, write and remove',
+    wrote === true && readBack === '3' && removed === true && afterRemove === null,
+    `wrote=${wrote} readBack=${JSON.stringify(readBack)} removed=${removed} afterRemove=${JSON.stringify(afterRemove)}`)
+
+  // E4 — the consumer's contract: Number(null) is 0, so a lost step resumes at 1.
+  check('E4 a lost step pointer degrades to step 1, not to NaN or 0',
+    (() => { const raw = Number(SAFE.safeSessionGet('nope')); return !(raw >= 1 && raw <= 3) })(),
+    'Number(safeSessionGet(missing)) must fall outside 1..STEPS so readSavedStep returns 1')
+
+  uninstall()
 }
 
 console.log(`\n  scanned ${files.length} tracked src files · ${total} storage sites · ${guardedCount} guarded · ${total - guardedCount} open (baselined)`)

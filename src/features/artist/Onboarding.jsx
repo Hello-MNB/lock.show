@@ -8,6 +8,7 @@ import { PageShell, Field, Spinner, ErrorNote, Loading } from '../../components/
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
+import { safeSessionGet, safeSessionSet, safeSessionRemove } from '../../lib/safeStorage.js'
 
 // ── MINIMUM VIABLE ENTRY (owner order, 8 Jul) ────────────────────────────────
 // "בשביל זה יש רדאר — לאסוף נתונים": onboarding stops collecting; the Radar
@@ -48,16 +49,14 @@ const STEPS = 3
 // every field is already persisted server-side before its step advances
 // (upsertArtist on 1→2, addProfileItem/addEvidence on 2→3) and step 1 is
 // re-prefilled from `getMyArtist` on mount.
+// The three touches route through src/lib/safeStorage.js rather than guarding
+// inline. The behaviour is identical; what changes is that the fail-soft path
+// is now in an importable module, so a test can EXECUTE it against a throwing
+// store instead of inspecting the shape of a try/catch (QA-INDEP-01 F4).
 function stepStorageKey(userId) { return `gigproof_onboarding_step_${userId}` }
-function safeGetStep(userId) {
-  try { return sessionStorage.getItem(stepStorageKey(userId)) } catch { return null }
-}
-function safeSetStep(userId, value) {
-  try { sessionStorage.setItem(stepStorageKey(userId), value) } catch { /* resume degrades to step 1; never throws */ }
-}
-function safeClearStep(userId) {
-  try { sessionStorage.removeItem(stepStorageKey(userId)) } catch { /* nothing to clear if it was never stored */ }
-}
+const safeGetStep = (userId) => safeSessionGet(stepStorageKey(userId))
+const safeSetStep = (userId, value) => safeSessionSet(stepStorageKey(userId), value)
+const safeClearStep = (userId) => safeSessionRemove(stepStorageKey(userId))
 function readSavedStep(userId) {
   const raw = Number(safeGetStep(userId))
   return raw >= 1 && raw <= STEPS ? raw : 1
