@@ -3496,3 +3496,67 @@ untranslated string renders English and this gate is content with that. It cover
 **RECOMMENDED, not done:** the same locale blindness applies to `test-visual-regression` (baselines
 are LTR-only) and `test-hero-contract` (website, renders the default locale). Neither was touched.
 
+---
+
+## RTL-MIRROR — geometry was measured, mirroring was not
+
+**Band:** HE/EN + RTL/LTR. **Files:** `src/features/producer/ProducerConfirm.jsx` ·
+`src/features/passport/passportKit.jsx` · `src/features/passport/RequestConfirmation.jsx` ·
+`src/components/layout/NotificationBell.jsx` · `src/features/auth/AuthScene.jsx` ·
+`src/features/agency/AgencyRadarUniverse.jsx` · `scripts/test-logical-direction.mjs` (new) ·
+`package.json`.
+
+**The gap FIT-RTL left open, named at the time and now closed.** `test-fit` renders every screen in
+he/rtl and measures geometry — boxes, overflow, overlap, tap targets. It is structurally blind to
+MIRRORING. A gold quote bar pinned with `border-l-4` overflows nothing in Hebrew; it simply sits on
+the wrong side of the quote, on the end instead of the start, and every spatial assertion passes.
+
+**Why converting is risk-free in one direction.** Tailwind's logical utilities resolve to the SAME
+pixels as their physical counterparts under `dir=ltr` and flip under `dir=rtl`. The physical form is
+therefore never *more* correct — only less correct in Hebrew. `test-visual-regression` (LTR baselines)
+is the positive control for exactly this: an unchanged English render proves the conversion was
+pixel-neutral where it should be.
+
+**Seven sites converted**, each a real mirroring defect rather than a style preference:
+
+| site | was | now | why it mattered |
+|---|---|---|---|
+| `ProducerConfirm.jsx:179` | `border-l-4 … pl-5 pr-4 rounded-r-xl` | `border-s-4 … ps-5 pe-4 rounded-e-xl` | the gold quote bar sat on the END side in Hebrew |
+| `ProducerConfirm.jsx:309` | `rounded-r-xl border-l-4` | `rounded-e-xl border-s-4` | same bar, second instance |
+| `passportKit.jsx:253` | `ml-auto` | `ms-auto` | pill pushed to the wrong end of the row (`UserTypeSelect.jsx:134` already used `ms-auto`) |
+| `RequestConfirmation.jsx:94` | `text-left` | `text-start` | Hebrew body copy left-aligned |
+| `NotificationBell.jsx:75` | `absolute right-1.5` | `absolute end-1.5` | unread dot on the wrong corner — **the same file already used `end-0` four lines below** |
+| `AuthScene.jsx:39` | `left-10 right-16` | `start-10 end-16` | asymmetric decorative insets (10 vs 16) did not mirror |
+| `AgencyRadarUniverse.jsx:86` | `-right-1` | `-end-1` | count badge on the wrong corner; **found by the gate, missed by my own first grep**, which had no leading `-` in its pattern |
+
+**New gate — `npm run test:logical-dir` (5 checks).** Precision is the entire problem: a naive scan for
+`border-l` matches `border-line` (a colour token used **185** times here), `rounded-l` matches
+`rounded-lg`, and `left-` matches the words `left-panel` and `left-to-right` in prose. Every candidate
+is matched as a full Tailwind token with its VALUE shape checked, and the classifier is self-tested
+against both the real utilities and those exact false friends **before** any verdict. `BASELINE` holds
+the physical usages that remain, each with a reason, as a ratchet: a new one fails, and quietly fixing
+a baselined one **also** fails until the baseline is tightened.
+
+**A defect the gate found in itself.** The first version reported `left-1/2` as the token `left-1` —
+the `\d+` alternative preceded `\d+/\d+`, so it matched the shorter prefix. It was *detected*, and a
+self-test that only asked "was something found?" passed it. S1 now compares the **exact token text**,
+which is what caught it.
+
+**Mutation battery — 5/5 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| Q1 | reintroduce a physical utility (`text-start` → `text-left`) | R1 NEW |
+| Q2 | remove a BASELINE entry without changing the source | R1 NEW |
+| Q3 | blunt the border rule (`border-[lr]${NUM}?` → `border-[lr]`), making `border-l-4` undetectable | S1 exact-token, before any verdict |
+| Q4 | quietly fix a baselined site in SOURCE, leaving the baseline stale | R1 STALE |
+| Q5 | drop only the `rounded` rule's token boundary, so `rounded-lg` reads as `rounded-l` | **S1b alone** — S1 still passed, so both halves of the classifier self-test are independently non-vacuous |
+
+**Scope limits, stated rather than implied.** This reads Tailwind class tokens in tracked JS/JSX under
+`src/`. It does **not** read `.css` files — a physical `padding-left` in a stylesheet is invisible to
+it — does not resolve classes composed at runtime from fragments, and says nothing about gradient
+direction (`bg-gradient-to-r` at `AuthScene.jsx:37` has no logical form in Tailwind 3 and was left
+alone). Passing does **not** mean the UI mirrors correctly; it means no NEW physical utility entered
+this scope. Six physical usages remain, all baselined as direction-NEUTRAL: five `left-1/2` centring
+pairs (`-translate-x-1/2`) and one symmetric `left-0 right-0` stretch.
+

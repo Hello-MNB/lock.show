@@ -36,7 +36,7 @@ export default function AuthScene({ children, tagline }) {
           className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-bg/30 via-bg/45 to-bg" />
         <div className="absolute inset-0 bg-gradient-to-t from-bg/70 via-transparent to-bg/25" />
-        <div className="absolute bottom-10 left-10 right-16 max-w-md">
+        <div className="absolute bottom-10 start-10 end-16 max-w-md">
           <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">
             {T.authScene.eyebrow}
           </p>

@@ -176,7 +176,7 @@ export default function ProducerConfirm() {
 
       <div className="card">
         {/* the claim — serif quote block, gold left border */}
-        <blockquote className="mb-5 border-l-4 border-gold bg-surface2 py-4 pl-5 pr-4 rounded-r-xl">
+        <blockquote className="mb-5 border-s-4 border-gold bg-surface2 py-4 ps-5 pe-4 rounded-e-xl">
           <p className="font-display text-lg leading-relaxed text-ink">“{data.claimText}”</p>
           <p className="mt-2 text-xs text-faint">{T.producer.submittedBy(data.artistName)}</p>
         </blockquote>
@@ -306,7 +306,7 @@ function Terminal({ data, when, busy, revoking, onRevoke, correction }) {
           : (correction ? T.producer.partialBodyWithCorrection : T.producer.partialBody)}
       </p>
       {data.response === 'partial' && correction && (
-        <blockquote className="mb-4 rounded-r-xl border-l-4 border-gold/60 bg-surface2 px-3 py-2 text-start text-sm italic text-ink">
+        <blockquote className="mb-4 rounded-e-xl border-s-4 border-gold/60 bg-surface2 px-3 py-2 text-start text-sm italic text-ink">
           “{correction}”
         </blockquote>
       )}

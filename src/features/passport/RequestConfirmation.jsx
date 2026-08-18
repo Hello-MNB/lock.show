@@ -91,7 +91,7 @@ export default function RequestConfirmation() {
             </>
           ) : settled ? (
             /* no WhatsApp on file — still not a dead end */
-            <div className="mt-6 rounded-[14px] border border-line bg-surface2 p-4 text-left">
+            <div className="mt-6 rounded-[14px] border border-line bg-surface2 p-4 text-start">
               <p className="text-sm leading-relaxed text-ink">
                 {T.request.willGetBack(artistName)}
               </p>

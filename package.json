@@ -32,7 +32,7 @@
     "validate:registry": "node scripts/validate-registry.mjs",
     "validate:deltas": "node scripts/validate-deltas.mjs",
     "registry:events": "node scripts/generate-event-registry.mjs",
-    "verify": "npm run test:nav && npm run test:flow && npm run test:isolation && npm run test:canon && npm run test:analytics && npm run test:security && npm run test:auth-session && npm run test:act-boundary && npm run test:link-integrity && npm run test:public-passport && npm run test:sql-migrations && npm run test:sql-privileges && npm run test:grant-scope && npm run test:guardrails && npm run test:ds && npm run test:states && npm run test:one-truth && npm run test:projection-matrix && npm run test:tenant-isolation && npm run test:embed && npm run test:release-artifacts && npm run test:integration-contract && npm run test:waitlist && npm run test:copy && npm run test:brand && npm run test:seo && npm run test:sitenav && npm run test:hero && npm run test:client-store && npm run test:storage && npm run test:visual && npm run check:styles && npm run lint:i18n && npm run test:i18n-parity && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:chain-closed && npm run test:fit",
+    "verify": "npm run test:nav && npm run test:flow && npm run test:isolation && npm run test:canon && npm run test:analytics && npm run test:security && npm run test:auth-session && npm run test:act-boundary && npm run test:link-integrity && npm run test:public-passport && npm run test:sql-migrations && npm run test:sql-privileges && npm run test:grant-scope && npm run test:guardrails && npm run test:ds && npm run test:states && npm run test:one-truth && npm run test:projection-matrix && npm run test:tenant-isolation && npm run test:embed && npm run test:release-artifacts && npm run test:integration-contract && npm run test:waitlist && npm run test:copy && npm run test:brand && npm run test:seo && npm run test:sitenav && npm run test:hero && npm run test:client-store && npm run test:storage && npm run test:logical-dir && npm run test:visual && npm run check:styles && npm run lint:i18n && npm run test:i18n-parity && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:chain-closed && npm run test:fit",
     "test:fit": "node scripts/test-fit.mjs",
     "test:embed": "node scripts/test-embed-integrity.mjs",
     "test:seo": "node scripts/test-seo-contract.mjs",
@@ -53,7 +53,8 @@
     "test:client-store": "node scripts/test-client-store.mjs",
     "test:auth-session": "node scripts/test-auth-session.mjs",
     "test:storage": "node scripts/test-storage-resilience.mjs",
-    "test:chain-closed": "node scripts/test-chain-closed.mjs"
+    "test:chain-closed": "node scripts/test-chain-closed.mjs",
+    "test:logical-dir": "node scripts/test-logical-direction.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

@@ -250,7 +250,7 @@ export function ProofUnit({ claim, context, band, status, methodLabel, reviewedA
           <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-line pt-2.5 font-mono sm:mt-3.5 sm:pt-3">
             {band && (!claimIsBand || contextLine) && <BandPill value={band} />}
             {reviewedLabel && (
-              <span className={`ml-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
+              <span className={`ms-auto rounded-full px-2 py-[2px] text-[10px] ${reviewed.isFresh ? 'border border-accent/30 bg-good-bg text-good' : 'text-faint'}`}>
                 {reviewedLabel}
               </span>
             )}

@@ -83,7 +83,7 @@ export default function AgencyRadarUniverse({ artists, claims }) {
                     ? <img src={a.photo_url} alt="" className="h-full w-full rounded-full object-cover" />
                     : <span className="font-display text-base text-ink">{(a.stage_name || '?').slice(0, 1)}</span>}
                   {st.pending > 0 && (
-                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold text-[#12160A]">✦{st.pending}</span>
+                    <span className="absolute -end-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold text-[#12160A]">✦{st.pending}</span>
                   )}
                 </span>
                 <span className="mt-1.5 block w-20 truncate font-mono text-[8px] uppercase tracking-[0.06em] text-muted">
