@@ -3157,7 +3157,7 @@ LAYOUT route guard.
 **Status: COMPLETE with evidence.** Measurement and pinning; no behaviour changed. One hazard filed as
 **OWNER-PENDING OAUTH-CODE-RESIDUE**.
 
-`AuthProvider`'s boot effect (`AuthProvider.jsx:63-110`) exchanges a PKCE `?code=` **before any
+`AuthProvider`'s boot effect (`AuthProvider.jsx:63-106`) exchanges a PKCE `?code=` **before any
 routing**, then restores the session and awaits the profile. It was the last part of the controller's
 top-priority band with no coverage. Five properties are now pinned, each mutation-proven:
 
@@ -3186,3 +3186,61 @@ Literals of all three quote styles are now removed before the test. Same class a
 harness-shape errors: measure the shape, do not assume it.
 
 **34 static checks (was 28).**
+
+### SEVENTH INDEPENDENT REVIEW (`6cedfa8..f3935d4`) — verdict REVISE. The transform swap was sound; four HIGH around it were not.
+
+The engine swap itself held: all three fail-closed claims verified by execution, all 8 of the previous
+round's mutations still caught, `jsx:'preserve'` confirmed to preserve every JSX form the assertions
+need, and the check counts re-derived at each commit (26 → 28 → 34). The defects were in what I built
+ON it, and in claims I made about it.
+
+**[HIGH-1] C1's ordering half measured nothing.** It compared `indexOf("params.get('code')")` — the
+SINGLE-quoted spelling — against esbuild output, which normalises to double quotes. The index was always
+`-1`, and `-1 < anything` is always true. Moving the exchange ABOVE the guard so it fires on every page
+load — the precise defect C1 names — passed green. **This is the same quote-normalisation bug I had
+already self-caught in C3 one commit earlier and left in place here**, which is worse than not knowing:
+I found the class and fixed one instance. Now matches both spellings and requires the index to exist;
+mutation-tested against the REORDER, not just the deletion the register had tested.
+
+**[HIGH-2] C3 retargeted to the wrong `catch` block.** It hardcoded `catch (e)`, and `boot` contains
+two catch blocks. Renaming the OAuth one's parameter — a zero-semantic refactor, and something **esbuild
+itself does** (it renames `e`→`e2`, `params`→`params2`) — made the regex fall through to the boot-init
+handler, which trivially satisfied the assertion while a real `window.location.href` leak sat in the
+first. Now anchored by POSITION (the catch following the exchange) with a non-vacuity check that the
+block carries the `[oauth]` marker.
+
+**[HIGH-3] The OAUTH-CODE-RESIDUE row asserted a runtime mechanism the library source contradicts —
+WITHDRAWN.** I verified the reviewer's reading independently in `@supabase/auth-js@2.108.2`: with this
+app's `flowType:'pkce'` + `detectSessionInUrl:true`, the library detects the callback during
+`_initialize()` and **cleans the URL itself** (`GoTrueClient.js:3205-3206`), `exchangeCodeForSession`
+awaits `initializePromise` first (`:1196`) so the library always wins, and the `-code-verifier` item is
+deleted (`:1560`). So "a failed exchange leaves the code in the URL" was wrong twice over — the failure
+is the NORMAL path, and the URL is clean anyway. A static gate cannot support a runtime-consequence
+claim, and I made one. Replaced by **OAUTH-EXCHANGE-DOUBLE**, stated as EVIDENCE OPEN with a predicted
+observable that one real sign-in would confirm or refute.
+
+**[HIGH-4] T-121 claimed a root-cause fix while six assertions still read RAW text.** `strip()` failed
+closed but A2, A3, B1, B3a, B3 and B4 never called it. Proven: narrowing the recovery-readiness
+predicate, with the removed token left behind in a comment, passed A3 green — exactly the contamination
+class T-121 exists to close. There is no raw accessor any more; `read()` IS the transform, and an
+unknown path fails closed by name.
+
+**MED, repaired:** T0 tested the TOOL, not the PIPELINE — replacing `CODE.set(f, transform(raw))` with
+`CODE.set(f, raw)` restored the original bug with T0 green; **T0b** now measures the real corpus
+(96/96 files differ from raw, and a known comment in a real file is gone) and catches it · C4 and C5
+fired on CORRECT refactors (a debug line inside the `finally`; a hoisted-but-awaited promise) and are
+now shape-tolerant, both verified to pass · **the acorn/`@babel/parser` provenance claim was factually
+wrong** — `npm ls` shows acorn arriving via declared `vite` and `@babel/parser` via declared
+`@vitejs/plugin-react`, so both are transitively declared exactly as esbuild is; the CHOICE was right
+(acorn cannot parse this JSX/TSX unaided) but the stated reason was not.
+
+**[MED-6] "The auth band's last uncovered surface" was false.** `boot` is defined as everything UP TO
+`onAuthStateChange`, making that handler the regex terminator — deliberately excluded. It fires on every
+`SIGNED_IN`/`TOKEN_REFRESHED`, including straight after a successful OAuth exchange, and calls
+`loadProfile` **without `await`** and with no `loading` management. So C5's awaited-profile guarantee is
+a BOOT property only. **C6** now pins that, and the claim is corrected.
+
+**LOW:** the cited range `AuthProvider.jsx:63-110` is `63-106` — 107-110 are inside the handler that was
+not covered.
+
+**39 static checks (was 34).**

@@ -31,7 +31,7 @@ const check = (cond, good, bad) => (cond ? ok(good) : fail(bad || `FAILED (no fa
 // the gate reported "exactly ONE call site".
 const files = execSync("git ls-files -- 'src'", { encoding: 'utf8' })
   .split('\n').filter((f) => /\.(js|jsx|ts|tsx|mts|cts)$/.test(f))
-const read = (f) => readFileSync(f, 'utf8')
+const read = (f) => code(f)
 // Comments are stripped before matching. A commented-out `auth.updateUser(` is
 // not a password-change surface, and an early version of this gate counted one
 // — which produced a battery of FALSE catches until the contamination was
@@ -59,11 +59,10 @@ if (!esbuild) {
   console.log('  ✗ B0 ⚠ esbuild (via vite) could not be imported — comments and types cannot be removed reliably, so every source assertion below would be UNSOUND. Not skipping: this fails.')
   process.exit(1)
 }
-const CODE = new Map()   // raw source -> transformed source, keyed by content
+const CODE = new Map()   // path -> transformed source
 for (const f of files) {
-  const raw = readFileSync(f, 'utf8')
   try {
-    CODE.set(raw, (await esbuild.transform(raw, { loader: 'tsx', jsx: 'preserve' })).code)
+    CODE.set(f, (await esbuild.transform(readFileSync(f, 'utf8'), { loader: 'tsx', jsx: 'preserve' })).code)
   } catch (e) {
     console.log(`  ✗ B0 ⚠ ${f} failed to transform (${String(e).split('\n')[0]}) — refusing to scan it as raw text`)
     process.exit(1)
@@ -72,12 +71,21 @@ for (const f of files) {
 // Callers pass file CONTENT. An unknown string means someone scanned something
 // that was never transformed — fail rather than silently scanning raw text,
 // which is the blind spot this whole block exists to remove.
-const code = (f) => CODE.get(readFileSync(f, 'utf8'))
-const strip = (t) => {
-  if (CODE.has(t)) return CODE.get(t)
-  console.log('  ✗ B0 ⚠ strip() received text that was never transformed — refusing to scan raw source')
-  process.exit(1)
+// THE ONLY ACCESSOR. Independent QA found that six assertions (A2, A3, B1, B3a,
+// B3, B4) still called a RAW reader, so the contamination class T-121 claimed to
+// close was still live: a narrowing of the recovery-readiness predicate, hidden
+// behind a comment, passed A3 green. There is no raw accessor any more — every
+// read goes through the transform, and an unknown path fails closed by NAME
+// rather than throwing an unhandled TypeError.
+const code = (f) => {
+  const c = CODE.get(f)
+  if (c === undefined) {
+    console.log(`  ✗ B0 ⚠ ${f} is not in the transformed set (untracked, renamed, or outside src/) — refusing to scan it as raw text`)
+    process.exit(1)
+  }
+  return c
 }
+const strip = (t) => t   // retained for call-site compatibility; input is already transformed
 const hits = (re) => files.flatMap((f) => [...strip(read(f)).matchAll(re)].map(() => f))
 
 console.log('\nAUTH · SESSION · RECOVERY — static contract (GoTrue not runnable here)')
@@ -93,13 +101,37 @@ console.log('  · scope: TRACKED files only (git ls-files). An untracked working
     "localStorage.setItem('gp_selftest_key', '1')",
     '// ...and the trailing */ too',
   ].join('\n')
-  const t = (await esbuild.transform(trap, { loader: 'tsx', jsx: 'preserve' })).code
+  // Through the PIPELINE, not the tool. The first version called
+  // esbuild.transform directly and never touched the CODE map every assertion
+  // actually reads — so neutering the pipeline one line lower
+  // (`CODE.set(f, raw)`) restored the original contamination bug with T0 still
+  // green. The trap is inserted into CODE and read back through code().
+  const TRAP_PATH = '<t0-selftest>'
+  CODE.set(TRAP_PATH, (await esbuild.transform(trap, { loader: 'tsx', jsx: 'preserve' })).code)
+  const t = code(TRAP_PATH)
+  CODE.delete(TRAP_PATH)
   check(/updateUser/.test(t) && /gp_selftest_key/.test(t),
     'T0 transform self-test: real code SURVIVES a `/*` written inside a `//` comment — the exact shape that made the previous hand-rolled stripper delete a live password-change surface',
     `T0 ⚠ the transform deleted real code — every source assertion below is unsound. Got: ${JSON.stringify(t)}`)
   check(!/TODO/.test(t),
     'T0 transform self-test: comments ARE removed, so a commented-out call site is not counted as live',
     `T0 ⚠ comments survive the transform — commented-out code would count as a real surface. Got: ${JSON.stringify(t)}`)
+
+  // T0b · THE FILE LOOP ITSELF. T0 above seeds its own CODE entry, so it proves
+  // the TOOL works and says nothing about the POPULATION step — independent QA
+  // replaced `CODE.set(f, transform(raw))` with `CODE.set(f, raw)`, restoring the
+  // original contamination bug, and T0 stayed green. These two measure the real
+  // corpus: most files must actually differ from their raw source, and a comment
+  // known to exist in a real file must be gone from its transformed form.
+  const differing = files.filter((f) => code(f) !== readFileSync(f, 'utf8'))
+  check(differing.length >= Math.floor(files.length / 2),
+    `T0b the file loop really transformed the corpus — ${differing.length}/${files.length} tracked files differ from their raw source`,
+    `T0b ⚠ only ${differing.length}/${files.length} files differ from raw — the transform step is a pass-through and every assertion is scanning RAW text`)
+  const probeFile = 'src/features/auth/AuthProvider.jsx'
+  const rawProbe = readFileSync(probeFile, 'utf8')
+  check(/OAuth callback \(Google\)/.test(rawProbe) && !/OAuth callback \(Google\)/.test(code(probeFile)),
+    'T0b a comment known to exist in AuthProvider.jsx is present in the raw file and ABSENT from its transformed form — measured on a real file, not a synthetic string',
+    'T0b ⚠ a real file\'s comments survive transformation (or the probe comment moved) — re-derive before trusting any assertion below')
 }
 
 // ── vacuity guards ──────────────────────────────────────────────────────────
@@ -342,10 +374,18 @@ console.log('\n  C · OAuth callback & session restore')
 
   // The exchange is CONDITIONAL on a ?code being present — it does not fire on
   // every page load.
-  check(/params\.get\('code'\)|params\.get\("code"\)/.test(boot) &&
-        boot.indexOf("params.get('code')") < boot.indexOf('exchangeCodeForSession'),
-    'C1 the PKCE exchange runs ONLY when a ?code is present, and the check precedes the call',
-    'C1 ⚠ the ?code guard no longer precedes exchangeCodeForSession — the exchange would fire on ordinary page loads')
+  // BOTH quote spellings, and the index must EXIST. The first version compared
+  // `indexOf("params.get('code')")` — the single-quoted form — against esbuild
+  // output, which normalises to double quotes. It was always -1, and
+  // `-1 < anything` is always true, so the ordering half of this assertion
+  // measured nothing: independent QA moved the exchange ABOVE the guard, the
+  // precise defect this names, and the gate stayed green. Same
+  // quote-normalisation bug I had already self-caught in C3 and left here.
+  const guardIdx = Math.max(boot.indexOf('params.get("code")'), boot.indexOf("params.get('code')"))
+  const exchangeIdx = boot.indexOf('exchangeCodeForSession')
+  check(guardIdx !== -1 && exchangeIdx !== -1 && guardIdx < exchangeIdx,
+    `C1 the PKCE exchange runs ONLY when a ?code is present, and the check precedes the call (guard@${guardIdx} < exchange@${exchangeIdx})`,
+    `C1 ⚠ the ?code guard does not precede exchangeCodeForSession (guard@${guardIdx}, exchange@${exchangeIdx}) — the exchange would fire on ordinary page loads`)
 
   // THE ASYMMETRY. `history.replaceState` sits INSIDE the try, after the await,
   // so the URL is cleaned only when the exchange SUCCEEDS. On failure the
@@ -354,11 +394,22 @@ console.log('\n  C · OAuth callback & session restore')
   const cleanInsideTry = /history\.replaceState/.test(tryBlock)
   const cleanInCatchOrFinally = /catch[\s\S]{0,300}?history\.replaceState/.test(boot)
   check(cleanInsideTry && !cleanInCatchOrFinally,
-    'C2 ⚠ OBSERVED ASYMMETRY — the ?code is stripped from the address bar only on SUCCESS. history.replaceState is inside the try, after the await, so a FAILED exchange leaves a single-use OAuth/recovery code in the URL and in browser history. Pinned, not endorsed — OWNER-PENDING OAUTH-CODE-RESIDUE',
-    'C2 the cleanup now runs on the failure path too — good, and this gate is stale: update it and close OAUTH-CODE-RESIDUE')
+    'C2 SOURCE SHAPE ONLY — history.replaceState sits inside the try, after the await, so THIS FILE cleans the URL only on the success path. NO runtime consequence is claimed: an earlier version of this message asserted that a failed exchange leaves the code in the URL, and the library source refutes it — @supabase/auth-js cleans the URL itself during _initialize() (GoTrueClient.js:3205-3206). See OWNER-PENDING OAUTH-EXCHANGE-DOUBLE, which is EVIDENCE OPEN pending one real sign-in.',
+    'C2 the cleanup now runs on the failure path too — the source shape changed; re-derive OAUTH-EXCHANGE-DOUBLE')
 
   // The failure handler must not log the code or the full callback URL.
-  const catchBlock = (boot.match(/catch \(e\) \{[\s\S]*?\}/) ?? [''])[0]
+  // ANCHORED BY POSITION, not by parameter name. The first version matched
+  // `catch (e) {`, and `boot` contains TWO catch blocks — the OAuth one and the
+  // boot-init one. Renaming the first block's parameter (a zero-semantic
+  // refactor, and something esbuild itself does: it renamed `e` to `e2` and
+  // `params` to `params2` in this very file) made the regex fall through to the
+  // SECOND block, which trivially satisfied the assertion while a real URL leak
+  // sat in the first. Take the catch that follows the exchange instead.
+  const afterExchange = boot.slice(exchangeIdx === -1 ? 0 : exchangeIdx)
+  const catchBlock = (afterExchange.match(/catch\s*\([^)]*\)\s*\{[\s\S]*?\}/) ?? [''])[0]
+  check(catchBlock.length > 20 && /\[oauth\]/.test(catchBlock),
+    'C3 non-vacuity: the catch block measured is the OAuth one (it carries the [oauth] marker), not the boot-init handler',
+    `C3 ⚠ the block measured is not the OAuth handler — anchoring is wrong: ${catchBlock.replace(/\s+/g, ' ').slice(0, 100)}`)
   // String LITERALS are removed before testing — including double-quoted ones.
   // The first version stripped only single quotes, and esbuild normalises to
   // double, so the log LABEL "[oauth] code exchange failed:" tripped the word
@@ -369,15 +420,40 @@ console.log('\n  C · OAuth callback & session restore')
     `C3 ⚠ the failure handler may log the code or callback URL: ${catchBlock.replace(/\s+/g, ' ').slice(0, 120)}`)
 
   // A transient boot failure must never strand the app on the spinner.
-  check(/finally \{[\s\S]{0,80}setLoading\(false\)/.test(boot),
+  // The whole finally BLOCK, not a fixed 80-char window: adding a comment and a
+  // debug line above setLoading(false) — a correct refactor — failed the gate,
+  // and by this repo's own rule a gate that fires on correct edits gets loosened.
+  const finallyBlock = (boot.match(/finally\s*\{[\s\S]*?\n\s*\}/) ?? [''])[0]
+  check(finallyBlock.length > 5 && /setLoading\(false\)/.test(finallyBlock),
     'C4 boot always reaches setLoading(false) via `finally` — a transient getSession/profile failure cannot strand the app on the loading spinner with no recovery',
     'C4 ⚠ setLoading(false) is no longer in a finally — a boot failure could leave the app spinning forever')
 
   // The profile must be AWAITED before loading clears, or RequireRole races
   // role=null on every hard reload (the broken-refresh Maria hit).
-  check(/await loadProfile\(/.test(boot),
+  // Accepts a hoisted promise (`const p = loadProfile(id); await p`) — still
+  // awaited, still before `loading` clears — which the previous literal
+  // `await loadProfile(` rejected as a defect.
+  const awaitedDirect = /await\s+loadProfile\s*\(/.test(boot)
+  const awaitedHoisted = /(?:const|let)\s+(\w+)\s*=\s*loadProfile\s*\([\s\S]{0,200}?await\s+\1\b/.test(boot)
+  check(awaitedDirect || awaitedHoisted,
     'C5 the profile is AWAITED during boot, so `loading` covers the ROLE too — RequireRole cannot race role=null on a hard reload',
     'C5 ⚠ loadProfile is no longer awaited in boot — every hard reload can bounce the user to /select')
+
+  // C6 · onAuthStateChange — NOT covered by the boot assertions above, because
+  // `boot` is defined as everything UP TO onAuthStateChange, which makes that
+  // handler the regex terminator. T-122 claimed the auth band was covered "end
+  // to end"; it was not. This handler fires on every SIGNED_IN /
+  // TOKEN_REFRESHED / PASSWORD_RECOVERY — including immediately after a
+  // successful OAuth exchange — and it is where C5's awaited-profile property
+  // does NOT hold.
+  const provider2 = code('src/features/auth/AuthProvider.jsx')
+  const onChange = (provider2.match(/onAuthStateChange\(([\s\S]*?)\n\s{4}\}\)/) ?? [''])[0]
+  check(onChange.length > 40,
+    `C6 non-vacuity: the onAuthStateChange handler was located (${onChange.length} chars)`,
+    'C6 ⚠ the onAuthStateChange handler could not be located')
+  check(/loadProfile\(/.test(onChange) && !/await\s+loadProfile\(/.test(onChange),
+    'C6 ⚠ OBSERVED — onAuthStateChange calls loadProfile WITHOUT await and manages no `loading` flag, so the role can still be null for a tick after a SIGNED_IN (including straight after an OAuth exchange). C5\'s awaited-profile guarantee is a BOOT property only, not a session-event one. Pinned as observed, not endorsed.',
+    'C6 the handler now awaits loadProfile — good, and this gate is stale: update it, the role race is closed on the event path too')
 }
 
 console.log(`
