@@ -10,8 +10,9 @@
  *       (styles/hero.css) — any `minHeight` using svh / min(...) in page or
  *       component source fails unless allowlisted below with a reason
  *
- * RENDERED (chromium via playwright; SKIPPED WITH NOTICE if unavailable —
- * CI-safe):  at 1440×900 and 390×844 on every public route:
+ * RENDERED (chromium via playwright; REQUIRED — with no browser this gate
+ * exits NON-ZERO rather than reporting the static half as the whole, because
+ * a skip is NOT a pass):  at 1440×900 and 390×844 on every public route:
  *   R1  no horizontal overflow (document.scrollWidth == innerWidth)
  *   R2  fold contract: hero H1 fully inside the first viewport; the hero's
  *       primary CTA (when the variant carries one) inside the first viewport
@@ -172,16 +173,20 @@ async function renderedChecks() {
   let chromium
   try {
     ;({ chromium } = await import('playwright'))
-  } catch {
-    console.log('⚠ RENDERED CHECKS SKIPPED — playwright not installed (static checks still enforced).')
-    return false
+  } catch (err) {
+    // FAIL CLOSED (VERIFY-CLOSED): the rendered half is the half that measures
+    // real geometry. Reporting the static half as the whole gate is a false
+    // green. Chromium is already required by test-client-store.mjs in the same
+    // chain, so this costs no portability.
+    console.error(`✗ HERO CONTRACT: playwright unavailable (${String(err).split('\n')[0]}) — the rendered checks measure nothing without it, and a skip is NOT a pass.`)
+    process.exit(1)
   }
   let browser
   try {
     browser = await chromium.launch()
   } catch (err) {
-    console.log(`⚠ RENDERED CHECKS SKIPPED — chromium unavailable (${String(err).split('\n')[0]}). Static checks still enforced.`)
-    return false
+    console.error(`✗ HERO CONTRACT: chromium failed to launch (${String(err).split('\n')[0]}) — the rendered checks measure nothing without it, and a skip is NOT a pass.`)
+    process.exit(1)
   }
 
   if (!existsSync(path.join(OUT, 'index.html'))) {
@@ -319,10 +324,11 @@ async function renderedChecks() {
   return true
 }
 
-const ran = await renderedChecks().catch((err) => {
+// `renderedChecks` no longer has a false return: both unavailability paths
+// exit non-zero (VERIFY-CLOSED), so reaching here means they really ran.
+await renderedChecks().catch((err) => {
   server.close()
   findings.push(`R? · rendered checks crashed: ${err}`)
-  return true
 })
 
 if (findings.length) {
@@ -332,4 +338,4 @@ if (findings.length) {
 }
 console.log(`\n✓ HERO CONTRACT: ${Object.keys(VARIANT_MAP).length} hero pages on approved variants, ` +
   `no magic hero min-heights outside styles/hero.css` +
-  (ran ? `, ONE desktop hero height ${DESKTOP_HERO_H}px on all heroes @1440×900 (±0px), rendered fold/height/overlap/crawl contracts hold @1440×900 + 390×844 (+320×568 consent)` : ` (rendered checks skipped — no chromium)`))
+  `, ONE desktop hero height ${DESKTOP_HERO_H}px on all heroes @1440×900 (±0px), rendered fold/height/overlap/crawl contracts hold @1440×900 + 390×844 (+320×568 consent)`)

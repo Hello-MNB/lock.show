@@ -16,8 +16,9 @@
  * A missing baseline for a route is seeded automatically on first run (the
  * run reports it and still passes — commit the new file).
  *
- * CI-SAFE: if chromium cannot launch (no browser installed on the runner),
- * the test SKIPS with a notice and exits 0.
+ * FAIL CLOSED: if the renderer or the diff libraries are unavailable this gate
+ * exits NON-ZERO. It used to skip and exit 0, which reported "no visual
+ * regression" from a run that compared no pixels.
  *
  * Diff artifacts for failures land in <os-tmp>/lock-visual-diff/ so the
  * changed pixels can be inspected.
@@ -86,15 +87,18 @@ async function main() {
     ;({ PNG } = await import('pngjs'))
     pixelmatch = (await import('pixelmatch')).default
   } catch (err) {
-    console.log(`⚠ VISUAL REGRESSION SKIPPED — dependency unavailable (${String(err).split('\n')[0]}).`)
-    return
+    // FAIL CLOSED (VERIFY-CLOSED): pixel comparison with no renderer compares
+    // nothing. Chromium is already required by test-client-store.mjs in the
+    // same chain, so this costs no portability.
+    console.error(`✗ VISUAL REGRESSION: dependency unavailable (${String(err).split('\n')[0]}) — nothing was compared, and a skip is NOT a pass.`)
+    process.exit(1)
   }
   let browser
   try {
     browser = await chromium.launch()
   } catch (err) {
-    console.log(`⚠ VISUAL REGRESSION SKIPPED — chromium unavailable (${String(err).split('\n')[0]}).`)
-    return
+    console.error(`✗ VISUAL REGRESSION: chromium failed to launch (${String(err).split('\n')[0]}) — nothing was compared, and a skip is NOT a pass.`)
+    process.exit(1)
   }
 
   await new Promise((r) => server.listen(PORT, '127.0.0.1', r))

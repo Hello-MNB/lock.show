@@ -3326,3 +3326,68 @@ survive a **tab close** at all (`sessionStorage` → `localStorage`) is a produc
 devices, not an engineering one — raised as **ONB-RESUME-MEDIUM** in OWNER-PENDING, deliberately not
 decided here.
 
+---
+
+## VERIFY-CLOSED — three rendered gates reported green having measured nothing
+
+**Band:** isolated test environment / observability. **Files:** `scripts/test-fit.mjs` ·
+`scripts/test-hero-contract.mjs` · `scripts/test-visual-regression.mjs` ·
+`scripts/test-chain-closed.mjs` (new) · `scripts/lib/block-playwright{,-register}.mjs` (new) ·
+`package.json`.
+
+**OBSERVED.** With Chromium unavailable, `test-fit` printed `⚠ FIT SKIPPED` and **exited 0**;
+`test-hero-contract` returned `false` from `renderedChecks()` and reported its static half as the
+whole gate; `test-visual-regression` returned early and its header called this *"CI-SAFE"*. Three
+gates that measure nothing but geometry, each able to report success having rendered no pixel.
+
+**What was NOT true, stated precisely so the fix is not oversold.** `npm run verify` as a whole did
+**not** go green without a browser: `test-client-store.mjs` is in the same chain and already
+hard-fails (*"this gate is rendered-only, a skip is NOT a pass"*). The chain therefore failed
+closed — but **incidentally**, through one gate's presence and position, which nothing pinned.
+What was really broken: each of the three individually (`npm run test:fit`) reported success from a
+run that measured nothing, and `generate-evidence.mjs` detects this by scraping console text for the
+word SKIPPED rather than by reading an exit code.
+
+**Fix.** All three now exit non-zero on an unavailable renderer, each naming the rule. Because the
+chain already required Chromium via `test-client-store`, this costs **no** portability the chain had.
+Stale text corrected with the behaviour: hero's *"SKIPPED WITH NOTICE … CI-safe"* header and its now
+impossible `ran ? … : "(rendered checks skipped)"` tail; visual-regression's *"CI-SAFE"* header.
+
+**New gate — `npm run test:chain-closed` (14 checks).** It does not read source text for the word
+"skip". It **executes** every browser-dependent gate in the `verify` chain with `playwright` made
+unresolvable — an ESM `resolve` hook registered in the child process, nothing on disk touched — and
+requires each to exit non-zero **and say why** (C2 exit code, C3 reason marker, independently
+checked). C1 pins the SET, so a new rendered gate cannot join the chain without a fail-closed path;
+C0b asserts this gate is itself in the chain it audits. S0/S0b prove the hook really blocks and that
+`playwright` really is installed here, **before** anything is spawned — otherwise a broken hook would
+let four real browsers launch and the verdicts would mean nothing.
+
+**A defect this gate found in itself, by being run.** The file contains the literal
+`import('playwright')` inside the S0 probe string, so it matched its own browser-dependency scan,
+spawned itself, and recursed until the per-gate timeout — 3 minutes and a false red. Reading the
+source would not have shown it. Self-exclusion is now explicit, with the reason recorded at the line.
+Runtime after the fix: **~2s**.
+
+**Mutation battery — 5/5 caught, every restore verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| N1 | revert `test-fit` to skip-and-exit-0 | C2 + C3 |
+| N2 | neuter the resolve hook (pass through) | S0, in ~1s, before any gate is spawned |
+| N3 | new browser-dependent gate joins the chain unpinned | C1 (set) + C3 (no reason marker) |
+| N4 | fail non-zero but **silently**, no reason marker | C3 only — C2 passed, proving they are independent |
+| N5 | remove this gate from the chain it audits | C0b |
+
+**Scope limits, stated rather than implied.** This measures the **unavailability** path only. The
+positive control — that these gates pass when the browser IS present — comes from the same
+`npm run verify` chain running them for real, not from this file. It covers `playwright`
+unavailability, not every dependency a gate might lack; the **PostgreSQL** skip paths
+(`test-sql-migrations`, `test-link-integrity`, `test-projection-matrix`) are untouched and still exit
+0 with assertions unproven, which CLAUDE.md's preflight law already names. Closing those changes the
+chain's posture on machines with no database — a policy call, not an engineering one — so it is
+**not** decided here.
+
+**RECOMMENDED, not done:** `test-fit` renders at **360** and **1360** only. The controller names
+**360 / 390 / 430 / desktop**; 390 and 430 are unmeasured. Grounded but not yet measured — adding
+them may surface real layout findings, which is its own increment.
+

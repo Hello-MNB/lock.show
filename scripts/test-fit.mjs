@@ -9,8 +9,14 @@
 //      — promoted from WARN after the T-68 sweep reached zero)
 //   5. exactly ONE visible primary CTA
 // Runs on `dist` AFTER build:demo (verify order guarantees the demo build is
-// the one on disk). A machine without the Playwright browser prints a loud
-// SKIP and exits 0 — on such machines L1 runs by hand (the doc's assertions).
+// the one on disk).
+//
+// FAIL CLOSED (VERIFY-CLOSED). This gate is rendered-only: with no browser it
+// measures NOTHING, so it must not report exit 0. It used to print a loud SKIP
+// and pass, which meant `npm run test:fit` alone could look green having
+// checked no pixel at all. Chromium is not optional for this chain in any
+// case — test-client-store.mjs, also in `npm run verify`, already hard-fails
+// without it — so failing closed here costs no portability the chain had.
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -27,8 +33,8 @@ if (!existsSync(join(DIST, 'index.html'))) {
 
 let chromium
 try { ({ chromium } = await import('playwright')) } catch {
-  console.log('⚠ FIT SKIPPED — Playwright unavailable on this machine. Run L1 BY HAND (HOW-TO-BUILD-A-TASK Part 2) before any witness handoff.')
-  process.exit(0)
+  console.error('✗ FIT: Playwright unavailable — this gate is rendered-only, so a skip is NOT a pass. Install it, or run L1 BY HAND (HOW-TO-BUILD-A-TASK Part 2) and record that separately; this run measured no pixel.')
+  process.exit(1)
 }
 
 // SPA static server with index.html fallback.
