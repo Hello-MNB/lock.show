@@ -25,12 +25,17 @@
  * ratchet, not an allowlist to grow at will: a NEW physical utility fails, and
  * fixing a baselined one ALSO fails until the baseline is tightened.
  *
- * KNOWN LIMITS, stated: this reads Tailwind class tokens in tracked JS/JSX under
- * `src/`. It does not read `.css` files (physical `padding-left` in a stylesheet
- * is invisible to it), it does not resolve classes composed at runtime from
- * fragments, and it says nothing about gradient direction (`bg-gradient-to-r`
- * has no logical form in Tailwind 3). Passing does not mean the UI mirrors
- * correctly — only that no NEW physical utility was introduced in this scope.
+ * TWO SCOPES. (A) Tailwind class tokens in tracked JS/JSX under `src/`.
+ * (B) CSS DECLARATIONS in the authored stylesheets both surfaces actually ship —
+ * scope (B) closes the blind spot scope (A) shipped with, since a physical
+ * `padding-left` in a stylesheet is invisible to a class scan.
+ *
+ * KNOWN LIMITS, stated: it does not resolve classes composed at runtime from
+ * fragments; it says nothing about gradient direction (`bg-gradient-to-r` has no
+ * logical form in Tailwind 3) or about `background-position: left`, which is
+ * direction-sensitive and has no logical form either. Passing does not mean the
+ * UI mirrors correctly — only that no NEW physical utility or declaration was
+ * introduced in these scopes.
  *
  * Run: node scripts/test-logical-direction.mjs
  */
@@ -136,7 +141,107 @@ const totalFound = Object.values(found).flat().length
 check('R2 non-vacuity — the scanner did find physical utilities in this tree (it is not silently matching nothing)',
   totalFound > 0, `found ${totalFound}`)
 
+// ── (B) CSS declarations in the stylesheets that actually ship ──────────────
+// SCOPE, with the evidence for each exclusion rather than a silent filter:
+//   · docs/reference/LOCK_DESIGN_SYSTEM_THEME.v8.css — a reference document.
+//     `grep -rn LOCK_DESIGN_SYSTEM_THEME` outside docs/reference/ returns
+//     NOTHING: no import, no build step, no <link>. It ships nowhere.
+//   · website-next/public/app/assets/*.css — the PRE-BUILT embed bundle copied
+//     around by scripts/embed-post.mjs. Generated output, not authored source.
+// Everything else tracked with a .css extension is in scope, so a NEW stylesheet
+// is scanned the moment it is added rather than needing to be opted in.
+const CSS_EXCLUDE = [/^docs\/reference\//, /^website-next\/public\//]
+const cssFiles = execSync("git ls-files '*.css'", { encoding: 'utf8' })
+  .split('\n').filter(Boolean).filter((f) => !CSS_EXCLUDE.some((re) => re.test(f)))
+check('S3 non-vacuity — authored stylesheets were enumerated, and the two excluded ones really are excluded',
+  cssFiles.length > 0 && !cssFiles.some((f) => CSS_EXCLUDE.some((re) => re.test(f))),
+  `scanned: ${cssFiles.join(', ') || '(none)'}`)
+
+// A declaration, not a substring: the property must follow `{`, `;` or the start
+// of a line. That is what keeps `[style*="right: 14px"]` inside a SELECTOR, and
+// a `.left-panel` class name, from reading as a physical declaration.
+const PHYSICAL_PROP = /^(?:padding-(?:left|right)|margin-(?:left|right)|border-(?:left|right)(?:-(?:width|color|style))?|left|right|scroll-(?:margin|padding)-(?:left|right))$/
+const VALUE_PROP = /^(?:text-align|float|clear)$/
+function scanCss(text) {
+  // Strip comments FIRST — "/* pinned to the left */" is prose, not a rule.
+  const src = text.replace(/\/\*[\s\S]*?\*\//g, '')
+  const out = []
+  const re = /(?:^|[{;])\s*(--[\w-]+|[a-zA-Z-]+)\s*:\s*([^;{}]*)/g
+  let m
+  while ((m = re.exec(src)) !== null) {
+    const prop = m[1], value = (m[2] || '').trim()
+    if (prop.startsWith('--')) continue // a custom property named --left-rail is a NAME, not a direction
+    if (PHYSICAL_PROP.test(prop)) out.push(prop)
+    else if (VALUE_PROP.test(prop) && /^(left|right)\b/.test(value)) out.push(`${prop}:${value.split(/\s/)[0]}`)
+  }
+  return out
+}
+
+// S4 CSS classifier self-test — real declarations AND the exact false friends.
+{
+  const REAL = [
+    ['a{padding-left:4px}', ['padding-left']],
+    ['a{margin-right:4px}', ['margin-right']],
+    ['a{border-left:1px solid red}', ['border-left']],
+    ['a{border-left-color:red}', ['border-left-color']],
+    ['a{left:50%}', ['left']],
+    ['a{text-align:left}', ['text-align:left']],
+    ['a{float:right}', ['float:right']],
+    ['a{color:red;right:0}', ['right']],
+  ]
+  const FRIENDS = [
+    'a{padding-inline-start:4px}', 'a{border-inline-end:1px solid red}', 'a{inset-inline-start:0}',
+    'a{--left-rail:4px}', 'a{border-radius:4px}', 'a{text-align:center}', 'a{float:none}',
+    '.left-panel{color:red}', '[style*="right: 14px"]{color:red}', 'a{/* on the left */color:red}',
+    'a{background:left}',
+    // A COMMENTED-OUT RULE is the case that actually needs the comment strip:
+    // the `{` inside the comment satisfies the declaration anchor, so without
+    // stripping this reads as a live `left:` declaration. The weaker probe
+    // above ("/* on the left */", no colon, no brace) passed either way, which
+    // is why removing the comment strip survived its first mutation run.
+    '/* .foo { left: 0 } */ a{color:red}',
+    '/* legacy: { padding-left: 8px; } */ a{color:red}',
+  ]
+  const bad = REAL.filter(([css, want]) => JSON.stringify(scanCss(css)) !== JSON.stringify(want))
+  const leaked = FRIENDS.filter((css) => scanCss(css).length > 0)
+  check('S4 CSS classifier self-test — every physical declaration is detected by its exact property',
+    bad.length === 0, bad.map(([c, w]) => `${c} -> ${JSON.stringify(scanCss(c))} (wanted ${JSON.stringify(w)})`).join(' · '))
+  check('S4b CSS classifier self-test — no false friend leaks (logical properties, --custom names, class selectors, [style*=…], comments)',
+    leaked.length === 0, leaked.map((c) => `${c} -> ${JSON.stringify(scanCss(c))}`).join(' · '))
+  if (findings.some((f) => f.startsWith('S4'))) {
+    console.error(`\n✖ LOGICAL DIRECTION: the CSS classifier is broken, so its verdict would mean nothing — ${findings.find((f) => f.startsWith('S4'))}`)
+    process.exit(1)
+  }
+}
+
+// BASELINE (CSS): direction-NEUTRAL survivors, each with its reason.
+const CSS_BASELINE = {
+  // `.tap-target::before` centres the 44px hit area with left:50% + translate(-50%,-50%).
+  'src/index.css': ['left'],
+  // `.m-flat` / `.m-flat-white` zero BOTH sides — a symmetric reset, identical mirrored.
+  'website-next/app/globals.css': ['padding-left', 'padding-left', 'padding-right', 'padding-right'],
+}
+const cssFound = {}
+for (const f of cssFiles) {
+  const hits = scanCss(readFileSync(f, 'utf8'))
+  if (hits.length) (cssFound[f] ||= []).push(...hits)
+}
+const cssGot = norm(cssFound), cssWant = norm(CSS_BASELINE)
+for (const f of Object.keys(cssGot)) {
+  if (!cssWant[f]) { findings.push(`R3 NEW physical direction declaration in ${f}: ${cssGot[f].join(', ')} — use the logical property (padding-inline-start, border-inline-start, inset-inline-start, text-align:start…), or add it to CSS_BASELINE with a reason`); continue }
+  if (JSON.stringify(cssGot[f]) !== JSON.stringify(cssWant[f])) {
+    findings.push(`R3 ${f} changed — baseline ${JSON.stringify(cssWant[f])}, found ${JSON.stringify(cssGot[f])}`)
+  }
+}
+for (const f of Object.keys(cssWant)) {
+  if (!cssGot[f]) findings.push(`R3 STALE CSS baseline — ${f} no longer has a physical direction declaration; remove it from CSS_BASELINE so the ratchet stays tight`)
+}
+check('R3 CSS ratchet — the physical-declaration set matches CSS_BASELINE exactly (no new, no stale)', !findings.some((x) => x.startsWith('R3 ')))
+const cssTotal = Object.values(cssFound).flat().length
+check('R4 non-vacuity — the CSS scanner did find declarations in this tree', cssTotal > 0, `found ${cssTotal}`)
+
 console.log(`\n  scanned ${files.length} tracked src files · ${totalFound} physical direction utilities, all baselined as direction-neutral`)
+console.log(`  scanned ${cssFiles.length} authored stylesheet(s) · ${cssTotal} physical direction declaration(s), all baselined as direction-neutral`)
 if (findings.length) {
   console.error(`\n✖ LOGICAL DIRECTION — ${findings.length} finding(s) of ${checks} checks:`)
   for (const x of findings) console.error(`   · ${x}`)

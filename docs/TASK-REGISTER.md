@@ -3560,3 +3560,56 @@ alone). Passing does **not** mean the UI mirrors correctly; it means no NEW phys
 this scope. Six physical usages remain, all baselined as direction-NEUTRAL: five `left-1/2` centring
 pairs (`-translate-x-1/2`) and one symmetric `left-0 right-0` stretch.
 
+---
+
+## RTL-MIRROR-CSS — closing the blind spot the previous increment shipped with
+
+**Band:** HE/EN + RTL/LTR. **File:** `scripts/test-logical-direction.mjs`.
+
+RTL-MIRROR stated its own limit plainly: *"it does not read `.css` files — a physical `padding-left`
+in a stylesheet is invisible to it."* A class-token scan cannot see a stylesheet, so the ratchet it
+installed had a hole exactly the width of one `@layer components` block. This closes it.
+
+**Scope, with the evidence for each exclusion rather than a silent filter.** Every tracked `.css` is
+scanned except two, and both exclusions were checked, not assumed:
+· `docs/reference/LOCK_DESIGN_SYSTEM_THEME.v8.css` — `grep -rn LOCK_DESIGN_SYSTEM_THEME` outside
+  `docs/reference/` returns **nothing**: no import, no build step, no `<link>`. It ships nowhere, and
+  it holds 30 of the 36 raw matches in the tree, so scanning it would have produced a baseline of
+  noise about a document.
+· `website-next/public/app/assets/*.css` — the **pre-built** embed bundle that `embed-post.mjs`
+  copies around. Generated output, not authored source.
+Anything else with a `.css` extension is in scope by default, so a NEW stylesheet is scanned the
+moment it is added rather than needing to be opted in.
+
+**Result: 4 authored stylesheets, 5 physical declarations, all direction-NEUTRAL and baselined with
+reasons** — `src/index.css` `.tap-target::before` centres its 44px hit area with
+`left:50% + translate(-50%,-50%)`, and `globals.css` `.m-flat`/`.m-flat-white` zero **both** sides.
+There was no real CSS mirroring defect to fix; what was missing was the ability to notice the next one.
+
+**Declaration, not substring.** The property must follow `{`, `;` or the start of input, which is what
+keeps `[style*="right: 14px"]` inside a SELECTOR and a `.left-panel` class name from reading as a
+physical declaration. Custom properties are skipped by name (`--left-rail` is a name, not a direction).
+
+**Mutation battery — 4/4 caught, restores verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| R-Q1 | a new `padding-left` in a shipped stylesheet | R3 (set changed) |
+| R-Q2 | quietly convert a baselined declaration to `inset-inline-start` | R3 STALE |
+| R-Q3 | un-exclude the pre-built embed bundle (scope silently widened) | R3 NEW — 11 declarations from generated output |
+| R-Q4 | stop stripping CSS comments | S4b — **only after the probe was fixed; see below** |
+
+**R-Q4 survived its first run, and that was the finding.** The gate's own false-friend probe was
+`a{/* on the left */color:red}` — prose with no colon and no brace, which the scanner rejects with or
+without comment stripping. So the strip looked load-bearing and was not being tested at all. The case
+that actually needs it is a **commented-out rule**: in `/* .foo { left: 0 } */` the `{` inside the
+comment satisfies the declaration anchor, so without stripping it reads as a live `left:` declaration.
+With that probe added, R-Q4 fails as it should. A mutation that survives is worth more than one that
+does not — this one found a self-test asserting nothing.
+
+**Total: 10 checks** (was 5). Static only; no runtime cost to the chain.
+
+**Limits restated, now accurately:** it does not resolve classes composed at runtime from fragments,
+and says nothing about `bg-gradient-to-r` or `background-position: left` — both direction-sensitive,
+neither with a logical form in Tailwind 3 / CSS. Passing does not mean the UI mirrors correctly.
+
