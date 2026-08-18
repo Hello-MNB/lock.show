@@ -26,11 +26,20 @@
 -- 001:89 wrote, and a score sitting in a network response is inspectable by the
 -- person the firewall exists to protect from scores.
 --
--- ── THE SAME CLASS OF COLUMN ────────────────────────────────────────────────
--- 039:76 records extraction provenance as INTERNAL-ONLY "like
--- internal_confidence", so extraction_method, model_version and
--- extraction_provenance are revoked with it. server/index.js:451 already
--- excludes all four from the public payload by hand.
+-- ── WHICH COLUMNS, AND WHY NOT THE OTHER TWO ────────────────────────────────
+-- CORRECTED after the first draft over-reached. This revokes exactly two:
+--   internal_confidence   — 001:89 "never returned to any client"
+--   extraction_provenance — 039:76 "INTERNAL-ONLY (like internal_confidence)
+--                           … no client read path may ever render it"
+--
+-- The first draft ALSO revoked extraction_method and model_version. That was
+-- wrong: src/types.ts:76-77 declares both as fields of the client-facing `Claim`
+-- type, immediately above the line "// internal_confidence: DB-only, never in
+-- this type". The written client contract deliberately distinguishes them, and
+-- src/lib/db.js:344 has the client WRITE extraction_method/model_version on
+-- insert. server/index.js:451 excludes all four from the BUYER payload — that is
+-- the buyer boundary, not the artist one, and conflating the two is what the
+-- first draft did.
 --
 -- ── WHY THE LIST IS COMPUTED, NOT WRITTEN OUT ───────────────────────────────
 -- A hand-written column list is the defect that shipped in the first draft of
@@ -45,9 +54,19 @@
 -- ── WHAT THIS BREAKS, STATED PLAINLY ────────────────────────────────────────
 -- `select *` on claims will FAIL for every authenticated caller — permission
 -- denied, not a silently narrower row. That is the point (016 did exactly this
--- to artists for anon), and it means the three call sites above must be changed
--- to explicit column lists IN THE SAME COMMIT as any promotion. The gate proves
--- the failure rather than describing it, so the cost is measured, not assumed.
+-- to artists for anon), and every affected call site must be changed to an
+-- explicit column list IN THE SAME COMMIT as any promotion.
+--
+-- FIVE call sites, not three. The first draft of this file counted only the
+-- `select('*')` READS. A bare `.select()` after a write expands to every column
+-- too, so claim CREATION and claim UPDATE break as well:
+--     src/lib/db.js:177   select('*')                      — Act-scoped claim list
+--     src/lib/db.js:260   select('*')                      — artist claim list
+--     src/lib/db.js:788   select('*')                      — artist export
+--     src/lib/db.js:347   insert(claim).select().single()  — CREATE a claim
+--     src/lib/db.js:431   update(patch).select().single()  — UPDATE a claim
+-- The gate enumerates these from source and proves the failure rather than
+-- describing it, so the cost is measured, not assumed.
 --
 -- ── OWNER DECISION REQUIRED ─────────────────────────────────────────────────
 -- Two statements in the repo disagree and only Maria can say which is canon:
@@ -62,7 +81,7 @@
 do $$
 declare
   keep text;
-  internal text[] := array['internal_confidence','extraction_method','model_version','extraction_provenance'];
+  internal text[] := array['internal_confidence','extraction_provenance'];
 begin
   select string_agg(quote_ident(column_name), ', ' order by column_name)
     into keep

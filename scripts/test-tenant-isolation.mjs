@@ -42,6 +42,9 @@
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { pgAvailable, ScratchDb } from './lib/pgharness.mjs'
 
+import { execSync as _execSync } from 'node:child_process'
+const execSyncList = (cmd) => _execSync(cmd, { encoding: 'utf8' }).split('\n').filter(Boolean)
+
 let failed = false
 let checks = 0
 const fail = (m) => { checks++; console.log(`  ✗ ${m}`); failed = true }
@@ -846,11 +849,36 @@ try {
 
     // The column only matters if a shipped path returns it. These three do.
     const dbjs = readFileSync('src/lib/db.js', 'utf8').split('\n')
+    // A BARE `.select()` after a write expands to every column exactly as
+    // `select('*')` does. The first version of this assertion counted only the
+    // reads and reported "three call sites"; claim CREATION and claim UPDATE
+    // break too, which understated the cost of promoting the candidate.
     const starClaims = dbjs.map((l, i) => [i + 1, l])
-      .filter(([, l]) => /from\('claims'\)\s*\.select\('\*'\)/.test(l))
+      .filter(([, l]) => /from\('claims'\)[\s\S]*\.select\('\*'\)/.test(l))
+    const bareSelect = dbjs.map((l, i) => [i + 1, l])
+      .filter(([, l]) => /from\('claims'\)\.(insert|update)\([\s\S]*\)\.select\(\)/.test(l))
     check(starClaims.length >= 3,
-      `E2 ${starClaims.length} shipped client read(s) are select('*') on claims (src/lib/db.js:${starClaims.map((x) => x[0]).join(', ')}) — each returns every column the role may select, so the score is delivered to the browser (executed)`,
+      `E2 ${starClaims.length} shipped client READ(s) are select('*') on claims (src/lib/db.js:${starClaims.map((x) => x[0]).join(', ')}) — each returns every column the role may select, so the score is delivered to the browser (executed)`,
       `E2 the select('*') call sites changed (${starClaims.length} found) — re-derive this residual before trusting it`)
+    check(bareSelect.length >= 2,
+      `E2 and ${bareSelect.length} WRITE path(s) return a bare .select() (src/lib/db.js:${bareSelect.map((x) => x[0]).join(', ')}) — claim creation and claim update expand to every column too, so promotion breaks ${starClaims.length + bareSelect.length} call sites, not ${starClaims.length} (executed)`,
+      `E2 the bare-.select() write paths changed (${bareSelect.length} found) — re-derive before trusting the breakage count`)
+
+    // THE RENDER QUESTION, answered rather than left open. T-115 recorded
+    // "nothing renders it" as UNVERIFIED; this is the check that settles it.
+    const INTERNAL_COLS = ['internal_confidence', 'extraction_provenance', 'extraction_method', 'model_version']
+    const uiFiles = execSyncList("git ls-files -- 'src/features' 'src/components'").filter((f) => /\.(js|jsx)$/.test(f))
+    check(uiFiles.length >= 10,
+      `E2 non-vacuity: ${uiFiles.length} artist/agency UI files scanned for the internal columns`,
+      `E2 ⚠ only ${uiFiles.length} UI files found — the render check below would be vacuous`)
+    const renders = []
+    for (const f of uiFiles) {
+      const src = readFileSync(f, 'utf8')
+      for (const c of INTERNAL_COLS) if (src.includes(c)) renders.push(`${f}:${c}`)
+    }
+    check(renders.length === 0,
+      `E2 NO artist-facing UI file names any of the four internal columns — this is a column in a network response, NOT a score on a screen (executed over ${uiFiles.length} files)`,
+      `E2 ⚠ an internal column is referenced in artist-facing UI: ${renders.join(', ')} — that would be a firewall breach, not a defence-in-depth gap`)
   }
 
   console.log('\n  ── candidate applied: scripts/sql/candidate-claims-internal-columns.sql ──')
@@ -858,7 +886,11 @@ try {
   db.exec(readFileSync('scripts/sql/candidate-claims-internal-columns.sql', 'utf8'))
   const icGrantsAfter = db.rows(GRANT_SQL)
   {
-    const INTERNAL = ['internal_confidence', 'extraction_method', 'model_version', 'extraction_provenance']
+    // Exactly two. The first draft revoked four; src/types.ts:76-77 declares
+    // extraction_method and model_version as fields of the client-facing Claim
+    // type, so revoking them contradicted a written client contract.
+    const INTERNAL = ['internal_confidence', 'extraction_provenance']
+    const CLIENT_VISIBLE = ['extraction_method', 'model_version']
     for (const col of INTERNAL) {
       const r = db.try(`select ${col} from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER))
       check(!r.ok && /permission denied/i.test(r.out),
@@ -867,11 +899,16 @@ try {
     }
     check(db.try(`select internal_confidence from public.claims`, asUser(U.REP_A)).ok === false,
       'E3 and by every representing organization too (executed)')
+    for (const col of CLIENT_VISIBLE) {
+      check(db.try(`select ${col} from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER)).ok,
+        `E3 ${col} REMAINS readable — src/types.ts:76-77 declares it a field of the client-facing Claim type, and src/lib/db.js:344 has the client write it (executed)`,
+        `E3 ⚠ the candidate revoked ${col}, contradicting the Claim type contract in src/types.ts`)
+    }
 
     // CONSEQUENCE, measured rather than described: this is what breaks.
     const star = db.try(`select * from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER))
     check(!star.ok && /permission denied/i.test(star.out),
-      'E4 `select *` on claims now FAILS for authenticated — the three src/lib/db.js call sites break LOUDLY rather than leak quietly, and must be changed to explicit column lists in the same commit as any promotion (executed)',
+      'E4 `select *` on claims now FAILS for authenticated — all FIVE src/lib/db.js call sites (3 reads + 2 write-returns) break LOUDLY rather than leak quietly, and must be changed to explicit column lists in the same commit as any promotion (executed)',
       'E4 ⚠ select * still succeeds — the candidate did not narrow anything')
     check(db.try(`select id, claim_type, value, verification_status, visibility, artist_approved from public.claims where artist_id='${ARTIST}'`, asUser(U.OWNER)).ok,
       'E4 an EXPLICIT column list still works — the narrowing is a narrowing, not a blackout (executed)',

@@ -2799,3 +2799,42 @@ caught. E5 snapshots all 3,954 column privileges and asserts exactly four revoke
 `authenticated/claims`, with nothing granted anywhere.
 
 **131 checks (was 114).**
+
+## T-116 · THE RENDER CHECK — AND TWO CORRECTIONS TO T-115 (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** This closes the half of T-115 I recorded as UNVERIFIED, and corrects
+two things T-115 got wrong. Both corrections make the finding **smaller and more precise**, which is the
+direction they should be reported in when that is where the evidence points.
+
+**The render question is answered: nothing renders it.** No artist- or agency-facing UI file names
+`internal_confidence`, `extraction_provenance`, `extraction_method` or `model_version` — 61 files under
+`src/features` and `src/components`, scanned by the gate rather than by hand, with a non-vacuity guard on
+the file count. There is no generic renderer over claims either: the single `JSON.stringify` in
+`ClaimReview.jsx:435` sends `{claimId, producerContact}`, not a row. So CONF-COL is **a column in a
+network response, not a score on a screen** — exactly as T-115 framed it, now verified instead of
+assumed. Mutation-proven: adding `claim.internal_confidence` to an artist screen fails the gate by name.
+
+**CORRECTION 1 — T-115 understated the breakage. Five call sites, not three.** I counted only the
+`select('*')` reads. A bare `.select()` after a write expands to every column too, so
+`src/lib/db.js:347` (`insert(claim).select().single()`) and `:431` (`update(patch).select().single()`)
+break as well — **claim creation and claim update**, not merely three list reads. The gate now
+enumerates both shapes from source and reports the combined count, so the number cannot drift.
+
+**CORRECTION 2 — the candidate over-reached by two columns, and I only found it by checking the client
+contract.** It revoked four. `src/types.ts:76-77` declares `extraction_method` and `model_version` as
+fields of the client-facing `Claim` type, directly above the line
+`// internal_confidence: DB-only, never in this type` — the type deliberately distinguishes them — and
+`src/lib/db.js:344` has the client WRITE those two on insert. `server/index.js:451` excludes all four
+from the **buyer** payload, and I had conflated the buyer boundary with the artist one.
+
+The candidate now revokes exactly two: `internal_confidence` (001:89) and `extraction_provenance`
+(039:76, "INTERNAL-ONLY … no client read path may ever render it"). The gate asserts the other two
+**remain readable**, so a future draft cannot silently re-over-reach — mutation-proven, adding
+`extraction_method` back to the revoke list fails by name.
+
+**134 checks (was 131). Mutations 2/2 caught.**
+
+**What this changes for the owner.** CONF-COL is now a smaller decision than T-115 implied: no score is
+displayed, and the fix costs five call-site edits rather than three. What has not changed is the
+substance — `authenticated` can still select a column `001:89` says is never returned to any client, and
+`016:9` says that was deliberate. Which statement is canon is still Maria's to settle.
