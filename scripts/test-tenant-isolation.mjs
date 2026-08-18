@@ -1080,6 +1080,69 @@ try {
       `E5 ⚠ internal column(s) still granted: ${leaked.join(', ')} (keep-list size ${stillGranted.length})`)
   }
 
+
+  // ──────────────────────────────────────────────────────────────────────────
+  console.log('\nF · ROLE CONTEXT — can a user point their active org at a FOREIGN organization? (EXECUTED)')
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    // `arc_self` (008:216) is `for all using (person_id = auth.uid()) with
+    // check (person_id = auth.uid())`. It constrains WHOSE row you may write.
+    // It says nothing about WHICH organization you may point at, and
+    // set_artist_org() (014/015) READS that column to stamp ownership on every
+    // new artist. 014's header asserts the RLS WITH CHECK catches the mismatch.
+    // That is a claim about behaviour, so it is executed here rather than read.
+    const arcOther = db.try(
+      `insert into public.active_role_context(person_id, active_organization_id)
+       values ('${U.REP_B}', '${ORG_A}')
+       on conflict (person_id) do update set active_organization_id = excluded.active_organization_id`,
+      asUser(U.REP_A))
+    check(!arcOther.ok,
+      'F1 arc_self refuses writing ANOTHER person\'s role context (executed)',
+      `F1 ⚠ REP_A wrote REP_B's active_role_context — cross-person write is open (ok=${arcOther.ok})`)
+
+    // Own row, FOREIGN organization. REP_A belongs to ORG_A only.
+    const arcForeign = db.try(
+      `insert into public.active_role_context(person_id, active_organization_id)
+       values ('${U.REP_A}', '${ORG_B}')
+       on conflict (person_id) do update set active_organization_id = excluded.active_organization_id`,
+      asUser(U.REP_A))
+    const arcNow = db.scalar(`select active_organization_id::text from public.active_role_context where person_id = '${U.REP_A}'`)
+    check(arcForeign.ok && arcNow === ORG_B,
+      `F2 ⚠ REPRODUCED — a user may point their OWN active_role_context at an organization they do NOT belong to: REP_A's active org is now ${arcNow} (ORG_B). arc_self validates the person, never the organization (executed)`,
+      `F2 the foreign-org write was refused (ok=${arcForeign.ok}, now=${arcNow}) — arc_self is stricter than 008:216 reads, re-derive this`)
+
+    // THE QUESTION THAT MATTERS: does anything downstream TRUST it?
+    // set_artist_org() stamps owner_organization_id from that column.
+    const insArtist = db.try(
+      `insert into public.artists (id, stage_name, created_by)
+       values ('00000000-0000-0000-0000-0000000000d9', 'QA ROLE CONTEXT PROBE', '${U.REP_A}')`,
+      asUser(U.REP_A))
+    // Existence by COUNT, not by a scalar compared to null: the harness returns
+    // an empty scalar for "no rows", so `=== null` reported a refusal as a
+    // failure. Measured the shape before trusting it.
+    const stampedRows = db.scalar(`select count(*) from public.artists where id = '00000000-0000-0000-0000-0000000000d9'`)
+    const stamped = db.scalar(`select coalesce(max(owner_organization_id::text),'(no row)') from public.artists where id = '00000000-0000-0000-0000-0000000000d9'`)
+    check(!insArtist.ok && stampedRows === '0',
+      `F3 the artists RLS WITH CHECK still REFUSES it — a foreign active org stamps owner_organization_id=ORG_B and \`owner_organization_id in current_org_ids()\` then fails, because current_org_ids() reads MEMBERSHIP and never the active context. 014's header claim holds, executed (insert ok=${insArtist.ok}, row=${stamped}) (executed)`,
+      `F3 ⚠ ESCALATION — REP_A created an artist owned by ORG_B, an organization they do not belong to (owner=${stamped}). The active context was trusted as authority.`)
+
+    // Positive control: the SAME insert with the user's OWN org must succeed,
+    // or F3 would pass because artist creation is broken rather than refused.
+    db.exec(`update public.active_role_context set active_organization_id = '${ORG_A}' where person_id = '${U.REP_A}'`)
+    const insOwn = db.try(
+      `insert into public.artists (id, stage_name, created_by)
+       values ('00000000-0000-0000-0000-0000000000da', 'QA ROLE CONTEXT CONTROL', '${U.REP_A}')`,
+      asUser(U.REP_A))
+    const stampedOwn = db.scalar(`select owner_organization_id::text from public.artists where id = '00000000-0000-0000-0000-0000000000da'`)
+    check(insOwn.ok && stampedOwn === ORG_A,
+      `F3 positive control: the same insert with REP_A's OWN active org SUCCEEDS and stamps ${stampedOwn} — F3 above is a refusal, not a broken write path (executed)`,
+      `F3 ⚠ the control insert failed (ok=${insOwn.ok}, owner=${stampedOwn}) — F3 proves nothing`)
+    db.exec(`delete from public.artists where id in ('00000000-0000-0000-0000-0000000000d9','00000000-0000-0000-0000-0000000000da')`)
+    check(db.scalar(`select count(*) from public.artists where id in ('00000000-0000-0000-0000-0000000000d9','00000000-0000-0000-0000-0000000000da')`) === '0',
+      'F3 probe artists removed — this block leaves no residue (executed)',
+      'F3 ⚠ a probe artist survived the block')
+  }
+
 } finally {
   db.drop()
 }

@@ -2973,3 +2973,41 @@ need a running auth server; this container has none. These are static assertions
 the SHAPE of the surface so it cannot drift silently, which is not the same as proving runtime behaviour.
 
 **12 static checks. Wired into `verify` (39 steps, was 38).**
+
+## T-119 · ROLE-CONTEXT SWITCHING — the escalation does NOT happen, proven by execution (18 Aug 2026)
+
+**Status: COMPLETE with evidence.** The finding is a **latent hazard**, not a live defect, and it is
+reported that way because that is what the evidence says.
+
+`arc_self` (008:216) is `for all using (person_id = auth.uid()) with check (person_id = auth.uid())`.
+It constrains WHOSE row you may write and says nothing about WHICH organization you may point at — and
+`set_artist_org()` (014/015) READS that column to stamp `owner_organization_id` on every new artist.
+014's header asserts the RLS `WITH CHECK` catches the mismatch. That is a claim about behaviour, so it
+was executed rather than read.
+
+**What executes:**
+* **F1** — writing ANOTHER person's role context is refused. The person half of `arc_self` works.
+* **F2** — a user CAN point their OWN active context at an organization they do not belong to. Reproduced.
+* **F3** — and **nothing downstream trusts it**. `set_artist_org()` stamps `owner_organization_id = ORG_B`,
+  then `owner_organization_id in current_org_ids()` fails, because `current_org_ids()` reads
+  `organization_membership` and never the active context. The insert is refused and no row exists.
+  **014's header claim holds.** A positive control proves this is a refusal and not a broken write path:
+  the same insert with the user's own active org succeeds and stamps ORG_A.
+
+**Mutation-proven.** Redefining `current_org_ids()` to read the active context instead of membership
+makes the escalation real, and F3 catches it by name — so F3 is measuring the boundary, not restating
+that inserts fail.
+
+**Why this is still worth recording.** The safety here rests entirely on one function reading membership
+rather than the active context. Any future code that treats `active_role_context` as AUTHORITY — rather
+than as the UI preference it is — escalates immediately, and the column's own policy would not stop it.
+Filed as **ARC-VALIDATE**, explicitly as the lowest-urgency open item, because nothing is exploitable
+today.
+
+**Two assertion bugs of my own, both caught by the harness before the report.** F3 first compared a
+scalar to `null` to mean "no row"; the harness returns an empty scalar, so a correct refusal was
+reported as an ESCALATION failure. Existence is now measured by `count(*)`. This is the second time this
+session a harness-shape assumption produced a false red — the same class as the earlier stranger-read
+check.
+
+**151 checks (was 146).**
