@@ -33,9 +33,33 @@ const STEPS = 3
 // Refresh mid-entry must resume, not restart — the step position (never the
 // field data, which is saved server-side per-step) is mirrored to
 // sessionStorage per-user so a reload lands back where the artist was.
+//
+// FAIL-SOFT (ONB-RESUME-STORAGE). Touching web storage THROWS, not returns
+// null, when the browser has site data disabled (restricted webviews, some
+// private modes, enterprise policy). `readSavedStep` runs inside the `step`
+// useState initialiser — i.e. during first render — so an unguarded throw
+// there took out the whole entry screen via ErrorBoundary and the artist
+// could not onboard AT ALL. The convenience of resuming must never be able
+// to cost the flow itself. Same idiom already used by EvidenceExplorer.jsx
+// and AgencyDashboard.jsx.
+//
+// Degradation when storage is unavailable, stated honestly: the step POSITION
+// is lost, so a refresh lands on step 1 — but no entered data is lost, because
+// every field is already persisted server-side before its step advances
+// (upsertArtist on 1→2, addProfileItem/addEvidence on 2→3) and step 1 is
+// re-prefilled from `getMyArtist` on mount.
 function stepStorageKey(userId) { return `gigproof_onboarding_step_${userId}` }
+function safeGetStep(userId) {
+  try { return sessionStorage.getItem(stepStorageKey(userId)) } catch { return null }
+}
+function safeSetStep(userId, value) {
+  try { sessionStorage.setItem(stepStorageKey(userId), value) } catch { /* resume degrades to step 1; never throws */ }
+}
+function safeClearStep(userId) {
+  try { sessionStorage.removeItem(stepStorageKey(userId)) } catch { /* nothing to clear if it was never stored */ }
+}
 function readSavedStep(userId) {
-  const raw = Number(sessionStorage.getItem(stepStorageKey(userId)))
+  const raw = Number(safeGetStep(userId))
   return raw >= 1 && raw <= STEPS ? raw : 1
 }
 
@@ -145,7 +169,7 @@ export default function Onboarding() {
 
   // Mirror step position so a mid-entry refresh resumes instead of restarting.
   useEffect(() => {
-    sessionStorage.setItem(stepStorageKey(user.id), String(step))
+    safeSetStep(user.id, String(step))
   }, [user.id, step])
 
   // Move focus to the new step's own heading whenever step 2 or 3 renders —
@@ -215,7 +239,7 @@ export default function Onboarding() {
   // Reveal → Radar (the completion path — one place, fired from step 2 no-link
   // or the step-3 CTA).
   function finish() {
-    sessionStorage.removeItem(stepStorageKey(user.id))
+    safeClearStep(user.id)
     logEvent(EVENTS.ONBOARDING_COMPLETE)
     nav('/artist/home', { state: { fromEntry: true } })
   }

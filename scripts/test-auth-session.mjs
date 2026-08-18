@@ -273,9 +273,12 @@ const UNRESOLVED = KEYS.filter((k) => k.includes('(unresolved expression in'))
 check(RESOLVED.length === 14,
   `B2 ${RESOLVED.length} resolvable browser-storage keys, pinned: ${RESOLVED.join(' · ')}`,
   `B2 ⚠ the resolvable key set changed (${RESOLVED.length}, expected 14): ${RESOLVED.join(' · ')} — a new key that outlives sign-out must be reviewed on its own terms`)
-check(UNRESOLVED.length === 5,
-  `B2b ${UNRESOLVED.length} key expressions resolve through a helper or a cross-file constant and are NOT read literally — named so they are visible rather than dropped: ${UNRESOLVED.join(' · ')}. Three of these are per-user by construction (gigproof_pp_dirty_<artistId>, gigproof_onboarding_step_<userId>, and the pending-role key).`,
-  `B2b ⚠ the unresolved key-expression set changed (${UNRESOLVED.length}, expected 5): ${UNRESOLVED.join(' · ')}`)
+// Was 5 until ONB-RESUME-STORAGE: Onboarding's two `stepStorageKey(user.id)`
+// call sites moved behind the safeSetStep/safeClearStep fail-soft helpers, so
+// that spelling now appears once (inside the helper) instead of twice.
+check(UNRESOLVED.length === 4,
+  `B2b ${UNRESOLVED.length} key expressions resolve through a helper or a cross-file constant and are NOT read literally — named so they are visible rather than dropped: ${UNRESOLVED.join(' · ')}. They cover three distinct key families, all per-user by construction (gigproof_pp_dirty_<artistId>, gigproof_onboarding_step_<userId>, and the pending-role key, which appears from two files).`,
+  `B2b ⚠ the unresolved key-expression set changed (${UNRESOLVED.length}, expected 4): ${UNRESOLVED.join(' · ')}`)
 
 // The clause the old B2 MESSAGE asserted but never evaluated ("and none is
 // cleared on sign-out") is now an actual check.
@@ -464,5 +467,5 @@ console.log(`
 
 console.log(failed
   ? `\n✗ AUTH · SESSION · RECOVERY: FAILED (${checks} checks)\n`
-  : `\n✓ AUTH · SESSION · RECOVERY: ${checks} static checks hold — one password-change surface, public by design, ready on any session, with no re-authentication in front of it; and sign-out clears the session but none of the app's 14 resolvable (+5 helper-resolved) storage keys, with the T-106 stale-Act adoption structurally pinned at both consumers.\n`)
+  : `\n✓ AUTH · SESSION · RECOVERY: ${checks} static checks hold — one password-change surface, public by design, ready on any session, with no re-authentication in front of it; and sign-out clears the session but none of the app's 14 resolvable (+4 helper-resolved) storage keys, with the T-106 stale-Act adoption structurally pinned at both consumers.\n`)
 process.exit(failed ? 1 : 0)

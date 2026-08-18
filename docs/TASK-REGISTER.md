@@ -3244,3 +3244,85 @@ a BOOT property only. **C6** now pins that, and the claim is corrected.
 not covered.
 
 **39 static checks (was 34).**
+
+---
+
+## ONB-RESUME-STORAGE — the entry flow could not survive a browser that refuses site data
+
+**Band:** resumable onboarding. **Files:** `src/features/artist/Onboarding.jsx` ·
+`scripts/test-storage-resilience.mjs` (new) · `package.json` (verify chain).
+
+**OBSERVED defect.** `readSavedStep()` read `sessionStorage.getItem` unguarded, and it is invoked from
+the `step` `useState` initialiser — i.e. **during first render**. Web storage does not return `null`
+when the browser has site data disabled (restricted webviews, some private modes, enterprise policy);
+the property access **throws**. So the artist entry screen went out through `ErrorBoundary`
+(`src/main.jsx:32`) and the artist could not onboard at all. Two further unguarded touches: the
+step-mirror effect and `finish()`. The repo's own dominant idiom already guards — measured 30 of 48
+sites at the parent commit, with `EvidenceExplorer.jsx:40` carrying the explicit comment
+*"private-mode storage — degrades … never throws"*. This was the outlier, not the convention.
+
+**Fix.** `safeGetStep` / `safeSetStep` / `safeClearStep` wrap the three touches. Degradation is stated
+in the file and is honest: the step POSITION is lost, so a refresh lands on step 1 — **no entered data
+is lost**, because every field is persisted server-side before its step advances (`upsertArtist` on
+1→2 at `Onboarding.jsx:113`/`:169`, `addProfileItem` + `addEvidence` on 2→3 at `:192`/`:197`) and
+step 1 is re-prefilled from `getMyArtist` on mount.
+
+**New gate — `npm run test:storage` (9 checks).** Every `localStorage`/`sessionStorage` member access
+in the tracked `src/` tree, classified GUARDED/OPEN by real **AST ancestry** (esbuild JSX transform →
+acorn → parent-chain walk), not by regex and not by named-file spot checks — the failure mode this
+session has repeatedly paid for. `website-next/` is a different surface, covered by
+`test-client-store.mjs`. Design points:
+· **ratchet**, not a snapshot — the OPEN set is pinned to a `BASELINE`; a NEW unguarded access fails,
+  and *fixing* a baselined one **also** fails until the baseline is tightened (a ratchet that can
+  silently loosen is not a ratchet).
+· **the baseline is DEBT, listed openly** — 15 sites across 7 files, NOT a claim they are safe. Each
+  needs its own fallback-semantics decision (what should `publicSessionId()` return when it cannot
+  persist?), which is why they were not swept into this increment.
+· **fail closed** — a file that will not transform or parse is a FAILURE, never a skip.
+· **S1 source-map self-test** — every reported `file:line` must actually contain the token it claims,
+  so the gate cannot report confidently against the wrong line.
+· **S6 detector self-test** — proves `try` guards, that `catch`/`finally` do **not**, that
+  `window.localStorage.*` is seen, and that crossing a **function boundary cancels the guard**, all
+  before any verdict on real files is trusted.
+· **no false GUARD** — a callback *defined* inside a `try` but *called* later (an event handler, a
+  timer) is NOT protected at runtime, because the try has already exited. The walk therefore stops at
+  a function boundary. Verified to be a real behaviour change and not an equivalent mutant: on the
+  probe `try { on('x', () => localStorage.getItem('qa')) } catch {}` the loose rule returns
+  `guarded:true` and the boundary rule returns `guarded:false`. It changes **no** verdict on the tree
+  as it stands (33/15 either way) — i.e. no existing site was relying on a false GUARD; it closes the
+  hole ahead of one.
+
+**Mutation battery — 7/7 caught, every restore verified by sha256:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| M1 | un-guard the Onboarding read (revert the fix) | S4 NEW + S5 DOD |
+| M2 | new unguarded access in a file not in BASELINE (`src/lib/orgs.js`) | S4 NEW |
+| M3 | guard a baselined site without tightening BASELINE (`Signup.jsx`) | S4 STALE |
+| M4 | detector stuck-true (`guarded = true`) | S6, before any file verdict |
+| M5 | source-map lookup shifted +3 lines | S1 (44 findings) |
+| M6 | unparseable tracked src file | S3 (transform failure ≠ skip) |
+| M7 | storage access in a callback defined inside a `try` (the false-GUARD hole) | S4 NEW |
+
+Positive control after each restore: gate green, tree carrying only the intended changes.
+
+**Measured surface:** 96 tracked src files · 48 storage sites · 33 guarded · 15 open (baselined).
+
+**Knock-on, disclosed rather than absorbed.** `test-auth-session` §B2b pinned **5** helper-resolved
+key expressions; moving the two `stepStorageKey(user.id)` call sites behind the fail-soft helpers
+leaves that spelling in one place, so the pin is now **4**. The KEY SET is unchanged — only how many
+places spell it. B2b caught this on the first full chain (that is the pin working, not a regression);
+the count was tightened in the gate, in its summary line, and in the SIGNOUT-SCOPE row of
+OWNER-PENDING, which carried the stale "+5".
+
+**Scope limits, stated rather than implied.** The gate is **static** and **lexical**: a helper that is
+always called from inside a caller's `try` is still reported OPEN (deliberate — guarding at the source
+is cheap and correct). It sees `localStorage.*` / `window.localStorage.*` as written; an alias
+(`const ls = localStorage`), a computed host (`window['localStorage']`) or a `globalThis.` spelling
+would not be seen — none appears in this tree today, but the gate's green does not deny they could. It
+does not execute the flow, so it proves the *shape*, not the runtime behaviour of a storage-refusing
+browser. It covers `src/` only. Whether onboarding resume should
+survive a **tab close** at all (`sessionStorage` → `localStorage`) is a product/privacy call on shared
+devices, not an engineering one — raised as **ONB-RESUME-MEDIUM** in OWNER-PENDING, deliberately not
+decided here.
+
