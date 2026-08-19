@@ -121,6 +121,15 @@ export const COPY: CopyRow[] = [
   { id: 'contact.form.error.error', page: 'contact', section: 'form', component: 'ContactForm', element: 'error',
     t: { en: 'Something went wrong — your text is still here, please try again.',
          he: 'משהו השתבש — הטקסט שלכם נשמר, נסו שוב.' } },
+  // Two verdicts the governed RPC can return that "please try again" answers WRONGLY
+  // (QA-INDEP-03, M3): a retry of an over-long message can never succeed, and a
+  // retry while rate-limited increments the counter that is refusing you.
+  { id: 'contact.form.tooLong.error', page: 'contact', section: 'form', component: 'ContactForm', element: 'error',
+    t: { en: 'That message is too long to send — please shorten it a little and try again. Your text is still here.',
+         he: 'ההודעה ארוכה מדי לשליחה — קצרו אותה מעט ונסו שוב. הטקסט שלכם נשמר.' } },
+  { id: 'contact.form.rateLimited.error', page: 'contact', section: 'form', component: 'ContactForm', element: 'error',
+    t: { en: 'Too many messages from your email provider just now. Please try again in an hour — your text is still here.',
+         he: 'נשלחו יותר מדי הודעות מספק הדואר שלכם כרגע. נסו שוב בעוד שעה — הטקסט שלכם נשמר.' } },
   { id: 'contact.form.privacy.help', page: 'contact', section: 'form', component: 'ContactForm', element: 'help',
     note: 'Point-of-collection privacy link. {link} is substituted at render.',
     t: { en: 'We use your details only to reply. See our {link}.', he: 'נשתמש בפרטים רק כדי להשיב. ראו את {link} שלנו.' } },

@@ -186,14 +186,24 @@ begin
          -- newest would lose the first message instead; coalescing to the oldest
          -- would reproduce the 026 loss. Appending loses neither. An exact
          -- repeat is not appended, so a double-submit does not duplicate text.
-         -- Growth is bounded by the rate limiter (5 per domain+role per hour)
-         -- and by the 4000-character cap on each incoming message.
+         -- GROWTH IS RATE-LIMITED, NOT BOUNDED — corrected after QA-INDEP-03 (M7)
+         -- showed the earlier comment claimed more than the code delivered. The
+         -- 5-per-hour limiter and the 4000-character cap bound the RATE; the column
+         -- itself had no ceiling and appended forever. Combined with WL-OVERWRITE
+         -- (docs/OWNER-PENDING.md — an unauthenticated caller may write to any
+         -- address's row), an attacker rotating the six roles could append roughly
+         -- 120 KB/hour to a chosen victim's row. The stored value is now capped at
+         -- 32 KB: appends stop growing the column past that, and the OLDEST text is
+         -- what survives, because the first message someone sent is the one they
+         -- are waiting on an answer to.
          message          = case
            when excluded.message is null then w.message
            when w.message is null then excluded.message
            when w.message = excluded.message then w.message
-           else w.message || E'\n\n--- ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || E' ---\n' || excluded.message
+           when length(w.message) >= 32768 then w.message
+           else left(w.message || E'\n\n--- ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || E' ---\n' || excluded.message, 32768)
          end,
+
          -- CONSENT BINDS TO THE NUMBER IT WAS GIVEN FOR (independent QA, D3).
          -- The previous version let whatsapp_e164 move by coalesce while
          -- whatsapp_consent latched one-way to true, so a second submission

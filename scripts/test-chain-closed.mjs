@@ -191,6 +191,11 @@ const EXPECTED = [
   'scripts/test-client-store.mjs',
   'scripts/test-fit.mjs',
   'scripts/test-hero-contract.mjs',
+  // Added by QA-INDEP-03 H2: the brand gate can read an SVG but never a PNG, so
+  // the SERVED share card was unasserted. test:og-assets re-renders every og/*.svg
+  // and compares bytes, which needs a real browser — and therefore needs the same
+  // fail-closed proof every other rendered gate here gets.
+  'scripts/test-og-assets.mjs',
   'scripts/test-visual-regression.mjs',
 ].sort()
 check('C1 the set of browser-dependent gates in the verify chain is exactly the pinned set',

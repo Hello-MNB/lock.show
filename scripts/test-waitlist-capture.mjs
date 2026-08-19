@@ -8,7 +8,7 @@
 // A SKIP IS NOT A PASS — with no local PostgreSQL this exits 1.
 // ============================================================
 import { ScratchDb, pgAvailable } from './lib/pgharness.mjs'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
 let failures = 0
@@ -188,28 +188,54 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
 {
   const TABLE_PATH = '/rest/v1/waitlist_signup'
   const RPC_PATH = '/rest/v1/rpc/join_waitlist'
-  const files = execFileSync('git', ['ls-files',
+  // TRACKED **and** UNTRACKED (QA-INDEP-03, L6). `git ls-files` alone cannot see a
+  // client file that exists on disk but has not been added, and "the browser does
+  // not ask" must be true of the working tree, not only of the index.
+  const listed = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard',
     'website-next/app', 'website-next/components', 'website-next/lib', 'src'],
     { encoding: 'utf8' }).split('\n')
-    .filter((f) => /\.(tsx|ts|jsx|js)$/.test(f))
+  const files = listed.filter((f) => /\.(tsx|ts|jsx|js)$/.test(f) && existsSync(f))
 
   const strip = (src) => src.split('\n')
     .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
     .join('\n')
 
+  // THE TABLE NAME ITSELF, not one URL spelling (QA-INDEP-03, H1). The first
+  // version of this check tested for the literal substring `/rest/v1/waitlist_signup`
+  // and nothing else. Mutation P1 injected exactly that spelling, the check caught
+  // it, and the register concluded the browser half of the contract was enforced.
+  // It was not. The reviewer added two live direct writes to a client component and
+  // this gate stayed green:
+  //
+  //     sb.from('waitlist_signup').insert(row)                  // supabase-js — the
+  //     fetch(`${SUPABASE_URL}/rest/v1/` + TBL, …)              // dominant style in
+  //                                                             // src/lib/db.js
+  //
+  // The supabase-js form is how EVERY other write in this repo is spelled
+  // (src/lib/db.js:12,22,30,46,59), so the one form the scanner modelled was close
+  // to the least likely one to appear. Post-048 either call is a permanent 401 with
+  // the person's message discarded — the exact failure GAP-W1 exists to prevent.
+  //
+  // So the rule is now about the TABLE, not about a URL: the identifier
+  // `waitlist_signup` may not appear in client code at all, in any expression. The
+  // RPC path is subtracted first because it does not contain the table name; only
+  // the postgrest URL form does, and stripping it would hide a real hit, so the two
+  // are distinguished by pattern rather than by subtraction.
+  const TABLE_NAME = 'waitlist_signup'
   const offenders = []
   let rpcCallers = 0
   for (const f of files) {
     const code = strip(readFileSync(f, 'utf8'))
     if (code.includes(RPC_PATH)) rpcCallers++
-    // The RPC path CONTAINS the table name's prefix, so the table hit must be
-    // counted only where it is not the RPC path — otherwise every correct
-    // caller would be reported as an offender.
-    if (code.split(RPC_PATH).join('').includes(TABLE_PATH)) offenders.push(f)
+    // Every mention of the table identifier that is not part of the RPC path.
+    // `/rest/v1/rpc/join_waitlist` contains neither the table name nor TABLE_PATH,
+    // so nothing legitimate is caught here.
+    const hits = [...code.matchAll(/waitlist_signup/g)]
+    if (hits.length) offenders.push(`${f} (${hits.length}× "${TABLE_NAME}")`)
   }
 
-  check('[6c] no client file POSTs the revoked table directly', offenders.length === 0,
-    offenders.join(', '))
+  check('[6c] the table the migration revoked is never named in client code',
+    offenders.length === 0, offenders.join(', '))
   // NON-VACUITY, both directions: the scan must have opened real files, and it
   // must be able to SEE a waitlist write path at all. A glob that silently
   // matched nothing would otherwise report a clean result forever.
@@ -321,6 +347,18 @@ console.log('\n[9] the CONTACT payload survives the move (GAP-W1)')
   // And a repeat that carries NO message must not erase the one already stored.
   call({ p_email: E2, p_entity_role: 'venue', p_message: null })
   check('a later submission with no message cannot clear the stored one', flat(E2) === 'IDENTICAL')
+
+  // THE CEILING, EXECUTED (QA-INDEP-03, M7). The append comment used to claim
+  // growth was "bounded by the rate limiter"; that bounds the RATE. With
+  // WL-OVERWRITE unresolved, an unauthenticated caller can write to any address's
+  // row, so an unbounded column is an unbounded write to somebody else's record.
+  const E3 = 'cap@msg-cap.test'
+  for (let i = 0; i < 12; i++) call({ p_email: E3, p_entity_role: 'artist', p_message: `${i}-${'x'.repeat(3900)}` })
+  const capLen = Number(db.scalar(`select length(message) from public.waitlist_signup where email='${E3}'`))
+  check('the stored message cannot grow past 32 KB however many are appended',
+    capLen > 0 && capLen <= 32768, `length=${capLen}`)
+  check('...and the OLDEST message is the one kept — it is the one awaiting a reply',
+    db.scalar(`select left(message, 1) from public.waitlist_signup where email='${E3}'`) === '0')
 }
 
 console.log('\n[5] rate limiting')

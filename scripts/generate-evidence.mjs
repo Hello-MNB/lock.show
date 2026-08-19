@@ -47,7 +47,8 @@
 // is already accounted for, not the thing that decides the step exists.
 // ============================================================
 import { execFileSync, execSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, realpathSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 const OUT = 'evidence/current.json'
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim()
@@ -112,14 +113,35 @@ export function parseChain(log, declared, exitCode) {
   for (const [i, d] of declared.entries()) {
     // The umbrella script itself is the chain, not a step within it.
     if (d.cmd === 'npm run verify') continue
-    const ran = d.step === null
-      // A raw command has no header: it ran iff the chain got past the step
-      // before it. With `&&`, reaching step i+1 proves step i succeeded.
-      ? ranSteps.length > 0
-      : ranSteps.includes(d.step)
+    // A raw command prints no header, so its execution must be inferred from
+    // POSITION — QA-INDEP-03, M2. The first version asked `ranSteps.length > 0`,
+    // i.e. "it ran iff ANY step ran", which is true by construction on every
+    // non-empty log. The reviewer executed a log where the chain died at step 2
+    // of 43 and the raw step at position 38 was still recorded as a PASSING gate
+    // and was structurally absent from `stepsNotRun` — the very list the register
+    // calls "the ratchet". With `&&`, a step ran iff the chain reached the step
+    // AFTER it; if it is last, iff the step before it ran and the chain exited 0.
+    const nextHeadered = declared.slice(i + 1).find((x) => x.step !== null)
+    const prevHeadered = declared.slice(0, i).reverse().find((x) => x.step !== null)
+    const ran = d.step !== null
+      ? ranSteps.includes(d.step)
+      : nextHeadered
+        ? ranSteps.includes(nextHeadered.step)
+        : Boolean(prevHeadered && ranSteps.includes(prevHeadered.step) && exitCode === 0)
     if (!ran) { stepsNotRun.push(d.cmd); continue }
     const block = d.step === null ? null : blocks.find((b) => b.step === d.step)
     const own = block ? block.lines.filter((l) => /^[✓✗]/.test(l) && !TOOL_OUTPUT.some((r) => r.test(l))) : []
+    // A GATE THAT PRINTS NO TICK STILL SAYS SOMETHING — QA-INDEP-03, L3. Counting
+    // the step was the fix; recording `summary: null` for the five gates this
+    // increment exists to rescue left the register's word "recorded" stronger than
+    // the artifact. Their real summaries — "All security-denial checks passed.",
+    // "G13 act-isolation: 17 passed, 0 failed", "DS-DRIFT PASS — …" — are the
+    // evidence, so fall back to the block's LAST non-blank column-0 line, which is
+    // where a suite prints its verdict. Tool output is excluded from the fallback
+    // too, so a vite line can never stand in for a gate's summary.
+    const tickless = block ? block.lines.filter((l) =>
+      l.trim() && !/^\s/.test(l) && !TOOL_OUTPUT.some((r) => r.test(l)) && !/^> /.test(l)) : []
+    const summaryLine = own[0] ?? tickless[tickless.length - 1] ?? null
     const failed = own.some((l) => l.startsWith('✗'))
     const isLast = i === declared.length - 1
     gates.push({
@@ -127,7 +149,7 @@ export function parseChain(log, declared, exitCode) {
       step: d.step ?? d.cmd,
       // A step with no printable summary is recorded anyway — that is the whole
       // point. `null` means "printed no column-0 verdict", never "did not run".
-      summary: own[0] ? own[0].trim().slice(0, 400) : null,
+      summary: summaryLine ? summaryLine.trim().slice(0, 400) : null,
       result: failed ? 'fail' : (isLast && exitCode !== 0) ? 'fail' : 'pass',
     })
   }
@@ -188,8 +210,12 @@ if (process.argv.includes('--self-test')) {
     const log = '> gigproof@0.1.0 a\nAll security-denial checks passed.\n\n> gigproof@0.1.0 b\n✓ B GATE: fine\n'
     const r = parseChain(log, d, 0)
     t('a tickless gate is still counted', r.gates.length === 2, `${r.gates.length} gate(s)`)
-    t('...and is marked pass, with a null summary rather than a guess',
-      r.gates[0].result === 'pass' && r.gates[0].summary === null, JSON.stringify(r.gates[0]))
+    // Was `summary === null`. L3 changed that deliberately: leaving the summary
+    // empty for exactly the gates this parser exists to rescue made "recorded"
+    // a stronger word than the artifact deserved.
+    t('...and is marked pass, carrying its own tickless verdict line',
+      r.gates[0].result === 'pass' && r.gates[0].summary === 'All security-denial checks passed.',
+      JSON.stringify(r.gates[0]))
   }
 
   // 2 · lowercase ids and the parenthesis form are gates, not noise.
@@ -266,6 +292,39 @@ if (process.argv.includes('--self-test')) {
       r.gates.length === 1 && r.subChecks.length === 1, `${r.gates.length}/${r.subChecks.length}`)
   }
 
+  // 8b · A RAW (non-`npm run`) STEP IS JUDGED BY POSITION — QA-INDEP-03, M2. The
+  //      old rule was "it ran iff ANY step ran", true by construction, so the one
+  //      raw command in `verify` was recorded as a passing gate on every log and
+  //      could never appear in `stepsNotRun`. No fixture had ever placed a raw
+  //      command in a truncated chain, which is why the battery missed it.
+  {
+    const d = declaredChain(pkg('npm run a && node scripts/x.mjs --check && npm run c'))
+    const died = parseChain('> gigproof@0.1.0 a\n✓ A: ok\n', d, 1)
+    t('a raw step is NOT counted when the chain died before it',
+      died.stepsNotRun.includes('node scripts/x.mjs --check') && !died.gates.some((g) => g.step.startsWith('node ')),
+      JSON.stringify(died.stepsNotRun))
+    const ok2 = parseChain('> gigproof@0.1.0 a\n✓ A: ok\n\n> gigproof@0.1.0 c\n✓ C: ok\n', d, 0)
+    t('...and IS counted when the step after it ran',
+      ok2.gates.some((g) => g.step === 'node scripts/x.mjs --check') && ok2.stepsNotRun.length === 0,
+      JSON.stringify(ok2.stepsNotRun))
+  }
+
+  // 8c · a tickless gate's own verdict line is captured, not discarded (L3).
+  {
+    const d = declaredChain(pkg('npm run a'))
+    const r = parseChain('> gigproof@0.1.0 a\n  some detail\nAll security-denial checks passed.\n', d, 0)
+    t('a tickless gate\'s summary is recorded, not left null',
+      r.gates[0].summary === 'All security-denial checks passed.', JSON.stringify(r.gates[0]))
+  }
+
+  // 8d · tool output can never stand in as a gate's summary (L3 + Q3 together).
+  {
+    const d = declaredChain(pkg('npm run build'))
+    const r = parseChain('> gigproof@0.1.0 build\nvite v5\n✓ 160 modules transformed.\n✓ built in 5.63s\n', d, 0)
+    t('vite output is not promoted to a summary by the tickless fallback',
+      r.gates[0].summary === 'vite v5', JSON.stringify(r.gates[0]))
+  }
+
   // 9 · non-vacuity: the fixtures above must exercise a real declared chain.
   {
     const real = declaredChain(readFileSync('package.json', 'utf8'))
@@ -281,6 +340,14 @@ if (process.argv.includes('--self-test')) {
 }
 
 // ── RECORD A RUN ────────────────────────────────────────────────────────────
+// ENTRYPOINT GUARD (QA-INDEP-03, L2). `declaredChain`/`parseChain`/`parseSkips`
+// are exported so a future gate can reuse them, but this block was top-level and
+// unguarded: `import { parseChain } from './generate-evidence.mjs'` RAN THE WHOLE
+// CHAIN and overwrote evidence/current.json. The reviewer hit exactly that and
+// had to kill it. The exports were unusable by anything.
+const IS_ENTRYPOINT = process.argv[1]
+  && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+if (IS_ENTRYPOINT) {
 const head = sh('git rev-parse HEAD')
 const branch = sh('git rev-parse --abbrev-ref HEAD')
 // The evidence file itself is excluded: it is being written by this run, so its
@@ -288,14 +355,48 @@ const branch = sh('git rev-parse --abbrev-ref HEAD')
 const dirty = sh('git status --porcelain').split('\n').filter(Boolean)
   .filter((l) => !l.includes('evidence/current.json'))
 
+// THE CHAIN VERDICT IS OBSERVED, NEVER INFERRED FROM PROSE — QA-INDEP-03, H3.
+// `--from-log` used to derive the exit code as `/(^|\n)✗/.test(log) ? 1 : 0`, and
+// BOTH committed evidence records were written that way, so their `exitCode: 0`
+// was a statement about text in a file rather than about a process. The reviewer
+// built a 43-step log whose LAST step died on an unhandled exception — the shape
+// a ReferenceError produces, which is precisely the class the brand increment
+// celebrates catching — and this generator certified it:
+//
+//     ✓ wrote evidence/current.json … 43/43 declared step(s) recorded, result=green-at-head
+//     last gate: {"id":"test:fit","result":"pass"}
+//
+// All three fail-closed guards were satisfied. The failure is realistic: a vite
+// build error prints `error during build:` with no ✗, a node crash prints a stack
+// trace with no ✗, and a log captured as `npm run verify > log.txt` loses every ✗
+// outright, because gates print failures through console.error.
+//
+// M7 de-prosed the STEP verdicts and left the CHAIN verdict inferred from prose —
+// the load-bearing half. `--exit` is now REQUIRED with `--from-log`: the caller
+// must state the status it observed, and there is no default that quietly means
+// "green".
 const logIdx = process.argv.indexOf('--from-log')
+const exitIdx = process.argv.indexOf('--exit')
 let log = ''
 let exitCode = 0
 let command = 'npm run verify'
 if (logIdx > -1) {
+  if (exitIdx === -1 || !/^\d+$/.test(process.argv[exitIdx + 1] ?? '')) {
+    console.error('✗ --from-log requires --exit <observed exit code>. Refusing to infer a chain')
+    console.error('  verdict from console prose: a crashed step prints no ✗, and a stdout-only')
+    console.error('  capture drops every ✗ that was printed. Pass the status you actually saw.')
+    process.exit(1)
+  }
   log = readFileSync(process.argv[logIdx + 1], 'utf8')
-  exitCode = /(^|\n)✗/.test(log) ? 1 : 0
-  command = `${command} (recorded from ${process.argv[logIdx + 1]})`
+  exitCode = Number(process.argv[exitIdx + 1])
+  // A ✗ in the log with a zero exit is a contradiction, not a detail: it means a
+  // gate reported a violation and the chain still claimed success.
+  if (exitCode === 0 && /(^|\n)✗/.test(log)) {
+    console.error('✗ --exit 0 was given but the log contains a ✗ verdict line — refusing to record')
+    console.error('  a green result over a reported violation.')
+    process.exit(1)
+  }
+  command = `${command} (recorded from ${process.argv[logIdx + 1]}, observed exit ${exitCode})`
 } else {
   try {
     log = execFileSync('npm', ['run', 'verify'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
@@ -346,23 +447,31 @@ const evidence = {
   rollback: 'Every gate and generated artifact in this record is additive. Revert by removing the named script/contract files and their package.json entries; no runtime code, migration or provider state is touched by the evidence layer itself.',
   unverified: [
     '.env.local is absent — no credential was exercised; no named-environment readiness is claimed.',
+    'Reproducibility (QA-INDEP-03, M6): C5/C6 of the brand gate and the client-store freshness check assert against website-next/out, which is gitignored. `npm run build:site` is now a chain step so a fresh clone reproduces this, but the artifact itself is local build state, not something this record pins.',
     'No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.',
     'Migrations 043-048 remain drafted-or-authored and NOT applied to any live environment.',
   ],
 }
-writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n')
-console.log(`✓ wrote ${OUT} — HEAD ${head.slice(0, 8)}, exit ${exitCode}, ${gates.length}/${evidence.declaredStepCount} declared step(s) recorded, ${skips.length} skip line(s), result=${evidence.result}`)
-
-// FAIL CLOSED on a record that cannot be trusted to describe the chain. A green
-// exit here is a claim that the evidence is complete; it must not be made while
-// a declared step is unaccounted for or a verdict line is unexplained.
+// VALIDATE FIRST, WRITE LAST — QA-INDEP-03, L1. The file used to be written
+// before these guards ran, so a refused record still landed on disk: the process
+// exited 1 while `evidence/current.json` said `green-at-head`. Anything reading
+// the artifact rather than the exit status saw the claim the guard had just
+// rejected. A record that fails its own completeness check must not exist.
+const blocking = []
 if (unclassified.length) {
-  console.error(`✗ ${unclassified.length} column-0 verdict line(s) could not be classified — the record is incomplete:`)
-  for (const l of unclassified) console.error(`    ${l.slice(0, 140)}`)
-  process.exit(1)
+  blocking.push(`${unclassified.length} column-0 verdict line(s) could not be classified — the record is incomplete:`)
+  for (const l of unclassified) blocking.push(`    ${l.slice(0, 140)}`)
 }
 if (stepsNotRun.length && exitCode === 0) {
-  console.error(`✗ the chain exited 0 but ${stepsNotRun.length} declared step(s) never ran: ${stepsNotRun.join(', ')}`)
+  blocking.push(`the chain exited 0 but ${stepsNotRun.length} declared step(s) never ran: ${stepsNotRun.join(', ')}`)
+}
+if (blocking.length) {
+  for (const b of blocking) console.error(`✗ ${b}`)
+  console.error(`✗ ${OUT} was NOT written — an incomplete record is worse than none.`)
   process.exit(1)
 }
+
+writeFileSync(OUT, JSON.stringify(evidence, null, 2) + '\n')
+console.log(`✓ wrote ${OUT} — HEAD ${head.slice(0, 8)}, exit ${exitCode}, ${gates.length}/${evidence.declaredStepCount} declared step(s) recorded, ${skips.length} skip line(s), result=${evidence.result}`)
 process.exit(0)
+}

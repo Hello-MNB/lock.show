@@ -58,7 +58,7 @@ const ENTITY_ROLE_FOR_CONTACT: Record<string, string> = {
   other: 'other',
 }
 
-type State = 'idle' | 'sending' | 'done' | 'duplicate' | 'error'
+type State = 'idle' | 'sending' | 'done' | 'duplicate' | 'error' | 'tooLong' | 'rateLimited'
 
 export default function ContactForm() {
   const { locale, dir } = useLocale()
@@ -100,6 +100,14 @@ export default function ContactForm() {
       // 026 path this arrived as an HTTP 409 and was shown the same way.
       if (out?.ok === true && out.code === 'joined') setState('done')
       else if (out?.ok === true && out.code === 'already') setState('duplicate')
+      // TWO VERDICTS THAT "TRY AGAIN" ANSWERS WRONGLY (QA-INDEP-03, M3). Moving to
+      // the RPC put this form behind codes it had never seen, and collapsing them
+      // all into one message gave actively bad advice: an over-long message can
+      // NEVER succeed on retry, and a retry while rate-limited increments the very
+      // counter refusing it. The sibling waitlist-join-form has handled these since
+      // it was written; this form inherited the path without the handling.
+      else if (out?.code === 'message_too_long') setState('tooLong')
+      else if (out?.code === 'rate_limited') setState('rateLimited')
       else setState('error')
     } catch { setState('error') }
   }
@@ -142,7 +150,11 @@ export default function ContactForm() {
       {/* 3 · MESSAGE — the substance, while the thought is fresh */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <label htmlFor="c-message" style={label}>{t('contact.form.message.label', locale)} · {opt}</label>
-        <textarea id="c-message" name="message" rows={5} placeholder={t('contact.form.message.placeholder', locale)}
+        {/* The RPC refuses a message over 4000 characters, and the payload prepends
+            "[subject] [role] " — so the field stops short of the limit rather than
+            letting someone write past it and be refused (QA-INDEP-03, M3). */}
+        <textarea id="c-message" name="message" rows={5} maxLength={3900}
+                  placeholder={t('contact.form.message.placeholder', locale)}
                   style={{ ...field, resize: 'vertical' }} />
       </div>
 
@@ -163,9 +175,11 @@ export default function ContactForm() {
         {state === 'sending' ? t('contact.form.sending.cta', locale) : t('contact.form.submit.cta', locale)}
       </button>
 
-      {state === 'error' && (
+      {(state === 'error' || state === 'tooLong' || state === 'rateLimited') && (
         <p role="alert" style={{ fontSize: '0.85rem', color: 'var(--color-void)', margin: 0 }}>
-          {t('contact.form.error.error', locale)}
+          {t(state === 'tooLong' ? 'contact.form.tooLong.error'
+            : state === 'rateLimited' ? 'contact.form.rateLimited.error'
+              : 'contact.form.error.error', locale)}
         </p>
       )}
 

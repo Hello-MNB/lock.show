@@ -86,8 +86,10 @@ export default function Contact() {
             }} />
 
             {/* First-party capture — writes through the governed RPC
-                join_waitlist (migration 048) into waitlist_signup, which is
-                operator-only read and has no public write path of its own.
+                join_waitlist (migration 048). The destination table is
+                operator-only read and has no public write path of its own;
+                it is deliberately not named here, because the waitlist gate
+                forbids that identifier anywhere in client source.
                 No Formspree, no third parties — matching the promise below. */}
             <ContactForm />
           </div>

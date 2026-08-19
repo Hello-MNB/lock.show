@@ -57,8 +57,14 @@ export default defineConfig(({ mode }) => {
         selfDestroying: true,
         includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
         manifest: {
-          name: 'LOCK',
-          short_name: 'LOCK',
+          // `short_name` is the label under the installed icon on a home screen
+          // and `name` is the install-prompt title — both metadata under the
+          // 17 Aug ruling, and both shipped the bare standalone form until QA-INDEP-03 (H4)
+          // found them. vite.config.js was outside every clause of the brand
+          // gate, and dist/manifest.webmanifest is gitignored, so nothing could
+          // see it. Both are now in the gate's scope.
+          name: 'LOCK SHOW',
+          short_name: 'LOCK SHOW',
           description: 'Pre-booking proof — evaluate an artist via method-labeled evidence.',
           lang: 'en',
           dir: 'ltr',

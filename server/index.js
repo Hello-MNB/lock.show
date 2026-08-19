@@ -932,8 +932,8 @@ app.post('/api/notify', requireAuth, async (req, res) => {
 // EN body hardcoded verbatim from §14.6.5 (no email.* keys exist in
 // en.js/he.js yet); HE body + stored-language selection land when Resend is
 // wired (§14.6.3). Env vars read at CALL time so the flag governs each send.
-// NOTE: brief W3-5 fixes FROM 'LOCK <hello@lock.show>'; spec §14.6.5 authors
-// `LOCK <notifications@lock.show>` — EMAIL_FROM env resolves that conflict
+// NOTE: brief W3-5 and spec §14.6.5 named different sender addresses
+// (hello@ vs notifications@) — the EMAIL_FROM env var resolves that conflict
 // at wiring time without a code change.
 // ──────────────────────────────────────────────────────────
 function gateEmailEnabled() {
@@ -952,13 +952,15 @@ export async function sendGateEmail({ to, artistName, requesterOrg } = {}) {
   const name = typeof artistName === 'string' && artistName.trim() ? artistName.trim() : 'there'
   const link = 'https://app.lock.show/artist/requests'
   const payload = {
-    from: realValue(process.env.EMAIL_FROM) || 'LOCK <hello@lock.show>',
+    // The sender DISPLAY NAME is user-visible copy (QA-INDEP-03, M1). Dark today
+    // — this path needs EMAIL_ENABLED=1 and a real key — but latent, not exempt.
+    from: realValue(process.env.EMAIL_FROM) || 'LOCK SHOW <hello@lock.show>',
     to: [to],
     // §14.6.5 `email.request` subject (EN)
     subject: 'Someone asked about your date',
     // §14.6.5 `email.request` body (EN), verbatim; CTA "See the request" → /artist/requests
     text:
-      `Hi ${name} — a booking manager just asked about your availability through your LOCK Passport. ` +
+      `Hi ${name} — a booking manager just asked about your availability through your LOCK SHOW Passport. ` +
       `It's a question, not a booking or a hold. Open your Requests to see it and reply.\n\n` +
       `See the request: ${link}`,
   }
