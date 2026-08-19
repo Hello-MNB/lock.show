@@ -36,12 +36,12 @@
 -- refusal would be a new failure mode for callers doing nothing wrong. The
 -- attacker is the only caller whose value changes.
 --
--- SERVICE ROLE AND MIGRATIONS ARE UNAFFECTED: when `auth.uid()` is NULL there is
--- no authenticated identity to substitute, so the supplied value stands. Seeds,
--- fixtures and backfills keep working. This is deliberate and it is the honest
--- limit of this migration: it governs the authenticated surface, which is the
--- one the review reached. A service-role key can still write any value, as it
--- can write anything.
+-- SERVICE ROLE, THE TABLE OWNER AND MIGRATIONS ARE UNAFFECTED — on INSERT *and*
+-- on UPDATE. The rule keys on the caller's role, so seeds, fixtures, backfills and
+-- any deliberate ownership transfer keep working, while `anon` and `authenticated`
+-- cannot set or move the column. This is the honest limit of the migration: it
+-- governs the authenticated surface, which is the one the review reached. A
+-- service-role key can still write any value, as it can anywhere.
 --
 -- SIDE EFFECT THAT IS ALSO A FIX: `act_from_artist()` (020) mirrors every new
 -- artists row into `public.act` with `person_id = new.created_by`. The spoof
@@ -58,17 +58,31 @@ security invoker
 set search_path = public, pg_temp
 as $$
 begin
+  -- WHICH CALLER, NOT WHETHER THERE IS ONE. My first version keyed the UPDATE
+  -- branch on nothing at all and pinned the column for EVERY role — triggers are
+  -- not bypassed by RLS-bypass, so a service-role or owner `update artists set
+  -- created_by = …` reported success and changed nothing. Executed:
+  --   service_role : update ok=true -> UNCHANGED (silent no-op)
+  --   postgres     : update ok=true -> UNCHANGED (silent no-op)
+  -- An ownership transfer or a Person merge — cases 046's own comments
+  -- contemplate — would have failed silently, which is worse than failing. And it
+  -- made this file's own "a service-role key can still write any value" comment
+  -- false, along with the sentence the founder was given. Same role rule as 050.
+  if current_setting('role', true) not in ('anon', 'authenticated') then
+    return new;
+  end if;
   if tg_op = 'INSERT' then
-    -- auth.uid() NULL = no authenticated identity (service role, migration,
-    -- seed). Nothing to substitute, so the supplied value stands.
+    -- auth.uid() NULL under an authenticated role means no JWT subject; there is
+    -- nothing to substitute, and artists_org refuses such an insert anyway.
     if auth.uid() is not null then
       new.created_by := auth.uid();
     end if;
   else
-    -- UPDATE: authorship is not editable by anyone through this surface, not
-    -- even by the person who holds it. Silently pinning rather than raising
-    -- keeps ArtistDashboard.jsx:266 — which round-trips the whole row — working
-    -- unchanged, and makes the column's value independent of what it sends.
+    -- UPDATE from the authenticated surface: authorship is not editable, not even
+    -- by the person who holds it. Silence is right HERE — ArtistDashboard.jsx:266
+    -- round-trips the whole row and sends the value it already has, so a raise
+    -- would break an honest caller doing nothing wrong. The trusted roles above
+    -- keep a real transfer path.
     new.created_by := old.created_by;
   end if;
   return new;

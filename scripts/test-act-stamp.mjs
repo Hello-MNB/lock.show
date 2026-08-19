@@ -248,9 +248,89 @@ console.log('\n[2g] the created_by spoof — the shape that got past the first f
   check('[2g] ...and among the BEFORE triggers it sorts ahead of trg_set_artist_org, which also reads the column',
     artistTriggers.filter((r) => r[1] === 'BEFORE').map((r) => r[0])[0] === 'trg_artists_pin_created_by',
     JSON.stringify(artistTriggers.filter((r) => r[1] === 'BEFORE').map((r) => r[0])))
+  // BLAST RADIUS, BOTH DIRECTIONS — QA-INDEP-08, M1. The pin must stop the
+  // authenticated surface and must NOT stop a trusted one: my first version
+  // pinned the column for every role, so a service-role ownership transfer
+  // reported success and changed nothing. A silent no-op is worse than a refusal,
+  // and it made the sentence the founder was given false.
+  check('[2g] ...and a trusted role CAN still move authorship — the pin is not a silent no-op for seeds and transfers',
+    (db.exec(`update public.artists set created_by='${STRANGER_P}' where id='${SPOOF}'`, { role: 'service_role' }),
+     db.scalar(`select created_by::text from public.artists where id='${SPOOF}'`) === STRANGER_P),
+    'a service-role UPDATE that reports success and changes nothing breaks ownership transfer and Person merge')
+  db.exec(`update public.artists set created_by='${STRANGER_P}' where id='${SPOOF}'`, { role: 'service_role' })
   check('[2g] ...and authorship cannot be re-pointed by an UPDATE either',
     (db.try(`update public.artists set created_by='${OWNER}' where id='${SPOOF}'`, asStranger),
      db.scalar(`select created_by::text from public.artists where id='${SPOOF}'`) === STRANGER_P))
+}
+
+// ── [2h] THE LAYER MATRIX, EXECUTED — QA-INDEP-08, H1 ───────────────────────
+// I wrote a four-cell independence matrix into the commit, the task register, the
+// founder row and this gate's own success line: "each layer was proven to hold
+// with the other removed". No gate ever ran it, and it was FALSE. I had only ever
+// executed the DEFAULT-Act shape. 041's disjunct (a) refuses a p_act that IS an
+// artists id — and a non-default Act's id is a fresh uuid, so for a multi-Act
+// lineage (a) is a no-op, leaving the forgeable `created_by` join as the only
+// test and 049 as the only layer:
+//
+//   049 removed — predicate alone   attack=ACCEPTED   lineage published -> superseded
+//
+// The predicate now also requires the Act's organisation to match the artist's,
+// which is the one column artists_org will not let an attacker claim. Asserted
+// here by RUNNING the matrix on BOTH shapes, because a matrix in prose is a claim
+// and a matrix in a gate is evidence.
+console.log('\n[2h] both layers, each alone, on a default AND a non-default Act')
+{
+  const SPOOF2 = '00000000-0000-0000-0000-0000000000f2'
+  const ACT3 = '00000000-0000-0000-0000-00000000ac03'
+  db.exec(`insert into public.act (id, person_id, organization_id, stage_name, is_default)
+           select '${ACT3}', person_id, organization_id, 'Victim Act 3', false
+             from public.act where id='${MINE}' on conflict (id) do nothing`)
+  db.exec(`insert into public.passport_versions (artist_id, act_id, snapshot, state, audience)
+           values ('${MINE}','${ACT3}','{"victim3":1}'::jsonb,'published','booker')`, as)
+
+  // `drop trigger` needs table ownership, so this runs unqualified (as the owner),
+  // never as the attacker — the attacker never gains a privilege they would not
+  // have. It models an operator applying 041 WITHOUT 049, which is the realistic
+  // failure: they are separate files, 041 sorts first, and the founder row that
+  // says "this gates applying 041" does not mention 049.
+  const withoutPin = (fn) => {
+    db.exec(`drop trigger if exists trg_artists_pin_created_by on public.artists`)
+    try { return fn() } finally {
+      db.exec(`create trigger trg_artists_pin_created_by before insert or update on public.artists
+               for each row execute function public.artists_pin_created_by()`)
+    }
+  }
+  const attack = (spoofId, actId, audience) => {
+    db.try(`insert into public.artists (id, created_by, owner_organization_id, stage_name)
+            values ('${spoofId}', '${OWNER}', '${STRANGER_O}', 'Spoof')`, asStranger)
+    return db.try(`insert into public.passport_versions (artist_id, act_id, snapshot, state, audience)
+                   values ('${spoofId}','${actId}','{"m":1}'::jsonb,'published','${audience}')`, asStranger).ok
+  }
+  const lineage = (actId, audience) => db.scalar(`select coalesce(string_agg(state, ',' order by version_no), '-')
+    from public.passport_versions where coalesce(act_id,artist_id)='${actId}' and audience='${audience}'`)
+
+  check('[2h] DEFAULT Act · both layers — refused', !attack(SPOOF2, MINE, 'producer'))
+  check('[2h] NON-DEFAULT Act · both layers — refused', !attack(SPOOF2, ACT3, 'booker'))
+  check('[2h] DEFAULT Act · 041 alone (049 removed) — still refused',
+    !withoutPin(() => attack('00000000-0000-0000-0000-0000000000f3', MINE, 'producer')))
+  check('[2h] NON-DEFAULT Act · 041 alone (049 removed) — still refused, and THIS is the cell that was false',
+    !withoutPin(() => attack('00000000-0000-0000-0000-0000000000f4', ACT3, 'booker')),
+    '041 disjunct (a) is a no-op for a non-default Act; without the organisation half, 049 is the only layer')
+  check('[2h] ...and the victim\'s non-default-Act Passport is still published throughout',
+    lineage(ACT3, 'booker').includes('published') && !lineage(ACT3, 'booker').includes('superseded'),
+    `lineage: ${lineage(ACT3, 'booker')}`)
+  // The other direction: 049 alone must also hold, so neither cell is decorative.
+  check('[2h] 049 alone (predicate weakened to the pre-H1 body) — still refused',
+    (db.exec(`create or replace function public.pv_act_in_artist_lineage(p_act uuid, p_artist uuid)
+              returns boolean language sql stable security definer set search_path = public, pg_temp as $w$
+                select p_act is null or p_act = p_artist or exists (select 1 from public.act a
+                  where a.id = p_act and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)) $w$`),
+     !attack('00000000-0000-0000-0000-0000000000f5', ACT3, 'booker')))
+  db.exec(readFileSync('supabase/migrations/041_link_service_and_version_store.sql', 'utf8')
+    .split('create or replace function public.pv_act_in_artist_lineage')[1]
+    .split('$$;')[0].replace(/^/, 'create or replace function public.pv_act_in_artist_lineage') + '$$;')
+  check('[2h] ...and the shipped predicate is restored afterwards, so later sections test the real one',
+    db.scalar(`select public.pv_act_in_artist_lineage('${ACT3}','${MINE}')`) === 't')
 }
 
 console.log('\n[3] what the Act boundary actually rests on')
@@ -327,7 +407,21 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
   // else is a finding. That is a claim a scan can actually support.
   const ALLOWED = {
     'set_artist_org -> artists': 'fills the column on insert; it decides nothing',
-    'act_from_artist -> artists': 'mirrors it into act.organization_id; a copy, not a decision',
+    // THE RATCHET CAUGHT THIS ONE ON ITS FIRST RUN, which is the point of it.
+    // 041's H1 repair reads act.organization_id to refuse a forged artists row,
+    // so this IS a permission decision keyed on one of the eight columns — the
+    // exact thing [4] exists to make loud. It is allowed BECAUSE the column it
+    // compares against, artists.owner_organization_id, is the one an attacker
+    // cannot claim: artists_org will not admit a row naming an org the writer
+    // does not belong to. That is a different footing from the caller-supplied
+    // columns this section is about, and it is why the entry says so here
+    // rather than being waved through.
+    'pv_act_in_artist_lineage -> act': '041 H1: compares act.organization_id to artists.owner_organization_id, which artists_org governs — the one column in this family a forger cannot set',
+    'act_from_artist -> artists': 'reads the artists row it mirrors; a copy, not a decision',
+    // The write side of the same mirror. Surfaced only once the unqualified arm
+    // existed — the insert names its columns without an alias, which is the very
+    // spelling M2 was about.
+    'act_from_artist -> act': 'writes act.organization_id from the artists row; the destination of that same copy',
     'request_org_attribution -> availability_requests': '050 itself — the guard that nulls an unattributable value',
     'recompute_radar_for_org -> availability_requests': 'RADAR scoping, made safe by 050',
     'recompute_radar_private_for_artist -> availability_requests': 'RADAR scoping, made safe by 050',
@@ -358,6 +452,24 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
         if (m[1] && !KEYWORDS.includes(m[1])) aliases.add(m[1])
       for (const a of aliases)
         if (new RegExp(`\\b${a.replace('.', '\\.')}\\.organization_id\\b`).test(body)) readers.push(`${fn} -> ${t}`)
+      // UNQUALIFIED IS THE ORDINARY SPELLING — QA-INDEP-08, M2. `select count(*)
+      // from availability_requests where organization_id is not null` names no
+      // alias at all, and the alias-only scan could not see it. When a body names
+      // exactly ONE of the eight tables, a bare `organization_id` in it can only
+      // be that table's. When it names several, the bare form is ambiguous and is
+      // attributed to all of them: over-reporting a reader costs one ALLOWED entry
+      // with a reason, while under-reporting it is the defect this section exists
+      // to prevent.
+      // ATTRIBUTED ONLY WHEN IT CANNOT BE ANYTHING ELSE. A first cut asked "does the
+      // body name this table and a bare organization_id" and reported twelve
+      // readers that are not: the RADAR functions name `artists` and also insert
+      // into `radar_signal (organization_id, …)`, and the bare column there is
+      // radar_signal's. So the bare form counts only when the body's ENTIRE set of
+      // FROM/JOIN/UPDATE/INTO targets is this one table — then the column has no
+      // other owner it could belong to. A body touching several tables must spell
+      // out which one it means, and if it does, the alias arm above sees it.
+      const allTargets = new Set([...body.matchAll(/\b(?:from|join|update|into)\s+(?:public\.)?([a-z_][a-z0-9_]*)/g)].map((m) => m[1]))
+      if (allTargets.size === 1 && allTargets.has(t) && /(^|[^._a-z])organization_id/.test(body)) readers.push(`${fn} -> ${t}`)
       if ((trigTables.get(fn) || []).includes(t) && /\b(new|old)\.organization_id\b/.test(body)) readers.push(`${fn} -> ${t}`)
     }
   }
@@ -368,11 +480,34 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
     unexpected.length === 0, `unexpected reader(s): ${unexpected.join('; ')}`)
   check('[4] ...and the scan is not vacuous — every named reader is still found, so a broken scan reds instead of reporting silence',
     vanished.length === 0, `the scan no longer finds: ${vanished.join('; ')} — it stopped working, which is how the last version failed`)
+  // TWO SHAPES, BECAUSE POSTGRESQL RENDERS THEM DIFFERENTLY — QA-INDEP-08, M3.
+  // A policy's OWN-table column is rendered unqualified, so `OWN_COL` (which
+  // rejects anything preceded by a dot) catches it. A policy that reaches ANOTHER
+  // of the eight through a subquery renders as `r.organization_id`, and the same
+  // dot-rejection made it invisible — which is exactly how a permission would be
+  // keyed on one of these columns. My register claim that "all four surfaces" were
+  // mutation-tested had in fact tested one rendering twice.
+  // …and the qualified arm must resolve the alias too, or every policy that reads
+  // `artist_access.organization_id` — a DIFFERENT column, on a table outside these
+  // eight — is reported. artists_org does exactly that, legitimately.
   const pol = []
   for (const t of ORG_TABLES) {
-    const n = db.scalar(`select count(*) from pg_policies where schemaname='public' and tablename='${t}'
-      and (replace(coalesce(qual,''),chr(10),' ')||' '||replace(coalesce(with_check,''),chr(10),' ')) ~ '${OWN_COL}'`)
-    if (n !== '0') pol.push(`${t}: ${n}`)
+    const expr = `(replace(coalesce(qual,''),chr(10),' ')||' '||replace(coalesce(with_check,''),chr(10),' '))`
+    const own = db.scalar(`select count(*) from pg_policies where schemaname='public' and tablename='${t}'
+      and ${expr} ~ '${OWN_COL}'`)
+    if (own !== '0') pol.push(`${t}: ${own} own-column`)
+  }
+  for (const [tbl, name, expr] of db.rows(`select tablename, policyname,
+      replace(coalesce(qual,''),chr(10),' ')||' '||replace(coalesce(with_check,''),chr(10),' ')
+      from pg_policies where schemaname='public'`)) {
+    const body = (expr || '').toLowerCase()
+    for (const t of ORG_TABLES) {
+      const aliases = new Set([t])
+      for (const m of body.matchAll(new RegExp(`\\b(?:from|join)\\s+(?:public\\.)?${t}\\b(?:\\s+(?:as\\s+)?([a-z_][a-z0-9_]*))?`, 'g')))
+        if (m[1] && !['on', 'where', 'and', 'or', 'group', 'order', 'limit', 'join', 'as'].includes(m[1])) aliases.add(m[1])
+      for (const a of aliases)
+        if (new RegExp(`\\b${a}\\.organization_id\\b`).test(body)) pol.push(`${tbl}.${name} reaches ${t}.organization_id`)
+    }
   }
   const views = db.scalar(`select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace
     where n.nspname='public' and c.relkind in ('v','m') and pg_get_viewdef(c.oid) ~ '${OWN_COL}'`)
@@ -383,5 +518,5 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
 console.log('')
 reachedEnd = true
 if (failures) { console.log(`✖ ACT STAMP: ${failures} failure(s).`); process.exit(1) }
-console.log(`✓ ACT STAMP: measured, not assumed, and corrected twice by independent review. A row CAN still be stamped with an Act belonging to another artist on all ${TABLES.length} evidence tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id — and there the reach is bounded and measured: RADAR is untouched, the stranger cannot read the row, and an identical row stamped with the artist's own Act is exactly as invisible. THAT BOUND DOES NOT GENERALISE. [2f]: on passport_versions, which 041 keys on coalesce(act_id, artist_id) in two SECURITY DEFINER functions that never consult ownership, one foreign-stamped row was an IRREVERSIBLE cross-tenant unpublish plus a permanent publish-lock; 041 now gates that insert on pv_act_in_artist_lineage(). [2g]: the first version of that predicate keyed ownership on artists.created_by, which no policy governs, so ONE extra INSERT — an artists row in the attacker's own org carrying the victim's created_by — made it certify the attack; 049 pins created_by to auth.uid() and the predicate now also refuses any p_act that is itself a different artists row, and each half is proven to hold with the other removed. [4]: organization_id is NOT inert, which is what I told the founder before measuring it properly — availability_requests.organization_id is read as a SCOPING decision by three RADAR functions and was writable by ANONYMOUS callers, so an anon visitor could move a real booking request out of the artist's own RADAR into a stranger's; 050 nulls an attribution the writer cannot claim. Every reader of those eight columns is now named with its reason and a new one is a finding. Tracked as ACT-STAMP-TRUST, CREATED-BY-AUTHORITY and REQ-ORG-ATTRIBUTION in docs/OWNER-PENDING.md. NOT proven here: what the app's own writers send, PostgREST's real role switching, and 041/049/050 are DRAFTED and NOT APPLIED to any live environment.`)
+console.log(`✓ ACT STAMP: measured, not assumed, and corrected by three independent reviews. A row CAN still be stamped with an Act belonging to another artist on all ${TABLES.length} evidence tables tested — set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy there keys on artist_id — and there the reach is bounded and measured. THAT BOUND DOES NOT GENERALISE. [2f]: on passport_versions one foreign-stamped row was an irreversible cross-tenant unpublish plus a permanent publish-lock; 041 gates that insert on pv_act_in_artist_lineage(). [2g]: the first predicate keyed ownership on artists.created_by, which no policy governs, so one extra INSERT certified the attack; 049 pins that column for the anon/authenticated surface while leaving a real transfer path for trusted roles, and both directions are executed. [2h]: I then claimed the two layers were independent, in four documents, and no gate ran the matrix — it was FALSE for a non-default Act, whose id is a fresh uuid, so 041's disjunct was a no-op and 049 was the only layer. 041 now also requires the Act's organisation to match the artist's, and the matrix RUNS here on both a default and a second Act. [4]: organization_id is not inert — availability_requests.organization_id is read as a scoping decision by three RADAR functions and was anon-writable; 050 nulls an attribution the writer cannot claim, and every reader of the eight columns is named with its reason. NOT CLOSED HERE, and stated so the green line does not overclaim: without migration 046 a stranger can self-issue a roster grant and publish as an authorised writer, and a view-scoped one-Act grant can supersede a different Act's Passport (ACT-SCOPE-PUBLISH). Tracked in docs/OWNER-PENDING.md. 041, 046, 049 and 050 are DRAFTED and NOT APPLIED to any live environment.`)
 process.exit(0)

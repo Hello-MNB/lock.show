@@ -5453,3 +5453,126 @@ selects by primary key so an injected row cannot be served through a victim's sh
 genuinely no UPDATE or DELETE policy on `passport_versions`, so the irreversibility claim is accurate;
 `p_act = p_artist` is not independently exploitable because `artists.id` is a primary key; the
 multi-Act claim is true and executed; the rollback and privilege claims hold.
+
+---
+
+## QA-INDEP-08 — the eighth review, and the one that read my own evidence table back to me
+
+Verdict: **REJECT**, on the second attempt at the same fix. Two H, seven M/L. The finding that matters
+most is not a hole in the code — it is that I wrote a four-cell evidence matrix into four documents and
+**no gate had ever executed a single cell**, and the cell I had not run was false.
+
+### H1 — "each layer holds with the other removed" was false for a non-default Act
+
+041's disjunct refuses a `p_act` that IS an artists id. Only a **default** Act has such an id; a second
+Act's is a fresh uuid. So for exactly the multi-Act case CLAUDE.md makes canon, the disjunct is a no-op,
+the forgeable `created_by` join was the only test, and 049 was the only layer. Reproduced:
+
+```
+NON-DEFAULT ACT lineage:
+  both layers (shipped)            predicate=f attack=refused  published -> published
+  049 removed — predicate alone    predicate=t attack=ACCEPTED published -> superseded,published
+```
+
+The claim appeared unqualified in the commit message, this register's F1 matrix, `OWNER-PENDING`
+ACT-STAMP-TRUST, and `test-act-stamp.mjs`'s own success line. My matrix had only ever exercised the
+default-Act shape, with both layers present.
+
+**Fix:** the predicate now also requires `a.organization_id is not distinct from ar.owner_organization_id`.
+That is the one column in the family an attacker cannot claim — `artists_org` (015:27) has
+`with check (owner_organization_id in (select current_org_ids()))`, so a forged artists row is stamped
+with the *attacker's* org and can never carry the victim's. It refuses the forgery without consulting
+`created_by` at all.
+
+**And the matrix is now executed, not asserted** — `[2h]` runs all four cells on a default *and* a
+non-default Act, dropping and restoring 049's trigger as the table owner. A matrix in prose is a claim;
+a matrix in a gate is evidence. The `[4]` ratchet immediately flagged the new predicate as an unnamed
+reader of `act.organization_id`, which is the ratchet working: it is now named with its reason.
+
+### H2 — 041+049 do not close the unpublish without 046
+
+`aa_admin_write` (008:221) constrains `organization_id` and nothing else, and the guard that stops a
+grantee writing their own authority is in **046, which is drafted and unapplied**. Executed on that
+shape:
+
+```
+stranger self-issues a roster grant: true
+can_access_artist(victim) as stranger: t
+publishes into the victim lineage : true -> superseded,published
+```
+
+No forgery, no foreign `act_id` — an authorised writer. The hole is documented inside 046's own header,
+so this is a scoping defect in my claim, not a new discovery. The founder row now says the safe set is
+**041+046+049**, not 041 alone.
+
+### M1 — 049's blast radius was the opposite of what I wrote
+
+The UPDATE pin applied to every role, because triggers are not bypassed by RLS-bypass:
+
+```
+service_role : update ok=true -> UNCHANGED (silent no-op)
+postgres     : update ok=true -> UNCHANGED (silent no-op)
+```
+
+An ownership transfer or Person merge would have failed silently — worse than failing — and it made
+049's own comment and the founder's sentence false. Now keyed on the caller's role, like 050. Both
+directions are asserted in `[2g]`: the authenticated surface cannot move authorship, a trusted role can.
+
+### M2/M3 — the repaired ratchet still had two blind spots, and my "four surfaces" claim was wrong
+
+`select count(*) from availability_requests where organization_id is not null` names no alias, and the
+alias-only scan could not see it. And PostgreSQL renders a policy's **own-table** column unqualified, so
+my "qualified policy" and "unqualified policy" mutations tested *the same rendering twice*; a policy
+reaching another of the eight through a subquery (`r.organization_id`) — precisely how a permission
+would be keyed on one — was invisible.
+
+Both closed, and the attribution is precise rather than coarse: a bare `organization_id` counts only
+when the body's entire set of FROM/JOIN/UPDATE/INTO targets is that one table, and the policy arm
+resolves aliases the same way. A first cut without that refinement reported twelve readers that are not
+(the RADAR functions name `artists` and also insert into `radar_signal (organization_id, …)`).
+
+### M4 — the decoration fix was one escape away from the defect it repaired
+
+Six spellings recorded a genuine failure as `pass`, with an empty `unknownGlyphs` list:
+
+| spelling | before | after |
+| --- | --- | --- |
+| variation selector U+FE0F / U+FE0E | **pass** | fail |
+| combining mark U+0301 | **pass** | fail |
+| zero-width space U+200B | **pass** | fail |
+| 8-bit CSI U+009B | **pass** | fail |
+| unterminated OSC | **pass** | *record refused* |
+
+Root cause: I had collapsed two different questions into one function. `leadGlyph` now asks only what a
+line leads with and says nothing about what follows; `leadMarker` adds the alone-in-token test, which
+exists solely to keep Hebrew prose out of the *unknown* scan. A PASS/FAIL glyph comes from a curated set
+and is never a letter inside a word, so nothing that follows it can change what it asserts — making the
+load-bearing detection depend on a trailing space is what let one invisible codepoint turn a reported
+violation into silence.
+
+Two further bugs found by tracing rather than reading: my OSC branch ended with `$`, so the lazy match
+**swallowed the rest of the line including the verdict** — `decorate` destroying content, the exact
+failure mode the reviewer asked about by name. And `ESC ]` was being eaten by the generic two-byte
+branch because `[@-Z\-_]` spans 0x40–0x5F, which contains `]`. An unterminated escape is now reported
+rather than classified: what such a line displays is undetermined, so it blocks the record.
+
+### M5/M6/M7/L1/L2 — accepted, scoped or recorded
+
+- **M5** A3 pins shape, not meaning: replacing the function body or adding a second permissive policy
+  leaves it green. Both are caught by `[2f]/[2g]/[2h]` behaviourally. Recorded as the honest limit of a
+  static gate rather than papered over. The search_path sensitivity is real and unaddressed.
+- **M6** 050 closes the anonymous half only — a signed-up account can still attribute a request to its
+  own org, which 050 permits by design. Reproduced; the founder row now says so, and closing it is a
+  Product decision about the public form.
+- **M7** raised as **ACT-SCOPE-PUBLISH**: a legitimate grant scoped to one Act and marked `view` let the
+  grantee supersede a *different* Act's published Passport. Reproduced. Documented nowhere before this.
+- **L1** `•` classified as a non-verdict; the single-letter-token limitation is documented, fail-closed.
+- **L2** `[2f]`'s second Act is created as superuser because `act_org` (020:186) refuses the shipped
+  `createAct()` path — already tracked as ACT-RLS. So the multi-Act assertions are true of the policy
+  and silent about the client, which is worth knowing when reading them.
+
+### The pattern worth naming
+
+Eight reviews, eight rejections. Rounds 6, 7 and 8 each found a **founder-facing claim** that was wrong,
+and this one found the mechanism: I had written an evidence table no gate executed. The repair that
+matters most in this commit is not the predicate — it is `[2h]`.

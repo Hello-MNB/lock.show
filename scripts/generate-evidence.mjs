@@ -93,7 +93,7 @@ const FAIL_GLYPHS = '✗✖✘❌'
 // exactly why the category rule could not see it, and it is a real leading marker
 // in real output. One line of evidence that the structural rule is not merely a
 // different guess.
-const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→\u0192'
+const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→\u0192\u2022'
 
 // -- ONE NORMALISATION, SHARED BY EVERY CLASSIFIER -- QA-INDEP-07, F2 --------
 // Everything below used to test raw bytes: `line[0]`, `^`, `\s*`. The reviewer
@@ -114,8 +114,35 @@ const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲
 // PAYLOAD without its introducer -- so the escapes survived and the reviewer's
 // case still walked through. Caught by re-running the reproduction rather than
 // by re-reading the regex. CSI, OSC (both terminators) and two-byte Fe forms.
-const ANSI = /\x1b(?:\[[0-9;?]*[ -\/]*[@-~]|\][\s\S]*?(?:\x07|\x1b\\)|[@-Z\\-_])/g
-const decorate = (line) => line.replace(ANSI, '').replace(/\r/g, '')
+// EVERY SPELLING OF "DECORATION", not the three I happened to think of --
+// QA-INDEP-08, M4. The previous version stripped ESC-introduced sequences, \r and
+// bidi, and SIX further spellings still recorded a genuine failure as a pass:
+// a variation selector (U+FE0F/U+FE0E) or a combining mark after the glyph, a
+// zero-width space before it, the 8-bit CSI (U+009B), and an unterminated OSC.
+// Each is invisible to a reader and each defeated the parser silently -- the same
+// defect QA-INDEP-07 found, four times over.
+// TERMINATED SEQUENCES ONLY. My first attempt ended the OSC branch with `$`,
+// which made the lazy match swallow the entire rest of the line -- including the
+// verdict on it. That is `decorate` DESTROYING content, the failure mode the
+// reviewer asked about by name, and it turned a genuine failure into silence
+// rather than into a pass. An unterminated escape is now left in place and
+// reported below, because a line whose display cannot be determined must not be
+// classified as anything. The 8-bit CSI (U+009B) replaces `ESC [`, and the `\[?`
+// tolerates the redundant bracket a hand-written case may carry.
+// `]` IS EXCLUDED FROM THE TWO-BYTE BRANCH. `[@-Z\\-_]` is the range 0x40-0x5F,
+// which contains `]` (0x5D) -- so `ESC ]` matched the generic Fe form, the OSC
+// introducer vanished, and an UNTERMINATED OSC left no residual escape to
+// report. It silently became `0;title` + the verdict, and the verdict was then
+// unreachable behind an ASCII word. Found by tracing the one case that still
+// failed, not by reading the class.
+const ANSI = /(?:\x1b\[|\x9b\[?)[0-9;?]*[ -\/]*[@-~]|\x1b\][\s\S]*?(?:\x07|\x1b\\)|\x1b[@-Z\\^_]/g
+/** An escape introducer that survived stripping: the line's display is undetermined. */
+const UNRESOLVED_ESCAPE = /[\x1b\x9b]/
+// Zero-width and format characters: invisible, and therefore never part of what a
+// line MEANS. Variation selectors are here too -- an emoji-presentation tick is
+// the same verdict as a text-presentation one.
+const INVISIBLE = /[\u200b-\u200d\ufeff\ufe00-\ufe0f]/g
+const decorate = (line) => line.replace(ANSI, '').replace(INVISIBLE, '').replace(/\r/g, '')
   .replace(/^[\s‎‏⁦-⁩]+/, '')
 
 // A MARKER IS A CHARACTER THAT STANDS ALONE, and that is a structural fact, not a
@@ -132,12 +159,32 @@ const decorate = (line) => line.replace(ANSI, '').replace(/\r/g, '')
 // "- <glyph> GATE X" are both a marker with a counter or a bullet in front, and
 // both were invisible. Letters are NOT allowed in that prefix, so a line like
 // "the guard sees <glyph> as a violation" is prose and stays prose.
-const LEAD_MARKER = /^[\s\d[\]()\/.,:;#*+|>-]*([^\s\x00-\x7f])(?=\s|$)/u
-/** The verdict-shaped marker at the head of a line, or null. */
-const leadMarker = (line) => LEAD_MARKER.exec(decorate(line))?.[1] ?? null
+// TWO RULES, BECAUSE THEY ANSWER DIFFERENT QUESTIONS -- M4.
+// `leadGlyph` asks "what character does this line lead with", and NOTHING about
+// what follows it. `leadMarker` adds the "alone in its token" test, which exists
+// only to keep Hebrew prose out of the UNKNOWN scan.
+//
+// Collapsing the two was the defect. A known PASS or FAIL glyph is drawn from a
+// hand-curated set -- it is never a letter inside a word -- so whether a combining
+// mark or a variation selector follows it cannot change what it asserts. Making
+// the load-bearing FAIL detection depend on a trailing space meant one invisible
+// codepoint turned a reported violation into a silent pass.
+const LEAD_GLYPH = /^[\s\d[\]()\/.,:;#*+|>-]*([^\s\x00-\x7f])/u
+/** The character a line leads with, after decoration. Says nothing about what follows. */
+const leadGlyph = (line) => LEAD_GLYPH.exec(decorate(line))?.[1] ?? null
+/** …and the same character only when it stands alone as a token. */
+const leadMarker = (line) => {
+  const d = decorate(line)
+  const m = LEAD_GLYPH.exec(d)
+  if (!m) return null
+  // Combining marks belong to the character they decorate, so skip them before
+  // asking whether the token ended.
+  const rest = d.slice(m.index + m[0].length).replace(/^\p{M}+/u, '')
+  return rest === '' || /^\s/.test(rest) ? m[1] : null
+}
 
 const VERDICT = (line) => {
-  const g = leadMarker(line)
+  const g = leadGlyph(line)
   return g !== null && `${PASS_GLYPHS}${FAIL_GLYPHS}`.includes(g)
 }
 // INDENTED FAILURES COUNT TOO (QA-INDEP-04, M5). The guard was column-0 only, so a
@@ -145,11 +192,11 @@ const VERDICT = (line) => {
 // lockup` was accepted with --exit 0. A sub-check failure is still a reported
 // violation; the register said "a log containing a ✗" and meant something narrower.
 const FAIL_AT_COL0 = (log) => log.split('\n').some((l) => {
-  const g = leadMarker(l)
+  const g = leadGlyph(l)
   return g !== null && FAIL_GLYPHS.includes(g)
 })
 const isFail = (line) => {
-  const g = leadMarker(line)
+  const g = leadGlyph(line)
   return g !== null && FAIL_GLYPHS.includes(g)
 }
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim()
@@ -296,6 +343,15 @@ export function parseChain(log, declared, exitCode) {
   // silent; a Bopomofo character used as a tick is not.
   const unknownGlyphs = []
   for (const l of lines) {
+    // AN UNTERMINATED ESCAPE IS ITSELF A FINDING. What such a line displays is
+    // undetermined -- a terminal would swallow the rest of it, and so would any
+    // stripper that guessed -- so it is reported rather than classified. Fail
+    // closed: this blocks the record exactly like an unknown glyph.
+    if (UNRESOLVED_ESCAPE.test(decorate(l))) {
+      const esc = '\u001b'
+      if (!unknownGlyphs.includes(esc)) unknownGlyphs.push(esc)
+      continue
+    }
     const g = leadMarker(l)
     if (g === null) continue
     if (`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g)) continue
@@ -534,6 +590,39 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
       FAIL_AT_COL0('> x\n[3/9] ' + FAILG + ' CHAIN CLOSED\n'))
   }
 
+  // 8e4 · DECORATION, EVERY SPELLING -- QA-INDEP-08, M4. Six of these recorded a
+  //       genuine failure as a PASS after the F2 repair, with an empty
+  //       unknownGlyphs list and no blocking finding: the same defect QA-INDEP-07
+  //       found, in spellings I had not thought of. They are fixtures now.
+  {
+    const d = declaredChain(pkg('npm run a'))
+    const run = (body) => parseChain(`> gigproof@0.1.0 a\n${body}\n`, d, 0)
+    const FAILG = String.fromCodePoint(0x2717)
+    const ESC = String.fromCodePoint(27)
+    const CSI8 = String.fromCodePoint(0x9b)
+    const cases = [
+      ['a variation selector (emoji presentation)', FAILG + String.fromCodePoint(0xfe0f)],
+      ['a variation selector (text presentation)', FAILG + String.fromCodePoint(0xfe0e)],
+      ['a combining mark', FAILG + String.fromCodePoint(0x301)],
+      ['a zero-width space in front', String.fromCodePoint(0x200b) + FAILG],
+      ['an 8-bit CSI colour', CSI8 + '[31m' + FAILG],
+    ]
+    for (const [name, lead] of cases) {
+      const r = run(lead + ' ACT STAMP: 6 failures')
+      t(`a failure behind ${name} is still recorded as fail`, r.gates[0].result === 'fail', JSON.stringify(r.gates[0]))
+      t(`...and the contradiction guard sees it behind ${name}`,
+        FAIL_AT_COL0('> x\n' + lead + ' CHAIN CLOSED\n'))
+    }
+    // AN UNTERMINATED ESCAPE IS NOT CLASSIFIED AT ALL. What it displays is
+    // undetermined, so it blocks the record instead of being called pass or fail.
+    const osc = run(ESC + ']0;title' + FAILG + ' ACT STAMP: 6 failures')
+    t('an unterminated OSC is REPORTED rather than classified, so the record is refused',
+      osc.unknownGlyphs.includes(ESC), JSON.stringify(osc.unknownGlyphs))
+    // …and decoration must not destroy a line it cannot fully resolve.
+    t('...and the line it appears on is not swallowed — decorate() strips, it does not eat',
+      run(ESC + ']0;t' + FAILG + ' X').gates[0].summary.includes('X'))
+  }
+
   // 8f · THE SET IS DERIVED FROM THE SCRIPTS, NOT HAND-LISTED. This is the check
   //      that would have caught H2 on the day `✖` was introduced: every glyph any
   //      chain gate actually prints at column 0 must be classifiable. A gate that
@@ -602,7 +691,14 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
         if (ch && !/[\p{L}\p{N}\p{M}]/u.test(ch)) used.add(ch)
       }
     }
-    const unknown = [...used].filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g))
+    // A CHARACTER `decorate` STRIPS CAN NEVER BE A LEADING MARKER, so it is not an
+    // unknown one. This scan reads SOURCE, and M4 added U+FEFF and the variation
+    // selectors to this file's own INVISIBLE class — which the escape-scan then
+    // reported as a glyph the chain prints. Filtering by what the parser itself
+    // removes is the general form of that, not a special case for one codepoint.
+    const unknown = [...used]
+      .filter((g) => decorate(g) !== '')
+      .filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g))
     t(`every leading glyph printed by the ${files.length} gate scripts in the chain is classifiable as pass, fail or explicitly non-verdict`,
       unknown.length === 0, `unclassified glyph(s): ${unknown.map((g) => `${g} (U+${g.codePointAt(0).toString(16).toUpperCase()})`).join(', ')}`)
     t('...and the scan actually found glyphs, so it is not vacuous',

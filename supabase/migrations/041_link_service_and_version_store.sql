@@ -438,9 +438,30 @@ returns boolean language sql stable security definer set search_path = public, p
         -- multi-Act publishing is untouched — executed, not assumed.
         not exists (select 1 from public.artists ar where ar.id = p_act)
         and exists (
-          select 1 from public.act a
+          select 1
+            from public.act a
+            join public.artists ar on ar.id = p_artist
            where a.id = p_act
-             and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)
+             -- (b) THE PERSON. Correct, and NOT self-sufficient: `created_by` is
+             -- caller-supplied without 049, which is how QA-INDEP-07 got in.
+             and a.person_id = ar.created_by
+             -- (c) THE ORGANISATION, and this is the half that stands on its own.
+             -- QA-INDEP-08 (H1) showed (a) is a NO-OP for a non-default Act — its
+             -- id is a fresh uuid, never an artists id — so for a multi-Act lineage
+             -- (b) was the only test and 049 was the only layer, while three
+             -- founder- and record-facing places said the two were independent.
+             -- `owner_organization_id` is the one column here an attacker CANNOT
+             -- claim: artists_org (015:27) has `with check (owner_organization_id
+             -- in (select current_org_ids()))`, so a forged artists row is stamped
+             -- with the ATTACKER's org and can never carry the victim's. Requiring
+             -- the Act's org to match the artist's therefore refuses the forgery
+             -- without consulting `created_by` at all.
+             -- `is not distinct from` so a NULL-org Act and a NULL-org artist still
+             -- match: `=` would yield NULL and refuse a legitimate publish. An
+             -- authenticated caller cannot reach that state anyway — set_artist_org
+             -- leaves the column NULL only when the person has no org, and then
+             -- artists_org refuses the insert outright.
+             and a.organization_id is not distinct from ar.owner_organization_id
         )
       )
 $$;
