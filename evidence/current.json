@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "4aa6505c5aa6c9beca15488cf6474971f9257703",
+  "head": "8531526afc1c6af1d27d0c610cd483fbd26b6b07",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/stor/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/link/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
-  "declaredStepCount": 47,
-  "gateCount": 47,
+  "declaredStepCount": 48,
+  "gateCount": 48,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -63,6 +63,12 @@
       "id": "LINK INTEGRITY",
       "step": "test:link-integrity",
       "summary": "✓ LINK INTEGRITY: all assertions hold.",
+      "result": "pass"
+    },
+    {
+      "id": "LINK DEAD STATES",
+      "step": "test:link-deadstates",
+      "summary": "✓ LINK DEAD STATES: every outcome of resolve_share_link proven by ASKING THE FUNCTION — not_found, revoked (four ways), expired (two ways), wrong_recipient, superseded_not_permitted and ok; precedence established by rows that are in two dead states at once; the open receipt idempotent under a repeated key and refused on a dead link; anon may ask and receives a reason without a snapshot and without",
       "result": "pass"
     },
     {
@@ -146,7 +152,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 14.8s",
+      "summary": "✓ Compiled successfully in 11.1s",
       "result": "pass"
     },
     {
@@ -348,9 +354,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 5.52s",
+    "✓ built in 5.31s",
     "✓ 160 modules transformed.",
-    "✓ built in 4.23s"
+    "✓ built in 3.10s"
   ],
   "unclassified": [],
   "skips": [],
