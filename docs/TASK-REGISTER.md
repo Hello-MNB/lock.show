@@ -4302,3 +4302,65 @@ and says why.
 **A mistake worth recording.** Restoring P5 with `git checkout -- website-next/components/waitlist-form.tsx`
 discarded the uncommitted GAP-W1 edit in that file — the exact hazard the preflight rule names. It was
 re-applied and `sha256sum -c` confirms the result is byte-identical to the pre-mutation file.
+
+## M7 — the evidence file under-reported the chain it certifies, and no one could tell
+
+**Increment:** M7 · **HEAD at open:** `1091ea9`
+**Files:** `scripts/generate-evidence.mjs` · `package.json` · `docs/TASK-REGISTER.md`
+
+`evidence/current.json` is what every "green at HEAD" claim in this repo rests on. It found gates by
+matching a regex against console lines, so every repair to that regex was a repair to a **guess about
+how gates phrase themselves**, and each one left a different set invisible. Measured against the real
+green chain at `1091ea9` — 42 steps, 51 column-0 verdict lines:
+
+| | |
+|---|---|
+| 43 | lines matched the regex |
+| **4** | real gates dropped for cosmetic reasons — `canon-drift:`, `component-styles:` and `event-registry:` start with a **lowercase** id; `LANGUAGE-PURE (0 violations)` separates with a parenthesis |
+| **4** | vite lines (`✓ 160 modules transformed.`, `✓ built in 5.63s`, twice each) that a **looser regex would have recorded as four fake gates** |
+| **5** | gates that had **never appeared in the evidence on any run** |
+
+That last row is the finding. `test:isolation`, `test:security`, `test:public-passport`, `test:ds`
+and `test:projection-matrix` print a real column-0 summary with **no leading tick** — `All
+security-denial checks passed.`, `G13 act-isolation: 17 passed, 0 failed`, `DS-DRIFT PASS — …`.
+Nothing was broken. The parser simply had no model for them, and **nothing ever compared the gate
+list to the chain**, so five passing gates were absent from every evidence record ever written.
+
+The old header promised *"a gate that stops printing disappears from the evidence instead of being
+silently assumed green."* It could not keep that promise: it had no idea what the chain contained.
+
+**The repair is structural, not another regex.** The unit of evidence is now the **chain step**. The
+declared chain is read out of `package.json`; the steps that ran are read out of the log; one gate is
+recorded per declared step. A step's result comes from chain progression — `&&` means a step followed
+by another step passed — not from its prose. Summary text is still captured, but it is decoration on a
+step already accounted for, never the thing that decides the step exists. Result at the same log:
+**43/43 declared steps recorded, 0 dropped, 0 unclassified**, where the old parser reported 39 gates.
+
+`stepsNotRun` is the ratchet: a declared step missing from the log is **reported**, and the generator
+**exits 1** if the chain claims exit 0 while a step never ran. A second guard fails on a column-0
+verdict printed outside any step. Both were executed, not assumed.
+
+**A claim of mine, corrected by its own probe.** I first wrote that any unfamiliar verdict line "is
+reported and fails the run". It is not, and should not be: because gates are counted per step, a
+stray line **inside** a step's block cannot invent or hide a gate — it is that gate's own output and
+is correctly absorbed. `unclassified` is deliberately narrow, and the self-test now measures **both**
+halves of that boundary so the narrowness is a measured claim rather than an assumption.
+
+**The generator was in no verification chain.** Nothing had ever executed its parser except a human
+reading it — which is exactly how a defect this old survives. `npm run test:evidence-parser` runs it
+against fixtures whose correct answer is known, and is now step 37 of `verify` (43 steps).
+
+**Mutation battery — 4 injected into the parser, 2 fail-closed paths executed, all caught. Restores
+verified byte-exact by `sha256sum -c`:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **Q1** | skip steps whose block printed no tick — the OLD behaviour | `a tickless gate is still counted — 1 gate(s)` |
+| **Q2** | a step that never ran is quietly assumed to have passed | `a declared step missing from the log is reported — []` |
+| **Q3** | empty the documented tool-output list | `vite output is classified as tool output, not a gate — 1 gate(s), 0 tool line(s)` |
+| **Q4** | swallow unclassifiable lines | `a verdict printed OUTSIDE any step is reported as unclassified — []` |
+| **Q5a** | a stray verdict prepended to a COMPLETE 43-step log | generator exits 1: `✗ 1 column-0 verdict line(s) could not be classified` |
+| **Q5b** | a log whose chain "passed" with 41 steps missing | generator exits 1: `✗ the chain exited 0 but 41 declared step(s) never ran` |
+
+Q1 is the one that matters: it re-injects precisely the behaviour that hid five gates for the whole
+life of this file, and the self-test now refuses it.
