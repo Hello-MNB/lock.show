@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "e0c828319a4b741fa82687f8ff1789f77c68173f",
+  "head": "9c1c3bcfcd26889035f382c9b5034e50412e3137",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m4.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m5.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 50,
@@ -26,7 +26,7 @@
     {
       "id": "test:isolation",
       "step": "test:isolation",
-      "summary": "G13 act-isolation: 17 passed, 0 failed",
+      "summary": "✔ DEMO mode active (VITE_DEMO=1 via --mode demo)",
       "result": "pass"
     },
     {
@@ -140,7 +140,7 @@
     {
       "id": "TENANT · MANDATE · ACT ISOLATION",
       "step": "test:tenant-isolation",
-      "summary": "✓ TENANT · MANDATE · ACT ISOLATION: 152 checks, all hold.",
+      "summary": "✓ TENANT · MANDATE · ACT ISOLATION: 153 checks, all hold.",
       "result": "pass"
     },
     {
@@ -152,7 +152,7 @@
     {
       "id": "ACT STAMP",
       "step": "test:act-stamp",
-      "summary": "✓ ACT STAMP: measured, not assumed. A row CAN still be stamped with an Act belonging to another artist on all 3 evidence tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id — and there the reach is bounded and measured: RADAR is untouched (recompute keys on the artist), the stranger cannot read the row, and an ide",
+      "summary": "✓ ACT STAMP: measured, not assumed, and corrected twice by independent review. A row CAN still be stamped with an Act belonging to another artist on all 3 evidence tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id — and there the reach is bounded and measured: RADAR is untouched, the stranger cannot read the row",
       "result": "pass"
     },
     {
@@ -164,7 +164,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 4.8s",
+      "summary": "✓ Compiled successfully in 5.2s",
       "result": "pass"
     },
     {
@@ -200,13 +200,13 @@
     {
       "id": "COPY MATRIX",
       "step": "test:copy",
-      "summary": "✓ COPY MATRIX: every row carries every locale, ids are unique and self-addressing, marketing rows carry no engineering vocabulary, no phone number in copy.",
+      "summary": "✓ locales declared: en, he",
       "result": "pass"
     },
     {
       "id": "BRAND NAMING",
       "step": "test:brand",
-      "summary": "✓ BRAND NAMING: zero bare LOCK across the gated scope — website source, rendered HTML, public app shells, non-HTML public surfaces, vite.config.js, server/index.js and src/** (0 remaining, deferral closed); lowercase lock.show URLs preserved. STILL NOT \"everywhere\": docs/** and scripts/** are out of scope, binary artifacts are read only by test:og-assets, and 22 lockup assets are exempt — 16 for a",
+      "summary": "✓ C0 matcher self-test: 5 equivalence classes over 27 strings — bare, non-ASCII prefix AND suffix particles caught; approved forms and ASCII identifiers on either side not",
       "result": "pass"
     },
     {
@@ -236,19 +236,19 @@
     {
       "id": "CLIENT-STORE CONTRACT",
       "step": "test:client-store",
-      "summary": "✓ CLIENT-STORE CONTRACT: 39 assertions hold — consent banner and locale both read localStorage through useSyncExternalStore, persist across reload, and keep gtag.js and <html lang/dir> as effect-only external writes.",
+      "summary": "✓ P1 GET / returns 200",
       "result": "pass"
     },
     {
       "id": "STORAGE RESILIENCE",
       "step": "test:storage",
-      "summary": "✓ STORAGE RESILIENCE — 13 checks hold",
+      "summary": "✓ S6 detector self-test (try guards; catch/finally do not; window.* seen)",
       "result": "pass"
     },
     {
       "id": "LOGICAL DIRECTION",
       "step": "test:logical-dir",
-      "summary": "✓ LOGICAL DIRECTION — 13 checks hold",
+      "summary": "✓ S1 classifier self-test — every real physical utility is detected AND reported by its exact token",
       "result": "pass"
     },
     {
@@ -302,7 +302,7 @@
     {
       "id": "CHAIN CLOSED",
       "step": "test:chain-closed",
-      "summary": "✓ CHAIN CLOSED — 23 checks hold: 5 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
+      "summary": "✓ S0 the resolve hook really makes `playwright` unresolvable in the child",
       "result": "pass"
     },
     {
@@ -366,9 +366,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 3.63s",
+    "✓ built in 3.70s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.04s"
+    "✓ built in 3.18s"
   ],
   "unclassified": [],
   "unknownGlyphs": [],
