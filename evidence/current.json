@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "ce2c9847159f26cafb13c38eb73186d8051329f8",
+  "head": "3be7e42ddbd34251f137a96ffab01462f9f9d33b",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m8.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m10.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 50,
@@ -164,7 +164,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 12.8s",
+      "summary": "✓ Compiled successfully in 5.4s",
       "result": "pass"
     },
     {
@@ -366,9 +366,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 5.84s",
+    "✓ built in 3.50s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.32s"
+    "✓ built in 3.33s"
   ],
   "unclassified": [],
   "unknownGlyphs": [],
@@ -426,6 +426,6 @@
     ".env.local is absent — no credential was exercised; no named-environment readiness is claimed.",
     "Reproducibility (QA-INDEP-03, M6): C5/C6 of the brand gate and the client-store freshness check assert against website-next/out, which is gitignored. `npm run build:site` is now a chain step so a fresh clone reproduces this, but the artifact itself is local build state, not something this record pins.",
     "No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.",
-    "Migrations 043-048 remain drafted-or-authored and NOT applied to any live environment."
+    "Migrations 043-051 (9 files) remain drafted-or-authored and NOT applied to any live environment."
   ]
 }
