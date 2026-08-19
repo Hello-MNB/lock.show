@@ -4778,3 +4778,60 @@ must not appear in shipped bytes. Zero today.
 | **W3** | the font environment diverges from `FONT_BASELINE` | `FAIL … this machine resolves [], the baseline was rendered with ["Manrope"]` |
 
 **Every QA-INDEP-04 finding is now closed** — 3 H, 5 M, 4 L, none carried forward.
+
+## PV-EXECUTED — the PassportVersion state machine was asserted by regex, never run
+
+**Increment:** PV-EXECUTED · **HEAD at open:** `4bd0de5`
+**Files:** `scripts/test-passport-version.mjs` (new) · `package.json` · `docs/OWNER-PENDING.md`
+
+Four consecutive runs had been gate and evidence work — the **lowest** band of the controller's
+priority list. This one is in a high band: *"immutable recipient-specific PassportVersion with atomic
+publish/replace/withdraw"*.
+
+**The gap, and it was hiding in plain sight.** `test-link-integrity.mjs` guards migration 041, and its
+own header says: *"WHAT IS ASSERTED HERE **STATICALLY** (no database, no network, no keys — this
+container has no DB credentials, and the migration is deliberately NOT APPLIED)"*. That was true when
+it was written. **It is no longer true**: `scripts/lib/pgharness.mjs` gives every gate a real
+PostgreSQL 16, and the waitlist, grant-scope and sql-privileges suites already execute against it. So
+**57 assertions** about the Passport version store are regexes over the migration's own text — they
+witness that somebody wrote a line, and cannot witness a CHECK refusing a value, a trigger demoting an
+incumbent, or a cross-Act read. The static gate is kept: drift-detection on the file is a different
+and still useful job.
+
+**What the new suite proves by execution:** five states enforced (and a sixth refused); the six
+`audience` policy keys enforced; publishing **supersedes the incumbent in the same statement** and
+stamps `supersedes_id`, `published_at` and `superseded_at` — while the live row is not made its own
+history; exactly one published version per `(lineage × audience)`; a different audience is a genuinely
+different bucket; five columns immutable, each proven by a refused UPDATE; a superseded version
+unrevivable; **multi-Act** — publishing for Act Two leaves Act One's published version untouched, and
+each Act holds exactly one published version per audience; and republishing the same row is idempotent
+rather than a self-supersede.
+
+**It found a live exposure, and then found me wrong about it.** The first run showed anon reading a
+SUPERSEDED snapshot — the exact defect `test-link-integrity`'s header says 041 exists to close. The
+cause is not a regression: **041 PART B is deliberately commented out** (`041:1046`), because replacing
+`pv_public_read` is a policy cutover on live data and therefore Maria's action. So an assertion that
+"anon is refused" would have demanded a state nobody authorised, and one that "anon may read" would
+have blessed the exposure permanently.
+
+The suite now **measures which world it is in** and requires the two policy states to be consistent —
+failing if the tree is ever left half-cut-over — and prints the cost of dormancy as a number on every
+run: *"with 041 PART B dormant, anon reads 6 passport_version row(s) in this scratch DB, superseded
+snapshots included."* Raised as **PV-PARTB** in `docs/OWNER-PENDING.md`.
+
+**Two fixture facts learned by running, not by reading:** the Act spine's `act_from_artist()` trigger
+inserts into `public.act`, whose `person_id` FKs `public.person`, so a fixture with only `auth.users`
+aborts; and `audience` is CHECK-constrained to the six policy keys, which my first probe loop
+discovered by failing on an invented one.
+
+**Mutation battery — 3 injected into the migration, 3 caught, restores byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **X1** | the supersede trigger stops demoting the incumbent | `the first publish is published` / `the SECOND publish demoted it` |
+| **X2** | the `act_id` immutability guard is removed | `act_id cannot be changed after the fact` |
+| **X3** | a superseded version becomes revivable | `reviving a superseded version is refused` |
+
+**X2 did not land on the first attempt** — my replacement text had the wrong internal spacing, so the
+file was unchanged and the run passed. An unlanded mutation proves nothing; it was re-run with the
+landing verified (`grep -c` 2 → 1) and then failed correctly.
