@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "8531526afc1c6af1d27d0c610cd483fbd26b6b07",
+  "head": "66fc8272caacc8c0536dcb6814a59ac4242fa6c0",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/link/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa5/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 48,
@@ -80,13 +80,13 @@
     {
       "id": "test:passport-version",
       "step": "test:passport-version",
-      "summary": "✓ PASSPORT VERSION [PART B DORMANT]: the 041 state machine proven by EXECUTION, not by regex over its own text — five states enforced, publish supersedes the incumbent atomically and stamps lineage, one published version per (lineage × audience), five columns immutable, a superseded version unrevivable, a second Act a genuinely separate bucket, republishing idempotent, and anon refused draft and s",
+      "summary": "✓ PASSPORT VERSION [PART B DORMANT]: the 041 state machine proven by EXECUTION, not by regex over its own text — five states enforced, publish supersedes the incumbent atomically and stamps lineage, one published version per (lineage × audience), five columns immutable, a superseded version unrevivable, a second Act a genuinely separate bucket, and republishing idempotent. PART B DORMANT: anon CAN",
       "result": "pass"
     },
     {
       "id": "test:storage-isolation",
       "step": "test:storage-isolation",
-      "summary": "✓ STORAGE ISOLATION [evidence policy: BUCKET-ONLY, the 001 shape]: buckets, RLS and the three policies proven installed by execution; anon refused both write paths and the private bucket; the public bucket readable, which proves the anon role works and the refusals are real; and the cross-person posture on the evidence bucket measured rather than assumed. NOT proven here: Supabase's real storage A",
+      "summary": "✓ STORAGE ISOLATION [evidence policy: BUCKET-ONLY, the 001 shape]: buckets, RLS and the three policies proven installed by execution; anon refused both write paths and the private bucket; the public bucket readable, which proves the anon role works and the refusals are real; and the cross-person posture on the evidence bucket measured rather than assumed. NOT proven here: PostgREST/GoTrue with rea",
       "result": "pass"
     },
     {
@@ -152,7 +152,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 11.1s",
+      "summary": "✓ Compiled successfully in 4.7s",
       "result": "pass"
     },
     {
@@ -290,7 +290,7 @@
     {
       "id": "CHAIN CLOSED",
       "step": "test:chain-closed",
-      "summary": "✓ CHAIN CLOSED — 22 checks hold: 5 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
+      "summary": "✓ CHAIN CLOSED — 23 checks hold: 5 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
       "result": "pass"
     },
     {
@@ -354,9 +354,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 5.31s",
+    "✓ built in 4.46s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.10s"
+    "✓ built in 4.18s"
   ],
   "unclassified": [],
   "skips": [],
