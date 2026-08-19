@@ -256,6 +256,16 @@ try {
     // only — and any new act_id reference, or that one migrating into USING,
     // fails here and names itself.
     const ACT_ID_WRITE_CHECK = ['passport_versions.pv_owner_insert']
+    // AND THE EXPRESSION, NOT ONLY THE NAME — QA-INDEP-07, F4. Pinning the policy
+    // NAME let the reviewer neuter the predicate and stay green: `act_id is not
+    // distinct from act_id` is a tautology, `coalesce(act_id, artist_id) is not
+    // null` is never false, and both keep the name and the act_id mention that
+    // this assertion was matching on. I also claimed in the register that the new
+    // A3 was "stricter than what it replaced"; it was not — it was INCOMPARABLE,
+    // adding a presence ratchet the old one lacked while dropping every constraint
+    // on the one policy that decides anything. Pinning the normalised expression
+    // is what makes the word "stricter" true.
+    const ACT_ID_WRITE_EXPR = '(can_access_artist(artist_id) AND pv_act_in_artist_lineage(act_id, artist_id))'
     const actUsing = db.rows(`
       select tablename, policyname from pg_policies
        where schemaname='public' and tablename in (${ACT_TABLES.map((t) => `'${t}'`).join(',')})
@@ -267,6 +277,11 @@ try {
       select tablename, policyname from pg_policies
        where schemaname='public' and tablename in (${ACT_TABLES.map((t) => `'${t}'`).join(',')})
          and coalesce(with_check,'') like '%act_id%'`).map((r) => r.join('.')).sort()
+    const shippedExpr = db.scalar(`select regexp_replace(replace(coalesce(with_check,'-'), chr(10), ' '), '\\s+', ' ', 'g')
+       from pg_policies where schemaname='public' and tablename='passport_versions' and policyname='pv_owner_insert'`)
+    check(shippedExpr === ACT_ID_WRITE_EXPR,
+      'A3 ...and that policy still carries the exact predicate it is trusted for, not merely a mention of act_id (executed)',
+      `A3 pv_owner_insert reads ${JSON.stringify(shippedExpr)}, expected ${JSON.stringify(ACT_ID_WRITE_EXPR)} — a tautology or a never-false test keeps the name and the act_id and grants everything back`)
     check(JSON.stringify(actCheck) === JSON.stringify(ACT_ID_WRITE_CHECK),
       `A3 exactly one policy constrains WRITES by act_id — ${ACT_ID_WRITE_CHECK[0]}, which stops a stranger inserting a version into another artist's lineage — and it grants nothing (executed)`,
       `A3 the act_id write-check set is ${JSON.stringify(actCheck)}, expected ${JSON.stringify(ACT_ID_WRITE_CHECK)} — an act_id constraint was added or removed; re-derive this gate's model`)

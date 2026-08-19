@@ -88,14 +88,70 @@ const FAIL_GLYPHS = '✗✖✘❌'
 // silently is the H2 defect. `× ≠` are prose symbols the widened source scan
 // surfaced out of template interpolation (test-ds-drift, test-tenant-isolation),
 // and `\u2192` is the separator 173 source lines use after an interpolated value.
-const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→'
-const VERDICT = new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]`)
+// U+0192 was added by the F2 rule on its first run against a real log: Next.js
+// prints `\u0192 Proxy (Middleware)` in its route legend. It is a LETTER, which is
+// exactly why the category rule could not see it, and it is a real leading marker
+// in real output. One line of evidence that the structural rule is not merely a
+// different guess.
+const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→\u0192'
+
+// -- ONE NORMALISATION, SHARED BY EVERY CLASSIFIER -- QA-INDEP-07, F2 --------
+// Everything below used to test raw bytes: `line[0]`, `^`, `\s*`. The reviewer
+// walked past all of it with a colour escape, and not only past the glyph scan --
+// past the LOAD-BEARING half. A gate whose summary literally read
+// ESC + "[31m" + a fail glyph + " ACT STAMP: 6 failures" was recorded
+// `"result": "pass"`, with an empty unknownGlyphs list and no blocking finding.
+// Reproduced before it was believed. Today's chain emits no ANSI because
+// spawnSync gives the steps no TTY, so this was a latent defect AND a false
+// claim -- the commit said quoting, indentation and concatenation "are all
+// irrelevant to it". They were not.
+//
+// `decorate` strips what a terminal adds and a reader ignores: ANSI CSI/OSC
+// sequences, carriage returns, bidi controls, and leading whitespace. Every
+// classifier now decides on that form, so a colourising reporter or a FORCE_COLOR
+// in CI changes what the log LOOKS like and nothing about what it MEANS.
+// The ESC byte is the whole point and my first version omitted it, matching the
+// PAYLOAD without its introducer -- so the escapes survived and the reviewer's
+// case still walked through. Caught by re-running the reproduction rather than
+// by re-reading the regex. CSI, OSC (both terminators) and two-byte Fe forms.
+const ANSI = /\x1b(?:\[[0-9;?]*[ -\/]*[@-~]|\][\s\S]*?(?:\x07|\x1b\\)|[@-Z\\-_])/g
+const decorate = (line) => line.replace(ANSI, '').replace(/\r/g, '')
+  .replace(/^[\s‎‏⁦-⁩]+/, '')
+
+// A MARKER IS A CHARACTER THAT STANDS ALONE, and that is a structural fact, not a
+// script one. The previous scan excluded every Unicode LETTER so a Hebrew prose
+// line would not be reported as an unknown verdict -- and the reviewer used
+// letters that read as marks (Bopomofo U+3128, Cherokee U+13CF, Lisu U+A4D2) to
+// walk straight through. Category was the wrong axis. A verdict marker is ONE
+// character followed by a space; Hebrew prose opens with a WORD, whose first
+// letter is followed by another letter. So the rule is now "one non-ASCII
+// character, alone in its token, at the head of the line" -- no list of scripts,
+// nothing to keep up to date.
+//
+// A NON-LETTER ASCII PREFIX IS ALLOWED BEFORE IT. "[3/9] <glyph> GATE X" and
+// "- <glyph> GATE X" are both a marker with a counter or a bullet in front, and
+// both were invisible. Letters are NOT allowed in that prefix, so a line like
+// "the guard sees <glyph> as a violation" is prose and stays prose.
+const LEAD_MARKER = /^[\s\d[\]()\/.,:;#*+|>-]*([^\s\x00-\x7f])(?=\s|$)/u
+/** The verdict-shaped marker at the head of a line, or null. */
+const leadMarker = (line) => LEAD_MARKER.exec(decorate(line))?.[1] ?? null
+
+const VERDICT = (line) => {
+  const g = leadMarker(line)
+  return g !== null && `${PASS_GLYPHS}${FAIL_GLYPHS}`.includes(g)
+}
 // INDENTED FAILURES COUNT TOO (QA-INDEP-04, M5). The guard was column-0 only, so a
 // log whose sole marker was `  ✗ C2 …: uppercase LOCK.SHOW outside an approved
 // lockup` was accepted with --exit 0. A sub-check failure is still a reported
 // violation; the register said "a log containing a ✗" and meant something narrower.
-const FAIL_AT_COL0 = new RegExp(`(^|\n)\\s*[${FAIL_GLYPHS}]`)
-const isFail = (line) => FAIL_GLYPHS.includes(line[0])
+const FAIL_AT_COL0 = (log) => log.split('\n').some((l) => {
+  const g = leadMarker(l)
+  return g !== null && FAIL_GLYPHS.includes(g)
+})
+const isFail = (line) => {
+  const g = leadMarker(line)
+  return g !== null && FAIL_GLYPHS.includes(g)
+}
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim()
 
 // Build tools print their own ticks. These are NOT gate verdicts, and recording
@@ -149,7 +205,7 @@ export function parseChain(log, declared, exitCode) {
   const verdictLines = []
   for (const b of blocks) {
     for (const l of b.lines) {
-      if (VERDICT.test(l)) verdictLines.push({ step: b.step, line: l })
+      if (VERDICT(l)) verdictLines.push({ step: b.step, line: l })
     }
   }
 
@@ -175,7 +231,7 @@ export function parseChain(log, declared, exitCode) {
         : Boolean(prevHeadered && ranSteps.includes(prevHeadered.step) && exitCode === 0)
     if (!ran) { stepsNotRun.push(d.cmd); continue }
     const block = d.step === null ? null : blocks.find((b) => b.step === d.step)
-    const own = block ? block.lines.filter((l) => VERDICT.test(l) && !TOOL_OUTPUT.some((r) => r.test(l))) : []
+    const own = block ? block.lines.filter((l) => VERDICT(l) && !TOOL_OUTPUT.some((r) => r.test(l))) : []
     // A GATE THAT PRINTS NO TICK STILL SAYS SOMETHING — QA-INDEP-03, L3. Counting
     // the step was the fix; recording `summary: null` for the five gates this
     // increment exists to rescue left the register's word "recorded" stronger than
@@ -232,16 +288,16 @@ export function parseChain(log, declared, exitCode) {
   // line's first non-whitespace character, when it is a non-ASCII SYMBOL, must be
   // classifiable as pass, fail or explicitly non-verdict.
   //
-  // LETTERS, DIGITS AND MARKS ARE EXCLUDED. A log line may legitimately open with
-  // Hebrew (the i18n gates print it) and that is prose, not a verdict marker. The
-  // firewall this enforces is about markers, and a letter is never one.
-  // Bidi controls and the RTL/LTR marks are stripped alongside whitespace first,
-  // because a Hebrew gate line can open with U+2066 before its real glyph.
+  // IT CLASSIFIES BY STRUCTURE, NOT BY CHARACTER CATEGORY -- QA-INDEP-07, F2.
+  // The first version excluded every Unicode letter so Hebrew prose would not be
+  // reported, and the reviewer walked through with letters that read as marks. The
+  // rule now lives in leadMarker(): one non-ASCII character, alone in its token,
+  // at the head of a decorated line. Hebrew prose opens with a word and is still
+  // silent; a Bopomofo character used as a tick is not.
   const unknownGlyphs = []
   for (const l of lines) {
-    const g = [...l.replace(/^[\s\u200e\u200f\u2066-\u2069]+/, '')][0]
-    if (!g || g.codePointAt(0) < 0x80) continue
-    if (/[\p{L}\p{N}\p{M}]/u.test(g)) continue
+    const g = leadMarker(l)
+    if (g === null) continue
     if (`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g)) continue
     if (!unknownGlyphs.includes(g)) unknownGlyphs.push(g)
   }
@@ -408,7 +464,7 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
     t('a ✖ verdict records the gate as FAIL, not pass',
       r.gates[0].result === 'fail', JSON.stringify(r.gates[0]))
     t('...and the contradiction guard sees ✖ as a violation',
-      FAIL_AT_COL0.test('> x\n✖ CHAIN CLOSED — 1 finding(s):\n'))
+      FAIL_AT_COL0('> x\n✖ CHAIN CLOSED — 1 finding(s):\n'))
   }
 
   // 8e2 · THE OUTPUT SCAN — the check the source scan keeps failing to be. Every
@@ -439,6 +495,43 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
     t('...and a real chain banner set classifies clean',
       run('\u2550\u2550 FLOW CONTRACT GATE \u2550\u2550\n\u00b7 F1 route table parsed\n\u250c \u25cb /\n\u251c \u25cb /_not-found\n\u2514 \u25cb /waitlist').length === 0,
       JSON.stringify(run('\u2550\u2550 x\n\u250c y')))
+  }
+
+  // 8e3 · DECORATION MUST NOT CHANGE A VERDICT -- QA-INDEP-07, F2. Every case the
+  //       reviewer used, against log text, including the load-bearing half: a
+  //       genuine failure wearing a colour escape must still be recorded FAIL.
+  {
+    const d = declaredChain(pkg('npm run a'))
+    const run = (body) => parseChain(`> gigproof@0.1.0 a\n${body}\n`, d, 0)
+    const glyphs = (body) => run(body).unknownGlyphs
+    const UNK = String.fromCodePoint(0x26d4)
+    const ESC = String.fromCodePoint(27)
+    const RED = ESC + '[31m'
+    const OFF = ESC + '[0m'
+    const FAILG = String.fromCodePoint(0x2717)
+    t('an ANSI-coloured unknown marker is seen',
+      glyphs(RED + UNK + ' GATE X' + OFF).join('') === UNK, JSON.stringify(glyphs(RED + UNK + ' x' + OFF)))
+    t('...and one behind an ASCII counter prefix', glyphs('[3/9] ' + UNK + ' GATE X').join('') === UNK)
+    t('...and one behind a bullet', glyphs('- ' + UNK + ' GATE X').join('') === UNK)
+    t('...and one behind a carriage return', glyphs('\r' + UNK + ' GATE X').join('') === UNK)
+    // Category was the wrong axis: these are LETTERS that read as marks.
+    for (const [name, cp] of [['Bopomofo', 0x3128], ['Cherokee', 0x13cf], ['Lisu', 0xa4d2]]) {
+      const g = String.fromCodePoint(cp)
+      t(`...and a ${name} letter used as a tick is not prose`, glyphs(g + ' GATE X').join('') === g)
+    }
+    t('...while a Hebrew WORD still is prose, which is what the letter rule was protecting',
+      glyphs('בדיקה עברה').length === 0)
+    t('...and a marker inside prose is not a marker',
+      glyphs('the guard sees ' + UNK + ' as a violation').length === 0)
+    // THE LOAD-BEARING HALF. This is the one that mattered: a coloured genuine
+    // failure was recorded "pass" with no blocking finding of any kind.
+    const coloured = run(RED + FAILG + ' ACT STAMP: 6 failures' + OFF)
+    t('a COLOURED failure line still records the gate as fail',
+      coloured.gates[0].result === 'fail', JSON.stringify(coloured.gates[0]))
+    t('...and the contradiction guard sees it too',
+      FAIL_AT_COL0('> x\n' + RED + FAILG + ' CHAIN CLOSED' + OFF + '\n'))
+    t('...and behind an ASCII prefix as well',
+      FAIL_AT_COL0('> x\n[3/9] ' + FAILG + ' CHAIN CLOSED\n'))
   }
 
   // 8f · THE SET IS DERIVED FROM THE SCRIPTS, NOT HAND-LISTED. This is the check
@@ -580,7 +673,7 @@ if (logIdx > -1) {
   exitCode = Number(process.argv[exitIdx + 1])
   // A ✗ in the log with a zero exit is a contradiction, not a detail: it means a
   // gate reported a violation and the chain still claimed success.
-  if (exitCode === 0 && FAIL_AT_COL0.test(log)) {
+  if (exitCode === 0 && FAIL_AT_COL0(log)) {
     console.error('✗ --exit 0 was given but the log contains a ✗ verdict line — refusing to record')
     console.error('  a green result over a reported violation.')
     process.exit(1)

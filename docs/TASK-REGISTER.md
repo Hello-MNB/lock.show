@@ -5169,7 +5169,10 @@ One insert from an account holding no grant: **(a)** cross-tenant unpublish, **(
 rows and *report success*, **(c)** a permanent publish-lock. The Act id needs no guessing: for a
 default Act `act.id = artists.id`, and `artists_public_read` hands it to anonymous readers.
 
-**Fix, in 041.** `pv_owner_insert` now also requires `act_belongs_to_artist(act_id, artist_id)`.
+**Fix, in 041.** `pv_owner_insert` now also requires `pv_act_in_artist_lineage(act_id, artist_id)`.
+(Written as `act_belongs_to_artist` first — see the rename below; QA-INDEP-07 F5 found this sentence
+still carrying the old name, which points a reader at 046's stricter body and makes the claim read
+stronger than the shipped predicate was.)
 **It must be SECURITY DEFINER and the first attempt proved why:** an inlined `EXISTS` in a `WITH
 CHECK` runs under the *caller's* RLS, `act` has RLS, so an artist could not see their own second Act
 row and multi-Act publishing broke silently. CLAUDE.md makes multi-Act canon; a predicate that
@@ -5318,3 +5321,135 @@ act_id policies as long as there were zero, while the new one pins the exact set
 USING clause of claims.claims_act_read — the Act would now decide who SEES a row`; removing the
 sanctioned predicate → `the act_id write-check set is [], expected
 ["passport_versions.pv_owner_insert"]`. Both exit 1; control green; 152 checks.
+
+---
+
+## QA-INDEP-07 — the seventh review, and the one that found the fix did not fix it
+
+Verdict: **REJECT**. Five findings. The headline one is that the H1 repair recorded in the section
+above was **not a fix** — it raised the attacker's cost by exactly one `INSERT`.
+
+### F1 (H) — the lineage predicate keyed ownership on a column anyone could write
+
+`pv_act_in_artist_lineage` asked whether the Act's `person_id` matched `artists.created_by`. Nothing
+governs `artists.created_by`. `artists_org` (015:27) constrains `owner_organization_id` and says
+nothing about authorship, and `artists_owner` (001:162), which does check it, is **permissive** — a
+permissive policy can add permission, never withhold it. Reproduced independently before the founder
+row was touched:
+
+```
+spoof row accepted? true    org=<attacker>  created_by=<victim>
+can_access_artist(FAKE) as stranger = t
+pv_act_in_artist_lineage(<victim act>, FAKE) = t     <- the fix certifies the attack
+SPOOFED attack accepted? true      victim states: published -> superseded
+int-max lock accepted? true        victim can still publish? false (integer out of range)
+```
+
+Every consequence the previous section says is closed — cross-tenant unpublish, irreversibility,
+publish-lock — reproduced against the fixed schema. And the victim's `created_by` needs no guessing:
+any signed-in account reads it off a published artist.
+
+**Two independent refusals now, and the point is that they are independent:**
+
+| scenario | spoofed `created_by` | attack |
+| --- | --- | --- |
+| both layers (shipped) | attacker's own | refused |
+| 049 removed — predicate alone | victim's | refused |
+| predicate weakened — 049 alone | attacker's own | refused |
+| **both removed (control)** | victim's | **ACCEPTED — victim superseded** |
+
+049 pins `artists.created_by` to `auth.uid()` on insert and to its prior value on update, so the
+column stops being an input; 041's predicate separately refuses any `p_act` that is itself a
+*different* artists row, because a default Act's id **is** an artists id and that fact needs no
+`created_by` at all. `[2g]` executes the whole shape, including the trigger ordering — my first
+version of that ordering assertion was wrong and failed against correct code: `trg_act_from_artist`
+sorts first alphabetically but is AFTER INSERT, so timing decides, not the name.
+
+### F2 (M) — the output glyph scan, and the guard behind it, were blind to decoration
+
+The M1 repair claimed quoting, indentation, concatenation and interpolation were "all irrelevant to
+it, because it reads the bytes the chain printed". Five evasions, executed:
+
+| line | before | after |
+| --- | --- | --- |
+| bare unknown marker | caught | caught |
+| ANSI-coloured | **missed** | caught |
+| behind `[3/9] ` | **missed** | caught |
+| behind `- ` | **missed** | caught |
+| Bopomofo/Cherokee/Lisu letter used as a tick | **missed** | caught |
+
+And the load-bearing half: a genuine `✗ ACT STAMP: 6 failures` wearing a colour escape was recorded
+`"result": "pass"` with no blocking finding — the QA-INDEP-02 defect resurrected by one escape
+sequence. Today's chain emits no ANSI (spawnSync gives the steps no TTY), so this was a false claim
+plus a latent defect that any `FORCE_COLOR` would have armed.
+
+One `decorate()` now strips ANSI, carriage returns and bidi controls, and every classifier —
+`VERDICT`, `isFail`, `FAIL_AT_COL0`, the glyph scan — decides on that form. The category rule
+(`exclude every Unicode letter`) is gone: **a marker is one non-ASCII character alone in its token at
+the head of a line**, which is structural, needs no list of scripts, and lets Hebrew prose stay prose.
+A non-letter ASCII prefix is allowed in front of it; letters are not, so `the guard sees ✗ as a
+violation` is still prose. My first ANSI pattern matched the payload without the ESC introducer and
+changed nothing — caught by re-running the reproduction rather than by re-reading the regex.
+
+**The wider rule immediately found one the old one had hidden:** Next.js prints `ƒ Proxy
+(Middleware)` in its route legend. U+0192 is a *letter*, which is exactly why the category rule could
+not see it. **Mutation:** a coloured genuine failure injected into a real 2,600-line log → the record
+is refused, exit 1, `evidence/current.json` byte-identical afterwards.
+
+### F3 (M) — the "inert" claim was not overstated, it was false
+
+The reviewer showed the `[4]` ratchet's function-body arm grepped for the table-qualified spelling
+only, so an alias or a `NEW` reference walked past, and that only one of three declared surfaces had
+ever been mutation-tested. Repairing the scan found something worse than the finding:
+
+**`availability_requests.organization_id` is read as a scoping decision by three RADAR functions**,
+and the column is writable by **anonymous** callers through `req_public_insert` — correctly, because
+a buyer has no account. Executed:
+
+```
+after an HONEST anon request      -> owner org counts: 1   unrelated org counts: 0
+anon stamped it with an unrelated org, accepted: true
+after the STAMPED anon request    -> owner org counts: 0   unrelated org counts: 1
+```
+
+An anonymous visitor can take a real booking request for a published artist and move it out of that
+artist's RADAR into a stranger's. The row stays visible to the artist (`req_org_read` keys on
+`artist_id`), so nothing leaks — RADAR simply reports demand to the wrong party and hides it from the
+right one. **050** is drafted: you may name an organisation only if you belong to it, and everyone
+else gets NULL, which the same join already reads as the artist's own org — so the public form is
+unchanged and the spoof collapses into the honest case instead of into an error a buyer would see.
+
+**My first version of 050 was too blunt and the fixtures caught it**: keying on `auth.uid() is null`
+nulled the attribution for seeds and any service-role writer too, silently erasing the fixture's
+deliberate org attributions and changing which RADAR signals existed. It now keys on the caller's
+role. And it must read `current_setting('role')`, not `current_role` — inside a SECURITY DEFINER
+function `current_role` is the function's *owner*, so the rule would have been dead code that looked
+alive. Measured: anon reads `anon`, authenticated reads `authenticated`, the owner reads `none`.
+
+`[4]` now resolves aliases and `NEW`/`OLD` references, names every reader with its reason, and fails
+on a new one — plus a non-vacuity assertion so a scan that stops working reds instead of reporting
+silence, which is how the last version failed. **All four surfaces mutation-tested:** unqualified
+policy, qualified policy, alias function read, qualified function read — all four exit 1.
+
+### F4 (M) — A3 pinned the policy's name, not its meaning
+
+Two total neuterings of the H1 predicate passed A3: `act_id is not distinct from act_id` and
+`coalesce(act_id, artist_id) is not null`. Both keep the policy name and the `act_id` mention the
+assertion was matching on. My register claim that the new A3 was "stricter than what it replaced" was
+false — the two were **incomparable**. A3 now pins the normalised expression as well, which is what
+makes the word "stricter" true. Both neuterings exit 1.
+
+### F5 (L) — the rename was not finished
+
+`test-act-stamp.mjs:131` and its `✓` summary still said `act_belongs_to_artist`, the name migration
+046 owns and 041 was renamed *away* from, and the H1 section of this register did too. It never
+reached `evidence/current.json` (the summary truncates at 400 chars), but it points a reader at 046's
+stricter body and makes the claim read stronger than the shipped predicate is. Fixed in all three.
+
+### What survived the attack
+
+The reviewer executed and could not break: 042 does not key on the lineage; `resolve_share_link()`
+selects by primary key so an injected row cannot be served through a victim's share link; there is
+genuinely no UPDATE or DELETE policy on `passport_versions`, so the irreversibility claim is accurate;
+`p_act = p_artist` is not independently exploitable because `artists.id` is a primary key; the
+multi-Act claim is true and executed; the rollback and privilege claims hold.

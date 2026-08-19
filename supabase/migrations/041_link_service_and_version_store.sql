@@ -407,6 +407,13 @@ create index if not exists idx_pv_state on public.passport_versions (state);
 -- executing the legitimate case, which is why it is now a test.
 -- This mirrors `can_access_artist` (008:147), which is SECURITY DEFINER for the
 -- same reason.
+-- OWNERSHIP IS NOT `created_by` ALONE — QA-INDEP-07, F1. The first version of this
+-- predicate keyed entirely on `artists.created_by`, which no policy governs:
+-- artists_org (015:27) constrains the ORG column only, and the permissive
+-- artists_owner (001:162) cannot restrict what another permissive policy admits.
+-- One extra INSERT — an artists row in the attacker's own org carrying the
+-- victim's `created_by` — made this function certify the very attack it exists to
+-- refuse. Reproduced locally before it was believed. See 049.
 -- DELIBERATELY NOT NAMED `act_belongs_to_artist`. That name is taken: migration
 -- 046 defines a function with the same signature and a STRICTER body (no NULL
 -- allowance, no default-Act identity), and 046's down file drops it. Reusing the
@@ -418,10 +425,23 @@ create or replace function public.pv_act_in_artist_lineage(p_act uuid, p_artist 
 returns boolean language sql stable security definer set search_path = public, pg_temp as $$
   select p_act is null
       or p_act = p_artist
-      or exists (
-        select 1 from public.act a
-         where a.id = p_act
-           and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)
+      or (
+        -- A DEFAULT ACT'S ID *IS* AN ARTISTS ID — 020's act_from_artist() mirrors
+        -- every artists row into `act` with `act.id = artists.id`. So if p_act
+        -- names an artists row and it is not p_artist, this is a reach across two
+        -- artists, whatever any other column claims. QA-INDEP-07 (F1) got past the
+        -- ownership join below by inserting an artists row carrying the VICTIM's
+        -- `created_by`; this disjunct refuses that shape without consulting
+        -- `created_by` at all, and 049 stops the forged column separately. Two
+        -- independent reasons to refuse, because the first one has now been wrong
+        -- once. A non-default Act's id is a fresh uuid and never an artists id, so
+        -- multi-Act publishing is untouched — executed, not assumed.
+        not exists (select 1 from public.artists ar where ar.id = p_act)
+        and exists (
+          select 1 from public.act a
+           where a.id = p_act
+             and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)
+        )
       )
 $$;
 -- ANON IS REVOKED, and the revoke is load-bearing: Supabase's default privileges
