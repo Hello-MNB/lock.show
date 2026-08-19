@@ -52,7 +52,45 @@ const UPPER_DOTTED = /(?<![A-Za-z0-9_-])LOCK\.SHOW(?![A-Za-z0-9_-])/g
 
 // Allowlist for approved visual-lockup files. MAY ONLY SHRINK — adding an entry
 // is a deliberate act visible in a diff (pattern proven in test-i18n-parity).
-const LOCKUP_ALLOWLIST = []
+//
+// These 22 entries became VISIBLE, not new, when BRAND-OG put  in scope.
+// Every one is a brand-asset file whose <title>/<desc> describes the mark —
+// e.g. "LOCK.SHOW Spotlight Lens symbol black". Four source files, mirrored
+// across four public trees.
+//
+// OPEN OWNER QUESTION — BRAND-LOCKUP-TITLES, raised not decided. CLAUDE.md
+// permits LOCK.SHOW "ONLY as the domain or an explicitly approved logo/wordmark
+// lockup", and separately bans the BARE form in "titles" and "alt text". An SVG
+// <title> is the accessible name a screen reader announces: it is neither
+// clearly the domain nor clearly the visual lockup. These assets are Codex-owned
+// governed source (scripts/render-og.mjs), so changing their text is not this
+// lane's call. Allowlisted so the surface is measured rather than unscanned;
+// if Maria rules the exemption does not reach accessible text, the fix is in
+// the assets and this list shrinks to zero.
+const LOCKUP_ALLOWLIST = [
+  'public/assets/brand/lockshow-symbol-spotlight-lens-v2-black.svg',
+  'public/assets/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg',
+  'public/assets/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg',
+  'public/assets/brand/lockshow-symbol-spotlight-lens-v2-white.svg',
+  'website-next/public/app/assets/brand/lockshow-symbol-spotlight-lens-v2-black.svg',
+  'website-next/public/app/assets/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg',
+  'website-next/public/app/assets/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg',
+  'website-next/public/app/assets/brand/lockshow-symbol-spotlight-lens-v2-white.svg',
+  'website-next/public/assets/brand/lockshow-symbol-spotlight-lens-v2-black.svg',
+  'website-next/public/assets/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg',
+  'website-next/public/assets/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg',
+  'website-next/public/assets/brand/lockshow-symbol-spotlight-lens-v2-white.svg',
+  'website-next/public/brand/lockshow-symbol-spotlight-lens-v2-black.svg',
+  'website-next/public/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg',
+  'website-next/public/brand/lockshow-symbol-spotlight-lens-v2-master-lime.svg',
+  'website-next/public/brand/lockshow-symbol-spotlight-lens-v2-white.svg',
+  'website-next/public/og/lockshow-og-private-events-v1.svg',
+  'website-next/public/og/lockshow-og-production-v1.svg',
+  'website-next/public/og/lockshow-og-professional-buyers-v1.svg',
+  'website-next/public/og/lockshow-og-source-confirmer-v1.svg',
+  'website-next/public/og/lockshow-social-artist-radar-square-v1.svg',
+  'website-next/public/og/lockshow-story-private-events-v1.svg',
+]
 
 // ── DATED DEFERRAL · src/** (the AUTHENTICATED APP) ─────────────────────────
 // CODE-WEB-021A scopes the naming sweep to the public WEBSITE and the public
@@ -128,10 +166,19 @@ const lines = (t) => t ? t.split('\n').filter(Boolean) : []
 // the brand clean. A gate that names a surface must read it.
 const SRC = [
   ...lines(sh("git ls-files 'website-next/app' 'website-next/components' 'website-next/lib' 'website-next/messages' 'website-next/content'")),
-  ...lines(sh("git ls-files 'website-next/public/app'")),
+  ...lines(sh("git ls-files 'website-next/public'")),
+  ...lines(sh("git ls-files 'public'")),
   ...lines(sh("git ls-files 'src'")),
   'index.html',
-].filter((f) => /\.(tsx|ts|jsx|js|json|css|html)$/.test(f) && existsSync(f))
+  // SVG IS A PUBLIC SURFACE (independent review P1). The extension filter had
+  // no `svg`, and `website-next/public/og/og-default.svg` carried a rendered
+  // `<text>LOCK</text>` wordmark. scripts/render-og.mjs draws the PNGs from
+  // those SVGs, and lib/site.ts:16 makes og-default.png the site-wide
+  // `og:image` — so the card shown on every WhatsApp, Facebook and LinkedIn
+  // share of lock.show was drawn from a source carrying the prohibited form.
+  // The founder ruling names "social text" explicitly. Both public asset trees
+  // are in scope now, at zero debt.
+].filter((f) => /\.(tsx|ts|jsx|js|json|css|html|svg)$/.test(f) && existsSync(f))
 
 let webHits = 0, appHits = 0
 for (const f of SRC) {

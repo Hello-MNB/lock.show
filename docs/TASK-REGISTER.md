@@ -4165,3 +4165,65 @@ separator), L2/L3 (`test-visual-regression`'s header still documents the removed
 and `--update` still prints "0 of 28 match"), L4 (the `@scope` key churns on a no-op rename), L5, L7,
 P1 (`og-default.svg` carries a bare LOCK wordmark; the served PNG unverified), P2.
 
+
+## BRAND-OG — the share card everyone actually sees was drawn from a bare wordmark
+
+**Increment:** BRAND-OG · **Source:** QA-INDEP-02 finding **P1** · **HEAD at open:** `0a1294c`
+**Files:** `website-next/public/og/og-default.svg`, `website-next/public/og/og-default.png`,
+`scripts/test-brand-naming.mjs`
+
+`website-next/lib/site.ts:16` makes `og/og-default.png` the site-wide `og:image`, so it is the card
+rendered on every WhatsApp, Facebook, LinkedIn and Slack share of any page on the site. Its governed
+source drew the brand as a bare wordmark:
+
+```
+  <!-- LOCK wordmark -->
+  <text x="113" y="160" … font-size="52" …>LOCK</text>
+```
+
+The founder ruling of 17 Aug binds "titles, metadata, structured data, social text". The share card
+is the most-seen social surface the site has, and **no clause of the brand gate could reach it** —
+every clause filtered to `tsx|ts|jsx|js|json|css|html`, and the OG source is `.svg` under
+`website-next/public`, which was not in SRC at all. The gate had been green while the widest-reach
+brand surface was unscanned.
+
+**Repair.** The wordmark reads `LOCK SHOW`; `node scripts/render-og.mjs` re-rendered the PNG
+(exit 0, `1200×630` preserved, 55619 → 57857 bytes). The gate's SRC now includes
+`website-next/public` and `public`, and the extension filter includes `svg`: **49 → 131** files.
+
+**P1's own residual, closed by execution.** The reviewer wrote *"I did not inspect the PNG's pixels,
+so whether the served image shows 'LOCK' is unconfirmed — the source asset does."* A probe replayed
+`render-og.mjs`'s exact pipeline (inline SVG in HTML, same viewport, same engine) and measured the
+laid-out element, then compared its own screenshot to the committed file:
+
+```
+wordmark          : {"found":true,"textContent":"LOCK SHOW","x":113,"y":112,"w":274,"h":60}
+right edge / 1200 : 387 / 1200
+re-render hash    : c11500822655   committed png hash: c11500822655
+pixel-identical   : true
+```
+
+The committed PNG is bit-identical to what the corrected SVG renders, so the pixels are no longer an
+inference: the served card reads `LOCK SHOW`, and at 274px of a 1200px canvas it does not overflow.
+
+**What widening the scope surfaced: 22 pre-existing violations nobody had measured.** Four brand
+symbol assets, mirrored across four public trees, plus six OG/story templates, carry accessible text
+of the form `<title>LOCK.SHOW Spotlight Lens symbol black</title>`.
+
+> **OPEN OWNER QUESTION — BRAND-LOCKUP-TITLES.** CLAUDE.md permits `LOCK.SHOW` "ONLY as the domain
+> or an explicitly approved logo/wordmark lockup", and separately bans the bare form in "titles" and
+> "alt text". An SVG `<title>` is the **accessible name a screen reader announces** — neither clearly
+> the domain nor clearly the visual lockup. These are Codex-owned governed source, so rewriting their
+> text is not this lane's call. They are allowlisted so the surface is **measured rather than
+> unscanned**; if Maria rules the exemption does not reach accessible text, the fix is in the assets
+> and `LOCKUP_ALLOWLIST` shrinks to zero. Recorded in `docs/OWNER-PENDING.md`.
+
+**Mutation battery — 2/2 caught, restores verified byte-exact by `sha256sum -c`:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **O1** | revert `og-default.svg` to `>LOCK</text>` | `✗ website-next/public/og/og-default.svg:26 bare "LOCK"` → C1 fails. The `.svg` widening is load-bearing, not decorative |
+| **O2** | delete one `LOCKUP_ALLOWLIST` entry | `✗ C2 …/lockshow-og-production-v1.svg: uppercase "LOCK.SHOW" outside an approved lockup (2)`. The allowlist is an exemption the gate enforces, not a list it ignores |
+
+O1 matters because the obvious weaker repair — fixing the SVG and leaving the filter alone — would
+also have shown a green gate, while leaving every other `.svg` brand surface invisible.
