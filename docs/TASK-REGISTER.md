@@ -4835,3 +4835,61 @@ discovered by failing on an invented one.
 **X2 did not land on the first attempt** — my replacement text had the wrong internal spacing, so the
 file was unchanged and the run passed. An unlanded mutation proves nothing; it was re-run with the
 landing verified (`grep -c` 2 → 1) and then failed correctly.
+
+## STORAGE-ISOLATION — the word "storage" appeared in the chain, and none of it was this
+
+**Increment:** STORAGE-ISOLATION · **HEAD at open:** `3e21996`
+**Files:** `scripts/test-storage-isolation.mjs` (new) · `package.json` · `docs/OWNER-PENDING.md`
+
+The controller's priority list names **"RLS/storage/API negative isolation"** and requires a
+**"storage/API bypass"** negative control. No gate in the chain had ever opened `storage.objects`.
+
+**Why the gap survived a chain of 46 gates:** `test-storage-resilience` is about the BROWSER's
+`sessionStorage`/`localStorage` failing soft. Different thing, same word — and the coincidence is
+exactly what made the chain *look* like it had storage covered. Measured before assuming: of the ten
+gates that make claims about migrations, six execute them and four are text-only; none of the ten
+touched `storage.objects`.
+
+**What 001 ships** (`001:213-229`): two buckets and three policies. `evidence_rw` is
+`for all to authenticated using (bucket_id = 'evidence')` — scoped by **bucket and nothing else**. No
+owner. No organization. No Act.
+
+**Executed, not inferred.** Alice writes an evidence object; Bob is a different authenticated account:
+
+```
+[3] BUCKET-ONLY policy (001 shape): any authenticated user reads another artist's evidence   PASS
+    ...and can RENAME it                                                                     PASS
+    ...and can DELETE it                                                                     PASS
+```
+
+Bob read Alice's object, renamed it, and deleted it — each measured, each restored. CLAUDE.md makes
+evidence **per-Act and NON-transferable**, and evidence is the asset the whole product rests on.
+
+**The anon boundary is sound**, which is what makes the above specific rather than a broken harness:
+anon is refused the private bucket and both write paths, while `public-media` reads fine — so the anon
+role works and the refusals are real.
+
+**Two-state, like 041 PART B.** Asserting "Bob is refused" would demand a state nobody authorised;
+asserting "Bob may read" would bless the exposure permanently. The gate reads the installed policy
+shape and requires the behaviour to match it exactly — so the day the policy is narrowed, the gate
+switches branch and *demands* the refusals. Proven by mutation Y1, which tightened the policy to
+`owner = auth.uid()` and turned all three lines into refusal assertions that passed.
+
+Raised as **STORAGE-EVIDENCE-SCOPE**. I did not write the narrowing migration: it is a behaviour change
+for live orgs, and the scope itself is a product question — **owner**, **organization** or **Act**?
+The three give different answers for a representative acting on an artist's behalf.
+
+**Mutation battery — 3 injected into 001, 3 caught, restores byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **Y1** | the evidence policy is tightened to `owner = auth.uid()` | the gate switches to the SCOPED branch and proves all three refusals |
+| **Y2** | `media_write` loses `to authenticated` | `anon cannot write to public-media either` |
+| **Y3** | the evidence bucket is marked `public` | `the evidence bucket is PRIVATE (public=false)` |
+
+**A cast artifact in my own check.** `boolean::text` yields `'true'`; psql's default boolean *display*
+is `'t'`. The RLS check compared an explicit cast against the display form and failed on a table whose
+RLS is plainly enabled. Both spellings now sit in this file, with the reason written down.
+
+**Stated limit:** this measures the DATABASE half. Supabase's real storage API adds its own
+path-prefix rules on top, and nothing here proves those.
