@@ -4893,3 +4893,67 @@ RLS is plainly enabled. Both spellings now sit in this file, with the reason wri
 
 **Stated limit:** this measures the DATABASE half. Supabase's real storage API adds its own
 path-prefix rules on top, and nothing here proves those.
+
+## LINK-DEADSTATES — the stale-deep-link control was proven against a model, not the mechanism
+
+**Increment:** LINK-DEADSTATES · **HEAD at open:** `401fc0e`
+**Files:** `scripts/test-link-deadstates.mjs` (new) · `scripts/test-link-integrity.mjs` · `package.json`
+
+Two findings, from the same question the last two runs asked: *is this proven, or only written?*
+
+### 1 — the one gate in the chain that skipped and still passed
+
+`test-link-integrity` degraded to
+`⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X12 are UNPROVEN in this run.` **and exited 0.**
+Measured against its siblings: `test-waitlist-capture`, `test-grant-scope`, `test-passport-version` and
+`test-storage-isolation` all `process.exit(1)`. So in any environment without PostgreSQL — CI, a fresh
+clone, a container that lost the cluster — twelve executed assertions vanished and the chain still
+reported success. That is the rule this repo states everywhere else, and the controller's step 8 states
+again: **a skipped test is not a pass.**
+
+It now fails closed, and the path was **executed** rather than reasoned about — PostgreSQL was actually
+stopped, the gate run, and the exit code observed:
+
+```
+$ pg_ctlcluster 16 main stop && npm run test:link-integrity
+✖ LINK INTEGRITY: no local PostgreSQL. X1..X12 assert what the DATABASE decides —
+  a skip would leave the link service unproven while reporting success, so it is NOT a pass.
+exit=1
+```
+
+### 2 — the six dead states were proven against a JavaScript re-implementation
+
+`test-link-integrity` covers them twice: `S8` as a regex over `resolve_share_link`'s SQL text, and `R5`
+against a **JS model of the precedence rule** with its own fixtures. Both are useful; neither is the
+mechanism. **A model of a rule agrees with itself no matter what the database does** — reorder the SQL
+so `revoked` stops shadowing `expired`, or add a status to the CHECK vocabulary and not to the function,
+and both checks keep passing.
+
+The new suite asks the FUNCTION. Every outcome comes from `select public.resolve_share_link(...)`:
+`not_found` (unknown and malformed), `revoked` (four ways — status, timestamp, `replaced`,
+`unpublished`/`withdrawn`), `expired` (two ways), `wrong_recipient`, `superseded_not_permitted`, and
+`ok`. **Precedence is established by constructing rows that are in two dead states at once** and
+asserting which branch wins — the one thing neither a regex nor a model can do.
+
+Also proven: a **superseded** version still resolves, because 041 binds a recipient to the snapshot they
+were given; the open receipt is idempotent under a repeated key and refused on a dead link; and anon may
+ask, receives a reason without a snapshot, and cannot read `share_link` to enumerate tokens.
+
+**Three schema invariants learned by RUNNING, not reading**, each now asserted in its own right:
+`tracking_disclosed` must be true, so **no link can exist without the recipient being told they are
+counted**; `expiry_kind` must agree with `expiry`, because *"NULL means ENDLESS — a deliberate choice,
+not a missing value"*; and a link **cannot** point at a nonexistent version — the FK refuses it, and
+`on delete cascade` removes links with their version. That last one made `resolve_share_link`'s
+`pv not found` branch **unreachable, defensive code**, which is a better fact than the test I set out to
+write, so it is what the suite asserts.
+
+**Mutation battery — 3 injected into 041, 3 caught, restores byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **Z1** | precedence reordered so `expired` shadows `revoked` | `revoked beats expired` (both forms) — the drift the JS model cannot see |
+| **Z2** | the idempotency unique index removed | the function raises `no unique or exclusion constraint matching the ON CONFLICT specification` — caught, but by a hard error rather than by a behavioural check, which is why Z3 exists |
+| **Z3** | `on conflict … do nothing` → `do update`, dedupe lost while the function keeps working | `the SAME idempotency key does not record a second — second=t` |
+
+Z2 is recorded honestly: it exits 1, so the chain is red, but it aborts rather than failing a named
+check. Z3 is the mutation that proves the idempotency assertions are load-bearing.

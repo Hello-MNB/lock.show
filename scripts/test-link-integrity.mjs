@@ -597,8 +597,18 @@ console.log('\nRUNTIME — the mint precondition rule (pure, really executed)')
 }
 
 // ── EXECUTED LOCALLY ───────────────────────────────────────────────────────
+// FAIL CLOSED, like every sibling. This was the ONE executed-capable gate in the
+// chain that degraded to a skip and still exited 0 — measured against
+// test-waitlist-capture, test-grant-scope, test-passport-version and
+// test-storage-isolation, all of which exit 1. So in any environment without
+// PostgreSQL, X1..X12 silently vanished and the chain still reported success,
+// which is precisely the "a skip is NOT a pass" rule this repo states everywhere
+// else and the controller's step 8 states again.
 if (!pgAvailable()) {
-  console.log('\n⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X12 are UNPROVEN in this run.')
+  console.error('\n✖ LINK INTEGRITY: no local PostgreSQL. X1..X12 assert what the DATABASE decides —')
+  console.error('  a skip would leave the link service unproven while reporting success, so it is NOT a pass.')
+  console.error('  Start PostgreSQL 16 and re-run.')
+  process.exit(1)
 } else {
   console.log('\nEXECUTED LOCALLY — real PostgreSQL 16, migration 041 really applied')
   const db = ScratchDb.create('b4_link')
