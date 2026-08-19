@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "66fc8272caacc8c0536dcb6814a59ac4242fa6c0",
+  "head": "32f4eab0e2e46cfe327f7aacbd2ed75b7fc84fdb",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa5/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/arc/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
-  "declaredStepCount": 48,
-  "gateCount": 48,
+  "declaredStepCount": 49,
+  "gateCount": 49,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -144,6 +144,12 @@
       "result": "pass"
     },
     {
+      "id": "test:arc-reach",
+      "step": "test:arc-reach",
+      "summary": "✓ ARC REACH [CONTAINED — trusted by the trigger, refused by the policy]: the reach of a forged active_role_context measured by execution rather than described. set_artist_org() (015:35) does consult the forged value with no membership check, and artists_org (015:22, which supersedes the 008 definition) then refuses the row because its WITH CHECK reads real memberships — so ARC-VALIDATE is a hazard",
+      "result": "pass"
+    },
+    {
       "id": "EMBED-INTEGRITY",
       "step": "test:embed",
       "summary": "✓ EMBED-INTEGRITY: committed embed is conflict-free, single-bundle per route.",
@@ -152,7 +158,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 4.7s",
+      "summary": "✓ Compiled successfully in 7.8s",
       "result": "pass"
     },
     {
@@ -354,9 +360,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 4.46s",
+    "✓ built in 4.48s",
     "✓ 160 modules transformed.",
-    "✓ built in 4.18s"
+    "✓ built in 3.74s"
   ],
   "unclassified": [],
   "skips": [],
