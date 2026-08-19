@@ -3,10 +3,20 @@
 import { useState } from 'react'
 
 // ── First-party waitlist capture (Phase-1) ───────────────────────────────────
-// Writes straight into the LOCK SHOW Supabase (waitlist_signup, migration 026).
+// SUPERSEDED SURFACE, STILL LIVE CODE. components/waitlist-join-form.tsx is the
+// conversion form on /waitlist and components/contact-form.tsx is the form on
+// /contact; this Phase-1 component is currently imported by neither. It is kept
+// rather than deleted — it is prior work and the copy still reads — but it is NOT
+// exempt from the write-path contract: an unmounted component that still POSTs a
+// revoked table is a trap for whoever mounts it next.
+//
+// GAP-W1: writes through the governed RPC join_waitlist (migration 048), not into
+// waitlist_signup. Migration 048 revokes anon INSERT, so the old direct write is
+// a permanent 401 once applied.
+//
 // The values below are the PUBLISHABLE client credentials — they ship in every
-// browser bundle by design; the table is write-only for the public (RLS:
-// anon INSERT only, zero read columns). No third-party service touches the data.
+// browser bundle by design; the table is write-only for the public and has zero
+// public read columns. No third-party service touches the data.
 const SUPABASE_URL = 'https://qexfndiyallwqhhzeerd.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_rEoMmflkjGIoAEUFBab_IA_c6k4tgOu'
 
@@ -31,6 +41,17 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
 }
 
+// Phase-1 offered four roles; B4-70.10 §10.1 defines six Entity/Roles. The two
+// that renamed are mapped, not dropped — a legacy `booking_manager` IS the
+// programmer/booker/buyer Entity/Role, and collapsing it to `other` would throw
+// away the one thing the person told us.
+const ENTITY_ROLE_FOR_LEGACY: Record<string, string> = {
+  artist: 'artist',
+  booking_manager: 'programmer_booker_buyer',
+  producer: 'producer_promoter',
+  other: 'other',
+}
+
 export default function WaitlistForm() {
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'duplicate' | 'error'>('idle')
 
@@ -40,25 +61,32 @@ export default function WaitlistForm() {
     const fd = new FormData(e.currentTarget)
     setState('sending')
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist_signup`, {
+      const legacyRole = String(fd.get('role') || '')
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/join_waitlist`, {
         method: 'POST',
         headers: {
           apikey: SUPABASE_ANON_KEY,
           Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
         },
         body: JSON.stringify({
-          email: String(fd.get('email') || '').trim(),
-          name: String(fd.get('name') || '').trim() || null,
-          role: String(fd.get('role') || '') || null,
-          message: String(fd.get('message') || '').trim() || null,
-          source_page: typeof window !== 'undefined' ? window.location.pathname : null,
-          locale: typeof document !== 'undefined' ? document.documentElement.lang || 'en' : 'en',
+          p_email: String(fd.get('email') || '').trim(),
+          p_name: String(fd.get('name') || '').trim() || null,
+          // The select is `required`, so an unanswered role no longer reaches
+          // here as an empty string that the RPC would refuse as invalid_role.
+          p_entity_role: ENTITY_ROLE_FOR_LEGACY[legacyRole] || 'other',
+          p_message: String(fd.get('message') || '').trim() || null,
+          p_source_page: typeof window !== 'undefined' ? window.location.pathname : null,
+          p_cta_placement: 'phase1_waitlist_form',
+          p_locale: typeof document !== 'undefined' ? document.documentElement.lang || 'en' : 'en',
         }),
       })
-      if (res.ok) setState('done')
-      else if (res.status === 409) setState('duplicate') // unique(lower(email)) — already on the list
+      if (!res.ok) { setState('error'); return }
+      const out = await res.json()
+      // `already` is a success with a different receipt — the 026 path surfaced
+      // the same condition as an HTTP 409 from unique(lower(email)).
+      if (out?.ok === true && out.code === 'joined') setState('done')
+      else if (out?.ok === true && out.code === 'already') setState('duplicate')
       else setState('error')
     } catch {
       setState('error')
@@ -121,7 +149,7 @@ export default function WaitlistForm() {
         <label htmlFor="f-role" style={labelStyle}>
           Role
         </label>
-        <select id="f-role" name="role" style={{ ...inputStyle, appearance: 'none' }}>
+        <select id="f-role" name="role" required style={{ ...inputStyle, appearance: 'none' }}>
           <option value="">— Select —</option>
           <option value="artist">Artist</option>
           <option value="booking_manager">Booking Manager</option>

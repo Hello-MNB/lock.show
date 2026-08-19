@@ -3,10 +3,11 @@
 /**
  * WAITLIST JOIN FORM — B4-70.10 §10.1 form contract.
  *
- * Upgrades the Phase-1 contact form rather than replacing it: the existing
- * components/waitlist-form.tsx stays on /contact untouched, because that is a
- * CONTACT surface with different copy and a different job. This component is
- * the conversion surface.
+ * Upgrades the Phase-1 form rather than replacing it. CORRECTED: an earlier
+ * version of this note said components/waitlist-form.tsx "stays on /contact".
+ * It does not — /contact mounts components/contact-form.tsx, and waitlist-form
+ * .tsx is imported by no route at all. /contact is still a CONTACT surface with
+ * different copy and a different job; this component is the conversion surface.
  *
  * Three things changed structurally from the Phase-1 form:
  *  1. It calls the SECURITY DEFINER RPC join_waitlist (migration 048), not the

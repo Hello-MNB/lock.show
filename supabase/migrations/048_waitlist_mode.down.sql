@@ -6,6 +6,10 @@
 -- waitlist records and consent history". Dropping whatsapp_consent/consent_*
 -- would delete exactly the evidence a consent claim rests on. The columns are
 -- inert without the RPC, so leaving them costs nothing.
+-- BOTH signatures. 048 added p_message, so a database that was upgraded from an
+-- earlier 048 could hold either arity; dropping only one would leave a live RPC
+-- behind a rollback that claims to have removed the governed path.
+drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text,text);
 drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text);
 drop policy if exists wl_definer_insert on public.waitlist_signup;
 create policy wl_anon_insert on public.waitlist_signup

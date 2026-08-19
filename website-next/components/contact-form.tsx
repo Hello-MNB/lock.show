@@ -28,6 +28,36 @@ import { t, CONTACT_SUBJECTS, CONTACT_ROLES } from '../content/copy-matrix'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qexfndiyallwqhhzeerd.supabase.co'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_rEoMmflkjGIoAEUFBab_IA_c6k4tgOu'
 
+/**
+ * GAP-W1 — this form used to POST straight to /rest/v1/waitlist_signup. Migration
+ * 048 revokes anon INSERT on that table, so the direct write becomes a permanent
+ * 401 the moment 048 is applied: every contact message would be silently lost
+ * while the button still said "sending". The governed SECURITY DEFINER RPC
+ * join_waitlist is now the only public way in, for this form as much as for the
+ * waitlist form.
+ *
+ * THE ROLE VOCABULARIES DIFFER, AND THAT IS NOT A BUG TO PAPER OVER. The contact
+ * form offers NINE roles; join_waitlist accepts the SIX Entity/Roles B4-70.10
+ * §10.1 defines. Three contact-only roles (media/press, partner, service
+ * supplier) have no Entity/Role, so they map to `other` — and because a mapping
+ * that only narrows would DESTROY the answer, the person's real selection is
+ * still carried verbatim in the message text, exactly as this form already did.
+ * Nothing the person typed or chose is lost by the move.
+ */
+const ENTITY_ROLE_FOR_CONTACT: Record<string, string> = {
+  artist: 'artist',
+  representative_agency: 'representative_agency',
+  producer_promoter: 'producer_promoter',
+  programmer_booker_buyer: 'programmer_booker_buyer',
+  venue: 'venue',
+  // No Entity/Role exists for these three. `other` is the honest bucket; the
+  // true role survives in the message prefix below.
+  media_press: 'other',
+  partner: 'other',
+  service_supplier: 'other',
+  other: 'other',
+}
+
 type State = 'idle' | 'sending' | 'done' | 'duplicate' | 'error'
 
 export default function ContactForm() {
@@ -43,22 +73,33 @@ export default function ContactForm() {
     const fd = new FormData(e.currentTarget)
     setState('sending')
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist_signup`, {
+      const role = String(fd.get('role') || 'other')
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/join_waitlist`, {
         method: 'POST',
-        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: String(fd.get('email') || '').trim(),
-          name: String(fd.get('name') || '').trim() || null,
-          // Subject and role are carried in the message body so this keeps
-          // working against the 026 shape without a schema change.
-          message: [`[${String(fd.get('subject') || 'other')}]`, `[${String(fd.get('role') || 'other')}]`,
-                    String(fd.get('message') || '').trim()].join(' ').trim(),
-          source_page: typeof window !== 'undefined' ? window.location.pathname : null,
-          locale,
+          p_email: String(fd.get('email') || '').trim(),
+          p_name: String(fd.get('name') || '').trim() || null,
+          p_entity_role: ENTITY_ROLE_FOR_CONTACT[role] || 'other',
+          // Subject and the person's REAL role stay in the message text — the
+          // same prefix this form has always written, so old and new rows read
+          // identically and a narrowed Entity/Role never erases the answer.
+          p_message: [`[${String(fd.get('subject') || 'other')}]`, `[${role}]`,
+                      String(fd.get('message') || '').trim()].join(' ').trim(),
+          p_locale: locale,
+          p_source_page: typeof window !== 'undefined' ? window.location.pathname : null,
+          p_cta_placement: 'contact_form',
+          p_referrer: typeof document !== 'undefined' ? document.referrer || null : null,
         }),
       })
-      if (res.ok) setState('done')
-      else if (res.status === 409) setState('duplicate')
+      // The RPC always answers 200 with a verdict in the body; a non-200 is a
+      // transport or gateway failure, not a rejected submission.
+      if (!res.ok) { setState('error'); return }
+      const out = await res.json()
+      // ONE NEUTRAL RECEIPT. `already` is a success, not a failure — under the
+      // 026 path this arrived as an HTTP 409 and was shown the same way.
+      if (out?.ok === true && out.code === 'joined') setState('done')
+      else if (out?.ok === true && out.code === 'already') setState('duplicate')
       else setState('error')
     } catch { setState('error') }
   }

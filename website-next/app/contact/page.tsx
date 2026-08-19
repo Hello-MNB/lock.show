@@ -85,8 +85,9 @@ export default function Contact() {
               marginBottom: '24px',
             }} />
 
-            {/* First-party waitlist capture — writes to waitlist_signup
-                (migration 026; write-only for the public, operator-only read).
+            {/* First-party capture — writes through the governed RPC
+                join_waitlist (migration 048) into waitlist_signup, which is
+                operator-only read and has no public write path of its own.
                 No Formspree, no third parties — matching the promise below. */}
             <ContactForm />
           </div>

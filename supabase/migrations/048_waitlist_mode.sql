@@ -72,6 +72,11 @@ revoke all on public.waitlist_rate from anon, authenticated;
 -- neutral receipt as a first-time join, so the response never discloses whether
 -- an address is already registered (§10.1: "does not leak whether another
 -- person is registered beyond the same neutral receipt").
+-- The 16-argument version must be DROPPED, not replaced. `create or replace`
+-- cannot change a signature: adding p_message creates a SECOND overload, and
+-- PostgREST would then resolve by whichever argument set the caller sent — an
+-- old client could keep reaching a function this migration thinks it replaced.
+drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text);
 create or replace function public.join_waitlist(
   p_email            text,
   p_entity_role      text,
@@ -88,7 +93,11 @@ create or replace function public.join_waitlist(
   p_utm_medium       text default null,
   p_utm_campaign     text default null,
   p_utm_content      text default null,
-  p_referrer         text default null
+  p_referrer         text default null,
+  -- The 026 `message` column is where CONTACT text has always lived. The
+  -- contact form used to INSERT it directly; now it arrives here, so the
+  -- column keeps its meaning instead of being emptied by the move (GAP-W1).
+  p_message          text default null
 ) returns jsonb
 language plpgsql
 security definer
@@ -120,6 +129,9 @@ begin
   if v_wa is not null and v_wa !~ '^\+?[0-9]{7,15}$' then
     return jsonb_build_object('ok', false, 'code', 'invalid_whatsapp');
   end if;
+  if p_message is not null and length(p_message) > 4000 then
+    return jsonb_build_object('ok', false, 'code', 'message_too_long');
+  end if;
 
   -- CONSENT CANNOT BE ASSERTED WITHOUT ITS RECORD, and cannot be given for a
   -- number that was not supplied. Enforced here as well as in the constraint
@@ -146,13 +158,14 @@ begin
   select not exists (select 1 from public.waitlist_signup where lower(email) = v_email) into v_new;
 
   insert into public.waitlist_signup as w
-    (email, name, entity_role, primary_need, whatsapp_e164, whatsapp_consent,
+    (email, name, entity_role, primary_need, message, whatsapp_e164, whatsapp_consent,
      consent_text, consent_version, consent_locale, consent_at,
      source_page, cta_placement, locale,
      utm_source, utm_medium, utm_campaign, utm_content, referrer, updated_at)
   values
     (v_email, nullif(trim(coalesce(p_name,'')),''), p_entity_role,
-     nullif(trim(coalesce(p_primary_need,'')),''), v_wa, coalesce(p_whatsapp_consent,false),
+     nullif(trim(coalesce(p_primary_need,'')),''), nullif(trim(coalesce(p_message,'')),''),
+     v_wa, coalesce(p_whatsapp_consent,false),
      case when p_whatsapp_consent then p_consent_text end,
      case when p_whatsapp_consent then p_consent_version end,
      case when p_whatsapp_consent then p_locale end,
@@ -167,6 +180,20 @@ begin
      set name             = coalesce(excluded.name, w.name),
          entity_role      = coalesce(excluded.entity_role, w.entity_role),
          primary_need     = coalesce(excluded.primary_need, w.primary_need),
+         -- MESSAGES ACCUMULATE, they do not overwrite. Under the 026 path a
+         -- second contact from the same address hit the unique index, returned
+         -- 409, and the person's text was simply DISCARDED. Coalescing to the
+         -- newest would lose the first message instead; coalescing to the oldest
+         -- would reproduce the 026 loss. Appending loses neither. An exact
+         -- repeat is not appended, so a double-submit does not duplicate text.
+         -- Growth is bounded by the rate limiter (5 per domain+role per hour)
+         -- and by the 4000-character cap on each incoming message.
+         message          = case
+           when excluded.message is null then w.message
+           when w.message is null then excluded.message
+           when w.message = excluded.message then w.message
+           else w.message || E'\n\n--- ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || E' ---\n' || excluded.message
+         end,
          -- CONSENT BINDS TO THE NUMBER IT WAS GIVEN FOR (independent QA, D3).
          -- The previous version let whatsapp_e164 move by coalesce while
          -- whatsapp_consent latched one-way to true, so a second submission
@@ -225,9 +252,9 @@ begin
 end;
 $$;
 
-revoke all on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text) from public;
-grant execute on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text) to anon;
-grant execute on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text) to authenticated;
+revoke all on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text,text) from public;
+grant execute on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text,text) to anon;
+grant execute on function public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text,text) to authenticated;
 
 -- ── 4 · CLOSE THE DIRECT PUBLIC WRITE ───────────────────────────────────────
 -- The RPC above is now the only public path in. 026's anon INSERT policy is

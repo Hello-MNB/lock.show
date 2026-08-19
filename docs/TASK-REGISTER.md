@@ -4227,3 +4227,78 @@ of the form `<title>LOCK.SHOW Spotlight Lens symbol black</title>`.
 
 O1 matters because the obvious weaker repair — fixing the SVG and leaving the filter alone — would
 also have shown a green gate, while leaving every other `.svg` brand surface invisible.
+
+## GAP-W1 — the database stopped accepting the write; the browser never stopped asking
+
+**Increment:** GAP-W1 · **HEAD at open:** `966024a`
+**Files:** `supabase/migrations/048_waitlist_mode{,.down}.sql` ·
+`website-next/components/{contact-form,waitlist-form,waitlist-join-form}.tsx` ·
+`website-next/app/contact/page.tsx` · `scripts/test-waitlist-capture.mjs`
+
+Migration 048 §4 revokes `anon INSERT` on `waitlist_signup` and makes the SECURITY DEFINER RPC
+`join_waitlist` the only public way in. Its gate proved that thoroughly — on the **database** side.
+Two client components still posted `/rest/v1/waitlist_signup` directly:
+
+| file | mounted at | what would happen when 048 applies |
+|---|---|---|
+| `contact-form.tsx:46` | `/contact` | every contact message a permanent 401, while the button still said "sending" |
+| `waitlist-form.tsx:43` | nothing | unmounted, but a trap for whoever mounts it next |
+
+The gate could not see either, because it never opened the client source. **A contract enforced on
+one side only is not enforced**: the database refusing and the browser still asking is precisely how
+a form goes silently dead in production while every test stays green.
+
+**Repair.** Both components now call the RPC. `contact-form` maps its **nine** contact roles onto the
+**six** Entity/Roles §10.1 defines; `waitlist-form` maps Phase-1's four (`booking_manager` →
+`programmer_booker_buyer`, not to `other` — collapsing it would discard the one thing the person
+said). The three contact-only roles (media/press, partner, service supplier) have no Entity/Role and
+map to `other`, **with the real selection still carried verbatim in the message text**, exactly as
+this form already wrote it. Nothing typed or chosen is lost by the move.
+
+**048 gains `p_message`,** so the 026 `message` column keeps its meaning instead of being emptied by
+the move. Migration 048 is DRAFTED and UNAPPLIED, so this is a draft edit, not a live migration.
+
+**A behaviour that improved rather than merely survived.** Under the 026 path a second contact from
+the same address hit `unique(lower(email))`, returned 409, and the person's text was **discarded**.
+Coalescing to the newest would have lost the first instead. The RPC now **appends**, with a dated
+separator; an exact resubmission is not appended twice, and a later submission carrying no message
+cannot clear the stored one.
+
+**Two stale comments corrected.** `waitlist-join-form.tsx`'s header said `waitlist-form.tsx` "stays on
+/contact" — `/contact` mounts `contact-form.tsx`, and `waitlist-form.tsx` is imported by no route at
+all. `contact/page.tsx` still described the write as going to the 026 table.
+
+**The gate gained both halves.** New `[6c]` scans **142** client source files and requires zero direct
+table writes; it is comment-aware, because `contact-form.tsx` documents the old path in its header and
+a raw grep would fail on the very comment explaining the fix. New `[9]`/`[10]` execute the contact
+payload against a real PostgreSQL. `[9]` **parses the real sources** — offered roles from
+`copy-matrix.ts`, the mapping from the component that posts — after the first version retyped the
+mapping into the gate, where it would have drifted silently.
+
+**Mutation battery — 5 injected, 4 caught first time, restores verified byte-exact:**
+
+| # | injected defect | result |
+|---|---|---|
+| **P1** | `contact-form` posts the table again | caught: `[6c] … — website-next/components/contact-form.tsx` |
+| **P2** | a new offered role (`sponsor`) with no mapping | caught: `[9] every role the form OFFERS has an explicit mapping — unmapped: sponsor` |
+| **P3** | `message` coalesces to newest instead of appending | caught: the first message no longer survives |
+| **P4** | delete the `drop function` for the 16-argument signature | **NOT CAUGHT.** See below |
+| **P5** | the unmounted legacy form regresses | caught: `[6c] … — website-next/components/waitlist-form.tsx` |
+
+**P4 is the finding worth keeping.** `create or replace` cannot change a signature, so adding
+`p_message` creates a **second overload** and PostgREST then resolves by whichever argument set the
+caller sent — an old cached client would keep reaching a function the migration believes it replaced.
+Every check passed anyway, because a fresh scratch database has never held the old version: the hazard
+lives only on the path an operator actually takes, applying an updated 048 over a database that ran
+the previous one. New `[0b]` installs a stub 16-argument overload, applies 048 over it, and requires
+exactly one function to survive. Re-running P4 against it now fails with `16,17`.
+
+**A RED I reported rather than repaired away.** `[10]` first failed against **correct** SQL:
+`ScratchDb.scalar` ends in `.split('\n').filter(Boolean).pop()`, so it returns the **last line** of a
+value, and the accumulated message reads as its tail. The append was working; the assertion was wrong.
+Any future check here that can span lines must collapse them **inside the query** — the gate now does,
+and says why.
+
+**A mistake worth recording.** Restoring P5 with `git checkout -- website-next/components/waitlist-form.tsx`
+discarded the uncommitted GAP-W1 edit in that file — the exact hazard the preflight rule names. It was
+re-applied and `sha256sum -c` confirms the result is byte-identical to the pre-mutation file.
