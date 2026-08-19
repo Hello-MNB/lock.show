@@ -4127,7 +4127,7 @@ export const FIELDS = [
         "evidence_ceiling": "supporting",
         "freshness_rule": "refresh-30d",
         "consent_requirement": "artist OAuth",
-        "limitation_text": "Counts render as bands; no subscriber identities enter LOCK",
+        "limitation_text": "Counts render as bands; no subscriber identities enter LOCK SHOW",
         "applicability": "conditional"
       },
       {
@@ -4139,7 +4139,7 @@ export const FIELDS = [
         "evidence_ceiling": "supporting",
         "freshness_rule": "refresh-30d",
         "consent_requirement": "artist OAuth",
-        "limitation_text": "Counts render as bands; no subscriber identities enter LOCK",
+        "limitation_text": "Counts render as bands; no subscriber identities enter LOCK SHOW",
         "applicability": "conditional"
       }
     ]
@@ -7720,7 +7720,7 @@ export const FIELDS = [
         "evidence_ceiling": "verified",
         "freshness_rule": "review-365d",
         "consent_requirement": "bounded magic link",
-        "limitation_text": "Specialist review is scoped; LOCK does not provide legal validity judgments",
+        "limitation_text": "Specialist review is scoped; LOCK SHOW does not provide legal validity judgments",
         "applicability": "conditional"
       }
     ]

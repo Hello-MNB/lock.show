@@ -1,5 +1,5 @@
 // ============================================================
-// LOCK — PUBLIC PASSPORT BOUNDARY CONTRACT (Lane G)
+// LOCK SHOW — PUBLIC PASSPORT BOUNDARY CONTRACT (Lane G)
 //
 // WHAT THIS FILE IS: the vocabulary of the ONE public, shareable, potentially
 // indexable artist Passport surface — terminal states, visibility modes, index

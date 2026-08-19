@@ -178,7 +178,7 @@ function sourceLineFor(c, T) {
   return T.passport.sourceDeclared || 'Artist-declared'
 }
 
-// Proof Unit — LOCK's visual signature. §5.10 provenance-forward order (P-3):
+// Proof Unit — LOCK SHOW's visual signature. §5.10 provenance-forward order (P-3):
 // source identity (human line + method chip) LEADS → claim text (contextLine
 // warm-lead when present, per P-1) → band/value + reviewed date, quiet mono,
 // last. §5.10 warmth layer: when `contextLine` is given (a room-fit sentence

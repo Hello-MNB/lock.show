@@ -92,26 +92,34 @@ const LOCKUP_ALLOWLIST = [
   'website-next/public/og/lockshow-story-private-events-v1.svg',
 ]
 
-// ── DATED DEFERRAL · src/** (the AUTHENTICATED APP) ─────────────────────────
-// CODE-WEB-021A scopes the naming sweep to the public WEBSITE and the public
-// app SHELLS. `src/**` is the authenticated app, explicitly listed as NON-SCOPE
-// for this task, so its 57 remaining tokens are DEFERRED — not ignored, and not
-// silently excluded. They are counted, owned by the app lane, and the budget
-// below MAY ONLY SHRINK: fixing tokens is always allowed, adding any is a gate
-// failure. Recorded 17 Aug 2026.
+// ── src/** (the AUTHENTICATED APP) · DEFERRAL CLOSED AT ZERO ────────────────
+// The dated deferral is retired. It ran 57 → 18 (BRAND-APP-I18N) → 15
+// (BRAND-APP-EMBED) → 0 (BRAND-SRC-ZERO, 2026-08-19), and the budget below is
+// now a FLOOR, not an allowance: any bare "LOCK" reappearing anywhere in src/**
+// is a gate failure with nothing left to absorb it.
 //
-// SHRUNK 57 → 18 (BRAND-APP-I18N) → 15 (BRAND-APP-EMBED), both 2026-08-18.
-// The two i18n catalogues, the RENDERED WORDMARK, and three rendered surfaces an
-// independent reviewer caught me omitting from my own enumeration: the
-// PassportFooter (`passportKit.jsx`, on all four public buyer views — the
-// product's core artifact), the Settings build badge, and `og:site_name` in
-// `publicPassport.js`. My earlier note called the remainder "code identifiers,
-// contracts, analytics labels and one CSS comment"; that was wrong, and the
-// exact-equality budget was freezing real rendered copy behind it. What remains
-// is 15 tokens, and each still needs a per-site judgement — it is a claim to
-// re-check, not a settled classification. The budget MAY ONLY SHRINK.
-const SRC_APP_DEFERRAL = 15
-const SRC_APP_DEFERRAL_DATE = '2026-08-18'
+// WHAT THE LAST 15 ACTUALLY WERE, since the deferral's own note admitted its
+// classification was "a claim to re-check, not a settled classification":
+//   · 3 were COPY, not identifiers — `limitation_text` values written for a
+//     buyer to read ("no subscriber identities enter LOCK SHOW"). They live in a
+//     GENERATED file (`src/lib/registryData.js`), so they were fixed in the
+//     source `docs/registry/F1.csv` and regenerated; hand-editing the artifact
+//     would have been undone by the next generator run. MEASURED, correcting an
+//     inherited claim: these strings are NOT in any bundle today — their only
+//     reader, `registryUniverse.js`, still has zero importers — so they are copy
+//     that WILL render when the Radar layer is wired, not copy rendering now.
+//     Fixing them at source means the wiring inherits the right name.
+//   · 1 was the Anthropic SYSTEM prompt in `src/lib/ai/anthropic.js` — not a
+//     comment: text sent to the model, able to echo the wrong name back into
+//     extracted claims.
+//   · 11 were implementation comments. MEASURED, not assumed: none of their
+//     strings appears in `dist/**` or `website-next/public/app/**`, so none of
+//     them was a PUBLIC surface under the 17 Aug ruling. They were closed as
+//     source hygiene, and this note says so rather than claiming a live defect
+//     was repaired.
+//
+// The `source_brand` data tokens remain exempt under C7, which proves that
+// exemption on every run rather than assuming it.
 
 let failed = false
 const fail = (m) => { failed = true; console.error(`  ✗ ${m}`) }
@@ -205,17 +213,21 @@ for (const f of SRC) {
 if (webHits === 0) ok(`C1 website + public app shells: zero bare "LOCK" across ${SRC.filter((f) => !f.startsWith('src/')).length} files`)
 else fail(`C1 website + public app shells: ${webHits} bare "LOCK" token(s) — this must be zero`)
 
-// EXACT, not "within" (found by mutation L3 of BRAND-APP-I18N). `appHits <=
-// SRC_APP_DEFERRAL` meant the budget could be RAISED and the gate stayed green —
-// a stale budget silently pre-authorises every regression up to its number, and
-// nothing failed when L3 widened 18 back to 57. Exact equality makes the budget
-// self-truthing: it can only move by actually changing the tokens, and fixing a
-// token without lowering it is a STALE-budget failure, which is the same
-// discipline the storage and logical-direction ratchets already use.
-if (appHits === 0) ok('C1 src/** (app lane): zero — the deferral can now be deleted')
-else if (appHits === SRC_APP_DEFERRAL) ok(`C1 src/** (app lane): ${appHits} deferred token(s) — exactly the ${SRC_APP_DEFERRAL} budget dated ${SRC_APP_DEFERRAL_DATE}; NON-SCOPE for CODE-WEB-021A, owned by the app lane`)
-else if (appHits > SRC_APP_DEFERRAL) fail(`C1 src/** (app lane): ${appHits} token(s) EXCEEDS the ${SRC_APP_DEFERRAL} budget — the deferral may only shrink; a new bare "LOCK" was introduced`)
-else fail(`C1 src/** (app lane): only ${appHits} token(s) remain but the budget still says ${SRC_APP_DEFERRAL} — lower it to ${appHits}. A budget larger than reality pre-authorises regressions up to its number`)
+// NO BUDGET SURVIVES A CLOSED DEFERRAL — found by mutation R2 of BRAND-SRC-ZERO.
+// The budget was previously an exact-equality constant, which made it truthful
+// about the COUNT (mutation L3 had shown `<=` let it be silently RAISED). That
+// was not enough. With the deferral closed at zero, R2 reintroduced one bare
+// token AND edited the constant from 0 to 1 — and the gate went green, printing
+// a calm "exactly the 1 budget" line. "MAY ONLY SHRINK" was a COMMENT, never a
+// mechanism, and a dial left sitting at zero is an invitation to turn it.
+//
+// No gate can defend against an edit to its own assertion, and this one does not
+// claim to. What it can refuse to do is SHIP THE DIAL: there is no number here to
+// nudge, so restoring an allowance means re-adding a whole branch structure and
+// arguing for it in a diff, instead of changing `0` to `1` in a line that still
+// reads like routine bookkeeping. The friction is the point.
+if (appHits === 0) ok('C1 src/** (app lane): zero bare "LOCK" — deferral CLOSED 2026-08-19, no budget remains to absorb a regression')
+else fail(`C1 src/** (app lane): ${appHits} bare "LOCK" token(s) — must be zero. The deferral was closed at zero on 2026-08-19; there is no budget, and re-opening one is a deliberate act, not a number change`)
 
 // CLAUSE 7b · the ratchet. The source_brand exemption holds ONLY while nothing
 // consumes it; one consumer converts ~190 dormant tokens into rendered copy.
@@ -310,5 +322,5 @@ if (!'LOCK is here'.match(BARE) || 'LOCK SHOW is here'.match(BARE) || 'lock.show
 
 console.log('')
 if (failed) { console.error('✗ BRAND NAMING: violations above.'); process.exit(1) }
-console.log(`✓ BRAND NAMING: zero bare LOCK in the GATED scope — website source, rendered HTML, public app shells and non-HTML public surfaces; lowercase lock.show URLs preserved. NOT "everywhere": ${appHits} token(s) remain deferred in src/**, and docs/** is out of scope entirely.`)
+console.log(`✓ BRAND NAMING: zero bare LOCK across the whole gated scope — website source, rendered HTML, public app shells, non-HTML public surfaces AND src/** (${appHits} remaining, deferral closed); lowercase lock.show URLs preserved. STILL NOT "everywhere": docs/** is out of scope entirely, and the ${LOCKUP_ALLOWLIST.length} allowlisted lockup assets carry LOCK.SHOW in accessible text pending the BRAND-LOCKUP-TITLES ruling.`)
 process.exit(0)

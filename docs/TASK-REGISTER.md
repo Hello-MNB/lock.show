@@ -4364,3 +4364,56 @@ verified byte-exact by `sha256sum -c`:**
 
 Q1 is the one that matters: it re-injects precisely the behaviour that hid five gates for the whole
 life of this file, and the self-test now refuses it.
+
+## BRAND-SRC-ZERO — the last 15 tokens, and the dial the closed deferral left behind
+
+**Increment:** BRAND-SRC-ZERO · **HEAD at open:** `f2a2e8b`
+**Files:** `docs/registry/F1.csv` · `src/lib/registryData.js` (regenerated) · 12 files across `src/**` ·
+`scripts/test-brand-naming.mjs`
+
+The `src/**` deferral ran 57 → 18 → 15 and is now **CLOSED AT ZERO**. Its own note admitted the
+remainder was *"a claim to re-check, not a settled classification"*, so each of the 15 was classified
+by measurement rather than inherited:
+
+| n | what they actually were | how they were closed |
+|---|---|---|
+| **3** | `limitation_text` — **copy a buyer reads**, not identifiers | fixed in the SOURCE `docs/registry/F1.csv` and regenerated. `registryData.js` says `GENERATED — do not hand-edit`; editing the artifact would have been undone by the next generator run |
+| **1** | the Anthropic **SYSTEM prompt** (`src/lib/ai/anthropic.js`) — not a comment: text sent to the model, able to echo the wrong name back into extracted claims | edited in place |
+| **11** | implementation comments | edited in place |
+
+**An inherited claim corrected by measurement.** The BRAND-NAME record called the three
+`limitation_text` tokens "rendered-class copy", and I first wrote that they "reach the Radar UI".
+They do not — not today. Their only reader, `registryUniverse.js`, still has **zero importers**, and
+neither string appears in `dist/**` or `website-next/public/app/**`. They are copy that **will**
+render when the Radar layer is wired. Fixing them at source means the wiring inherits the right name;
+saying they render now would have been a claim I had not checked.
+
+**And the 11 comments are hygiene, not a live repair.** Measured the same way: none of their strings
+reaches `dist/**` or the embedded app bundle, so none was a PUBLIC surface under the 17 Aug ruling.
+The register says so rather than dressing a tidy-up as a defect fix.
+
+**Mutation battery — 4 injected, 3 caught, 1 exposed a real hole. Restores byte-exact:**
+
+| # | injected defect | result |
+|---|---|---|
+| **R1** | a bare `LOCK` reappears in `src/**` | caught: `1 token(s) EXCEEDS the 0 budget` |
+| **R2** | reintroduce the token **and edit the budget 0 → 1** | **NOT CAUGHT.** Green, printing a calm *"exactly the 1 budget"* |
+| **R3** | the SYSTEM prompt regresses | caught |
+| **R4** | the CSV regresses and is **regenerated** | caught, `2 token(s)` — proving the generated-file path is covered end to end, CSV → generator → gate |
+
+**R2 is the finding.** Mutation L3 had already shown that `<=` let the budget be raised silently, and
+the repair was exact equality — which made the budget truthful about the **count** while leaving the
+**dial** itself freely editable. *"MAY ONLY SHRINK"* was a comment, never a mechanism. With the
+deferral closed, a budget sitting at zero is an invitation to turn it, and turning it looks like
+routine bookkeeping in a diff.
+
+So the dial is gone: `SRC_APP_DEFERRAL` and `SRC_APP_DEFERRAL_DATE` are deleted and the four-branch
+block is now a flat `appHits === 0`. No gate can defend against an edit to its own assertion and this
+one does not claim to — but restoring an allowance now means re-adding a whole branch structure and
+arguing for it, instead of changing `0` to `1`. R1 and R3 were re-run against the dial-free gate and
+still fail.
+
+**A ReferenceError caught only by executing.** A block replacement swallowed the
+`const SRC_APP_DEFERRAL` declaration and the follow-up string replace silently matched nothing, so
+the gate parsed fine and died at runtime on the line that mattered. Exactly the case GATE DISCIPLINE
+names: *"syntax checks cannot see a ReferenceError; if a path matters, execute it."*

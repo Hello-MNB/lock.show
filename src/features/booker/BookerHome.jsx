@@ -60,7 +60,7 @@ export default function BookerHome() {
           </div>
         </div>
 
-        {/* ── SECONDARY — what a LOCK passport is (calm, professional) ── */}
+        {/* ── SECONDARY — what a LOCK SHOW passport is (calm, professional) ── */}
         <div className="mt-4 rounded-[22px] border border-line bg-bg2 p-7">
           <h2 className="font-display text-lg font-bold text-ink">{T.booker.whatIsTitle}</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">

@@ -119,7 +119,7 @@ export function deriveWidgetState(info, { busy = false, error = false, saved = f
   if (saved) return WIDGET_STATES.SAVED       // just landed — brief named receipt window
   const c = widgetCounts(info)
   if (info.state === 'locked') return WIDGET_STATES.EMPTY // "Not needed yet" — the quiet empty variant
-  if (c.found > 0) return WIDGET_STATES.FOUND // ✦ LOCK found something — waiting for the artist
+  if (c.found > 0) return WIDGET_STATES.FOUND // ✦ LOCK SHOW found something — waiting for the artist
   if (c.disputed > 0 && c.confirmed === 0) return WIDGET_STATES.NOT_MINE // flagged "not mine" — recorded, never deleted
   if (c.confirmed === 0 && c.review === 0) return WIDGET_STATES.EMPTY // only invitations here so far
   if (c.open === 0 && c.confirmed > 0) return WIDGET_STATES.READY // confirmed, no gaps

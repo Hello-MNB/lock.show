@@ -1,4 +1,4 @@
-// LOCK analytics — first-party product events.
+// LOCK SHOW analytics — first-party product events.
 //
 // Two sinks, both best-effort (analytics must NEVER break a user action):
 //   1. localStorage ring buffer — dev inspection, offline-safe, unchanged.

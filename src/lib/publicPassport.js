@@ -1,5 +1,5 @@
 // ============================================================
-// LOCK — PUBLIC PASSPORT BOUNDARY RULE (Lane G)
+// LOCK SHOW — PUBLIC PASSPORT BOUNDARY RULE (Lane G)
 //
 // The one place the PUBLIC passport resolution RULE lives. Pure functions only:
 // no network, no Supabase client, no filesystem, no ambient clock (every

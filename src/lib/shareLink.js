@@ -1,5 +1,5 @@
 // ============================================================
-// LOCK — SHARE LINK CONTRACT (P0-PRIVACY lane B1)
+// LOCK SHOW — SHARE LINK CONTRACT (P0-PRIVACY lane B1)
 //
 // The one place the link-resolution RULE lives. Pure functions only: no
 // network, no Supabase client, no clock of its own (every function takes
