@@ -4725,3 +4725,56 @@ render and will fail loudly on a machine that has the brand faces. It fails loud
 the gate's disclosure does not mention font dependence. **L3** — `[6c]` scans tracked *and* untracked
 files while `test-brand-naming` still uses `git ls-files` alone; same lesson, one gate. **L4** — the
 committed app bundle is a served client artifact outside `[6c]`'s scope (grepped: zero waitlist hits).
+
+## QA4-RESIDUAL — closing the three findings I recorded and did not fix
+
+**Increment:** QA4-RESIDUAL · **HEAD at open:** `d9b8dd7`
+**Files:** `scripts/{test-og-assets,test-brand-naming,test-waitlist-capture}.mjs` ·
+`docs/{OWNER-PENDING,TASK-REGISTER}.md`
+
+Last run I closed QA-INDEP-04's H and M findings and left L1, L3 and L4 recorded. That is the exact
+pattern that let L4/L5 sit open through a whole increment before, so they are closed here.
+
+### L1 — the byte comparison pinned a font environment and said so nowhere
+
+The share cards declare **Manrope, DM Mono, Georgia, Heebo, Space Mono**, embed no `@font-face` and no
+font data. The gate compares bytes, which makes whatever this container renders canonical — so on a
+machine that *has* the faces the chain fails, and the failure reads like "someone edited the card".
+
+**The obvious oracle was wrong, and measuring showed it.** `document.fonts.check('12px "Manrope"')`
+returned **true for all five** on a container fontconfig says has none of them: it reports whether the
+string can be rendered *including fallback*, which is true of any family name at all. An oracle that
+answers yes for a font nobody installed is worse than no oracle. Each family is now compared
+**behaviourally** — same advance width as a deliberately nonexistent family means the renderer fell
+back. Result: **0 of 5 resolvable**, confirming the reviewer.
+
+The environment is measured, named in the summary, and pinned in `FONT_BASELINE`. A machine with the
+faces now gets *"this machine resolves [...], the baseline was rendered with [] — a byte mismatch below
+would be caused by the FONTS, not by an edited card"* instead of a bare hash difference. The gate's
+closing line now states plainly that these are fallback renders and **not** proof the cards look as
+designed. Raised for Maria as **OG-FONTS** — embedding the faces is a licensing question, not a
+technical one.
+
+### L3 — the same lesson applied to one gate and not its neighbour
+
+`[6c]` was widened to `git ls-files --cached --others` with the note *"the working tree, not only the
+index"*; `test-brand-naming` was left on `git ls-files` in the same increment. Now both scan tracked
+and untracked files.
+
+### L4 — the source was gated and the shipped artifact was not, for the third time
+
+What a browser executes at `www.lock.show/app/*` is the committed bundle under
+`website-next/public/app/assets/*.js`, which no clause opened. New `[6d]` scans it. A minified bundle
+cannot take the `.from(x)` source contract — minification makes every `.from(` ambiguous — but what is
+decidable in an artifact is the **string**: the revoked table name and any direct postgrest table path
+must not appear in shipped bytes. Zero today.
+
+**Mutations — 3 injected, 3 caught, restores byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **W1** | an **untracked** website file carrying a bare `LOCK` | `✗ website-next/lib/zz-untracked.ts:1 bare "LOCK"` |
+| **W2** | the shipped bundle gains `fetch("/rest/v1/waitlist_signup")` | `FAIL [6d] … index-CWOHorNj.js (2)` |
+| **W3** | the font environment diverges from `FONT_BASELINE` | `FAIL … this machine resolves [], the baseline was rendered with ["Manrope"]` |
+
+**Every QA-INDEP-04 finding is now closed** — 3 H, 5 M, 4 L, none carried forward.

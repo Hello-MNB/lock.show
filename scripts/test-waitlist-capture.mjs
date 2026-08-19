@@ -337,6 +337,32 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
     files.length >= 20, `scanned ${files.length} files`)
   check('[6c] ...and it can see the governed path, so the scanner works',
     rpcCallers >= 2, `${rpcCallers} file(s) call ${RPC_PATH}`)
+
+  // [6d] THE SHIPPED ARTIFACT, NOT ONLY THE SOURCE — QA-INDEP-04, L4. The scan
+  // above reads website-next/{app,components,lib} and src. But the thing a browser
+  // actually executes at www.lock.show/app/* is the COMMITTED BUNDLE under
+  // website-next/public/app/assets/*.js, which no clause opened. That is H2's
+  // finding in another place: the source was gated and the artifact was not, and
+  // this lane has now been caught by that shape three times.
+  //
+  // A minified bundle cannot be read with the `.from(x)` rule — the source
+  // contract above — because minification makes every `.from(` ambiguous. What IS
+  // decidable in an artifact is the string: the table name and any postgrest table
+  // path must not appear in shipped bytes at all.
+  const bundles = execFileSync('git', ['ls-files', 'website-next/public/app'],
+    { encoding: 'utf8' }).split('\n').filter((f) => /\.js$/.test(f) && existsSync(f))
+  const shipped = []
+  for (const f of bundles) {
+    const code = readFileSync(f, 'utf8')
+    const hits = (code.match(/waitlist_signup/g) || []).length
+      + (code.split(RPC_PATH).join('').match(/\/rest\/v1\/[A-Za-z0-9_$]/g) || []).length
+    if (hits) shipped.push(`${f} (${hits})`)
+  }
+  check('[6d] the SHIPPED app bundle names no revoked table and no direct postgrest path',
+    shipped.length === 0, shipped.join(', '))
+  check('[6d] ...and bundle files were actually opened, so the check is not vacuous',
+    bundles.length > 0, `${bundles.length} bundle file(s)`)
+  console.log(`        shipped artifact: ${bundles.length} committed bundle file(s) scanned`)
   console.log(`        scanned ${files.length} client source files · ${rpcCallers} call the governed RPC · ${destinations} table destination(s) named · ${offenders.length} unresolved or unallowed`)
 }
 

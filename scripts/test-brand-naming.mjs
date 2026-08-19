@@ -193,11 +193,17 @@ const lines = (t) => t ? t.split('\n').filter(Boolean) : []
 // actually load from lock.show/app, it is committed, `verify` never rebuilds
 // it, and it still carried `brand:"LOCK"` from 27 July while this gate reported
 // the brand clean. A gate that names a surface must read it.
+// TRACKED **and** UNTRACKED (QA-INDEP-04, L3). The waitlist gate was widened to
+// `--cached --others` in the same increment that left this one on `git ls-files`
+// alone — the same lesson applied to one gate and not its neighbour. A brand
+// violation in a file that exists on disk but has not been added is still a brand
+// violation, and "the working tree, not only the index" is the rule either way.
+const tracked = (globs) => lines(sh(`git ls-files --cached --others --exclude-standard ${globs}`))
 const SRC = [
-  ...lines(sh("git ls-files 'website-next/app' 'website-next/components' 'website-next/lib' 'website-next/messages' 'website-next/content'")),
-  ...lines(sh("git ls-files 'website-next/public'")),
-  ...lines(sh("git ls-files 'public'")),
-  ...lines(sh("git ls-files 'src'")),
+  ...tracked("'website-next/app' 'website-next/components' 'website-next/lib' 'website-next/messages' 'website-next/content'"),
+  ...tracked("'website-next/public'"),
+  ...tracked("'public'"),
+  ...tracked("'src'"),
   // QA-INDEP-03 swept every tracked non-docs file with this gate's own matcher and
   // found four carriers outside SRC. Three are now in scope:
   //   H4 · vite.config.js:60-61 set the PWA manifest `name`/`short_name` to a bare
@@ -212,7 +218,7 @@ const SRC = [
   //        shipped stylesheet, while every sibling directory was already scanned.
   //        Its two hits are CSS comments the build strips, but a `content: "LOCK"`
   //        declaration added there renders, and the gate was blind to it.
-  ...lines(sh("git ls-files 'website-next/styles'")),
+  ...tracked("'website-next/styles'"),
   'vite.config.js',
   'server/index.js',
   'index.html',

@@ -76,6 +76,45 @@ check('the OG source directory contains SVGs to check', svgs.length >= 5, `${svg
 
 const sha = (b) => createHash('sha256').update(b).digest('hex')
 const browser = await chromium.launch()
+
+// ── L1 · THE BYTE COMPARISON PINS A FONT ENVIRONMENT, AND SAID SO NOWHERE ─────
+// QA-INDEP-04: the SVGs declare Manrope, DM Mono, Georgia, Heebo and Space Mono,
+// embed no @font-face and no font data, and this container has none of those
+// families. So the committed PNGs are FALLBACK renders, and comparing bytes makes
+// them canonical: on a machine that does have the brand faces, render-og.mjs
+// produces different pixels and this gate fails. It fails LOUDLY, which is why it
+// is not a hole — but a byte mismatch reads like "someone edited the card", and
+// the true cause would be "your machine has the fonts and the baseline does not".
+//
+// So the environment is measured, named in the summary, and pinned. Asked of the
+// BROWSER rather than fontconfig, because what matters is what the renderer can
+// resolve, not what the OS has installed.
+const DECLARED_FAMILIES = ['Manrope', 'DM Mono', 'Georgia', 'Heebo', 'Space Mono']
+// The families available WHEN THE COMMITTED PNGS WERE RENDERED. Changing this is
+// a deliberate act: it means the baseline images must be re-rendered and looked at.
+const FONT_BASELINE = []
+{
+  // MEASURED BEHAVIOURALLY, not asked. `document.fonts.check('12px "Manrope"')`
+  // returned TRUE for all five families on a container that fontconfig says has
+  // none of them — it reports whether the string can be rendered, fallback
+  // included, which is true of any family name at all. An oracle that answers yes
+  // for a font nobody installed is worse than no oracle. So each family is
+  // compared against a deliberately nonexistent one: identical advance width for
+  // the same string means the renderer fell back, i.e. the family is NOT present.
+  const page = await browser.newPage()
+  const available = await page.evaluate((fams) => {
+    const c = document.createElement('canvas').getContext('2d')
+    const probe = 'MWQ@1il — mixed 0O'
+    const widthIn = (f) => { c.font = `48px "${f}", monospace`; return c.measureText(probe).width }
+    const fallback = widthIn('__b4_no_such_family__')
+    return fams.filter((f) => widthIn(f) !== fallback)
+  }, DECLARED_FAMILIES)
+  await page.close()
+  check('the font environment matches the one the committed PNGs were rendered in',
+    JSON.stringify(available.sort()) === JSON.stringify([...FONT_BASELINE].sort()),
+    `this machine resolves ${JSON.stringify(available)}, the baseline was rendered with ${JSON.stringify(FONT_BASELINE)} — a byte mismatch below would be caused by the FONTS, not by an edited card. Re-render with \`node scripts/render-og.mjs\` and review the cards visually before updating FONT_BASELINE`)
+  console.log(`        fonts: ${DECLARED_FAMILIES.length} families declared by the SVGs, ${available.length} resolvable here${available.length === 0 ? ' — every card is a FALLBACK render' : ''}`)
+}
 try {
   for (const f of svgs) {
     const { width, height } = sizeFor(f)
@@ -108,5 +147,5 @@ try {
 
 console.log('')
 if (failures) { console.log(`✗ OG ASSETS: ${failures} failure(s).`); process.exit(1) }
-console.log(`✓ OG ASSETS: all ${svgs.length} share cards re-rendered and byte-identical to their committed PNGs — the artifact social platforms actually fetch is the one the governed source draws. NOT proven here: what any platform's own scaler or cache serves.`)
+console.log(`✓ OG ASSETS: all ${svgs.length} share cards re-rendered and byte-identical to their committed PNGs, and every served PNG has a governed SVG source — the artifact social platforms actually fetch is the one the governed source draws. NOT proven here: what any platform's own scaler or cache serves, and NOT that the cards look as designed — the SVGs declare ${DECLARED_FAMILIES.length} font families, embed none, and this environment resolves none of them, so these are FALLBACK renders pinned by FONT_BASELINE (see OG-FONTS in docs/OWNER-PENDING.md).`)
 process.exit(0)
