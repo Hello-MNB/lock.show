@@ -68,7 +68,16 @@ begin
   -- contemplate — would have failed silently, which is worse than failing. And it
   -- made this file's own "a service-role key can still write any value" comment
   -- false, along with the sentence the founder was given. Same role rule as 050.
-  if current_setting('role', true) not in ('anon', 'authenticated') then
+  -- `current_setting('role')` RECORDS HOW A ROLE WAS ASSUMED, NOT WHICH IS
+  -- EFFECTIVE — QA-INDEP-09, M4. Under `set session authorization authenticated`
+  -- the GUC reads 'none' while current_user is 'authenticated', and the pin does
+  -- not fire. That needs superuser, so it is not reachable through PostgREST — but
+  -- the accurate claim was "callers whose role GUC is set", not "anon and
+  -- authenticated", and current_user is the robust test. Both are checked now, so
+  -- the sentence and the code say the same thing. An unset GUC reads NULL, and
+  -- `NULL not in (…)` is NULL, so the fall-through is already fail-safe.
+  if coalesce(current_setting('role', true), current_user) not in ('anon', 'authenticated')
+     and current_user not in ('anon', 'authenticated') then
     return new;
   end if;
   if tg_op = 'INSERT' then

@@ -173,9 +173,21 @@ console.log('\n[2f] passport_versions — THE TABLE I DID NOT TEST, and the one 
   // and `act` has RLS, so an artist could not see their own second Act row. Both
   // failures are silent unless the legitimate case is executed, so it is.
   const ACT2 = '00000000-0000-0000-0000-00000000ac02'
-  db.exec(`insert into public.act (id, person_id, organization_id, stage_name, is_default)
-           select '${ACT2}', person_id, organization_id, 'Second Act', false from public.act where id='${MINE}'
+  // THE SHAPE THE CLIENT ACTUALLY SENDS — QA-INDEP-09, H1. This fixture used to
+  // copy `organization_id` from the default Act, which src/lib/db.js:156 never
+  // does: createAct() sends person_id, stage_name, genre and is_default only. So
+  // the assertion below ("I can still publish for my own second Act") was true of
+  // the fixture and FALSE of the application — 041's organisation half refused
+  // the artist's own publish, because act.organization_id was NULL and nothing in
+  // the schema filled it. 051 supplies the missing inheritance; this fixture now
+  // exercises it instead of hiding it.
+  db.exec(`insert into public.act (id, person_id, stage_name, genre, is_default)
+           select '${ACT2}', person_id, 'Second Act', 'techno', false from public.act where id='${MINE}'
            on conflict (id) do nothing`)
+  check('[2f] precondition: the second Act inherits its artist\'s organisation (051), as createAct() leaves it unset',
+    db.scalar(`select coalesce(organization_id::text,'NULL') from public.act where id='${ACT2}'`)
+      === db.scalar(`select coalesce(owner_organization_id::text,'NULL') from public.artists where id='${MINE}'`),
+    'without 051 the client-created Act carries NULL and 041 refuses the artist\'s OWN publish')
   check('[2f] ...and I can still publish for MY OWN second Act — the fix does not cost multi-Act',
     db.try(`insert into public.passport_versions (artist_id, act_id, snapshot, state, audience)
             values ('${MINE}','${ACT2}','{"act2":1}'::jsonb,'published','booker')`, as).ok,
@@ -282,8 +294,9 @@ console.log('\n[2h] both layers, each alone, on a default AND a non-default Act'
 {
   const SPOOF2 = '00000000-0000-0000-0000-0000000000f2'
   const ACT3 = '00000000-0000-0000-0000-00000000ac03'
-  db.exec(`insert into public.act (id, person_id, organization_id, stage_name, is_default)
-           select '${ACT3}', person_id, organization_id, 'Victim Act 3', false
+    // Shipped shape here too — see [2f].
+  db.exec(`insert into public.act (id, person_id, stage_name, genre, is_default)
+           select '${ACT3}', person_id, 'Victim Act 3', 'psytrance', false
              from public.act where id='${MINE}' on conflict (id) do nothing`)
   db.exec(`insert into public.passport_versions (artist_id, act_id, snapshot, state, audience)
            values ('${MINE}','${ACT3}','{"victim3":1}'::jsonb,'published','booker')`, as)
@@ -326,11 +339,26 @@ console.log('\n[2h] both layers, each alone, on a default AND a non-default Act'
                 select p_act is null or p_act = p_artist or exists (select 1 from public.act a
                   where a.id = p_act and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)) $w$`),
      !attack('00000000-0000-0000-0000-0000000000f5', ACT3, 'booker')))
-  db.exec(readFileSync('supabase/migrations/041_link_service_and_version_store.sql', 'utf8')
-    .split('create or replace function public.pv_act_in_artist_lineage')[1]
-    .split('$$;')[0].replace(/^/, 'create or replace function public.pv_act_in_artist_lineage') + '$$;')
-  check('[2h] ...and the shipped predicate is restored afterwards, so later sections test the real one',
-    db.scalar(`select public.pv_act_in_artist_lineage('${ACT3}','${MINE}')`) === 't')
+  // RESTORE, AND PROVE IT RESTORED — QA-INDEP-09, M3. The check I wrote here asked
+  // whether the predicate returns true for a legitimate pair, which the WEAKENED
+  // body also does: the assertion named for the job could not fail. It is now a
+  // body comparison against the migration text, which is the only thing that
+  // distinguishes the two.
+  // The split is also narrowed. `.split('$$;')[0]` would silently produce a
+  // different function if the body ever contained `$$;` or if 041 grew a second
+  // definition of this name (L1) — so the extraction asserts it found exactly one.
+  const migration = readFileSync('supabase/migrations/041_link_service_and_version_store.sql', 'utf8')
+  const DEFN = /create or replace function public\.pv_act_in_artist_lineage[\s\S]*?\n\$\$;/g
+  const defs = migration.match(DEFN) ?? []
+  check('[2h] ...and 041 defines pv_act_in_artist_lineage exactly once, so the restore text is unambiguous',
+    defs.length === 1, `${defs.length} definition(s) matched`)
+  db.exec(defs[0])
+  const shipped = defs[0].slice(defs[0].indexOf('as $$') + 5, defs[0].lastIndexOf('$$;')).replace(/\s+/g, ' ').trim()
+  const installed = db.scalar(`select regexp_replace(replace(prosrc, chr(10), ' '), '\\s+', ' ', 'g')
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace and n.nspname='public'
+    where p.proname='pv_act_in_artist_lineage'`).trim()
+  check('[2h] ...and the installed body is the migration\'s body, not the weakened one — a restore that silently failed would leave every later section testing the wrong function',
+    installed === shipped, `installed: ${installed.slice(0, 90)}…`)
 }
 
 console.log('\n[3] what the Act boundary actually rests on')
@@ -422,6 +450,13 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
     // existed — the insert names its columns without an alias, which is the very
     // spelling M2 was about.
     'act_from_artist -> act': 'writes act.organization_id from the artists row; the destination of that same copy',
+    // 051's inheritance. Reads the Person's default Act and their artists row to
+    // fill a NULL — it decides no permission, and it exists because 041's
+    // organisation half needs the column to actually be populated.
+    // NOT listed: act_inherit_org's artists fallback reads `owner_organization_id`,
+    // a DIFFERENT column outside this family — the non-vacuity assertion caught me
+    // adding it here by mistake, which is exactly what that assertion is for.
+    'act_inherit_org -> act': '051: fills a new Act\'s organisation from the Person\'s default Act; a fill, not a decision',
     'request_org_attribution -> availability_requests': '050 itself — the guard that nulls an unattributable value',
     'recompute_radar_for_org -> availability_requests': 'RADAR scoping, made safe by 050',
     'recompute_radar_private_for_artist -> availability_requests': 'RADAR scoping, made safe by 050',
@@ -468,9 +503,56 @@ check('[4] set_artist_org() takes the CALLER’s organization_id when one is sup
       // FROM/JOIN/UPDATE/INTO targets is this one table — then the column has no
       // other owner it could belong to. A body touching several tables must spell
       // out which one it means, and if it does, the alias arm above sees it.
-      const allTargets = new Set([...body.matchAll(/\b(?:from|join|update|into)\s+(?:public\.)?([a-z_][a-z0-9_]*)/g)].map((m) => m[1]))
-      if (allTargets.size === 1 && allTargets.has(t) && /(^|[^._a-z])organization_id/.test(body)) readers.push(`${fn} -> ${t}`)
+      // THREE ORDINARY SPELLINGS DEFEATED THE FIRST VERSION — QA-INDEP-09, M6:
+      //   · a CTE — `with src as (select organization_id from availability_requests)`
+      //     adds `src` to the target set, so `size === 1` was never true;
+      //   · a record variable — `select * into rec …; rec.organization_id` is
+      //     dot-qualified, which OWN_COL rejects by construction;
+      //   · dynamic SQL — `execute format('… from public.%I where %I = $1', …)`
+      //     names neither the table nor the column literally.
+      // The first two are handled by asking a narrower question: does the body name
+      // this table at all, and does it mention the column in ANY form — bare, or
+      // qualified by a name that is not another of the eight tables. Dynamic SQL is
+      // handled by refusing to vouch for it at all, below, because a scan cannot
+      // follow `format()` and should say so rather than return silence.
+      // TARGETS, MINUS CTE NAMES. `with src as (select organization_id from
+      // availability_requests) select … from src` names TWO targets textually, so
+      // the precise `size === 1` rule was defeated by an ordinary CTE. A CTE name
+      // is declared by `with <name> as (`, so it can be subtracted rather than
+      // guessed at — and then the precise rule holds again, instead of being
+      // widened into the coarse "names the table and mentions the column" test
+      // that reported nineteen readers that are not.
+      const cteNames = new Set([...body.matchAll(/\b(?:with|,)\s+([a-z_][a-z0-9_]*)\s+as\s*\(/g)].map((m) => m[1]))
+      // `into` NAMES A TABLE ONLY AFTER `insert`. In PL/pgSQL, `select * into rec
+      // from …` targets a RECORD VARIABLE, and counting `rec` as a table made the
+      // target set size 2 — which is how the record-variable reader stayed
+      // invisible through the first repair of this very arm.
+      const allTargets = new Set([
+        ...[...body.matchAll(/\b(?:from|join|update)\s+(?:public\.)?([a-z_][a-z0-9_]*)/g)].map((m) => m[1]),
+        ...[...body.matchAll(/\binsert\s+into\s+(?:public\.)?([a-z_][a-z0-9_]*)/g)].map((m) => m[1]),
+      ].filter((x) => !cteNames.has(x)))
+      const namesTable = allTargets.size === 1 && allTargets.has(t)
+      const otherEight = ORG_TABLES.filter((x) => x !== t)
+      // THE IDENTIFIER BOUNDARY IS LOAD-BEARING. A first cut lost it and matched
+      // `owner_organization_id` as a bare mention, reporting 21 readers that are
+      // not — including can_access_artist and grant_permits, which read the OWNER
+      // column, a different thing entirely.
+      const bare = /(?<![a-z0-9_.])organization_id/.test(body)
+      const qualified = [...body.matchAll(/([a-z_][a-z0-9_]*)\.organization_id/g)].map((m) => m[1])
+      const mentions = bare || qualified.some((q) => !otherEight.includes(q))
+      if (namesTable && mentions) readers.push(`${fn} -> ${t}`)
       if ((trigTables.get(fn) || []).includes(t) && /\b(new|old)\.organization_id\b/.test(body)) readers.push(`${fn} -> ${t}`)
+    }
+  }
+  // A SCAN THAT CANNOT FOLLOW A STATEMENT MUST NOT REPORT SILENCE. `execute
+  // format(...)` builds its table and column names at run time; nothing textual
+  // can say what it reaches. Any function that both builds SQL dynamically and
+  // mentions this column family is reported as unvouchable rather than absent —
+  // the same fail-closed choice the waitlist gate makes for a computed `.from()`.
+  for (const [fn, raw] of defs) {
+    const body = raw.toLowerCase()
+    if (/\bexecute\s+(?:format|'|")/.test(body) && /organization_id/.test(body)) {
+      readers.push(`${fn} -> (dynamic SQL — this scan cannot say which table it reaches)`)
     }
   }
   const unique = [...new Set(readers)].sort()

@@ -5576,3 +5576,114 @@ rather than classified: what such a line displays is undetermined, so it blocks 
 Eight reviews, eight rejections. Rounds 6, 7 and 8 each found a **founder-facing claim** that was wrong,
 and this one found the mechanism: I had written an evidence table no gate executed. The repair that
 matters most in this commit is not the predicate — it is `[2h]`.
+
+---
+
+## QA-INDEP-09 — the ninth review, and the one where my own fix broke the product
+
+Verdict: **REJECT**, on the third attempt at the same security fix. 1 H, 6 M, 1 L. The H is not a hole
+an attacker walks through — it is the fix refusing the artist.
+
+### H1 — the organisation half broke the legitimate multi-Act publish
+
+041 requires an Act's organisation to match its artist's. **Nothing in the schema maintains that
+equality**, and the only Act-creation path the product has does not set the column:
+
+```js
+src/lib/db.js:156   .insert({ person_id, stage_name, genre, is_default: false })
+```
+
+`public.act.organization_id` has no default and no trigger. Executed:
+
+```
+column default on act.organization_id: (none)
+triggers on act: (none)
+shipped-shape act org: NULL      artist owner org: …b1
+predicate(new act, my artist): f
+THE ARTIST publishes for their OWN second Act: false
+  ERROR: new row violates row-level security policy for table "passport_versions"
+```
+
+The artist, refused on their own Act — the exact cost 041's own comment at `:404` says a fix must not
+have, and CLAUDE.md makes multi-Act canon.
+
+**Why no gate saw it:** `test-act-stamp.mjs` built its second Acts by copying `organization_id` from
+the default Act, a shape the client never produces. `[2f]`'s assertion *"I can still publish for MY OWN
+second Act — the fix does not cost multi-Act"* was **true of the fixture and false of the application**.
+That is the third consecutive round of the same defect class: a claim true of what was tested and false
+of what was claimed. The fixture is now literally what `createAct()` sends, and `[2f]` asserts the
+inheritance as a precondition so the divergence cannot come back silently.
+
+**051** supplies the missing inheritance — a new Act takes its organisation from the Person's default
+Act, falling back to their artists row, with a narrow backfill for rows that resolve unambiguously.
+It is SECURITY DEFINER for the same reason 041's predicate is: `act_org` (020:186) hides an artist's own
+non-default Act from them, which is the trap that broke the first version of that predicate.
+
+**Residual, stated not hidden:** an artist who later moves organisation leaves the Act's copy stale and
+their own publish would refuse. Availability, not security. Raised as **ACT-ORG-INHERIT**.
+
+### M1/M2/M5 — three wrong sentences in the founder register, in one row
+
+- **M1** ACT-STAMP-TRUST corrected the "two independent layers" claim and then **repeated it verbatim**
+  two sentences later, describing 041's half as only the artists-id disjunct — the half the same row
+  admits is a no-op for a second Act. Fourth consecutive round with a wrong claim in this register.
+- **M2** "the safe set is 041+046+049" is not applicable: 046 hard-raises without 045
+  (`migration 046 requires 045 … Apply 045 first`) and its guard reads columns 043 adds. The real
+  minimum is **041+043+045+046+049+051**.
+- **M5** "the one column an attacker cannot claim" is true across organisations and **false inside one**:
+  a co-member's Act and artist share an org, so 041 alone admits them. No new privilege is gained — org
+  members already hold `for all` on each other's artists — but the word "independent" was doing more
+  work than the evidence supported. All three corrected.
+
+### M3/L1 — the restore assertion in `[2h]` could not fail
+
+`check('…the shipped predicate is restored…', predicate(ACT3, MINE) === 't')` — the **weakened** body
+returns `t` for that pair too. The check named for the job passed either way. It now compares the
+installed `prosrc` against the migration's own text, and the extraction asserts 041 defines the function
+exactly once instead of splitting naively on `$$;`. **Mutation:** restore line removed →
+`FAIL [2h] …the installed body is the migration's body, not the weakened one`, exit 1.
+
+(The restore itself *was* byte-exact — the reviewer verified md5 identical — and a failed restore did
+red the gate incidentally via `[4]`'s non-vacuity arm. Both true, and neither is the assertion doing it.)
+
+### M6 — the ratchet had three ordinary blind spellings
+
+A CTE, a record variable and dynamic SQL all read `availability_requests.organization_id` invisibly.
+Two wrong repairs on the way, both caught by running the mutations rather than reading the code:
+
+1. Widening to "names the table and mentions the column" reported **nineteen** readers that are not —
+   `can_access_artist`, `grant_permits` and others read `owner_organization_id`, a different column. I
+   had dropped the identifier boundary.
+2. With the boundary restored, the record-variable case still slipped, because `select * into rec`
+   counted `rec` as a table target. `into` names a table only after `insert`.
+
+Final shape keeps the precise rule and subtracts CTE names from the target set. Dynamic SQL is reported
+as *unvouchable* rather than absent — a scan that cannot follow `format()` must say so. **All four
+mutations exit 1; control green.**
+
+### M7 — the invisible-character list was still a list
+
+Five more format characters turned a genuine failure into a silent pass — U+2060, U+00AD, U+061C,
+U+2061, U+180E — under a comment claiming "EVERY SPELLING OF DECORATION, not the three I happened to
+think of". It was still an enumeration. Replaced with the Unicode property that actually means it:
+`\p{Cf}` plus the variation-selector blocks and the tag-range. Asking Unicode instead of me.
+
+### M4 — 049 keyed on how a role was assumed, not which is effective
+
+`current_setting('role')` reads `none` under `set session authorization authenticated`, so the pin did
+not fire. Not attacker-reachable (that needs superuser), but the file's own sentence was wrong. Now
+checks `current_user` as well.
+
+### What survived
+
+The reviewer confirmed by execution: `artists_org` does stop a cross-org attacker claiming the victim's
+org; the org half refuses the forged-`created_by` attack with 049 fully bypassed; an attacker cannot
+write `act.organization_id` on a victim's Act (`act_org` refuses a fresh uuid) nor point a self-issued
+grant at an Act id (FK to `artists`); 046 does close the self-grant route; 049's INSERT pin is intact.
+
+### Nine rounds, nine rejections — and the class has narrowed
+
+Rounds 7 and 8 found claims that were true of the test and false of the product. Round 9 found the same
+class again, but this time the gap ran the other way: the fixture was *more permissive* than reality, so
+the product broke while the suite stayed green. The lesson is the same one and it now has a name —
+**a fixture that does not match what the shipped code sends is not evidence about the shipped code.**

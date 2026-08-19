@@ -138,10 +138,19 @@ const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲
 const ANSI = /(?:\x1b\[|\x9b\[?)[0-9;?]*[ -\/]*[@-~]|\x1b\][\s\S]*?(?:\x07|\x1b\\)|\x1b[@-Z\\^_]/g
 /** An escape introducer that survived stripping: the line's display is undetermined. */
 const UNRESOLVED_ESCAPE = /[\x1b\x9b]/
-// Zero-width and format characters: invisible, and therefore never part of what a
-// line MEANS. Variation selectors are here too -- an emoji-presentation tick is
-// the same verdict as a text-presentation one.
-const INVISIBLE = /[\u200b-\u200d\ufeff\ufe00-\ufe0f]/g
+// A CATEGORY, NOT A LIST -- QA-INDEP-09, M7. The previous version enumerated four
+// ranges under a comment claiming "EVERY SPELLING OF DECORATION, not the three I
+// happened to think of". It was still a list, and five more format characters
+// walked through it, each turning a genuine failure into a silent pass:
+//   U+2060 WORD JOINER · U+00AD SOFT HYPHEN · U+061C ARABIC LETTER MARK
+//   U+2061 FUNCTION APPLICATION · U+180E MONGOLIAN VOWEL SEPARATOR
+// The property that matters is Unicode's own: a character that is Default
+// Ignorable renders as nothing, so it cannot be part of what a line MEANS.
+// `\p{Cf}` covers the format class (including the bidi controls stripped
+// separately below), the variation selectors need their two blocks named because
+// they are Mn/Default_Ignorable rather than Cf, and U+00AD is Cf already.
+// Enumerating ranges was the defect; this asks Unicode instead of me.
+const INVISIBLE = /[\p{Cf}\u200b-\u200d\ufe00-\ufe0f\u{e0100}-\u{e01ef}\u180e\u2061-\u2064]/gu
 const decorate = (line) => line.replace(ANSI, '').replace(INVISIBLE, '').replace(/\r/g, '')
   .replace(/^[\s‎‏⁦-⁩]+/, '')
 
