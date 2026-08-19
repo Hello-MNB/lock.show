@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "e6f52ac5f25324054e795293e37c8b966f79d3ca",
+  "head": "7e766a11048466a49bbabcf244bb505b7053c9b4",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/srczero/verify.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa3/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
-  "declaredStepCount": 43,
-  "gateCount": 43,
+  "declaredStepCount": 45,
+  "gateCount": 45,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -26,7 +26,7 @@
     {
       "id": "test:isolation",
       "step": "test:isolation",
-      "summary": null,
+      "summary": "G13 act-isolation: 17 passed, 0 failed",
       "result": "pass"
     },
     {
@@ -44,7 +44,7 @@
     {
       "id": "test:security",
       "step": "test:security",
-      "summary": null,
+      "summary": "All security-denial checks passed.",
       "result": "pass"
     },
     {
@@ -68,7 +68,7 @@
     {
       "id": "test:public-passport",
       "step": "test:public-passport",
-      "summary": null,
+      "summary": "All public-passport-contract checks passed.",
       "result": "pass"
     },
     {
@@ -98,7 +98,7 @@
     {
       "id": "test:ds",
       "step": "test:ds",
-      "summary": null,
+      "summary": "DS-DRIFT PASS — 65 token pairs in sync (3 known-drift TODOs), 61 jsx files clean of rogue hex, asset law holds in src/features/**",
       "result": "pass"
     },
     {
@@ -116,7 +116,7 @@
     {
       "id": "test:projection-matrix",
       "step": "test:projection-matrix",
-      "summary": null,
+      "summary": "All projection-matrix checks passed.",
       "result": "pass"
     },
     {
@@ -156,9 +156,21 @@
       "result": "pass"
     },
     {
+      "id": "Generating static pages using 3 workers",
+      "step": "build:site",
+      "summary": "✓ Compiled successfully in 3.6s",
+      "result": "pass"
+    },
+    {
       "id": "BRAND NAMING",
       "step": "test:brand",
-      "summary": "✓ BRAND NAMING: zero bare LOCK across the whole gated scope — website source, rendered HTML, public app shells, non-HTML public surfaces AND src/** (0 remaining, deferral closed); lowercase lock.show URLs preserved. STILL NOT \"everywhere\": docs/** is out of scope entirely, and the 22 allowlisted lockup assets carry LOCK.SHOW in accessible text pending the BRAND-LOCKUP-TITLES ruling.",
+      "summary": "✓ BRAND NAMING: zero bare LOCK across the gated scope — website source, rendered HTML, public app shells, non-HTML public surfaces, vite.config.js, server/index.js and src/** (0 remaining, deferral closed); lowercase lock.show URLs preserved. STILL NOT \"everywhere\": docs/** and scripts/** are out of scope, binary artifacts are read only by test:og-assets, and 22 lockup assets are exempt — 16 for a",
+      "result": "pass"
+    },
+    {
+      "id": "OG ASSETS",
+      "step": "test:og-assets",
+      "summary": "✓ OG ASSETS: all 7 share cards re-rendered and byte-identical to their committed PNGs — the artifact social platforms actually fetch is the one the governed source draws. NOT proven here: what any platform's own scaler or cache serves.",
       "result": "pass"
     },
     {
@@ -248,19 +260,19 @@
     {
       "id": "build",
       "step": "build",
-      "summary": null,
+      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
       "result": "pass"
     },
     {
       "id": "build:demo",
       "step": "build:demo",
-      "summary": null,
+      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
       "result": "pass"
     },
     {
       "id": "CHAIN CLOSED",
       "step": "test:chain-closed",
-      "summary": "✓ CHAIN CLOSED — 17 checks hold: 4 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
+      "summary": "✓ CHAIN CLOSED — 19 checks hold: 5 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
       "result": "pass"
     },
     {
@@ -324,9 +336,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 4.68s",
+    "✓ built in 3.91s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.13s"
+    "✓ built in 3.56s"
   ],
   "unclassified": [],
   "skips": [],
@@ -381,6 +393,7 @@
   "rollback": "Every gate and generated artifact in this record is additive. Revert by removing the named script/contract files and their package.json entries; no runtime code, migration or provider state is touched by the evidence layer itself.",
   "unverified": [
     ".env.local is absent — no credential was exercised; no named-environment readiness is claimed.",
+    "Reproducibility (QA-INDEP-03, M6): C5/C6 of the brand gate and the client-store freshness check assert against website-next/out, which is gitignored. `npm run build:site` is now a chain step so a fresh clone reproduces this, but the artifact itself is local build state, not something this record pins.",
     "No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.",
     "Migrations 043-048 remain drafted-or-authored and NOT applied to any live environment."
   ]
