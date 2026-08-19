@@ -5091,3 +5091,51 @@ states are a **diagnosis, not a permission**, so the escalation branch now reds 
 **Mutation — 1 injected, caught, restore byte-exact:** **AB1** removes `with check` at `015:27` →
 `✗ ESCALATION — a person who belongs to no such organization created an artist OWNED by it`, plus the
 reads and writes it unlocks for the other organization's member. Green when contained, red when not.
+
+## ACT-STAMP-TRUST — the Act boundary is an application convention, and now that is measured
+
+**Increment:** ACT-STAMP-TRUST · **HEAD at open:** `f1860ed`
+**Files:** `scripts/test-act-stamp.mjs` (new) · `package.json` · `docs/OWNER-PENDING.md`
+
+Following last run's finding — a stamper that trusts an unvalidated value, contained only by a second
+control — the same question applied to `set_act_from_artist_id()` (`020:147`), which fills `act_id` on
+**twelve** tenancy-bearing tables:
+
+```sql
+if new.act_id is null and new.artist_id is not null then
+  new.act_id := new.artist_id;
+end if;
+```
+
+It fills a DEFAULT. It does not validate. A caller who supplies `act_id` is trusted, and every RLS
+policy on those tables keys on `artist_id`.
+
+**Measured:** a row can be written for one artist while stamped with an Act belonging to a completely
+unrelated artist — accepted on `evidence_artifacts`, `claims` and `profile_items`. No CHECK binds the
+pair; no policy mentions `act_id` in a WITH CHECK. CLAUDE.md makes the Act the unit of evidence and
+calls it non-transferable, so this is the product's central contract sitting on nothing but convention.
+
+**Reach, measured — and this is what keeps it from being alarm.** It changes nothing today. RADAR is
+untouched, because recompute keys on the artist. The stranger cannot read the row. And an identical
+row stamped with the artist's **own** Act is exactly as invisible — the control that proves readers key
+on `artist_id` and the stamp grants nothing. The foreign-key floor holds: the Act must exist.
+
+**A false positive I caught with that control.** My first probe used an appsec-fixture identity as the
+"stranger" and reported that the stranger could read the injected row. The fixture deliberately gives
+ORG_A **and** ORG_B active `artist_access` grants on the same artist — nobody in it is a stranger to
+it. The control row (same claim, own `act_id`) was equally visible, which showed the `act_id` was not
+the cause. The gate now builds a genuinely unrelated person, organization and artist, and asserts the
+non-relationship (`can_access_artist` false in both directions) before measuring anything.
+
+**So the honest statement, and it is the finding:** the Act boundary is an **application convention
+with a foreign-key floor**, not a database constraint. That is tenable while nothing reads by `act_id`
+— and two pending owner items would change that: **ACT-PUBLIC** (an Act-scoped public read) and any
+Act-scoped RADAR or Passport query. Raised as **ACT-STAMP-TRUST**, explicitly as a decision worth
+taking *before* ACT-PUBLIC rather than after.
+
+**Mutation — 1 injected, caught from both directions, restore byte-exact:** **AC1** adds
+`check (act_id is null or act_id = artist_id)` to `claims` →
+`✗ [1] … accepted on: evidence_artifacts, profile_items — if this shrank, a constraint was added` and
+`✗ [3] no CHECK constraint anywhere binds act_id to its artist`. The gate cannot drift silently in
+either direction: it fails if the boundary is enforced *and* if it stops being enforced, so the owner
+note can never quietly become wrong.
