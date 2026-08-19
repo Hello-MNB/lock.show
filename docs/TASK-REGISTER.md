@@ -5687,3 +5687,67 @@ Rounds 7 and 8 found claims that were true of the test and false of the product.
 class again, but this time the gap ran the other way: the fixture was *more permissive* than reality, so
 the product broke while the suite stayed green. The lesson is the same one and it now has a name —
 **a fixture that does not match what the shipped code sends is not evidence about the shipped code.**
+
+---
+
+## ENV-PG-PREFLIGHT — the local database does not survive between scheduled runs
+
+Not a defect in the product. An environment fact about this remote session, observed twice, that would
+have been misread as one.
+
+### What happens
+
+Two consecutive scheduled runs opened with the cluster gone. Identical signature both times:
+
+```
+pg_isready            -> no response
+pg_lsclusters         -> 16 main 5432 down
+server log            -> ends on a routine timed checkpoint; no shutdown record,
+                         no PANIC, no OOM (14 GB free), disk 37%
+pg_ctlcluster start   -> "Removed stale pid file"
+```
+
+It is reaped, not crashed — the container reclaims background processes between runs.
+
+### Why it matters more than it looks
+
+Fifteen gates in the declared chain execute against a real PostgreSQL, and this session made every one
+of them **fail closed** rather than skip, because CLAUDE.md's GATE DISCIPLINE says a skip is not a pass.
+That is the right behaviour and it has been proven by execution. But it means a session opening on a
+reaped cluster meets **fifteen simultaneous RED gates**, none of which said why. The obvious reading is
+a code regression, and the obvious response — bisecting a green commit — is wasted work.
+
+### What changed
+
+`pgAvailable()` now prints an actionable diagnosis once per process, so all twelve existing refusal
+messages gain it without twelve edits and without weakening any of them:
+
+```
+  ⚠ no local PostgreSQL — A PostgreSQL cluster exists but is DOWN. Start it with `npm run preflight:db -- --start`.
+    This session reaps the cluster between scheduled runs; a DOWN cluster is
+    an environment state, not a code regression. The gate below still fails
+    closed, which is correct: an unrun check is not a pass.
+✖ ACT STAMP: no local PostgreSQL. … NOT a pass.
+```
+
+`scripts/preflight-db.mjs` reports cluster state, and with `--start` recovers it.
+
+**It is deliberately NOT a chain step.** A verify step that silently starts a database would make the
+chain's green depend on mutating its own environment, and would hide a genuine outage in CI behind an
+auto-heal. Recovery stays an explicit act. For the same reason the script's success line is gated on an
+executed query rather than on `pg_ctlcluster`'s exit code — that command exiting 0 says the start was
+accepted, not that anything can be queried.
+
+### Executed, full cycle
+
+| step | result |
+| --- | --- |
+| `pg_ctlcluster 16 main stop` | `pg_isready` → no response |
+| `npm run test:act-stamp` | diagnosis printed, **exit 1** — fail-closed preserved |
+| `npm run preflight:db` | refuses, **exit 1**, does not heal |
+| `npm run preflight:db -- --start` | recovers, **exit 0**, verified by query |
+| `npm run test:act-stamp` | **exit 0** |
+
+**UNVERIFIED:** the `absent` branch (PostgreSQL not installed at all) — reaching it would mean removing
+the package, which is not a reversible thing to do to this container. The branch is written and
+syntax-checked, not executed, and this sentence exists so nobody reads the table above as covering it.

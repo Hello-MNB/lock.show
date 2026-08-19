@@ -59,13 +59,52 @@ function su(args, { input, allowFail = false } = {}) {
   }
 }
 
+/** Why there is no server, in terms an operator can act on. */
+export function pgUnavailableReason() {
+  let installed = true
+  try { execFileSync('pg_lsclusters', ['--version'], { stdio: 'ignore' }) } catch { installed = false }
+  if (!installed) {
+    try { execFileSync('which', ['psql'], { stdio: 'ignore' }) } catch {
+      return { kind: 'absent', text: 'PostgreSQL is not installed on this machine.' }
+    }
+  }
+  let listed = ''
+  try { listed = execFileSync('pg_lsclusters', { encoding: 'utf8' }) } catch { /* not debian-packaged */ }
+  const down = /\bdown\b/.test(listed)
+  return down
+    ? { kind: 'down', text: 'A PostgreSQL cluster exists but is DOWN. Start it with `npm run preflight:db -- --start`.' }
+    : { kind: 'unreachable', text: 'PostgreSQL did not answer. Check `pg_isready` and the server log.' }
+}
+
+// SAY IT ONCE, AND SAY WHAT TO DO. Twelve gates refuse without a database, each
+// correctly ("a skip would prove nothing. NOT a pass") — and none of them said
+// WHY the database was missing. In this remote session the cluster is reaped
+// between scheduled runs: twice now the preflight has found it down with a stale
+// pid file, a clean log ending on a routine checkpoint, no PANIC, 14 GB free and
+// the disk at 37%. An operator meeting twelve simultaneous RED gates would read
+// that as a code regression. The diagnosis is printed HERE so every existing
+// refusal message gains it without twelve edits, and it is printed once per
+// process so a gate that asks twice does not shout twice.
+let announced = false
 /** Is there a local server we can actually execute against? */
 export function pgAvailable() {
   try {
     execFileSync('pg_isready', [], { stdio: 'ignore' })
     su('psql -tAc "select 1"')
     return true
-  } catch { return false }
+  } catch {
+    if (!announced) {
+      announced = true
+      const why = pgUnavailableReason()
+      console.error(`\n  ⚠ no local PostgreSQL — ${why.text}`)
+      if (why.kind === 'down') {
+        console.error('    This session reaps the cluster between scheduled runs; a DOWN cluster is')
+        console.error('    an environment state, not a code regression. The gate below still fails')
+        console.error('    closed, which is correct: an unrun check is not a pass.')
+      }
+    }
+    return false
+  }
 }
 
 function migrationFiles() {

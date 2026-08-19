@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "seed": "node scripts/seed.mjs",
     "lint:i18n": "node scripts/i18n-purity.mjs",
+    "preflight:db": "node scripts/preflight-db.mjs",
     "test:nav": "node scripts/nav-contract.test.mjs",
     "test:flow": "node scripts/test-flow-contracts.mjs",
     "test:isolation": "node scripts/test-act-isolation.mjs",
