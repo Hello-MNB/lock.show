@@ -60,7 +60,16 @@ function pngSize(buf) {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) }
 }
 
-const svgs = existsSync(DIR) ? readdirSync(DIR).filter((f) => f.endsWith('.svg')).sort() : []
+const all = existsSync(DIR) ? readdirSync(DIR).sort() : []
+const svgs = all.filter((f) => f.endsWith('.svg'))
+// THE REVERSE DIRECTION TOO — QA-INDEP-04, M3. This gate iterates the SOURCES, so
+// a PNG dropped into the served directory with no SVG beside it is governed by
+// nothing: test:brand structurally cannot read a PNG, this gate never looks at one
+// without a sibling source, and test:seo only checks that a referenced image
+// exists. That is H2's own finding — source gated, artifact not — one step over.
+const orphanPngs = all.filter((f) => f.endsWith('.png') && !all.includes(f.replace(/\.png$/, '.svg')))
+check('every served PNG has a governed SVG source', orphanPngs.length === 0,
+  `${orphanPngs.join(', ')} — a card nothing can re-render is a card nothing can check`)
 // NON-VACUITY. An empty directory, a renamed folder or a changed extension would
 // otherwise report a clean result forever.
 check('the OG source directory contains SVGs to check', svgs.length >= 5, `${svgs.length} found`)

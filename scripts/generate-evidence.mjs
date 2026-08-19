@@ -46,11 +46,39 @@
 // print. Summary text is still captured, but it is now decoration on a step that
 // is already accounted for, not the thing that decides the step exists.
 // ============================================================
-import { execFileSync, execSync } from 'node:child_process'
-import { readFileSync, writeFileSync, realpathSync } from 'node:fs'
+import { execFileSync, execSync, spawnSync } from 'node:child_process'
+import { readFileSync, writeFileSync, realpathSync, existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const OUT = 'evidence/current.json'
+// Defined here, above BOTH executable blocks: the self-test block used to sit
+// above this definition and therefore outside L2's protection.
+const IS_ENTRYPOINT = Boolean(process.argv[1])
+  && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+
+// EVERY GLYPH A GATE CAN PRINT, NOT THE TWO I HAPPENED TO USE — QA-INDEP-04, H2.
+// The classifier was `/^[✓✗]/` and the contradiction guard `/(^|\n)✗/`. Five of
+// the 45 chain gates print their column-0 failure with `✖` (U+2716), not `✗`
+// (U+2717): test-chain-closed, test-client-store, test-logical-direction,
+// test-storage-resilience and test-brand-naming. The reviewer spliced the real
+// failure verdict of test:chain-closed into a green log and this generator wrote
+//
+//     {"id":"test:chain-closed","summary":"✖ CHAIN CLOSED — 1 finding(s) …","result":"pass"}
+//
+// inside a record marked green-at-head — a gate whose own recorded summary says
+// it found findings, classified as passing. M7 de-prosed the step verdicts and
+// H3 de-prosed the chain verdict; both were done against a glyph set that was
+// itself a guess. `test:evidence-parser` now DERIVES the set from the scripts, so
+// a gate that adopts a sixth glyph fails the parser instead of vanishing from it.
+const PASS_GLYPHS = '✓✔✅'
+const FAIL_GLYPHS = '✗✖✘❌'
+const VERDICT = new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]`)
+// INDENTED FAILURES COUNT TOO (QA-INDEP-04, M5). The guard was column-0 only, so a
+// log whose sole marker was `  ✗ C2 …: uppercase LOCK.SHOW outside an approved
+// lockup` was accepted with --exit 0. A sub-check failure is still a reported
+// violation; the register said "a log containing a ✗" and meant something narrower.
+const FAIL_AT_COL0 = new RegExp(`(^|\n)\\s*[${FAIL_GLYPHS}]`)
+const isFail = (line) => FAIL_GLYPHS.includes(line[0])
 const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim()
 
 // Build tools print their own ticks. These are NOT gate verdicts, and recording
@@ -59,8 +87,8 @@ const sh = (cmd) => execSync(cmd, { encoding: 'utf8' }).trim()
 // reported as unclassified and fails the run, so new tool output is never
 // silently absorbed.
 const TOOL_OUTPUT = [
-  /^[✓✗]\s+\d+\s+modules transformed\./,   // vite
-  /^[✓✗]\s+built in [\d.]+m?s/,            // vite
+  new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]\\s+\\d+\\s+modules transformed\\.`),   // vite
+  new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]\\s+built in [\\d.]+m?s`),                 // vite
 ]
 
 /** The chain exactly as package.json declares it — the only authority on what
@@ -79,7 +107,7 @@ export function declaredChain(pkgJson) {
 const SUBCHECK_ID = /^[A-Z]\d+(?:-[A-Z]?\d+)?$/
 /** A verdict line's display id, when it has one. Decoration, not identity. */
 function summaryId(line) {
-  const m = /^[✓✗]\s+([A-Za-z][A-Za-z0-9 ·/\-+]*?)(?::|\s[—–]\s|\s\()/.exec(line)
+  const m = new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]\\s+([A-Za-z][A-Za-z0-9 ·/\\-+]*?)(?::|\\s[—–]\\s|\\s\\()`).exec(line)
   return m ? m[1].trim() : null
 }
 
@@ -104,7 +132,7 @@ export function parseChain(log, declared, exitCode) {
   const verdictLines = []
   for (const b of blocks) {
     for (const l of b.lines) {
-      if (/^[✓✗]/.test(l)) verdictLines.push({ step: b.step, line: l })
+      if (VERDICT.test(l)) verdictLines.push({ step: b.step, line: l })
     }
   }
 
@@ -130,7 +158,7 @@ export function parseChain(log, declared, exitCode) {
         : Boolean(prevHeadered && ranSteps.includes(prevHeadered.step) && exitCode === 0)
     if (!ran) { stepsNotRun.push(d.cmd); continue }
     const block = d.step === null ? null : blocks.find((b) => b.step === d.step)
-    const own = block ? block.lines.filter((l) => /^[✓✗]/.test(l) && !TOOL_OUTPUT.some((r) => r.test(l))) : []
+    const own = block ? block.lines.filter((l) => VERDICT.test(l) && !TOOL_OUTPUT.some((r) => r.test(l))) : []
     // A GATE THAT PRINTS NO TICK STILL SAYS SOMETHING — QA-INDEP-03, L3. Counting
     // the step was the fix; recording `summary: null` for the five gates this
     // increment exists to rescue left the register's word "recorded" stronger than
@@ -142,7 +170,7 @@ export function parseChain(log, declared, exitCode) {
     const tickless = block ? block.lines.filter((l) =>
       l.trim() && !/^\s/.test(l) && !TOOL_OUTPUT.some((r) => r.test(l)) && !/^> /.test(l)) : []
     const summaryLine = own[0] ?? tickless[tickless.length - 1] ?? null
-    const failed = own.some((l) => l.startsWith('✗'))
+    const failed = own.some(isFail)
     const isLast = i === declared.length - 1
     gates.push({
       id: (own.map(summaryId).find(Boolean)) || d.step || d.cmd,
@@ -169,7 +197,7 @@ export function parseChain(log, declared, exitCode) {
   for (const v of verdictLines) {
     if (TOOL_OUTPUT.some((r) => r.test(v.line))) { toolOutput.push(v.line.trim()); continue }
     const id = summaryId(v.line)
-    if (id && SUBCHECK_ID.test(id)) { subChecks.push({ id, result: v.line[0] === '✓' ? 'pass' : 'fail' }); continue }
+    if (id && SUBCHECK_ID.test(id)) { subChecks.push({ id, result: isFail(v.line) ? 'fail' : 'pass' }); continue }
     if (v.step && gates.some((g) => g.step === v.step)) continue   // belongs to a counted step
     if (id) continue                                               // a named verdict from an unheadered raw step
     unclassified.push(v.line.trim())
@@ -193,7 +221,11 @@ export function parseSkips(log) {
 // parser except a human reading it. The fixtures below run it against logs whose
 // correct answer is known, and `npm run verify` runs this mode. A parser that
 // decides what the evidence says must itself be evidence.
-if (process.argv.includes('--self-test')) {
+// GUARDED LIKE THE RECORDER (QA-INDEP-04, M5). L2 moved the record-a-run block
+// behind an entrypoint check so importing the parser stops running the chain, but
+// left this block above it — an importer passing --self-test in argv would still
+// run and `process.exit`. Cheap to close, and the asymmetry was the finding.
+if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
   let bad = 0
   const t = (name, cond, detail = '') => {
     if (cond) console.log(`  PASS  ${name}`)
@@ -325,6 +357,43 @@ if (process.argv.includes('--self-test')) {
       r.gates[0].summary === 'vite v5', JSON.stringify(r.gates[0]))
   }
 
+  // 8e · A `✖` FAILURE IS A FAILURE (QA-INDEP-04, H2), in both the step verdict
+  //      and the chain contradiction guard.
+  {
+    const d = declaredChain(pkg('npm run a'))
+    const r = parseChain('> gigproof@0.1.0 a\n✖ CHAIN CLOSED — 1 finding(s) of 22 checks:\n', d, 1)
+    t('a ✖ verdict records the gate as FAIL, not pass',
+      r.gates[0].result === 'fail', JSON.stringify(r.gates[0]))
+    t('...and the contradiction guard sees ✖ as a violation',
+      FAIL_AT_COL0.test('> x\n✖ CHAIN CLOSED — 1 finding(s):\n'))
+  }
+
+  // 8f · THE SET IS DERIVED FROM THE SCRIPTS, NOT HAND-LISTED. This is the check
+  //      that would have caught H2 on the day `✖` was introduced: every glyph any
+  //      chain gate actually prints at column 0 must be classifiable. A gate that
+  //      adopts a sixth glyph fails here instead of disappearing from the record.
+  {
+    // SCOPED TO THE CHAIN, because the contract is about gates the evidence
+    // records. On its first run this check flagged ✅ (U+2705) — real, and used
+    // only by e2e-live.mjs and the seed scripts, none of which are in `verify`.
+    // A non-chain script's glyph choice must not red the parser; a chain gate's
+    // must. (✅ is in PASS_GLYPHS anyway: a broader set costs nothing.)
+    const scripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts
+    const files = declaredChain(readFileSync('package.json', 'utf8'))
+      .map((d) => (d.step ? scripts[d.step] : d.cmd) ?? '')
+      .flatMap((cmd) => [...cmd.matchAll(/(scripts\/[\w.-]+\.mjs)/g)].map((m) => m[1]))
+      .filter((f, i, a) => a.indexOf(f) === i && existsSync(f))
+    const used = new Set()
+    for (const f of files) {
+      for (const m of readFileSync(f, 'utf8').matchAll(/(?:^|\\n|`|')([\u2713-\u2718\u274c\u2705])\s/gu)) used.add(m[1])
+    }
+    const unknown = [...used].filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}`.includes(g))
+    t(`every verdict glyph printed by the ${files.length} gate scripts in the chain is classifiable`,
+      unknown.length === 0, `unclassified glyph(s): ${unknown.map((g) => `${g} (U+${g.codePointAt(0).toString(16).toUpperCase()})`).join(', ')}`)
+    t('...and the scan actually found glyphs, so it is not vacuous',
+      used.size >= 2, `found ${[...used].join('')}`)
+  }
+
   // 9 · non-vacuity: the fixtures above must exercise a real declared chain.
   {
     const real = declaredChain(readFileSync('package.json', 'utf8'))
@@ -345,8 +414,6 @@ if (process.argv.includes('--self-test')) {
 // unguarded: `import { parseChain } from './generate-evidence.mjs'` RAN THE WHOLE
 // CHAIN and overwrote evidence/current.json. The reviewer hit exactly that and
 // had to kill it. The exports were unusable by anything.
-const IS_ENTRYPOINT = process.argv[1]
-  && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 if (IS_ENTRYPOINT) {
 const head = sh('git rev-parse HEAD')
 const branch = sh('git rev-parse --abbrev-ref HEAD')
@@ -391,7 +458,7 @@ if (logIdx > -1) {
   exitCode = Number(process.argv[exitIdx + 1])
   // A ✗ in the log with a zero exit is a contradiction, not a detail: it means a
   // gate reported a violation and the chain still claimed success.
-  if (exitCode === 0 && /(^|\n)✗/.test(log)) {
+  if (exitCode === 0 && FAIL_AT_COL0.test(log)) {
     console.error('✗ --exit 0 was given but the log contains a ✗ verdict line — refusing to record')
     console.error('  a green result over a reported violation.')
     process.exit(1)
@@ -399,7 +466,14 @@ if (logIdx > -1) {
   command = `${command} (recorded from ${process.argv[logIdx + 1]}, observed exit ${exitCode})`
 } else {
   try {
-    log = execFileSync('npm', ['run', 'verify'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+    // BOTH STREAMS — QA-INDEP-04, M5. `execFileSync` returns stdout only on
+    // success, and every gate prints its failures through console.error. So on a
+    // zero-exit chain the contradiction guard was structurally inert, and any
+    // stderr-side skip line was absent from the record. The failure branch already
+    // concatenated both; the success branch did not.
+    const r = spawnSync('npm', ['run', 'verify'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+    log = `${r.stdout || ''}${r.stderr || ''}`
+    if ((r.status ?? 1) !== 0) throw Object.assign(new Error('chain failed'), { stdout: log, stderr: '', status: r.status })
   } catch (e) {
     log = `${e.stdout || ''}${e.stderr || ''}`
     exitCode = e.status ?? 1

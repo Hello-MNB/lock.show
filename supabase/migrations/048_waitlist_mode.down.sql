@@ -24,6 +24,16 @@ begin
 end
 $drop_overloads$;
 drop policy if exists wl_definer_insert on public.waitlist_signup;
+-- IDEMPOTENT, and it was not (QA-INDEP-04, M1). The UP file carries this exact
+-- lesson in its own comment — "a migration that cannot be re-run is a migration
+-- that fails the second time an operator touches it" — and adds the mirror drop
+-- for its own policy. This file, edited in the same increment that quoted that
+-- lesson, omitted it: a SECOND rollback aborted with
+--   ERROR: policy "wl_anon_insert" for table "waitlist_signup" already exists
+-- and the aborted statement is followed by the `grant insert` below, so the
+-- rollback left capture silently broken — the precise D4 failure this file's own
+-- comment claims was "verified by execution". It was verified once, forward.
+drop policy if exists wl_anon_insert on public.waitlist_signup;
 create policy wl_anon_insert on public.waitlist_signup
   for insert with check (true);
 -- THE GRANT, not just the policy (independent QA, D4). The up-migration revokes

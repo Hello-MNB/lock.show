@@ -80,6 +80,29 @@ console.log('\n[0b] re-applying 048 over an EARLIER 048 leaves ONE function, not
     db.scalar(`select coalesce(string_agg(pronargs::text, ','), 'none') from pg_proc where proname='join_waitlist'`))
   check('[0b] ...and the survivor is the 17-argument version',
     db.scalar(`select pronargs::text from pg_proc where proname='join_waitlist'`) === '17')
+
+  // [0c] THE DOWN FILE, EXECUTED — QA-INDEP-04, M1. Nothing in this repo had ever
+  // run 048's rollback: `[0b]` and every mutation exercised the UP file only, so
+  // the register's claim that "both the up and down migrations now drop every
+  // overload" was a claim about text. Run twice, because a rollback an operator
+  // repeats is a rollback that has to survive being repeated.
+  const down = readFileSync('supabase/migrations/048_waitlist_mode.down.sql', 'utf8')
+  const d1 = db.try(down)
+  check('[0c] the down migration applies', d1.ok, d1.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  check('[0c] ...and removes every join_waitlist overload',
+    db.scalar(`select count(*) from pg_proc where proname='join_waitlist'`) === '0')
+  const backIn = db.try(`insert into public.waitlist_signup (email) values ('rollback@b.com')`, { role: 'anon' })
+  check('[0c] ...and capture works again afterwards — the policy AND the grant are restored',
+    backIn.ok, backIn.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  const d2 = db.try(down)
+  check('[0c] ...and a REPEATED rollback does not abort (it did: policy already exists)',
+    d2.ok, d2.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  const backIn2 = db.try(`insert into public.waitlist_signup (email) values ('rollback2@b.com')`, { role: 'anon' })
+  check('[0c] ...and capture still works after the repeat, so the abort did not skip the grant',
+    backIn2.ok, backIn2.out.split('\n').find((l) => /ERROR/.test(l))?.slice(0, 120))
+  // Restore the governed state for every check that follows.
+  db.exec(readFileSync('supabase/migrations/048_waitlist_mode.sql', 'utf8'))
+  db.exec(`delete from public.waitlist_signup where email like 'rollback%@b.com'`)
 }
 
 const call = (args = {}, opts = {}) => {
@@ -232,21 +255,81 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
   // RPC path is subtracted first because it does not contain the table name; only
   // the postgrest URL form does, and stripping it would hide a real hit, so the two
   // are distinguished by pattern rather than by subtraction.
-  const TABLE_NAME = 'waitlist_signup'
+  // A POSITIVE CONTRACT, NOT A FORBIDDEN SUBSTRING — QA-INDEP-04, H1.
+  //
+  // The rule was "the identifier `waitlist_signup` may not appear in client code
+  // at all, in any expression". It was not: it was a substring match, and the
+  // reviewer walked through it with two tokens —
+  //
+  //     const TBL = 'waitlist_' + 'signup'
+  //     return sb.from(TBL).insert(row)
+  //
+  // — a live direct write to the revoked table, gate green. Each repair here has
+  // enumerated a spelling and been beaten by the next one: first a URL, then an
+  // identifier. Enumerating forbidden spellings is unbounded; enumerating ALLOWED
+  // destinations is not.
+  //
+  // So the contract inverts. Every table a client names — through `.from(x)` or a
+  // `/rest/v1/<table>` path — must resolve to a literal on the allowlist below,
+  // and anything that does NOT resolve statically is a failure. That is the same
+  // "cannot tell is not clean" rule this lane applied to the reachability scan,
+  // and applying it to one gate and not its neighbour is what H1 punished.
+  //
+  // SCOPED TO THE WEBSITE LANE, which is the lane 048 governs. The first attempt
+  // at this inversion applied it to `src/**` as well and reported 113 findings —
+  // because the AUTHENTICATED APP legitimately reaches ~30 tables through RLS;
+  // that is the product, not a defect. A contract must be aimed at the surface it
+  // describes. The website is a static export whose only backend contact is the
+  // governed RPC, so there the allowlist is genuinely empty; `src/**` is covered
+  // by the separate, weaker assertion below.
+  //
+  // MAY ONLY SHRINK. Adding a table here is a deliberate act in a diff.
+  const SITE_LANE = /^website-next\//
+  const CLIENT_TABLES = [
+    // (empty: the marketing site writes NOTHING directly — every backend
+    // interaction goes through the governed RPC)
+  ]
+  // `Array.from(...)`, `Object.from...` and Supabase STORAGE (`storage.from(bucket)`)
+  // are not table destinations. The negative lookbehind keeps the rule about the
+  // database client, which is the thing 048 revoked.
+  const FROM_CALL = /(?<!Array|Object|storage)\.from\s*\(([^)]*)\)/g
+  const REST_PATH = /\/rest\/v1\/(?!rpc\/)([A-Za-z0-9_$]*)/g
+  const STR_LITERAL = /^\s*['"`]([A-Za-z0-9_]+)['"`]\s*$/
+
   const offenders = []
   let rpcCallers = 0
+  let destinations = 0
+  const appLaneWaitlist = []
   for (const f of files) {
     const code = strip(readFileSync(f, 'utf8'))
     if (code.includes(RPC_PATH)) rpcCallers++
-    // Every mention of the table identifier that is not part of the RPC path.
-    // `/rest/v1/rpc/join_waitlist` contains neither the table name nor TABLE_PATH,
-    // so nothing legitimate is caught here.
-    const hits = [...code.matchAll(/waitlist_signup/g)]
-    if (hits.length) offenders.push(`${f} (${hits.length}× "${TABLE_NAME}")`)
+    if (!SITE_LANE.test(f)) {
+      // THE APP LANE'S CONTRACT IS DIFFERENT AND WEAKER, stated rather than
+      // pretended: src/** talks to many tables by design, so an allowlist there
+      // would be the whole schema. What IS true — and worth ratcheting — is that
+      // the authenticated app has no business with the waitlist at all. Measured
+      // today: zero files under src/** mention it in any form.
+      if (/waitlist/i.test(code)) appLaneWaitlist.push(f)
+      continue
+    }
+    for (const m of code.matchAll(FROM_CALL)) {
+      destinations++
+      const lit = m[1].match(STR_LITERAL)?.[1]
+      if (lit === undefined) offenders.push(`${f}: .from(${m[1].trim().slice(0, 40)}) — the destination is computed, so this scan cannot say which table it writes`)
+      else if (!CLIENT_TABLES.includes(lit)) offenders.push(`${f}: .from('${lit}') — not on the client-table allowlist`)
+    }
+    for (const m of code.matchAll(REST_PATH)) {
+      destinations++
+      // `/rest/v1/` followed by nothing is a concatenated or interpolated path.
+      if (!m[1]) offenders.push(`${f}: a /rest/v1/ path built at runtime — this scan cannot say which table it targets`)
+      else if (!CLIENT_TABLES.includes(m[1])) offenders.push(`${f}: /rest/v1/${m[1]} — not on the client-table allowlist`)
+    }
   }
 
-  check('[6c] the table the migration revoked is never named in client code',
-    offenders.length === 0, offenders.join(', '))
+  check('[6c] every table the SITE lane names resolves to the allowlist, and none is computed',
+    offenders.length === 0, offenders.join(' · '))
+  check('[6c] ...and the app lane (src/**) does not touch the waitlist in any form',
+    appLaneWaitlist.length === 0, appLaneWaitlist.join(', '))
   // NON-VACUITY, both directions: the scan must have opened real files, and it
   // must be able to SEE a waitlist write path at all. A glob that silently
   // matched nothing would otherwise report a clean result forever.
@@ -254,7 +337,7 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
     files.length >= 20, `scanned ${files.length} files`)
   check('[6c] ...and it can see the governed path, so the scanner works',
     rpcCallers >= 2, `${rpcCallers} file(s) call ${RPC_PATH}`)
-  console.log(`        scanned ${files.length} client source files · ${rpcCallers} call the RPC · ${offenders.length} write the table`)
+  console.log(`        scanned ${files.length} client source files · ${rpcCallers} call the governed RPC · ${destinations} table destination(s) named · ${offenders.length} unresolved or unallowed`)
 }
 
 console.log('\n[9] the CONTACT payload survives the move (GAP-W1)')

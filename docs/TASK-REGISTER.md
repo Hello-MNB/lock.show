@@ -4630,3 +4630,98 @@ touching `process.env`, and both gates pass.
 S1 now covers `@playwright/*`, `playwright-core`, a lookalike package name that must NOT match, and
 the three wrapped-literal idioms; S1b proves the opaque report fires only on genuinely computed
 specifiers. Both run on fixtures before any real verdict, as they did before.
+
+## QA-INDEP-04 — the fourth review, which rejected the repairs made for the third
+
+**Increment:** QA4-REPAIRS · **Range reviewed:** `658f170..b3e923d` · **HEAD at open:** `b3e923d`
+**Reviewer:** independent, read-only, 96 tool calls, own `npm run verify` in a fresh copy
+(`CHAIN_EXIT=0`, 45 steps) — so every finding below is a defect **inside a green chain**.
+
+**Verdicts: REVISE on all three increments**, including `7e766a1`, which was itself the repair set for
+QA-INDEP-03. Repairs written under review pressure were exactly where the defects were.
+
+### H1 — the flagship repair was defeated by two tokens
+
+`[6c]` was rewritten to forbid the identifier `waitlist_signup` "in any expression". It was a
+**substring match**, and the reviewer walked through it:
+
+```
+const TBL = 'waitlist_' + 'signup'
+return sb.from(TBL).insert(row)          →  gate GREEN, 0 write the table
+```
+
+Each repair had enumerated a spelling and been beaten by the next: first a URL, then an identifier.
+**Enumerating forbidden spellings is unbounded; enumerating allowed destinations is not.** The rule is
+now a positive contract — every table the site lane names, through `.from(x)` or `/rest/v1/<t>`, must
+resolve to a literal on an allowlist that is currently **empty**, and anything that does not resolve
+statically FAILS. That is the "cannot tell is not clean" rule this lane already applied to the
+reachability scan; applying it to one gate and not its neighbour is what H1 punished.
+
+**My first inversion was too broad and its own execution said so:** applied to `src/**` it reported
+**113 findings**, because the authenticated app legitimately reaches ~30 tables through RLS — that is
+the product. Scoped to the website lane, with `Array.from`/`storage.from` excluded. The app lane keeps
+a separate, weaker, *stated* assertion: it must not touch the waitlist at all (measured: zero files).
+
+Four probes now fail, including the one that beat the previous rule: concatenation, plain literal,
+runtime-built REST path, and a different unallowed table.
+
+### H2 — five of the 45 gates fail with `✖`, not `✗`
+
+`✗` is U+2717; `test-chain-closed`, `test-client-store`, `test-logical-direction`,
+`test-storage-resilience` and `test-brand-naming` print their column-0 failure with **`✖` U+2716**.
+The classifier was `/^[✓✗]/` and the contradiction guard `/(^|\n)✗/`. The reviewer spliced a real
+failure verdict into a green log:
+
+```
+{"id":"test:chain-closed","summary":"✖ CHAIN CLOSED — 1 finding(s) …","result":"pass"}
+chain result: green-at-head
+```
+
+A gate whose own recorded summary says it found findings, classified as passing. M7 de-prosed the step
+verdicts and H3 de-prosed the chain verdict — **both against a glyph set that was itself a guess.**
+
+The set is widened, and `test:evidence-parser` now **derives** it from the gate scripts the chain
+declares, so a sixth glyph fails the parser instead of vanishing from it. On its first run that check
+found a sixth glyph — `✅` U+2705 — real, and used only by non-chain scripts; it is scoped to the
+chain and `✅` added anyway.
+
+### H3 — my own M6 repair was confidently wrong
+
+The resolver took `IDENT_IN`'s **first** all-caps match, so
+`import(pathToFileURL(path.join(ROOT, RULE)).href)` bound to `ROOT` — and `const ROOT = path.join(DIR, '..')`
+is the house idiom at `test-chain-closed.mjs:39` — resolving to `".."`. The reviewer injected it into a
+live chain gate that really does launch Chromium and watched C1, C2b and C2c all pass.
+
+> M6 existed because "cannot tell" was recorded as "clean". The repair converted one class of
+> "cannot tell" into a **confidently wrong "clean"** — worse than the hole it closed.
+
+Now: every all-caps candidate is resolved, a candidate counts only if it names a real **file**, and
+zero-or-several candidates is opaque. `DIRECT` matches the package as a **prefix with a boundary**,
+closing two more silent misses the reviewer found — deep imports (`playwright-core/lib/server/index.js`)
+and the published `playwright-chromium/-firefox/-webkit` family.
+
+### The rest
+
+| # | finding | repair |
+|---|---|---|
+| **M1** | 048's DOWN migration is **not idempotent** — a repeated rollback aborts on `policy "wl_anon_insert" already exists`, and the aborted statement is followed by the `grant`, i.e. the D4 failure its own comment claims was verified. **No gate had ever executed that file.** | mirror `drop policy if exists` added; new `[0c]` applies the down file, proves capture works again, applies it a **second** time, and proves capture still works |
+| **M2** | the element-scoped exemption's staleness guard was still **file**-scoped, so a dead `<text>` exemption survived; and the register's claim that the owner row "reports a figure the gate measures" was untrue — both counts were hand-classified | per-element staleness; the 22/6 counts are now **computed** and printed from the measurement |
+| **M3** | `test:og-assets` iterates sources, so a served PNG with no SVG is governed by nothing — H2's own pattern one step over | every served PNG must have a governed SVG source |
+| **M4** | on a clean tree the chain records **4 skips**: `test:release-artifacts` and `test:integration-contract` run before the builds | the three build steps moved ahead of them |
+| **M5** | default mode captured **stdout only**, so on a zero-exit chain the contradiction guard was structurally inert; the guard was column-0 only; and the `--self-test` block sat **above** L2's entrypoint guard | `spawnSync` capturing both streams; indented failures count; the self-test block is guarded |
+
+**Mutations — 6 injected, 6 caught, restores byte-exact:** V1 concatenation · V2 plain literal ·
+V3 runtime REST path · V4 an unallowed table · V5 the non-idempotent rollback · V6 the dead exemption.
+
+**Checked by the reviewer and found sound**, recorded because it is evidence too: the 048 drop loop is
+correctly schema-scoped and case-safe (`api.join_waitlist` and `public."Join_Waitlist"` both survived);
+`test:og-assets` is deterministic across runs and catches QA-INDEP-03's original mutation; its
+fail-closed path verified with the reviewer's **own** resolve hook; the `lastIndex` bug has no second
+instance anywhere in `scripts/`; `OPAQUE_PINNED` is justified; and the H4 manifest fix holds.
+
+**Open, recorded, NOT closed:** **L1** — the OG PNGs are **fallback-font** renders (this host has none
+of the declared families and the SVGs embed no font), so the byte comparison pins a host-specific
+render and will fail loudly on a machine that has the brand faces. It fails loud rather than quiet, but
+the gate's disclosure does not mention font dependence. **L3** — `[6c]` scans tracked *and* untracked
+files while `test-brand-naming` still uses `git ls-files` alone; same lesson, one gate. **L4** — the
+committed app bundle is a served client artifact outside `[6c]`'s scope (grepped: zero waitlist hits).

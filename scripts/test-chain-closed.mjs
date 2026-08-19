@@ -32,7 +32,7 @@
  *
  * Run: node scripts/test-chain-closed.mjs
  */
-import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, statSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -143,7 +143,15 @@ const SELF = 'scripts/test-chain-closed.mjs'
 // Neither had a live instance when this was written — both are holes in the
 // ratchet rather than live defects, which is exactly when they are cheapest to
 // close, and the same posture recorded for the Hebrew suffix-particle hole.
-const DIRECT = /(?:from|import)\s*\(?\s*['"](?:playwright|playwright-core|@playwright\/[a-z-]+)['"]/
+// A PACKAGE PREFIX, not an enumeration (QA-INDEP-04, H3). Enumerating
+// `playwright|playwright-core|@playwright/*` still missed two real ways in:
+// a deep import — `import('playwright-core/lib/server/index.js')` — because the
+// pattern demanded the closing quote right after the name, and the published
+// `playwright-chromium` / `-firefox` / `-webkit` packages, which the fixture
+// `playwrightish` was written to justify excluding. The boundary is now a `-`,
+// `/` or end-of-specifier, so the family and its subpaths match while a
+// lookalike like `playwrightish` still does not.
+const DIRECT = /(?:from|import)\s*\(?\s*['"](?:@playwright\/[^'"]+|playwright(?:-[a-z]+)?(?:\/[^'"]*)?)['"]/
 const RELATIVE = /(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g
 // A dynamic import whose argument is not a plain quoted specifier. Not all of
 // these are unanalysable: the FIRST version of this rule reported seven real
@@ -165,10 +173,31 @@ const RELATIVE = /(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g
 // dynamic import in this repo fits on one line.
 const DYNAMIC_LINE = /\bimport\s*\((.*)$/
 const STRING_IN = /['"]([^'"]+)['"]/
-const IDENT_IN = /\b([A-Z][A-Z0-9_]*)\b/
+// EVERY all-caps candidate, not the first (QA-INDEP-04, H3). The first version
+// took `IDENT_IN`'s single first match, so
+// `import(pathToFileURL(path.join(ROOT, RULE)).href)` bound to ROOT — and
+// `const ROOT = path.join(DIR, '..')` is the house idiom at this file's own
+// line 39 — yielding the literal "..". The reviewer injected exactly that into a
+// live chain gate that really does launch Chromium and watched C1, C2b and C2c
+// all pass. That is worse than the silence M6 set out to fix: the hole answered
+// "cannot tell"; this answered "clean", confidently and wrongly.
+//
+// So: collect ALL candidates, resolve each, and take a candidate only if it
+// names a real FILE. If several resolve, or none does, the specifier is opaque —
+// "cannot tell" is the honest answer and it fails loudly.
+const IDENT_ALL = /\b([A-Z][A-Z0-9_]*)\b/g
 /** Files whose imports this scanner cannot resolve. Collected while walking, so
  *  the report names the file rather than the gate that happened to reach it. */
 const opaque = new Set()
+/** Does this specifier name a real FILE, from `fromAbs` or from the repo root?
+ *  A directory is not a module, and ".." is the answer a broken resolver gives. */
+function resolvesToFile(fromAbs, spec) {
+  for (const base of [path.dirname(fromAbs), ROOT]) {
+    const t = path.resolve(base, spec)
+    try { if (existsSync(t) && statSync(t).isFile()) return true } catch { /* not a file */ }
+  }
+  return false
+}
 function playwrightPath(file, seen = new Set()) {
   const abs = path.join(ROOT, file)
   if (seen.has(abs) || !existsSync(abs)) return null
@@ -186,17 +215,26 @@ function playwrightPath(file, seen = new Set()) {
       // An interpolated template is genuinely computed even though it contains
       // quote-free text — check for it before looking for a literal.
       const interpolated = /`[^`]*\$\{/.test(args)
+      // A literal in the call itself is unambiguous.
       let lit = interpolated ? null : args.match(STRING_IN)?.[1]
       if (!lit && !interpolated) {
-        // One level of indirection: a CONST in this file whose initializer
-        // carries a literal — `const RULE = 'src/lib/x.js'` and also
-        // `const TAILWIND_PATH = join(ROOT, 'tailwind.config.js')`.
-        const id = args.match(IDENT_IN)?.[1]
-        if (id) {
-          const decl = src.match(new RegExp(`\\bconst\\s+${id}\\s*=([^\\n]*)`))?.[1]
-          lit = decl?.match(STRING_IN)?.[1] ?? null
+        // One level of indirection through a CONST in this file. Every all-caps
+        // identifier in the argument list is a candidate; a candidate counts only
+        // if its literal names a file that EXISTS. `ROOT` resolving to ".." names
+        // a directory, so it is discarded rather than believed.
+        const cands = []
+        IDENT_ALL.lastIndex = 0
+        for (const idm of args.matchAll(IDENT_ALL)) {
+          const decl = src.match(new RegExp(`\\bconst\\s+${idm[1]}\\s*=([^\\n]*)`))?.[1]
+          const cand = decl?.match(STRING_IN)?.[1]
+          if (cand && resolvesToFile(abs, cand)) cands.push(cand)
         }
+        // Exactly one real file is a resolution; zero or several is a guess.
+        if (cands.length === 1) lit = cands[0]
       }
+      // A literal that does not name a real file is not a resolution either —
+      // it is a specifier this scanner failed to understand.
+      if (lit && !resolvesToFile(abs, lit)) lit = null
       if (lit) dynamicTargets.push(lit)
       else opaque.add(file)
     }
@@ -251,12 +289,22 @@ function playwrightPath(file, seen = new Set()) {
     w('viaUrl.mjs', "export default await import(new URL('./helper1.mjs', import.meta.url))\n")
     w('viaPathToFileUrl.mjs', "export default await import(pathToFileURL(resolve('scripts/.chain-closed-fixture/helper1.mjs')).href)\n")
     w('viaConst.mjs', "const RULE = 'scripts/.chain-closed-fixture/helper1.mjs'\nexport default await import(pathToFileURL(RULE).href)\n")
+    // QA-INDEP-04 H3, verbatim: TWO all-caps candidates, and the FIRST one is a
+    // directory. Taking the first match resolved this to ".." and called a
+    // browser-launching gate clean.
+    w('viaRootJoin.mjs', "const ROOT = path.join(DIR, '..')\nconst RULE = 'scripts/.chain-closed-fixture/helper1.mjs'\nexport default await import(pathToFileURL(path.join(ROOT, RULE)).href)\n")
+    // A const whose literal names nothing on disk is not a resolution.
+    w('viaMissing.mjs', "const GONE = './does-not-exist.mjs'\nexport default await import(pathToFileURL(GONE).href)\n")
+    // Deep import into the package, and the published playwright-* family.
+    w('deep.mjs', "export default await import('playwright-core/lib/server/index.js')\n")
+    w('family.mjs', "import { chromium } from 'playwright-chromium'\nexport default chromium\n")
     w('viaUrlClean.mjs', "export default await import(new URL('./innocent.mjs', import.meta.url))\n")
     const rel = (n) => `scripts/.chain-closed-fixture/${n}`
     const cases = [
       ['direct.mjs', true], ['viaHelper.mjs', true], ['viaTwo.mjs', true],
       ['scoped.mjs', true], ['core.mjs', true], ['viaScoped.mjs', true],
       ['viaUrl.mjs', true], ['viaPathToFileUrl.mjs', true], ['viaConst.mjs', true],
+      ['viaRootJoin.mjs', true], ['deep.mjs', true], ['family.mjs', true],
       ['innocent.mjs', false], ['viaInnocent.mjs', false], ['lookalike.mjs', false],
       ['viaUrlClean.mjs', false],
     ]
@@ -269,10 +317,11 @@ function playwrightPath(file, seen = new Set()) {
     // import must not be — otherwise the new rule would flag the whole codebase.
     opaque.clear()
     for (const n of ['opaque.mjs', 'opaqueTpl.mjs', 'direct.mjs', 'viaHelper.mjs',
-      'viaUrl.mjs', 'viaPathToFileUrl.mjs', 'viaConst.mjs']) playwrightPath(rel(n))
+      'viaUrl.mjs', 'viaPathToFileUrl.mjs', 'viaConst.mjs', 'viaRootJoin.mjs',
+      'viaMissing.mjs']) playwrightPath(rel(n))
     const flagged = [...opaque].map((f) => f.split('/').pop()).sort()
-    check('S1b only a GENUINELY computed specifier is reported — a literal wrapped in new URL() or pathToFileURL(), or resolved through a same-file const, is followed instead',
-      JSON.stringify(flagged) === JSON.stringify(['opaque.mjs', 'opaqueTpl.mjs']),
+    check('S1b only a GENUINELY computed specifier is reported — a wrapped literal, or a const that resolves to a real FILE, is followed; a candidate that names a directory or nothing at all is reported rather than believed',
+      JSON.stringify(flagged) === JSON.stringify(['opaque.mjs', 'opaqueTpl.mjs', 'viaMissing.mjs']),
       `flagged ${JSON.stringify(flagged)}`)
     opaque.clear()
   } finally {

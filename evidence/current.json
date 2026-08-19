@@ -1,13 +1,22 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "a63ee6abb3aeddf1bd69090df0dbb21fca5beba9",
+  "head": "b3e923db8349173e7a617a11037f25679aa83d61",
   "branch": "claude/b4-gigproof-discovery-e7749o",
-  "treeClean": true,
-  "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/m6/verify2.log, observed exit 0)",
+  "treeClean": false,
+  "dirtyFiles": [
+    "M docs/TASK-REGISTER.md",
+    " M package.json",
+    " M scripts/generate-evidence.mjs",
+    " M scripts/test-brand-naming.mjs",
+    " M scripts/test-chain-closed.mjs",
+    " M scripts/test-og-assets.mjs",
+    " M scripts/test-waitlist-capture.mjs",
+    " M supabase/migrations/048_waitlist_mode.down.sql"
+  ],
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa4/verify.log, observed exit 0)",
   "exitCode": 0,
-  "result": "green-at-head",
+  "result": "green-but-tree-dirty (does NOT describe this HEAD)",
   "declaredStepCount": 45,
   "gateCount": 45,
   "gates": [
@@ -132,6 +141,24 @@
       "result": "pass"
     },
     {
+      "id": "Generating static pages using 3 workers",
+      "step": "build:site",
+      "summary": "✓ Compiled successfully in 5.2s",
+      "result": "pass"
+    },
+    {
+      "id": "build",
+      "step": "build",
+      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
+      "result": "pass"
+    },
+    {
+      "id": "build:demo",
+      "step": "build:demo",
+      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
+      "result": "pass"
+    },
+    {
       "id": "RELEASE ARTIFACTS",
       "step": "test:release-artifacts",
       "summary": "✓ RELEASE ARTIFACTS: 193 shipped file(s) scanned, no loopback host.",
@@ -153,12 +180,6 @@
       "id": "COPY MATRIX",
       "step": "test:copy",
       "summary": "✓ COPY MATRIX: every row carries every locale, ids are unique and self-addressing, marketing rows carry no engineering vocabulary, no phone number in copy.",
-      "result": "pass"
-    },
-    {
-      "id": "Generating static pages using 3 workers",
-      "step": "build:site",
-      "summary": "✓ Compiled successfully in 9.3s",
       "result": "pass"
     },
     {
@@ -258,18 +279,6 @@
       "result": "pass"
     },
     {
-      "id": "build",
-      "step": "build",
-      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
-      "result": "pass"
-    },
-    {
-      "id": "build:demo",
-      "step": "build:demo",
-      "summary": "- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.",
-      "result": "pass"
-    },
-    {
       "id": "CHAIN CLOSED",
       "step": "test:chain-closed",
       "summary": "✓ CHAIN CLOSED — 22 checks hold: 5 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
@@ -336,9 +345,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 4.15s",
+    "✓ built in 4.83s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.13s"
+    "✓ built in 4.16s"
   ],
   "unclassified": [],
   "skips": [],

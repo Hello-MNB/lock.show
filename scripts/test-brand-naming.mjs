@@ -393,16 +393,40 @@ for (const f of SRC) {
     fail(`C2 ${f}: uppercase "LOCK.SHOW" outside an approved lockup (${m.length})${where}`)
   }
 }
-// NON-VACUITY: every allowlisted file must still CONTAIN the token inside its
-// granted element. An asset that no longer carries it does not need an exemption,
-// and a stale entry is how an allowlist quietly becomes a blanket.
-// `.match()`, NOT `.test()`. UPPER_DOTTED carries the /g flag, and RegExp.test on a
-// global regex ADVANCES lastIndex between calls — so alternate files were reported
-// as no longer containing the token when they plainly do. String.match resets.
-// Caught by this check firing on five assets that each carry it once.
-const staleExempt = [...ELEMENT_EXEMPT.keys()].filter((f) => existsSync(f) && !readFileSync(f, 'utf8').match(UPPER_DOTTED))
-if (staleExempt.length) fail(`C2 ${staleExempt.length} allowlisted asset(s) no longer contain LOCK.SHOW at all, so the exemption is stale and should be removed: ${staleExempt.join(', ')}`)
-if (upper === 0) ok(`C2 uppercase LOCK.SHOW confined to the EXACT ELEMENT each of ${LOCKUP_ALLOWLIST.length} assets was allowlisted for — all ${LOCKUP_ALLOWLIST.length} carry it as accessible text (the open BRAND-LOCKUP-TITLES question) and ${LOCKUP_VISIBLE_ALLOWLIST.length} of those also draw it as a visible wordmark (the case the ruling already permits). Anywhere else in the same files it fails`)
+// NON-VACUITY, PER ELEMENT — and it was per FILE, the same mismatch L4 was written
+// to remove (QA-INDEP-04, M2). The guard asked only whether the token appeared
+// anywhere in the file, so the reviewer deleted the drawn wordmark from a
+// VISIBLE-allowlisted card, left its <title> intact, and the now-dead <text>
+// exemption survived unremarked. "An unused exemption is how an allowlist becomes
+// a blanket" is L4's own sentence, and its guard reproduced the defect it names.
+//
+// This also MEASURES the two counts. The C2 summary and the OWNER-PENDING row both
+// asserted "all 22 carry it as accessible text, 6 of those also draw it", and the
+// register claimed the owner row now "reports a figure the gate measures rather
+// than one I counted by hand". It did not — both numbers were still hand-classified
+// and merely printed by the gate. They are computed here, so a third correction of
+// that row cannot be needed.
+//
+// `.match()`, NOT `.test()`: UPPER_DOTTED carries /g, and RegExp.test on a global
+// regex advances lastIndex between calls.
+const countIn = (src, re) => ((src.match(re) || []).join('').match(UPPER_DOTTED) || []).length
+let titleCarriers = 0
+let drawnCarriers = 0
+const staleExempt = []
+for (const [f, regexes] of ELEMENT_EXEMPT) {
+  if (!existsSync(f)) continue
+  const src = readFileSync(f, 'utf8')
+  const inTitle = countIn(src, TITLE_ELEMENTS())
+  const inDrawn = countIn(src, DRAWN_ELEMENTS())
+  if (inTitle) titleCarriers++
+  if (inDrawn) drawnCarriers++
+  const granted = regexes.length === 1
+    ? [['<title>/<desc>', inTitle]]
+    : [['<title>/<desc>', inTitle], ['<text>/<tspan>', inDrawn]]
+  for (const [name, n] of granted) if (n === 0) staleExempt.push(`${f} (${name} no longer carries it)`)
+}
+if (staleExempt.length) fail(`C2 ${staleExempt.length} exemption(s) are STALE — the element each was granted for no longer carries LOCK.SHOW, so the entry should be removed rather than left as a blanket: ${staleExempt.join(', ')}`)
+if (upper === 0 && staleExempt.length === 0) ok(`C2 uppercase LOCK.SHOW confined to the EXACT ELEMENT each of ${LOCKUP_ALLOWLIST.length} assets was allowlisted for — MEASURED, not hand-classified: ${titleCarriers} carry it as accessible text (the open BRAND-LOCKUP-TITLES question) and ${drawnCarriers} of those also draw it as a visible wordmark (the case the ruling already permits). Anywhere else in the same files it fails`)
 
 // ── VACUOUS-PASS GUARD. If the corpus is empty the gate proves nothing.
 // FLOOR SET NEAR THE ACTUAL CORPUS (QA-INDEP-03, L6). The threshold was 50
