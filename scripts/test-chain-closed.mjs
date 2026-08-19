@@ -125,18 +125,94 @@ const SELF = 'scripts/test-chain-closed.mjs'
 // `playwright` token and joined the chain undetected. The scan now follows
 // RELATIVE imports through the local module graph and reports the path by which
 // playwright is reachable, so the reason is legible in the output.
-const DIRECT = /(?:from|import)\s*\(?\s*['"]playwright['"]/
+// LITERAL SPECIFIERS ONLY — the two blind spots that left, and how each is closed.
+//
+// (1) THE PACKAGE NAME WAS PINNED TO ONE SPELLING. `DIRECT` matched the exact
+//     string 'playwright', so `import { test } from '@playwright/test'` — the
+//     ordinary way a Playwright test file is written — carried no match, resolved
+//     to "no browser needed", and would have joined the chain with no fail-closed
+//     proof. Same for `playwright-core`. The pattern now covers the family.
+//
+// (2) A NON-LITERAL SPECIFIER CANNOT BE RESOLVED AT ALL, and returning null for it
+//     was the wrong answer. `await import(mod)` or `import(`./${name}.mjs`)` is not
+//     evidence that a file reaches no browser; it is evidence that this scanner
+//     cannot tell. Silently answering "clean" is the failure mode every review in
+//     this lane has found in some other form. Such a file is now REPORTED and the
+//     gate FAILS: an unanalysable import is an open question, not a pass.
+//
+// Neither had a live instance when this was written — both are holes in the
+// ratchet rather than live defects, which is exactly when they are cheapest to
+// close, and the same posture recorded for the Hebrew suffix-particle hole.
+const DIRECT = /(?:from|import)\s*\(?\s*['"](?:playwright|playwright-core|@playwright\/[a-z-]+)['"]/
 const RELATIVE = /(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g
+// A dynamic import whose argument is not a plain quoted specifier. Not all of
+// these are unanalysable: the FIRST version of this rule reported seven real
+// files, and every one turned out to use a literal wrapped in a URL helper —
+//
+//   await import(new URL('../server/index.js', import.meta.url))
+//   await import(pathToFileURL(resolve('src/lib/radar.js')).href)
+//
+// which this scanner can follow perfectly well. Declaring a resolvable idiom
+// "unknowable" would have been the same overreach as exempting a whole file for
+// one element. So the call's argument list is searched for a string literal, and
+// for a bare identifier resolved one level against a `const NAME = '…'` in the
+// same file; only what survives that is genuinely computed.
+// Scanned per LINE rather than by counting parentheses. The first attempt tried to
+// balance nested calls with a bounded `(?:\)[^)]*){0,3}?` and quietly failed on
+// `import(pathToFileURL(join(process.cwd(), RULE)).href)` — four levels deep —
+// reporting a file whose specifier is a plain `const RULE = 'src/lib/…'`. A regex
+// that miscounts brackets is a worse oracle than the line it appears on, and every
+// dynamic import in this repo fits on one line.
+const DYNAMIC_LINE = /\bimport\s*\((.*)$/
+const STRING_IN = /['"]([^'"]+)['"]/
+const IDENT_IN = /\b([A-Z][A-Z0-9_]*)\b/
+/** Files whose imports this scanner cannot resolve. Collected while walking, so
+ *  the report names the file rather than the gate that happened to reach it. */
+const opaque = new Set()
 function playwrightPath(file, seen = new Set()) {
   const abs = path.join(ROOT, file)
   if (seen.has(abs) || !existsSync(abs)) return null
   seen.add(abs)
   let src
   try { src = readFileSync(abs, 'utf8') } catch { return null }
+  // Dynamic specifiers: resolve what is resolvable, report only the rest.
+  const dynamicTargets = []
+  if (file !== SELF) {
+    for (const line of src.split('\n')) {
+      const m = DYNAMIC_LINE.exec(line)
+      if (!m) continue
+      const args = m[1]
+      if (/^\s*['"]/.test(args)) continue                    // a plain literal; RELATIVE handles it
+      // An interpolated template is genuinely computed even though it contains
+      // quote-free text — check for it before looking for a literal.
+      const interpolated = /`[^`]*\$\{/.test(args)
+      let lit = interpolated ? null : args.match(STRING_IN)?.[1]
+      if (!lit && !interpolated) {
+        // One level of indirection: a CONST in this file whose initializer
+        // carries a literal — `const RULE = 'src/lib/x.js'` and also
+        // `const TAILWIND_PATH = join(ROOT, 'tailwind.config.js')`.
+        const id = args.match(IDENT_IN)?.[1]
+        if (id) {
+          const decl = src.match(new RegExp(`\\bconst\\s+${id}\\s*=([^\\n]*)`))?.[1]
+          lit = decl?.match(STRING_IN)?.[1] ?? null
+        }
+      }
+      if (lit) dynamicTargets.push(lit)
+      else opaque.add(file)
+    }
+  }
   if (DIRECT.test(src)) return [file]
   for (const m of src.matchAll(RELATIVE)) {
     const target = path.relative(ROOT, path.resolve(path.dirname(abs), m[1]))
     const deeper = playwrightPath(target, seen)
+    if (deeper) return [file, ...deeper]
+  }
+  // A resolved dynamic target is a real edge in the graph — a gate that reaches a
+  // browser through `import(new URL('./lib/browser.mjs', import.meta.url))` is as
+  // browser-dependent as one that writes the import statically.
+  for (const lit of dynamicTargets) {
+    const base = lit.startsWith('.') ? path.dirname(abs) : ROOT
+    const deeper = playwrightPath(path.relative(ROOT, path.resolve(base, lit)), seen)
     if (deeper) return [file, ...deeper]
   }
   return null
@@ -155,14 +231,50 @@ function playwrightPath(file, seen = new Set()) {
     w('viaTwo.mjs', "import { go } from './helper2.mjs'\nexport default go\n")
     w('innocent.mjs', "export const x = 1\n")
     w('viaInnocent.mjs', "import { x } from './innocent.mjs'\nexport default x\n")
+    // M6 · the package family, not one spelling. `@playwright/test` is the
+    // ordinary way a Playwright test file is written and matched nothing before.
+    w('scoped.mjs', "import { test } from '@playwright/test'\nexport default test\n")
+    w('core.mjs', "import { chromium } from 'playwright-core'\nexport default chromium\n")
+    w('viaScoped.mjs', "import t from './scoped.mjs'\nexport default t\n")
+    // …and a package whose name merely STARTS with the token must not match, or
+    // the widening would trade one blind spot for a false positive.
+    w('lookalike.mjs', "import { x } from 'playwrightish'\nexport default x\n")
+    // M6 · an import this scanner cannot read. Not "no browser" — "cannot tell".
+    // NOT `process.env.X` — the integration-contract gate scans source for env
+    // reads and demands they be registered, and it correctly flagged this fixture
+    // STRING as an unregistered read. A fixture must not smuggle a real-looking
+    // credential surface into the tree just to be unresolvable.
+    w('opaque.mjs', "const m = String(Math.trunc(1))\nexport default await import(m)\n")
+    w('opaqueTpl.mjs', "const n = 'a'\nexport default await import(`./${n}.mjs`)\n")
+    // …and the WRAPPED-LITERAL idioms this repo actually uses, which are
+    // resolvable and must be followed rather than reported.
+    w('viaUrl.mjs', "export default await import(new URL('./helper1.mjs', import.meta.url))\n")
+    w('viaPathToFileUrl.mjs', "export default await import(pathToFileURL(resolve('scripts/.chain-closed-fixture/helper1.mjs')).href)\n")
+    w('viaConst.mjs', "const RULE = 'scripts/.chain-closed-fixture/helper1.mjs'\nexport default await import(pathToFileURL(RULE).href)\n")
+    w('viaUrlClean.mjs', "export default await import(new URL('./innocent.mjs', import.meta.url))\n")
     const rel = (n) => `scripts/.chain-closed-fixture/${n}`
     const cases = [
       ['direct.mjs', true], ['viaHelper.mjs', true], ['viaTwo.mjs', true],
-      ['innocent.mjs', false], ['viaInnocent.mjs', false],
+      ['scoped.mjs', true], ['core.mjs', true], ['viaScoped.mjs', true],
+      ['viaUrl.mjs', true], ['viaPathToFileUrl.mjs', true], ['viaConst.mjs', true],
+      ['innocent.mjs', false], ['viaInnocent.mjs', false], ['lookalike.mjs', false],
+      ['viaUrlClean.mjs', false],
     ]
     const wrong = cases.filter(([n, want]) => !!playwrightPath(rel(n)) !== want)
-    check('S1 reachability self-test — playwright is found through a helper, and through TWO helpers, and is not invented where absent',
+    check('S1 reachability self-test — playwright is found through a helper, through TWO helpers, and under @playwright/* and playwright-core; it is not invented where absent, nor for a lookalike package name',
       wrong.length === 0, wrong.map(([n, want]) => `${n} should ${want ? '' : 'NOT '}resolve`).join(' · '))
+
+    // S1b · the OPAQUE case, proven in both directions on fixtures. A file whose
+    // import argument is not a literal must be REPORTED, and an ordinary literal
+    // import must not be — otherwise the new rule would flag the whole codebase.
+    opaque.clear()
+    for (const n of ['opaque.mjs', 'opaqueTpl.mjs', 'direct.mjs', 'viaHelper.mjs',
+      'viaUrl.mjs', 'viaPathToFileUrl.mjs', 'viaConst.mjs']) playwrightPath(rel(n))
+    const flagged = [...opaque].map((f) => f.split('/').pop()).sort()
+    check('S1b only a GENUINELY computed specifier is reported — a literal wrapped in new URL() or pathToFileURL(), or resolved through a same-file const, is followed instead',
+      JSON.stringify(flagged) === JSON.stringify(['opaque.mjs', 'opaqueTpl.mjs']),
+      `flagged ${JSON.stringify(flagged)}`)
+    opaque.clear()
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -202,6 +314,25 @@ check('C1 the set of browser-dependent gates in the verify chain is exactly the 
   JSON.stringify(rendered) === JSON.stringify(EXPECTED),
   `pinned ${JSON.stringify(EXPECTED)}, found ${JSON.stringify(rendered)}`)
 check('C1b non-vacuity — at least one browser-dependent gate was detected', rendered.length > 0)
+// AN UNANALYSABLE IMPORT IS AN OPEN QUESTION, NOT A PASS (M6). If a gate or any
+// module it reaches imports through a computed specifier, this scanner cannot say
+// whether a browser is on the other side — and "cannot say" must not be recorded
+// as "does not need one", which is how a rendered gate would rejoin the chain
+// with no fail-closed proof. There is no live instance today; this keeps it so.
+// PINNED, MAY ONLY SHRINK. One file in the chain genuinely computes its specifier:
+// test-i18n-parity's `load(path)` interpolates a parameter — `new URL(\`../${path}\`,
+// import.meta.url)` — and its callers pass i18n catalogue paths. No amount of
+// static analysis resolves a function parameter, so this is recorded as a known
+// unknown rather than pretended away, and adding a second one is a gate failure.
+const OPAQUE_PINNED = ['scripts/test-i18n-parity.mjs']
+const opaqueNew = [...opaque].filter((f) => !OPAQUE_PINNED.includes(f))
+const opaqueStale = OPAQUE_PINNED.filter((f) => !opaque.has(f))
+check('C2b no NEW file imports through a computed specifier — reachability must never be unknown by accident',
+  opaqueNew.length === 0,
+  `${opaqueNew.length} unpinned file(s) with an unresolvable specifier: ${opaqueNew.join(', ')}`)
+check('C2c the pinned unknowns are still unknown — a stale pin is an exemption nobody re-earned',
+  opaqueStale.length === 0,
+  `no longer opaque, remove from OPAQUE_PINNED: ${opaqueStale.join(', ')}`)
 
 // ── execute each one with playwright unresolvable ───────────────────────────
 for (const gate of rendered) {

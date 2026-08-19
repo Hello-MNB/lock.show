@@ -4566,3 +4566,67 @@ overload of a different arity, named nowhere in the migration**.
 | **T1** | an allowlisted asset gains `aria-label="LOCK.SHOW …"` | `✗ C2 … outside an approved lockup (1) — this file is allowlisted, but only inside the element it was granted for` |
 | **T2** | an allowlisted asset stops carrying the token | `✗ C2 1 allowlisted asset(s) no longer contain LOCK.SHOW at all, so the exemption is stale` |
 | **T3** | restore 048's signature-named drop | `✗ [0b] applying 048 REMOVES it — exactly one join_waitlist survives — 2,17` |
+
+## M6 — the reachability scan read literal specifiers only, and one blunt rule was worse than the hole
+
+**Increment:** M6 · **HEAD at open:** `749626b`
+**Files:** `scripts/test-chain-closed.mjs` · `docs/TASK-REGISTER.md`
+
+`test-chain-closed` proves that every browser-dependent gate in `verify` fails closed rather than
+skipping. It found them with two literal-string patterns, which left two ways for a rendered gate to
+join the chain unproven:
+
+1. **The package name was pinned to one spelling.** `DIRECT` matched the exact string `'playwright'`,
+   so `import { test } from '@playwright/test'` — the ordinary way a Playwright test file is written —
+   matched nothing and resolved to "no browser needed". Measured directly rather than asserted:
+
+   ```
+   old DIRECT matches @playwright/test : false
+   new DIRECT matches @playwright/test : true
+   ```
+
+2. **A computed specifier returned `null`**, i.e. the same answer as "reaches no browser". `await
+   import(mod)` is not evidence of anything except that the scanner cannot tell, and recording
+   "cannot tell" as "clean" is the failure mode every review in this lane has found in some other form.
+
+**The first repair was wrong in the opposite direction, and its own execution said so.** Flagging every
+non-literal `import(` reported **seven** real files — and all seven use a literal wrapped in a URL
+helper (`import(new URL('../server/index.js', import.meta.url))`,
+`import(pathToFileURL(resolve('src/lib/radar.js')).href)`), which this scanner can follow perfectly
+well. Declaring a resolvable idiom unknowable is the same overreach as exempting a whole file for one
+element — the defect L4 had just closed. So the scan now **resolves what is resolvable**: a string
+literal in the call, or a bare identifier resolved one level against a `const` in the same file, and a
+resolved dynamic target is followed as a real graph edge.
+
+**A regex that miscounted brackets.** The first version balanced nested calls with
+`(?:\)[^)]*){0,3}?` and silently failed on `import(pathToFileURL(join(process.cwd(), RULE)).href)` —
+four levels deep — reporting a file whose specifier is a plain `const RULE = 'src/lib/rosterHealth.js'`.
+Scanning per LINE is the honest tool: every dynamic import in this repo fits on one, and a regex that
+miscounts brackets is a worse oracle than the line it appears on. Seven reported → three → **one**.
+
+**The one that remains is a known unknown, pinned.** `test-i18n-parity`'s `load(path)` interpolates a
+function parameter — `new URL(\`../${path}\`, import.meta.url)` — and no static analysis resolves a
+parameter. `OPAQUE_PINNED` records it, `C2b` fails on any NEW one, and `C2c` fails on a **stale** pin,
+because an exemption nobody re-earned is how a pin becomes a blanket.
+
+**Mutation battery — 3 injected, 3 caught, restores verified byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **U1** | a chain gate reaches a browser through `@playwright/test` | `C1 … found [… test-seo-contract.mjs …]`, then `C2`/`C3` demand the fail-closed proof it does not have |
+| **U2** | a new computed specifier in a chain gate | `C2b … 1 unpinned file(s) with an unresolvable specifier` |
+| **U3** | an extra entry in `OPAQUE_PINNED` | `C2c … no longer opaque, remove from OPAQUE_PINNED` |
+
+U1 is load-bearing: under the old pattern the same injection produced **no match at all**, so the gate
+would have joined the chain with no fail-closed proof and nothing would have said so.
+
+**A RED the chain found, reported not worked around.** The first full run exited 1 at step 23:
+`✗ M is read in code (scripts/test-chain-closed.mjs) but is NOT in the register`. My opaque fixture
+was the string `"const m = process.env.M …"`, and the integration-contract gate — correctly — scans
+source for env reads and demands each be registered. A fixture must not smuggle a credential-shaped
+surface into the tree merely to be unresolvable; the fixture now computes its specifier without
+touching `process.env`, and both gates pass.
+
+S1 now covers `@playwright/*`, `playwright-core`, a lookalike package name that must NOT match, and
+the three wrapped-literal idioms; S1b proves the opaque report fires only on genuinely computed
+specifiers. Both run on fixtures before any real verdict, as they did before.
