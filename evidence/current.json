@@ -1,23 +1,278 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "419ff7e2de91f16fe971ed4f8a5bf54d2da86716",
+  "head": "42ee09f11ace59b756394d89b7a6ee38624fa5e4",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/v12.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/m7/verify.log)",
   "exitCode": 0,
   "result": "green-at-head",
-  "gateCount": 33,
+  "declaredStepCount": 43,
+  "gateCount": 43,
   "gates": [
     {
       "id": "NAV CONTRACT",
+      "step": "test:nav",
+      "summary": "✓ NAV CONTRACT: all 35 navigation journeys land correctly (signup + returning, every entity + gate).",
       "result": "pass"
     },
     {
       "id": "FLOW CONTRACTS",
+      "step": "test:flow",
+      "summary": "✓ FLOW CONTRACTS: all 16 assertions hold — every target resolves, every screen is role-reachable and has a way back, no orphan routes, act-scoped writes intact.",
       "result": "pass"
     },
+    {
+      "id": "test:isolation",
+      "step": "test:isolation",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "canon-drift",
+      "step": "test:canon",
+      "summary": "✓ canon-drift: app CANON == 040_buyer_funnel_events.sql CHECK (33 events, in sync)",
+      "result": "pass"
+    },
+    {
+      "id": "A1",
+      "step": "test:analytics",
+      "summary": "✓ A1: app CANON (33) ⊆ 040_buyer_funnel_events.sql CHECK (33)",
+      "result": "pass"
+    },
+    {
+      "id": "test:security",
+      "step": "test:security",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "AUTH · SESSION · RECOVERY",
+      "step": "test:auth-session",
+      "summary": "✓ AUTH · SESSION · RECOVERY: 39 static checks hold — one password-change surface, public by design, ready on any session, with no re-authentication in front of it; and sign-out clears the session but none of the app's 14 resolvable (+4 helper-resolved) storage keys, with the T-106 stale-Act adoption structurally pinned at both consumers.",
+      "result": "pass"
+    },
+    {
+      "id": "ACT BOUNDARY",
+      "step": "test:act-boundary",
+      "summary": "✓ ACT BOUNDARY: publish executes; act_id stamped; no cross-Act evidence transfer; authority resolves on the Act; non-default publication refused fail-closed and writes nothing.",
+      "result": "pass"
+    },
+    {
+      "id": "LINK INTEGRITY",
+      "step": "test:link-integrity",
+      "summary": "✓ LINK INTEGRITY: all assertions hold.",
+      "result": "pass"
+    },
+    {
+      "id": "test:public-passport",
+      "step": "test:public-passport",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "SQL MIGRATION GATE",
+      "step": "test:sql-migrations",
+      "summary": "✓ SQL MIGRATION GATE: all assertions hold.",
+      "result": "pass"
+    },
+    {
+      "id": "SQL PRIVILEGES",
+      "step": "test:sql-privileges",
+      "summary": "✓ SQL PRIVILEGES: every function 041/042 create has an explicit, minimal, EXECUTED-and-verified grant.",
+      "result": "pass"
+    },
+    {
+      "id": "GRANT SCOPE",
+      "step": "test:grant-scope",
+      "summary": "✓ GRANT SCOPE: default-deny proven executed — action, Act, audience, time window, revocation and legacy-publish all denied on the negative side; PART B dormant and ungranted; anon has no oracle; the down migration reverses it on a real database.",
+      "result": "pass"
+    },
+    {
+      "id": "GUARDRAILS",
+      "step": "test:guardrails",
+      "summary": "✓ GUARDRAILS: all 7 §20 inspectors pass (person-score · retired-word · destructive-migration · internal-confidence · reaction-as-number · two-view · ai-output-firewall).",
+      "result": "pass"
+    },
+    {
+      "id": "test:ds",
+      "step": "test:ds",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "WIDGET-STATES",
+      "step": "test:states",
+      "summary": "✓ WIDGET-STATES: all 6 proof widgets render through the full 10-state machine (T-90 / §5.8).",
+      "result": "pass"
+    },
+    {
+      "id": "ONE-TRUTH",
+      "step": "test:one-truth",
+      "summary": "✓ ONE-TRUTH: roster health has exactly one derivation; both agency surfaces map that one state.",
+      "result": "pass"
+    },
+    {
+      "id": "test:projection-matrix",
+      "step": "test:projection-matrix",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "TENANT · MANDATE · ACT ISOLATION",
+      "step": "test:tenant-isolation",
+      "summary": "✓ TENANT · MANDATE · ACT ISOLATION: 151 checks, all hold.",
+      "result": "pass"
+    },
+    {
+      "id": "EMBED-INTEGRITY",
+      "step": "test:embed",
+      "summary": "✓ EMBED-INTEGRITY: committed embed is conflict-free, single-bundle per route.",
+      "result": "pass"
+    },
+    {
+      "id": "RELEASE ARTIFACTS",
+      "step": "test:release-artifacts",
+      "summary": "✓ RELEASE ARTIFACTS: 193 shipped file(s) scanned, no loopback host.",
+      "result": "pass"
+    },
+    {
+      "id": "INTEGRATION CONTRACT",
+      "step": "test:integration-contract",
+      "summary": "✓ INTEGRATION CONTRACT: register ↔ code agree; classes separated; scanners proven; no committed or bundled credential; guards match; activation claims honest.",
+      "result": "pass"
+    },
+    {
+      "id": "WAITLIST CAPTURE",
+      "step": "test:waitlist",
+      "summary": "✓ WAITLIST CAPTURE: server-side validation, six distinct roles, versioned consent that cannot be forged or silently withdrawn, idempotency, rate limiting, the closed public write path — and, both halves of it, that no client still asks for the write the database refuses. Contact payload proven end to end. NOT proven here: behaviour against the live Supabase, which this suite never contacts.",
+      "result": "pass"
+    },
+    {
+      "id": "COPY MATRIX",
+      "step": "test:copy",
+      "summary": "✓ COPY MATRIX: every row carries every locale, ids are unique and self-addressing, marketing rows carry no engineering vocabulary, no phone number in copy.",
+      "result": "pass"
+    },
+    {
+      "id": "BRAND NAMING",
+      "step": "test:brand",
+      "summary": "✓ BRAND NAMING: zero bare LOCK in the GATED scope — website source, rendered HTML, public app shells and non-HTML public surfaces; lowercase lock.show URLs preserved. NOT \"everywhere\": 15 token(s) remain deferred in src/**, and docs/** is out of scope entirely.",
+      "result": "pass"
+    },
+    {
+      "id": "S1-S3",
+      "step": "test:seo",
+      "summary": "✓ S1-S3: 15 pages — metadata + unique title/description/canonical, all canonicals on www.lock.show",
+      "result": "pass"
+    },
+    {
+      "id": "SITE NAV CONFORMANCE",
+      "step": "test:sitenav",
+      "summary": "✓ SITE NAV CONFORMANCE: laws 1-3 hold — every crawled page has <nav> + footer legal links, all 15 routes reachable from \"/\", all 26 internal links resolve.",
+      "result": "pass"
+    },
+    {
+      "id": "HERO CONTRACT",
+      "step": "test:hero",
+      "summary": "✓ HERO CONTRACT: 13 hero pages on approved variants, no magic hero min-heights outside styles/hero.css, ONE desktop hero height 620px on all heroes @1440×900 (±0px), rendered fold/height/overlap/crawl contracts hold @1440×900 + 390×844 (+320×568 consent)",
+      "result": "pass"
+    },
+    {
+      "id": "CLIENT-STORE CONTRACT",
+      "step": "test:client-store",
+      "summary": "✓ CLIENT-STORE CONTRACT: 39 assertions hold — consent banner and locale both read localStorage through useSyncExternalStore, persist across reload, and keep gtag.js and <html lang/dir> as effect-only external writes.",
+      "result": "pass"
+    },
+    {
+      "id": "STORAGE RESILIENCE",
+      "step": "test:storage",
+      "summary": "✓ STORAGE RESILIENCE — 13 checks hold",
+      "result": "pass"
+    },
+    {
+      "id": "LOGICAL DIRECTION",
+      "step": "test:logical-dir",
+      "summary": "✓ LOGICAL DIRECTION — 13 checks hold",
+      "result": "pass"
+    },
+    {
+      "id": "VISUAL REGRESSION",
+      "step": "test:visual",
+      "summary": "✓ VISUAL REGRESSION: 28 of 28 screenshot(s) match the committed baselines (≤1% pixel drift)",
+      "result": "pass"
+    },
+    {
+      "id": "component-styles",
+      "step": "check:styles",
+      "summary": "✓ component-styles: docs/design-system/COMPONENT-STYLES.md in sync (9 primitives + 26 components)",
+      "result": "pass"
+    },
+    {
+      "id": "LANGUAGE-PURE",
+      "step": "lint:i18n",
+      "summary": "✓ LANGUAGE-PURE (0 violations)   · demo.js bilingual-fixture lines (data): 64",
+      "result": "pass"
+    },
+    {
+      "id": "I18N PARITY",
+      "step": "test:i18n-parity",
+      "summary": "✓ I18N PARITY: 1332 EN / 1328 HE keys — no unexpected divergence, no orphans, allowlist accurate.",
+      "result": "pass"
+    },
+    {
+      "id": "REGISTRY VALID",
+      "step": "validate:registry",
+      "summary": "✓ REGISTRY VALID — 483 rows · 376 unique fields · header + enums + ids + duplicates + firewall-surface + ticketing-hierarchy all pass",
+      "result": "pass"
+    },
+    {
+      "id": "DELTAS VALID",
+      "step": "validate:deltas",
+      "summary": "✓ DELTAS VALID — 337 records · segment_baseline:90 · field_override:66 · field_addition:76 · activation_rule:100 · governance:5 · referential integrity vs F1 (376 ids) + firewall (musical-score allowlist) pass",
+      "result": "pass"
+    },
+    {
+      "id": "node scripts/generate-event-registry.mjs --check",
+      "step": "node scripts/generate-event-registry.mjs --check",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "EVIDENCE PARSER",
+      "step": "test:evidence-parser",
+      "summary": "✓ EVIDENCE PARSER: one gate per declared chain step, tickless and lowercase summaries captured, build-tool output excluded, a step that did not run reported rather than assumed green, and no column-0 verdict silently discarded.",
+      "result": "pass"
+    },
+    {
+      "id": "build",
+      "step": "build",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "build:demo",
+      "step": "build:demo",
+      "summary": null,
+      "result": "pass"
+    },
+    {
+      "id": "CHAIN CLOSED",
+      "step": "test:chain-closed",
+      "summary": "✓ CHAIN CLOSED — 17 checks hold: 4 browser-dependent gates in `verify`, each proven to fail closed by execution, not by reading its source.",
+      "result": "pass"
+    },
+    {
+      "id": "FIT",
+      "step": "test:fit",
+      "summary": "✓ FIT: 11 covered screens fit at 360px, 390px, 430px, 1360px in en/ltr + he/rtl — no clamped text overflowing, no overlap among control-layer elements, no h-scroll, no tap target under 44px, never more than one primary CTA, and every render confirmed the direction it claimed. NOT all routes: src/App.jsx declares 38.",
+      "result": "pass"
+    }
+  ],
+  "stepsNotRun": [],
+  "subCheckCount": 12,
+  "subChecks": [
     {
       "id": "A1",
       "result": "pass"
@@ -36,58 +291,6 @@
     },
     {
       "id": "A5",
-      "result": "pass"
-    },
-    {
-      "id": "ANALYTICS CONTRACT",
-      "result": "pass"
-    },
-    {
-      "id": "ACT BOUNDARY",
-      "result": "pass"
-    },
-    {
-      "id": "LINK INTEGRITY",
-      "result": "pass"
-    },
-    {
-      "id": "SQL MIGRATION GATE",
-      "result": "pass"
-    },
-    {
-      "id": "SQL PRIVILEGES",
-      "result": "pass"
-    },
-    {
-      "id": "GRANT SCOPE",
-      "result": "pass"
-    },
-    {
-      "id": "GUARDRAILS",
-      "result": "pass"
-    },
-    {
-      "id": "WIDGET-STATES",
-      "result": "pass"
-    },
-    {
-      "id": "ONE-TRUTH",
-      "result": "pass"
-    },
-    {
-      "id": "TENANT · MANDATE · ACT ISOLATION",
-      "result": "pass"
-    },
-    {
-      "id": "EMBED-INTEGRITY",
-      "result": "pass"
-    },
-    {
-      "id": "RELEASE ARTIFACTS",
-      "result": "pass"
-    },
-    {
-      "id": "INTEGRATION CONTRACT",
       "result": "pass"
     },
     {
@@ -117,32 +320,15 @@
     {
       "id": "S10",
       "result": "pass"
-    },
-    {
-      "id": "SEO CONTRACT",
-      "result": "pass"
-    },
-    {
-      "id": "SITE NAV CONFORMANCE",
-      "result": "pass"
-    },
-    {
-      "id": "HERO CONTRACT",
-      "result": "pass"
-    },
-    {
-      "id": "VISUAL REGRESSION",
-      "result": "pass"
-    },
-    {
-      "id": "I18N PARITY",
-      "result": "pass"
-    },
-    {
-      "id": "FIT",
-      "result": "pass"
     }
   ],
+  "toolOutput": [
+    "✓ 160 modules transformed.",
+    "✓ built in 3.81s",
+    "✓ 160 modules transformed.",
+    "✓ built in 2.85s"
+  ],
+  "unclassified": [],
   "skips": [],
   "negativeControls": [
     {
@@ -165,6 +351,30 @@
         "non-default fail-closed guard removed",
         "authority falls back to the URL"
       ]
+    },
+    {
+      "gate": "WAITLIST CAPTURE",
+      "mutations": [
+        "client posts the revoked table",
+        "an offered role with no mapping",
+        "message overwrites instead of appending",
+        "the stale 16-argument overload is left installed"
+      ]
+    },
+    {
+      "gate": "BRAND NAMING",
+      "mutations": [
+        "bare LOCK in an OG source asset",
+        "a lockup allowlist entry removed"
+      ]
+    },
+    {
+      "gate": "EVIDENCE PARSER",
+      "mutations": [
+        "a gate that prints no tick",
+        "a declared step missing from the log",
+        "build-tool output offered as a gate"
+      ]
     }
   ],
   "independentVerdict": null,
@@ -172,6 +382,6 @@
   "unverified": [
     ".env.local is absent — no credential was exercised; no named-environment readiness is claimed.",
     "No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.",
-    "Migrations 038/040/041/042 remain drafted-or-authored and NOT applied to any live environment."
+    "Migrations 043-048 remain drafted-or-authored and NOT applied to any live environment."
   ]
 }
