@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "5af229df3cf8b3e583c54ef4e9fe62772258eff8",
+  "head": "21f379767363a7c83d4223d04ae5269608795598",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa4r/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/pv/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
-  "declaredStepCount": 45,
-  "gateCount": 45,
+  "declaredStepCount": 46,
+  "gateCount": 46,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -69,6 +69,12 @@
       "id": "test:public-passport",
       "step": "test:public-passport",
       "summary": "All public-passport-contract checks passed.",
+      "result": "pass"
+    },
+    {
+      "id": "test:passport-version",
+      "step": "test:passport-version",
+      "summary": "✓ PASSPORT VERSION [PART B DORMANT]: the 041 state machine proven by EXECUTION, not by regex over its own text — five states enforced, publish supersedes the incumbent atomically and stamps lineage, one published version per (lineage × audience), five columns immutable, a superseded version unrevivable, a second Act a genuinely separate bucket, republishing idempotent, and anon refused draft and s",
       "result": "pass"
     },
     {
@@ -134,7 +140,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 6.0s",
+      "summary": "✓ Compiled successfully in 15.9s",
       "result": "pass"
     },
     {
@@ -336,9 +342,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 5.18s",
+    "✓ built in 7.87s",
     "✓ 160 modules transformed.",
-    "✓ built in 4.33s"
+    "✓ built in 3.90s"
   ],
   "unclassified": [],
   "skips": [],
