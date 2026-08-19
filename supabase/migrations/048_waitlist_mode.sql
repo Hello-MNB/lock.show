@@ -72,11 +72,30 @@ revoke all on public.waitlist_rate from anon, authenticated;
 -- neutral receipt as a first-time join, so the response never discloses whether
 -- an address is already registered (§10.1: "does not leak whether another
 -- person is registered beyond the same neutral receipt").
--- The 16-argument version must be DROPPED, not replaced. `create or replace`
--- cannot change a signature: adding p_message creates a SECOND overload, and
--- PostgREST would then resolve by whichever argument set the caller sent — an
--- old client could keep reaching a function this migration thinks it replaced.
-drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text);
+-- EVERY prior version must be DROPPED, not replaced. `create or replace` cannot
+-- change a signature: adding a parameter creates a SECOND overload, and PostgREST
+-- then resolves by whichever argument set the caller sent — an old client keeps
+-- reaching a function this migration believes it replaced.
+--
+-- NAMED BY NAME, NOT BY SIGNATURE (QA-INDEP-03, L5). This was a single
+-- `drop function … (16 types)`, which covered exactly the one arity that happened
+-- to exist when p_message was added. The next parameter reproduces the same hazard
+-- and the same guard would pass, because it would still be dropping yesterday's
+-- shape. Dropping every overload of the NAME is arity-independent: it needs no
+-- maintenance and cannot fall behind the function it protects.
+do $drop_overloads$
+declare r record;
+begin
+  for r in
+    select oid::regprocedure::text as sig
+      from pg_proc
+     where pronamespace = 'public'::regnamespace
+       and proname = 'join_waitlist'
+  loop
+    execute 'drop function if exists ' || r.sig;
+  end loop;
+end
+$drop_overloads$;
 create or replace function public.join_waitlist(
   p_email            text,
   p_entity_role      text,

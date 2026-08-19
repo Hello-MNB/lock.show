@@ -61,7 +61,7 @@ const UPPER_DOTTED = /(?<![A-Za-z0-9_-])LOCK\.SHOW(?![A-Za-z0-9_-])/g
 // question that describes 16 files, and told the list can reach zero when it
 // cannot unless she also rules the visible marks out.
 
-// (a) ACCESSIBLE TEXT — 16 symbol assets whose <title>/<desc> read
+// (a) ACCESSIBLE TEXT ONLY — 16 symbol assets whose <title>/<desc> read
 // "LOCK.SHOW Spotlight Lens symbol black". This is the genuinely open question:
 // an SVG <title> is the name a screen reader ANNOUNCES, which is neither clearly
 // the domain nor clearly the visual lockup, while the ruling bans the bare form
@@ -91,7 +91,10 @@ const LOCKUP_TITLE_ALLOWLIST = [
   'website-next/public/brand/lockshow-symbol-spotlight-lens-v2-white.svg',
 ]
 
-// (b) VISIBLE WORDMARKS — 6 per-route share cards and story templates that DRAW
+// (b) ACCESSIBLE TEXT **AND** A VISIBLE WORDMARK — 6 per-route share cards and
+// story templates. CORRECTED 19 Aug: these carry the mark TWICE, in a <title> as
+// well as in a drawn <text>, so they are in the accessible-text question too. The
+// list is separate because they additionally DRAW
 // LOCK.SHOW as a rendered <text> element, e.g. lockshow-og-production-v1.svg:
 //   <text … font-size="22" font-weight="900">LOCK.SHOW</text>
 // They are referenced by app/bookers/page.tsx:20 and app/producers/page.tsx:19,
@@ -346,13 +349,60 @@ if (pubMissing.length) fail(`C5 ${pubMissing.length} public surface(s) MISSING, 
 else if (pubHits === 0) ok(`C5 all ${pubScanned} non-HTML public surfaces opened and clean (llms.txt ×2, robots.txt, sitemap.xml)`)
 
 // ── CLAUSE 2 · uppercase LOCK.SHOW only in an approved lockup.
+//
+// THE EXEMPTION IS THE ELEMENT, NOT THE FILE (QA-INDEP-03, L4). This loop used to
+// `continue` on an allowlisted path, so those 22 assets were exempt WHOLESALE: one
+// of them could grow a `<text>LOCK.SHOW</text>` banner, an `aria-label`, or a
+// `<metadata>` block and no verdict would ever be printed. An allowlist is meant to
+// record a decision about a SPECIFIC use — "this <title> may say LOCK.SHOW" — and a
+// file-level skip records something much larger than the decision anyone made.
+//
+// So each list exempts only the element it was granted for: the 16 symbol assets
+// inside <title>/<desc> (the accessible-text question open with Maria), the 6 share
+// cards inside <text> (the drawn wordmark the ruling already permits). Anywhere
+// else in those same files, LOCK.SHOW fails exactly as it does in any other file.
+//
+// AND THE SPLIT ITSELF WAS OFF BY THE SAME KIND OF ERROR IT CORRECTED. M5 recorded
+// "16 accessible-text assets and 6 visible ones", from a classification I checked
+// with `grep '<title>[^<]*LOCK\.SHOW'` — which cannot match `<title id="title">`.
+// Narrowing the exemption to the element made all six fail immediately, and the
+// reason is that every one of them carries the mark in a `<title>` AS WELL AS in a
+// drawn `<text>`. QA-INDEP-03 reported exactly that ({"title":1,"text":1}); my
+// verification grep was what was wrong, not the review. So the true shape is: ALL
+// 22 carry it as accessible text — the whole set is the open BRAND-LOCKUP-TITLES
+// question — and 6 of them ALSO draw it, which is the separately-permitted case.
+const TITLE_ELEMENTS = () => /<(title|desc)\b[^>]*>[\s\S]*?<\/\1>/g
+const DRAWN_ELEMENTS = () => /<(text|tspan)\b[^>]*>[\s\S]*?<\/\1>/g
+const ELEMENT_EXEMPT = new Map([
+  ...LOCKUP_TITLE_ALLOWLIST.map((f) => [f, [TITLE_ELEMENTS()]]),
+  ...LOCKUP_VISIBLE_ALLOWLIST.map((f) => [f, [TITLE_ELEMENTS(), DRAWN_ELEMENTS()]]),
+])
 let upper = 0
 for (const f of SRC) {
-  if (LOCKUP_ALLOWLIST.includes(f)) continue
-  const m = readFileSync(f, 'utf8').match(UPPER_DOTTED)
-  if (m) { upper += m.length; fail(`C2 ${f}: uppercase "LOCK.SHOW" outside an approved lockup (${m.length})`) }
+  const raw = readFileSync(f, 'utf8')
+  const exempt = ELEMENT_EXEMPT.get(f)
+  // Blank out ONLY the granted elements, then scan what is left. Replacing with
+  // spaces of equal length keeps every other offset honest for the line report.
+  const scanned = exempt
+    ? exempt.reduce((acc, re) => acc.replace(re, (m) => ' '.repeat(m.length)), raw)
+    : raw
+  const m = scanned.match(UPPER_DOTTED)
+  if (m) {
+    upper += m.length
+    const where = exempt ? ' — this file is allowlisted, but only inside the element it was granted for' : ''
+    fail(`C2 ${f}: uppercase "LOCK.SHOW" outside an approved lockup (${m.length})${where}`)
+  }
 }
-if (upper === 0) ok(`C2 uppercase LOCK.SHOW confined to the lockup allowlist — ${LOCKUP_TITLE_ALLOWLIST.length} assets carrying it as ACCESSIBLE TEXT (the open BRAND-LOCKUP-TITLES question) and ${LOCKUP_VISIBLE_ALLOWLIST.length} carrying it as a VISIBLE wordmark (the case the ruling already permits)`)
+// NON-VACUITY: every allowlisted file must still CONTAIN the token inside its
+// granted element. An asset that no longer carries it does not need an exemption,
+// and a stale entry is how an allowlist quietly becomes a blanket.
+// `.match()`, NOT `.test()`. UPPER_DOTTED carries the /g flag, and RegExp.test on a
+// global regex ADVANCES lastIndex between calls — so alternate files were reported
+// as no longer containing the token when they plainly do. String.match resets.
+// Caught by this check firing on five assets that each carry it once.
+const staleExempt = [...ELEMENT_EXEMPT.keys()].filter((f) => existsSync(f) && !readFileSync(f, 'utf8').match(UPPER_DOTTED))
+if (staleExempt.length) fail(`C2 ${staleExempt.length} allowlisted asset(s) no longer contain LOCK.SHOW at all, so the exemption is stale and should be removed: ${staleExempt.join(', ')}`)
+if (upper === 0) ok(`C2 uppercase LOCK.SHOW confined to the EXACT ELEMENT each of ${LOCKUP_ALLOWLIST.length} assets was allowlisted for — all ${LOCKUP_ALLOWLIST.length} carry it as accessible text (the open BRAND-LOCKUP-TITLES question) and ${LOCKUP_VISIBLE_ALLOWLIST.length} of those also draw it as a visible wordmark (the case the ruling already permits). Anywhere else in the same files it fails`)
 
 // ── VACUOUS-PASS GUARD. If the corpus is empty the gate proves nothing.
 // FLOOR SET NEAR THE ACTUAL CORPUS (QA-INDEP-03, L6). The threshold was 50

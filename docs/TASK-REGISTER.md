@@ -4512,3 +4512,57 @@ verified independently across three build trees; `build:embed` reintroduces no b
 genuinely out of scope; 048's down migration and `[0b]` correct on the hazard they model; the evidence
 record internally consistent. It also retracted one line of attack of its own — it suspected
 `src/lib/ai/anthropic.js` was dead code and found it live via `src/lib/ai/index.js:2`.
+
+## QA3-RESIDUAL — closing the two findings I recorded and did not fix
+
+**Increment:** QA3-RESIDUAL · **HEAD at open:** `9379349`
+**Files:** `scripts/test-brand-naming.mjs` · `supabase/migrations/048_waitlist_mode{,.down}.sql` ·
+`scripts/test-waitlist-capture.mjs` · `docs/OWNER-PENDING.md`
+
+QA-INDEP-03 raised L4 and L5 and I closed neither, recording them as "real, but ratchet holes with no
+live instance". That is the sentence under which findings quietly become permanent, so they are closed
+here. Both are the same defect in different places: **an exemption written wider than the decision it
+records.**
+
+### L4 — the allowlist exempted the FILE, not the ELEMENT
+
+`C2` did `if (LOCKUP_ALLOWLIST.includes(f)) continue`. The decision anyone actually made was "this
+`<title>` may say LOCK.SHOW"; what the code recorded was "this file may say LOCK.SHOW anywhere". An
+allowlisted asset could gain a visible banner, an `aria-label` or a `<metadata>` block unremarked.
+Each list now exempts only the element it was granted for, and a **stale-exemption guard** fails when
+an allowlisted asset stops carrying the token at all — because an unused exemption is how an
+allowlist becomes a blanket.
+
+**And narrowing it corrected the record twice over.** M5 had split the 22 into "16 accessible-text and
+6 visible". All six failed the moment the exemption became element-scoped, because **every one of them
+carries the mark in a `<title>` as well as in a drawn `<text>`**. QA-INDEP-03 reported exactly that
+(`{"title":1,"text":1}`); the thing that was wrong was my verification grep,
+`<title>[^<]*LOCK\.SHOW`, which cannot match `<title id="title">`. The true shape — **all 22 carry it
+as accessible text, and 6 of those also draw it** — is now in the gate, in the C2 summary and in the
+owner row, which has been corrected for the second time and now reports a figure the gate measures
+rather than one I counted by hand.
+
+**A `lastIndex` bug found by its own new check.** The stale-exemption guard used
+`UPPER_DOTTED.test(...)`, and `RegExp.test` on a `/g` regex **advances `lastIndex` between calls**, so
+alternate files were reported as no longer containing a token they plainly contain. It fired on five
+assets and was fixed to `String.match`, which resets.
+
+### L5 — the overload drop named one signature
+
+048 dropped `join_waitlist(<16 types>)` — exactly the arity that happened to exist when `p_message`
+was added. The next parameter reproduces the P4 hazard and that guard still passes, because it is
+dropping yesterday's shape. Both the up and down migrations now drop **every overload of the name**
+through a `pg_proc` loop: arity-independent, needing no maintenance, and unable to fall behind the
+function it protects.
+
+`[0b]` was equally narrow — it installed the one stale overload 048 explicitly names, so it proved the
+migration drops the signature it lists, which it could hardly fail to do. It now installs a **second
+overload of a different arity, named nowhere in the migration**.
+
+**Mutation battery — 3 injected, 3 caught, restores byte-exact:**
+
+| # | injected defect | caught by |
+|---|---|---|
+| **T1** | an allowlisted asset gains `aria-label="LOCK.SHOW …"` | `✗ C2 … outside an approved lockup (1) — this file is allowlisted, but only inside the element it was granted for` |
+| **T2** | an allowlisted asset stops carrying the token | `✗ C2 1 allowlisted asset(s) no longer contain LOCK.SHOW at all, so the exemption is stale` |
+| **T3** | restore 048's signature-named drop | `✗ [0b] applying 048 REMOVES it — exactly one join_waitlist survives — 2,17` |

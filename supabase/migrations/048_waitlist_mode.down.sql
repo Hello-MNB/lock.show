@@ -6,11 +6,23 @@
 -- waitlist records and consent history". Dropping whatsapp_consent/consent_*
 -- would delete exactly the evidence a consent claim rests on. The columns are
 -- inert without the RPC, so leaving them costs nothing.
--- BOTH signatures. 048 added p_message, so a database that was upgraded from an
--- earlier 048 could hold either arity; dropping only one would leave a live RPC
--- behind a rollback that claims to have removed the governed path.
-drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text,text);
-drop function if exists public.join_waitlist(text,text,text,text,text,boolean,text,text,text,text,text,text,text,text,text,text);
+-- EVERY signature, by name (QA-INDEP-03, L5). This listed two arities, which was
+-- correct for the shapes that existed the day it was written and silently wrong
+-- for any later one: a rollback that leaves a live RPC behind has not rolled the
+-- governed path back at all. Mirrors the up-migration's drop loop.
+do $drop_overloads$
+declare r record;
+begin
+  for r in
+    select oid::regprocedure::text as sig
+      from pg_proc
+     where pronamespace = 'public'::regnamespace
+       and proname = 'join_waitlist'
+  loop
+    execute 'drop function if exists ' || r.sig;
+  end loop;
+end
+$drop_overloads$;
 drop policy if exists wl_definer_insert on public.waitlist_signup;
 create policy wl_anon_insert on public.waitlist_signup
   for insert with check (true);

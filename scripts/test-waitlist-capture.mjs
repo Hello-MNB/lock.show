@@ -61,8 +61,19 @@ console.log('\n[0b] re-applying 048 over an EARLIER 048 leaves ONE function, not
       p_utm_source text default null, p_utm_medium text default null, p_utm_campaign text default null,
       p_utm_content text default null, p_referrer text default null
     ) returns jsonb language sql as $b4$ select '{"ok":false,"code":"stale_overload"}'::jsonb $b4$;`)
+  // A SECOND, DIFFERENT ARITY (QA-INDEP-03, L5). [0b] previously installed one
+  // stale overload — the 16-argument shape 048's own `drop function` line named —
+  // so it proved that the migration drops the signature it explicitly lists, which
+  // it could hardly fail to do. It said nothing about the NEXT parameter, where the
+  // identical hazard returns and a signature-named drop is already out of date.
+  // 048 now drops every overload of the name, so this fixture installs two shapes
+  // neither of which is written down anywhere in the migration.
+  db.exec(`create or replace function public.join_waitlist(p_email text, p_entity_role text)
+    returns jsonb language sql as $b4$ select '{"ok":false,"code":"ancient_overload"}'::jsonb $b4$;`)
   check('[0b] precondition: the stale 16-argument overload is installed',
     db.scalar(`select count(*) from pg_proc where proname='join_waitlist' and pronargs=16`) === '1')
+  check('[0b] ...and a SECOND stale overload of a different arity, named nowhere in 048',
+    db.scalar(`select count(*) from pg_proc where proname='join_waitlist' and pronargs=2`) === '1')
   db.exec(readFileSync('supabase/migrations/048_waitlist_mode.sql', 'utf8'))
   check('[0b] applying 048 REMOVES it — exactly one join_waitlist survives',
     db.scalar(`select count(*) from pg_proc where proname='join_waitlist'`) === '1',
