@@ -375,6 +375,82 @@ create index if not exists idx_pv_state on public.passport_versions (state);
 -- without a filler would break publishing on the next deploy. trg_pv_defaults
 -- below fills both on INSERT. Promote to NOT NULL in a later migration once the
 -- trigger has been live through at least one publish cycle.
+-- ── LINEAGE OWNERSHIP · added after QA-INDEP-06 H1 ──────────────────────────
+-- EVERYTHING BELOW KEYS ON `coalesce(act_id, artist_id)` — the lineage — and
+-- nothing consulted who owns it. `set_act_from_artist_id()` (020:147) fills
+-- act_id only when NULL, so a caller may SUPPLY one, and `pv_owner_insert`
+-- (017:18) checked only `can_access_artist(artist_id)`. An independent reviewer
+-- found the consequence and it was reproduced three ways:
+--
+--   (a) a stranger inserts ONE row on their OWN artist stamped with the victim's
+--       act_id → pv_supersede_previous demotes the victim's published version and
+--       the stranger's row holds `published` in the victim's lineage;
+--   (b) the victim cannot undo it — passport_versions has no UPDATE and no DELETE
+--       policy, so their revive and their delete match zero rows and report success;
+--   (c) a row parked at version_no = 2147483647 makes every later publish in that
+--       lineage fail with `integer out of range`.
+--
+-- The act id is not secret: for a default Act `act.id = artists.id`, and
+-- artists_public_read hands it to anon.
+--
+-- THE PREDICATE IS "SAME PERSON", NOT "act_id = artist_id". The obvious constraint
+-- would forbid multi-Act outright — a second Act has its own uuid, and CLAUDE.md
+-- makes multi-Act canon. Today every Act is the default one (020:13, act.id =
+-- artists.id), and a second Act is linked by person_id, so the honest rule is that
+-- the Act must belong to the person who owns the artist. NULL stays legal: the
+-- 020 backfill left pre-Act rows with NULL and they are legitimate history.
+-- SECURITY DEFINER, and this is not decoration. The first version inlined the
+-- EXISTS directly in the policy, and a subquery inside a WITH CHECK runs under the
+-- CALLER's row-level security — `act` has RLS, so an artist publishing for their
+-- own SECOND Act could not see the `act` row the predicate needed and was refused.
+-- Multi-Act is canon (CLAUDE.md), so a fix that forbids it is not a fix. Caught by
+-- executing the legitimate case, which is why it is now a test.
+-- This mirrors `can_access_artist` (008:147), which is SECURITY DEFINER for the
+-- same reason.
+-- DELIBERATELY NOT NAMED `act_belongs_to_artist`. That name is taken: migration
+-- 046 defines a function with the same signature and a STRICTER body (no NULL
+-- allowance, no default-Act identity), and 046's down file drops it. Reusing the
+-- name made 041 depend on a definition a LATER migration owns — 046 silently
+-- replaced this body on every full apply — and made each migration's rollback
+-- break the other's policy. Two migrations, two helpers, two down files that can
+-- each run alone: that is the only arrangement where either rollback is real.
+create or replace function public.pv_act_in_artist_lineage(p_act uuid, p_artist uuid)
+returns boolean language sql stable security definer set search_path = public, pg_temp as $$
+  select p_act is null
+      or p_act = p_artist
+      or exists (
+        select 1 from public.act a
+         where a.id = p_act
+           and a.person_id = (select ar.created_by from public.artists ar where ar.id = p_artist)
+      )
+$$;
+-- ANON IS REVOKED, and the revoke is load-bearing: Supabase's default privileges
+-- grant EXECUTE on every new function to anon/authenticated/service_role, and
+-- `revoke from public` does not remove a role-specific grant. This is a linkage
+-- ORACLE — it answers "do this Act and this artist belong together" about ids the
+-- caller supplies — and anon has no path that needs it: the policy it serves is
+-- INSERT-only, and can_access_artist() already refuses an anonymous writer.
+-- `authenticated` must hold EXECUTE because a policy expression is planned as the
+-- CALLING role, not as the policy's owner. That grant is DECLARED, NOT LOAD-BEARING,
+-- and I know which because I deleted it: the suite stayed green, exactly as 046's
+-- comment says of its own pair, because scripts/sql/supabase-shim.sql:38-39 mirrors
+-- Supabase's default privileges and hands `authenticated` the same EXECUTE at CREATE
+-- time. It is written anyway — a migration should not rely on a platform default it
+-- does not state — but the honest claim is "redundant with the default", not "the
+-- only thing standing between us and permission-denied". The anon REVOKE above IS
+-- load-bearing for that same reason, and deleting it turns P3 red.
+revoke all on function public.pv_act_in_artist_lineage(uuid, uuid) from public;
+revoke all on function public.pv_act_in_artist_lineage(uuid, uuid) from anon;
+grant execute on function public.pv_act_in_artist_lineage(uuid, uuid) to authenticated;
+grant execute on function public.pv_act_in_artist_lineage(uuid, uuid) to service_role;
+
+drop policy if exists pv_owner_insert on public.passport_versions;
+create policy pv_owner_insert on public.passport_versions for insert
+  with check (
+    public.can_access_artist(artist_id)
+    and public.pv_act_in_artist_lineage(act_id, artist_id)
+  );
+
 create or replace function public.pv_fill_defaults()
 returns trigger language plpgsql security definer set search_path = public, pg_temp as $$
 declare

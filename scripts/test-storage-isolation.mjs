@@ -107,10 +107,25 @@ const ownerScoped = /owner|auth\.uid|organization|act_id/i.test(scoped)
 // no third possibility. `evidence_rw` missing entirely, or a SECOND permissive
 // policy re-opening what a narrowed one closed, both fail here rather than
 // silently choosing a branch.
-const evidencePolicies = Number(db.scalar(`select count(*) from pg_policies
-  where schemaname='storage' and tablename='objects' and (qual like '%evidence%' or with_check like '%evidence%')`))
-check('[3] exactly one policy governs the evidence bucket — not zero, and not a second one re-opening it',
-  evidencePolicies === 1, `${evidencePolicies} policies mention the evidence bucket`)
+// COUNT-OF-POLICIES IS THE WRONG INVARIANT, IN BOTH DIRECTIONS (QA-INDEP-06, H2).
+// This counted policies whose text mentions "evidence". The reviewer walked past
+// it with `create policy blanket_all … using (true) with check (true)` — the most
+// likely accidental re-opening there is, and it never spells the word. And it
+// FAILED a legitimate hardening that splits `evidence_rw` into a narrowed read
+// plus a narrowed write, blocking the very fix this gate exists to encourage.
+// My own mutation AA1 was caught only because I happened to spell "evidence" in
+// it: the mutation was shaped to the check rather than to the hazard.
+//
+// The invariant that matters is not how many policies exist but whether any of
+// them hands `authenticated` an unrestricted door.
+const blanket = db.rows(`select policyname, coalesce(qual,'') , coalesce(with_check,'')
+                         from pg_policies where schemaname='storage' and tablename='objects'`)
+  .filter(([, q, w]) => /^\s*true\s*$/i.test(q) || /^\s*true\s*$/i.test(w))
+  .map(([n]) => n)
+check('[3] no policy on storage.objects grants an unrestricted `true` — a blanket door re-opens every bucket at once',
+  blanket.length === 0, `blanket policies: ${blanket.join(', ')}`)
+check('[3] ...and the evidence bucket is governed by at least one policy, so the check is not vacuous',
+  Number(db.scalar(`select count(*) from pg_policies where schemaname='storage' and tablename='objects'`)) > 0)
 
 if (ownerScoped) {
   check('[3] SCOPED policy installed: a different artist cannot READ another\'s evidence', !bobReads, bobRead.out.slice(0, 90))

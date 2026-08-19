@@ -162,9 +162,26 @@ begin
   -- NO `to` CLAUSE — 017:18 created this policy for PUBLIC. Recreating it `to
   -- authenticated` silently NARROWS the shipped policy on rollback; QA caught the
   -- before/after role tuple diverging while a substring check saw no difference.
-  create policy pv_owner_insert on public.passport_versions
-    for insert
-    with check (public.can_access_artist(artist_id));
+  --
+  -- AND THE BASELINE MOVED. 017's text is no longer what "revert" means: 041 now
+  -- also requires `pv_act_in_artist_lineage(act_id, artist_id)`, because without it
+  -- one row from a stranger irreversibly unpublishes another artist's Passport
+  -- (QA-INDEP-06, H1). Restoring 017 verbatim here would have made reverting 047
+  -- a way to silently re-open that hole — a rollback path that removes a security
+  -- predicate is not a rollback. Guarded on the helper existing so this function
+  -- still works against a database where 041 has not been applied.
+  if to_regprocedure('public.pv_act_in_artist_lineage(uuid, uuid)') is not null then
+    create policy pv_owner_insert on public.passport_versions
+      for insert
+      with check (
+        public.can_access_artist(artist_id)
+        and public.pv_act_in_artist_lineage(act_id, artist_id)
+      );
+  else
+    create policy pv_owner_insert on public.passport_versions
+      for insert
+      with check (public.can_access_artist(artist_id));
+  end if;
 end;
 $$;
 

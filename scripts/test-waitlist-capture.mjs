@@ -304,7 +304,11 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
   // the receiver `.storage` for Supabase Storage — `supabase.storage.from(` still
   // has `.storage` immediately before `.from`, while a bare `storage.from(` (a
   // variable that merely shares the name) is caught.
-  const FROM_CALL = /(?<!\bArray|\bObject|\.storage)\.from\s*\(([^)]*)\)/g
+  // `.storage` alone exempts ANY receiver whose last property is literally
+  // `storage`, not just the Supabase client (QA-INDEP-06, M2). Anchored to the
+  // client bindings this repo actually uses. `\bArray`/`\bObject` were verified
+  // sound by the reviewer and are unchanged.
+  const FROM_CALL = /(?<!\bArray|\bObject|supabase\.storage|\bsb\.storage)\.from\s*\(([^)]*)\)/g
   // …and the RPC exemption named a PREFIX, not a function: `(?!rpc\/)` exempted
   // every RPC that exists. Only the governed one is exempt; any other RPC in the
   // site lane is a backend write this scan cannot vouch for.
@@ -312,6 +316,8 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
   const RPC_CALL = /\/rest\/v1\/rpc\/([A-Za-z0-9_$]*)/g
   const REST_PATH = /\/rest\/v1\/(?!rpc\/)([A-Za-z0-9_$]*)/g
   const STR_LITERAL = /^\s*['"`]([A-Za-z0-9_]+)['"`]\s*$/
+  // Three ways to hold the builder without spelling `.from(` at the call site.
+  const LAUNDERED = /(?:\{[^{}]*\bfrom\b[^{}]*\}\s*=|=\s*(?:supabase|sb|client)\s*\.\s*from\s*(?![\s(])|\[\s*['"`]from['"`]\s*\])/g
 
   const offenders = []
   let rpcCallers = 0
@@ -334,6 +340,18 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
       const lit = m[1].match(STR_LITERAL)?.[1]
       if (lit === undefined) offenders.push(`${f}: .from(${m[1].trim().slice(0, 40)}) — the destination is computed, so this scan cannot say which table it writes`)
       else if (!CLIENT_TABLES.includes(lit)) offenders.push(`${f}: .from('${lit}') — not on the client-table allowlist`)
+    }
+    // THE SCAN FOLLOWS `.from(`, SO DON'T LET THE CALL STOP LOOKING LIKE ONE —
+    // QA-INDEP-06, M2 residual. Widening the lookbehind fixed `Array.from`; it did
+    // nothing about a site-lane file that never writes `.from(` at all:
+    // `const { from } = supabase` then `from('anything')`, or `const q =
+    // supabase.from` as a bare method reference, or `supabase['from']`. None is
+    // idiomatic here and none appears today — which is precisely why the check
+    // costs nothing and why it is fail-closed rather than a table lookup. The
+    // scan cannot follow a laundered reference, so it refuses to vouch for one.
+    for (const m of code.matchAll(LAUNDERED)) {
+      destinations++
+      offenders.push(`${f}: \`${m[0].trim().slice(0, 40)}\` — the query builder is aliased away from \`.from(\`, so this scan cannot say which table it reaches`)
     }
     for (const m of code.matchAll(REST_PATH)) {
       destinations++

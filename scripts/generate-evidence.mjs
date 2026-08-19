@@ -79,7 +79,16 @@ const FAIL_GLYPHS = '✗✖✘❌'
 // unfamiliar glyph is still loud. A third category is the honest answer; forcing
 // them into pass or fail, or narrowing the scan until it stops seeing them, would
 // both be ways of not answering.
-const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–'
+// M1 WIDENED THIS FROM WHAT REAL OUTPUT CONTAINS, NOT FROM WHAT SOURCE CONTAINS.
+// The seven added here — box-drawing banners printed by the flow, security-denial
+// and act gates, plus `▲ ○ ┌ ├ └` from the Next.js build step — were invisible to
+// every source-based scan and appear at column 0 of a real `npm run verify` log.
+// They are declared non-verdicts because that is what they are; leaving them
+// unclassified would red the recorder on every clean run, and absorbing them
+// silently is the H2 defect. `× ≠` are prose symbols the widened source scan
+// surfaced out of template interpolation (test-ds-drift, test-tenant-isolation),
+// and `\u2192` is the separator 173 source lines use after an interpolated value.
+const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→'
 const VERDICT = new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]`)
 // INDENTED FAILURES COUNT TOO (QA-INDEP-04, M5). The guard was column-0 only, so a
 // log whose sole marker was `  ✗ C2 …: uppercase LOCK.SHOW outside an approved
@@ -210,7 +219,33 @@ export function parseChain(log, declared, exitCode) {
     if (id) continue                                               // a named verdict from an unheadered raw step
     unclassified.push(v.line.trim())
   }
-  return { gates, ranSteps, stepsNotRun, subChecks, toolOutput, unclassified }
+  // THE AUTHORITATIVE GLYPH SCAN READS OUTPUT, NOT SOURCE — QA-INDEP-06, M1.
+  // The self-test below also scans the gate SOURCES, and that scan has now been
+  // wrong twice in the same way: it looked for a hand-picked glyph RANGE (H2),
+  // then for a hand-picked set of quoting POSITIONS (M1). Both are guesses about
+  // how a `console.log` will be written, and `scripts/test-act-isolation.mjs:35`
+  // proved the second one wrong — it prints `  ✔ ${name}` with two leading
+  // spaces, which no position anchor in that scan could see.
+  //
+  // This check cannot be evaded by quoting style, indentation, concatenation or
+  // interpolation, because it reads the bytes the chain actually printed. Every
+  // line's first non-whitespace character, when it is a non-ASCII SYMBOL, must be
+  // classifiable as pass, fail or explicitly non-verdict.
+  //
+  // LETTERS, DIGITS AND MARKS ARE EXCLUDED. A log line may legitimately open with
+  // Hebrew (the i18n gates print it) and that is prose, not a verdict marker. The
+  // firewall this enforces is about markers, and a letter is never one.
+  // Bidi controls and the RTL/LTR marks are stripped alongside whitespace first,
+  // because a Hebrew gate line can open with U+2066 before its real glyph.
+  const unknownGlyphs = []
+  for (const l of lines) {
+    const g = [...l.replace(/^[\s\u200e\u200f\u2066-\u2069]+/, '')][0]
+    if (!g || g.codePointAt(0) < 0x80) continue
+    if (/[\p{L}\p{N}\p{M}]/u.test(g)) continue
+    if (`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g)) continue
+    if (!unknownGlyphs.includes(g)) unknownGlyphs.push(g)
+  }
+  return { gates, ranSteps, stepsNotRun, subChecks, toolOutput, unclassified, unknownGlyphs }
 }
 
 // "Nothing was skipped." is a chain ASSERTION, not a skip — counting it would
@@ -376,6 +411,36 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
       FAIL_AT_COL0.test('> x\n✖ CHAIN CLOSED — 1 finding(s):\n'))
   }
 
+  // 8e2 · THE OUTPUT SCAN — the check the source scan keeps failing to be. Every
+  //       case the reviewer listed against 8f is exercised here against LOG TEXT,
+  //       because that is what the chain actually produces.
+  {
+    const d = declaredChain(pkg('npm run a'))
+    // CONSTRUCTED, NOT WRITTEN. Spelled as a literal or a `\\u` escape, this
+    // fixture glyph would be picked up by the source scan below as a glyph this
+    // file emits — which it does not; it is the defect these fixtures inject.
+    const UNK = String.fromCodePoint(0x26d4)
+    const HE = [0x05d1, 0x05d3, 0x05d9, 0x05e7, 0x05d4].map((c) => String.fromCodePoint(c)).join('')
+    const run = (body) => parseChain(`> gigproof@0.1.0 a\n${body}\n`, d, 0).unknownGlyphs
+    t('an INDENTED unknown glyph is seen — the exact case the position anchor missed',
+      run('  ' + UNK + ' GATE X: 3 failures').join('') === UNK, JSON.stringify(run('  ' + UNK + ' x')))
+    t('...and one at column 0 too', run(UNK + ' GATE X').join('') === UNK)
+    t('...and a bidi-wrapped one, which Hebrew gate lines really do emit',
+      run('\u2066' + UNK + ' ' + HE).join('') === UNK, JSON.stringify(run('\u2066' + UNK + ' x')))
+    t('...while a line opening in Hebrew is prose, not an unknown marker',
+      run(HE + ' ' + HE).length === 0, JSON.stringify(run('\u05d1\u05d3\u05d9\u05e7\u05d4')))
+    t('...and the declared verdict and non-verdict glyphs stay silent',
+      run('\u2713 A: fine\n  \u2718 B: not fine\n\u2500\u2500 banner \u2500\u2500\n\u25b2 Next.js 16').length === 0,
+      JSON.stringify(run('\u2713 A\n\u2500\u2500 b \u2500\u2500')))
+    t('...and each unknown is reported once, not once per line',
+      run([UNK + ' one', UNK + ' two', UNK + ' three'].join('\n')).length === 1)
+    // The real log this increment was measured against, as a fixture: the seven
+    // glyphs added to NEUTRAL came from here, and if any is dropped this reds.
+    t('...and a real chain banner set classifies clean',
+      run('\u2550\u2550 FLOW CONTRACT GATE \u2550\u2550\n\u00b7 F1 route table parsed\n\u250c \u25cb /\n\u251c \u25cb /_not-found\n\u2514 \u25cb /waitlist').length === 0,
+      JSON.stringify(run('\u2550\u2550 x\n\u250c y')))
+  }
+
   // 8f · THE SET IS DERIVED FROM THE SCRIPTS, NOT HAND-LISTED. This is the check
   //      that would have caught H2 on the day `✖` was introduced: every glyph any
   //      chain gate actually prints at column 0 must be classifiable. A gate that
@@ -409,9 +474,24 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
       // Both are the scan reading source rather than output; neither is a real
       // unknown, and absorbing them into the neutral list would have hidden the
       // next real one.
+      // TRAILING COMMENTS STRIPPED TOO. Full-line comments were already dropped;
+      // `const routes = new Map() // path \u2192 { … }` is not, and once the anchor
+      // below stopped demanding the glyph sit flush against a quote, that arrow
+      // surfaced as an "unknown glyph" nothing ever prints. `//` preceded by a
+      // colon or a quote is left alone so a URL is not truncated mid-string.
       const src = readFileSync(f, 'utf8').split('\n')
-        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
-      for (const m of src.matchAll(/(?:^|\\n|['"`])([^\s\x00-\x7f])\s/gu)) used.add(m[1])
+        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l))
+        .map((l) => l.replace(/(?<![:'"`\\])\/\/.*$/, ''))
+        .join('\n')
+      // THE POSITION ANCHOR WAS THE SECOND GUESS AND IT WAS ALSO WRONG — M1.
+      // H2's fix stopped hand-picking a glyph RANGE; it kept hand-picking the
+      // POSITIONS a glyph may occupy, and `  \u2714 ${name}` — two leading spaces,
+      // test-act-isolation.mjs:35 — occupies none of them. Indentation and
+      // template interpolation are now both allowed before the glyph. This scan
+      // is deliberately the SECOND line of defence: the authoritative check in
+      // parseChain reads the chain's real output, where quoting cannot hide
+      // anything. This one exists to fail at edit time rather than at run time.
+      for (const m of src.matchAll(/(?:^|\\n|['"`}])[ \t]*([^\s\x00-\x7f])\s/gu)) used.add(m[1])
       // …and the escaped spelling, excluding escapes that are RANGE endpoints.
       // LOOKAROUNDS, not capture groups. Both endpoints of a character range must
       // be skipped — `[\u0590-` opens one, `-\u05FF]` closes it — and a capturing
@@ -421,7 +501,12 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
       // nothing, so each endpoint is judged on its own context.
       for (const m of src.matchAll(/(?<![[-])\\u\{?([0-9a-fA-F]{4,6})\}?(?!-)/g)) {
         const cp = parseInt(m[1], 16)
-        if (cp > 0x7f) used.add(String.fromCodePoint(cp))
+        // SAME CATEGORY RULE AS THE OUTPUT SCAN. A `\\u05d1` escape is a Hebrew
+        // LETTER — the i18n gates spell fixtures that way — and a letter is never
+        // a verdict marker. Without this the scan reports prose as an unknown
+        // verdict glyph, which is noise the next real unknown would hide behind.
+        const ch = cp > 0x7f ? String.fromCodePoint(cp) : ''
+        if (ch && !/[\p{L}\p{N}\p{M}]/u.test(ch)) used.add(ch)
       }
     }
     const unknown = [...used].filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g))
@@ -518,7 +603,7 @@ if (logIdx > -1) {
 }
 
 const declared = declaredChain(readFileSync('package.json', 'utf8'))
-const { gates, ranSteps, stepsNotRun, subChecks, toolOutput, unclassified } = parseChain(log, declared, exitCode)
+const { gates, ranSteps, stepsNotRun, subChecks, toolOutput, unclassified, unknownGlyphs } = parseChain(log, declared, exitCode)
 const skips = parseSkips(log)
 
 const evidence = {
@@ -543,6 +628,9 @@ const evidence = {
   subChecks,
   toolOutput,
   unclassified,
+  // Empty on every accepted record — a non-empty value blocks the write. Kept in
+  // the schema so the artifact states the check ran, not merely that it passed.
+  unknownGlyphs,
   skips,
   // Negative controls: gates that prove themselves by catching an injected defect.
   // Listed because a suite that has never failed is not evidence of anything.
@@ -572,6 +660,9 @@ const blocking = []
 if (unclassified.length) {
   blocking.push(`${unclassified.length} column-0 verdict line(s) could not be classified — the record is incomplete:`)
   for (const l of unclassified) blocking.push(`    ${l.slice(0, 140)}`)
+}
+if (unknownGlyphs.length) {
+  blocking.push(`${unknownGlyphs.length} leading glyph(s) in the chain output are neither pass, fail nor declared non-verdict — the parser cannot say what they assert: ${unknownGlyphs.map((g) => `${g} (U+${g.codePointAt(0).toString(16).toUpperCase()})`).join(', ')}`)
 }
 if (stepsNotRun.length && exitCode === 0) {
   blocking.push(`the chain exited 0 but ${stepsNotRun.length} declared step(s) never ran: ${stepsNotRun.join(', ')}`)

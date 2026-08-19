@@ -102,7 +102,7 @@ const FONT_BASELINE = []
   // compared against a deliberately nonexistent one: identical advance width for
   // the same string means the renderer fell back, i.e. the family is NOT present.
   const page = await browser.newPage()
-  const available = await page.evaluate((fams) => {
+  const probeResult = await page.evaluate((fams) => {
     // THREE GENERICS, not one (QA-INDEP-05, L1). Probing against `monospace`
     // alone is blind exactly when the family being tested IS what the renderer
     // resolves `monospace` to: the widths match and a PRESENT font is reported
@@ -116,9 +116,26 @@ const FONT_BASELINE = []
     const widthIn = (f, g) => { c.font = `48px "${f}", ${g}`; return c.measureText(probe).width }
     const GENERICS = ['monospace', 'serif', 'sans-serif']
     const fallback = Object.fromEntries(GENERICS.map((g) => [g, widthIn('__b4_no_such_family__', g)]))
-    return fams.filter((f) => GENERICS.some((g) => widthIn(f, g) !== fallback[g]))
+    // THE PROBE CAN BE DEGENERATE, AND SILENTLY — QA-INDEP-06, L1 residual.
+    // Three generics only widen the probe if the renderer resolves them to three
+    // different faces. A minimal container where `serif`, `sans-serif` and
+    // `monospace` all land on the same fallback face gives three identical
+    // widths, and the original single-generic blindness is back whole: a family
+    // that IS that face measures equal under all three and is reported ABSENT.
+    // Reported rather than assumed away, and acted on below.
+    const distinct = new Set(GENERICS.map((g) => fallback[g])).size
+    return { available: fams.filter((f) => GENERICS.some((g) => widthIn(f, g) !== fallback[g])), distinct }
   }, DECLARED_FAMILIES)
   await page.close()
+  const { available, distinct } = probeResult
+  // A DEGENERATE PROBE MAY NOT REPORT AN ABSENCE. If every generic resolves to
+  // one face, "absent" is indistinguishable from "identical to the fallback", so
+  // the only honest verdict is that this run cannot say. It stays silent when
+  // nothing is reported absent, because then the degeneracy hid nothing.
+  const missing = DECLARED_FAMILIES.filter((f) => !available.includes(f))
+  check('the three generic fallbacks resolve to different faces, so an "absent" verdict means absent',
+    distinct >= 2 || missing.length === 0,
+    `all ${['monospace', 'serif', 'sans-serif'].length} generics measure identically on this machine, so ${JSON.stringify(missing)} cannot be distinguished from "identical to the one installed fallback face" — install a second font family, or re-render and review the cards visually rather than trusting this probe`)
   check('the font environment matches the one the committed PNGs were rendered in',
     JSON.stringify(available.sort()) === JSON.stringify([...FONT_BASELINE].sort()),
     `this machine resolves ${JSON.stringify(available)}, the baseline was rendered with ${JSON.stringify(FONT_BASELINE)} — a byte mismatch below would be caused by the FONTS, not by an edited card. Re-render with \`node scripts/render-og.mjs\` and review the cards visually before updating FONT_BASELINE`)

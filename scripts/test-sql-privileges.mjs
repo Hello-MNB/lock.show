@@ -74,6 +74,7 @@ const EXPECTED = {
   pv_fill_defaults: { roles: [], why: 'trigger function — EXECUTE is checked at CREATE TRIGGER time' },
   pv_guard_immutable: { roles: [], why: 'trigger function' },
   pv_supersede_previous: { roles: [], why: 'trigger function (SECURITY DEFINER: it must update rows RLS hides)' },
+  pv_act_in_artist_lineage: { roles: ['authenticated', 'service_role'], why: 'SECURITY DEFINER lineage check named INSIDE the pv_owner_insert policy, and a policy expression is planned as the CALLING role — so authenticated must hold EXECUTE or every insert fails with permission-denied instead of an RLS decision. anon is revoked: the policy is INSERT-only and can_access_artist() already refuses an anonymous writer, so the only thing anon could gain is the linkage oracle. Definer for the same reason 046\'s is: act_org hides a non-default Act from its own owner, so an invoker check would refuse the legitimate multi-Act publish' },
   // 042 — the radar audience split
   apply_radar_audience_split: { roles: [], why: 'owner-signed DDL act; run as the owning role in the SQL editor. No RPC surface at all — least exposure' },
   revert_radar_audience_split: { roles: [], why: 'owner-signed DDL act, and it DELETEs rows' },

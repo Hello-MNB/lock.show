@@ -142,6 +142,24 @@ begin
     drop column if exists replaced_by,
     drop column if exists wrong_recipient_at;
 
+  -- ── D4b · the Act-ownership predicate on pv_owner_insert ──────────────────
+  -- 041 tightened `pv_owner_insert` so a version can only enter a lineage its
+  -- writer owns (QA-INDEP-06, H1). Rolling 041 back must put the policy back the
+  -- way 017 left it, and must take the helper with it — otherwise the catalog
+  -- diff after a down run shows a policy that no migration in the tree defines
+  -- and a function nothing calls, which is exactly what R2 caught.
+  --
+  -- VERBATIM from 017_owner_publish_snapshot.sql:17-19, and note what is NOT
+  -- there: no `to` clause. 017 created this policy for PUBLIC, and recreating it
+  -- `to authenticated` would silently narrow it on rollback — the same defect
+  -- 047's revert function already carries a comment about.
+  drop policy if exists pv_owner_insert on public.passport_versions;
+  create policy pv_owner_insert on public.passport_versions for insert
+    with check (public.can_access_artist(artist_id));
+  -- The policy first, the function it calls second: a drop in the other order
+  -- fails while the policy still references it.
+  drop function if exists public.pv_act_in_artist_lineage(uuid, uuid);
+
   -- ── D5 · passport_versions triggers ───────────────────────────────────────
   -- Triggers before their functions, and the supersession trigger before the
   -- columns it writes (D6) — otherwise the column drops fire it.

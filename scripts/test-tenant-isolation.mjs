@@ -241,13 +241,35 @@ try {
       `A3 on ${forced.length}/${rows.length} act-threaded tables artist_id is NOT NULL (→ public.artists) while act_id is NULLABLE — a second Act's rows are STRUCTURALLY FORCED onto the first Act's artists row (executed)`,
       `A3 the artist_id/act_id nullability shape changed — only ${forced.length} tables force artist_id`)
 
-    const actPolicies = db.rows(`
+    // MODEL RE-DERIVED, NOT RELAXED — QA-INDEP-06, H1 follow-on. This assertion
+    // used to read "NOT ONE policy references act_id", and 041 made that false by
+    // adding `pv_act_in_artist_lineage(act_id, artist_id)` to pv_owner_insert. The
+    // gate was right to refuse: a claim about act_id's role in authorization must
+    // be re-derived when act_id enters a policy, not widened until it fits.
+    //
+    // The distinction the model actually rests on is READ versus WRITE. A `USING`
+    // clause keyed on act_id would make the Act an authorization boundary — it
+    // would decide who SEES a row, and every "the Act is a display filter" claim
+    // downstream would be wrong. A `WITH CHECK` keyed on act_id decides only what
+    // may be WRITTEN, and grants nothing: it is an integrity constraint expressed
+    // as a policy. So the ratchet is now exact — one named exception, WITH CHECK
+    // only — and any new act_id reference, or that one migrating into USING,
+    // fails here and names itself.
+    const ACT_ID_WRITE_CHECK = ['passport_versions.pv_owner_insert']
+    const actUsing = db.rows(`
       select tablename, policyname from pg_policies
        where schemaname='public' and tablename in (${ACT_TABLES.map((t) => `'${t}'`).join(',')})
-         and (coalesce(qual,'') like '%act_id%' or coalesce(with_check,'') like '%act_id%')`)
-    check(actPolicies.length === 0,
-      'A3 NOT ONE RLS policy on any of the eleven act-threaded tables references act_id — the Act is a display filter, never an authorization boundary (executed)',
-      `A3 some policies DO reference act_id (${actPolicies.map((r) => r.join('.')).join(', ')}) — re-derive this gate's model`)
+         and coalesce(qual,'') like '%act_id%'`)
+    check(actUsing.length === 0,
+      'A3 NOT ONE RLS policy on any of the eleven act-threaded tables decides READ access by act_id — the Act is a display filter, never an authorization boundary (executed)',
+      `A3 act_id appears in the USING clause of ${actUsing.map((r) => r.join('.')).join(', ')} — the Act would now decide who SEES a row; re-derive this gate's model`)
+    const actCheck = db.rows(`
+      select tablename, policyname from pg_policies
+       where schemaname='public' and tablename in (${ACT_TABLES.map((t) => `'${t}'`).join(',')})
+         and coalesce(with_check,'') like '%act_id%'`).map((r) => r.join('.')).sort()
+    check(JSON.stringify(actCheck) === JSON.stringify(ACT_ID_WRITE_CHECK),
+      `A3 exactly one policy constrains WRITES by act_id — ${ACT_ID_WRITE_CHECK[0]}, which stops a stranger inserting a version into another artist's lineage — and it grants nothing (executed)`,
+      `A3 the act_id write-check set is ${JSON.stringify(actCheck)}, expected ${JSON.stringify(ACT_ID_WRITE_CHECK)} — an act_id constraint was added or removed; re-derive this gate's model`)
   }
 
   // A4 · the consequence: a mandate on the ARTIST silently covers every Act.

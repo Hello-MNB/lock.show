@@ -5139,3 +5139,182 @@ taking *before* ACT-PUBLIC rather than after.
 `✗ [3] no CHECK constraint anywhere binds act_id to its artist`. The gate cannot drift silently in
 either direction: it fails if the boundary is enforced *and* if it stops being enforced, so the owner
 note can never quietly become wrong.
+
+---
+
+## QA-INDEP-06 — the review that found "it changes nothing today" was false, and the four repairs
+
+The sixth independent adversarial review rejected work I had declared complete and mutation-tested.
+Its findings, and what each one turned out to be when executed rather than argued.
+
+### H1 — `passport_versions`, the table the ACT-STAMP-TRUST gate never tested
+
+I measured three evidence tables, found no reach, and told Maria a foreign `act_id` "changes nothing
+today". `passport_versions` was not one of the three, and it is where migration 041 keys its whole
+version lineage on `coalesce(act_id, artist_id)` inside two SECURITY DEFINER functions that never
+consult ownership. I reproduced all three consequences before touching the founder register:
+
+```
+MY producer-bucket rows BEFORE : published#2
+MY producer-bucket rows AFTER  : superseded#2
+who holds published in MY lineage now: …e3      ← a stranger
+I try to revive: true | my state now: superseded#2   ← "true" is a zero-row UPDATE
+I try to delete the foreign row: true | it remains: 1
+stranger parks version_no at int max: true
+can I still publish in that lineage? false | ERROR: integer out of range
+```
+
+One insert from an account holding no grant: **(a)** cross-tenant unpublish, **(b)** irreversible —
+`passport_versions` has no UPDATE and no DELETE policy, so the victim's revive and delete match zero
+rows and *report success*, **(c)** a permanent publish-lock. The Act id needs no guessing: for a
+default Act `act.id = artists.id`, and `artists_public_read` hands it to anonymous readers.
+
+**Fix, in 041.** `pv_owner_insert` now also requires `act_belongs_to_artist(act_id, artist_id)`.
+**It must be SECURITY DEFINER and the first attempt proved why:** an inlined `EXISTS` in a `WITH
+CHECK` runs under the *caller's* RLS, `act` has RLS, so an artist could not see their own second Act
+row and multi-Act publishing broke silently. CLAUDE.md makes multi-Act canon; a predicate that
+forbids it is not a fix. Both cases are now executed — the attack and the legitimate second Act.
+
+**Mutation AD1** — remove the predicate from the policy → `✖ ACT STAMP: 7 failure(s)`, including
+`a stranger CANNOT write a passport version stamped with my Act — accepted=true`. Restore verified
+byte-exact with `sha256sum -c`. Note: `git checkout --` on that file was refused by policy, which is
+the correct outcome — it carries uncommitted work, and the preflight rule forbids exactly that. The
+mutation was reversed textually instead.
+
+### M1 — the glyph scan swapped one hand-picked guess for another
+
+H2's repair stopped hand-picking a glyph *range*. It kept hand-picking the *positions* a glyph may
+occupy, and `scripts/test-act-isolation.mjs:35` prints `  ✔ ${name}` with two leading spaces — a
+position no anchor in that scan could see. Widening the anchor to tolerate indentation immediately
+surfaced `✔` and `✘`, two glyphs the chain really emits that the scan had never seen.
+
+**The real repair is that the authoritative scan now reads OUTPUT, not source.** `parseChain` returns
+`unknownGlyphs`: every line's first non-whitespace character, when it is a non-ASCII *symbol*, must
+classify as pass, fail or explicitly non-verdict, and a non-empty list blocks the write. Quoting
+style, indentation, concatenation and interpolation are all irrelevant to it, because it reads the
+bytes the chain printed. Letters, digits and marks are excluded — a Hebrew gate line is prose, not a
+marker — and bidi controls are stripped before the first character is taken.
+
+Running it against a real 2,569-line chain log found seven leading glyphs no source scan had ever
+seen: `═ ─ ▲ ┌ ├ └ ○` — gate banners and the Next.js build tree. They are now declared non-verdicts,
+which is what they are. The source scan survives as a second line of defence that fails at edit time
+rather than run time, and its own self-test fixtures are now *constructed* (`String.fromCodePoint`)
+so the file stops reporting its own negative fixtures as glyphs it emits.
+
+**Mutation** — inject `  ⛔ GATE X: 3 failures` at line 200 of a real chain log, indented, the exact
+case the position anchor missed → `✗ 1 leading glyph(s) … ⛔ (U+26D4)`, exit 1, and
+`evidence/current.json` byte-identical afterwards: **the record was refused, not written and then
+disowned.** The column-0 variant fails too.
+
+### L2 — `organization_id`, the second ungoverned tenancy column
+
+The reviewer flagged `artists.organization_id`. Measuring it turned one column into eight: migration
+`008:110-120` stamped a nullable `organization_id` onto seven domain tables, `set_artist_org()` writes
+`coalesce(new.organization_id, v_org)` — **the caller's value wins**, the `act_id` shape exactly —
+and `act_from_artist()` copies it onward into `act.organization_id`.
+
+**It is inert, and that is an executed result, not the sentence that was wrong one section above.**
+Checked across all three surfaces where a value can become load-bearing — RLS policy expressions,
+function bodies, view definitions — on all eight tables: nothing reads any of them. Every policy that
+matters keys on `owner_organization_id` or `can_access_artist()`.
+
+So it is recorded as a **ratchet**, not an opinion. `test-act-stamp.mjs` `[4]` fails and names the
+table the first time anything starts reading one of those columns while the write side still trusts
+the caller. **Mutation** — add a policy keyed on `claims.organization_id` → `✖ … claims: 1
+policy(ies)`. Raised to the owner as **ORG-STAMP-INERT**, deliberately separate from ARC-VALIDATE.
+
+### M2 residual — a query builder aliased away from `.from(`
+
+Widening the lookbehind fixed `Array.from`. It did nothing about a site-lane file that never spells
+`.from(` at all. Three forms now fail closed, because the scan cannot follow a laundered reference
+and refuses to vouch for one. **Mutation, all three caught:**
+
+| injected into `website-next/lib/` | reported |
+| --- | --- |
+| `const { from } = supabase` | `` `{ from } =` — the query builder is aliased away from `.from(` `` |
+| `const q = supabase.from` | `` `= supabase.from` `` |
+| `supabase["from"]("secret_table")` | `` `["from"]` `` |
+
+### L1 residual — the font probe can be degenerate, and silently
+
+Three generics only widen the probe if the renderer resolves them to three different faces. On a
+minimal container where they all land on one face, the three widths are identical and the original
+single-generic blindness is back whole: a family that *is* that face measures equal under all three
+and is reported ABSENT. The probe now counts distinct fallback widths and refuses to report an
+absence it cannot distinguish — silent when nothing is reported absent, because then the degeneracy
+hid nothing. **Mutation** — force `GENERICS` to three copies of `monospace` → the check fails and
+names all five families as indistinguishable from the one installed fallback face.
+
+### What this review cost, and what it is worth
+
+Six independent reviews have now run; every one rejected work I had declared complete. Two of the
+six found a founder-facing claim that was wrong in a way I could not have found by re-reading my own
+work — QA-INDEP-05 found both exposure claims mis-scoped in opposite directions, QA-INDEP-06 found
+the one table that turned "changes nothing" into an irreversible cross-tenant unpublish. The role
+separation in CLAUDE.md is not procedure; it is the only reason those two are not still true.
+
+### The two defects the H1 fix introduced, and the gates that caught them
+
+Neither was visible from the file I edited. Both came out of running the declared chain.
+
+**R2 — the fix had no rollback.** `041 down returns the catalog EXACTLY to its pre-041 state
+(lost=1, leftover=3)`: the down file still restored the *old* `pv_owner_insert` and knew nothing
+about the helper. A security predicate with no rollback path is a one-way schema change. D4b now
+restores 017's policy text verbatim — **with no `to` clause**, because 017 created it for PUBLIC and
+recreating it `to authenticated` narrows it silently — and drops the helper after the policy that
+references it.
+
+**A name collision with migration 046.** Fixing the down file surfaced the larger error: I had named
+the helper `act_belongs_to_artist(uuid, uuid)`, **and 046 already defines that exact signature** with
+a stricter body, and 046's down file drops it. So on a full apply 046 silently replaced 041's
+function; 041's rollback would have dropped a function 046 depends on; and 046's rollback broke
+041's policy — `cannot drop function act_belongs_to_artist(uuid,uuid) because other objects depend
+on it`, raised by three separate assertions in the grant-scope gate. Renamed to
+`pv_act_in_artist_lineage(uuid, uuid)`: two migrations, two helpers, two down files that can each
+run alone, which is the only arrangement where either rollback is real.
+
+**And 047's revert would have re-opened the hole.** `revert_act_scoped_publish()` recreates
+`pv_owner_insert` from 017's text, which is no longer what "revert" means. Reverting 047 would have
+silently removed the Act-lineage predicate — a rollback path that deletes a security check is not a
+rollback. It now restores the predicate when the helper exists and 017's form when it does not, so
+the function still works against a database where 041 was never applied. (`to_regproc` does not
+accept an argument list and returned NULL for every signature — `to_regprocedure` is the one that
+takes one. The grant-scope gate caught that too, as a byte-for-byte policy tuple mismatch.)
+
+All four gates green afterwards: `test:sql-migrations`, `test:grant-scope`, `test:act-stamp`,
+`test:passport-version`. **Mutation AD1 re-run against the renamed predicate** — remove it from the
+policy → 7 failures, exit 1; restore verified with `sha256sum -c`.
+
+**P3 — a new SECURITY DEFINER function arrived with Supabase's default grants.** The privileges gate
+refused it three times over: `pv_act_in_artist_lineage() grants anon and nothing justifies it`. It is
+a linkage oracle — it answers "do this Act and this artist belong together" — and anon has no path
+that needs it, because the policy it serves is INSERT-only and `can_access_artist()` already refuses
+an anonymous writer. anon is revoked, `authenticated`/`service_role` are granted, and the decision is
+recorded in `EXPECTED` with its reason, which is what that gate exists to force.
+
+**And the comment I wrote for that grant was wrong, which I found by mutating it.** I wrote that
+`authenticated` "must" hold EXECUTE or every insert fails with permission-denied. Deleting the grant
+left the suite green: `scripts/sql/supabase-shim.sql:38-39` mirrors Supabase's default privileges and
+hands `authenticated` the same EXECUTE at CREATE time — the identical fact 046's comment already
+records about its own pair. The grant is DECLARED, not load-bearing, and now says so. The **anon
+revoke** is load-bearing, and deleting it turns P3 red — verified in both directions, restored
+byte-exact.
+
+**A3 — the fix invalidated another gate's model, and that gate refused to be widened.** The tenant
+isolation suite asserted `NOT ONE RLS policy on any of the eleven act-threaded tables references
+act_id — the Act is a display filter, never an authorization boundary`. Adding the lineage predicate
+made that literally false: `✗ A3 some policies DO reference act_id (passport_versions.pv_owner_insert)
+— re-derive this gate's model`. The instruction in the failure message is the right one, and the
+wrong move would have been to add an exception until the old sentence fit again.
+
+**The distinction the model actually rests on is READ versus WRITE.** A `USING` clause keyed on
+act_id would make the Act decide who *sees* a row — an authorization boundary, and every downstream
+"display filter" claim would be wrong. A `WITH CHECK` keyed on act_id decides only what may be
+*written* and grants nothing: an integrity constraint wearing a policy's clothes. A3 is now two
+assertions on that line, and it is stricter than what it replaced — the old one allowed any number of
+act_id policies as long as there were zero, while the new one pins the exact set.
+
+**Mutated from both sides:** a policy with `using (act_id is not null)` → `act_id appears in the
+USING clause of claims.claims_act_read — the Act would now decide who SEES a row`; removing the
+sanctioned predicate → `the act_id write-check set is [], expected
+["passport_versions.pv_owner_insert"]`. Both exit 1; control green; 152 checks.
