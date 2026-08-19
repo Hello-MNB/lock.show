@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "dbf2336cd8f962583f386693b84848bca0c70d4c",
+  "head": "5af229df3cf8b3e583c54ef4e9fe62772258eff8",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa4/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/qa4r/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 45,
@@ -134,7 +134,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 5.2s",
+      "summary": "✓ Compiled successfully in 6.0s",
       "result": "pass"
     },
     {
@@ -182,7 +182,7 @@
     {
       "id": "OG ASSETS",
       "step": "test:og-assets",
-      "summary": "✓ OG ASSETS: all 7 share cards re-rendered and byte-identical to their committed PNGs — the artifact social platforms actually fetch is the one the governed source draws. NOT proven here: what any platform's own scaler or cache serves.",
+      "summary": "✓ OG ASSETS: all 7 share cards re-rendered and byte-identical to their committed PNGs, and every served PNG has a governed SVG source — the artifact social platforms actually fetch is the one the governed source draws. NOT proven here: what any platform's own scaler or cache serves, and NOT that the cards look as designed — the SVGs declare 5 font families, embed none, and this environment resolve",
       "result": "pass"
     },
     {
@@ -336,9 +336,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 4.83s",
+    "✓ built in 5.18s",
     "✓ 160 modules transformed.",
-    "✓ built in 4.16s"
+    "✓ built in 4.33s"
   ],
   "unclassified": [],
   "skips": [],
