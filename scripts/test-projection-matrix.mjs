@@ -342,7 +342,10 @@ check(/RadarFeed/.test(read('src/App.jsx')) && /agency\/radar/.test(read('src/Ap
 // SAME artist, and there are three open requests — one belonging to A, one to
 // B, one unattributed (organization_id IS NULL = the artist's own context).
 if (!pgAvailable()) {
-  console.log('\n⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X8 below are UNPROVEN in this run.')
+  console.error('\n✖ PROJECTION MATRIX: no local PostgreSQL — X1..X8 did not run.')
+  console.error('  A SKIP IS NOT A PASS (CLAUDE.md operating law, controller step 8): with these')
+  console.error('  assertions unrun, a zero exit would report a proof that did not happen.')
+  process.exit(1)
 } else {
   console.log('\n[X] EXECUTED LOCALLY — two organizations, real RLS, real definer functions')
   const db = ScratchDb.create('b4_matrix')

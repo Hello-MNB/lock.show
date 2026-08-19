@@ -72,6 +72,14 @@ const IS_ENTRYPOINT = Boolean(process.argv[1])
 // a gate that adopts a sixth glyph fails the parser instead of vanishing from it.
 const PASS_GLYPHS = '✓✔✅'
 const FAIL_GLYPHS = '✗✖✘❌'
+// GLYPHS THAT ARE DELIBERATELY NOT VERDICTS. Widening the derived scan (M2) made
+// it find these, correctly: `⚠` prefixes a warning or skip line, and the bidi
+// isolates appear inside RTL test strings. Neither is a pass or a fail, and the
+// parser must not treat them as one — but they must be ENUMERATED, so that an
+// unfamiliar glyph is still loud. A third category is the honest answer; forcing
+// them into pass or fail, or narrowing the scan until it stops seeing them, would
+// both be ways of not answering.
+const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–'
 const VERDICT = new RegExp(`^[${PASS_GLYPHS}${FAIL_GLYPHS}]`)
 // INDENTED FAILURES COUNT TOO (QA-INDEP-04, M5). The guard was column-0 only, so a
 // log whose sole marker was `  ✗ C2 …: uppercase LOCK.SHOW outside an approved
@@ -385,10 +393,39 @@ if (IS_ENTRYPOINT && process.argv.includes('--self-test')) {
       .filter((f, i, a) => a.indexOf(f) === i && existsSync(f))
     const used = new Set()
     for (const f of files) {
-      for (const m of readFileSync(f, 'utf8').matchAll(/(?:^|\\n|`|')([\u2713-\u2718\u274c\u2705])\s/gu)) used.add(m[1])
+      // ANY leading non-ASCII glyph, in ANY quoting position — QA-INDEP-05, M2.
+      // The first version matched a hand-picked range `[\u2713-\u2718\u274c\u2705]`
+      // after `^`, `\n`, a backtick or a single quote. The reviewer got past it
+      // three ways: a DOUBLE-quoted string, a `\u` escape, and any glyph outside
+      // the range — so `console.log("⛔ GATE X: 3 failures")` was invisible to the
+      // check AND unclassifiable by the parser, which is H2 reproduced one level
+      // up. A scan whose job is to find UNKNOWN glyphs must not be told in advance
+      // which glyphs to look for.
+      // COMMENT LINES STRIPPED FIRST. A glyph in a comment is not printed, and the
+      // widened scan proved it on this very file: it flagged `⛔` out of the
+      // comment above that QUOTES the reviewer's example. It also flagged U+0590
+      // and U+05FF, which are the endpoints of the Hebrew RANGE in
+      // test-client-store.mjs:242 — a character class, not a glyph anyone emits.
+      // Both are the scan reading source rather than output; neither is a real
+      // unknown, and absorbing them into the neutral list would have hidden the
+      // next real one.
+      const src = readFileSync(f, 'utf8').split('\n')
+        .filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n')
+      for (const m of src.matchAll(/(?:^|\\n|['"`])([^\s\x00-\x7f])\s/gu)) used.add(m[1])
+      // …and the escaped spelling, excluding escapes that are RANGE endpoints.
+      // LOOKAROUNDS, not capture groups. Both endpoints of a character range must
+      // be skipped — `[\u0590-` opens one, `-\u05FF]` closes it — and a capturing
+      // version CONSUMED the `-` on the first match, so the second endpoint saw an
+      // empty prefix and stayed "unknown". Excluding one end of a pair is the same
+      // half-a-fix this session keeps finding elsewhere; a lookaround consumes
+      // nothing, so each endpoint is judged on its own context.
+      for (const m of src.matchAll(/(?<![[-])\\u\{?([0-9a-fA-F]{4,6})\}?(?!-)/g)) {
+        const cp = parseInt(m[1], 16)
+        if (cp > 0x7f) used.add(String.fromCodePoint(cp))
+      }
     }
-    const unknown = [...used].filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}`.includes(g))
-    t(`every verdict glyph printed by the ${files.length} gate scripts in the chain is classifiable`,
+    const unknown = [...used].filter((g) => !`${PASS_GLYPHS}${FAIL_GLYPHS}${NEUTRAL_GLYPHS}`.includes(g))
+    t(`every leading glyph printed by the ${files.length} gate scripts in the chain is classifiable as pass, fail or explicitly non-verdict`,
       unknown.length === 0, `unclassified glyph(s): ${unknown.map((g) => `${g} (U+${g.codePointAt(0).toString(16).toUpperCase()})`).join(', ')}`)
     t('...and the scan actually found glyphs, so it is not vacuous',
       used.size >= 2, `found ${[...used].join('')}`)

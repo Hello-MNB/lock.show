@@ -4815,9 +4815,16 @@ cause is not a regression: **041 PART B is deliberately commented out** (`041:10
 have blessed the exposure permanently.
 
 The suite now **measures which world it is in** and requires the two policy states to be consistent —
-failing if the tree is ever left half-cut-over — and prints the cost of dormancy as a number on every
-run: *"with 041 PART B dormant, anon reads 6 passport_version row(s) in this scratch DB, superseded
-snapshots included."* Raised as **PV-PARTB** in `docs/OWNER-PENDING.md`.
+failing if the tree is ever left half-cut-over — and prints the shape of the dormancy on every run.
+
+**CORRECTED after QA-INDEP-05 (M5, and the PV-PARTB scope finding).** This section originally quoted
+the run as *"anon reads 6 passport_version row(s) in this scratch DB"*. That number was **meaningless**
+— every artist in the fixture is `published`, so it was always 100% of the table — and it is now stale
+as well (the gate prints 11). Worse, I escalated *"anon reads every `passport_versions` row"* to Maria.
+`pv_public_read` is `using (artist_is_published(artist_id))`, so it is every row of a **published**
+artist; the reviewer built a fixture with one published and one unpublished artist, measured 3 of 6
+rows visible, then 0 after unpublishing. The exposure is real and the decision request was right; the
+scope sentence was not. Both the count and the wording are fixed in `docs/OWNER-PENDING.md`.
 
 **Two fixture facts learned by running, not by reading:** the Act spine's `act_from_artist()` trigger
 inserts into `public.act`, whose `person_id` FKs `public.person`, so a fixture with only `auth.users`
@@ -4901,12 +4908,20 @@ path-prefix rules on top, and nothing here proves those.
 
 Two findings, from the same question the last two runs asked: *is this proven, or only written?*
 
-### 1 — the one gate in the chain that skipped and still passed
+### 1 — a gate that skipped and still passed (and the claim I made about it, which was WRONG)
 
 `test-link-integrity` degraded to
 `⚠ EXECUTION SKIPPED — no local PostgreSQL. X1..X12 are UNPROVEN in this run.` **and exited 0.**
-Measured against its siblings: `test-waitlist-capture`, `test-grant-scope`, `test-passport-version` and
-`test-storage-isolation` all `process.exit(1)`. So in any environment without PostgreSQL — CI, a fresh
+Measured against **four** siblings — `test-waitlist-capture`, `test-grant-scope`,
+`test-passport-version`, `test-storage-isolation` — all of which `process.exit(1)`.
+
+⚠ **AND I CONCLUDED FROM FOUR THAT IT WAS THE ONLY ONE.** QA-INDEP-05 stopped the cluster and ran
+*every* database-dependent gate, not the four I happened to compare against: `test-sql-migrations`,
+`test-sql-privileges`, `test-projection-matrix` and `test-tenant-isolation` **also skipped and exited
+0**. `test-projection-matrix` printed `⚠ EXECUTION SKIPPED … UNPROVEN in this run` and then
+`All projection-matrix checks passed.`; `test-tenant-isolation` printed the words *"A SKIP IS NOT A
+PASS"* and exited 0 on the next line. I closed one of five and titled it "the one". All five now exit
+1, and the fail-closed path of each was **executed** with the cluster stopped, not reasoned about. So in any environment without PostgreSQL — CI, a fresh
 clone, a container that lost the cluster — twelve executed assertions vanished and the chain still
 reported success. That is the rule this repo states everywhere else, and the controller's step 8 states
 again: **a skipped test is not a pass.**
@@ -4957,3 +4972,69 @@ write, so it is what the suite asserts.
 
 Z2 is recorded honestly: it exits 1, so the chain is red, but it aborts rather than failing a named
 check. Z3 is the mutation that proves the idempotency assertions are load-bearing.
+
+## QA-INDEP-05 — the fifth review, and the first to check a claim I had put in front of Maria
+
+**Increment:** QA5-REPAIRS · **Range reviewed:** `b3e923d..fc35920` (five increments) · **HEAD at open:** `fc35920`
+**Reviewer:** independent, read-only, 85 tool calls, own scratch databases and own probes.
+
+**Verdicts: REVISE ×3, ACCEPT WITH CONDITIONS ×2.** The part that mattered most was the part I could
+not check myself.
+
+### The two founder-facing exposure claims
+
+| claim | verdict | what changed |
+|---|---|---|
+| **STORAGE-EVIDENCE-SCOPE** | **CONFIRMED — and I UNDERSTATED it** | The reviewer reproduced the read/rename/delete with its own probe, then went further than I could: it read Supabase's storage source and access-control docs and confirmed **owner restriction is not automatic** — so this is not a shim artifact. Then it found the amplification I missed: **creating a signed URL needs only SELECT**, so any authenticated account can mint a **7-day public link** to another artist's evidence, and `src/lib/storage.js:21` names files `${userId}/${timestamp}_${name}`, making paths enumerable. My sentence *"the anon boundary is sound"* was true of the database and **misleading about the system**. The owner row now says so. |
+| **PV-PARTB** | **CONFIRMED in mechanism, OVERSTATED in wording** | I told Maria *"anon reads every `passport_versions` row"*. `pv_public_read` is `using (artist_is_published(artist_id))` — it is every row of a **published** artist. The reviewer built the fixture mine could not distinguish (one published artist, one not): **3 of 6 rows visible, 0 after unpublishing**. And the number I quoted her was meaningless — every fixture artist is published, so it was always 100% of the table — and stale besides (6 quoted, 11 printed). Scope corrected, number removed. |
+
+Both exposures are real and both decision requests stand. The *wording* of one was too wide and the
+other too narrow, in opposite directions, and neither error was discoverable from inside my own suites.
+
+### H1 — my headline finding was false
+
+LINK-DEADSTATES was titled *"the **one** gate in the chain that skipped and still passed"*. I compared
+against four siblings and generalised from four. The reviewer stopped the cluster and ran **every**
+database-dependent gate:
+
+```
+test-sql-migrations    EXIT=0        test-projection-matrix EXIT=0
+test-sql-privileges    EXIT=0        test-tenant-isolation  EXIT=0
+```
+
+`test-projection-matrix` printed `⚠ EXECUTION SKIPPED … UNPROVEN in this run` and then
+`All projection-matrix checks passed.` `test-tenant-isolation` printed the words **"A SKIP IS NOT A
+PASS"** and exited 0 on the next line. I closed one of five and called it the only one. All five now
+exit 1, and every fail-closed path was **executed** with the cluster genuinely stopped — eight gates,
+eight `exit=1`.
+
+### H2 — a verdict line that contradicted its own run
+
+`test-passport-version`'s unconditional green summary ended *"…and anon refused draft and superseded
+snapshots"* — on a run that had just measured and printed the opposite. That line is exactly what
+`generate-evidence` captures into `evidence/current.json`, so the record said "refused" for a run that
+proved "reads". The tail now branches on the measured state.
+
+### The rest
+
+| # | finding | repair |
+|---|---|---|
+| **M1** | the storage gate's "exactly ONE of two shapes" check was `typeof x === 'boolean'` — **it could never fail** while its label claimed half-applied-mix detection | replaced with a real count: exactly one policy may govern the evidence bucket. Mutation AA1 (a second permissive policy) now fails |
+| **M2** | the derived glyph scan matched a hand-picked range after `^`, `\n`, backtick or single quote — blind to **double quotes**, `\u` escapes, and any glyph outside the range. `console.log("⛔ …")` was invisible to the check *and* unclassifiable by the parser: H2 one level up | any leading non-ASCII glyph, in any quoting position, plus escapes — with an explicit **neutral** category for `⚠` and bidi marks, comment lines stripped, and character-range endpoints excluded by lookaround |
+| **M3** | `(?<!Array\|Object\|storage)` is a character-sequence test, not a receiver test, so **any identifier ending in those letters** walked through — `const storage = createClient(…); storage.from('waitlist_signup')` counted zero destinations. And `(?!rpc\/)` exempted **every** RPC | anchored to word boundaries and to the `.storage` receiver; RPCs now need a one-entry allowlist. All four reviewer evasions fail; `supabase.storage.from`, `Array.from` and the governed RPC still pass |
+| **M4** | the gate and register asserted Supabase *"adds its own path-prefix rules on top"* — **false**, and it pointed Maria toward a safety that does not exist | replaced with the accurate limit: Supabase delegates authorization wholly to RLS, so the database half **is** the whole boundary |
+| **L1** | the font probe compared against `monospace` alone, so a family that IS the resolved monospace reads as absent — **DejaVu Sans Mono is installed here and the probe called it missing**, inverting the diagnosis L1 exists to give | three generics; verified: `DejaVu Sans Mono single-generic: false → three-generic: true`, while all five brand families stay absent, so `FONT_BASELINE = []` remains correct |
+| **L2** | `[6d]`, added in the same commit whose register entry says the tracked-only lesson was closed, was `git ls-files` — tracked only, three lines below a `[6c]` using `--others`. It also filtered to `.js`, never opening the twelve committed `/app/**/index.html` shells | both fixed |
+| **L3** | `OPAQUE_PINNED` pinned a **file**, absorbing the next unresolvable import added to it | pinned per **count**; new `C2d` fails when a pinned file grows a second one (mutation AA2) |
+| **L4** | PART B is three policies; the two-state check passed a cutover that created one and omitted `pv_org_history_read` / `pv_operator_read`, leaving owners without their own history | the applied branch now requires PART B whole |
+
+**Mutations — 3 injected, 3 caught, restores byte-exact:** AA1 a second permissive evidence policy ·
+AA2 a pinned file growing a second opaque specifier · AA3 the reviewer's own `⛔` case, a chain gate
+printing an out-of-range failure glyph.
+
+**What the reviewer checked and found sound**, recorded because it is evidence too: all three new gates
+fail closed with the cluster stopped; none leaves a scratch database behind on an injected mid-run
+crash; none passes vacuously on an emptied fixture; `test-link-deadstates` is a genuine mechanism test
+and its "unreachable defensive branch" finding is correct; H3's resolver is sound — the reviewer
+rebuilt the two-candidate case and got fail-loud, not silently-clean; and the chain is green at HEAD
+with zero skip lines in 2514 lines of output.

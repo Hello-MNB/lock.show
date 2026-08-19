@@ -103,11 +103,20 @@ const FONT_BASELINE = []
   // the same string means the renderer fell back, i.e. the family is NOT present.
   const page = await browser.newPage()
   const available = await page.evaluate((fams) => {
+    // THREE GENERICS, not one (QA-INDEP-05, L1). Probing against `monospace`
+    // alone is blind exactly when the family being tested IS what the renderer
+    // resolves `monospace` to: the widths match and a PRESENT font is reported
+    // absent. Demonstrated on this container — DejaVu Sans Mono is installed and
+    // the single-generic probe called it missing. That inverts the diagnosis this
+    // check exists to give: the operator would be told the font environment
+    // matches while the fonts are precisely what changed. A family counts as
+    // present if it differs under ANY generic.
     const c = document.createElement('canvas').getContext('2d')
     const probe = 'MWQ@1il — mixed 0O'
-    const widthIn = (f) => { c.font = `48px "${f}", monospace`; return c.measureText(probe).width }
-    const fallback = widthIn('__b4_no_such_family__')
-    return fams.filter((f) => widthIn(f) !== fallback)
+    const widthIn = (f, g) => { c.font = `48px "${f}", ${g}`; return c.measureText(probe).width }
+    const GENERICS = ['monospace', 'serif', 'sans-serif']
+    const fallback = Object.fromEntries(GENERICS.map((g) => [g, widthIn('__b4_no_such_family__', g)]))
+    return fams.filter((f) => GENERICS.some((g) => widthIn(f, g) !== fallback[g]))
   }, DECLARED_FAMILIES)
   await page.close()
   check('the font environment matches the one the committed PNGs were rendered in',

@@ -183,8 +183,10 @@ if (!pgAvailable()) {
   console.log('  Sections A (multi-Act), B (dead mandates), C (residual a+b) and')
   console.log('  D (residual c) did NOT RUN. Nothing about tenant, mandate or Act')
   console.log('  isolation was proven by this run. A SKIP IS NOT A PASS — start a')
-  console.log('  local PostgreSQL 16 and re-run before trusting any green above.')
-  process.exit(failed ? 1 : 0)
+  console.error('  local PostgreSQL 16 and re-run before trusting any green above.')
+  // This gate PRINTED the rule and then exited 0 on the next line, which is the
+  // most exact way a skip becomes a pass (QA-INDEP-05, H1).
+  process.exit(1)
 }
 
 const db = ScratchDb.create('b4_tenant')

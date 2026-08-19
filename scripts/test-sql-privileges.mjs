@@ -120,7 +120,9 @@ if (!pgAvailable()) {
   console.log('\n⚠ EXECUTION SKIPPED — no local PostgreSQL on this machine.')
   console.log('  Only the static half above ran. The privilege assertions P1..P7 are')
   console.log('  UNPROVEN in this run. Start a local server and re-run before trusting it.')
-  process.exit(failed ? 1 : 0)
+  console.error('  A SKIP IS NOT A PASS (CLAUDE.md operating law, controller step 8): with these')
+  console.error('  assertions unrun, a zero exit would report a proof that did not happen.')
+  process.exit(1)
 }
 
 console.log('\nEXECUTED LOCALLY — real PostgreSQL 16, real roles, real ACLs')

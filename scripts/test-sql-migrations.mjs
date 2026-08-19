@@ -622,4 +622,12 @@ if (!failed) {
 }
 dropOurs({ mineOnly: true })
 dropOurs()
+// A SKIP IS NOT A PASS — and this file said so in its own summary while exiting 0
+// (QA-INDEP-05, H1). Every V and R assertion here is EXECUTED-LOCALLY; with no
+// database none of them ran, so a zero exit reports a proof that did not happen.
+if (!DB_OK) {
+  console.error('\n✖ SQL MIGRATION GATE: no local PostgreSQL — every EXECUTED-LOCALLY assertion was skipped.')
+  console.error('  A SKIP IS NOT A PASS (CLAUDE.md operating law, controller step 8).')
+  process.exit(1)
+}
 process.exit(failed ? 1 : 0)

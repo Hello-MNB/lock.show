@@ -189,6 +189,8 @@ const IDENT_ALL = /\b([A-Z][A-Z0-9_]*)\b/g
 /** Files whose imports this scanner cannot resolve. Collected while walking, so
  *  the report names the file rather than the gate that happened to reach it. */
 const opaque = new Set()
+/** How MANY unresolvable specifiers each file has, so a pin cannot absorb a second. */
+const opaqueCount = new Map()
 /** Does this specifier name a real FILE, from `fromAbs` or from the repo root?
  *  A directory is not a module, and ".." is the answer a broken resolver gives. */
 function resolvesToFile(fromAbs, spec) {
@@ -236,7 +238,7 @@ function playwrightPath(file, seen = new Set()) {
       // it is a specifier this scanner failed to understand.
       if (lit && !resolvesToFile(abs, lit)) lit = null
       if (lit) dynamicTargets.push(lit)
-      else opaque.add(file)
+      else { opaque.add(file); opaqueCount.set(file, (opaqueCount.get(file) ?? 0) + 1) }
     }
   }
   if (DIRECT.test(src)) return [file]
@@ -373,15 +375,25 @@ check('C1b non-vacuity — at least one browser-dependent gate was detected', re
 // import.meta.url)` — and its callers pass i18n catalogue paths. No amount of
 // static analysis resolves a function parameter, so this is recorded as a known
 // unknown rather than pretended away, and adding a second one is a gate failure.
-const OPAQUE_PINNED = ['scripts/test-i18n-parity.mjs']
-const opaqueNew = [...opaque].filter((f) => !OPAQUE_PINNED.includes(f))
-const opaqueStale = OPAQUE_PINNED.filter((f) => !opaque.has(f))
+// PINNED PER SPECIFIER, not per file (QA-INDEP-05, L3). A file-level pin absorbs
+// the NEXT unresolvable import added to that file, silently — which is the same
+// "exemption wider than the decision it records" shape L4 closed in the brand
+// gate. The pin now names the count as well, so a second opaque specifier in the
+// same file fails even though the file is pinned.
+const OPAQUE_PINNED = { 'scripts/test-i18n-parity.mjs': 1 }
+const opaqueNew = [...opaque].filter((f) => !(f in OPAQUE_PINNED))
+const opaqueStale = Object.keys(OPAQUE_PINNED).filter((f) => !opaque.has(f))
+const opaqueOver = Object.entries(OPAQUE_PINNED)
+  .filter(([f, n]) => opaqueCount.get(f) > n)
+  .map(([f, n]) => `${f} (pinned ${n}, found ${opaqueCount.get(f)})`)
 check('C2b no NEW file imports through a computed specifier — reachability must never be unknown by accident',
   opaqueNew.length === 0,
   `${opaqueNew.length} unpinned file(s) with an unresolvable specifier: ${opaqueNew.join(', ')}`)
 check('C2c the pinned unknowns are still unknown — a stale pin is an exemption nobody re-earned',
   opaqueStale.length === 0,
   `no longer opaque, remove from OPAQUE_PINNED: ${opaqueStale.join(', ')}`)
+check('C2d a pinned file has not GROWN a second unresolvable specifier',
+  opaqueOver.length === 0, opaqueOver.join(', '))
 
 // ── execute each one with playwright unresolvable ───────────────────────────
 for (const gate of rendered) {

@@ -180,6 +180,18 @@ const legacy = db.scalar(`select count(*) from pg_policies
                           where tablename='passport_versions' and policyname='pv_public_read'`) !== '0'
 check('[8] the anon read policy is in exactly ONE of its two known states, not a half-applied mix',
   partB !== legacy, `pv_share_link_read=${partB} pv_public_read=${legacy} — a tree carrying both, or neither, is a partial cutover`)
+// PART B IS THREE POLICIES, NOT ONE (QA-INDEP-05, L4). `partB !== legacy` rejects
+// both-present and both-absent, but not a cutover that creates pv_share_link_read
+// and drops pv_public_read while omitting pv_org_history_read / pv_operator_read —
+// which passes as "applied" while owners and operators lose governed history.
+if (partB) {
+  const companions = db.scalar(`select coalesce(string_agg(policyname, ',' order by policyname), '')
+                                from pg_policies where tablename='passport_versions'
+                                  and policyname in ('pv_org_history_read','pv_operator_read')`)
+  check('[8] ...and PART B was applied WHOLE — the org-history and operator reads came with it',
+    companions.includes('pv_org_history_read') && companions.includes('pv_operator_read'),
+    `found: ${companions || '(neither)'} — a partial cutover leaves owners without their own history`)
+}
 
 const anonSees = (id) => db.try(`select snapshot from public.passport_versions where id='${id}'`, { role: 'anon' })
 const draft = idOf(pub(A1, '{"secret":"draft"}', 'private', 'draft'))
@@ -208,5 +220,5 @@ if (partB) {
 console.log('')
 reachedEnd = true
 if (failures) { console.log(`✖ PASSPORT VERSION: ${failures} failure(s).`); process.exit(1) }
-console.log(`✓ PASSPORT VERSION [PART B ${partB ? 'APPLIED' : 'DORMANT'}]: the 041 state machine proven by EXECUTION, not by regex over its own text — five states enforced, publish supersedes the incumbent atomically and stamps lineage, one published version per (lineage × audience), five columns immutable, a superseded version unrevivable, a second Act a genuinely separate bucket, republishing idempotent, and anon refused draft and superseded snapshots. NOT proven here: PostgREST behaviour with real JWTs, and that 041 applies to the production data (it is drafted, NOT applied).`)
+console.log(`✓ PASSPORT VERSION [PART B ${partB ? 'APPLIED' : 'DORMANT'}]: the 041 state machine proven by EXECUTION, not by regex over its own text — five states enforced, publish supersedes the incumbent atomically and stamps lineage, one published version per (lineage × audience), five columns immutable, a superseded version unrevivable, a second Act a genuinely separate bucket, and republishing idempotent. ${partB ? 'PART B APPLIED: anon refused draft and superseded snapshots.' : 'PART B DORMANT: anon CAN read draft and superseded snapshots of a published artist — measured above, and the reason this line does not say "refused".'} NOT proven here: PostgREST behaviour with real JWTs, and that 041 applies to the production data (it is drafted, NOT applied).`)
 process.exit(0)

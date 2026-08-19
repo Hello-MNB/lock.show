@@ -100,8 +100,17 @@ if (bobDeleted) db.exec(`insert into storage.objects (bucket_id, name, owner) va
 const scoped = db.scalar(`select coalesce(string_agg(coalesce(qual,'') || coalesce(with_check,''), ' '), '')
                           from pg_policies where schemaname='storage' and tablename='objects' and policyname='evidence_rw'`)
 const ownerScoped = /owner|auth\.uid|organization|act_id/i.test(scoped)
-check('[3] the evidence policy is in exactly ONE of its two known shapes, not a half-applied mix',
-  typeof ownerScoped === 'boolean')
+// A REAL TWO-STATE TEST. This was `typeof ownerScoped === 'boolean'` — always
+// true, a check that could never fail while its label claimed to detect a
+// half-applied mix (QA-INDEP-05, M1). The honest form is the one the PV gate
+// already uses: the named policy must exist, and it must be scoped or not, with
+// no third possibility. `evidence_rw` missing entirely, or a SECOND permissive
+// policy re-opening what a narrowed one closed, both fail here rather than
+// silently choosing a branch.
+const evidencePolicies = Number(db.scalar(`select count(*) from pg_policies
+  where schemaname='storage' and tablename='objects' and (qual like '%evidence%' or with_check like '%evidence%')`))
+check('[3] exactly one policy governs the evidence bucket — not zero, and not a second one re-opening it',
+  evidencePolicies === 1, `${evidencePolicies} policies mention the evidence bucket`)
 
 if (ownerScoped) {
   check('[3] SCOPED policy installed: a different artist cannot READ another\'s evidence', !bobReads, bobRead.out.slice(0, 90))
@@ -131,5 +140,5 @@ check('...which makes the [2] refusals meaningful rather than a broken role',
 console.log('')
 reachedEnd = true
 if (failures) { console.log(`✖ STORAGE ISOLATION: ${failures} failure(s).`); process.exit(1) }
-console.log(`✓ STORAGE ISOLATION [evidence policy: ${ownerScoped ? 'OWNER-SCOPED' : 'BUCKET-ONLY, the 001 shape'}]: buckets, RLS and the three policies proven installed by execution; anon refused both write paths and the private bucket; the public bucket readable, which proves the anon role works and the refusals are real; and the cross-person posture on the evidence bucket measured rather than assumed. NOT proven here: Supabase's real storage API, which adds its own path-prefix rules on top of these policies — this measures the DATABASE half.`)
+console.log(`✓ STORAGE ISOLATION [evidence policy: ${ownerScoped ? 'OWNER-SCOPED' : 'BUCKET-ONLY, the 001 shape'}]: buckets, RLS and the three policies proven installed by execution; anon refused both write paths and the private bucket; the public bucket readable, which proves the anon role works and the refusals are real; and the cross-person posture on the evidence bucket measured rather than assumed. NOT proven here: PostgREST/GoTrue with real JWTs, and the production data. CORRECTED after QA-INDEP-05 (M4): an earlier version of this line said Supabase "adds its own path-prefix rules on top", which is FALSE — path scoping in Supabase Storage exists only if a policy writes storage.foldername(), and these policies do not. Supabase delegates authorization wholly to RLS, so the database half IS the whole boundary, and the hedge was pointing the reader toward a safety that does not exist.`)
 process.exit(0)

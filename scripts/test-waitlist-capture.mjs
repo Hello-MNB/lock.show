@@ -289,10 +289,27 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
     // (empty: the marketing site writes NOTHING directly — every backend
     // interaction goes through the governed RPC)
   ]
-  // `Array.from(...)`, `Object.from...` and Supabase STORAGE (`storage.from(bucket)`)
-  // are not table destinations. The negative lookbehind keeps the rule about the
-  // database client, which is the thing 048 revoked.
-  const FROM_CALL = /(?<!Array|Object|storage)\.from\s*\(([^)]*)\)/g
+  // THE EXEMPTIONS MUST NOT REINTRODUCE THE ENUMERATION (QA-INDEP-05, M3). The
+  // first version was `(?<!Array|Object|storage)` — a raw character-sequence test,
+  // not a receiver test — so ANY identifier ENDING in those letters walked through:
+  //
+  //     const storage = createClient(U, K)      // a supabase client named `storage`
+  //     storage.from('waitlist_signup').insert(row)   →  0 destinations counted
+  //
+  //   and likewise `dbObject.from(...)`, `rowArray.from(...)`. H1 replaced an
+  //   unbounded list of forbidden spellings with a bounded list of allowed
+  //   destinations; the lookbehind quietly put an unbounded list back.
+  //
+  // The exemptions are now anchored to a WORD BOUNDARY for the built-ins, and to
+  // the receiver `.storage` for Supabase Storage — `supabase.storage.from(` still
+  // has `.storage` immediately before `.from`, while a bare `storage.from(` (a
+  // variable that merely shares the name) is caught.
+  const FROM_CALL = /(?<!\bArray|\bObject|\.storage)\.from\s*\(([^)]*)\)/g
+  // …and the RPC exemption named a PREFIX, not a function: `(?!rpc\/)` exempted
+  // every RPC that exists. Only the governed one is exempt; any other RPC in the
+  // site lane is a backend write this scan cannot vouch for.
+  const RPC_ALLOWED = ['join_waitlist']
+  const RPC_CALL = /\/rest\/v1\/rpc\/([A-Za-z0-9_$]*)/g
   const REST_PATH = /\/rest\/v1\/(?!rpc\/)([A-Za-z0-9_$]*)/g
   const STR_LITERAL = /^\s*['"`]([A-Za-z0-9_]+)['"`]\s*$/
 
@@ -324,6 +341,11 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
       if (!m[1]) offenders.push(`${f}: a /rest/v1/ path built at runtime — this scan cannot say which table it targets`)
       else if (!CLIENT_TABLES.includes(m[1])) offenders.push(`${f}: /rest/v1/${m[1]} — not on the client-table allowlist`)
     }
+    for (const m of code.matchAll(RPC_CALL)) {
+      destinations++
+      if (!m[1]) offenders.push(`${f}: an /rest/v1/rpc/ path built at runtime — this scan cannot say which function it calls`)
+      else if (!RPC_ALLOWED.includes(m[1])) offenders.push(`${f}: /rest/v1/rpc/${m[1]} — not the governed RPC`)
+    }
   }
 
   check('[6c] every table the SITE lane names resolves to the allowlist, and none is computed',
@@ -349,8 +371,15 @@ console.log('\n[6c] ...and the BROWSER stopped asking (GAP-W1)')
   // contract above — because minification makes every `.from(` ambiguous. What IS
   // decidable in an artifact is the string: the table name and any postgrest table
   // path must not appear in shipped bytes at all.
-  const bundles = execFileSync('git', ['ls-files', 'website-next/public/app'],
-    { encoding: 'utf8' }).split('\n').filter((f) => /\.js$/.test(f) && existsSync(f))
+  // TRACKED **and** UNTRACKED, and the SHELLS as well as the bundles
+  // (QA-INDEP-05, L2). This clause was added in the same commit whose register
+  // entry says the tracked-only lesson was closed — three lines below a [6c] that
+  // already used `--others`. It also filtered to `.js`, so the twelve committed
+  // `/app/**/index.html` shells were never opened, and a shell is as much a
+  // shipped client artifact as a bundle is.
+  const bundles = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard',
+    'website-next/public/app'], { encoding: 'utf8' })
+    .split('\n').filter((f) => /\.(js|html)$/.test(f) && existsSync(f))
   const shipped = []
   for (const f of bundles) {
     const code = readFileSync(f, 'utf8')
