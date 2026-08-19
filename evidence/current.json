@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "94f05831722bba8eb85973c701d29773ce72956e",
+  "head": "0deade7acc3e6aedfee63f406218f69e0b799122",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m6.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m7.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 50,
@@ -164,7 +164,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 5.1s",
+      "summary": "✓ Compiled successfully in 7.5s",
       "result": "pass"
     },
     {
@@ -366,9 +366,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 3.68s",
+    "✓ built in 4.01s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.33s"
+    "✓ built in 3.20s"
   ],
   "unclassified": [],
   "unknownGlyphs": [],
