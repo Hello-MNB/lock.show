@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "42ee09f11ace59b756394d89b7a6ee38624fa5e4",
+  "head": "e6f52ac5f25324054e795293e37c8b966f79d3ca",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/m7/verify.log)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/srczero/verify.log)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 43,
@@ -158,7 +158,7 @@
     {
       "id": "BRAND NAMING",
       "step": "test:brand",
-      "summary": "✓ BRAND NAMING: zero bare LOCK in the GATED scope — website source, rendered HTML, public app shells and non-HTML public surfaces; lowercase lock.show URLs preserved. NOT \"everywhere\": 15 token(s) remain deferred in src/**, and docs/** is out of scope entirely.",
+      "summary": "✓ BRAND NAMING: zero bare LOCK across the whole gated scope — website source, rendered HTML, public app shells, non-HTML public surfaces AND src/** (0 remaining, deferral closed); lowercase lock.show URLs preserved. STILL NOT \"everywhere\": docs/** is out of scope entirely, and the 22 allowlisted lockup assets carry LOCK.SHOW in accessible text pending the BRAND-LOCKUP-TITLES ruling.",
       "result": "pass"
     },
     {
@@ -324,9 +324,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 3.81s",
+    "✓ built in 4.68s",
     "✓ 160 modules transformed.",
-    "✓ built in 2.85s"
+    "✓ built in 3.13s"
   ],
   "unclassified": [],
   "skips": [],
