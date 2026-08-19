@@ -5038,3 +5038,56 @@ crash; none passes vacuously on an emptied fixture; `test-link-deadstates` is a 
 and its "unreachable defensive branch" finding is correct; H3's resolver is sound — the reviewer
 rebuilt the two-candidate case and got fail-loud, not silently-clean; and the chain is green at HEAD
 with zero skip lines in 2514 lines of output.
+
+## ARC-REACH — "hazard, not a live defect" was a claim about reach, and reach was never measured
+
+**Increment:** ARC-REACH · **HEAD at open:** `64a7978`
+**Files:** `scripts/test-arc-reach.mjs` (new) · `package.json` · `docs/OWNER-PENDING.md`
+
+Two hypotheses were checked and **abandoned before any code was written**, which is the part worth
+recording: `evidence_artifacts` looked absent from every executed isolation check — it is covered
+(`test-tenant-isolation:256,534`), and its policy is `can_access_artist(artist_id)`. And ARC-VALIDATE
+looked unmeasured — the *forgery* is already reproduced and executed (`F1`/`F2`). Building either
+would have duplicated existing work.
+
+What was **not** measured is the second half of the owner row's own sentence. *"Hazard, not a live
+defect"* is a claim about **reach**, and reach is exactly what reading a policy cannot tell you.
+
+**The consumer that matters.** `set_artist_org()` (`015:35`) is a SECURITY DEFINER trigger on `artists`
+INSERT that reads the caller's active organization and stamps `owner_organization_id` **with no
+membership check** — and `can_access_artist()` then grants every member of whichever organization is
+stamped there. So a forged active org should inject a row into a stranger's roster.
+
+**It does not.** `artists_org`'s `with check` (`015:27`) requires `owner_organization_id in (select
+current_org_ids())`, which reads real memberships, so the policy refuses the very stamp the trigger
+wrote. Nothing is created. The identical insert succeeds the moment the active org is honest — which
+is what makes the refusal about the forgery rather than about inserts. **The claim holds, and now has
+evidence.** The finding worth reporting is the shape: containment rests on a *second, independent
+control*, not on the thing that consumes the value.
+
+**Three of my own errors, each caught by executing rather than reading:**
+
+1. **I cited the wrong guard.** I wrote `008:251`; migration **015 drops and recreates `artists_org`**,
+   so 008's definition is superseded and my first mutation against it changed nothing. Found by
+   mutating 008 and watching the outcome refuse to move — the file changed and the database did not.
+2. **My citation fix broke the gate.** An apostrophe in `008's` inside a single-quoted string made the
+   file unparseable, so two "mutation caught, exit=1" results were **syntax errors**. `node --check`
+   now, and the runs redone.
+3. **My probe conflated two controls.** `insert … returning id` also needs the row to be SELECT-visible,
+   and the USING clause fails for a foreign org — so the statement was refused for a second reason even
+   with the WITH CHECK removed, making the guard look load-bearing when the probe could not tell.
+   Isolated by running the same insert with and without `returning` under both policies:
+
+   | | shipped guard | guard removed |
+   |---|---|---|
+   | insert **without** `returning` | refused, 0 rows | **succeeds, stamped with the foreign org** |
+
+**And a design correction.** The escalation branch first *reported* the cross-org write and exited 0,
+copying the two-state pattern from 041 PART B and the storage policy. That pattern is right where both
+states are legitimate — a cutover the owner has not authorised is not a defect. It is wrong here:
+a person writing into an organization they do not belong to is not a posture anyone chose. The two
+states are a **diagnosis, not a permission**, so the escalation branch now reds the chain.
+
+**Mutation — 1 injected, caught, restore byte-exact:** **AB1** removes `with check` at `015:27` →
+`✗ ESCALATION — a person who belongs to no such organization created an artist OWNED by it`, plus the
+reads and writes it unlocks for the other organization's member. Green when contained, red when not.
