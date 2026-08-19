@@ -68,16 +68,48 @@ export function pgUnavailableReason() {
       return { kind: 'absent', text: 'PostgreSQL is not installed on this machine.' }
     }
   }
-  let listed = ''
-  try { listed = execFileSync('pg_lsclusters', { encoding: 'utf8' }) } catch { /* not debian-packaged */ }
-  const down = /\bdown\b/.test(listed)
-  return down
-    ? { kind: 'down', text: 'A PostgreSQL cluster exists but is DOWN. Start it with `npm run preflight:db -- --start`.' }
-    : { kind: 'unreachable', text: 'PostgreSQL did not answer. Check `pg_isready` and the server log.' }
+  // ANSWERING BUT UNUSABLE IS ITS OWN STATE — QA-INDEP-10, M4(a). pgAvailable()
+  // catches two different failures in one try/catch: the server not answering,
+  // and `su postgres psql` being refused. With the cluster ONLINE and the caller
+  // not root, the old code reported "PostgreSQL did not answer" — both halves
+  // false, and the remedy it offered (start the cluster) was wrong.
+  // The port comes from `pg_isready`'s own output — it prints the socket and port
+  // it tried, whether or not anything answered. Reading a PGPORT env var here was
+  // the obvious move and the integration-contract gate rejected it: an env read
+  // that is not in the register is an undeclared interface, which is exactly what
+  // that gate exists to catch. Deriving it needs no new contract.
+  let ready = true
+  let probe = ''
+  try { probe = execFileSync('pg_isready', { encoding: 'utf8' }) } catch (e) { ready = false; probe = String(e.stdout || '') }
+  if (ready) {
+    return { kind: 'unprivileged',
+      text: 'The server IS answering, but this process cannot open a session as the postgres role. Run as root, or fix local auth — starting the cluster will not help.' }
+  }
+  // THE CLUSTER WE ACTUALLY USE, not any cluster — M4(b). The old test was
+  // /\bdown\b/ against the WHOLE pg_lsclusters listing, so an unrelated down
+  // cluster made this report "down" while the one on our port was fine, and the
+  // caller then hardcoded `pg_ctlcluster 16 main start`. The row is parsed and the
+  // cluster is identified, so the remedy names the thing that is actually down.
+  let rows = []
+  try {
+    rows = execFileSync('pg_lsclusters', { encoding: 'utf8' }).split('\n')
+      .map((l) => l.trim().split(/\s+/))
+      .filter((c) => /^\d/.test(c[0] || ''))
+      .map(([ver, cluster, port, status]) => ({ ver, cluster, port, status }))
+  } catch { /* not debian-packaged */ }
+  const probedPort = /:(\d+)\s/.exec(probe)?.[1] ?? '5432'
+  const wanted = rows.find((c) => c.port === probedPort) ?? rows[0]
+  if (wanted && wanted.status === 'down') {
+    return { kind: 'down', cluster: wanted,
+      text: `PostgreSQL cluster ${wanted.ver}/${wanted.cluster} on port ${wanted.port} is DOWN. Start it with \`npm run preflight:db -- --start\`.` }
+  }
+  return { kind: 'unreachable',
+    text: 'PostgreSQL did not answer and no cluster on this port reports itself down. Check `pg_isready` and the server log.' }
 }
 
-// SAY IT ONCE, AND SAY WHAT TO DO. Twelve gates refuse without a database, each
-// correctly ("a skip would prove nothing. NOT a pass") — and none of them said
+// SAY IT ONCE, AND SAY WHAT TO DO. Eleven chain gates refuse through this
+// function, each correctly ("a skip would prove nothing. NOT a pass") — and none
+// of them said
 // WHY the database was missing. In this remote session the cluster is reaped
 // between scheduled runs: twice now the preflight has found it down with a stale
 // pid file, a clean log ending on a routine checkpoint, no PANIC, 14 GB free and
@@ -99,8 +131,8 @@ export function pgAvailable() {
       console.error(`\n  ⚠ no local PostgreSQL — ${why.text}`)
       if (why.kind === 'down') {
         console.error('    This session reaps the cluster between scheduled runs; a DOWN cluster is')
-        console.error('    an environment state, not a code regression. The gate below still fails')
-        console.error('    closed, which is correct: an unrun check is not a pass.')
+        console.error('    an environment state, not a code regression. Whatever called this still')
+        console.error('    fails closed, which is correct: an unrun check is not a pass.')
       }
     }
     return false

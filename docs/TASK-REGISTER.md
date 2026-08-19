@@ -5751,3 +5751,131 @@ accepted, not that anything can be queried.
 **UNVERIFIED:** the `absent` branch (PostgreSQL not installed at all) — reaching it would mean removing
 the package, which is not a reversible thing to do to this container. The branch is written and
 syntax-checked, not executed, and this sentence exists so nobody reads the table above as covering it.
+
+---
+
+## QA-INDEP-10 — the tenth review: multi-Act is canon, and unreachable
+
+Verdict: **REJECT** on claims, not on red gates — every gate was green at HEAD and stayed green. 1 H, 6 M,
+3 L. The H is the third variation of the same defect, and this time it moved from *columns* to *privilege*.
+
+### H1 — an artist cannot create a second Act at all, and my fixture hid it
+
+QA-INDEP-09 rejected the second-Act fixture for sending columns `createAct()` never sends. I fixed the
+columns and wrote *"the fixture is now literally what createAct() sends"* into the commit, the gate and
+the founder register. It still ran as the **database owner**. Executed:
+
+```
+createAct INSERT as authenticated: false
+  ERROR: new row violates row-level security policy for table "act"
+same INSERT as DB OWNER (what my fixture does): true
+act_org WITH CHECK: can_access_artist(id)
+```
+
+`act_org` (020:185) checks `can_access_artist` on the **new** Act's id, a fresh uuid that no artists row
+and no grant names. The columns matched; the privilege is the half that decides. And there are two more
+layers: `publishPassport()` (src/lib/db.js:605-609) throws `act_publish_unavailable` for any non-default
+Act — a deliberate, documented refusal pending 043 — and all three callers pass only `artist.id`.
+
+**So multi-Act is canon in the specification and unreachable in the product.** Everything [2f]/[2g]/[2h]
+protects is protecting a row no artist can create. `[2i]` now measures all three layers, and the fixture
+keeps owner privilege *deliberately and says so* instead of claiming to be the client.
+
+I had also written that this was "already tracked as ACT-RLS". **It is not** — ACT-RLS is about a
+grant-holder being able to UPDATE an Act row. The register did not contain this fact anywhere. Raised as
+**ACT-CREATE-BLOCKED**, with no fix attached: opening Act creation overlaps a decision Maria already
+holds, and getting it wrong is worse than the gap.
+
+### M1 — 051 guessed, and the guess refused the artist
+
+`limit 1` over a Person's default Acts with no `ORDER BY`, and nothing limits a Person to one. Executed:
+two default Acts in two organisations (artist-plus-agency, an ordinary shape — **no move required**, which
+is what my "residual" claimed), the new Act filled from whichever came back first, and then:
+
+```
+THE PERSON publishes that Act for their ORG_A artist: true
+THE PERSON publishes that Act for their ORG_B artist: false
+```
+
+The same "refused on your own work" failure that got round 9 rejected, reached without anyone moving
+anywhere — and 051's own text claimed it touched *"only rows that can be resolved unambiguously"*.
+
+Now: fill only when **every** candidate agrees, else leave NULL — and **041 no longer refuses a NULL
+organisation**, it falls back to the Person check. That removes the availability failure entirely and the
+honest cost is stated: for a NULL-organisation Act, 049 is the only layer. (`min(uuid)` does not exist;
+`(array_agg(distinct org))[1]`.)
+
+### M3 — the enumerated safe set was wrong, and I reproduced my own error before fixing it
+
+The reviewer applied my six-migration list and the ordinary fixture would not load. **My first attempt to
+reproduce it said the reviewer was wrong** — because my filter was `n > 042`, which always applies 042
+itself. Fixed, and it reproduces exactly:
+
+| set | result |
+| --- | --- |
+| 041,043,045,046,049,051 (what I gave Maria) | `ERROR: ON CONFLICT DO UPDATE command cannot affect row a second time` |
+| 041,**042**,043,045,046,049,051 | fixture loads: OK |
+
+042's header says `DRAFTED, NOT APPLIED`, so it is not a baseline migration, and 042 is the file whose
+`select distinct on (a.id)` fixes that exact error. **Nobody had ever applied the set as a set** — the
+harness applies every migration file, so an enumerated subset was a list I had written, not a thing that
+had been run. It has now been run, both ways.
+
+The near-miss is worth recording: I almost dismissed a correct finding because my own probe was wrong.
+
+### M2 — the mechanism I gave Maria twice refers to a policy dropped 43 migrations ago
+
+"A second permissive policy cannot restrict what the first admits" reasons about `artists_owner`, which
+`008_org_first_model.sql:248` drops and never recreates. The **conclusion** survives — the forged row is
+refused, re-executed — but because `artists_org` is the *only* write policy, not for the stated reason.
+Corrected in the founder row and in 041/049's comments.
+
+### M4/M5/M6 — the environment increment shipped with three wrong statements of its own
+
+- **M4(a)** With the cluster ONLINE and the caller not root, it reported *"PostgreSQL did not answer"* —
+  both halves false, and the remedy it offered was wrong. `pgAvailable()` catches two different failures
+  in one `try/catch`. There is now an `unprivileged` verdict that says starting the cluster will not help.
+- **M4(b)** `/\bdown\b/` was tested against the **whole** `pg_lsclusters` listing, so an unrelated down
+  cluster made it report "down" while ours was fine — and the caller then hardcoded `16 main`. The listing
+  is parsed, the cluster on our port is identified, and the start targets *that* one. Verified by creating
+  a second down cluster (`16 qa10`) and removing it again.
+- **M5** "Fifteen gates" and "twelve" appeared two paragraphs apart, and neither was right. Counted: **12
+  chain steps need PostgreSQL**, 11 refuse through `pgAvailable`, 12 scripts call it — one of which is
+  `preflight-db.mjs` itself, which is neither a gate nor a chain step.
+- **M6** `generate-evidence.mjs` hardcoded *"Migrations 043-048 remain drafted-or-authored"*, so 049, 050
+  and 051 — two of which the fix depends on — were missing from the record's own unverified list. A
+  hardcoded range in a **generated** artifact is a claim with no author; it is derived now (`043-051 (9
+  files)`).
+
+### L1/L2/L3
+
+- **L1** 051's down file is exercised by no gate; `test-sql-migrations` round-trips 041 and 042 only. The
+  reviewer ran it by hand — applies cleanly, idempotent on a second run. **Recorded as an accepted gap,
+  not as coverage.**
+- **L2** `NEUTRAL_GLYPHS` still listed bidi controls that `INVISIBLE` strips before any classifier sees a
+  line, and the comment claimed `\p{Cf}` "asks Unicode" about Default_Ignorable — it does not; U+115F,
+  U+3164, U+17B4 render as nothing and are outside it. Dead entries removed, limit stated, residual is
+  fail-closed.
+- **L3** the diagnostic said "the gate below still fails closed" when `preflight-db.mjs` itself triggers
+  it, where there is no gate below.
+
+### Ten rounds
+
+Rounds 7, 8, 9 and 10 each found a claim true of what was tested and false of what was claimed. Round 10
+found it in the same fixture round 9 had already corrected once — columns fixed, privilege not. The
+generalisation the register should carry: **a fixture is evidence about the shipped code only in the
+dimensions where it matches the shipped code, and privilege is a dimension.**
+
+**And the integration-contract gate caught the repair.** M4(b)'s first implementation read `process.env.PGPORT`
+to identify our cluster:
+
+```
+✗ PGPORT is read in code (scripts/lib/pgharness.mjs) but is NOT in the register
+✗ INTEGRATION CONTRACT: 1 violation(s).
+```
+
+An env read that is not in the register is an undeclared interface, which is precisely what that gate exists
+to catch — and the right answer was not to register a new variable but to stop needing one. `pg_isready`
+already prints the socket and port it tried, whether or not anything answered, so the port is derived from
+the probe that was being run anyway. Verified with an unrelated down cluster present: the diagnosis names
+`16/main on port 5432`, not the other one.

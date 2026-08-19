@@ -47,7 +47,7 @@
 // is already accounted for, not the thing that decides the step exists.
 // ============================================================
 import { execFileSync, execSync, spawnSync } from 'node:child_process'
-import { readFileSync, writeFileSync, realpathSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, realpathSync, existsSync, readdirSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const OUT = 'evidence/current.json'
@@ -93,7 +93,10 @@ const FAIL_GLYPHS = '✗✖✘❌'
 // exactly why the category rule could not see it, and it is a real leading marker
 // in real output. One line of evidence that the structural rule is not merely a
 // different guess.
-const NEUTRAL_GLYPHS = '⚠\u2066\u2067\u2068\u2069\u200e\u200f·—–═─▲┌├└○×≠→\u0192\u2022'
+// The bidi controls that used to live here (\u2066-\u2069, \u200e, \u200f) are gone:
+// INVISIBLE strips \p{Cf} before any classifier sees a line, so listing them here
+// was dead weight that read as though it were doing something — QA-INDEP-10, L2.
+const NEUTRAL_GLYPHS = '⚠·—–═─▲┌├└○×≠→\u0192\u2022'
 
 // -- ONE NORMALISATION, SHARED BY EVERY CLASSIFIER -- QA-INDEP-07, F2 --------
 // Everything below used to test raw bytes: `line[0]`, `^`, `\s*`. The reviewer
@@ -149,10 +152,17 @@ const UNRESOLVED_ESCAPE = /[\x1b\x9b]/
 // `\p{Cf}` covers the format class (including the bidi controls stripped
 // separately below), the variation selectors need their two blocks named because
 // they are Mn/Default_Ignorable rather than Cf, and U+00AD is Cf already.
-// Enumerating ranges was the defect; this asks Unicode instead of me.
+// Enumerating ranges was mostly the defect, and the honest limit is that `\p{Cf}`
+// is the FORMAT class, not Default_Ignorable — QA-INDEP-10, L2. Characters like
+// U+115F, U+3164 and U+17B4 render as nothing and are Lo/Mn, so they are outside
+// it. That residual is fail-closed rather than silent: such a character becomes
+// the leadGlyph, matches no set, lands in unknownGlyphs, and the record is refused
+// rather than written with a wrong verdict. Stated because the previous version of
+// this comment claimed to have asked Unicode and had not.
 const INVISIBLE = /[\p{Cf}\u200b-\u200d\ufe00-\ufe0f\u{e0100}-\u{e01ef}\u180e\u2061-\u2064]/gu
+// No separate bidi strip: INVISIBLE (\p{Cf}) has already removed them.
 const decorate = (line) => line.replace(ANSI, '').replace(INVISIBLE, '').replace(/\r/g, '')
-  .replace(/^[\s‎‏⁦-⁩]+/, '')
+  .replace(/^\s+/, '')
 
 // A MARKER IS A CHARACTER THAT STANDS ALONE, and that is a structural fact, not a
 // script one. The previous scan excluded every Unicode LETTER so a Hebrew prose
@@ -846,7 +856,20 @@ const evidence = {
     '.env.local is absent — no credential was exercised; no named-environment readiness is claimed.',
     'Reproducibility (QA-INDEP-03, M6): C5/C6 of the brand gate and the client-store freshness check assert against website-next/out, which is gitignored. `npm run build:site` is now a chain step so a fresh clone reproduces this, but the artifact itself is local build state, not something this record pins.',
     'No provider console (Supabase, Vercel, Anthropic, Resend, Google, Shopify) was inspected or mutated.',
-    'Migrations 043-048 remain drafted-or-authored and NOT applied to any live environment.',
+    // DERIVED, NOT TYPED — QA-INDEP-10, M6. This was the literal string
+    // "Migrations 043-048 …", written once and never revisited, so 049, 050 and
+    // 051 — including the two the current security fix depends on — were absent
+    // from the record's own unverified list while the record claimed to state what
+    // is unapplied. A hardcoded range in a generated artifact is a claim with no
+    // author. It is now read off the migration directory at generation time.
+    `Migrations ${(() => {
+      const applied = 42 // the highest migration this project treats as applied
+      const drafted = readdirSync('supabase/migrations')
+        .map((f) => /^(\d{3})_.*\.sql$/.exec(f)?.[1]).filter(Boolean)
+        .map(Number).filter((n) => n > applied)
+        .filter((n, i, a) => a.indexOf(n) === i).sort((x, y) => x - y)
+      return drafted.length ? `${String(drafted[0]).padStart(3, '0')}-${String(drafted[drafted.length - 1]).padStart(3, '0')} (${drafted.length} files)` : '(none)'
+    })()} remain drafted-or-authored and NOT applied to any live environment.`,
   ],
 }
 // VALIDATE FIRST, WRITE LAST — QA-INDEP-03, L1. The file used to be written

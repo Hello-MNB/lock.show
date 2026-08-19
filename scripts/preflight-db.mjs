@@ -2,8 +2,12 @@
 // ============================================================
 // PREFLIGHT · IS THE LOCAL DATABASE THERE, AND CAN IT BE BROUGHT BACK?
 //
-// Fifteen gates in the declared chain execute against a real PostgreSQL and fail
-// closed without one. That is right — CLAUDE.md's GATE DISCIPLINE says a skip is
+// TWELVE steps in the declared chain execute against a real PostgreSQL; eleven of
+// them refuse through pgAvailable() and fail closed without one, and
+// test:sql-migrations needs it too though it has no such refusal. (I wrote
+// "fifteen" and then "twelve" two paragraphs apart — QA-INDEP-10, M5. Counted:
+// 11 chain steps call pgAvailable, 12 scripts call it in total, and one of those
+// twelve is this file, which is neither a gate nor a chain step.) That is right — CLAUDE.md's GATE DISCIPLINE says a skip is
 // not a pass, and these were deliberately made to exit 1 rather than skip.
 //
 // What was missing is the other half: WHY it is absent, and what to do. In this
@@ -17,7 +21,7 @@
 //   pg_ctlcluster start   -> "Removed stale pid file"
 //
 // So it is reaped, not crashed. An operator — or a future session — meeting
-// fifteen simultaneous RED gates would reasonably diagnose a code regression.
+// twelve simultaneous RED gates would reasonably diagnose a code regression.
 //
 // THIS SCRIPT DOES NOT RUN INSIDE THE CHAIN, AND THAT IS DELIBERATE. A verify
 // step that silently starts a database would make the chain's green depend on
@@ -41,7 +45,7 @@ const clusters = quiet('pg_lsclusters', []).split('\n').filter((l) => /^\d/.test
 console.log(`  clusters      : ${clusters.length ? clusters.map((l) => l.replace(/\s+/g, ' ')).join(' | ') : '(none reported)'}`)
 
 if (pgAvailable()) {
-  console.log('✓ PREFLIGHT DB: a local PostgreSQL is up and answering — the chain\'s 15 database gates will execute.')
+  console.log('✓ PREFLIGHT DB: a local PostgreSQL is up and answering — the chain\'s 12 database-dependent steps will execute.')
   process.exit(0)
 }
 
@@ -59,8 +63,10 @@ if (why.kind !== 'down') {
   process.exit(1)
 }
 
-console.log('  starting      : pg_ctlcluster 16 main start')
-console.log(`  ${quiet('pg_ctlcluster', ['16', 'main', 'start']) || '(no output)'}`)
+// START THE CLUSTER THE DIAGNOSIS NAMED, not a hardcoded one — M4(b).
+const target = why.cluster ?? { ver: '16', cluster: 'main' }
+console.log(`  starting      : pg_ctlcluster ${target.ver} ${target.cluster} start`)
+console.log(`  ${quiet('pg_ctlcluster', [target.ver, target.cluster, 'start']) || '(no output)'}`)
 
 // PROVE IT, DO NOT ANNOUNCE IT. `pg_ctlcluster` exiting 0 says the start command
 // was accepted, not that a query can run — so the success line below is gated on

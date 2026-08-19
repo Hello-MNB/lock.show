@@ -461,7 +461,15 @@ returns boolean language sql stable security definer set search_path = public, p
              -- authenticated caller cannot reach that state anyway — set_artist_org
              -- leaves the column NULL only when the person has no org, and then
              -- artists_org refuses the insert outright.
-             and a.organization_id is not distinct from ar.owner_organization_id
+             -- NULL TOLERATED, NOT REFUSED — QA-INDEP-10, M1. `is not distinct
+             -- from` refused an Act whose organisation is unknown, which made an
+             -- unresolvable Person unable to publish their own Act at all. A NULL
+             -- here means "this Act's organisation was never established", and the
+             -- honest response is to fall back to the Person check above rather
+             -- than to deny. The cost is stated plainly and is in the founder
+             -- register: for a NULL-organisation Act, 049 is the ONLY layer.
+             and (a.organization_id is null
+                  or a.organization_id = ar.owner_organization_id)
         )
       )
 $$;

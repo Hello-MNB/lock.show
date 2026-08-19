@@ -173,14 +173,25 @@ console.log('\n[2f] passport_versions — THE TABLE I DID NOT TEST, and the one 
   // and `act` has RLS, so an artist could not see their own second Act row. Both
   // failures are silent unless the legitimate case is executed, so it is.
   const ACT2 = '00000000-0000-0000-0000-00000000ac02'
-  // THE SHAPE THE CLIENT ACTUALLY SENDS — QA-INDEP-09, H1. This fixture used to
-  // copy `organization_id` from the default Act, which src/lib/db.js:156 never
-  // does: createAct() sends person_id, stage_name, genre and is_default only. So
-  // the assertion below ("I can still publish for my own second Act") was true of
-  // the fixture and FALSE of the application — 041's organisation half refused
-  // the artist's own publish, because act.organization_id was NULL and nothing in
-  // the schema filled it. 051 supplies the missing inheritance; this fixture now
-  // exercises it instead of hiding it.
+  // THE COLUMNS THE CLIENT SENDS — AND NOT THE PRIVILEGE IT SENDS THEM WITH.
+  // Read that distinction carefully, because I got it wrong twice.
+  // QA-INDEP-09 rejected this fixture for copying `organization_id` from the
+  // default Act, which src/lib/db.js:155-157 never does. Fixing the COLUMNS, I
+  // then wrote "the fixture is now literally what createAct() sends" into the
+  // commit, this file and the founder register. QA-INDEP-10 showed that is still
+  // false in the half that decides the outcome: this insert runs as the database
+  // OWNER, and the shipped path runs as `authenticated`, where it is REFUSED —
+  //
+  //   createAct INSERT as authenticated: false
+  //     ERROR: new row violates row-level security policy for table "act"
+  //   same INSERT as DB OWNER (what this fixture does): true
+  //
+  // because act_org (020:185) is `with check (can_access_artist(id))` and a new
+  // Act's id is a fresh uuid that no artists row and no grant names. So an artist
+  // CANNOT create a second Act through the product today. [2i] measures that
+  // directly; this fixture keeps owner privilege deliberately, to exercise 051 and
+  // 041 on a row the product cannot yet produce, and says so instead of claiming
+  // to be the client.
   db.exec(`insert into public.act (id, person_id, stage_name, genre, is_default)
            select '${ACT2}', person_id, 'Second Act', 'techno', false from public.act where id='${MINE}'
            on conflict (id) do nothing`)
@@ -359,6 +370,33 @@ console.log('\n[2h] both layers, each alone, on a default AND a non-default Act'
     where p.proname='pv_act_in_artist_lineage'`).trim()
   check('[2h] ...and the installed body is the migration\'s body, not the weakened one — a restore that silently failed would leave every later section testing the wrong function',
     installed === shipped, `installed: ${installed.slice(0, 90)}…`)
+}
+
+// ── [2i] IS MULTI-ACT REACHABLE AT ALL? — QA-INDEP-10, H1 ───────────────────
+// CLAUDE.md makes multi-Act canon and the whole [2f]/[2g]/[2h] apparatus is about
+// protecting a second Act's lineage. None of it asked whether the product can
+// create one. It cannot, at three layers, and two of them were undocumented:
+//   1. act_org refuses the artist's own INSERT (measured below);
+//   2. publishPassport() (src/lib/db.js:605-609) throws `act_publish_unavailable`
+//      for any non-default Act — a DELIBERATE refusal pending migration 043,
+//      documented in that file;
+//   3. all three callers pass only artist.id anyway.
+// Asserted as MEASUREMENT, not as a wish: these checks record what is true today
+// so that the day it changes, the gate says so rather than quietly passing. The
+// founder decision is ACT-CREATE-BLOCKED in docs/OWNER-PENDING.md.
+console.log('\n[2i] can the product create a second Act at all?')
+{
+  const shipped = db.try(`insert into public.act (person_id, stage_name, genre, is_default)
+                          select person_id, 'Client Shape', 'techno', false
+                            from public.act where id='${MINE}'`, as)
+  check('[2i] the shipped createAct() insert is REFUSED for the artist themselves — multi-Act is not reachable from the product today',
+    !shipped.ok, `accepted=${shipped.ok} — if this now succeeds, act_org was narrowed and ACT-CREATE-BLOCKED can close`)
+  check('[2i] ...because act_org keys its WITH CHECK on can_access_artist(id), and a new Act id is a fresh uuid',
+    db.scalar(`select replace(coalesce(with_check,'-'),chr(10),' ') from pg_policies
+               where schemaname='public' and tablename='act' and policyname='act_org'`) === 'can_access_artist(id)')
+  check('[2i] ...and the client refuses a non-default-Act publish independently, pending migration 043',
+    /act_publish_unavailable/.test(readFileSync('src/lib/db.js', 'utf8')),
+    'src/lib/db.js:605-609 — a deliberate refusal, not a defect, but it means 051 alone unblocks nothing end to end')
 }
 
 console.log('\n[3] what the Act boundary actually rests on')
