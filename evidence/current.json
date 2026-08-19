@@ -1,15 +1,15 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "21f379767363a7c83d4223d04ae5269608795598",
+  "head": "4aa6505c5aa6c9beca15488cf6474971f9257703",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/pv/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/stor/verify.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
-  "declaredStepCount": 46,
-  "gateCount": 46,
+  "declaredStepCount": 47,
+  "gateCount": 47,
   "gates": [
     {
       "id": "NAV CONTRACT",
@@ -78,6 +78,12 @@
       "result": "pass"
     },
     {
+      "id": "test:storage-isolation",
+      "step": "test:storage-isolation",
+      "summary": "✓ STORAGE ISOLATION [evidence policy: BUCKET-ONLY, the 001 shape]: buckets, RLS and the three policies proven installed by execution; anon refused both write paths and the private bucket; the public bucket readable, which proves the anon role works and the refusals are real; and the cross-person posture on the evidence bucket measured rather than assumed. NOT proven here: Supabase's real storage A",
+      "result": "pass"
+    },
+    {
       "id": "SQL MIGRATION GATE",
       "step": "test:sql-migrations",
       "summary": "✓ SQL MIGRATION GATE: all assertions hold.",
@@ -140,7 +146,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 15.9s",
+      "summary": "✓ Compiled successfully in 14.8s",
       "result": "pass"
     },
     {
@@ -342,9 +348,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 7.87s",
+    "✓ built in 5.52s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.90s"
+    "✓ built in 4.23s"
   ],
   "unclassified": [],
   "skips": [],
