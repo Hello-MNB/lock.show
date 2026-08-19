@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "9c1c3bcfcd26889035f382c9b5034e50412e3137",
+  "head": "94f05831722bba8eb85973c701d29773ce72956e",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m5.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m6.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 50,
@@ -152,7 +152,7 @@
     {
       "id": "ACT STAMP",
       "step": "test:act-stamp",
-      "summary": "✓ ACT STAMP: measured, not assumed, and corrected twice by independent review. A row CAN still be stamped with an Act belonging to another artist on all 3 evidence tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id — and there the reach is bounded and measured: RADAR is untouched, the stranger cannot read the row",
+      "summary": "✓ ACT STAMP: measured, not assumed, and corrected by three independent reviews. A row CAN still be stamped with an Act belonging to another artist on all 3 evidence tables tested — set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy there keys on artist_id — and there the reach is bounded and measured. THAT BOUND DOES NOT GENERALISE. [2f]: on passport_versions one forei",
       "result": "pass"
     },
     {
@@ -164,7 +164,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 5.2s",
+      "summary": "✓ Compiled successfully in 5.1s",
       "result": "pass"
     },
     {
@@ -366,9 +366,9 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 3.70s",
+    "✓ built in 3.68s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.18s"
+    "✓ built in 3.33s"
   ],
   "unclassified": [],
   "unknownGlyphs": [],
