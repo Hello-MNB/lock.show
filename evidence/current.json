@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1.0",
   "generatedBy": "scripts/generate-evidence.mjs",
-  "head": "c66a74bf6e60e9286c807df52c5ac668dc897c37",
+  "head": "e0c828319a4b741fa82687f8ff1789f77c68173f",
   "branch": "claude/b4-gigproof-discovery-e7749o",
   "treeClean": true,
   "dirtyFiles": [],
-  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/act/verify.log, observed exit 0)",
+  "command": "npm run verify (recorded from /tmp/claude-0/-home-user-V6-B4-Artist-Pre-Booking-Intelligence-Growth-System/334b07f5-7410-5087-a4fc-1c81f2cb46d7/scratchpad/verify-m4.log, observed exit 0)",
   "exitCode": 0,
   "result": "green-at-head",
   "declaredStepCount": 50,
@@ -140,7 +140,7 @@
     {
       "id": "TENANT · MANDATE · ACT ISOLATION",
       "step": "test:tenant-isolation",
-      "summary": "✓ TENANT · MANDATE · ACT ISOLATION: 151 checks, all hold.",
+      "summary": "✓ TENANT · MANDATE · ACT ISOLATION: 152 checks, all hold.",
       "result": "pass"
     },
     {
@@ -152,7 +152,7 @@
     {
       "id": "ACT STAMP",
       "step": "test:act-stamp",
-      "summary": "✓ ACT STAMP: measured, not assumed — a row CAN be stamped with an Act belonging to another artist on all 3 tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id. REACH IS BOUNDED AND MEASURED: RADAR is untouched (recompute keys on the artist), the stranger cannot read the row, and an identical row stamped with the a",
+      "summary": "✓ ACT STAMP: measured, not assumed. A row CAN still be stamped with an Act belonging to another artist on all 3 evidence tables tested, because set_act_from_artist_id() (020:147) fills act_id only when NULL and every policy on those tables keys on artist_id — and there the reach is bounded and measured: RADAR is untouched (recompute keys on the artist), the stranger cannot read the row, and an ide",
       "result": "pass"
     },
     {
@@ -164,7 +164,7 @@
     {
       "id": "Generating static pages using 3 workers",
       "step": "build:site",
-      "summary": "✓ Compiled successfully in 11.5s",
+      "summary": "✓ Compiled successfully in 4.8s",
       "result": "pass"
     },
     {
@@ -366,11 +366,12 @@
   ],
   "toolOutput": [
     "✓ 160 modules transformed.",
-    "✓ built in 5.88s",
+    "✓ built in 3.63s",
     "✓ 160 modules transformed.",
-    "✓ built in 3.37s"
+    "✓ built in 3.04s"
   ],
   "unclassified": [],
+  "unknownGlyphs": [],
   "skips": [],
   "negativeControls": [
     {
