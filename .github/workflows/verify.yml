@@ -1,0 +1,77 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_DB: lock_show_test
+          POSTGRES_USER: lock_show_test
+          POSTGRES_PASSWORD: lock_show_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lock_show_test -d lock_show_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DATABASE_URL: postgresql://lock_show_test:lock_show_test@127.0.0.1:5432/lock_show_test
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: lock_show_test
+      PGUSER: lock_show_test
+      PGPASSWORD: lock_show_test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Set up Node 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website-next/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install locked marketing dependencies
+        run: npm --prefix website-next ci --no-audit --no-fund
+      - name: Audit application production dependencies
+        if: ${{ !cancelled() }}
+        run: npm audit --omit=dev --audit-level=high
+      - name: Audit marketing production dependencies
+        if: ${{ !cancelled() }}
+        run: npm --prefix website-next audit --audit-level=high
+      - name: Verify marketing build and application handoff
+        if: ${{ !cancelled() }}
+        run: npm --prefix website-next run verify
+      - name: Verify PostgreSQL tenancy and Admin denial contracts
+        if: ${{ !cancelled() }}
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: node scripts/tech-baseline/run-postgres-negatives.mjs
+      - name: Verify technical baseline
+        if: ${{ !cancelled() }}
+        run: npm run tech-baseline:verify
+      - name: Verify existing application chain
+        if: ${{ !cancelled() }}
+        run: npm run verify

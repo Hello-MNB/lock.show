@@ -17,8 +17,9 @@
 // ============================================================
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = new URL('..', import.meta.url).pathname
+const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const CSS = join(ROOT, 'src/index.css')
 const UI = join(ROOT, 'src/components/ui.jsx')
 const TW = join(ROOT, 'tailwind.config.js')

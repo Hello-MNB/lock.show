@@ -61,9 +61,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored === 'he') {
-        setLocaleState('he')
         document.documentElement.lang = 'he'
         document.documentElement.dir = 'rtl'
+        const timer = window.setTimeout(() => setLocaleState('he'), 0)
+        return () => window.clearTimeout(timer)
       }
     } catch {
       // localStorage unavailable — stay with default

@@ -5,6 +5,7 @@ import { useLang } from '../../context/LangContext.jsx'
 import { BottomSheet, Spinner } from '../../components/ui.jsx'
 import { createWorkspace } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
+import { useAdminAccess } from '../../context/AdminAccessContext.jsx'
 
 const orgRoleLabel = (r, T) => ({ owner: T.org.roleOwner, admin: T.org.roleAdmin, member: T.org.roleMember }[r] || r)
 
@@ -42,6 +43,7 @@ export default function ContextSwitcher() {
   // static profile role.
   const { memberships, activeOrgId, switchOrg, role, isProducerWorkspace, reload } = useOrg()
   const { profile } = useAuth()
+  const { allowed: adminAllowed, adminMode, enterAdmin, exitAdmin } = useAdminAccess()
   const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [wsName, setWsName] = useState('')
@@ -51,7 +53,7 @@ export default function ContextSwitcher() {
 
   const active = memberships?.find((m) => m.organization?.id === activeOrgId) || memberships?.[0]
   const isAgency = ['agency', 'agency_plus'].includes(active?.organization?.plan)
-  const typeLabel = workspaceTypeLabel(role, isAgency, T, isProducerWorkspace)
+  const typeLabel = adminMode ? T.org.privateAdminWorkspace : workspaceTypeLabel(role, isAgency, T, isProducerWorkspace)
   const initial = (profile?.full_name || 'G').trim().charAt(0).toUpperCase() || 'G'
 
   const typeWord = (t) => ({
@@ -112,7 +114,12 @@ export default function ContextSwitcher() {
       <BottomSheet open={open} onClose={closeSheet} title={T.org.switchOrg}>
         <div className="space-y-2">
           {profile?.full_name && <p className="mb-1 truncate text-sm font-semibold text-ink">{profile.full_name}</p>}
-          {memberships.map((m) => {
+          {adminMode ? (
+            <button type="button" onClick={() => { exitAdmin(); closeSheet() }} className="card w-full text-start">
+              <p className="text-sm font-semibold text-ink">{T.org.returnToUserWorkspace}</p>
+              <p className="text-xs text-muted">{T.org.adminEnvironmentProduction}</p>
+            </button>
+          ) : memberships.map((m) => {
             const isActive = m.organization?.id === activeOrgId
             return (
               <button
@@ -129,8 +136,15 @@ export default function ContextSwitcher() {
             )
           })}
 
+          {!adminMode && adminAllowed && (
+            <button type="button" onClick={async () => { await enterAdmin(); closeSheet() }} className="card w-full text-start border-amber/40">
+              <p className="text-sm font-semibold text-ink">{T.org.enterPrivateAdmin}</p>
+              <p className="text-xs text-muted">{T.org.adminEnvironmentProduction}</p>
+            </button>
+          )}
+
           {/* ── G3 · A2/N12 — real workspace creation, in place ── */}
-          {creating ? (
+          {!adminMode && (creating ? (
             <form onSubmit={submitCreate} className="card space-y-3 text-start">
               <p className="text-sm font-semibold text-ink">{T.org.newWorkspaceTitle}</p>
               <label className="block">
@@ -170,7 +184,7 @@ export default function ContextSwitcher() {
             >
               {T.nav.addWorkspace}
             </button>
-          )}
+          ))}
           <p className="mt-1 text-center text-[10px] text-faint">{T.org.switchNote}</p>
         </div>
       </BottomSheet>

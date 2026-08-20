@@ -1,0 +1,540 @@
+{
+  "schemaVersion": "1.0.0",
+  "sourceHashes": {
+    "src/App.jsx": "e98bb959746c98ba5f047c54320b7738587e0801af03a761fd400b6a3952d068",
+    "server/index.js": "8024a33a6efe413280af674cd9a84e4b5f8e5869f1d423f0b56634a2b9e6815b"
+  },
+  "routes": [
+    {
+      "path": "/login",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 161
+      }
+    },
+    {
+      "path": "/signup",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 162
+      }
+    },
+    {
+      "path": "/forgot-password",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 163
+      }
+    },
+    {
+      "path": "/reset-password",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 164
+      }
+    },
+    {
+      "path": "/select",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 165
+      }
+    },
+    {
+      "path": "/passport/:id",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 167
+      }
+    },
+    {
+      "path": "/passport/:id/request",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 168
+      }
+    },
+    {
+      "path": "/passport/:id/sent",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 169
+      }
+    },
+    {
+      "path": "/confirm/:token",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 171
+      }
+    },
+    {
+      "path": "/invite/:token",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 173
+      }
+    },
+    {
+      "path": "/",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 177
+      }
+    },
+    {
+      "path": "/settings",
+      "observedGuard": "authenticated",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 180
+      }
+    },
+    {
+      "path": "/org/settings",
+      "observedGuard": "authenticated",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 181
+      }
+    },
+    {
+      "path": "/org/members",
+      "observedGuard": "authenticated",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 182
+      }
+    },
+    {
+      "path": "/org/upgrade",
+      "observedGuard": "authenticated",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 183
+      }
+    },
+    {
+      "path": "/org/billing",
+      "observedGuard": "authenticated",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 184
+      }
+    },
+    {
+      "path": "/consent",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 189
+      }
+    },
+    {
+      "path": "/onboarding",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 190
+      }
+    },
+    {
+      "path": "/artist/home",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 191
+      }
+    },
+    {
+      "path": "/artist/readiness",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 194
+      }
+    },
+    {
+      "path": "/artist/claims",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 198
+      }
+    },
+    {
+      "path": "/artist/passport",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 202
+      }
+    },
+    {
+      "path": "/artist/act/edit",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 205
+      }
+    },
+    {
+      "path": "/artist/requests",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 207
+      }
+    },
+    {
+      "path": "/artist/offer",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 210
+      }
+    },
+    {
+      "path": "/evidence/:artistId",
+      "observedGuard": "role:ARTIST",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 211
+      }
+    },
+    {
+      "path": "/agency",
+      "observedGuard": "agency-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 214
+      }
+    },
+    {
+      "path": "/agency/requests",
+      "observedGuard": "agency-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 215
+      }
+    },
+    {
+      "path": "/agency/radar",
+      "observedGuard": "agency-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 216
+      }
+    },
+    {
+      "path": "/production",
+      "observedGuard": "production-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 222
+      }
+    },
+    {
+      "path": "/production/events",
+      "observedGuard": "production-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 223
+      }
+    },
+    {
+      "path": "/production/requests",
+      "observedGuard": "production-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 224
+      }
+    },
+    {
+      "path": "/admin",
+      "observedGuard": "server-capability:admin.environment",
+      "requiredCapability": "admin.environment",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 228
+      }
+    },
+    {
+      "path": "/discover",
+      "observedGuard": "role:BOOKER",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 231
+      }
+    },
+    {
+      "path": "/producer",
+      "observedGuard": "role:PRODUCER",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 234
+      }
+    },
+    {
+      "path": "/producer/received",
+      "observedGuard": "role:PRODUCER",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 235
+      }
+    },
+    {
+      "path": "*",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 238
+      }
+    }
+  ],
+  "apis": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 166
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/capability",
+      "observedAuth": "requireAuth",
+      "capability": "admin.environment:preflight",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 176
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/process-evidence",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 246
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/publish/:artistId",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 434
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/passport/:artistId",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 466
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/passport-signal",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 504
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/notify",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 588
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/availability-request",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 679
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/request-confirmation",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 744
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/confirm/:token",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 780
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/confirm/:token",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 805
+      }
+    }
+  ],
+  "releaseBlockers": []
+}

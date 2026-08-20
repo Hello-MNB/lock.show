@@ -820,6 +820,7 @@ export const T = {
     workspaceProduction: 'מרחב הפקה',
     workspaceBooker: 'מרחב מזמין הופעות',
     workspaceOperator: 'מרחב מנהל מערכת',
+    workspaceAdmin: 'אדמין פרטי',
   },
   org: {
     entitySolo: 'החשבון',
@@ -859,6 +860,15 @@ export const T = {
     seatUpsell: 'שדרג לסוכנות כדי להוסיף מושבי צוות.',
     switchOrg: 'החלף חשבון/סוכנות',
     switchNote: 'מעבר הקשר — לעולם לא רישום מחדש.',
+    contextBeaconLabel: 'האדם, התפקיד, הסביבה ומרחב העבודה הפעילים',
+    contextPersonFallback: 'משתמש מחובר',
+    contextNoWorkspace: 'מרחב העבודה טרם זוהה',
+    contextRolePending: 'התפקיד טרם זוהה',
+    privateAdminWorkspace: 'אדמין פרטי',
+    adminMode: 'מצב אדמין',
+    adminEnvironmentProduction: 'סביבת Production · הרשאת שרת עדכנית',
+    enterPrivateAdmin: 'כניסה לאדמין הפרטי',
+    returnToUserWorkspace: 'חזרה למרחב המשתמש שלי',
     // ── G3 · A2/N12 — טופס הוספת מרחב עבודה (ContextSwitcher) ──
     newWorkspaceTitle: 'מרחב עבודה חדש',
     newWorkspaceNameLabel: 'שם מרחב העבודה',

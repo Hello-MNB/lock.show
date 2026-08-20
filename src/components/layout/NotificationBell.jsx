@@ -64,7 +64,7 @@ export default function NotificationBell() {
           <path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 01-3.46 0" />
         </svg>
-        {unread && <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
+        {unread && <span aria-hidden="true" className="absolute end-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />}
       </button>
 
       {open && (

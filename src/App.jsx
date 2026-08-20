@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
 import { useLang } from './context/LangContext.jsx'
+import { useAdminAccess } from './context/AdminAccessContext.jsx'
 import { Loading, PageShell, Wordmark } from './components/ui.jsx'
 import { ROLES, PAYMENTS_ENABLED } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
@@ -69,6 +70,16 @@ function RequireRole({ role: need, children }) {
   const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
   if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
   if (redirect) return <Navigate to={redirect} replace />
+  return children
+}
+
+function RequireAdmin({ children }) {
+  const { user, loading: authLoading } = useAuth()
+  const { allowed, loading: adminLoading } = useAdminAccess()
+  const loc = useLocation()
+  if (authLoading || adminLoading) return <Loading />
+  if (!user) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (!allowed) return <Navigate to={ROUTES.home} replace />
   return children
 }
 
@@ -212,8 +223,9 @@ export default function App() {
         <Route path="/production/events" element={<RequireProduction><ProductionDashboard /></RequireProduction>} />
         <Route path="/production/requests" element={<RequireProduction><ProductionDashboard /></RequireProduction>} />
 
-        {/* operator */}
-        <Route path="/admin" element={<RequireRole role={ROLES.OPERATOR}><AdminDashboard /></RequireRole>} />
+        {/* private, Environment-bound Admin control plane. Profile role, route,
+            email and local storage never authorize this screen. */}
+        <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
 
         {/* booker */}
         <Route path="/discover" element={<RequireRole role={ROLES.BOOKER}><BookerHome /></RequireRole>} />

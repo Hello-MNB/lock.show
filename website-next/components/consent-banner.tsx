@@ -60,7 +60,10 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
   useEffect(() => {
     const choice = readChoice()
     if (choice === 'granted') loadGA(gaId)
-    else if (choice === null) setVisible(true)
+    else if (choice === null) {
+      const timer = window.setTimeout(() => setVisible(true), 0)
+      return () => window.clearTimeout(timer)
+    }
   }, [gaId])
 
   if (!visible) return null
