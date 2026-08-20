@@ -7,11 +7,11 @@ const SITE_URL = 'https://lock.show'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
-  title: 'LOCK — Build the Proof That Books You',
+  title: 'LOCK SHOW — Trust on Cue',
   description:
     'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
   openGraph: {
-    title: 'LOCK — Build the Proof That Books You',
+    title: 'LOCK SHOW — Trust on Cue',
     description:
       'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
@@ -38,7 +38,7 @@ const jsonLd = {
         },
         {
           '@type': 'Question',
-          name: 'Is LOCK free for booking managers?',
+          name: 'Is LOCK SHOW free for booking managers?',
           acceptedAnswer: {
             '@type': 'Answer',
             text: 'Yes. Booking managers (מזמיני הופעות) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
@@ -54,10 +54,10 @@ const jsonLd = {
         },
         {
           '@type': 'Question',
-          name: 'What does LOCK not do?',
+          name: 'What does LOCK SHOW not do?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'LOCK does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
+            text: 'LOCK SHOW does not score artists, produce rankings, predict bookings, or guarantee outcomes. There is no algorithm, no percentage, no gauge. Evidence is shown as-is, labelled by method.',
           },
         },
       ],
@@ -295,7 +295,7 @@ export default function HomePage() {
                   marginBottom: '2.25rem',
                 }}
               >
-                The rooms you filled, the nights that sold out — LOCK turns them
+                The rooms you filled, the nights that sold out — LOCK SHOW turns them
                 into a Passport a booking manager can trust before the first call.
               </p>
 
@@ -411,7 +411,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                LOCK · BOOKABILITY PASSPORT
+                LOCK SHOW · BOOKABILITY PASSPORT
               </div>
 
               {/* Artist identity */}
@@ -663,7 +663,7 @@ export default function HomePage() {
               }}
             >
               The artist on stage, the booking manager on the line, the producer
-              who ran the room — LOCK gives each of you your own door in.
+              who ran the room — LOCK SHOW gives each of you your own door in.
             </p>
 
             <div

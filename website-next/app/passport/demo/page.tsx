@@ -1,9 +1,9 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/passport/demo' },
   title: 'Sample Passport — Verified Live Performance Evidence',
-  description: 'A sample LOCK Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
+  description: 'A sample LOCK SHOW Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
 import { APP_URL } from '@/lib/app-url'
@@ -201,7 +201,7 @@ export default function PassportDemo() {
         maxWidth: '480px',
         margin: '0 auto',
       }}>
-        {/* LOCK stamp */}
+        {/* LOCK SHOW stamp */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -215,7 +215,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
           }}>
-            LOCK · BOOKABILITY PASSPORT
+            LOCK SHOW · BOOKABILITY PASSPORT
           </span>
         </div>
 
@@ -341,7 +341,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             margin: 0,
           }}>
-            LOCK · lock.show
+            LOCK SHOW · lock.show
           </p>
         </div>
 

@@ -21,7 +21,7 @@ const dmMono = DM_Mono({
   display: 'swap',
 })
 
-// GA4 — property LOCK (544738110), stream LOCK App; env can override
+// GA4 — property LOCK SHOW (544738110), stream LOCK SHOW App; env can override
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
 const SITE_URL = 'https://lock.show'
@@ -37,8 +37,8 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'LOCK — Booking Proof for Independent Artists',
-    template: '%s | LOCK',
+    default: 'LOCK SHOW — Trust on Cue',
+    template: '%s | LOCK SHOW',
   },
   description:
     'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
@@ -49,13 +49,13 @@ export const metadata: Metadata = {
     'artist passport',
     'אמרגן',
     'אמן',
-    'LOCK',
+    'LOCK SHOW',
     'verified gig history',
     'music industry verification',
   ],
-  authors: [{ name: 'LOCK', url: SITE_URL }],
-  creator: 'LOCK',
-  publisher: 'LOCK',
+  authors: [{ name: 'LOCK SHOW', url: SITE_URL }],
+  creator: 'LOCK SHOW',
+  publisher: 'LOCK SHOW',
   robots: {
     index: true,
     follow: true,
@@ -72,13 +72,13 @@ export const metadata: Metadata = {
     // No alternateLocale: page bodies are EN-only today (locale toggle covers
     // nav/footer/consent copy only, not page content — T-84 HE-scope note).
     // Claiming he_IL here would overclaim translated content that doesn't exist.
-    siteName: 'LOCK',
+    siteName: 'LOCK SHOW',
     images: [
       {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: 'LOCK — Booking Proof for Independent Artists',
+        alt: 'LOCK SHOW — Trust on Cue',
         type: 'image/png',
       },
     ],
@@ -94,8 +94,8 @@ export const metadata: Metadata = {
   // canonical (audit G8 finding: site-wide duplicate signal). No /he hreflang
   // until a real Hebrew route exists.
   icons: {
-    icon: [{ url: '/favicon.ico' }],
-    apple: [{ url: '/app/apple-touch-icon.png' }],
+    icon: [{ url: '/brand/lockshow-symbol-spotlight-lens-v2-lime-on-ink.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/apple-icon.png', type: 'image/png' }],
   },
 }
 
@@ -109,7 +109,7 @@ const jsonLd = {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       description:
         'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
       publisher: { '@id': `${SITE_URL}/#organization` },
@@ -120,7 +120,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'LOCK',
+      name: 'LOCK SHOW',
       url: SITE_URL,
       logo: {
         '@type': 'ImageObject',
@@ -159,12 +159,12 @@ const jsonLd = {
         })),
       ],
       description:
-        'LOCK provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK SHOW provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#software`,
-      name: 'LOCK — Bookability Passport',
+      name: 'LOCK SHOW — Bookability Passport',
       url: SITE_URL,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',

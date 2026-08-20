@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useLocale } from '@/lib/locale-context'
 import type { Locale } from '@/lib/i18n'
-import { DoorStamp } from '@/components/door-stamp'
+import { BrandSymbol } from '@/components/brand-symbol'
 
 import { APP_URL } from '@/lib/app-url'
 
@@ -102,7 +102,7 @@ export function Nav() {
         justifyContent: 'space-between',
         height: '64px',
       }}>
-        {/* Wordmark + stamp logo */}
+        {/* LOCK SHOW wordmark + Spotlight Lens symbol */}
         <Link
           href="/"
           style={{
@@ -117,10 +117,22 @@ export function Nav() {
             textDecoration: 'none',
             flexShrink: 0,
           }}
-          aria-label="LOCK home"
+          aria-label="LOCK SHOW home"
         >
-          <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-          LOCK
+          <BrandSymbol size={36} />
+          <span>LOCK SHOW</span>
+          <span
+            className="brand-tagline"
+            style={{
+              fontSize: '0.65rem',
+              fontWeight: 500,
+              letterSpacing: '0.04em',
+              color: 'var(--color-tally)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Trust on Cue
+          </span>
         </Link>
 
         {/* Desktop links */}
@@ -303,6 +315,7 @@ export function Nav() {
         @media (max-width: 768px) {
           .nav-desktop { display: none !important; }
           .nav-mobile-btn { display: flex !important; }
+          .brand-tagline { display: none !important; }
         }
         @media (min-width: 769px) {
           .nav-mobile-menu { display: none !important; }

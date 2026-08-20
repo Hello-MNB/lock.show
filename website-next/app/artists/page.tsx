@@ -5,12 +5,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/artists' },
   title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
   description:
-    'The nights you already played can open the rooms you want next. LOCK turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
+    'The nights you already played can open the rooms you want next. LOCK SHOW turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
   openGraph: {
     url: '/artists',
-    title: 'For Artists | LOCK',
+    title: 'For Artists | LOCK SHOW',
     description:
-      'Your talent is real. LOCK makes it visible — one link that carries your best nights into rooms you haven\'t played yet.',
+      'Your talent is real. LOCK SHOW makes it visible — one link that carries your best nights into rooms you haven\'t played yet.',
     type: 'website',
   },
 }
@@ -232,7 +232,7 @@ export default function ArtistsPage() {
             }}
           >
             The nights you&apos;ve already played can open the rooms you
-            haven&apos;t. LOCK turns your real gig history into one link a
+            haven&apos;t. LOCK SHOW turns your real gig history into one link a
             booking manager can trust — and it starts tonight.
           </p>
 

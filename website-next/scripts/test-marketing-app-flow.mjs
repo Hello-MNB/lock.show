@@ -23,13 +23,39 @@ const files = await htmlFiles(path.join(websiteRoot, 'out'))
 let signupLinks = 0
 let loginLinks = 0
 const forbidden = []
+const brandDefects = []
 
 for (const file of files) {
   const html = await readFile(file, 'utf8')
   signupLinks += (html.match(/https:\/\/app\.lock\.show\/signup(?:\?|&amp;)/g) || []).length
   loginLinks += (html.match(/https:\/\/app\.lock\.show\/login(?:\?|&amp;)/g) || []).length
   if (/href=["']\/app\/(?:signup|login)(?:\?|["'])/.test(html)) forbidden.push(file)
+
+  if (!html.includes('LOCK SHOW')) brandDefects.push(`${file}: missing LOCK SHOW`)
+  if (!html.includes('Trust on Cue')) brandDefects.push(`${file}: missing Trust on Cue`)
+  if (!html.includes('/brand/lockshow-symbol-spotlight-lens-v2-lime.svg')) {
+    brandDefects.push(`${file}: missing current brand symbol`)
+  }
+  if (path.basename(file) === 'index.html' && !html.includes('<title>LOCK SHOW — Trust on Cue</title>')) {
+    brandDefects.push(`${file}: homepage title does not use approved tagline`)
+  }
+
+  const withoutApprovedName = html.replaceAll('LOCK SHOW', '')
+  if (/(^|[^A-Z0-9])LOCK(?![A-Z0-9.])/m.test(withoutApprovedName)) {
+    brandDefects.push(`${file}: standalone LOCK remains`)
+  }
 }
+
+const llms = await readFile(path.join(websiteRoot, 'out', 'llms.txt'), 'utf8')
+const socialCard = await readFile(path.join(websiteRoot, 'out', 'og', 'og-default.svg'), 'utf8')
+for (const [name, content] of [['llms.txt', llms], ['og-default.svg', socialCard]]) {
+  if (!content.includes('LOCK SHOW')) brandDefects.push(`${name}: missing LOCK SHOW`)
+  const withoutApprovedName = content.replaceAll('LOCK SHOW', '')
+  if (/(^|[^A-Z0-9])LOCK(?![A-Z0-9.])/m.test(withoutApprovedName)) {
+    brandDefects.push(`${name}: standalone LOCK remains`)
+  }
+}
+if (!socialCard.includes('Trust on Cue')) brandDefects.push('og-default.svg: missing Trust on Cue')
 
 if (signupLinks === 0 || loginLinks === 0) {
   throw new Error(`Built marketing flow is incomplete: signup=${signupLinks}, login=${loginLinks}`)
@@ -37,5 +63,8 @@ if (signupLinks === 0 || loginLinks === 0) {
 if (forbidden.length > 0) {
   throw new Error(`Built pages contain legacy same-origin auth links: ${forbidden.join(', ')}`)
 }
+if (brandDefects.length > 0) {
+  throw new Error(`Built pages violate LOCK SHOW identity:\n${brandDefects.join('\n')}`)
+}
 
-console.log(`marketing->app flow PASS: signup=${signupLinks}, login=${loginLinks}, origin=${productionOrigin}`)
+console.log(`marketing->app flow PASS: signup=${signupLinks}, login=${loginLinks}, brand=${files.length}/${files.length}, origin=${productionOrigin}`)

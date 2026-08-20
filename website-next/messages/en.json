@@ -15,7 +15,7 @@
     "tagline": "Pre-booking proof for independent artists.",
     "entityNotice": "מזמין הופעות ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
     "firewallNotice": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE. Evidence, labelled by method.",
-    "copyright": "© 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL",
+    "copyright": "© 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL",
     "privacy": "Privacy",
     "terms": "Terms",
     "accessibility": "Accessibility",
@@ -33,7 +33,7 @@
     "firewall": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — EVIDENCE, LABELLED BY METHOD",
     "actors": {
       "heading": "One platform, three different jobs",
-      "sub": "A booking manager decides whether to book you. A producer ran the show you played. LOCK keeps those roles separate — so no one confirms their own claim.",
+      "sub": "A booking manager decides whether to book you. A producer ran the show you played. LOCK SHOW keeps those roles separate — so no one confirms their own claim.",
       "artist": {
         "tag": "אמן · ARTIST",
         "title": "Build your proof profile",
@@ -80,7 +80,7 @@
     "streamingNote": "CONTEXTUAL — NOT DRAW EVIDENCE"
   },
   "methodology": {
-    "firewallPrinciple": "LOCK publishes no score, ranking, percentile, prediction, or guarantee.",
+    "firewallPrinciple": "LOCK SHOW publishes no score, ranking, percentile, prediction, or guarantee.",
     "methodLabels": {
       "ticketExport": {
         "label": "TICKET EXPORT",
@@ -96,7 +96,7 @@
       },
       "operatorReviewed": {
         "label": "OPERATOR-REVIEWED",
-        "desc": "LOCK reviewed documentation and approved this claim."
+        "desc": "LOCK SHOW reviewed documentation and approved this claim."
       },
       "selfReported": {
         "label": "SELF-REPORTED",
