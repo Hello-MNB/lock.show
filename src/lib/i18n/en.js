@@ -369,6 +369,8 @@ export const T = {
     // §5.10 venue-context lines — index-aligned to BANDS.capacity. Room FIT, never a rank.
     drawContext: ['Fills intimate rooms & lounges', 'Regularly fills mid-size clubs', 'Moves large-hall crowds', 'Plays festival-scale stages'],
     performance: 'Performance',
+    showAllEvidence: (count) => `Show all ${count} appearances`,
+    showLessEvidence: 'Show less',
     community: 'Community',
     communityCaption: 'CONTEXTUAL — NOT DRAW EVIDENCE',
     readinessCaption: 'BINARIES ONLY — READY OR NOT SHOWN',

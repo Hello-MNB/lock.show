@@ -343,16 +343,16 @@ export function DrawSection({ data, T, label, contextLines, heroRoom = false }) 
 }
 
 // Performance / track record (booking calls it "Performance", rep "Career proof").
-export function PerformanceSection({ data, T, label }) {
+export function PerformanceSection({ data, T, label, limit }) {
   if (data.exp.length === 0) return null
   return (
     <PassportSection label={label || T.passport.performance}>
-      <div className="rounded-[18px] border border-line bg-surface px-5">
-        {data.exp.map((i) => (
+      <div className="space-y-2">
+        {data.exp.slice(0, limit).map((i) => (
           // Narrow screens stack to two lines — title WRAPS (venue lives inside it,
           // so it must never clip) and the date drops to a mono micro line. Buyers
           // must always see WHEN and WHERE. ≥sm keeps the original one-line row.
-          <div key={i.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-line py-3.5 last:border-0 sm:flex-nowrap">
+          <div key={i.id} className="premium-panel data-cue flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 px-5 py-3.5 sm:flex-nowrap">
             <span className="min-w-0 basis-full text-[15px] text-ink sm:basis-auto sm:truncate">
               {i.title}
               {i.item_date ? <span className="hidden text-faint sm:inline"> · {i.item_date}</span> : null}
@@ -554,7 +554,7 @@ export function PassportHero({ artist, tagline, photoOk, onPhotoError, children 
       )}
 
       <div className="absolute inset-x-0 top-0 flex items-center justify-between px-5 pt-4 sm:px-8 sm:pt-5">
-        <Wordmark />
+        <Wordmark showTagline />
         <div className="flex items-center gap-2">
           {user && (
             <Link

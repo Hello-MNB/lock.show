@@ -9,6 +9,7 @@ import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { Upload, Link2, ScanSearch } from 'lucide-react'
 
 // A pasted link is recognized live, the way the Radar's setup does it: name
 // the platform + show its logo, never just swallow the text silently.
@@ -31,9 +32,9 @@ function LinkPlatformHint({ value }) {
 // Each intent maps to its evidence ask + source_type (canon claim→source table).
 // Card copy lives in i18n (T.evidence.paths[key].title/desc) — EN + HE.
 const PATHS = [
-  { key: 'upload', icon: '⇪', intents: ['drew-crowd', 'sold-via-link', 'produced-event'] },
-  { key: 'connect', icon: '↗', intents: ['rebooked', 'consistent-frequency', 'producer-confirm'] },
-  { key: 'declare', icon: '✎', intents: ['community'] },
+  { key: 'upload', Icon: Upload, intents: ['drew-crowd', 'sold-via-link', 'produced-event'] },
+  { key: 'connect', Icon: Link2, intents: ['rebooked', 'consistent-frequency', 'producer-confirm'] },
+  { key: 'declare', Icon: ScanSearch, intents: ['community'] },
 ]
 
 export default function EvidenceCapture() {
@@ -201,7 +202,7 @@ export default function EvidenceCapture() {
   const retryable = countRetryableEvidence(evidence)
 
   return (
-    <PageShell>
+    <PageShell max="max-w-3xl">
       <div className="mb-6 flex items-center justify-end">
         <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
       </div>
@@ -218,9 +219,9 @@ export default function EvidenceCapture() {
       {!intent && (
         <div className="mb-4 space-y-3">
           {PATHS.map((p) => (
-            <div key={p.key} className="card">
+            <div key={p.key} className="premium-panel data-cue p-5">
               <div className="mb-2 flex items-center gap-3">
-                <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line2 font-mono text-sm text-muted">{p.icon}</span>
+                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line2 bg-surface2 text-accent"><p.Icon size={19} strokeWidth={1.7} /></span>
                 <div className="min-w-0">
                   <p className="font-display text-base font-bold text-ink">{T.evidence.paths[p.key].title}</p>
                   <p className="text-xs text-muted">{T.evidence.paths[p.key].desc}</p>

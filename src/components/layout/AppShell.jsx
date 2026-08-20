@@ -1,7 +1,7 @@
 import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '../../features/auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
-import { LanguageToggle } from '../ui.jsx'
+import { LanguageToggle, Wordmark } from '../ui.jsx'
 import BuildStamp from '../BuildStamp.jsx'
 import BottomNav from './BottomNav.jsx'
 import SideNav from './SideNav.jsx'
@@ -9,6 +9,7 @@ import NotificationBell from './NotificationBell.jsx'
 import ContextSwitcher from '../../features/org/ContextSwitcher.jsx'
 import ContextBeacon from './ContextBeacon.jsx'
 import { useAdminAccess } from '../../context/AdminAccessContext.jsx'
+import { Settings } from 'lucide-react'
 
 // Layout route wrapper — renders persistent nav shell around all authenticated screens.
 // Mobile: fixed bottom tab nav + a slim top bar. Desktop (md+): fixed 248px inline-start
@@ -41,12 +42,17 @@ export default function AppShell() {
       {/* Top bar — the ONE shared header: language toggle, notification bell,
           workspace switcher, top-right, every breakpoint (canon: no scattered
           chrome — the wordmark lives ONCE, in the sidebar, never here). */}
-      <header className="sticky top-0 z-20 flex min-h-14 flex-wrap items-center gap-3 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:flex-nowrap md:ps-[264px]">
+      <header className="shell-utility-bar sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-bg/90 px-4 py-2 backdrop-blur-xl md:flex-nowrap md:ps-[272px]">
+        <Wordmark className="order-1 me-auto md:hidden" />
         <ContextBeacon />
-        <LanguageToggle />
-        <NotificationBell />
-        <ContextSwitcher />
-        <Link to="/settings" className="flex min-h-[44px] min-w-[44px] items-center justify-center px-1 text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
+        <div className="order-2 ms-auto flex shrink-0 items-center gap-1 md:order-2">
+          <LanguageToggle />
+          <NotificationBell />
+          <ContextSwitcher />
+          <Link to="/settings" aria-label={T.dashboard.settings} title={T.dashboard.settings} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink">
+            <Settings size={19} strokeWidth={1.7} aria-hidden="true" />
+          </Link>
+        </div>
       </header>
 
       {/* Scrollable content — offset for sidebar on desktop, padded bottom for nav on mobile */}

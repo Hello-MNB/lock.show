@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   PassportHero, PersonaToggle, PassportFooter,
   DrawSection, PerformanceSection, ReadinessSection, ContextSection, ProofStory,
@@ -8,6 +9,7 @@ import {
 // they READY, first. Same facts as the representation view — only the order and
 // framing differ (CLAUDE.md firewall lives in passportKit, not here). ─────────
 export default function PassportBookingView({ artist, data, T, persona, onPersonaChange, photoOk, onPhotoError }) {
+  const [showAllEvidence, setShowAllEvidence] = useState(false)
   return (
     <>
       <PassportHero artist={artist} tagline={T.passport.taglineBooking} photoOk={photoOk} onPhotoError={onPhotoError}>
@@ -20,7 +22,12 @@ export default function PassportBookingView({ artist, data, T, persona, onPerson
             wires the Room Grammar hero picture to the draw unit's hero
             position here only (other faces keep the standard unit). */}
         <DrawSection data={data} T={T} label={T.passport.proofTitle} heroRoom />
-        <PerformanceSection data={data} T={T} label={T.passport.performance} />
+        <PerformanceSection data={data} T={T} label={T.passport.performance} limit={showAllEvidence ? undefined : 5} />
+        {data.exp.length > 5 && (
+          <button type="button" className="btn-ghost mb-10 w-full" onClick={() => setShowAllEvidence((value) => !value)}>
+            {showAllEvidence ? T.passport.showLessEvidence : T.passport.showAllEvidence(data.exp.length)}
+          </button>
+        )}
         <ReadinessSection data={data} artist={artist} T={T} />
         <ContextSection data={data} artist={artist} T={T} />
         <PassportFooter T={T} />

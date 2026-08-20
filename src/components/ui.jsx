@@ -541,17 +541,16 @@ export function PlatformMark({ platform, size = 'h-7 w-7' }) {
   )
 }
 
-export function Wordmark({ className = '' }) {
-  // LOCK wordmark: lime "L" square (30px, rounded) + wordmark.
-  // dir="ltr" LOCKS the icon-before-text order — a brand lockup is never
-  // mirrored by locale (RTL/Hebrew previously reversed this flex row to
-  // "LOCK [L]", scrambling the mark; the icon must always lead the text).
+export function Wordmark({ className = '', showTagline = false }) {
+  // The real Spotlight Lens asset is shared with the public website. The
+  // lockup is deliberately LTR in every locale.
   return (
-    <div dir="ltr" className={`flex items-center gap-2 ${className}`}>
-      <span className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-accent font-display text-[15px] font-black text-bg" aria-hidden>
-        L
+    <div dir="ltr" className={`flex items-center gap-2.5 ${className}`}>
+      <img src="/brand/lockshow-symbol-spotlight-lens-v2-lime.svg" alt="" aria-hidden="true" className="h-8 w-8 shrink-0" />
+      <span className="min-w-0">
+        <b className="block whitespace-nowrap text-[15px] font-extrabold tracking-[-0.025em] text-ink">LOCK SHOW</b>
+        {showTagline && <span className="block whitespace-nowrap font-mono text-[8px] uppercase tracking-[0.18em] text-muted">Trust on Cue</span>}
       </span>
-      <b className="text-sm font-extrabold tracking-tight text-ink">LOCK</b>
     </div>
   )
 }

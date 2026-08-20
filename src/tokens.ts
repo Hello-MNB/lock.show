@@ -57,8 +57,8 @@ export const status = {
 } as const
 
 export const fontFamily = {
-  display: '"Frank Ruhl Libre", Georgia, serif',            // headings
-  sans: '"Heebo", system-ui, sans-serif',                   // body/UI (covers Hebrew)
+  display: '"Fraunces", Georgia, "Assistant", serif',       // expressive headings + Hebrew fallback
+  sans: '"Rubik", "Assistant", system-ui, sans-serif',      // body/UI, Hebrew + Latin + Cyrillic
   mono: '"IBM Plex Mono", ui-monospace, monospace',         // method labels · bands · dates
 } as const
 

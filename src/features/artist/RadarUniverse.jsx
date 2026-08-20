@@ -499,7 +499,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     // panel FLEXES to the remaining height on md+ (min-h-0 + flex-1 instead of a
     // fixed min-h) — the universe square below derives its size from this height,
     // so the whole radar scales to fit rather than pushing the page past the fold.
-    <div className="relative shrink-0 overflow-hidden rounded-3xl border border-line bg-bg2 p-4 sm:p-5 md:flex md:min-h-0 md:flex-1 md:flex-col md:justify-center md:p-8">
+    <div className="premium-stage mobile-open-surface relative shrink-0 p-4 sm:p-5 md:flex md:min-h-0 md:flex-1 md:flex-col md:justify-center md:p-8">
       {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels).
           Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"

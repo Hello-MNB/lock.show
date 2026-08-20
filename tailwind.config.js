@@ -85,8 +85,8 @@ export default {
         'void-bg': 'rgba(227,154,75,.09)',
       },
       fontFamily: {
-        display: ['"Frank Ruhl Libre"', 'Georgia', 'serif'],  // headings — editorial serif voice
-        sans: ['"Heebo"', 'system-ui', 'sans-serif'],         // body/UI (Heebo covers Hebrew)
+        display: ['"Fraunces"', 'Georgia', '"Assistant"', 'serif'],
+        sans: ['"Rubik"', '"Assistant"', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'], // method labels · bands · dates
       },
       // Type scale — spec §5.11 self-contained DS defaults (interim; Codex may refine).

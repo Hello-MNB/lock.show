@@ -23,28 +23,27 @@ export default function ContextBeacon() {
     : model.environmentId
 
   return (
-    <section className="min-w-0 basis-full md:basis-auto md:flex-1" aria-label={T.org.contextBeaconLabel}>
-      <div className="grid min-w-0 grid-cols-2 gap-x-4 gap-y-1 text-xs sm:flex sm:flex-wrap sm:items-center sm:gap-x-5">
-        <div className="min-w-0">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-faint">{T.org.contextPersonLabel}</span>
-          <span className="block truncate font-semibold text-ink">{model.personName}</span>
-        </div>
-        <div className="min-w-0">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-faint">{T.org.contextWorkspaceLabel}</span>
-          <span className="block truncate text-ink">{adminMode ? T.org.privateAdminWorkspace : (model.workspaceName || T.org.contextNoWorkspace)}</span>
-          <span className="block truncate text-[10px] text-muted">{workspaceTypeLabel}</span>
-        </div>
-        <div className="min-w-0">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-faint">{T.org.contextRoleLabel}</span>
-          <span className="block truncate text-ink">{roleLabel}</span>
-        </div>
-        <div className="min-w-0">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-faint">{T.org.contextEnvironmentLabel}</span>
-          <span className="flex items-center gap-1.5 truncate text-ink">
+    <section className="order-3 min-w-0 basis-full md:order-1 md:basis-auto md:flex-1" aria-label={T.org.contextBeaconLabel}>
+      <div className="min-w-0 text-xs">
+        <p className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 font-semibold text-muted">{T.org.contextWorkspaceLabel}</span>
+          <strong className="truncate text-sm text-ink">{adminMode ? T.org.privateAdminWorkspace : (model.workspaceName || T.org.contextNoWorkspace)}</strong>
+          <span className="shrink-0 text-faint">·</span>
+          <span className="shrink-0 font-semibold text-muted">{T.org.contextRoleLabel}</span>
+          <span className="shrink-0 text-ink">{roleLabel}</span>
+        </p>
+        <p className="mt-0.5 flex min-w-0 items-center gap-2 text-[11px] text-muted">
+          <span className="shrink-0 text-faint">{T.org.contextPersonLabel}</span>
+          <span className="truncate">{model.personName}</span>
+          <span aria-hidden>·</span>
+          <span className="shrink-0 text-faint">{T.org.contextEnvironmentLabel}</span>
+          <span className="flex shrink-0 items-center gap-1.5">
             <span className={`h-2 w-2 shrink-0 rounded-full ${adminMode ? 'bg-amber' : 'bg-accent'}`} aria-hidden="true" />
             {environmentLabel}
           </span>
-        </div>
+          <span aria-hidden>·</span>
+          <span className="truncate">{workspaceTypeLabel}</span>
+        </p>
       </div>
       {adminMode && (
         <button type="button" onClick={exitAdmin} className="mt-0.5 text-[10px] font-medium text-amber hover:text-ink">
