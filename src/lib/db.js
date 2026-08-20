@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+import { sanitizePassportPayload } from './passportPublicPayload.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
 import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct } from './demo.js'
@@ -530,7 +531,7 @@ export async function getPublicPassport(id) {
     .select('id, item_type, title, detail, item_date, public_url, source_status')
     .eq('artist_id', id)
   let claimsQ = supabase.from('claims')
-    .select('id, claim_type, value, public_band, public_wording, source_type, verification_status, reason_code, method_label, verified_at, expires_at')
+    .select('id, claim_type, value, public_band, public_wording, source_type, verification_status, method_label, verified_at, expires_at')
     .eq('artist_id', id)
   if (session) {
     itemsQ = itemsQ.eq('visibility', VISIBILITY.PASSPORT_OK)
@@ -545,7 +546,7 @@ export async function getPublicPassport(id) {
   ])
   if (itemsRes.error) throw itemsRes.error
   if (claimsRes.error) throw claimsRes.error
-  return { artist, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
+  return sanitizePassportPayload({ artist, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] })
 }
 
 // Owner-side immutable snapshot. The owner's RLS sees ALL visibilities, so unlike
@@ -558,10 +559,10 @@ async function buildPassportSnapshot(artistId) {
       .select('id, item_type, title, detail, item_date, public_url, source_status')
       .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
     supabase.from('claims')
-      .select('id, claim_type, value, source_type, verification_status, reason_code, method_label')
+      .select('id, claim_type, value, source_type, verification_status, method_label')
       .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
   ])
-  return { artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
+  return sanitizePassportPayload({ artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] })
 }
 
 // ── Passport publish — NO server. The connected owner flips published + writes a

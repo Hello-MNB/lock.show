@@ -46,7 +46,7 @@ export default function AppShell() {
         <LanguageToggle />
         <NotificationBell />
         <ContextSwitcher />
-        <Link to="/settings" className="flex min-h-[44px] items-center text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
+        <Link to="/settings" className="flex min-h-[44px] min-w-[44px] items-center justify-center px-1 text-sm text-muted transition-colors hover:text-ink">{T.dashboard.settings}</Link>
       </header>
 
       {/* Scrollable content — offset for sidebar on desktop, padded bottom for nav on mobile */}

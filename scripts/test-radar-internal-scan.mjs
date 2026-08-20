@@ -469,6 +469,43 @@ test('PASSPORT firewall rejects whitespace aliases in security binding identifie
   }
 })
 
+test('PASSPORT public payload uses an allowlist and strips private RADAR reasoning from legacy snapshots', () => {
+  const source = {
+    artist: {
+      id: 'artist-1',
+      stage_name: 'Signal Act',
+      published: true,
+      whatsapp_number: '+972000000000',
+    },
+    items: [{
+      id: 'item-1',
+      item_type: 'event',
+      title: 'Show',
+      visibility: 'passport-ok',
+      private_note: 'do not expose',
+    }],
+    claims: [{
+      id: 'claim-1',
+      claim_type: 'lineup-frequency',
+      value: 'bounded public value',
+      method_label: 'source-linked',
+      reason_code: 'private extraction rationale',
+      internal_confidence: 0.94,
+      extraction_method: 'private-model',
+      model_version: 'private-version',
+      expires_at: '2026-08-21T00:00:00.000Z',
+    }],
+  }
+
+  const result = passport.sanitizePassportPayload(source)
+  assert.deepEqual(result, {
+    artist: { id: 'artist-1', stage_name: 'Signal Act', published: true },
+    items: [{ id: 'item-1', item_type: 'event', title: 'Show' }],
+    claims: [{ id: 'claim-1', claim_type: 'lineup-frequency', value: 'bounded public value', method_label: 'source-linked' }],
+  })
+  assert.equal(source.claims[0].reason_code, 'private extraction rationale', 'sanitization must not mutate the source receipt')
+})
+
 test('source invalidation emits bounded hooks without promising external cache deletion', () => {
   requireApi()
   const invalidation = passport.createPassportInvalidation({
