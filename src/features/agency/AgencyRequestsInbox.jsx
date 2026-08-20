@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider.jsx'
-import { listRequestsForAgency, updateRequestStatus } from '../../lib/db.js'
+import { listRequestsForArtists, updateRequestStatus } from '../../lib/db.js'
+import { listRosterGrants } from '../../lib/orgs.js'
 import * as UI from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -22,7 +22,6 @@ const STATUS_STYLE = { new: 'bg-accent/10 text-accent', replied: 'bg-teal/10 tex
 export default function AgencyRequestsInbox() {
   const { T } = useLang()
   const STATUS_LABEL = { new: T.agency.statusNew, replied: T.agency.statusReplied, closed: T.agency.statusClosed }
-  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [rows, setRows] = useState([])
@@ -39,14 +38,16 @@ export default function AgencyRequestsInbox() {
   async function load() {
     setError(false)
     try {
-      setRows(await listRequestsForAgency(user.id))
+      const grants = await listRosterGrants()
+      if (!Array.isArray(grants)) throw new Error('consented roster unavailable')
+      setRows(await listRequestsForArtists(grants.map((grant) => grant.artist_id)))
     } catch {
       setError(true)
     } finally {
       setLoading(false)
     }
   }
-  useEffect(() => { load() }, [user.id])
+  useEffect(() => { load() }, [])
 
   // Auto-open ONCE after load: the artist's first still-'new' request, else
   // their most recent one — never re-fires after status changes/reloads.

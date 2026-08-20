@@ -297,6 +297,22 @@ export async function listRequestsForAgency(userId) {
   return data ?? []
 }
 
+// Representation inbox — consented roster only. The caller passes Artist ids
+// sourced from ACTIVE ArtistAccess grants; RLS re-checks each artist at read
+// time. `created_by` is deliberately absent: a representative never owns an
+// Artist merely because they invited them.
+export async function listRequestsForArtists(artistIds) {
+  if (DEMO) return demoRequests.filter((r) => artistIds?.includes(r.artist_id))
+  if (!artistIds?.length) return []
+  const { data, error } = await supabase
+    .from('availability_requests')
+    .select('*, artists!inner(stage_name)')
+    .in('artist_id', artistIds)
+    .order('created_date', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
 export async function updateRequestStatus(id, status) {
   if (DEMO) return
   const { error } = await supabase.from('availability_requests').update({ status }).eq('id', id)
