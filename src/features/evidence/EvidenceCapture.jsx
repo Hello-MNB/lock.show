@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider.jsx'
 import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence, updateAct } from '../../lib/db.js'
 import { uploadFile } from '../../lib/storage.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { countRetryableEvidence } from '../../lib/evidenceState.js'
 import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -197,7 +198,7 @@ export default function EvidenceCapture() {
     )
   }
 
-  const pending = evidence.filter((e) => e.status === 'submitted').length
+  const retryable = countRetryableEvidence(evidence)
 
   return (
     <PageShell>
@@ -398,8 +399,8 @@ export default function EvidenceCapture() {
         </div>
       )}
 
-      <button className="btn-primary w-full" onClick={process} disabled={processing || pending === 0}>
-        {processing ? <><Spinner /> {T.evidence.processing}</> : `${T.evidence.process}${pending ? ` (${pending})` : ''}`}
+      <button className="btn-primary w-full" onClick={process} disabled={processing || retryable === 0}>
+        {processing ? <><Spinner /> {T.evidence.processing}</> : `${T.evidence.process}${retryable ? ` (${retryable})` : ''}`}
       </button>
     </PageShell>
   )

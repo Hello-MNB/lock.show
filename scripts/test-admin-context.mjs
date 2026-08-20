@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
+import { countRetryableEvidence } from '../src/lib/evidenceState.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { T as he } from '../src/lib/i18n/he.js'
 
@@ -130,8 +131,12 @@ test('RADAR Scanner has native Hebrew copy for every claim-first action', () => 
 test('RADAR Scanner reports degraded processing truthfully and keeps failed evidence retryable', () => {
   const capture = read('src/features/evidence/EvidenceCapture.jsx')
 
+  assert.equal(countRetryableEvidence([{ status: 'error' }]), 1)
+  assert.equal(countRetryableEvidence([{ status: 'submitted' }, { status: 'error' }, { status: 'processed' }]), 2)
+  assert.equal(countRetryableEvidence([{ status: 'processed' }]), 0)
   assert.match(capture, /result\.ai === 'degraded'/)
   assert.match(capture, /T\.evidence\.scannerDegraded/)
+  assert.match(capture, /countRetryableEvidence\(evidence\)/)
   assert.match(capture, /e\.status === 'error' \? T\.evidence\.retryable/)
   assert.equal(typeof he.evidence.scannerDegraded, 'string')
   assert.equal(typeof en.evidence.scannerDegraded, 'string')
