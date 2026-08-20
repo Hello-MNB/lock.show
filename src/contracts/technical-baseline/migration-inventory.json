@@ -581,6 +581,24 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260821131500",
+      "file": "supabase/migrations/20260821131500_roster_active_workspace_scope.down.sql",
+      "direction": "down",
+      "sha256": "65576e0bfcacda7c120073d59c821dd3bd8fee91924880e46f27442442bdcbc1",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "NOT_APPLICABLE",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260821131500",
+      "file": "supabase/migrations/20260821131500_roster_active_workspace_scope.sql",
+      "direction": "up",
+      "sha256": "dde1c88daa2b6e3e2f8ddc8e06292e4e5f35c2de12a391abbf2436f0885ba859",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

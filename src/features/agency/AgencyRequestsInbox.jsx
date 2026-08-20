@@ -4,6 +4,7 @@ import { listRequestsForArtists, updateRequestStatus } from '../../lib/db.js'
 import { listRosterGrants } from '../../lib/orgs.js'
 import * as UI from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useOrg } from '../../context/OrgContext.jsx'
 
 const { PageShell, Loading, EmptyState, ErrorState } = UI
 
@@ -21,6 +22,7 @@ const STATUS_STYLE = { new: 'bg-accent/10 text-accent', replied: 'bg-teal/10 tex
 
 export default function AgencyRequestsInbox() {
   const { T } = useLang()
+  const { activeOrgId } = useOrg()
   const STATUS_LABEL = { new: T.agency.statusNew, replied: T.agency.statusReplied, closed: T.agency.statusClosed }
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -34,20 +36,36 @@ export default function AgencyRequestsInbox() {
   const [searchParams, setSearchParams] = useSearchParams()
   const artistFilter = searchParams.get('artist') || ''
   const autoOpened = useRef(false)
+  const loadEpoch = useRef(0)
 
-  async function load() {
+  async function load(targetOrgId = activeOrgId) {
+    const epoch = ++loadEpoch.current
+    setLoading(true)
     setError(false)
-    try {
-      const grants = await listRosterGrants()
-      if (!Array.isArray(grants)) throw new Error('consented roster unavailable')
-      setRows(await listRequestsForArtists(grants.map((grant) => grant.artist_id)))
-    } catch {
+    setRows([])
+    setOpenId(null)
+    autoOpened.current = false
+    if (!targetOrgId) {
       setError(true)
-    } finally {
       setLoading(false)
+      return
+    }
+    try {
+      const grants = await listRosterGrants(targetOrgId)
+      if (!Array.isArray(grants)) throw new Error('consented roster unavailable')
+      const artistIds = grants.map((grant) => grant.artist_id).filter(Boolean)
+      const nextRows = artistIds.length ? await listRequestsForArtists(artistIds) : []
+      if (epoch === loadEpoch.current) setRows(nextRows)
+    } catch {
+      if (epoch === loadEpoch.current) setError(true)
+    } finally {
+      if (epoch === loadEpoch.current) setLoading(false)
     }
   }
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load(activeOrgId)
+    return () => { loadEpoch.current += 1 }
+  }, [activeOrgId])
 
   // Auto-open ONCE after load: the artist's first still-'new' request, else
   // their most recent one — never re-fires after status changes/reloads.
