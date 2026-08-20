@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider.jsx'
-import { authHeaders, listAgencyArtists, listClaimsByArtists, listRequestsForAgency } from '../../lib/db.js'
+import { authHeaders, listClaimsByArtists, listRequestsForArtists } from '../../lib/db.js'
 import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess, listRosterGrants } from '../../lib/orgs.js'
 import { createRosterInvitation } from '../../lib/rosterInvites.js'
 import { pickRosterAction, fetchGrantArtistState } from './rosterNextAction.js'
@@ -11,6 +10,7 @@ import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { STATUS } from '../../lib/constants.js'
 import { DEMO } from '../../lib/demo.js'
+import { loadRepresentationWorkspace } from './representationWorkspace.js'
 
 // The exact 5 canon scope values (DB-STRUCTURE.md Layer 1) minus `view`, which
 // is always included and never opted out of — every grant carries at least
@@ -168,8 +168,7 @@ function RequestsSideCard({ requests, T }) {
 
 export default function AgencyDashboard() {
   const { T } = useLang()
-  const { user } = useAuth()
-  const { isAgency, activeOrgId, memberships } = useOrg()
+  const { activeOrgId, memberships } = useOrg()
   // DEMO ONLY: prefer the ACTIVE workspace if it's already a valid
   // (non-production) agency/management org — the switcher IS functional now
   // (OrgContext derives `role`/`isProducerWorkspace` from the active
@@ -192,8 +191,6 @@ export default function AgencyDashboard() {
   const [rosterClaims, setRosterClaims] = useState([])
   const [requests, setRequests] = useState([])
   const [accessRequests, setAccessRequests] = useState([])
-  const [grants, setGrants] = useState(null) // A6 (032): ACTIVE consented grants — null until 032 applied
-  const [grantState, setGrantState] = useState({}) // G4: per-granted-artist bounded state (publish/evidence/requests)
   const [adding, setAdding] = useState(false)
   const [addMode, setAddMode] = useState('invite') // existing LOCK artist | not-yet-registered artist
   const [inviteInput, setInviteInput] = useState('')
@@ -207,29 +204,26 @@ export default function AgencyDashboard() {
   async function load() {
     setError(false)
     try {
-      const roster = await listAgencyArtists(user.id)
-      setArtists(roster)
-      try { setRosterClaims(await listClaimsByArtists(roster.map((a) => a.id))) } catch { setRosterClaims([]) }
-      try { setRequests(await listRequestsForAgency(user.id)) } catch { setRequests(null) }
       try { setAccessRequests(orgIdForThisScreen ? await listOutgoingAccessRequests(orgIdForThisScreen) : []) } catch { setAccessRequests([]) }
       try {
-        const g = await listRosterGrants() // A6 — consented roster (032)
-        setGrants(g)
-        // G4: the grant row carries no publish/evidence state — fetch the bounded
-        // extra read-model here (feature-local; degrades to unknown on failure).
-        if (Array.isArray(g) && g.length > 0) {
-          try { setGrantState(await fetchGrantArtistState(g.map((x) => x.artist_id))) } catch { setGrantState({}) }
-        } else {
-          setGrantState({})
-        }
-      } catch { setGrants(null) }
+        const roster = await loadRepresentationWorkspace({
+          listRosterGrants,
+          fetchGrantArtistState,
+          listClaimsByArtists,
+          listRequestsForArtists,
+        })
+        if (!roster.available) throw new Error('consented roster unavailable')
+        setArtists(roster.artists)
+        setRosterClaims(roster.claims)
+        setRequests(roster.requests)
+      } catch { setError(true) }
     } catch {
       setError(true)
     } finally {
       setLoading(false)
     }
   }
-  useEffect(() => { load() }, [user.id, orgIdForThisScreen])
+  useEffect(() => { load() }, [orgIdForThisScreen])
 
   // Invite an EXISTING artist by Passport link/id — creates a status='pending'
   // artist_access row. Nothing about the artist is visible to this org until
@@ -305,58 +299,9 @@ export default function AgencyDashboard() {
       {/* ── THE ROSTER UNIVERSE — the manager's home: artists as worlds ── */}
       <AgencyRadarUniverse artists={artists} claims={rosterClaims} />
 
-      {/* ── Representation — the artist_access consent handshake this org has
-            requested (pending/active/revoked). Separate from the owned roster
-            below: this is ACCESS, not ownership. ── */}
-      <AccessRequestsCard requests={accessRequests} T={T} onRevoked={load} />
-
-      {/* ── A6 (032-backed): the CONSENTED roster — ACTIVE ArtistAccess grants.
-            A grant, never ownership (ENTITY-GLOSSARY §2c boundary). Renders only
-            when 032 is applied AND at least one grant is active.
-            G4 (A5): ONE commercial next action per artist row, derived from that
-            artist's REAL state — open request → reply · unpublished → publish ·
-            stale evidence (>90d) → refresh · else share / request video. The 032
-            grant row carries no publish/evidence fields, so fetchGrantArtistState
-            loads that bounded read-model feature-side; unknown state degrades to
-            the always-allowed view floor, never a guess. Scope-gated: only
-            actions this grant's scope allows. Destination always carries the
-            artist id — never a bare /agency/radar. ── */}
-      {Array.isArray(grants) && grants.length > 0 && (
-        <div className="card mb-4 border border-line">
-          <p className="mb-0.5 font-bold text-ink text-sm">{T.agency.consentedTitle}</p>
-          <p className="mb-2 text-xs text-muted">{T.agency.consentedHint}</p>
-          <div className="space-y-1.5">
-            {grants.map((g) => {
-              const st = grantState[g.artist_id] || {}
-              const action = pickRosterAction({
-                artistId: g.artist_id,
-                published: st.published ?? null,
-                items: st.items ?? null,
-                openRequests: Math.max(openRequestsFor(requests, g.artist_id), st.openRequests || 0),
-                scope: g.scope || ['view'],
-              })
-              return (
-                <div key={g.grant_id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-ink">{g.artist_stage_name || '—'}</p>
-                    {g.artist_city && <p className="truncate text-[11px] text-muted">{g.artist_city}</p>}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <div className="hidden items-center gap-1 sm:flex">
-                      {(g.scope || []).map((s) => (
-                        <span key={s} className="chip bg-na-bg text-[9px] uppercase tracking-[0.06em] text-muted">{s}</span>
-                      ))}
-                    </div>
-                    {/* the ONE next action — real state only, bound to THIS artist */}
-                    <NextActionChip action={action} T={T} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
+      {/* Pending/revoked ArtistAccess requests. Active grants appear exactly
+          once in the roster below: access never becomes ownership. */}
+      <AccessRequestsCard requests={accessRequests.filter((request) => request.status !== 'active')} T={T} onRevoked={load} />
       {/* first-run checklist — dismissible, non-shaming */}
       {!hideChecklist && (
         <div className="card mb-4 border border-line">
@@ -389,15 +334,14 @@ export default function AgencyDashboard() {
               <div className="space-y-3 mb-4">
                 {artists.map((a) => {
                   const fresh = fmtDate(a.updated_at || a.created_at)
-                  // G4 (A5): ONE commercial next action from THIS artist's real
-                  // state (listAgencyArtists now carries bounded profile_items).
-                  // Owned row → no grant, nothing scope-gated (scope: null).
+                  // G4 (A5): ONE commercial next action from this consented
+                  // ArtistAccess grant. Representation never implies ownership.
                   const action = pickRosterAction({
                     artistId: a.id,
                     published: !!a.published,
                     items: a.profile_items ?? null,
                     openRequests: openRequestsFor(requests, a.id),
-                    scope: null,
+                    scope: a.access_scope,
                   })
                   return (
                     <div key={a.id}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
-import { upsertProfile, requestAccountDeletion, hasConsent, recordConsentScope, getMyArtist, saveArtistWhatsApp } from '../../lib/db.js'
+import { requestAccountDeletion, hasConsent, recordConsentScope, getMyArtist, saveArtistWhatsApp } from '../../lib/db.js'
+import { saveMyIdentity } from '../../lib/identity.js'
 import { listIncomingAccessRequests, respondToAccessRequest, revokeArtistAccess } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
 import { Field, ErrorNote, LanguageToggle, BottomSheet, Spinner, useToast } from '../../components/ui.jsx'
@@ -170,11 +171,9 @@ function RepresentationSection({ T, toast }) {
 
 export default function Settings() {
   const { T, lang } = useLang()
-  // baseRole = the static profile role (identity-level; only used for the
-  // profiles.role write in saveProfile). role = the ACTIVE workspace's
-  // effective role (ROUND 4) — used for anything nav/route-related below, so
-  // this screen reflects whichever workspace is currently active.
-  const { user, profile, role: baseRole, signOut, reloadProfile } = useAuth()
+  // role below is the ACTIVE workspace's effective role (ROUND 4), so this
+  // screen reflects whichever workspace is currently active.
+  const { user, profile, signOut, reloadProfile } = useAuth()
   const { activeOrg, isAgency, isOwner, role, isProducerWorkspace } = useOrg()
   const nav = useNavigate()
   const toast = useToast()
@@ -255,7 +254,7 @@ export default function Settings() {
   async function saveProfile() {
     setSaving(true); setError(''); setSaved(false)
     try {
-      await upsertProfile({ id: user.id, role: baseRole, full_name: name.trim() || null })
+      await saveMyIdentity(name)
       await reloadProfile()
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

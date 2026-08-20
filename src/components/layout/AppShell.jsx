@@ -51,6 +51,7 @@ export default function AppShell() {
           <ContextSwitcher />
           <Link to="/settings" aria-label={T.dashboard.settings} title={T.dashboard.settings} className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink">
             <Settings size={19} strokeWidth={1.7} aria-hidden="true" />
+            <span className="ms-2 hidden text-xs font-semibold lg:inline">{T.dashboard.settings}</span>
           </Link>
         </div>
       </header>

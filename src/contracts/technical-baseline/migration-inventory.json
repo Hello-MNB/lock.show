@@ -563,6 +563,24 @@
       "dependencyEvidence": "ROSTER_INVITATION_CONSENT",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260821123000",
+      "file": "supabase/migrations/20260821123000_person_identity_sync.down.sql",
+      "direction": "down",
+      "sha256": "6aa131c73d3b3f1f80b6476296d95e66caf555ccbd872d2ef0cadd28f356fe75",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "NOT_APPLICABLE",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260821123000",
+      "file": "supabase/migrations/20260821123000_person_identity_sync.sql",
+      "direction": "up",
+      "sha256": "90b3a58395aa80829bf1bed1fd5d6e239455692d5d528aca3f72345615bda7b9",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }
