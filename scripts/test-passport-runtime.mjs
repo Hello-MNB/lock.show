@@ -97,11 +97,18 @@ test('runtime wiring never publishes from the browser or serves live-table fallb
   assert.doesNotMatch(artistDashboard, /refreshPublic/)
   assert.doesNotMatch(claimReview, /republish|applyCta/)
 
-  assert.deepEqual(siteRouting.redirects, [{
-    source: '/app/:path*',
-    destination: 'https://app.lock.show/:path*',
-    permanent: false,
-  }])
+  assert.deepEqual(siteRouting.redirects, [
+    {
+      source: '/app',
+      destination: 'https://app.lock.show',
+      permanent: false,
+    },
+    {
+      source: '/app/:path*',
+      destination: 'https://app.lock.show/:path*',
+      permanent: false,
+    },
+  ])
   assert.equal(siteRouting.rewrites, undefined)
   assert.equal(rootPackage.scripts['build:embed'], undefined)
   assert.equal(sitePackage.scripts['build:with-embed'], 'next build')
