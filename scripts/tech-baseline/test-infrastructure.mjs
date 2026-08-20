@@ -58,6 +58,11 @@ check('RADAR Scanner is an authenticated persisted application flow', () => {
 
 check('application SPA fallback preserves Vercel API functions', () => {
   const config = JSON.parse(read('vercel.json'));
+  const apiRewrite = config.rewrites?.find((rule) => rule.source === '/api/:path*');
+  assert.deepEqual(apiRewrite, {
+    source: '/api/:path*',
+    destination: '/api',
+  }, 'nested /api routes must reach the Express Vercel Function');
   const fallback = config.rewrites?.find((rule) => rule.destination === '/index.html');
   assert.ok(fallback, 'missing SPA fallback');
   const matcher = new RegExp(`^${fallback.source}$`);
