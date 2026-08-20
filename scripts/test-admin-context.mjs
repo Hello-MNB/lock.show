@@ -4,7 +4,7 @@ import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
-import { resolveAdminCapability } from '../src/lib/adminAccess.js'
+import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -46,6 +46,13 @@ test('admin capability fails closed for missing, wrong-environment, revoked and 
   assert.equal(resolveAdminCapability({
     ...base, memberships: [{ environment_id: 'production', status: 'active', capabilities: ['admin.environment'], expires_at: '2026-08-20T11:59:59Z' }],
   }).reason, 'expired')
+})
+
+test('missing Supabase Admin authority store is recognized without weakening fail-closed access', () => {
+  assert.equal(isMissingAdminAuthorityStoreError({ code: '42P01' }), true)
+  assert.equal(isMissingAdminAuthorityStoreError({ code: 'PGRST205' }), true)
+  assert.equal(isMissingAdminAuthorityStoreError({ code: '42501' }), false)
+  assert.equal(isMissingAdminAuthorityStoreError(null), false)
 })
 
 test('legacy operator role is not silently treated as an environment capability', () => {

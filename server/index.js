@@ -13,7 +13,7 @@ import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
-import { resolveAdminCapability } from '../src/lib/adminAccess.js'
+import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -185,7 +185,9 @@ app.get('/api/admin/capability', requireAuth, async (req, res) => {
       .select('environment_id, status, capabilities, expires_at')
       .eq('person_id', req.userId)
     if (error) {
-      if (error.code === '42P01') return res.status(503).json({ allowed: false, reason: 'authority_store_unavailable' })
+      if (isMissingAdminAuthorityStoreError(error)) {
+        return res.status(503).json({ allowed: false, reason: 'authority_store_unavailable' })
+      }
       throw error
     }
     const result = resolveAdminCapability({
