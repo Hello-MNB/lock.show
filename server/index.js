@@ -448,15 +448,22 @@ app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
     const payload = await buildSafePayload(artistId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 
+    // Fail closed: a public flag never opens unless its immutable version exists.
+    const { data: version, error: snapErr } = await admin
+      .from('passport_versions')
+      .insert({ artist_id: artistId, snapshot: payload })
+      .select('id, created_at')
+      .single()
+    if (snapErr) throw snapErr
+
     const { error: upErr } = await admin.from('artists').update({ published: true }).eq('id', artistId)
     if (upErr) throw upErr
 
-    const { error: snapErr } = await admin
-      .from('passport_versions')
-      .insert({ artist_id: artistId, snapshot: payload })
-    if (snapErr) throw snapErr
-
-    res.json({ ok: true, published: true })
+    res.json({
+      ok: true,
+      published: true,
+      receipt: { id: randomUUID(), action: 'published', passportVersionId: version.id, at: version.created_at },
+    })
   } catch (e) {
     console.error('[publish]', e)
     res.status(500).json({ error: 'server_error' })
@@ -492,12 +499,33 @@ app.get('/api/passport/:artistId', async (req, res) => {
     if (sErr) throw sErr
     if (snap?.snapshot) return res.json(sanitizePassportPayload(snap.snapshot))
 
-    // Fallback: artist marked published but no snapshot yet (e.g. legacy) → build live.
-    const payload = await buildSafePayload(artistId)
-    if (!payload) return res.status(404).json({ error: 'Artist not published.' })
-    res.json(payload)
+    // A published flag without a version is an inconsistent legacy state. Never
+    // rebuild from live RADAR: that would bypass the owner's exact preview.
+    return res.status(409).json({ error: 'passport_snapshot_missing' })
   } catch (e) {
     console.error('[passport]', e)
+    res.status(500).json({ error: 'server_error' })
+  }
+})
+
+// POST /api/unpublish/:artistId
+// Owner-controlled revocation. The immutable history remains private/auditable,
+// while the live publish gate closes immediately for every new recipient read.
+app.post('/api/unpublish/:artistId', requireAuth, async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
+    const { artistId } = req.params
+    if (!(await requireArtistOwner(req, res, artistId))) return
+
+    const { error } = await admin.from('artists').update({ published: false }).eq('id', artistId)
+    if (error) throw error
+    res.json({
+      ok: true,
+      published: false,
+      receipt: { id: randomUUID(), action: 'unpublished', artistId, at: new Date().toISOString() },
+    })
+  } catch (e) {
+    console.error('[unpublish]', e)
     res.status(500).json({ error: 'server_error' })
   }
 })

@@ -175,8 +175,8 @@ findings.push(
   `artist_id-scoped paths (transition-safe ONLY for the default Act, where `
   + `act.id === artists.id per migration 020): ${artistScoped.join(', ') || '(none)'}`,
   'Evidence listing (listProfileItems, listEvidence), claim listing (listClaims), the public '
-  + 'Passport reads (getPublicPassport, buildPassportSnapshot client-side; buildSafePayload, '
-  + 'GET /api/passport server-side) and processing (POST /api/process-evidence) all still scope '
+  + 'Passport reads (getPublicPassport via GET /api/passport; buildSafePayload server-side) '
+  + 'and processing (POST /api/process-evidence) all still scope '
   + 'by artist_id. A non-default Act has no artists row, so these paths cannot ADDRESS it at '
   + 'all (they can neither leak its data nor serve it) — its data flows only through the '
   + 'act_id-scoped switchAct(). Architectural follow-up: move these readers to act_id '
