@@ -5,7 +5,7 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import { resolveAdminCapability } from '../src/lib/adminAccess.js'
-import { buildContextBeaconModel } from '../src/lib/contextBeacon.js'
+import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -75,6 +75,46 @@ test('context beacon keeps person, role, environment and workspace distinct', ()
     workspaceName: 'ARTIST',
     workspaceType: 'artist',
   })
+})
+
+test('context beacon maps technical role and workspace values to explicit localized labels', () => {
+  assert.equal(contextRoleKey('artist'), 'contextRoleArtist')
+  assert.equal(contextRoleKey('agency'), 'contextRoleRepresentation')
+  assert.equal(contextRoleKey('booker'), 'contextRoleBuyer')
+  assert.equal(contextRoleKey('producer'), 'contextRoleConfirmer')
+  assert.equal(contextRoleKey('admin'), 'contextRoleAdmin')
+  assert.equal(contextRoleKey('unknown'), 'contextRolePending')
+
+  assert.equal(contextWorkspaceTypeKey('artist'), 'contextWorkspaceArtist')
+  assert.equal(contextWorkspaceTypeKey('management'), 'contextWorkspaceRepresentation')
+  assert.equal(contextWorkspaceTypeKey('producer'), 'contextWorkspaceProduction')
+  assert.equal(contextWorkspaceTypeKey('admin'), 'contextWorkspaceAdmin')
+  assert.equal(contextWorkspaceTypeKey('unknown'), 'contextWorkspaceGeneric')
+})
+
+test('context beacon keeps all four orientation labels visible at every breakpoint', () => {
+  const beacon = read('src/components/layout/ContextBeacon.jsx')
+  for (const key of ['contextPersonLabel', 'contextWorkspaceLabel', 'contextRoleLabel', 'contextEnvironmentLabel']) {
+    assert.match(beacon, new RegExp(`T\\.org\\.${key}`))
+  }
+  assert.doesNotMatch(beacon, /hidden[^\n]*(?:contextRole|environmentId)|(?:contextRole|environmentId)[^\n]*hidden/)
+})
+
+test('new LOCK.SHOW sessions default to Hebrew while preserving an explicit English choice', () => {
+  const lang = read('src/context/LangContext.jsx')
+  assert.match(lang, /return saved === 'en' \? 'en' : 'he'/)
+})
+
+test('PASSPORT database firewall keeps private RADAR rationale and snapshot JSON away from anon', () => {
+  const migration = read('supabase/migrations/20260820091500_passport_public_payload_firewall.sql')
+  const rollback = read('supabase/rollback/20260820091500_passport_public_payload_firewall.sql')
+
+  assert.match(migration, /revoke select on public\.claims from anon/i)
+  assert.doesNotMatch(migration.match(/grant select \([^;]+\)\s+on public\.claims to anon/is)?.[0] ?? '', /reason_code/i)
+  assert.match(migration, /revoke select on public\.passport_versions from anon/i)
+  assert.match(migration, /grant select \(id, artist_id, created_at\)\s+on public\.passport_versions to anon/i)
+  assert.match(rollback, /reason_code/i)
+  assert.match(rollback, /grant select \(id, artist_id, snapshot, created_at\)/i)
 })
 
 test('admin migration is fail-closed, environment-bound and rollback-backed', () => {

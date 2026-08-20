@@ -26,9 +26,9 @@ const dicts = {
   en: { T: en, BANDS: BANDS_en, TYPES: TYPES_en },
 }
 
-// English is the PRIMARY/default locale (LTR). Hebrew is the secondary
-// localization (RTL). `dir` + `lang` on <html> flip automatically per locale.
-const LangCtx = createContext({ T: en, BANDS: BANDS_en, TYPES: TYPES_en, lang: 'en', setLang: () => {} })
+// Israel is the first launch market, so a new session defaults to Hebrew/RTL.
+// An explicit saved English choice remains durable across visits.
+const LangCtx = createContext({ T: withEnFallback(he, en), BANDS: BANDS_he, TYPES: TYPES_he, lang: 'he', setLang: () => {} })
 
 function applyDir(lang) {
   document.documentElement.lang = lang
@@ -38,7 +38,7 @@ function applyDir(lang) {
 export function LangProvider({ children }) {
   const [lang, setLangState] = useState(() => {
     const saved = localStorage.getItem('gigproof_lang')
-    return saved === 'he' ? 'he' : 'en' // default → English
+    return saved === 'en' ? 'en' : 'he' // first-launch default → Hebrew
   })
 
   useEffect(() => { applyDir(lang) }, [lang])

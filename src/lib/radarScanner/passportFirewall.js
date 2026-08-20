@@ -1,4 +1,5 @@
 import { createRadarError } from './contracts.js'
+export { sanitizePassportPayload } from '../passportPublicPayload.js'
 
 function requireGate(gate, code) {
   if (!gate || gate.passed !== true) throw createRadarError(code)

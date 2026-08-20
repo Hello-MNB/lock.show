@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import { randomUUID, createHash } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
+import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { resolveAdminCapability } from '../src/lib/adminAccess.js'
 
@@ -404,7 +405,7 @@ async function buildSafePayload(artistId) {
   // unreviewed claims leak into the public payload). No internal_confidence/model_version/extraction_method.
   const { data: claims, error: cErr } = await admin
     .from('claims')
-    .select('id, claim_type, value, source_type, verification_status, reason_code, method_label, expires_at')
+    .select('id, claim_type, value, source_type, verification_status, method_label, expires_at')
     .eq('artist_id', artistId)
     .eq('visibility', VISIBILITY.PASSPORT_OK)
     .in('verification_status', PUBLISHABLE_STATUSES)
@@ -422,7 +423,7 @@ async function buildSafePayload(artistId) {
   })
 
   // published:true so the public page renders; the GET re-checks live publish state.
-  return { artist: { ...artist, published: true }, items: items ?? [], claims: safeClaims }
+  return sanitizePassportPayload({ artist: { ...artist, published: true }, items: items ?? [], claims: safeClaims })
 }
 
 // ──────────────────────────────────────────────────────────
@@ -485,7 +486,7 @@ app.get('/api/passport/:artistId', async (req, res) => {
       .limit(1)
       .maybeSingle()
     if (sErr) throw sErr
-    if (snap?.snapshot) return res.json(snap.snapshot)
+    if (snap?.snapshot) return res.json(sanitizePassportPayload(snap.snapshot))
 
     // Fallback: artist marked published but no snapshot yet (e.g. legacy) → build live.
     const payload = await buildSafePayload(artistId)
