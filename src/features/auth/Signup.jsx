@@ -75,7 +75,7 @@ export default function Signup() {
       // + first-touch attribution (audit T-55): utm_*/referrer/landing captured
       // at first app open (main.jsx) — makes the signup traceable to the site
       // page / campaign / share link that produced it. First-party only.
-      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone', ...getFirstTouch() }); nav('/select') }
+      if (session) { logEvent(EVENTS.SIGNUP, { surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone', ...getFirstTouch() }); nav(pendingReturn || '/select') }
       else setConfirmPending(true)
     } catch (err) {
       setError(err?.message?.includes('registered') ? T.signup.error : (err.message || T.common.error))
@@ -91,7 +91,7 @@ export default function Signup() {
       surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone',
       ...getFirstTouch(),
     })
-    nav('/select')
+    nav(pendingReturn || '/select')
   }
 
   if (confirmPending) {

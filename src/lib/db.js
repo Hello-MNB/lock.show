@@ -38,6 +38,17 @@ export async function getMyArtist(userId) {
   return data
 }
 
+export async function listMyArtists(userId) {
+  if (DEMO) return [demoArtist]
+  const { data, error } = await supabase
+    .from('artists')
+    .select('id, stage_name, name, created_at')
+    .eq('created_by', userId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
 // Public/by-id read — BUYER-SAFE columns only (anon-facing: availability flow).
 // Never selects private fields (whatsapp/rider/created_by); the owner uses
 // getMyArtist for their full record. Matches the anon column grant (migration 016).

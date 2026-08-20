@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle2, ShieldCheck, UserPlus } from 'lucide-react'
 import AuthScene from '../auth/AuthScene.jsx'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { authHeaders, getMyArtist } from '../../lib/db.js'
+import { authHeaders, listMyArtists } from '../../lib/db.js'
 import { acceptRosterInvitation, declineRosterInvitation, getRosterInvitation } from '../../lib/rosterInvites.js'
 import { savePendingReturn } from '../../lib/pendingReturn.js'
+import { resolveRosterArtistSelection } from '../../lib/rosterArtistSelection.js'
 import { ErrorNote, Loading, Spinner } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -17,7 +18,8 @@ export default function RosterInvite() {
   const navigate = useNavigate()
   const returnPath = `${location.pathname}${location.search}`
   const [invitation, setInvitation] = useState(null)
-  const [artist, setArtist] = useState(null)
+  const [artists, setArtists] = useState([])
+  const [selectedArtistId, setSelectedArtistId] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -30,7 +32,12 @@ export default function RosterInvite() {
         const next = await getRosterInvitation(token)
         if (!current) return
         setInvitation(next)
-        if (user) setArtist(await getMyArtist(user.id))
+        if (user) {
+          const ownedArtists = await listMyArtists(user.id)
+          if (!current) return
+          setArtists(ownedArtists)
+          if (ownedArtists.length === 1) setSelectedArtistId(ownedArtists[0].id)
+        }
       } catch (nextError) {
         if (current) setError(nextError.status === 410 ? T.agency.rosterInviteUnavailable : T.agency.rosterInviteLoadError)
       } finally {
@@ -41,9 +48,14 @@ export default function RosterInvite() {
   }, [token, user, T.agency.rosterInviteLoadError, T.agency.rosterInviteUnavailable])
 
   async function accept() {
+    const selection = resolveRosterArtistSelection(artists, selectedArtistId)
+    if (selection.state !== 'ready') {
+      setError(T.agency.rosterInviteSelectRequired)
+      return
+    }
     setBusy(true); setError('')
     try {
-      const result = await acceptRosterInvitation(token, { artistId: artist?.id }, await authHeaders())
+      const result = await acceptRosterInvitation(token, { artistId: selection.artistId }, await authHeaders())
       setReceipt(result.receipt)
     } catch (nextError) {
       if (nextError.code === 'artist_profile_required') {
@@ -66,6 +78,8 @@ export default function RosterInvite() {
   }
 
   if (loading || authLoading) return <Loading />
+  const selection = resolveRosterArtistSelection(artists, selectedArtistId)
+  const selectedArtist = artists.find((item) => item.id === selection.artistId)
 
   return (
     <AuthScene tagline={T.agency.rosterInviteEyebrow}>
@@ -123,14 +137,35 @@ export default function RosterInvite() {
                 {T.agency.rosterInviteSignIn}
               </Link>
             </div>
-          ) : !artist ? (
+          ) : selection.state === 'missing' ? (
             <button className="btn-primary w-full" onClick={() => { savePendingReturn(returnPath); navigate('/onboarding') }}>
               {T.agency.rosterInviteCreateArtist}
             </button>
           ) : (
-            <div className="flex gap-2">
-              <button className="btn-primary flex-1" disabled={busy} onClick={accept}>{busy ? <Spinner /> : T.agency.rosterInviteAccept}</button>
-              <button className="btn-ghost" disabled={busy} onClick={decline}>{T.agency.rosterInviteDecline}</button>
+            <div className="space-y-4">
+              {artists.length > 1 ? (
+                <fieldset>
+                  <legend className="mb-2 text-sm font-bold text-ink">{T.agency.rosterInviteSelectArtist}</legend>
+                  <div className="space-y-2">
+                    {artists.map((item) => (
+                      <label key={item.id} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 ${selectedArtistId === item.id ? 'border-accent bg-accent/5' : 'border-line bg-bg'}`}>
+                        <input type="radio" name="roster-artist" value={item.id} checked={selectedArtistId === item.id}
+                          onChange={() => { setSelectedArtistId(item.id); setError('') }} />
+                        <span className="font-semibold text-ink">{item.stage_name || item.name || T.agency.rosterInviteUnnamedArtist}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
+              {selectedArtist ? (
+                <p className="rounded-xl bg-surface2 px-3 py-2 text-xs leading-relaxed text-muted">
+                  {T.agency.rosterInviteApprovalSummary(selectedArtist.stage_name || selectedArtist.name || T.agency.rosterInviteUnnamedArtist)}
+                </p>
+              ) : null}
+              <div className="flex gap-2">
+                <button className="btn-primary flex-1" disabled={busy || selection.state !== 'ready'} onClick={accept}>{busy ? <Spinner /> : T.agency.rosterInviteAccept}</button>
+                <button className="btn-ghost" disabled={busy} onClick={decline}>{T.agency.rosterInviteDecline}</button>
+              </div>
             </div>
           )}
         </div>
@@ -140,4 +175,3 @@ export default function RosterInvite() {
     </AuthScene>
   )
 }
-

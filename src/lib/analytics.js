@@ -15,6 +15,7 @@
 // scores about people are not.
 import { supabase } from './supabase.js'
 import { DEMO } from './demo.js'
+import { safeLandingLocation } from './attribution.js'
 
 const KEY = 'gigproof_events'
 const MAX_EVENTS = 100
@@ -81,12 +82,12 @@ export function captureFirstTouch() {
     if (typeof localStorage === 'undefined' || localStorage.getItem(ATTRIB_KEY)) return
     const p = new URLSearchParams(window.location.search)
     const attrib = {}
-    for (const k of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+    for (const k of ['src', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
       const v = p.get(k)
       if (v) attrib[k] = v.slice(0, 100)
     }
     if (document.referrer) attrib.referrer = document.referrer.slice(0, 200)
-    attrib.landing = window.location.pathname.slice(0, 200)
+    attrib.landing = safeLandingLocation(window.location.pathname, window.location.search)
     if (p.get('s') === '1') attrib.shared = true
     attrib.at = new Date().toISOString()
     localStorage.setItem(ATTRIB_KEY, JSON.stringify(attrib))
