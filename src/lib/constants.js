@@ -37,6 +37,14 @@ export const PAYMENTS_ENABLED = import.meta.env?.VITE_PAYMENTS_ENABLED === '1'
 // `?.` the API server crashes on startup and `concurrently -k` takes the web dev
 // server down with it → blank preview.
 export const OAUTH_ENABLED = import.meta.env?.VITE_OAUTH_ENABLED !== '0'
+// Google web client IDs are public identifiers, not secrets. Keeping the
+// production ID as the fail-safe default lets the official Google Identity
+// button work on app.lock.show without routing through Supabase's hosted OAuth
+// callback (whose provider secret may be rotated independently). Deployments
+// can override this with VITE_GOOGLE_CLIENT_ID without changing application
+// code.
+export const GOOGLE_WEB_CLIENT_ID = import.meta.env?.VITE_GOOGLE_CLIENT_ID
+  || '1064654798902-qbf88vpt8q5spgsba2nnvfptor863dq6.apps.googleusercontent.com'
 // Facebook is NOT enabled in Supabase (only Google is). Showing its button led
 // to a raw "provider is not enabled" error page (Maria, 9 Jul). Per-provider
 // flag, default OFF — flip to '1' only AFTER a Facebook app is created and the

@@ -10,7 +10,7 @@ import AuthScene from './AuthScene.jsx'
 
 export default function Signup() {
   const { T } = useLang()
-  const { signUp, signIn, signInWithOAuth, demo } = useAuth()
+  const { signUp, signIn, signInWithOAuth, signInWithGoogleIdToken, demo } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
   const [firstName, setFirstName] = useState('')
@@ -102,7 +102,12 @@ export default function Signup() {
       <p className="mb-6 text-sm text-muted">{T.signup.heroLine}</p>
       {(OAUTH_ENABLED || demo) && (
         <>
-          <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} demo={demo} />
+          <SocialAuthButtons
+            onOAuth={signInWithOAuth}
+            onGoogleCredential={signInWithGoogleIdToken}
+            disabled={!OAUTH_ENABLED}
+            demo={demo}
+          />
           <OrDivider />
         </>
       )}

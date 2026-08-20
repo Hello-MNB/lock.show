@@ -10,7 +10,7 @@ import { classifyAuthError, EMAIL_SHAPE } from './authError.js'
 
 export default function Login() {
   const { T } = useLang()
-  const { signIn, signInWithOAuth, demo, setDemoRole } = useAuth()
+  const { signIn, signInWithOAuth, signInWithGoogleIdToken, demo, setDemoRole } = useAuth()
   const nav = useNavigate()
   const loc = useLocation()
   // Prefill the email + show a friendly notice when Signup redirected here
@@ -134,7 +134,12 @@ export default function Login() {
       </form>
       {/* OAuth below the working form — disabled controls never lead the screen */}
       <div className="mt-6 border-t border-line pt-5">
-        <SocialAuthButtons onOAuth={signInWithOAuth} disabled={!OAUTH_ENABLED} demo={demo} />
+        <SocialAuthButtons
+          onOAuth={signInWithOAuth}
+          onGoogleCredential={signInWithGoogleIdToken}
+          disabled={!OAUTH_ENABLED}
+          demo={demo}
+        />
       </div>
     </AuthScene>
   )

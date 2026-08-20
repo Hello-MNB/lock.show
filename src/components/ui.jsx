@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, createContext, useContext } from 'react'
+import { useState, useRef, useEffect, useCallback, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
 import { useLang } from '../context/LangContext.jsx'
-import { STATUS, methodLabelFor, OAUTH_FACEBOOK_ENABLED } from '../lib/constants.js'
+import { STATUS, methodLabelFor, OAUTH_FACEBOOK_ENABLED, GOOGLE_WEB_CLIENT_ID } from '../lib/constants.js'
 
 // ── BottomSheet — mobile-first sheet (slides from the bottom in the thumb zone;
 // centered card on desktop). Controlled: <BottomSheet open onClose title>…</BottomSheet>.
@@ -107,7 +107,78 @@ function FacebookIcon() {
 // real OAuth call (there is no supabase client to call in DEMO). This wins over
 // `disabled` (the OAUTH_ENABLED-off "coming soon" state) so a demo build never
 // silently no-ops a tap.
-export function SocialAuthButtons({ onOAuth, disabled = false, demo = false }) {
+const GOOGLE_IDENTITY_SRC = 'https://accounts.google.com/gsi/client'
+let googleIdentityPromise
+
+function loadGoogleIdentity() {
+  if (window.google?.accounts?.id) return Promise.resolve(window.google)
+  if (googleIdentityPromise) return googleIdentityPromise
+
+  googleIdentityPromise = new Promise((resolve, reject) => {
+    const ready = () => window.google?.accounts?.id
+      ? resolve(window.google)
+      : reject(new Error('Google Identity Services did not initialize'))
+    const failed = () => reject(new Error('Google Identity Services could not be loaded'))
+    const existing = document.querySelector(`script[src="${GOOGLE_IDENTITY_SRC}"]`)
+    if (existing) {
+      existing.addEventListener('load', ready, { once: true })
+      existing.addEventListener('error', failed, { once: true })
+      return
+    }
+    const script = document.createElement('script')
+    script.src = GOOGLE_IDENTITY_SRC
+    script.async = true
+    script.defer = true
+    script.onload = ready
+    script.onerror = failed
+    document.head.appendChild(script)
+  })
+  return googleIdentityPromise
+}
+
+function GoogleIdentityButton({ onCredential, disabled, onError, busy }) {
+  const host = useRef(null)
+
+  useEffect(() => {
+    if (disabled || !host.current) return undefined
+    let active = true
+    loadGoogleIdentity()
+      .then((google) => {
+        if (!active || !host.current) return
+        google.accounts.id.initialize({
+          client_id: GOOGLE_WEB_CLIENT_ID,
+          callback: ({ credential }) => {
+            if (!credential) {
+              onError(new Error('Google did not return a signed credential'))
+              return
+            }
+            onCredential(credential)
+          },
+        })
+        host.current.replaceChildren()
+        google.accounts.id.renderButton(host.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          shape: 'rectangular',
+          text: 'continue_with',
+          logo_alignment: 'left',
+          width: Math.min(360, Math.max(240, host.current.clientWidth || 320)),
+        })
+      })
+      .catch(onError)
+    return () => { active = false }
+  }, [disabled, onCredential, onError])
+
+  return (
+    <div className={`flex min-h-[44px] w-full justify-center overflow-hidden ${busy ? 'pointer-events-none opacity-60' : ''}`}
+      aria-busy={busy || undefined}>
+      <div ref={host} className="min-h-[44px]" />
+    </div>
+  )
+}
+
+export function SocialAuthButtons({ onOAuth, onGoogleCredential, disabled = false, demo = false }) {
   const { T } = useLang()
   const { show } = useToast()
   const [busy, setBusy] = useState(false)
@@ -126,6 +197,21 @@ export function SocialAuthButtons({ onOAuth, disabled = false, demo = false }) {
     }
   }
 
+  const handleGoogleError = useCallback(() => {
+    setErr(T.login.socialError)
+    setBusy(false)
+  }, [T.login.socialError])
+
+  const handleGoogleCredential = useCallback(async (credential) => {
+    setErr('')
+    setBusy(true)
+    try {
+      await onGoogleCredential(credential)
+    } catch {
+      handleGoogleError()
+    }
+  }, [onGoogleCredential, handleGoogleError])
+
   const inert = disabled && !demo
   const btnClass = `w-full flex items-center justify-center gap-3 py-3 px-4 rounded-sm border border-line2 bg-surface2 text-sm font-medium transition-colors ${
     inert ? 'opacity-50 cursor-not-allowed text-muted' : 'hover:bg-raise text-ink'
@@ -134,13 +220,22 @@ export function SocialAuthButtons({ onOAuth, disabled = false, demo = false }) {
   return (
     <div className={`space-y-2 ${inert ? 'pointer-events-none' : ''}`}>
       {err && <ErrorNote>{err}</ErrorNote>}
-      <button type="button" disabled={busy || inert}
-        className={btnClass}
-        title={inert ? T.login.oauthComingSoon : undefined}
-        onClick={() => handle('google')}>
-        <GoogleIcon />
-        {T.login.googleCta}
-      </button>
+      {(demo || inert) ? (
+        <button type="button" disabled={busy || inert}
+          className={btnClass}
+          title={inert ? T.login.oauthComingSoon : undefined}
+          onClick={() => demo && handle('google')}>
+          <GoogleIcon />
+          {T.login.googleCta}
+        </button>
+      ) : (
+        <GoogleIdentityButton
+          onCredential={handleGoogleCredential}
+          onError={handleGoogleError}
+          disabled={inert}
+          busy={busy}
+        />
+      )}
       {OAUTH_FACEBOOK_ENABLED && (
         <button type="button" disabled={busy || inert}
           className={btnClass}
