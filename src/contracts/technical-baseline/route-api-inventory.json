@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "sourceHashes": {
     "src/App.jsx": "dcfee60f738f8222425ec9378b4897f9d2237c8daf575c3b6ae8b6282b0d17f4",
-    "server/index.js": "bcb5f3b7af338743e66bed58783e87f78050157efbefcce490db5fb5cc6ae128"
+    "server/index.js": "365a04079a7af2a0ff1c0968b637320537c05f1c891037fe3d7c059763e0ca51"
   },
   "routes": [
     {
@@ -477,7 +477,18 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 471
+        "line": 478
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/unpublish/:artistId",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 514
       }
     },
     {
@@ -488,7 +499,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 509
+        "line": 537
       }
     },
     {
@@ -499,7 +510,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 593
+        "line": 621
       }
     },
     {
@@ -510,7 +521,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 684
+        "line": 712
       }
     },
     {
@@ -521,7 +532,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 749
+        "line": 777
       }
     },
     {
@@ -532,7 +543,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 785
+        "line": 813
       }
     },
     {
@@ -543,7 +554,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 810
+        "line": 838
       }
     }
   ],

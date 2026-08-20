@@ -1,5 +1,5 @@
 import { supabase } from './supabase.js'
-import { sanitizePassportPayload } from './passportPublicPayload.js'
+import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot } from './passportApi.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
 import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct } from './demo.js'
@@ -505,90 +505,29 @@ export async function updateItemVisibility(id, visibility) {
   if (error) throw error
 }
 
-// ── Public Passport — buyer view, NO server (anon + RLS, firewall via 016) ──
-// The artist row is visible to anon only when published (artists_public_read);
-// items/claims are RLS-filtered to passport-ok (items/claims_public_read); the
-// 016 column grants block PII/score/raw-timestamp. So a direct anon read is
-// firewall-safe — no service-role, no /api/passport. getArtist() already selects
-// buyer-safe columns only.
+// ── Public Passport — immutable server snapshot ───────────
+// One version is identical for owner and recipient. The browser never rebuilds
+// a public Passport from live RADAR tables; edits require explicit re-publish.
 export async function getPublicPassport(id) {
   if (DEMO) return demoPassportPayload
   // Sample passport — the booker/login "see a sample" escape hatch. artists.id is
   // a uuid, so 'demo-artist' would throw 22P02 on live and dead-end the one
   // no-link-in-hand path (flow-gap B). Serve the canned demo payload instead.
   if (id === 'demo-artist') return demoPassportPayload
-  const artist = await getArtist(id) // null if not published (RLS hides it from anon)
-  if (!artist || !artist.published) return { artist: null, items: [], claims: [] }
-  // Two viewer classes, two firewalls (verified live 8 Jul):
-  // · ANON — the RLS row gate already restricts to published+passport-ok, and the
-  //   016 column grants do NOT include `visibility`, so referencing it in WHERE
-  //   throws 42501. No client filter — the DB is the firewall.
-  // · AUTHENTICATED (owner / agency member) — their RLS shows ALL their rows, so
-  //   the buyer view MUST filter explicitly or private/mirror-only claims leak
-  //   into the "public" view. One Passport = identical for every viewer.
-  const { data: { session } } = await supabase.auth.getSession()
-  let itemsQ = supabase.from('profile_items')
-    .select('id, item_type, title, detail, item_date, public_url, source_status')
-    .eq('artist_id', id)
-  let claimsQ = supabase.from('claims')
-    .select('id, claim_type, value, public_band, public_wording, source_type, verification_status, method_label, verified_at, expires_at')
-    .eq('artist_id', id)
-  if (session) {
-    itemsQ = itemsQ.eq('visibility', VISIBILITY.PASSPORT_OK)
-    // artist_approved: the publish gate (031). An authenticated viewer's RLS shows
-    // ALL their claims, so we must exclude unreviewed ones explicitly — same rule
-    // the anon path gets from claims_public_read.
-    claimsQ = claimsQ.eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true)
-  }
-  const [itemsRes, claimsRes] = await Promise.all([
-    itemsQ.order('item_date', { ascending: false, nullsFirst: false }),
-    claimsQ,
-  ])
-  if (itemsRes.error) throw itemsRes.error
-  if (claimsRes.error) throw claimsRes.error
-  return sanitizePassportPayload({ artist, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] })
+  return readPassportSnapshot(id)
 }
 
-// Owner-side immutable snapshot. The owner's RLS sees ALL visibilities, so unlike
-// the anon read we MUST filter to passport-ok explicitly here (mirrors the server's
-// buildSafePayload). Buyer-safe columns only — never private/score columns.
-async function buildPassportSnapshot(artistId) {
-  const artist = await getArtist(artistId)
-  const [itemsRes, claimsRes] = await Promise.all([
-    supabase.from('profile_items')
-      .select('id, item_type, title, detail, item_date, public_url, source_status')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK),
-    supabase.from('claims')
-      .select('id, claim_type, value, source_type, verification_status, method_label')
-      .eq('artist_id', artistId).eq('visibility', VISIBILITY.PASSPORT_OK).in('verification_status', PUBLISHABLE_STATUSES).eq('artist_approved', true),
-  ])
-  return sanitizePassportPayload({ artist: { ...artist, published: true }, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] })
-}
-
-// ── Passport publish — NO server. The connected owner flips published + writes a
-// buyer-safe immutable snapshot, both under RLS on their own artist. published=true
-// is the firewall gate (anon then reads live via getPublicPassport). The snapshot
-// (pv_owner_insert / migration 017) is the immutable record; it's best-effort so a
-// missing 017 never blocks publishing — the live-read view works regardless.
+// ── Passport publish/revoke — authenticated server actions ─
+// The server writes the immutable snapshot before opening the public flag.
 export async function publishPassport(artistId) {
   if (DEMO) return { ok: true, published: true, snapshotWritten: true }
-  const { error: upErr } = await supabase.from('artists').update({ published: true }).eq('id', artistId)
-  if (upErr) throw upErr
-  let snapshotWritten = false
-  try {
-    const snapshot = await buildPassportSnapshot(artistId)
-    const { error: snapErr } = await supabase.from('passport_versions').insert({ artist_id: artistId, snapshot })
-    if (snapErr) throw snapErr
-    snapshotWritten = true
-  } catch (e) {
-    console.warn('[publish] immutable snapshot deferred (apply migration 017 pv_owner_insert):', e?.message || e)
-  }
-  return { ok: true, published: true, snapshotWritten }
+  return publishPassportSnapshot(artistId, await authHeaders())
 }
 
 export async function unpublishArtist(artist) {
   if (DEMO) return { ...artist, published: false }
-  return upsertArtist({ ...artist, published: false })
+  const result = await unpublishPassportSnapshot(artist.id, await authHeaders())
+  return { ...artist, published: false, receipt: result.receipt }
 }
 
 // ── Operator / Admin ─────────────────────────────────────

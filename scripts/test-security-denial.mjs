@@ -146,13 +146,14 @@ try {
   for (const [method, path] of [
     ['POST', '/api/process-evidence'],
     ['POST', `/api/publish/${ARTIST_A}`],
+    ['POST', `/api/unpublish/${ARTIST_A}`],
     ['POST', '/api/notify'],
     ['POST', '/api/request-confirmation'],
   ]) {
     const r = await call(path, { method, body: {}, ip: '198.51.100.11' })
     check(`${method} ${path} → 401`, r.status === 401 && r.json?.error === 'auth_required', `got ${r.status} ${r.text}`)
   }
-  covered.push('1: no-auth → 401 (4 protected routes)')
+  covered.push('1: no-auth → 401 (5 protected routes)')
 
   // ── 2. Garbage JWT → 401 ───────────────────────────────────────────────────
   console.log('[2] invalid/garbage JWT → 401')
@@ -168,9 +169,11 @@ try {
   check("A mints confirm token for B's claim → 403", o2.status === 403 && o2.json?.error === 'forbidden', `got ${o2.status} ${o2.text}`)
   const o3 = await call(`/api/publish/${ARTIST_B}`, { method: 'POST', token: JWT_A, ip: '198.51.100.13' })
   check("A publishes B's passport → 403", o3.status === 403 && o3.json?.error === 'forbidden', `got ${o3.status} ${o3.text}`)
+  const o3b = await call(`/api/unpublish/${ARTIST_B}`, { method: 'POST', token: JWT_A, ip: '198.51.100.13' })
+  check("A unpublishes B's passport → 403", o3b.status === 403 && o3b.json?.error === 'forbidden', `got ${o3b.status} ${o3b.text}`)
   const o4 = await call('/api/process-evidence', { method: 'POST', token: JWT_A, body: { artistId: ARTIST_GONE }, ip: '198.51.100.13' })
   check('unknown artist → 404', o4.status === 404, `got ${o4.status} ${o4.text}`)
-  covered.push('3: per-object ownership → 403 (process-evidence, request-confirmation, publish) + 404 unknown')
+  covered.push('3: per-object ownership → 403 (process-evidence, request-confirmation, publish, unpublish) + 404 unknown')
 
   // ── 4. /api/notify closed enum + cross-user notify ─────────────────────────
   console.log('[4] notify enum + authorization → 403')
