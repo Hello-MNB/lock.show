@@ -23,7 +23,7 @@ for (const [name, source] of [['Login', login], ['Signup', signup]]) {
     `${name} must pass its post-exchange navigation handler to the social-auth surface`)
 }
 
-assert.match(login, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,300}nav\(loc\.state\?\.from \|\| ['"]\/['"]\)/,
+assert.match(login, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,300}readPendingReturn\(\{ consume: true \}\)[\s\S]{0,100}nav\(loc\.state\?\.from \|\| pendingReturn \|\| ['"]\/['"]\)/,
   'Google login must honor the preserved return route after exchange')
 assert.match(signup, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,400}nav\(['"]\/select['"]\)/,
   'Google signup must continue to role and workspace selection after exchange')

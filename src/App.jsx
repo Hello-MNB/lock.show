@@ -48,6 +48,7 @@ import Members from './features/org/Members.jsx'
 import UpgradePlan from './features/org/UpgradePlan.jsx'
 import Billing from './features/org/Billing.jsx'
 import AcceptInvite from './features/org/AcceptInvite.jsx'
+import RosterInvite from './features/agency/RosterInvite.jsx'
 import ConsentBanner from './components/ConsentBanner.jsx'
 
 function RequireAuth({ children }) {
@@ -171,6 +172,7 @@ export default function App() {
       <Route path="/confirm/:token" element={<ProducerConfirm />} />
       {/* Org invite — standalone landing, may be unauthenticated */}
       <Route path="/invite/:token" element={<AcceptInvite />} />
+      <Route path="/roster-invite/:token" element={<RosterInvite />} />
 
       {/* ── Authenticated — wrapped in AppShell (persistent nav) ──────── */}
       <Route element={<AppShell />}>

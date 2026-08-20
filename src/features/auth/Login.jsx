@@ -7,6 +7,7 @@ import { ROLES, OAUTH_ENABLED } from '../../lib/constants.js'
 import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 import AuthScene from './AuthScene.jsx'
 import { classifyAuthError, EMAIL_SHAPE } from './authError.js'
+import { readPendingReturn } from '../../lib/pendingReturn.js'
 
 export default function Login() {
   const { T } = useLang()
@@ -49,7 +50,8 @@ export default function Login() {
       // (deep link or /invite/:token) — otherwise every login dead-drops on "/"
       // and invited teammates / bounced deep-links never reach where they meant
       // to go. Falls back to RoleHome for a plain login.
-      nav(loc.state?.from || '/')
+      const pendingReturn = readPendingReturn({ consume: true })
+      nav(loc.state?.from || pendingReturn || '/')
     } catch (err) {
       // B1 finding 1: never tell the user their credentials are wrong when the
       // request never reached the server — classify, then show i18n text only.
@@ -62,7 +64,8 @@ export default function Login() {
   async function onGoogleCredential(credential) {
     await signInWithGoogleIdToken(credential)
     logEvent(EVENTS.LOGIN, { via: 'google', returning: isReturnVisit('app') || undefined })
-    nav(loc.state?.from || '/')
+    const pendingReturn = readPendingReturn({ consume: true })
+    nav(loc.state?.from || pendingReturn || '/')
   }
 
   // DEMO: persona switcher instead of a real login — subtle chips, same scene.

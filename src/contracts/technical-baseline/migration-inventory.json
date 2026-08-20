@@ -536,6 +536,33 @@
       "dependencyEvidence": "PD-005_ENVIRONMENT_ADMIN_AUTHORITY",
       "rollback": "PRESENT",
       "selectedForFirstSlice": true
+    },
+    {
+      "id": "20260820091500",
+      "file": "supabase/migrations/20260820091500_passport_public_payload_firewall.sql",
+      "direction": "up",
+      "sha256": "6b854deba7ec88d63be10d353acfaf4f02f7a89cd895814f1cf4be55ab5e2454",
+      "dependencyEvidence": "PASSPORT_PUBLIC_PAYLOAD_FIREWALL",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260820210117",
+      "file": "supabase/migrations/20260820210117_roster_invitations.down.sql",
+      "direction": "down",
+      "sha256": "70931f469b980670340ec924bcd6fee736e669007915c00dd2d4ac9243453488",
+      "dependencyEvidence": "ROSTER_INVITATION_CONSENT",
+      "rollback": "NOT_APPLICABLE",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260820210117",
+      "file": "supabase/migrations/20260820210117_roster_invitations.sql",
+      "direction": "up",
+      "sha256": "8fd60ba315edf2b6e8f1fa8c23eb72fbbe5e39f483cea6ab23c7566bf64b49eb",
+      "dependencyEvidence": "ROSTER_INVITATION_CONSENT",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

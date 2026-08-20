@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { listAgencyArtists, listClaimsByArtists, listRequestsForAgency, upsertArtist } from '../../lib/db.js'
+import { authHeaders, listAgencyArtists, listClaimsByArtists, listRequestsForAgency } from '../../lib/db.js'
 import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess, listRosterGrants } from '../../lib/orgs.js'
+import { createRosterInvitation } from '../../lib/rosterInvites.js'
 import { pickRosterAction, fetchGrantArtistState } from './rosterNextAction.js'
 import AgencyRadarUniverse from './AgencyRadarUniverse.jsx'
 import { PageShell, Loading, ErrorState, StatusChip, Field, Spinner, useToast } from '../../components/ui.jsx'
@@ -194,15 +195,14 @@ export default function AgencyDashboard() {
   const [grants, setGrants] = useState(null) // A6 (032): ACTIVE consented grants — null until 032 applied
   const [grantState, setGrantState] = useState({}) // G4: per-granted-artist bounded state (publish/evidence/requests)
   const [adding, setAdding] = useState(false)
-  const [addMode, setAddMode] = useState('invite') // 'invite' (canon-correct, default) | 'own' (legacy placeholder)
-  const [f, setF] = useState({ stage_name: '', genre: '' })
+  const [addMode, setAddMode] = useState('invite') // existing LOCK artist | not-yet-registered artist
   const [inviteInput, setInviteInput] = useState('')
+  const [newInvite, setNewInvite] = useState({ artistName: '', email: '' })
+  const [inviteReceipt, setInviteReceipt] = useState(null)
   const [inviteTerritory, setInviteTerritory] = useState('')
   const [inviteScope, setInviteScope] = useState(() => Object.fromEntries(OPTIONAL_SCOPES.map((s) => [s, false])))
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [justAddedId, setJustAddedId] = useState(null)
-  const highlightTimer = useRef(null)
 
   async function load() {
     setError(false)
@@ -230,30 +230,6 @@ export default function AgencyDashboard() {
     }
   }
   useEffect(() => { load() }, [user.id, orgIdForThisScreen])
-  useEffect(() => () => clearTimeout(highlightTimer.current), [])
-
-  async function addArtist(e) {
-    e.preventDefault()
-    if (!f.stage_name.trim()) return
-    setSaveError(''); setBusy(true)
-    try {
-      const created = await upsertArtist({ created_by: user.id, name: f.stage_name, stage_name: f.stage_name, genre: f.genre })
-      const addedName = f.stage_name
-      setF({ stage_name: '', genre: '' }); setAdding(false)
-      await load()
-      // SUCCESS is visible: toast + the new row glows for a moment (no silent reload)
-      toast.show(T.agency.addedToRoster(addedName))
-      if (created?.id) {
-        setJustAddedId(created.id)
-        clearTimeout(highlightTimer.current)
-        highlightTimer.current = setTimeout(() => setJustAddedId(null), 4000)
-      }
-    } catch {
-      setSaveError(T.agency.saveError)
-    } finally {
-      setBusy(false)
-    }
-  }
 
   // Invite an EXISTING artist by Passport link/id — creates a status='pending'
   // artist_access row. Nothing about the artist is visible to this org until
@@ -280,6 +256,37 @@ export default function AgencyDashboard() {
     } finally {
       setBusy(false)
     }
+  }
+
+  async function sendNewArtistInvite(e) {
+    e.preventDefault()
+    if (!newInvite.artistName.trim() || !newInvite.email.trim() || !orgIdForThisScreen) return
+    setSaveError(''); setBusy(true); setInviteReceipt(null)
+    try {
+      const scope = ['view', ...OPTIONAL_SCOPES.filter((s) => inviteScope[s])]
+      const result = await createRosterInvitation({
+        organizationId: orgIdForThisScreen,
+        artistName: newInvite.artistName.trim(),
+        email: newInvite.email.trim(),
+        scope,
+        territory: inviteTerritory.trim() || null,
+      }, await authHeaders())
+      setInviteReceipt(result)
+      setNewInvite({ artistName: '', email: '' })
+      toast.show(result.delivery === 'sent' ? T.agency.inviteDelivered : T.agency.inviteLinkReady)
+    } catch (error) {
+      setSaveError(error.code === 'forbidden' ? T.agency.inviteForbidden : T.agency.saveError)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function copyInviteLink() {
+    if (!inviteReceipt?.inviteUrl) return
+    try {
+      await navigator.clipboard.writeText(inviteReceipt.inviteUrl)
+      toast.show(T.agency.inviteCopied)
+    } catch { setSaveError(T.agency.inviteCopyFailed) }
   }
 
   if (loading) return <Loading />
@@ -394,7 +401,7 @@ export default function AgencyDashboard() {
                   })
                   return (
                     <div key={a.id}
-                      className={`card flex items-center justify-between gap-3 transition hover:border-accent ${a.id === justAddedId ? 'border-accent ring-1 ring-accent animate-fade-in' : ''}`}>
+                      className="card flex items-center justify-between gap-3 transition hover:border-accent">
                       <Link to={`/passport/${a.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                         {a.photo_url ? <img src={a.photo_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
                           : <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-surface2 font-display text-lg text-ink">{(a.stage_name || '?').slice(0, 1)}</div>}
@@ -414,15 +421,15 @@ export default function AgencyDashboard() {
               </div>
               {adding ? (
                 <div className="card">
-                  {/* mode toggle — invite (canon-correct, artist keeps their own
-                      account + approval control) vs. legacy owned placeholder */}
+                  {/* Existing Artist by private Passport link, or a new Artist by
+                      single-use invitation. Both require Artist consent. */}
                   <div className="mb-3 flex gap-1 rounded-full border border-line bg-surface2 p-1">
                     <button type="button"
                       className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'invite' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
-                      onClick={() => setAddMode('invite')}>{T.agency.inviteTabInvite}</button>
+                      onClick={() => { setAddMode('invite'); setInviteReceipt(null); setSaveError('') }}>{T.agency.inviteTabInvite}</button>
                     <button type="button"
-                      className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'own' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
-                      onClick={() => setAddMode('own')}>{T.agency.inviteTabOwn}</button>
+                      className={`flex min-h-[44px] flex-1 items-center justify-center rounded-full py-1.5 text-xs font-semibold transition ${addMode === 'new' ? 'bg-accent text-[#12160A]' : 'text-muted'}`}
+                      onClick={() => { setAddMode('new'); setInviteReceipt(null); setSaveError('') }}>{T.agency.inviteTabNew}</button>
                   </div>
 
                   {addMode === 'invite' ? (
@@ -450,14 +457,40 @@ export default function AgencyDashboard() {
                         <button type="button" className="btn-ghost" onClick={() => setAdding(false)}>{T.common.cancel}</button>
                       </div>
                     </form>
+                  ) : inviteReceipt ? (
+                    <div className="rounded-2xl bg-surface2 p-4">
+                      <p className="font-bold text-ink">{T.agency.inviteReadyTitle}</p>
+                      <p className="mt-1 text-sm text-muted">{T.agency.inviteReadyBody}</p>
+                      <div className="mt-3 flex gap-2">
+                        <input className="field min-w-0 flex-1" dir="ltr" readOnly value={inviteReceipt.inviteUrl} aria-label={T.agency.inviteLinkLabel} />
+                        <button type="button" className="btn-primary shrink-0" onClick={copyInviteLink}>{T.agency.inviteCopy}</button>
+                      </div>
+                      <button type="button" className="btn-ghost mt-3 w-full" onClick={() => setAdding(false)}>{T.common.back}</button>
+                    </div>
                   ) : (
-                    <form onSubmit={addArtist}>
-                      <p className="mb-3 text-xs text-muted">{T.agency.quickAddHint}</p>
-                      <Field label={T.onboarding.stageName}><input className="field" value={f.stage_name} onChange={(e) => setF({ ...f, stage_name: e.target.value })} /></Field>
-                      <Field label={T.onboarding.genre}><input className="field" value={f.genre} onChange={(e) => setF({ ...f, genre: e.target.value })} /></Field>
+                    <form onSubmit={sendNewArtistInvite}>
+                      <Field label={T.onboarding.stageName}>
+                        <input className="field" value={newInvite.artistName} onChange={(e) => setNewInvite({ ...newInvite, artistName: e.target.value })} required />
+                      </Field>
+                      <Field label={T.agency.inviteEmailLabel}>
+                        <input className="field" type="email" dir="ltr" autoComplete="email" value={newInvite.email} onChange={(e) => setNewInvite({ ...newInvite, email: e.target.value })} required />
+                      </Field>
+                      <Field label={T.agency.inviteTerritoryLabel}>
+                        <input className="field" value={inviteTerritory} onChange={(e) => setInviteTerritory(e.target.value)} />
+                      </Field>
+                      <Field label={T.agency.inviteScopeLabel}>
+                        <div className="flex flex-wrap gap-2">
+                          {OPTIONAL_SCOPES.map((s) => (
+                            <label key={s} className="tap-target flex items-center gap-1.5 rounded-full border border-line bg-surface2 px-2.5 py-1 text-xs text-ink">
+                              <input type="checkbox" checked={inviteScope[s]} onChange={(e) => setInviteScope({ ...inviteScope, [s]: e.target.checked })} />
+                              {T.access[`scope${s.charAt(0).toUpperCase()}${s.slice(1)}`]}
+                            </label>
+                          ))}
+                        </div>
+                      </Field>
                       {saveError && <p className="text-xs text-amber mb-2">{saveError}</p>}
                       <div className="flex gap-2">
-                        <button className="btn-primary flex-1" disabled={busy}>{busy ? <Spinner /> : T.common.save}</button>
+                        <button className="btn-primary flex-1" disabled={busy || !newInvite.artistName.trim() || !newInvite.email.trim()}>{busy ? <Spinner /> : T.agency.inviteCreateLink}</button>
                         <button type="button" className="btn-ghost" onClick={() => setAdding(false)}>{T.common.cancel}</button>
                       </div>
                     </form>

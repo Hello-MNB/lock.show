@@ -15,6 +15,7 @@ import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { assertInitialPassportPublish } from './passportPublishPolicy.js'
+import { normalizeRosterInvitation, rosterInvitationHash } from './rosterInvitePolicy.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -189,6 +190,186 @@ app.get('/api/health', (req, res) => {
     provider: requestAiConfig.provider,
     model: requestAiConfig.model,
   })
+})
+
+// ROSTER INVITATIONS — for an Artist who does not yet have a LOCK account.
+// A representation workspace receives a single-use link; no Artist data or
+// artist_access grant exists until the invited email signs in, owns an Artist,
+// and explicitly accepts. The raw token is returned/sent once and only its
+// SHA-256 hash is stored.
+async function requireOrgAdmin(req, res, organizationId) {
+  const { data, error } = await admin
+    .from('organization_membership')
+    .select('org_role, status')
+    .eq('organization_id', organizationId)
+    .eq('person_id', req.userId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (error) throw error
+  if (!data || !['owner', 'admin'].includes(data.org_role)) {
+    res.status(403).json({ error: 'forbidden' })
+    return false
+  }
+  return true
+}
+
+app.post('/api/roster-invitations', requireAuth, async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
+    let input
+    try { input = normalizeRosterInvitation(req.body) } catch (error) {
+      return res.status(400).json({ error: error.code || 'invalid_roster_invitation' })
+    }
+    if (!(await requireOrgAdmin(req, res, input.organizationId))) return
+
+    const { data: organization, error: orgError } = await admin
+      .from('organization').select('id, name').eq('id', input.organizationId).maybeSingle()
+    if (orgError) throw orgError
+    if (!organization) return res.status(404).json({ error: 'organization_not_found' })
+
+    const { error: cancelError } = await admin.from('roster_invitation')
+      .update({ status: 'cancelled' })
+      .eq('organization_id', input.organizationId)
+      .eq('invited_email', input.email)
+      .eq('status', 'pending')
+    if (cancelError) throw cancelError
+
+    const token = `${randomUUID()}${randomUUID()}`.replaceAll('-', '')
+    const { data: invitation, error } = await admin.from('roster_invitation').insert({
+      organization_id: input.organizationId,
+      invited_by: req.userId,
+      invited_email: input.email,
+      artist_name: input.artistName,
+      scope: input.scope,
+      territory: input.territory,
+      token_hash: rosterInvitationHash(token),
+      status: 'pending',
+    }).select('id, status, expires_at').single()
+    if (error) throw error
+
+    const appOrigin = (realValue(process.env.APP_ORIGIN) || 'https://app.lock.show').replace(/\/$/, '')
+    const inviteUrl = `${appOrigin}/roster-invite/${encodeURIComponent(token)}`
+    const delivery = await sendRosterInviteEmail({
+      to: input.email,
+      artistName: input.artistName,
+      organizationName: organization.name,
+      inviteUrl,
+    })
+    return res.status(201).json({
+      invitation: { id: invitation.id, status: invitation.status, expiresAt: invitation.expires_at },
+      inviteUrl,
+      delivery: delivery.sent ? 'sent' : 'link_only',
+    })
+  } catch (error) {
+    console.error('[roster-invitation:create]', error)
+    return res.status(500).json({ error: 'server_error' })
+  }
+})
+
+app.get('/api/roster-invitations/:token', async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
+    const token = String(req.params.token || '')
+    if (!token || token.length > 256) return res.status(404).json({ error: 'roster_invitation_not_found' })
+    const { data: invitation, error } = await admin.from('roster_invitation')
+      .select('id, invited_email, artist_name, scope, territory, status, expires_at, organization:organization_id(name)')
+      .eq('token_hash', rosterInvitationHash(token)).maybeSingle()
+    if (error) throw error
+    if (!invitation) return res.status(404).json({ error: 'roster_invitation_not_found' })
+    if (invitation.status !== 'pending') return res.status(410).json({ error: 'roster_invitation_unavailable' })
+    if (new Date(invitation.expires_at).getTime() <= Date.now()) {
+      await admin.from('roster_invitation').update({ status: 'expired' }).eq('id', invitation.id)
+      return res.status(410).json({ error: 'roster_invitation_expired' })
+    }
+    return res.json({
+      organizationName: invitation.organization?.name || 'LOCK SHOW',
+      artistName: invitation.artist_name,
+      invitedEmail: invitation.invited_email,
+      scope: invitation.scope,
+      territory: invitation.territory,
+      status: invitation.status,
+      expiresAt: invitation.expires_at,
+    })
+  } catch (error) {
+    console.error('[roster-invitation:read]', error)
+    return res.status(500).json({ error: 'server_error' })
+  }
+})
+
+app.post('/api/roster-invitations/:token/accept', requireAuth, async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
+    const token = String(req.params.token || '')
+    const { data: invitation, error: inviteError } = await admin.from('roster_invitation')
+      .select('id, invited_email, status, expires_at')
+      .eq('token_hash', rosterInvitationHash(token)).maybeSingle()
+    if (inviteError) throw inviteError
+    if (!invitation) return res.status(404).json({ error: 'roster_invitation_not_found' })
+    if (invitation.status !== 'pending') return res.status(409).json({ error: 'roster_invitation_not_pending' })
+    if (new Date(invitation.expires_at).getTime() <= Date.now()) return res.status(410).json({ error: 'roster_invitation_expired' })
+    if (String(req.authUser?.email || '').toLowerCase() !== invitation.invited_email) {
+      return res.status(403).json({ error: 'roster_invitation_email_mismatch' })
+    }
+
+    const requestedArtistId = String(req.body?.artistId || '').trim()
+    let artist
+    if (requestedArtistId) {
+      const result = await admin.from('artists').select('id, stage_name').eq('id', requestedArtistId).eq('created_by', req.userId).maybeSingle()
+      if (result.error) throw result.error
+      artist = result.data
+      if (!artist) return res.status(403).json({ error: 'roster_invitation_artist_forbidden' })
+    } else {
+      const result = await admin.from('artists').select('id, stage_name').eq('created_by', req.userId).order('created_at')
+      if (result.error) throw result.error
+      if (!result.data?.length) return res.status(409).json({ error: 'artist_profile_required' })
+      if (result.data.length > 1) return res.status(409).json({ error: 'artist_selection_required', artists: result.data })
+      artist = result.data[0]
+    }
+
+    const { data: accessId, error } = await admin.rpc('accept_roster_invitation', {
+      p_invitation: invitation.id,
+      p_user: req.userId,
+      p_artist: artist.id,
+    })
+    if (error) throw error
+    return res.json({
+      ok: true,
+      receipt: {
+        id: randomUUID(), action: 'roster_invitation_accepted', status: 'active',
+        artistId: artist.id, accessId, at: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error('[roster-invitation:accept]', error)
+    return res.status(500).json({ error: 'server_error' })
+  }
+})
+
+app.post('/api/roster-invitations/:token/decline', requireAuth, async (req, res) => {
+  try {
+    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
+    const token = String(req.params.token || '')
+    const { data: invitation, error } = await admin.from('roster_invitation')
+      .select('id, invited_email, status, expires_at')
+      .eq('token_hash', rosterInvitationHash(token)).maybeSingle()
+    if (error) throw error
+    if (!invitation) return res.status(404).json({ error: 'roster_invitation_not_found' })
+    if (invitation.status !== 'pending') return res.status(409).json({ error: 'roster_invitation_not_pending' })
+    if (new Date(invitation.expires_at).getTime() <= Date.now()) return res.status(410).json({ error: 'roster_invitation_expired' })
+    if (String(req.authUser?.email || '').toLowerCase() !== invitation.invited_email) {
+      return res.status(403).json({ error: 'roster_invitation_email_mismatch' })
+    }
+    const { error: updateError } = await admin.from('roster_invitation')
+      .update({ status: 'declined' }).eq('id', invitation.id).eq('status', 'pending')
+    if (updateError) throw updateError
+    return res.json({
+      ok: true,
+      receipt: { id: randomUUID(), action: 'roster_invitation_declined', status: 'declined', at: new Date().toISOString() },
+    })
+  } catch (error) {
+    console.error('[roster-invitation:decline]', error)
+    return res.status(500).json({ error: 'server_error' })
+  }
 })
 
 // GET /api/admin/capability?environment=production
@@ -696,6 +877,33 @@ app.post('/api/notify', requireAuth, async (req, res) => {
 // ──────────────────────────────────────────────────────────
 function gateEmailEnabled() {
   return process.env.EMAIL_ENABLED === '1' && !!realValue(process.env.RESEND_API_KEY)
+}
+async function sendRosterInviteEmail({ to, artistName, organizationName, inviteUrl } = {}) {
+  if (!gateEmailEnabled() || !to || !inviteUrl) return { sent: false }
+  const payload = {
+    from: realValue(process.env.EMAIL_FROM) || 'LOCK SHOW <hello@lock.show>',
+    to: [to],
+    subject: `${organizationName || 'A representation team'} invited you to LOCK SHOW`,
+    text:
+      `Hi ${artistName || 'there'},\n\n` +
+      `${organizationName || 'A representation team'} invited you to connect your Artist workspace to their roster. ` +
+      `Nothing is shared until you sign in and approve the requested access.\n\n` +
+      `Review invitation: ${inviteUrl}\n\n` +
+      `You can accept or leave without sharing data. This is not a booking or a commitment.`,
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${realValue(process.env.RESEND_API_KEY)}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    console.warn('[email] roster invite rejected:', response.status)
+    return { sent: false, status: response.status }
+  }
+  return { sent: true }
 }
 export async function sendGateEmail({ to, artistName, requesterOrg } = {}) {
   void requesterOrg // accepted, deliberately unused — see template law above
