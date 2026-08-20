@@ -9,6 +9,7 @@ import {
   readPassportSnapshot,
   unpublishPassportSnapshot,
 } from '../src/lib/passportApi.js'
+import { assertInitialPassportPublish } from '../server/passportPublishPolicy.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -72,6 +73,12 @@ test('an unpublished PASSPORT is a safe empty result while action failures stay 
 test('runtime wiring never publishes from the browser or serves live-table fallback', () => {
   const db = read('src/lib/db.js')
   const server = read('server/index.js')
+  const admin = read('src/features/admin/AdminDashboard.jsx')
+  const artistDashboard = read('src/features/artist/ArtistDashboard.jsx')
+  const claimReview = read('src/features/artist/ClaimReview.jsx')
+  const siteRouting = JSON.parse(read('website-next/vercel.json'))
+  const rootPackage = JSON.parse(read('package.json'))
+  const sitePackage = JSON.parse(read('website-next/package.json'))
   const publishRoute = server.slice(server.indexOf("app.post('/api/publish/:artistId'"), server.indexOf("app.get('/api/passport/:artistId'"))
   const publicRoute = server.slice(server.indexOf("app.get('/api/passport/:artistId'"), server.indexOf("app.post('/api/passport-signal'"))
   const snapshotInsert = publishRoute.indexOf(".from('passport_versions')")
@@ -85,4 +92,34 @@ test('runtime wiring never publishes from the browser or serves live-table fallb
   assert.match(server, /app\.post\('\/api\/unpublish\/:artistId', requireAuth/)
   assert.match(publicRoute, /passport_snapshot_missing/)
   assert.doesNotMatch(publicRoute, /buildSafePayload\(artistId\)/)
+  assert.doesNotMatch(db, /adminSetPublished/)
+  assert.doesNotMatch(admin, /togglePublished|adminSetPublished|onClick=\{\(\) => togglePublished/)
+  assert.doesNotMatch(artistDashboard, /refreshPublic/)
+  assert.doesNotMatch(claimReview, /republish|applyCta/)
+
+  assert.deepEqual(siteRouting.redirects, [{
+    source: '/app/:path*',
+    destination: 'https://app.lock.show/:path*',
+    permanent: false,
+  }])
+  assert.equal(siteRouting.rewrites, undefined)
+  assert.equal(rootPackage.scripts['build:embed'], undefined)
+  assert.equal(sitePackage.scripts['build:with-embed'], 'next build')
+  assert.equal(fs.existsSync(path.join(root, 'website-next/public/app')), false)
+  assert.equal(fs.existsSync(path.join(root, 'scripts/embed-post.mjs')), false)
+  assert.equal(fs.existsSync(path.join(root, 'website-next/proxy.ts')), false)
+})
+
+test('republish fails before any snapshot write can occur', () => {
+  assert.doesNotThrow(() => assertInitialPassportPublish({ published: false }))
+  assert.throws(
+    () => assertInitialPassportPublish({ published: true }),
+    (error) => error.status === 409 && error.code === 'passport_republish_requires_transaction',
+  )
+
+  const server = read('server/index.js')
+  const publishRoute = server.slice(server.indexOf("app.post('/api/publish/:artistId'"), server.indexOf("app.get('/api/passport/:artistId'"))
+  const guard = publishRoute.indexOf('assertInitialPassportPublish')
+  const snapshotInsert = publishRoute.indexOf(".from('passport_versions')")
+  assert.ok(guard >= 0 && snapshotInsert > guard, 'republish guard must run before snapshot insertion')
 })

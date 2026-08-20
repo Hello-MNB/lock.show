@@ -24,7 +24,8 @@ _Owner question (11 Jul): "do we unify folders into MAIN?" — YES. This file is
 
 ## Hard gates (what keeps autonomous shipping safe)
 1. Nothing reaches main without the verify gate green.
-2. Every app release also rebuilds the embed (`npm run build:embed`) — the two app surfaces must never skew.
+2. Every app release verifies the canonical `app.lock.show` runtime and the path-preserving
+   `lock.show/app/*` redirect; a second app bundle must never be generated.
 3. Every deploy is verified LIVE by fingerprint before it's called done; every release gets a DEPLOY-LOG row.
 4. Migrations ship alone, applied + verified before code that depends on them. 021 stays frozen.
 5. **Roadmap artifact updated AS PART OF EVERY RELEASE** — it is a release-checklist step (like the

@@ -5,7 +5,7 @@ Run cadence: FULL suite before any launch milestone; GENERAL G1–G4 before ever
 ## GENERAL AUDITS (product-wide)
 | # | Audit | What it checks | Method |
 |---|---|---|---|
-| G1 | Build gates | vite build · build:demo · lint:i18n (baseline=3) · build:embed · website-next build | commands, all green |
+| G1 | Build gates | vite build · build:demo · lint:i18n · website-next build · `/app/*` redirect contract | commands, all green |
 | G2 | **Deploy-pipeline truth** | Live domain serves the latest main (title fingerprint, robots Host, privacy version marker) — git green ≠ live green (tonight's lesson) | curl lock.show fingerprints vs repo |
 | G3 | Design-token sweep | Zero raw palette classes / off-token hex in src + site | grep sweep |
 | G4 | Brand/glossary sweep | Zero GIGPROOF user-facing; פספורט never דרכון; no Mirror; LOCK everywhere | grep + built-output scan |

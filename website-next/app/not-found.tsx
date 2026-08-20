@@ -1,18 +1,8 @@
-// Site 404 with the /app deep-link bootstrap (owner audit 17 Jul).
-// The static export cannot serve dynamic app routes (/app/passport/:id,
-// /app/confirm/:token …) — no physical file exists, so they land here.
-// The inline script runs before paint: any /app/* path bounces into the app
-// shell as /app/?dl=<original>, and the app restores the address before its
-// router mounts (src/main.jsx). Same-origin only — the script never uses a
-// caller-controlled host, only location.pathname/search of THIS origin.
-// Every other path gets a warm site 404 instead of Next's bare default.
+// App-only links from the retired same-origin embed are handed to the one
+// canonical application origin. Site routes keep the normal warm 404.
 import Link from 'next/link'
 
 const BOUNCE = `(function(){var p=location.pathname;
-if(p.indexOf('/app/')===0||p==='/app'){
-  location.replace('/app/?dl='+encodeURIComponent(p+location.search));
-  return;
-}
 // T-34 rescue: app links shared WITHOUT the /app prefix (a pre-fix share bug
 // put such links in the wild — e.g. lock.show/passport/<id>?s=1). App-ONLY
 // prefixes here; never site pages (/passport alone is the site's demo page,
@@ -20,7 +10,7 @@ if(p.indexOf('/app/')===0||p==='/app'){
 // segment or being app-exclusive).
 var APP_ONLY=/^\\/(passport\\/|confirm\\/|invite\\/|evidence\\/|artist\\/|agency(\\/|$)|org\\/|admin$|login$|signup$|select$|onboarding$|discover$|forgot-password$|reset-password$)/;
 if(APP_ONLY.test(p)){
-  location.replace('/app/?dl='+encodeURIComponent('/app'+p+location.search));
+  location.replace('https://app.lock.show'+p+location.search+location.hash);
 }})();`
 
 export default function NotFound() {

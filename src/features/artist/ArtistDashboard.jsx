@@ -327,21 +327,6 @@ export default function ArtistDashboard() {
     await doPublish()
   }
 
-  // Re-snapshot so visibility/claim edits reach the public Passport.
-  async function refreshPublic() {
-    if (publishing) return
-    setPubError('')
-    setPublishing(true)
-    try {
-      await publishPassport(artist.id)
-      clearPassportDirty(artist.id); setDirty(false)
-    } catch (e) {
-      setPubError(T.dashboard.publishError)
-    } finally {
-      setPublishing(false)
-    }
-  }
-
   if (loading) return <Loading />
   if (loadError) return <PageShell><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   if (!artist || !artist.stage_name) {
@@ -507,10 +492,6 @@ export default function ArtistDashboard() {
             {dirty
               ? <p className="mt-3 text-xs font-bold text-need">{T.dashboard.unpublishedBadge}</p>
               : <p className="mt-3 text-xs text-muted">{T.dashboard.publishedHint}</p>}
-            <button onClick={refreshPublic} disabled={publishing}
-              className="btn-ghost mt-2 w-full text-sm">
-              {T.dashboard.refreshPublic}
-            </button>
             {/* ── G7 share step — copy the public link (carries the ?s=1 share
                   marker so opens of THIS link are measurable). Link stays
                   visible + selectable as the no-clipboard fallback. ── */}

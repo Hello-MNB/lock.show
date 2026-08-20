@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:with-embed": "npm --prefix .. ci --no-audit --no-fund && npm --prefix .. run build:embed && next build",
+    "build:with-embed": "next build",
     "start": "next start",
     "lint": "eslint .",
     "test:flow": "node scripts/test-marketing-app-flow.mjs",

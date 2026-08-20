@@ -14,10 +14,12 @@ _Owner-ordered 17 Jul 2026 ("document site management professionally, including 
 
 ## 2. Deployment truths (never re-learn)
 - Production builds ONLY from `main`; the site project is `lock-site` (`prj_dUHnMaaTeg1ZeyyvEP93kVjOigCZ`); deploy hooks build the work branch as PREVIEWS — that is how taste-previews are made.
-- The site is a Next.js **static export**; `vercel.json` rewrites work; `next.config` rewrites do NOT (export mode).
-- `website-next/public/app/**` is the APP EMBED (Team E territory, legitimate merge cargo). Everything else under `website-next/**` is SITE (Team S territory, rule 12: taste-gate BEFORE production, never merge-cargo).
+- The site is a Next.js **static export**; `vercel.json` owns the external `/app/*` redirect.
+- `app.lock.show` is the sole application runtime. `website-next/public/app/**` is retired and must not
+  exist; the website keeps only the marketing surface and a path-preserving handoff to the app.
 - **The restore trap:** `git checkout <old> -- dir` does NOT delete newer-only files → mixed-tree type errors (hit twice on 17 Jul). Exact-state restore = `git rm -rqf dir && git checkout <old> -- dir`, then re-apply keepers.
-- Rollback: exact-state restore to the last version-log anchor, keep the keepers (rescue 404, rewrites, embed), push main; a failed Vercel build leaves the previous deploy live (safe).
+- Rollback: exact-state restore to the last version-log anchor, keep the site and canonical-app redirect,
+  push main; a failed Vercel build leaves the previous deploy live (safe).
 
 ## 2b. TRIGGER LAW (T-50 P1, 17 Jul — binding)
 - **Production deploys are triggered by `git push origin main` ONLY.** The deploy hooks are for EXPLICIT preview builds and must never be fired alongside a main push (duplicates → CANCELED noise → owner failure-emails).

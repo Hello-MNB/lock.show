@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  adminListArtists, adminListRequests, adminListClaims, adminSetPublished,
+  adminListArtists, adminListRequests, adminListClaims,
   adminListPendingEntitlements, adminActivateEntitlement,
   adminListConsents, adminExportArtist, adminDeleteArtist, adminListAudit,
 } from '../../lib/db.js'
@@ -53,7 +53,6 @@ export default function AdminDashboard() {
   const [consents, setConsents] = useState([])
   const [upgrades, setUpgrades] = useState([])
   const [audit, setAudit] = useState([])
-  const [toggling, setToggling] = useState(null)
   const [actionError, setActionError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteReason, setDeleteReason] = useState('')
@@ -140,19 +139,6 @@ export default function AdminDashboard() {
   const pagedClaims = usePaged(claims)
   const pagedConsents = usePaged(consents)
   const pagedAudit = usePaged(audit)
-
-  async function togglePublished(artist) {
-    if (toggling) return
-    setActionError(''); setToggling(artist.id)
-    try {
-      const updated = await adminSetPublished(artist.id, !artist.published)
-      setArtists((prev) => prev.map((x) => x.id === artist.id ? { ...x, published: updated.published } : x))
-    } catch {
-      setActionError(T.admin.actionError)
-    } finally {
-      setToggling(null)
-    }
-  }
 
   async function activate(id) {
     setActionError('')
@@ -543,14 +529,11 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <Link to={`/passport/${a.id}`} className="tap-target text-xs text-accent hover:underline">{T.admin.viewPassport}</Link>
-                        <button
-                          onClick={() => togglePublished(a)}
-                          disabled={toggling === a.id}
-                          className={`chip tap-target px-3 py-1.5 text-xs font-bold transition ${toggling === a.id ? 'opacity-60' : ''} ${
-                            a.published ? 'bg-accent/15 text-accent hover:bg-accent/25' : 'bg-surface2 text-muted hover:bg-raise'
-                          }`}>
+                        <span className={`chip px-3 py-1.5 text-xs font-bold ${
+                          a.published ? 'bg-accent/15 text-accent' : 'bg-surface2 text-muted'
+                        }`}>
                           {a.published ? T.admin.publishToggleOn : T.admin.publishToggleOff}
-                        </button>
+                        </span>
                       </div>
                     </div>
                     <div className="mt-2 flex items-center gap-4 border-t border-line pt-2">

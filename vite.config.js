@@ -6,12 +6,9 @@ import { execSync } from 'node:child_process'
 // Local dev: web on 5173, AI/api on 8787. /api/* is proxied to the local server.
 // VitePWA adds an installable manifest + a service worker (offline app-shell).
 //
-// MODE `embed` (8 Jul 2026, founder decision — public signup): builds the app
-// under /app/ straight into website-next/public/app, so the PUBLIC website
-// project serves the real app same-origin (lock.show/app).
-// PWA is OFF in embed — a service worker under the marketing origin would cache
-// the app with root-scoped fallbacks and serve stale shells. The standalone
-// build (dedicated Vercel project, app.lock.show) keeps the PWA.
+// The product application has one canonical runtime: app.lock.show. The
+// marketing site's legacy static /app bundle was retired because it duplicated
+// auth, API routing and release state.
 //
 // BUILD STAMP (W-2#5, owner directive) — every screen quietly shows
 // {PREVIEW|LIVE} · {sha7} · {date} so anyone looking at a live screen can tell
@@ -30,10 +27,9 @@ function resolveBuildSha() {
   }
 }
 
-export default defineConfig(({ mode }) => {
-  const embed = mode === 'embed'
+export default defineConfig(() => {
   return {
-    base: embed ? '/app/' : '/',
+    base: '/',
     define: {
       // Baked in at build time (not runtime env — a static deploy has no
       // server to read process.env from). JSON.stringify so each expands to a
@@ -43,7 +39,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
-      ...(embed ? [] : [VitePWA({
+      VitePWA({
         registerType: 'autoUpdate',
         // KILL SWITCH (9 Jul): the standalone app's service worker repeatedly
         // trapped users (incl. Maria) on STALE cached code after a deploy — the
@@ -87,9 +83,8 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
         },
         devOptions: { enabled: false },
-      })]),
+      }),
     ],
-    ...(embed ? { build: { outDir: 'website-next/public/app', emptyOutDir: true } } : {}),
     server: {
       port: process.env.PORT ? parseInt(process.env.PORT) : 5173,
       proxy: {

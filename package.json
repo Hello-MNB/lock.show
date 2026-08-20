@@ -13,7 +13,6 @@
     "dev:api": "node server/index.js",
     "build": "vite build",
     "build:demo": "vite build --mode demo",
-    "build:embed": "vite build --mode embed && node scripts/embed-post.mjs",
     "preview": "vite preview",
     "seed": "node scripts/seed.mjs",
     "lint:i18n": "node scripts/i18n-purity.mjs",
