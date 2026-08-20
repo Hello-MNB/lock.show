@@ -7,6 +7,8 @@ import BottomNav from './BottomNav.jsx'
 import SideNav from './SideNav.jsx'
 import NotificationBell from './NotificationBell.jsx'
 import ContextSwitcher from '../../features/org/ContextSwitcher.jsx'
+import ContextBeacon from './ContextBeacon.jsx'
+import { useAdminAccess } from '../../context/AdminAccessContext.jsx'
 
 // Layout route wrapper — renders persistent nav shell around all authenticated screens.
 // Mobile: fixed bottom tab nav + a slim top bar. Desktop (md+): fixed 248px inline-start
@@ -18,6 +20,7 @@ import ContextSwitcher from '../../features/org/ContextSwitcher.jsx'
 export default function AppShell() {
   const { user, loading } = useAuth()
   const { T } = useLang()
+  const { adminMode } = useAdminAccess()
 
   // No shell while loading or for unauthenticated renders (route guards handle redirect).
   if (!user || loading) return <Outlet />
@@ -38,7 +41,8 @@ export default function AppShell() {
       {/* Top bar — the ONE shared header: language toggle, notification bell,
           workspace switcher, top-right, every breakpoint (canon: no scattered
           chrome — the wordmark lives ONCE, in the sidebar, never here). */}
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-end gap-3 border-b border-line bg-bg/95 px-4 backdrop-blur md:ps-[248px]">
+      <header className="sticky top-0 z-20 flex min-h-14 flex-wrap items-center gap-3 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:flex-nowrap md:ps-[264px]">
+        <ContextBeacon />
         <LanguageToggle />
         <NotificationBell />
         <ContextSwitcher />
@@ -46,14 +50,12 @@ export default function AppShell() {
       </header>
 
       {/* Scrollable content — offset for sidebar on desktop, padded bottom for nav on mobile */}
-      <main className="md:ps-[248px] pb-16 md:pb-0">
+      <main className={`md:ps-[248px] ${adminMode ? 'pb-0' : 'pb-16 md:pb-0'}`}>
         <Outlet />
       </main>
 
       {/* Mobile bottom nav */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-30">
-        <BottomNav />
-      </div>
+      {!adminMode && <div className="md:hidden fixed bottom-0 inset-x-0 z-30"><BottomNav /></div>}
     </div>
   )
 }

@@ -12,6 +12,7 @@ import { randomUUID, createHash } from 'node:crypto'
 import { createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { T as en } from '../src/lib/i18n/en.js'
+import { resolveAdminCapability } from '../src/lib/adminAccess.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -130,6 +131,7 @@ async function requireAuth(req, res, next) {
     const { data, error } = await admin.auth.getUser(m[1])
     if (error || !data?.user?.id) return res.status(401).json({ error: 'auth_required' })
     req.userId = data.user.id
+    req.authUser = data.user
     next()
   } catch (e) {
     console.error('[auth]', e)
@@ -165,6 +167,37 @@ app.get('/api/health', (_req, res) => {
   // 'configured' = a key is present; it does NOT claim any call succeeded
   // (truthful-provenance rule: liveness is only reported per processed item).
   res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'configured' : 'mock', model: MODEL })
+})
+
+// GET /api/admin/capability?environment=production
+// Fresh, server-side preflight for the private Admin control plane. The browser
+// receives no membership list and cannot infer authority from email, route,
+// profile role, local storage or stale JWT metadata.
+app.get('/api/admin/capability', requireAuth, async (req, res) => {
+  try {
+    const requestedEnvironment = String(req.query.environment || 'production')
+    if (!['production', 'preview', 'staging', 'development'].includes(requestedEnvironment)) {
+      return res.status(400).json({ allowed: false, reason: 'invalid_environment' })
+    }
+    const { data, error } = await admin
+      .from('environment_admin_membership')
+      .select('environment_id, status, capabilities, expires_at')
+      .eq('person_id', req.userId)
+    if (error) {
+      if (error.code === '42P01') return res.status(503).json({ allowed: false, reason: 'authority_store_unavailable' })
+      throw error
+    }
+    const result = resolveAdminCapability({
+      memberships: data || [],
+      requestedEnvironment,
+      now: new Date(),
+    })
+    if (!result.allowed) return res.status(403).json(result)
+    return res.json(result)
+  } catch (e) {
+    console.error('[admin-capability]', e)
+    return res.status(503).json({ allowed: false, reason: 'preflight_failed' })
+  }
 })
 
 // AI-spend caps (G14-3) — per-user daily counter, in-memory. Key = userId + UTC

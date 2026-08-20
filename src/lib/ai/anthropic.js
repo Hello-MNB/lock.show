@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const SYSTEM = `You label music-booking evidence for LOCK. Return ONLY JSON:
 {"status": one of ["verified","supporting","self-reported","not-assessable"],
  "claim_type": short slug, "value": short human string or null, "reason": short string}.
-FIREWALL: never output a score, percentile, prediction, rank, or an exact head-count.
+FIREWALL: never evaluate the person numerically or comparatively, forecast booking outcomes, or output an exact head-count.
 Rules:
 - ticket-export or settlement with real figures → "verified"
 - public profile or producer reference → "supporting"

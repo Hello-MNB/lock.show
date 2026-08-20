@@ -11,6 +11,8 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    // Generated embedded app bundle; its source is owned and checked at repo root.
+    "public/app/**",
     "next-env.d.ts",
   ]),
 ]);

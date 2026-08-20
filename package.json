@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"node server/index.js\"",
     "dev:web": "vite",
@@ -18,13 +22,17 @@
     "test:canon": "node scripts/test-canon-drift.mjs",
     "test:security": "node scripts/test-security-denial.mjs",
     "test:guardrails": "node scripts/test-guardrails.mjs",
+    "test:admin-context": "node scripts/test-admin-context.mjs",
     "test:ds": "node scripts/test-ds-drift.mjs",
     "check:styles": "node scripts/generate-component-styles.mjs --check",
     "validate:registry": "node scripts/validate-registry.mjs",
     "validate:deltas": "node scripts/validate-deltas.mjs",
     "registry:events": "node scripts/generate-event-registry.mjs",
-    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run test:ds && npm run check:styles && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:fit",
-    "test:fit": "node scripts/test-fit.mjs"
+    "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run test:admin-context && npm run test:ds && npm run check:styles && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:fit",
+    "test:fit": "node scripts/test-fit.mjs",
+    "tech-baseline:test": "node scripts/tech-baseline/test-infrastructure.mjs && node scripts/tech-baseline/test-contract-scanner.mjs && node scripts/tech-baseline/test-repository-contracts.mjs && node scripts/tech-baseline/test-route-inventory.mjs && node scripts/tech-baseline/test-locale-source-scanner.mjs && node scripts/tech-baseline/test-postgres-runner.mjs && node scripts/tech-baseline/test-security-scanner.mjs && node scripts/tech-baseline/test-migration-inventory.mjs && npm run test:admin-context",
+    "test:radar-internal": "node scripts/test-radar-internal-scan.mjs",
+    "tech-baseline:verify": "npm run tech-baseline:test && npm run test:radar-internal && node scripts/tech-baseline/generate-types.mjs --check && node scripts/tech-baseline/generate-route-inventory.mjs --check && node scripts/tech-baseline/generate-migration-inventory.mjs --check && node scripts/tech-baseline/scan-locale-source.mjs && node scripts/tech-baseline/scan-security.mjs && npm run lint:i18n && npm run validate:registry && npm run test:ds"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
@@ -34,10 +42,10 @@
     "@supabase/supabase-js": "^2.45.4",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.0",
+    "express": "4.22.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "react-router-dom": "7.18.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
@@ -48,5 +56,8 @@
     "tailwindcss": "^3.4.13",
     "vite": "^5.4.8",
     "vite-plugin-pwa": "^1.3.0"
+  },
+  "overrides": {
+    "body-parser": "1.20.6"
   }
 }

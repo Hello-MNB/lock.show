@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { AuthProvider } from './features/auth/AuthProvider.jsx'
 import { OrgProvider } from './context/OrgContext.jsx'
+import { AdminAccessProvider } from './context/AdminAccessContext.jsx'
 import { LangProvider } from './context/LangContext.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
@@ -33,9 +34,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <LangProvider>
           <AuthProvider>
             <OrgProvider>
-              <ToastProvider>
-                <App />
-              </ToastProvider>
+              <AdminAccessProvider>
+                <ToastProvider>
+                  <App />
+                </ToastProvider>
+              </AdminAccessProvider>
             </OrgProvider>
           </AuthProvider>
         </LangProvider>

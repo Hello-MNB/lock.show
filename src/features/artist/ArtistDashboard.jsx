@@ -398,8 +398,11 @@ export default function ArtistDashboard() {
           <h1 className="font-display mb-0.5 text-2xl font-bold tracking-[-0.01em] text-ink">{T.radar.artistTitle}</h1>
           <p className="text-xs text-muted">{T.radar.artistSubtitle}</p>
         </div>
-        {/* D1: identity is now editable after onboarding (§8.6 Act-Identity Editor). */}
-        <Link to="/artist/act/edit" className="tap-target shrink-0 font-mono text-[11px] font-bold uppercase tracking-[0.07em] text-accent hover:underline">{T.actEditor.edit} ›</Link>
+        <div className="flex shrink-0 items-center gap-3">
+          <Link to={`/artist/radar/scanner/${artist.id}`} className="tap-target font-mono text-[11px] font-bold uppercase tracking-[0.07em] text-accent hover:underline">{T.evidence.scannerCta} ›</Link>
+          {/* D1: identity is now editable after onboarding (§8.6 Act-Identity Editor). */}
+          <Link to="/artist/act/edit" className="tap-target font-mono text-[11px] font-bold uppercase tracking-[0.07em] text-muted hover:text-ink hover:underline">{T.actEditor.edit} ›</Link>
+        </div>
       </div>
 
       {/* ── THE UNIVERSE — the Radar IS evidence collection; review/confirm

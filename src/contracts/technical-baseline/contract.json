@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "1.0.0",
+  "sources": [
+    {
+      "id": "B4-30.10",
+      "version": "7.1",
+      "revision": "AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC",
+      "url": "https://docs.google.com/document/d/1PvYcghY5aMK4TgdTqCaAmp8BuqNz_GrRBEUIec0OVvc",
+      "authority": "product",
+      "status": "accepted"
+    },
+    {
+      "id": "B4-40.10",
+      "version": "4.5",
+      "revision": "AIroW36nlncplN1J7snw47466LP39C0MAPIsLbmr7Z-RutAk18xmE6mc4Se-hrb4JpLd7OICkA2tTgnSGLOuNWuafBRiCmOApaKH0-_wVVOC",
+      "url": "https://docs.google.com/document/d/1avyYgJQO1gWTQqe03zGkoEyMWYqX-Te_74GuThexV14",
+      "authority": "technology",
+      "status": "stale-binding"
+    },
+    {
+      "id": "B4-40.20",
+      "version": "2.20",
+      "revision": "AIroW36WC5t_VnL9MI33VX2udi12Z__MAcgJt_z--gMIbABGuGtROfsaeN0eCgk9RJkdohkjFOoEcg7FjgHjNbOONbroE6I52M4lh8gg5jWM",
+      "url": "https://docs.google.com/document/d/1qwCdgdg4P5TBON5c7Xb3GPbb9ttRNoZnIgyEYtkX1Eo",
+      "authority": "technology",
+      "status": "stale-packet"
+    }
+  ],
+  "repository": {
+    "remote": "https://github.com/Hello-MNB/lock.show.git",
+    "base": "ef98d91992408a612b047c632717e053457b0c8d",
+    "branch": "codex/tech-baseline-align-01",
+    "surfaceModel": "one-repo-two-properties",
+    "marketingPath": "website-next",
+    "applicationPath": "src"
+  },
+  "designSystem": {
+    "tokens": [
+      { "id": "surface.default", "type": "color", "value": null, "binding": "LANE_B_REQUIRED" },
+      { "id": "text.default", "type": "color", "value": null, "binding": "LANE_B_REQUIRED" },
+      { "id": "space.shell", "type": "dimension", "value": null, "binding": "LANE_B_REQUIRED" },
+      { "id": "motion.context", "type": "duration", "value": null, "binding": "LANE_B_REQUIRED" }
+    ],
+    "semanticAliases": [
+      { "id": "surface.canvas", "target": "surface.default" },
+      { "id": "content.primary", "target": "text.default" },
+      { "id": "layout.shellGap", "target": "space.shell" },
+      { "id": "transition.context", "target": "motion.context" }
+    ],
+    "modes": ["he-rtl", "en-ltr", "mixed"],
+    "components": [
+      { "id": "CMP-AppShell", "states": ["loading", "empty", "error", "ready", "denied"], "api": ["locale", "direction", "workspaceId", "capabilities"] },
+      { "id": "CMP-RoleContextSwitcher", "states": ["loading", "empty", "error", "ready", "denied"], "api": ["selection", "preflight", "commit", "receipt", "rollback"] },
+      { "id": "CMP-AdminGate", "states": ["loading", "empty", "error", "ready", "denied"], "api": ["environmentId", "serverCapabilities", "denialReason"] }
+    ]
+  },
+  "locale": {
+    "modes": ["he-rtl", "en-ltr", "mixed"],
+    "logicalProperties": ["marginInlineStart", "marginInlineEnd", "paddingInlineStart", "paddingInlineEnd", "insetInlineStart", "insetInlineEnd"],
+    "requiredLocales": ["he", "en"],
+    "mixedScriptPolicy": "segment-direction",
+    "scanPaths": [
+      "src/App.jsx",
+      "src/components/layout/AppShell.jsx",
+      "src/components/layout/SideNav.jsx",
+      "src/components/layout/BottomNav.jsx",
+      "src/components/layout/NotificationBell.jsx",
+      "src/components/layout/navItems.jsx",
+      "src/features/admin/AdminDashboard.jsx",
+      "src/features/org/ContextSwitcher.jsx",
+      "src/context/LangContext.jsx",
+      "src/context/OrgContext.jsx"
+    ]
+  },
+  "taxonomy": {
+    "namespaces": ["Entity", "Workspace", "Role", "Act", "Object", "Case", "SCREEN", "FLOW", "StringKey"],
+    "ids": [
+      "Entity:Person",
+      "Workspace:Admin",
+      "Role:platform_owner",
+      "Act:primary",
+      "Object:Passport",
+      "Case:PD-005",
+      "SCREEN:AppShell",
+      "SCREEN:Admin",
+      "FLOW:ContextSwitch",
+      "StringKey:Nav.Admin"
+    ],
+    "references": [
+      { "from": "SCREEN:AppShell", "to": "FLOW:ContextSwitch" },
+      { "from": "SCREEN:Admin", "to": "FLOW:ContextSwitch" },
+      { "from": "SCREEN:Admin", "to": "StringKey:Nav.Admin" }
+    ]
+  },
+  "navigationProjection": {
+    "sourceId": "PD-005",
+    "sourceRevision": "AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC",
+    "semantics": "OPEN_NAV_TRUTH_001",
+    "universal": false,
+    "items": []
+  },
+  "routes": [
+    { "path": "/admin", "auth": "required", "capability": "admin.environment", "denial": "403", "returnContract": "preserve-origin" }
+  ],
+  "admin": {
+    "authority": "server",
+    "forbiddenAuthoritySignals": ["email", "client-role", "route"],
+    "contextPhases": ["SELECT", "PREFLIGHT", "COMMIT", "RECEIPT"],
+    "rollbackRequired": true,
+    "ordinaryUserDenied": true
+  },
+  "rls": {
+    "execution": "postgres-required",
+    "allowSkip": false,
+    "negatives": ["cross-tenant-read", "cross-tenant-write", "ordinary-user-admin", "anon-private-read"]
+  },
+  "migrations": {
+    "status": "FIRST_SLICE_MIGRATION_SELECTED_UNAPPLIED",
+    "included": ["20260820042812"],
+    "excluded": ["040", "041", "042", "043", "044", "045", "046", "047", "048", "049", "050", "051"]
+  },
+  "operations": {
+    "canonicalAppOrigin": "https://app.lock.show",
+    "productionActionAuthorized": false,
+    "providerEvidence": "OPEN_EVIDENCE",
+    "deployCadence": {
+      "preview": "EACH_GREEN_ATOMIC_PACKET",
+      "production": "MAX_ONE_CONTROLLED_WINDOW_PER_DAY",
+      "automaticProduction": false,
+      "postDeployTests": [
+        "public-marketing-smoke",
+        "google-auth-smoke",
+        "context-admin-smoke",
+        "radar-scanner-smoke",
+        "passport-recipient-smoke",
+        "monitoring-rollback-check"
+      ]
+    },
+    "localTools": {
+      "githubCli": "OBSERVED_PRESENT",
+      "vercelCli": "OBSERVED_MISSING",
+      "supabaseCli": "OBSERVED_MISSING",
+      "psql": "OBSERVED_MISSING",
+      "docker": "OBSERVED_MISSING"
+    }
+  },
+  "knownBlockers": [
+    { "id": "NAV_TRUTH_001", "evidence": "navigation semantics remain open; projection items must remain empty", "releaseBlocker": true },
+    { "id": "TB05_NOTIFICATION_BELL_PHYSICAL_RIGHT", "evidence": "src/components/layout/NotificationBell.jsx:67", "releaseBlocker": true },
+    { "id": "TB08_ADMIN_RUNTIME_UNVERIFIED", "evidence": "Environment-bound Admin capability and Context Beacon are candidate-only; PostgreSQL and authenticated preview verification remain open", "releaseBlocker": true },
+    { "id": "TB09_APP_RLS_RUNTIME_OPEN", "evidence": "PostgreSQL contract harness exists; application migrations were not executed", "releaseBlocker": true },
+    { "id": "TB11_EXISTING_GUARDRAIL_FAILURE", "evidence": "npm run verify exits 1 at src/lib/ai/anthropic.js:21", "releaseBlocker": true },
+    { "id": "TB11_WEBSITE_HIGH_AUDIT", "evidence": "npm --prefix website-next audit --audit-level=high exits 1 with 6 high severity vulnerabilities", "releaseBlocker": true },
+    { "id": "TB11_ROOT_MODERATE_AUDIT", "evidence": "npm audit reports 2 moderate and 1 low vulnerability; high threshold exits 0", "releaseBlocker": false },
+    { "id": "TB12_PROVIDER_RUNTIME_OPEN", "evidence": "Vercel/Supabase project identities and preview runtime not observed", "releaseBlocker": true }
+  ]
+}

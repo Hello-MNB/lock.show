@@ -840,6 +840,7 @@ export const T = {
     workspaceProduction: 'Production workspace',
     workspaceBooker: 'Booking manager workspace',
     workspaceOperator: 'Operator workspace',
+    workspaceAdmin: 'Private Admin',
   },
   org: {
     entitySolo: 'account',
@@ -879,6 +880,15 @@ export const T = {
     seatUpsell: 'Upgrade to agency to add team seats.',
     switchOrg: 'Switch account / agency',
     switchNote: 'Switching context — never re-registration.',
+    contextBeaconLabel: 'Current person, role, environment and workspace',
+    contextPersonFallback: 'Signed-in person',
+    contextNoWorkspace: 'Workspace not resolved',
+    contextRolePending: 'Role pending',
+    privateAdminWorkspace: 'Private Admin',
+    adminMode: 'Admin mode',
+    adminEnvironmentProduction: 'Production environment · fresh server authorization',
+    enterPrivateAdmin: 'Enter Private Admin',
+    returnToUserWorkspace: 'Return to my user workspace',
     // ── G3 · A2/N12 — add-workspace form (ContextSwitcher) ──
     newWorkspaceTitle: 'New workspace',
     newWorkspaceNameLabel: 'Workspace name',
@@ -1261,8 +1271,10 @@ export const T = {
     },
   },
   evidence: {
-    title: 'Evidence',
-    subtitle: 'Start from what you want to prove — we\'ll ask for the evidence that supports it.',
+    title: 'RADAR Scanner',
+    subtitle: 'Add an authorized source. The Scanner checks it and returns a private, source-bound result with its limits.',
+    scannerCta: 'Run Scanner',
+    scannerComplete: 'Scan complete. The result is saved in your private RADAR.',
     intentTitle: 'What do you want to prove?',
     intentHelp: 'Each claim maps to a verifiable source. No single path is mandatory.',
     intents: {

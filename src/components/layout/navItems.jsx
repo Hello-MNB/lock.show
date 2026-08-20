@@ -3,8 +3,11 @@ import { ROLES } from '../../lib/constants.js'
 // Shared nav tab definitions — consumed by BottomNav (mobile) and SideNav (desktop).
 // Each tab: { key, label, to, end }
 // `end` mirrors NavLink's `end` prop (exact-match active state).
-export function getNavTabs(role, isAgency, T, isProducerWorkspace = false) {
+export function getNavTabs(role, isAgency, T, isProducerWorkspace = false, adminMode = false) {
   const n = T.nav
+  if (adminMode) return [
+    { key: 'admin', label: n.admin, to: '/admin', end: true },
+  ]
   // IA correction (canon): artist nav = Radar · Passport · Requests · Account.
   // Readiness left the nav (content lives inside the Radar's readiness surface);
   // claim review is a panel/flow reached FROM the radar, not a nav destination —

@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
 import { useLang } from './context/LangContext.jsx'
+import { useAdminAccess } from './context/AdminAccessContext.jsx'
 import { Loading, PageShell, Wordmark } from './components/ui.jsx'
 import { ROLES, PAYMENTS_ENABLED } from './lib/constants.js'
 import { DEMO } from './lib/demo.js'
@@ -69,6 +70,16 @@ function RequireRole({ role: need, children }) {
   const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
   if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
   if (redirect) return <Navigate to={redirect} replace />
+  return children
+}
+
+function RequireAdmin({ children }) {
+  const { user, loading: authLoading } = useAuth()
+  const { allowed, loading: adminLoading } = useAdminAccess()
+  const loc = useLocation()
+  if (authLoading || adminLoading) return <Loading />
+  if (!user) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (!allowed) return <Navigate to={ROUTES.home} replace />
   return children
 }
 
@@ -194,6 +205,7 @@ export default function App() {
         <Route path="/artist/act/edit" element={<RequireRole role={ROLES.ARTIST}><ActEditor /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
+        <Route path="/artist/radar/scanner/:artistId" element={<RequireRole role={ROLES.ARTIST}><EvidenceCapture /></RequireRole>} />
         {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
             when payments are dormant — no payment surface reachable at launch. */}
         <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}>{PAYMENTS_ENABLED ? <OfferPayment /> : <Navigate to="/artist/home" replace />}</RequireRole>} />
@@ -212,8 +224,9 @@ export default function App() {
         <Route path="/production/events" element={<RequireProduction><ProductionDashboard /></RequireProduction>} />
         <Route path="/production/requests" element={<RequireProduction><ProductionDashboard /></RequireProduction>} />
 
-        {/* operator */}
-        <Route path="/admin" element={<RequireRole role={ROLES.OPERATOR}><AdminDashboard /></RequireRole>} />
+        {/* private, Environment-bound Admin control plane. Profile role, route,
+            email and local storage never authorize this screen. */}
+        <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
 
         {/* booker */}
         <Route path="/discover" element={<RequireRole role={ROLES.BOOKER}><BookerHome /></RequireRole>} />
