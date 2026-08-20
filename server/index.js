@@ -9,7 +9,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID, createHash } from 'node:crypto'
-import { createClaimProcessor } from '../src/lib/ai/index.js'
+import { anthropicKeyState, createClaimProcessor } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
@@ -33,6 +33,7 @@ function realValue(v) {
 const SUPA_URL = realValue(process.env.VITE_SUPABASE_URL)
 const SERVICE_KEY = realValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
 const ANTHROPIC_KEY = realValue(process.env.ANTHROPIC_API_KEY)
+const ANTHROPIC_STATE = anthropicKeyState(ANTHROPIC_KEY)
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8'
 
 const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : null
@@ -165,9 +166,10 @@ async function requireArtistOwner(req, res, artistId) {
 // GET /api/health
 // ──────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  // 'configured' = a key is present; it does NOT claim any call succeeded
+  // 'configured' = a plausibly-shaped key is present; it does NOT claim any call succeeded
   // (truthful-provenance rule: liveness is only reported per processed item).
-  res.json({ ok: true, supabase: Boolean(admin), ai: ANTHROPIC_KEY ? 'configured' : 'mock', model: MODEL })
+  const ai = ANTHROPIC_STATE === 'missing' ? 'mock' : ANTHROPIC_STATE
+  res.json({ ok: true, supabase: Boolean(admin), ai, model: MODEL })
 })
 
 // GET /api/admin/capability?environment=production
@@ -891,7 +893,8 @@ app.post('/api/confirm/:token', async (req, res) => {
 // as a serverless function (VERCEL=1 is set automatically there), so skip listen.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ANTHROPIC_KEY ? 'configured' : 'mock'}, supabase: ${admin ? 'on' : 'off'})`)
+    const ai = ANTHROPIC_STATE === 'missing' ? 'mock' : ANTHROPIC_STATE
+    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ai}, supabase: ${admin ? 'on' : 'off'})`)
   })
 }
 

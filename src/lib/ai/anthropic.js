@@ -79,6 +79,11 @@ export class AnthropicClaimProcessor {
   }
 
   async #callWithRetry(ev) {
+    if (typeof this.#apiKey !== 'string' || !this.#apiKey.trim().startsWith('sk-ant-')) {
+      const error = new Error('anthropic credential is misconfigured')
+      error.status = 401
+      throw error
+    }
     const { default: Anthropic } = await import('@anthropic-ai/sdk')
     const client = new Anthropic({ apiKey: this.#apiKey, maxRetries: 0 }) // we own the retry loop
     let lastErr
