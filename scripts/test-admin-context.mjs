@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url'
 
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
+import { T as en } from '../src/lib/i18n/en.js'
+import { T as he } from '../src/lib/i18n/he.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -110,6 +112,19 @@ test('context beacon keeps all four orientation labels visible at every breakpoi
 test('new LOCK.SHOW sessions default to Hebrew while preserving an explicit English choice', () => {
   const lang = read('src/context/LangContext.jsx')
   assert.match(lang, /return saved === 'en' \? 'en' : 'he'/)
+})
+
+test('RADAR Scanner has native Hebrew copy for every claim-first action', () => {
+  const intentKeys = [
+    'drew-crowd', 'sold-via-link', 'rebooked', 'community',
+    'produced-event', 'consistent-frequency', 'producer-confirm',
+  ]
+
+  for (const key of intentKeys) {
+    assert.equal(typeof he.evidence.intents?.[key], 'string', `missing Hebrew intent: ${key}`)
+    assert.equal(typeof he.evidence.intentAsk?.[key], 'string', `missing Hebrew evidence ask: ${key}`)
+    assert.notEqual(he.evidence.intents[key], en.evidence.intents[key], `English fallback leaked into Hebrew: ${key}`)
+  }
 })
 
 test('PASSPORT database firewall keeps private RADAR rationale and snapshot JSON away from anon', () => {
