@@ -14,9 +14,9 @@ export default function SideNav() {
   const tabs = getNavTabs(role, isAgency, T, isProducerWorkspace, adminMode)
 
   return (
-    <div className="flex flex-col h-full px-3 py-5">
-      <div className="px-2 mb-7">
-        <Wordmark />
+    <div className="flex h-full flex-col px-4 py-6">
+      <div className="mb-8 px-2">
+        <Wordmark showTagline />
       </div>
 
       <nav className="flex-1 space-y-0.5" aria-label="main navigation">
@@ -26,14 +26,13 @@ export default function SideNav() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) =>
-              `tap-target relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14.5px] font-medium transition-colors ${
-                isActive ? 'text-ink' : 'text-muted hover:text-ink hover:bg-surface'
+              `tap-target data-cue relative flex items-center gap-3 rounded-xl px-3 py-3 text-[14px] font-medium transition-colors ${
+                isActive ? 'bg-surface text-ink' : 'text-muted hover:bg-surface/70 hover:text-ink'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                {isActive && <span aria-hidden="true" className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-accent" />}
                 <NavIcon name={tab.key} />
                 <span>{tab.label}</span>
               </>

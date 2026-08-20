@@ -3,14 +3,15 @@
    unicode-range, so Hebrew coverage ships offline. Weights mirror the old
    Google Fonts link: Heebo 400–800 (body/UI incl. font-extrabold),
    Frank Ruhl Libre 400/700/900 (display serif), IBM Plex Mono 400/600. */
-@import '@fontsource/heebo/400.css';
-@import '@fontsource/heebo/500.css';
-@import '@fontsource/heebo/600.css';
-@import '@fontsource/heebo/700.css';
-@import '@fontsource/heebo/800.css';
-@import '@fontsource/frank-ruhl-libre/400.css';
-@import '@fontsource/frank-ruhl-libre/700.css';
-@import '@fontsource/frank-ruhl-libre/900.css';
+@import '@fontsource/rubik/400.css';
+@import '@fontsource/rubik/500.css';
+@import '@fontsource/rubik/600.css';
+@import '@fontsource/rubik/700.css';
+@import '@fontsource/assistant/400.css';
+@import '@fontsource/assistant/600.css';
+@import '@fontsource/assistant/700.css';
+@import '@fontsource/fraunces/400.css';
+@import '@fontsource/fraunces/700.css';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/600.css';
 
@@ -33,13 +34,19 @@ body,
 
 body {
   margin: 0;
-  background: theme('colors.bg');
+  background:
+    radial-gradient(70% 50% at 50% -10%, rgba(242, 192, 99, 0.07), transparent 65%),
+    theme('colors.bg');
   color: theme('colors.ink');
   font-family: theme('fontFamily.sans');
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   /* prevent iOS auto-zoom: base text >= 16px */
   font-size: 16px;
+}
+
+[dir='rtl'] body {
+  font-family: "Assistant", "Rubik", system-ui, sans-serif;
 }
 
 ::selection {
@@ -107,6 +114,37 @@ body {
   }
   .card {
     @apply rounded-xl2 bg-surface border border-line p-5 shadow-card;
+  }
+  .premium-panel {
+    @apply rounded-2xl border border-line bg-surface/90 shadow-card backdrop-blur;
+  }
+  .premium-stage {
+    @apply relative overflow-hidden rounded-3xl border border-line bg-bg2 shadow-card;
+    background-image:
+      radial-gradient(60% 46% at 50% 0%, rgba(242, 192, 99, 0.08), transparent 70%),
+      linear-gradient(180deg, rgba(255,255,255,0.018), transparent 38%);
+  }
+  .data-cue {
+    @apply relative transition-colors;
+  }
+  .data-cue::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 2px;
+    border-radius: 999px;
+    background: theme('colors.accent');
+    opacity: 0;
+    transform: scaleY(.55);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .data-cue:hover::before,
+  .data-cue:focus-within::before,
+  .data-cue[data-active='true']::before {
+    opacity: .85;
+    transform: scaleY(1);
   }
   .chip {
     /* status pills: small (≤24px tall), quiet tints (≤10% alpha), text does
@@ -199,6 +237,14 @@ body {
   .animate-fade-in,
   .animate-shimmer {
     animation: none !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-open-surface {
+    margin-inline: -1rem;
+    border-inline: 0;
+    border-radius: 0;
   }
 }
 
