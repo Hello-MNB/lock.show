@@ -55,8 +55,8 @@ Needs a Supabase **Personal Access Token** (`sbp_…`, from supabase.com/dashboa
 ## Firewall (enforced server-side)
 The public Passport is served by `/api/passport/:id` from an immutable snapshot built with an **explicit safe-column list** — it physically cannot return a score, percentile, exact head-count, gaps, or any private/mirror-only value (as-built enum; rename to working-only pending). Draw is bands/booleans with a method label; statuses are only חזק · מתפתח · חסר-הוכחה · לא-ניתן-להעריך.
 
-## Deploy (config ready; not yet deployed)
-`vercel.json` builds the SPA and routes `/api/*` to `api/index.js` (the same Express app; `server/index.js` skips `listen()` when `VERCEL=1`). To deploy: connect the repo to Vercel and set env vars (`VITE_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_*`) in the dashboard.
+## Deploy
+`vercel.json` builds the SPA and routes `/api/*` to `api/index.js` (the same Express app; `server/index.js` skips `listen()` when `VERCEL=1`). To deploy: connect the repo to Vercel and set env vars (`VITE_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`) in the dashboard. AI is opt-in: use direct `ANTHROPIC_*`, or explicitly set `AI_PROVIDER=vercel-gateway` plus `AI_GATEWAY_MODEL` after Vercel budgets/rate limits are approved. A Vercel OIDC token by itself never activates Gateway processing.
 
 ## Scripts
 | Script | What |

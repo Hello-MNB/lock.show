@@ -1,7 +1,7 @@
 // ============================================================
-// GIGPROOF — local AI / API server (port 8787).
-// Keeps the Anthropic key server-side. Uses the AiClaimProcessor
-// interface from /src/lib/ai — stub without a key, live with one.
+// LOCK SHOW — local AI / API server (port 8787).
+// Keeps provider credentials server-side. Uses the AiClaimProcessor
+// interface from /src/lib/ai — deterministic unless explicitly configured.
 // On deploy this maps 1:1 to Vercel serverless / Supabase Edge fns.
 // ============================================================
 import express from 'express'
@@ -9,7 +9,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 import { randomUUID, createHash } from 'node:crypto'
-import { anthropicKeyState, createClaimProcessor } from '../src/lib/ai/index.js'
+import { createClaimProcessorFromConfig, resolveAiProviderConfig } from '../src/lib/ai/index.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
@@ -33,9 +33,13 @@ function realValue(v) {
 
 const SUPA_URL = realValue(process.env.VITE_SUPABASE_URL)
 const SERVICE_KEY = realValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
-const ANTHROPIC_KEY = realValue(process.env.ANTHROPIC_API_KEY)
-const ANTHROPIC_STATE = anthropicKeyState(ANTHROPIC_KEY)
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8'
+const AI_CONFIG = resolveAiProviderConfig({
+  ...process.env,
+  ANTHROPIC_API_KEY: realValue(process.env.ANTHROPIC_API_KEY),
+  AI_GATEWAY_API_KEY: realValue(process.env.AI_GATEWAY_API_KEY),
+  VERCEL_OIDC_TOKEN: realValue(process.env.VERCEL_OIDC_TOKEN),
+})
+const MODEL = AI_CONFIG.model
 
 const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : null
 
@@ -58,9 +62,11 @@ const COST_PER_ITEM_USD = Number(process.env.COST_PER_ITEM_USD) || 0.02
 const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD) || 50 // hard cap (CFRO)
 const BUDGET_ALERT_AT_USD = Number(process.env.ALERT_AT) || 25 // warn threshold
 
-// Single processor instance: StubClaimProcessor (no key) or AnthropicClaimProcessor (key set).
+// Single processor instance: deterministic stub, direct Anthropic, or an
+// explicitly selected Vercel AI Gateway route. VERCEL_OIDC_TOKEN alone never
+// activates paid processing; AI_PROVIDER=vercel-gateway is required.
 // Callers never reference the concrete class — only the AiClaimProcessor interface.
-const processor = createClaimProcessor(ANTHROPIC_KEY, MODEL)
+const processor = createClaimProcessorFromConfig(AI_CONFIG)
 
 const app = express()
 
@@ -167,10 +173,11 @@ async function requireArtistOwner(req, res, artistId) {
 // GET /api/health
 // ──────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
-  // 'configured' = a plausibly-shaped key is present; it does NOT claim any call succeeded
+  // 'configured' = a plausibly-shaped provider configuration is present; it
+  // does NOT claim any call succeeded or any credits are available.
   // (truthful-provenance rule: liveness is only reported per processed item).
-  const ai = ANTHROPIC_STATE === 'missing' ? 'mock' : ANTHROPIC_STATE
-  res.json({ ok: true, supabase: Boolean(admin), ai, model: MODEL })
+  const ai = AI_CONFIG.state === 'missing' ? 'mock' : AI_CONFIG.state
+  res.json({ ok: true, supabase: Boolean(admin), ai, provider: AI_CONFIG.provider, model: MODEL })
 })
 
 // GET /api/admin/capability?environment=production
@@ -327,7 +334,8 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
     const claims = []
     for (const ev of candidates) {
       // TRUTHFUL PROVENANCE (G12): labelWithMethod reports the ACTUAL execution
-      // path — 'anthropic' only when the API call succeeded, 'deterministic_fallback'
+      // path — a named provider method only when the API call succeeded,
+      // 'deterministic_fallback'
       // when the stub ran after a terminal API failure, 'mock' when no key is set.
       const { label: labelled, method, aiFailed } = await processor.labelWithMethod(ev)
 
@@ -349,7 +357,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
         verified_at: new Date().toISOString(),
         visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
         extraction_method: method,
-        model_version: method === 'anthropic' ? MODEL : 'mock-v1',
+        model_version: ['anthropic', 'vercel_gateway'].includes(method) ? MODEL : 'mock-v1',
         reason_code: labelled.reason || null,
       }
       const { data: inserted } = await admin.from('claims').insert(claim).select().single()
@@ -370,7 +378,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       acc[m] = (acc[m] || 0) + 1
       return acc
     }, {})
-    const ai = !ANTHROPIC_KEY ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
+    const ai = AI_CONFIG.state === 'missing' ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
     res.json({ processed: claims.length, deduped: duplicates.length, ai, methods, claims, budget_alert: budgetAlert })
   } catch (e) {
     console.error('[process-evidence]', e)
@@ -936,8 +944,8 @@ app.post('/api/confirm/:token', async (req, res) => {
 // as a serverless function (VERCEL=1 is set automatically there), so skip listen.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    const ai = ANTHROPIC_STATE === 'missing' ? 'mock' : ANTHROPIC_STATE
-    console.log(`[gigproof api] http://localhost:${PORT}  (ai: ${ai}, supabase: ${admin ? 'on' : 'off'})`)
+    const ai = AI_CONFIG.state === 'missing' ? 'mock' : AI_CONFIG.state
+    console.log(`[lock show api] http://localhost:${PORT}  (ai: ${ai}, provider: ${AI_CONFIG.provider}, supabase: ${admin ? 'on' : 'off'})`)
   })
 }
 
