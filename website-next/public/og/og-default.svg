@@ -5,25 +5,37 @@
     </style>
   </defs>
 
-  <!-- Background: Paper (--color-paper) -->
+  <!-- Background: paper token -->
   <rect width="1200" height="630" fill="#f3f5ef"/>
 
-  <!-- Top stamp bar (--color-stamp / lime) -->
+  <!-- Top stamp bar: lime token -->
   <rect x="0" y="0" width="1200" height="6" fill="#c8f04d"/>
 
   <!-- Left accent line -->
   <rect x="80" y="80" width="3" height="470" fill="#c8f04d"/>
 
-  <!-- LOCK wordmark -->
+  <!-- LOCK SHOW Spotlight Lens symbol -->
+  <g transform="translate(104 96) scale(0.064)" fill="none" stroke="#0a0d0b" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M500 122C710 122 878 290 878 500" stroke-width="78"/>
+    <path d="M878 500C878 710 710 878 500 878" stroke-width="78"/>
+    <path d="M500 878C290 878 122 710 122 500" stroke-width="78"/>
+    <path d="M122 500C122 290 290 122 500 122" stroke-width="78"/>
+    <path d="M260 500C318 354 404 282 500 282C596 282 682 354 740 500C682 646 596 718 500 718C404 718 318 646 260 500Z" stroke-width="64"/>
+    <path d="M500 282C570 370 570 630 500 718" stroke-width="58"/>
+    <path d="M500 500L704 314" stroke-width="58"/>
+    <circle cx="500" cy="500" r="70" fill="#0a0d0b" stroke="none"/>
+  </g>
+
+  <!-- LOCK SHOW wordmark -->
   <text
-    x="113"
+    x="184"
     y="160"
     font-family="'Space Mono', monospace"
     font-weight="700"
     font-size="52"
     fill="#0a0d0b"
     letter-spacing="-1"
-  >LOCK</text>
+  >LOCK SHOW</text>
 
   <!-- Tagline -->
   <text
@@ -34,7 +46,7 @@
     font-size="18"
     fill="#5c655e"
     letter-spacing="2"
-  >VERIFIED PROOF. METHOD-LABELED.</text>
+  >Trust on Cue</text>
 
   <!-- Main headline -->
   <text

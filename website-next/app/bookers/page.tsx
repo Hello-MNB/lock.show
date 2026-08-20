@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { DoorStamp } from '@/components/door-stamp'
+import { BrandSymbol } from '@/components/brand-symbol'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/bookers' },
   title: 'For Booking Managers — Book With Context, Not Guesswork',
   description:
-    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
+    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK SHOW Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
   openGraph: {
     url: '/bookers',
-    title: 'For Booking Managers | LOCK',
+    title: 'For Booking Managers | LOCK SHOW',
     description:
       'Book with context, not guesswork. Checked evidence in two minutes — free for booking managers, always.',
     type: 'website',
@@ -53,7 +53,7 @@ const passportFeatures = [
   {
     label: 'NO ACCOUNT, EVER',
     title: 'One link, two minutes, zero friction.',
-    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK is free for booking managers, always.',
+    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK SHOW is free for booking managers, always.',
   },
 ]
 
@@ -88,7 +88,7 @@ export default function BookersPage() {
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={310} />
+          <BrandSymbol size={310} />
         </div>
         <div
           aria-hidden="true"
@@ -102,7 +102,7 @@ export default function BookersPage() {
             pointerEvents: 'none',
           }}
         >
-          <DoorStamp size={240} />
+          <BrandSymbol size={240} />
         </div>
         <div style={{ maxWidth: '640px', position: 'relative' }}>
           <p
@@ -401,7 +401,7 @@ export default function BookersPage() {
         </div>
       </section>
 
-      {/* ── WHAT LOCK DOESN'T PROMISE ────────────────── */}
+      {/* ── WHAT LOCK SHOW DOESN'T PROMISE ────────────────── */}
       <section style={{
         background: 'var(--color-night)',
         padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
@@ -429,7 +429,7 @@ export default function BookersPage() {
               marginBottom: '1rem',
             }}
           >
-            LOCK makes no promises. That&apos;s the point.
+            LOCK SHOW makes no promises. That&apos;s the point.
           </h2>
           <p
             style={{
@@ -440,7 +440,7 @@ export default function BookersPage() {
               marginBottom: '2rem',
             }}
           >
-            LOCK will never tell you an artist will fill your floor. No score,
+            LOCK SHOW will never tell you an artist will fill your floor. No score,
             no ranking, no prediction — only what happened, how it was checked,
             and when. You read it in two minutes. The decision stays yours.
           </p>
@@ -492,7 +492,7 @@ export default function BookersPage() {
               lineHeight: 1.6,
             }}
           >
-            Open it. See the room before you say yes. LOCK is free for booking
+            Open it. See the room before you say yes. LOCK SHOW is free for booking
             managers — always. No signup, no account, no catch.
           </p>
           <Link

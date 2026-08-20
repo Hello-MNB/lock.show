@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
-import { DoorStamp } from '@/components/door-stamp'
+import { BrandSymbol } from '@/components/brand-symbol'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
@@ -45,7 +45,7 @@ const FOOTER_LINKS = [
   {
     heading: 'FOR ARTISTS',
     links: [
-      { href: '/artists',     label: 'Why LOCK' },
+      { href: '/artists',     label: 'Why LOCK SHOW' },
       { href: '/radar',       label: 'Artist Radar' },
       { href: '/methodology', label: 'Methodology' },
       { href: '/pricing',     label: 'Pricing' },
@@ -109,7 +109,7 @@ export function Footer() {
           <div>
             <Link
               href="/"
-              aria-label="LOCK home"
+              aria-label="LOCK SHOW home"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -123,8 +123,8 @@ export function Footer() {
                 marginBottom: '6px',
               }}
             >
-              <DoorStamp size={36} style={{ color: 'var(--color-stamp)' }} />
-              LOCK
+              <BrandSymbol size={36} />
+              LOCK SHOW
             </Link>
             <p style={{
               fontFamily: 'var(--font-space-mono)',
@@ -133,7 +133,7 @@ export function Footer() {
               color: 'rgba(243,245,239,0.55)',
               margin: 0,
             }}>
-              REAL NIGHTS · CHECKED PROOF · TEL AVIV
+              Trust on Cue
             </p>
           </div>
           <a
@@ -340,7 +340,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
           </p>
           <Link
             href="/contact"

@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   alternates: { canonical: '/methodology' },
   title: 'Methodology — How Evidence Is Verified',
-  description: 'Every claim in a LOCK Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
+  description: 'Every claim in a LOCK SHOW Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 
 const methodLabels = [
@@ -17,7 +17,7 @@ const methodLabels = [
   {
     label: 'TICKET EXPORT · REVIEWED',
     title: 'Ticket sales data, reviewed by a human.',
-    body: 'The artist or their representative exported a sales report from the ticketing platform (Eventim, Tikaway, or similar). A LOCK operator reviewed the document against the stated claim, and the date of that review is stamped on the claim.',
+    body: 'The artist or their representative exported a sales report from the ticketing platform (Eventim, Tikaway, or similar). A LOCK SHOW operator reviewed the document against the stated claim, and the date of that review is stamped on the claim.',
     strength: 'Strong',
   },
   {
@@ -43,7 +43,7 @@ const pipelineSteps = [
   {
     phase: 'CONFIRM',
     title: 'A producer verifies.',
-    body: 'LOCK generates a unique, bounded magic link for that gig. The artist sends it to the producer; the producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
+    body: 'LOCK SHOW generates a unique, bounded magic link for that gig. The artist sends it to the producer; the producer clicks, sees the record, and confirms. The method label upgrades to PRODUCER-CONFIRMED.',
   },
   {
     phase: 'METHOD-LABEL',
@@ -68,7 +68,7 @@ const firewallItems = [
   'Every claim shows a date and geographic area. Evidence from 2023 ≠ evidence from 2026.',
   'Self-reported data appears only with an explicit SELF-REPORTED label — never disguised as verified.',
   'Streaming figures appear as secondary context only — never as draw evidence.',
-  'LOCK publishes no score, ranking, percentile, prediction, or guarantee.',
+  'LOCK SHOW publishes no score, ranking, percentile, prediction, or guarantee.',
   'A domain with no supported, verified claim is removed from the Passport entirely — never shown as "developing" or "missing".',
 ]
 
@@ -124,7 +124,7 @@ export default function Methodology() {
               </em>
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'rgba(243,245,239,0.72)', maxWidth: '540px', lineHeight: 1.65, margin: '0 0 1rem' }}>
-              Every piece of evidence in a LOCK Passport carries a method label —
+              Every piece of evidence in a LOCK SHOW Passport carries a method label —
               the source and process by which it was verified. A number without
               a method is an assertion. A method-labelled claim is evidence.
             </p>
@@ -422,7 +422,7 @@ export default function Methodology() {
             marginBottom: 'clamp(1.5rem, 4vw, 2.5rem)',
             maxWidth: '600px',
           }}>
-            And what LOCK will never do.
+            And what LOCK SHOW will never do.
           </h2>
           <div
             className="m-divide"

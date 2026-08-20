@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'Artists build and publish free during the pilot. Booking managers read Passports free, always. Producers never need an account. Agency roster plans come later.',
   openGraph: {
     url: '/pricing',
-    title: 'Pricing | LOCK',
+    title: 'Pricing | LOCK SHOW',
     description:
       'One page, four honest answers — artist, booking manager, producer, agency. And the things money can never buy here.',
     type: 'website',
@@ -41,7 +41,7 @@ const seats = [
       'Every claim carries its source and date',
       'Reply with an availability request in one tap',
     ],
-    cta: { text: 'How booking managers use LOCK →', href: '/bookers', primary: false },
+    cta: { text: 'How booking managers use LOCK SHOW →', href: '/bookers', primary: false },
     note: 'This one is permanent. A paywall between you and the proof would defeat the whole idea.',
   },
   {
@@ -81,7 +81,7 @@ const neverForSale = [
 /* ── FAQ (visible + JSON-LD share this source) ──────────── */
 const faq = [
   {
-    q: 'Is LOCK free for artists?',
+    q: 'Is LOCK SHOW free for artists?',
     a: 'Yes — free during the pilot. The pilot is a closed beta for Israeli artists: building your Radar and publishing your Passport cost nothing while it runs. When the pilot ends, pricing will be set together with the artists already inside — and we will say so clearly before anything changes.',
   },
   {
@@ -464,7 +464,7 @@ export default function Pricing() {
                 marginBottom: '1.75rem',
               }}
             >
-              Prices can change as LOCK grows — that&apos;s honest. What never changes is
+              Prices can change as LOCK SHOW grows — that&apos;s honest. What never changes is
               this: money moves nothing on a Passport. What it shows is decided by what
               actually happened, and by the artist&apos;s own approval.
             </p>
@@ -545,7 +545,7 @@ export default function Pricing() {
                 margin: 0,
               }}
             >
-              Right now LOCK is in a closed pilot with Israeli artists, and artists build
+              Right now LOCK SHOW is in a closed pilot with Israeli artists, and artists build
               free. When the pilot ends, artist pricing gets worked out with the founding
               artists — in the open, based on real use, before anything changes. Booking
               managers reading Passports stay free, producers never need an account, and

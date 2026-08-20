@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
 import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
@@ -6,7 +6,7 @@ import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
 export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
   title: 'Contact — Get in Touch',
-  description: 'LOCK is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
+  description: 'LOCK SHOW is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }
 
 const lookingFor = [
@@ -51,7 +51,7 @@ export default function Contact() {
             Questions? Ideas? Collaboration?
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            LOCK is in closed beta. We always want to hear from artists, booking managers, and producers.
+            LOCK SHOW is in closed beta. We always want to hear from artists, booking managers, and producers.
           </p>
           </div>
         </div>

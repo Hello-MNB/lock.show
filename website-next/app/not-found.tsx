@@ -35,7 +35,7 @@ export default function NotFound() {
           The address you opened doesn&apos;t exist here. The proof you&apos;re after is one click away.
         </p>
         <Link href="/" style={{ textDecoration: 'underline', fontWeight: 600 }}>
-          Back to LOCK
+          Back to LOCK SHOW
         </Link>
       </main>
     </>

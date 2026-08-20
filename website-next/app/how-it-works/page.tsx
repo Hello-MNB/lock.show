@@ -41,7 +41,7 @@ const steps = [
   {
     num: '03',
     title: 'Send the producer one link.',
-    body: 'LOCK gives you a unique link for that night. WhatsApp it to the producer who ran the show — that\'s the whole ask.',
+    body: 'LOCK SHOW gives you a unique link for that night. WhatsApp it to the producer who ran the show — that\'s the whole ask.',
   },
   {
     num: '04',
@@ -220,7 +220,7 @@ export default function HowItWorks() {
           }}>
             Worth knowing: the producer who ran your show and the booking
             manager deciding on the next one are two different people with two
-            different jobs. LOCK never mixes them up.
+            different jobs. LOCK SHOW never mixes them up.
           </p>
         </div>
       </section>
