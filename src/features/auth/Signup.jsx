@@ -78,6 +78,16 @@ export default function Signup() {
     }
   }
 
+  async function onGoogleCredential(credential) {
+    await signInWithGoogleIdToken(credential)
+    logEvent(EVENTS.SIGNUP, {
+      via: 'google',
+      surface: import.meta.env.BASE_URL === '/app/' ? 'embed' : 'standalone',
+      ...getFirstTouch(),
+    })
+    nav('/select')
+  }
+
   if (confirmPending) {
     return (
       <AuthScene>
@@ -104,7 +114,7 @@ export default function Signup() {
         <>
           <SocialAuthButtons
             onOAuth={signInWithOAuth}
-            onGoogleCredential={signInWithGoogleIdToken}
+            onGoogleCredential={onGoogleCredential}
             disabled={!OAUTH_ENABLED}
             demo={demo}
           />

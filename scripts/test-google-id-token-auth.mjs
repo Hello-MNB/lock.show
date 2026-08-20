@@ -3,12 +3,13 @@ import { readFile } from 'node:fs/promises'
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
 
-const [provider, ui, login, signup, constants] = await Promise.all([
+const [provider, ui, login, signup, constants, vercel] = await Promise.all([
   read('src/features/auth/AuthProvider.jsx'),
   read('src/components/ui.jsx'),
   read('src/features/auth/Login.jsx'),
   read('src/features/auth/Signup.jsx'),
   read('src/lib/constants.js'),
+  read('vercel.json'),
 ])
 
 assert.match(provider, /signInWithIdToken\s*\(\s*\{\s*provider:\s*['"]google['"]\s*,\s*token\s*,?\s*\}\s*\)/,
@@ -18,9 +19,14 @@ assert.match(provider, /signInWithGoogleIdToken/,
 
 for (const [name, source] of [['Login', login], ['Signup', signup]]) {
   assert.match(source, /signInWithGoogleIdToken/, `${name} must consume direct Google ID-token auth`)
-  assert.match(source, /onGoogleCredential=\{signInWithGoogleIdToken\}/,
-    `${name} must pass the direct credential handler to the social-auth surface`)
+  assert.match(source, /onGoogleCredential=\{onGoogleCredential\}/,
+    `${name} must pass its post-exchange navigation handler to the social-auth surface`)
 }
+
+assert.match(login, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,300}nav\(loc\.state\?\.from \|\| ['"]\/['"]\)/,
+  'Google login must honor the preserved return route after exchange')
+assert.match(signup, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,400}nav\(['"]\/select['"]\)/,
+  'Google signup must continue to role and workspace selection after exchange')
 
 assert.match(constants, /GOOGLE_WEB_CLIENT_ID/,
   'The public Google web client ID must have one named source')
@@ -38,5 +44,9 @@ assert.doesNotMatch(ui, /loadGoogleIdentity\(\)[\s\S]{0,500}\.catch\(onError\)/,
   'An initial third-party script failure must not show an auth error before user action')
 assert.match(ui, /onClick=\{\(\) => demo && handle\(['"]google['"]\)\}/,
   'Only the fixture-only demo build may use the legacy Google button handler')
+for (const directive of ['script-src', 'style-src', 'connect-src', 'frame-src']) {
+  assert.match(vercel, new RegExp(`${directive}[^;]*https:\\/\\/accounts\\.google\\.com`),
+    `${directive} must permit the official Google Identity Services origin`)
+}
 
 console.log('Google ID-token auth contract PASS')

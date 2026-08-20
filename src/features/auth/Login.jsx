@@ -59,6 +59,12 @@ export default function Login() {
     }
   }
 
+  async function onGoogleCredential(credential) {
+    await signInWithGoogleIdToken(credential)
+    logEvent(EVENTS.LOGIN, { via: 'google', returning: isReturnVisit('app') || undefined })
+    nav(loc.state?.from || '/')
+  }
+
   // DEMO: persona switcher instead of a real login — subtle chips, same scene.
   if (demo) {
     // Artist goes STRAIGHT to onboarding — first value first, no consent wall
@@ -136,7 +142,7 @@ export default function Login() {
       <div className="mt-6 border-t border-line pt-5">
         <SocialAuthButtons
           onOAuth={signInWithOAuth}
-          onGoogleCredential={signInWithGoogleIdToken}
+          onGoogleCredential={onGoogleCredential}
           disabled={!OAUTH_ENABLED}
           demo={demo}
         />
