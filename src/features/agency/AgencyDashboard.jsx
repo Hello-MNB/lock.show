@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authHeaders, listClaimsByArtists, listRequestsForArtists } from '../../lib/db.js'
 import { requestArtistAccess, listOutgoingAccessRequests, revokeArtistAccess, listRosterGrants } from '../../lib/orgs.js'
@@ -200,30 +200,51 @@ export default function AgencyDashboard() {
   const [inviteScope, setInviteScope] = useState(() => Object.fromEntries(OPTIONAL_SCOPES.map((s) => [s, false])))
   const [busy, setBusy] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const loadEpoch = useRef(0)
 
-  async function load() {
+  async function load(targetOrgId = orgIdForThisScreen) {
+    const epoch = ++loadEpoch.current
+    setLoading(true)
     setError(false)
+    setArtists([])
+    setRosterClaims([])
+    setRequests([])
+    setAccessRequests([])
+    if (!targetOrgId) {
+      setError(true)
+      setLoading(false)
+      return
+    }
     try {
-      try { setAccessRequests(orgIdForThisScreen ? await listOutgoingAccessRequests(orgIdForThisScreen) : []) } catch { setAccessRequests([]) }
+      let outgoing = []
+      try { outgoing = await listOutgoingAccessRequests(targetOrgId) } catch { outgoing = [] }
       try {
         const roster = await loadRepresentationWorkspace({
+          organizationId: targetOrgId,
           listRosterGrants,
           fetchGrantArtistState,
           listClaimsByArtists,
           listRequestsForArtists,
         })
         if (!roster.available) throw new Error('consented roster unavailable')
+        if (epoch !== loadEpoch.current) return
+        setAccessRequests(outgoing)
         setArtists(roster.artists)
         setRosterClaims(roster.claims)
         setRequests(roster.requests)
-      } catch { setError(true) }
+      } catch {
+        if (epoch === loadEpoch.current) setError(true)
+      }
     } catch {
-      setError(true)
+      if (epoch === loadEpoch.current) setError(true)
     } finally {
-      setLoading(false)
+      if (epoch === loadEpoch.current) setLoading(false)
     }
   }
-  useEffect(() => { load() }, [orgIdForThisScreen])
+  useEffect(() => {
+    load(orgIdForThisScreen)
+    return () => { loadEpoch.current += 1 }
+  }, [orgIdForThisScreen])
 
   // Invite an EXISTING artist by Passport link/id — creates a status='pending'
   // artist_access row. Nothing about the artist is visible to this org until

@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { persistMyIdentity as saveMyIdentity } from '../src/lib/identityCore.js'
 import { loadRepresentationWorkspace } from '../src/features/agency/representationWorkspace.js'
 
 let passed = 0
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 async function test(name, fn) {
   try {
@@ -56,7 +60,11 @@ await test('representation roster contains only consented ArtistAccess grants, n
     artist_city: 'Berlin', scope: ['view', 'share'], status: 'active',
   }
   const result = await loadRepresentationWorkspace({
-    listRosterGrants: async () => [grant],
+    organizationId: 'org-a',
+    listRosterGrants: async (organizationId) => {
+      assert.equal(organizationId, 'org-a')
+      return [grant]
+    },
     fetchGrantArtistState: async () => ({
       'artist-1': { published: true, items: [{ item_type: 'link', created_at: '2026-08-20T00:00:00Z' }], openRequests: 1 },
     }),
@@ -74,6 +82,7 @@ await test('representation roster contains only consented ArtistAccess grants, n
 
 await test('representation workspace fails closed when the consented-roster RPC is unavailable', async () => {
   const result = await loadRepresentationWorkspace({
+    organizationId: 'org-a',
     listRosterGrants: async () => null,
     fetchGrantArtistState: async () => { throw new Error('must not run') },
     listClaimsByArtists: async () => { throw new Error('must not run') },
@@ -82,4 +91,27 @@ await test('representation workspace fails closed when the consented-roster RPC 
   assert.deepEqual(result, { available: false, artists: [], claims: [], requests: [], grants: [], state: {} })
 })
 
-console.log(`Identity/workspace boundary: ${passed}/4 passed`)
+await test('representation workspace fails closed without an explicit active organization', async () => {
+  let called = false
+  const result = await loadRepresentationWorkspace({
+    organizationId: null,
+    listRosterGrants: async () => { called = true; return [] },
+    fetchGrantArtistState: async () => { throw new Error('must not run') },
+    listClaimsByArtists: async () => { throw new Error('must not run') },
+    listRequestsForArtists: async () => { throw new Error('must not run') },
+  })
+  assert.equal(called, false)
+  assert.deepEqual(result, { available: false, artists: [], claims: [], requests: [], grants: [], state: {} })
+})
+
+await test('both representation screens reload and clear data on active Workspace changes', async () => {
+  const dashboard = fs.readFileSync(path.join(root, 'src/features/agency/AgencyDashboard.jsx'), 'utf8')
+  const inbox = fs.readFileSync(path.join(root, 'src/features/agency/AgencyRequestsInbox.jsx'), 'utf8')
+  assert.match(dashboard, /organizationId:\s*targetOrgId/)
+  assert.match(dashboard, /useEffect\(\(\) => \{[\s\S]*load\(orgIdForThisScreen\)[\s\S]*\}, \[orgIdForThisScreen\]\)/)
+  assert.match(inbox, /listRosterGrants\(targetOrgId\)/)
+  assert.match(inbox, /setRows\(\[\]\)[\s\S]*setOpenId\(null\)/)
+  assert.match(inbox, /useEffect\(\(\) => \{[\s\S]*load\(activeOrgId\)[\s\S]*\}, \[activeOrgId\]\)/)
+})
+
+console.log(`Identity/workspace boundary: ${passed}/6 passed`)

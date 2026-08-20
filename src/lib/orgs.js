@@ -352,14 +352,15 @@ export async function revokeArtistAccess(id) {
 const RPC_MISSING = (e) => e && (e.code === '42883' || e.code === 'PGRST202' || /function .* does not exist/i.test(e.message || ''))
 
 // Manager office: ACTIVE consented grants → roster rows (grant ≠ ownership).
-export async function listRosterGrants() {
+export async function listRosterGrants(organizationId) {
   if (DEMO) return demoRadarRecords.map((r) => ({
     grant_id: `demo-grant-${r.artist.id}`, artist_id: r.artist.id,
     artist_stage_name: r.artist.stage_name || r.artist.name, artist_city: null,
     scope: ['view'], territory: null, status: 'active',
     consent_at: '2026-07-01T00:00:00Z', expires_at: null, created_at: '2026-07-01T00:00:00Z',
   }))
-  const { data, error } = await supabase.rpc('list_roster_grants')
+  if (!organizationId) return null
+  const { data, error } = await supabase.rpc('list_roster_grants', { p_organization_id: organizationId })
   if (error) { if (RPC_MISSING(error)) return null; throw error }
   return data ?? []
 }

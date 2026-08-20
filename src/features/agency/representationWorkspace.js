@@ -1,10 +1,14 @@
 export async function loadRepresentationWorkspace({
+  organizationId,
   listRosterGrants,
   fetchGrantArtistState,
   listClaimsByArtists,
   listRequestsForArtists,
 }) {
-  const grants = await listRosterGrants()
+  if (!organizationId) {
+    return { available: false, artists: [], claims: [], requests: [], grants: [], state: {} }
+  }
+  const grants = await listRosterGrants(organizationId)
   if (!Array.isArray(grants)) {
     return { available: false, artists: [], claims: [], requests: [], grants: [], state: {} }
   }
