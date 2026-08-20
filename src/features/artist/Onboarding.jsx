@@ -8,6 +8,7 @@ import { PageShell, Field, Spinner, ErrorNote, Loading } from '../../components/
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import ConsentLegal, { recordPrivacyConsent } from '../auth/ConsentLegal.jsx'
+import { readPendingReturn } from '../../lib/pendingReturn.js'
 
 // ── MINIMUM VIABLE ENTRY (owner order, 8 Jul) ────────────────────────────────
 // "בשביל זה יש רדאר — לאסוף נתונים": onboarding stops collecting; the Radar
@@ -158,7 +159,8 @@ export default function Onboarding() {
   function finish() {
     sessionStorage.removeItem(stepStorageKey(user.id))
     logEvent(EVENTS.ONBOARDING_COMPLETE)
-    nav('/artist/home', { state: { fromEntry: true } })
+    const pendingReturn = readPendingReturn({ consume: true })
+    nav(pendingReturn || '/artist/home', { state: { fromEntry: true } })
   }
 
   if (loading) return <Loading />

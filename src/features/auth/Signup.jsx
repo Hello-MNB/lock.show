@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { Field, Spinner, ErrorNote, SocialAuthButtons, OrDivider } from '../../components/ui.jsx'
@@ -7,6 +7,7 @@ import { OAUTH_ENABLED } from '../../lib/constants.js'
 import { logEvent, EVENTS, getFirstTouch } from '../../lib/analytics.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
 import AuthScene from './AuthScene.jsx'
+import { normalizePendingReturn, savePendingReturn } from '../../lib/pendingReturn.js'
 
 export default function Signup() {
   const { T } = useLang()
@@ -21,6 +22,11 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmPending, setConfirmPending] = useState(false)
+  const pendingReturn = normalizePendingReturn(loc.state?.from)
+
+  useEffect(() => {
+    savePendingReturn(pendingReturn)
+  }, [pendingReturn])
 
   // Persona-page handoff (cross-funnel seam): the website's /artists page
   // links here as `/signup?role=artist`. Stash the hint in sessionStorage —
@@ -43,7 +49,7 @@ export default function Signup() {
       // Maria hit: "sign up lands me on /login"). Detect it and send them to LOG
       // IN with the email prefilled + a clear notice, instead of a dead end.
       if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-        nav('/login', { state: { email, notice: 'exists' } })
+        nav('/login', { state: { email, notice: 'exists', from: pendingReturn } })
         return
       }
       // PKCE gotcha: with flowType:'pkce' (needed for Google OAuth), signUp

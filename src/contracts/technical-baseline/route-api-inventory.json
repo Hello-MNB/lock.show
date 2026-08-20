@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
   "sourceHashes": {
-    "src/App.jsx": "dcfee60f738f8222425ec9378b4897f9d2237c8daf575c3b6ae8b6282b0d17f4",
-    "server/index.js": "6221dcbb3cfae181590b95886045bf8ad717ed391677d4246bb9aafd7fd7e3f2"
+    "src/App.jsx": "5df10ae0f9414d157c2cde86249dbd666f1d1465469387ff1447c9af93c3eb5b",
+    "server/index.js": "2cac3fcd79dee4e2992421f4e4de8ac1f5b8ffa520447a03a52ef89a0f434444"
   },
   "routes": [
     {
@@ -13,7 +13,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 161
+        "line": 162
       }
     },
     {
@@ -24,7 +24,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 162
+        "line": 163
       }
     },
     {
@@ -35,7 +35,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 163
+        "line": 164
       }
     },
     {
@@ -46,7 +46,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 164
+        "line": 165
       }
     },
     {
@@ -57,7 +57,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 165
+        "line": 166
       }
     },
     {
@@ -68,7 +68,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 167
+        "line": 168
       }
     },
     {
@@ -79,7 +79,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 168
+        "line": 169
       }
     },
     {
@@ -90,7 +90,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 169
+        "line": 170
       }
     },
     {
@@ -101,7 +101,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 171
+        "line": 172
       }
     },
     {
@@ -112,7 +112,18 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 173
+        "line": 174
+      }
+    },
+    {
+      "path": "/roster-invite/:token",
+      "observedGuard": "public-or-unclassified",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 175
       }
     },
     {
@@ -123,7 +134,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 177
+        "line": 179
       }
     },
     {
@@ -134,7 +145,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 180
+        "line": 182
       }
     },
     {
@@ -145,7 +156,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 181
+        "line": 183
       }
     },
     {
@@ -156,7 +167,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 182
+        "line": 184
       }
     },
     {
@@ -167,7 +178,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 183
+        "line": 185
       }
     },
     {
@@ -178,7 +189,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 184
+        "line": 186
       }
     },
     {
@@ -189,7 +200,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 189
+        "line": 191
       }
     },
     {
@@ -200,7 +211,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 190
+        "line": 192
       }
     },
     {
@@ -211,7 +222,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 191
+        "line": 193
       }
     },
     {
@@ -222,7 +233,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 194
+        "line": 196
       }
     },
     {
@@ -233,7 +244,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 198
+        "line": 200
       }
     },
     {
@@ -244,7 +255,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 202
+        "line": 204
       }
     },
     {
@@ -255,7 +266,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 205
+        "line": 207
       }
     },
     {
@@ -266,7 +277,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 207
+        "line": 209
       }
     },
     {
@@ -277,7 +288,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 208
+        "line": 210
       }
     },
     {
@@ -288,7 +299,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 211
+        "line": 213
       }
     },
     {
@@ -299,7 +310,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 212
+        "line": 214
       }
     },
     {
@@ -310,7 +321,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 215
+        "line": 217
       }
     },
     {
@@ -321,7 +332,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 216
+        "line": 218
       }
     },
     {
@@ -332,7 +343,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 217
+        "line": 219
       }
     },
     {
@@ -343,7 +354,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 223
+        "line": 225
       }
     },
     {
@@ -354,7 +365,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 224
+        "line": 226
       }
     },
     {
@@ -365,7 +376,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 225
+        "line": 227
       }
     },
     {
@@ -376,7 +387,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 229
+        "line": 231
       }
     },
     {
@@ -387,7 +398,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 232
+        "line": 234
       }
     },
     {
@@ -398,7 +409,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 235
+        "line": 237
       }
     },
     {
@@ -409,7 +420,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 236
+        "line": 238
       }
     },
     {
@@ -420,7 +431,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 239
+        "line": 241
       }
     }
   ],
@@ -433,7 +444,51 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 179
+        "line": 180
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/roster-invitations",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 216
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/roster-invitations/:token",
+      "observedAuth": "public-or-inline",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 269
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/roster-invitations/:token/accept",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 299
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/roster-invitations/:token/decline",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 348
       }
     },
     {
@@ -444,7 +499,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 198
+        "line": 379
       }
     },
     {
@@ -455,7 +510,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 270
+        "line": 451
       }
     },
     {
@@ -466,7 +521,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 462
+        "line": 643
       }
     },
     {
@@ -477,7 +532,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 515
+        "line": 696
       }
     },
     {
@@ -488,7 +543,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 551
+        "line": 732
       }
     },
     {
@@ -499,7 +554,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 574
+        "line": 755
       }
     },
     {
@@ -510,7 +565,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 658
+        "line": 839
       }
     },
     {
@@ -521,7 +576,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 749
+        "line": 957
       }
     },
     {
@@ -532,7 +587,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 814
+        "line": 1022
       }
     },
     {
@@ -543,7 +598,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 850
+        "line": 1058
       }
     },
     {
@@ -554,7 +609,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 875
+        "line": 1083
       }
     }
   ],

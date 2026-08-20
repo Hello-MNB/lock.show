@@ -149,11 +149,14 @@ try {
     ['POST', `/api/unpublish/${ARTIST_A}`],
     ['POST', '/api/notify'],
     ['POST', '/api/request-confirmation'],
+    ['POST', '/api/roster-invitations'],
+    ['POST', '/api/roster-invitations/not-a-real-token/accept'],
+    ['POST', '/api/roster-invitations/not-a-real-token/decline'],
   ]) {
     const r = await call(path, { method, body: {}, ip: '198.51.100.11' })
     check(`${method} ${path} → 401`, r.status === 401 && r.json?.error === 'auth_required', `got ${r.status} ${r.text}`)
   }
-  covered.push('1: no-auth → 401 (5 protected routes)')
+  covered.push('1: no-auth → 401 (8 protected routes)')
 
   // ── 2. Garbage JWT → 401 ───────────────────────────────────────────────────
   console.log('[2] invalid/garbage JWT → 401')

@@ -9,6 +9,11 @@ const migrationsDir = path.join(root, 'supabase', 'migrations');
 const rollbackDir = path.join(root, 'supabase', 'rollback');
 const output = path.join(root, 'src', 'contracts', 'technical-baseline', 'migration-inventory.json');
 const selectedMigrationId = '20260820042812';
+const timestampEvidence = {
+  '20260820042812': 'PD-005_ENVIRONMENT_ADMIN_AUTHORITY',
+  '20260820091500': 'PASSPORT_PUBLIC_PAYLOAD_FIREWALL',
+  '20260820210117': 'ROSTER_INVITATION_CONSENT'
+};
 const names = fs.readdirSync(migrationsDir).filter((name) => /^(?:\d{3}|\d{14})_/.test(name));
 const nameSet = new Set(names);
 const rollbackNameSet = new Set(fs.existsSync(rollbackDir) ? fs.readdirSync(rollbackDir) : []);
@@ -17,7 +22,6 @@ const files = [];
 for (const name of names.sort()) {
   const id = name.match(/^\d+/)?.[0] ?? '';
   if (id.length === 3 && Number(id) > 39) continue;
-  if (id.length === 14 && id !== selectedMigrationId) continue;
   const direction = name.endsWith('.down.sql') ? 'down' : name.endsWith('.sql') ? 'up' : 'draft';
   const raw = fs.readFileSync(path.join(migrationsDir, name));
   let rollback = 'NOT_APPLICABLE';
@@ -31,7 +35,7 @@ for (const name of names.sort()) {
     file: `supabase/migrations/${name}`,
     direction,
     sha256: crypto.createHash('sha256').update(raw).digest('hex'),
-    dependencyEvidence: id === selectedMigrationId ? 'PD-005_ENVIRONMENT_ADMIN_AUTHORITY' : 'UNDECLARED_IN_FILENAME',
+    dependencyEvidence: timestampEvidence[id] ?? 'UNDECLARED_IN_FILENAME',
     rollback,
     selectedForFirstSlice: id === selectedMigrationId
   });
