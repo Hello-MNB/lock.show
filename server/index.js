@@ -14,6 +14,7 @@ import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
+import { assertInitialPassportPublish } from './passportPublishPolicy.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -445,6 +446,20 @@ app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
     }
     const { artistId } = req.params
     if (!(await requireArtistOwner(req, res, artistId))) return
+
+    // Until publish + version + receipt can run in one DB transaction, a
+    // replacement publish is blocked before any snapshot write. The existing
+    // public version therefore cannot change behind a failed response.
+    const { data: currentArtist, error: currentErr } = await admin
+      .from('artists').select('id, published').eq('id', artistId).maybeSingle()
+    if (currentErr) throw currentErr
+    if (!currentArtist) return res.status(404).json({ error: 'Artist not found.' })
+    try {
+      assertInitialPassportPublish(currentArtist)
+    } catch (policyError) {
+      return res.status(policyError.status || 409).json({ error: policyError.code })
+    }
+
     const payload = await buildSafePayload(artistId)
     if (!payload) return res.status(404).json({ error: 'Artist not found.' })
 

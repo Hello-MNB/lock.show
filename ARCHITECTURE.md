@@ -12,7 +12,7 @@ draw is bands + binaries + method labels only._
 
 ## 1. System diagram
 
-_Source: spec §13.1 (surfaces, stack, request flow) · `docs/SITE-MANAGEMENT.md` §2 (site/embed
+_Source: spec §13.1 (surfaces, stack, request flow) · `docs/SITE-MANAGEMENT.md` §2 (site/app
 split) · spec §13.4.4 (SPA rewrites)._
 
 ```mermaid
@@ -24,7 +24,6 @@ flowchart LR
 
   subgraph Vercel_site["Vercel project lock-site — lock.show / www"]
     SITE[Marketing site<br/>website-next/ · Next static export]
-    EMBED["/app/* embed<br/>committed SPA bundle copy<br/>website-next/public/app/"]
   end
 
   subgraph Vercel_app["Vercel project lock-app — app.lock.show"]
@@ -38,8 +37,7 @@ flowchart LR
   ANON -->|public pages| SITE
   ANON -->|/passport/:id · /confirm/:token| SPA
   AUTH --> SPA
-  SITE --- EMBED
-  EMBED -.same SPA, second bundle<br/>skew risk — CI sync gate OWED.-> SPA
+  SITE -->|app CTAs + /app/* redirect<br/>path preserved| SPA
   SPA -->|anon or user JWT, under RLS| SUPA
   SPA -->|Bearer JWT, privileged tasks only| API
   API -->|service role — BYPASSES RLS| SUPA
@@ -169,8 +167,8 @@ flowchart LR
   `git rm -rqf dir` first (lesson L-2); Vercel keeps every past deployment. One Supabase project
   — migrations additive + idempotent, applied+verified **before** dependent code; diff before
   authoring 037+; 021 stays frozen (spec §13.6.1, §13.2.1).
-- **Embed:** `website-next/public/app/**` is a second physical copy of the app bundle — every
-  app release rebuilds it; CI hash-sync gate OWED (spec §13.1.1).
+- **One application runtime:** `app.lock.show` is canonical. `lock.show/app/*` is a path-preserving
+  redirect; the retired `website-next/public/app/**` bundle must not be rebuilt.
 
 ### 4.1 The 3-state deployment labels
 
@@ -199,10 +197,10 @@ two teams are never scheduled into the same territory in the same wave._
 | C1 · Hebrew | `src/lib/i18n/he.js` only — nobody else touches he.js | HE copy, RTL, glossary conformance |
 | C2 · Platform ops | `index.html`, `public/**`, `server/**` (non-payload), `vercel.json` | fonts, bot protection, GA4, headers |
 | D · Critic-verify | nothing (temp files only) | adversarial SHIP / DO-NOT-SHIP on every µ-task |
-| E · Ship & regression | `website-next/public/app/**` (build output) | verify suite, embed rebuild, deploy watch, live smoke |
+| E · Ship & regression | release configuration and read-only production evidence | verify suite, deploy watch, live smoke |
 | F · Data & DB | `supabase/**`, Gate-metric reads in `server/` | migrations (diff-first, additive-only), RLS |
 | G · Docs & governance | `docs/**` (except `docs/qa`) + this file | register/memory/spec lockstep |
-| S · Site (11th team) | `website-next/**` exclusive (except `public/app/**` = Team E) | marketing site, rule-12 taste-gated |
+| S · Site (11th team) | `website-next/**` | marketing site and canonical app handoff, rule-12 taste-gated |
 
 ---
 

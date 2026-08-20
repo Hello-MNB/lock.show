@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, publishPassport, authHeaders } from '../../lib/db.js'
+import { getMyArtist, listClaims, updateClaimVisibility, updateClaim, deleteClaim, listProfileItems, updateItemVisibility, authHeaders } from '../../lib/db.js'
 import { VISIBILITY, SOURCE_STATUS, methodLabelFor } from '../../lib/constants.js'
 import { PageShell, Loading, EmptyState, ErrorState, Spinner } from '../../components/ui.jsx'
 import { MethodLabel, BandPill } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { markPassportDirty, clearPassportDirty, isPassportDirty } from '../../lib/passportState.js'
+import { markPassportDirty, isPassportDirty } from '../../lib/passportState.js'
 import { DEMO } from '../../lib/demo.js'
 import { appUrl } from '../../lib/appUrl.js'
 
@@ -30,7 +30,6 @@ export default function ClaimReview() {
   const [toggling, setToggling] = useState(null)
   const [loadError, setLoadError] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const [republishing, setRepublishing] = useState(false)
   const [receipt, setReceipt] = useState('') // named confirmation receipt (evidence integrity)
   // Confirm bloom (Master-Class Pillar 1: the moment of confirmation must feel
   // like progress being minted) — claim id currently mid-bloom (~400ms).
@@ -140,16 +139,6 @@ export default function ClaimReview() {
     } finally { setToggling(null) }
   }
 
-  async function republish() {
-    if (republishing) return
-    setRepublishing(true)
-    try {
-      await publishPassport(artist.id)
-      clearPassportDirty(artist.id)
-      setDirty(false)
-    } finally { setRepublishing(false) }
-  }
-
   if (loading) return <Loading />
   if (loadError) return (
     <PageShell>
@@ -192,10 +181,7 @@ export default function ClaimReview() {
             <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-amber" />
             {T.claims.applyTitle}
           </p>
-          <p className="mb-3 mt-1 text-xs text-muted">{T.claims.applyBody}</p>
-          <button className="btn-primary w-full" onClick={republish} disabled={republishing}>
-            {republishing ? <Spinner /> : T.claims.applyCta}
-          </button>
+          <p className="mt-1 text-xs text-muted">{T.claims.applyBody}</p>
         </div>
       )}
 

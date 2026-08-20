@@ -562,13 +562,6 @@ export async function adminListClaims() {
   return data ?? []
 }
 
-export async function adminSetPublished(id, published) {
-  if (DEMO) return { id, published }
-  const { data, error } = await supabase.from('artists').update({ published }).eq('id', id).select().single()
-  if (error) throw error
-  return data
-}
-
 // ── Entitlements (A8 Founding Passport, manual payment) ──────
 // W4-1 — DEMO walks the WHOLE pilot payment loop (none → "I've paid" pending →
 // operator activates), because the Gate's pay half must be RECORDABLE end-to-end.

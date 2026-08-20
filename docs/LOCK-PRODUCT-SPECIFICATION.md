@@ -1326,7 +1326,8 @@ All motion respects `prefers-reduced-motion`; menu a11y (haspopup/expanded/contr
 ### 11.1 What is live per surface (from `docs/VERSIONS.md`, mid-Jul 2026)
 - **App (app.lock.show):** live at `a874ab5` (rel-2026.07.10, incl. the firewall hotfix) — the **OLD dark build**; it does **not** yet reflect the prototype. The next app step is to implement the approved prototype into the real React app (`src/`) as an RC, then Q8, then production.
 - **Site (lock.show):** live at the Codex homepage narrative rebuild (DS v1.6.25); homepage done, inner pages pending the same architecture pass. Site is served by manual alias-promote from a Codex feature branch (governance note: not yet from `main`).
-- **Embed (lock.show/app):** mirrors the app release; every app release must rebuild the embed (`build:embed`) or the two surfaces skew.
+- **Canonical app handoff:** `lock.show/app/*` preserves the path and redirects to `app.lock.show/*`;
+  no second application bundle or runtime is permitted.
 - **DB:** applied through **037** (`is_demo`, owner-applied + verified 17 Jul; 036 stays `.DRAFT`); migration 021 is FROZEN (do not apply). Diff before creating ≥038; never recreate existing tables.
 
 ### 11.2 The prototype is the behavioral ground-truth
@@ -1376,7 +1377,7 @@ site:
 |---|---|---|---|
 | **Marketing site** (`website-next/`) | `lock.show`, `www.lock.show` | Next.js `output: 'export'` (static) | Public marketing, waitlist capture, SEO pages |
 | **App SPA** (`src/`) | `app.lock.show` | React 18 + Vite + Tailwind, React Router | The product (artist / buyer / agency / production / producer / operator workspaces) |
-| **Embed** | `www.lock.show/app/*` | The SAME Vite SPA, built `--mode embed`, committed as a static bundle under `website-next/public/app/` | Same-origin embedded copy of the app |
+| **App handoff** | `www.lock.show/app/*` | External path-preserving redirect | The sole application runtime remains `app.lock.show` |
 
 The **embed is a second physical copy** of the SPA bundle committed into the marketing repo. This is
 a known version-skew class (two bundles for one app): the standalone serves `index-*.js` from its own

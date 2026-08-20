@@ -4,10 +4,9 @@ _Source: Cowork's handover (11 Jul), banked here so it's version-controlled and 
 This file is THE registry of external connections. Update it when anything changes. No secrets — IDs only._
 
 ## Canonical decisions (Claude, 11 Jul — the handover asked)
-- **Canonical app domain = `app.lock.show`** — the only surface with serverless functions (producer
-  magic-link confirm, AI processing). `lock.show/app` = static embed mirror (marketing entry; auth works,
-  server features don't). PROCESS RULE: every app release also rebuilds the embed (`npm run build:embed`)
-  — skew between the two surfaces caused the 11-Jul "regression".
+- **Canonical app domain = `app.lock.show`** — the sole application runtime with auth and serverless
+  functions. `lock.show/app/*` redirects to the same path on `app.lock.show`; no static app mirror exists.
+  This removes the duplicate auth/API/release state that caused the 11-Jul regression.
 - Google OAuth chain VERIFIED healthy 11 Jul (headless trace: authorize → accounts.google.com, correct
   client + callback, no redirect_uri_mismatch). Owner should do one real Google login as final confirmation.
 
