@@ -34,6 +34,7 @@ function DemoAuthProvider({ children }) {
     user, profile, role, demo: true, setDemoRole,
     reloadProfile: async () => {},
     signUp: async () => ({}), signIn: async () => ({}), signInWithOAuth: async () => {},
+    signInWithGoogleIdToken: async () => ({}),
     signOut: async () => setDemoRole(null),
   }
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
@@ -153,6 +154,17 @@ function RealAuthProvider({ children }) {
     if (error) throw error
   }, [])
 
+  const signInWithGoogleIdToken = useCallback(async (token) => {
+    if (!token) throw new Error('Google did not return a signed credential')
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token,
+    })
+    if (error) throw error
+    if (data.user) await loadProfile(data.user.id)
+    return data
+  }, [loadProfile])
+
   const signOut = useCallback(async () => {
     await supabase?.auth.signOut()
     setProfile(null)
@@ -169,6 +181,7 @@ function RealAuthProvider({ children }) {
     signUp,
     signIn,
     signInWithOAuth,
+    signInWithGoogleIdToken,
     signOut,
   }
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>
