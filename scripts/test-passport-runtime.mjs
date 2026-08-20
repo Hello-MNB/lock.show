@@ -99,6 +99,11 @@ test('runtime wiring never publishes from the browser or serves live-table fallb
 
   assert.deepEqual(siteRouting.redirects, [
     {
+      source: '/app/',
+      destination: 'https://app.lock.show/',
+      permanent: false,
+    },
+    {
       source: '/app',
       destination: 'https://app.lock.show',
       permanent: false,
