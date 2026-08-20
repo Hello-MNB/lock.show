@@ -43,7 +43,7 @@ Token dependencies = tailwind tokens referenced (`color.* / shadow.* / font.*`);
 | `PlatformMark` | — | color.muted · color.surface | — | — |
 | `platformOf` | — | — | — | — |
 | `reviewedDate` | — | — | — | ── reviewedDate — dates as humans say them: "Reviewed June 2026" (mandate §3). Returns '' for missing/invalid input so callers can render-or-skip. |
-| `SocialAuthButtons` | — | color.ink · color.line2 · color.muted · color.raise · color.surface2 | disabled · hover | `demo` (DEMO build persona-picker mode, no real Supabase client): the buttons stay tappable — never inert — but explain via toast instead of attempting a real OAuth call (there is no supabase client to call in DEMO). This wins over `disabled` (the OAUTH_ENABLED-off "coming soon" state) so a demo build never silently no-ops a tap. |
+| `SocialAuthButtons` | — | color.ink · color.line2 · color.muted · color.raise · color.surface2 | disabled · hover | — |
 | `SourceLabel` | — | — | — | Method label for a fact (the 6-label SSOT). Pass a claim's verification_status as `status` and (optionally) its `methodLabel` override (e.g. producer-confirmed). |
 | `Spinner` | — | — | motion | — |
 | `StateBadge` | .chip | — | — | Canonical state badge. <StateBadge state="found" /> — or pass children to override the verb ("6 gigs found"). Accepts canonical states AND legacy STATUS.* values, so existing call sites can migrate gradually. |

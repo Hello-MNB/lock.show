@@ -110,34 +110,84 @@ function FacebookIcon() {
 const GOOGLE_IDENTITY_SRC = 'https://accounts.google.com/gsi/client'
 let googleIdentityPromise
 
-function loadGoogleIdentity() {
+function waitForGoogleIdentity(timeoutMs = 10000) {
+  const startedAt = Date.now()
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      if (window.google?.accounts?.id) {
+        resolve(window.google)
+        return
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        reject(new Error('Google Identity Services did not initialize'))
+        return
+      }
+      window.setTimeout(check, 50)
+    }
+    check()
+  })
+}
+
+function loadGoogleIdentity({ retry = false } = {}) {
   if (window.google?.accounts?.id) return Promise.resolve(window.google)
   if (googleIdentityPromise) return googleIdentityPromise
 
+  if (retry) {
+    document.querySelector(`script[data-lock-show-google-identity="true"]`)?.remove()
+  }
+
   googleIdentityPromise = new Promise((resolve, reject) => {
-    const ready = () => window.google?.accounts?.id
-      ? resolve(window.google)
-      : reject(new Error('Google Identity Services did not initialize'))
+    const ready = () => waitForGoogleIdentity().then(resolve, reject)
     const failed = () => reject(new Error('Google Identity Services could not be loaded'))
     const existing = document.querySelector(`script[src="${GOOGLE_IDENTITY_SRC}"]`)
     if (existing) {
-      existing.addEventListener('load', ready, { once: true })
-      existing.addEventListener('error', failed, { once: true })
+      ready()
       return
     }
     const script = document.createElement('script')
     script.src = GOOGLE_IDENTITY_SRC
     script.async = true
     script.defer = true
+    script.dataset.lockShowGoogleIdentity = 'true'
     script.onload = ready
     script.onerror = failed
     document.head.appendChild(script)
+  }).catch((error) => {
+    googleIdentityPromise = undefined
+    throw error
   })
   return googleIdentityPromise
 }
 
-function GoogleIdentityButton({ onCredential, disabled, onError, busy }) {
+function GoogleIdentityButton({ onCredential, disabled, onError, busy, label, fallbackClassName }) {
   const host = useRef(null)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+
+  const renderGoogleButton = useCallback((google) => {
+    if (!host.current) return
+    google.accounts.id.initialize({
+      client_id: GOOGLE_WEB_CLIENT_ID,
+      callback: ({ credential }) => {
+        if (!credential) {
+          onError(new Error('Google did not return a signed credential'))
+          return
+        }
+        onCredential(credential)
+      },
+    })
+    host.current.replaceChildren()
+    google.accounts.id.renderButton(host.current, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      shape: 'rectangular',
+      text: 'continue_with',
+      logo_alignment: 'left',
+      width: Math.min(360, Math.max(240, host.current.clientWidth || 320)),
+    })
+    setLoadFailed(false)
+  }, [onCredential, onError])
 
   useEffect(() => {
     if (disabled || !host.current) return undefined
@@ -145,35 +195,34 @@ function GoogleIdentityButton({ onCredential, disabled, onError, busy }) {
     loadGoogleIdentity()
       .then((google) => {
         if (!active || !host.current) return
-        google.accounts.id.initialize({
-          client_id: GOOGLE_WEB_CLIENT_ID,
-          callback: ({ credential }) => {
-            if (!credential) {
-              onError(new Error('Google did not return a signed credential'))
-              return
-            }
-            onCredential(credential)
-          },
-        })
-        host.current.replaceChildren()
-        google.accounts.id.renderButton(host.current, {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          shape: 'rectangular',
-          text: 'continue_with',
-          logo_alignment: 'left',
-          width: Math.min(360, Math.max(240, host.current.clientWidth || 320)),
-        })
+        renderGoogleButton(google)
       })
-      .catch(onError)
+      .catch(() => { if (active) setLoadFailed(true) })
     return () => { active = false }
-  }, [disabled, onCredential, onError])
+  }, [disabled, renderGoogleButton])
+
+  async function retryLoad() {
+    setRetrying(true)
+    try {
+      const google = await loadGoogleIdentity({ retry: true })
+      renderGoogleButton(google)
+    } catch (error) {
+      onError(error)
+    } finally {
+      setRetrying(false)
+    }
+  }
 
   return (
     <div className={`flex min-h-[44px] w-full justify-center overflow-hidden ${busy ? 'pointer-events-none opacity-60' : ''}`}
       aria-busy={busy || undefined}>
-      <div ref={host} className="min-h-[44px]" />
+      <div ref={host} className={`min-h-[44px] ${loadFailed ? 'hidden' : ''}`} />
+      {loadFailed && (
+        <button type="button" className={fallbackClassName} disabled={busy || retrying} onClick={retryLoad}>
+          <GoogleIcon />
+          {label}
+        </button>
+      )}
     </div>
   )
 }
@@ -234,6 +283,8 @@ export function SocialAuthButtons({ onOAuth, onGoogleCredential, disabled = fals
           onError={handleGoogleError}
           disabled={inert}
           busy={busy}
+          label={T.login.googleCta}
+          fallbackClassName={btnClass}
         />
       )}
       {OAUTH_FACEBOOK_ENABLED && (

@@ -30,6 +30,12 @@ assert.match(ui, /google\.accounts\.id\.initialize/,
   'Google Identity Services must be initialized')
 assert.match(ui, /google\.accounts\.id\.renderButton/,
   'The official Google sign-in button must be rendered')
+assert.match(ui, /waitForGoogleIdentity/,
+  'Google Identity Services loading must tolerate delayed initialization')
+assert.match(ui, /setLoadFailed\(true\)/,
+  'A blocked initial Google script load must preserve a retryable sign-in control')
+assert.doesNotMatch(ui, /loadGoogleIdentity\(\)[\s\S]{0,500}\.catch\(onError\)/,
+  'An initial third-party script failure must not show an auth error before user action')
 assert.match(ui, /onClick=\{\(\) => demo && handle\(['"]google['"]\)\}/,
   'Only the fixture-only demo build may use the legacy Google button handler')
 
