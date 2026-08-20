@@ -14,7 +14,10 @@ import {
   normalizeRosterInvitation,
   rosterInvitationHash,
 } from '../server/rosterInvitePolicy.js'
-import { normalizePendingReturn } from '../src/lib/pendingReturn.js'
+import { locationReturnPath, normalizePendingReturn } from '../src/lib/pendingReturn.js'
+import { resolveRosterArtistSelection } from '../src/lib/rosterArtistSelection.js'
+import { deliverRosterInvitation } from '../server/rosterInviteDelivery.js'
+import { safeLandingLocation } from '../src/lib/attribution.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -33,9 +36,47 @@ test('roster invitation input is bounded and always includes read access', () =>
 
 test('invite return paths stay inside the application', () => {
   assert.equal(normalizePendingReturn('/roster-invite/token?x=1'), '/roster-invite/token?x=1')
+  assert.equal(locationReturnPath({ pathname: '/agency', search: '?src=campaign' }), '/agency?src=campaign')
+  assert.equal(locationReturnPath({ pathname: '//evil.example', search: '?src=x' }), null)
   assert.equal(normalizePendingReturn('https://evil.example/steal'), null)
   assert.equal(normalizePendingReturn('//evil.example/steal'), null)
   assert.equal(normalizePendingReturn('/login'), null)
+})
+
+test('first-touch attribution preserves bounded campaign context without storing invite tokens', () => {
+  assert.equal(safeLandingLocation('/agency', '?src=roster-smoke&utm_campaign=launch'), '/agency?src=roster-smoke&utm_campaign=launch')
+  assert.equal(safeLandingLocation('/roster-invite/raw-secret', '?src=email&unknown=drop'), '/roster-invite/:token?src=email')
+})
+
+test('multi-Artist roster consent requires an explicit eligible Artist choice', () => {
+  const artists = [
+    { id: 'artist-a', stage_name: 'Atlas' },
+    { id: 'artist-b', stage_name: 'Nova' },
+  ]
+  assert.deepEqual(resolveRosterArtistSelection([], ''), { state: 'missing', artistId: null })
+  assert.deepEqual(resolveRosterArtistSelection([artists[0]], ''), { state: 'ready', artistId: 'artist-a' })
+  assert.deepEqual(resolveRosterArtistSelection(artists, ''), { state: 'selection_required', artistId: null })
+  assert.deepEqual(resolveRosterArtistSelection(artists, 'artist-b'), { state: 'ready', artistId: 'artist-b' })
+  assert.deepEqual(resolveRosterArtistSelection(artists, 'artist-x'), { state: 'invalid', artistId: null })
+})
+
+test('a thrown email delivery failure preserves the invitation link-only receipt without leaking details', async () => {
+  const warnings = []
+  const result = await deliverRosterInvitation({
+    enabled: true,
+    apiKey: 'configured-secret',
+    from: 'LOCK SHOW <hello@lock.show>',
+    to: 'nova@example.com',
+    artistName: 'Nova',
+    organizationName: 'North Management',
+    inviteUrl: 'https://app.lock.show/roster-invite/raw-secret-token',
+  }, {
+    fetchImpl: async () => { throw new Error('DNS failed for nova@example.com raw-secret-token') },
+    logger: { warn: (...args) => warnings.push(args.join(' ')) },
+  })
+  assert.deepEqual(result, { sent: false, reason: 'network_error' })
+  assert.equal(warnings.length, 1)
+  assert.equal(warnings[0], '[email] roster invite delivery failed')
 })
 
 function jsonResponse(status, body) {
@@ -128,12 +169,16 @@ test('runtime contract provides no-account invitation, explicit consent, and no 
   const migration = read(`supabase/migrations/${migrationNames[0]}`)
 
   assert.match(app, /path="\/roster-invite\/:token"/)
+  assert.match(app, /locationReturnPath\(location\)/)
   assert.match(agency, /createRosterInvitation/)
   assert.match(agency, /inviteUrl/)
   assert.doesNotMatch(agency, /quickAddHint/)
   assert.match(invite, /acceptRosterInvitation/)
+  assert.match(invite, /resolveRosterArtistSelection/)
+  assert.match(invite, /listMyArtists/)
   assert.match(invite, /\/signup\?role=artist/)
   assert.match(signup, /savePendingReturn/)
+  assert.match(signup, /nav\(pendingReturn \|\| ['"]\/select['"]\)/)
   assert.match(login, /readPendingReturn\(\{ consume: true \}\)/)
   assert.match(onboarding, /readPendingReturn\(\{ consume: true \}\)/)
   assert.match(server, /app\.post\('\/api\/roster-invitations', requireAuth/)

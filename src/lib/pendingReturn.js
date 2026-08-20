@@ -7,6 +7,10 @@ export function normalizePendingReturn(value) {
   return path
 }
 
+export function locationReturnPath(location) {
+  return normalizePendingReturn(`${location?.pathname || ''}${location?.search || ''}`)
+}
+
 export function savePendingReturn(value) {
   const path = normalizePendingReturn(value)
   if (!path) return null
@@ -22,4 +26,3 @@ export function readPendingReturn({ consume = false } = {}) {
   } catch { /* unavailable */ }
   return path
 }
-

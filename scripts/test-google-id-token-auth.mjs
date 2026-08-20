@@ -25,8 +25,8 @@ for (const [name, source] of [['Login', login], ['Signup', signup]]) {
 
 assert.match(login, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,300}readPendingReturn\(\{ consume: true \}\)[\s\S]{0,100}nav\(loc\.state\?\.from \|\| pendingReturn \|\| ['"]\/['"]\)/,
   'Google login must honor the preserved return route after exchange')
-assert.match(signup, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,400}nav\(['"]\/select['"]\)/,
-  'Google signup must continue to role and workspace selection after exchange')
+assert.match(signup, /await signInWithGoogleIdToken\(credential\)[\s\S]{0,400}nav\(pendingReturn \|\| ['"]\/select['"]\)/,
+  'Google signup must honor a preserved deep-link return, then otherwise continue to role selection')
 
 assert.match(constants, /GOOGLE_WEB_CLIENT_ID/,
   'The public Google web client ID must have one named source')

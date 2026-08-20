@@ -16,6 +16,7 @@ import { T as en } from '../src/lib/i18n/en.js'
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { assertInitialPassportPublish } from './passportPublishPolicy.js'
 import { normalizeRosterInvitation, rosterInvitationHash } from './rosterInvitePolicy.js'
+import { deliverRosterInvitation } from './rosterInviteDelivery.js'
 
 dotenv.config({ path: '.env.local' })
 
@@ -879,31 +880,15 @@ function gateEmailEnabled() {
   return process.env.EMAIL_ENABLED === '1' && !!realValue(process.env.RESEND_API_KEY)
 }
 async function sendRosterInviteEmail({ to, artistName, organizationName, inviteUrl } = {}) {
-  if (!gateEmailEnabled() || !to || !inviteUrl) return { sent: false }
-  const payload = {
+  return deliverRosterInvitation({
+    enabled: gateEmailEnabled(),
+    apiKey: realValue(process.env.RESEND_API_KEY),
     from: realValue(process.env.EMAIL_FROM) || 'LOCK SHOW <hello@lock.show>',
-    to: [to],
-    subject: `${organizationName || 'A representation team'} invited you to LOCK SHOW`,
-    text:
-      `Hi ${artistName || 'there'},\n\n` +
-      `${organizationName || 'A representation team'} invited you to connect your Artist workspace to their roster. ` +
-      `Nothing is shared until you sign in and approve the requested access.\n\n` +
-      `Review invitation: ${inviteUrl}\n\n` +
-      `You can accept or leave without sharing data. This is not a booking or a commitment.`,
-  }
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${realValue(process.env.RESEND_API_KEY)}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
+    to,
+    artistName,
+    organizationName,
+    inviteUrl,
   })
-  if (!response.ok) {
-    console.warn('[email] roster invite rejected:', response.status)
-    return { sent: false, status: response.status }
-  }
-  return { sent: true }
 }
 export async function sendGateEmail({ to, artistName, requesterOrg } = {}) {
   void requesterOrg // accepted, deliberately unused — see template law above

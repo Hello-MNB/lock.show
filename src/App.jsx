@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from './features/auth/AuthProvider.jsx'
 import { useOrg } from './context/OrgContext.jsx'
@@ -13,6 +14,7 @@ import {
   requireAgencyRedirect,
   requireProductionRedirect,
 } from './lib/navigation.js'
+import { locationReturnPath, savePendingReturn } from './lib/pendingReturn.js'
 
 import AppShell from './components/layout/AppShell.jsx'
 import SetupNotice from './features/setup/SetupNotice.jsx'
@@ -51,11 +53,17 @@ import AcceptInvite from './features/org/AcceptInvite.jsx'
 import RosterInvite from './features/agency/RosterInvite.jsx'
 import ConsentBanner from './components/ConsentBanner.jsx'
 
+function LoginRedirect({ location }) {
+  const from = locationReturnPath(location) || '/'
+  useEffect(() => { savePendingReturn(from) }, [from])
+  return <Navigate to={ROUTES.login} replace state={{ from }} />
+}
+
 function RequireAuth({ children }) {
   const { user, loading } = useAuth()
   const loc = useLocation()
   if (loading) return <Loading />
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
+  if (!user) return <LoginRedirect location={loc} />
   return children
 }
 
@@ -69,7 +77,7 @@ function RequireRole({ role: need, children }) {
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
   const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
-  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
   return children
 }
@@ -79,7 +87,7 @@ function RequireAdmin({ children }) {
   const { allowed, loading: adminLoading } = useAdminAccess()
   const loc = useLocation()
   if (authLoading || adminLoading) return <Loading />
-  if (!user) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (!user) return <LoginRedirect location={loc} />
   if (!allowed) return <Navigate to={ROUTES.home} replace />
   return children
 }
@@ -97,7 +105,7 @@ function RequireAgency({ children }) {
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
   const redirect = requireAgencyRedirect({ user, role, isAgency, isProducerWorkspace })
-  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
   return children
 }
@@ -112,7 +120,7 @@ function RequireProduction({ children }) {
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
   const redirect = requireProductionRedirect({ user, role, isAgency, isProducerWorkspace })
-  if (redirect === ROUTES.login) return <Navigate to={ROUTES.login} replace state={{ from: loc.pathname }} />
+  if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
   return children
 }
