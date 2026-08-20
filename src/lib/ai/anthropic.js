@@ -44,12 +44,23 @@ export class AnthropicClaimProcessor {
   #model
   #fallback
   #maxRetries
+  #baseURL
+  #credentialKind
+  #method
 
-  constructor(apiKey, model, { maxRetries = 3 } = {}) {
+  constructor(apiKey, model, {
+    maxRetries = 3,
+    baseURL,
+    credentialKind = 'anthropic',
+    method = 'anthropic',
+  } = {}) {
     this.#apiKey = apiKey
     this.#model = model
     this.#fallback = new StubClaimProcessor() // deterministic safety net
     this.#maxRetries = maxRetries
+    this.#baseURL = baseURL
+    this.#credentialKind = credentialKind
+    this.#method = method
   }
 
   async label(ev) {
@@ -71,7 +82,7 @@ export class AnthropicClaimProcessor {
   async labelWithMethod(ev) {
     try {
       const json = await this.#callWithRetry(ev)
-      return { label: this.#sanitize(json, ev), method: 'anthropic', aiFailed: false }
+      return { label: this.#sanitize(json, ev), method: this.#method, aiFailed: false }
     } catch (err) {
       console.error('[anthropic] label failed, using deterministic fallback:', err?.message || err)
       return { label: await this.#fallback.label(ev), method: 'deterministic_fallback', aiFailed: true }
@@ -79,13 +90,19 @@ export class AnthropicClaimProcessor {
   }
 
   async #callWithRetry(ev) {
-    if (typeof this.#apiKey !== 'string' || !this.#apiKey.trim().startsWith('sk-ant-')) {
+    const credential = typeof this.#apiKey === 'string' ? this.#apiKey.trim() : ''
+    const credentialValid = this.#credentialKind === 'nonempty'
+      ? Boolean(credential)
+      : credential.startsWith('sk-ant-')
+    if (!credentialValid) {
       const error = new Error('anthropic credential is misconfigured')
       error.status = 401
       throw error
     }
+    const options = { apiKey: credential, maxRetries: 0 }
+    if (this.#baseURL) options.baseURL = this.#baseURL
     const { default: Anthropic } = await import('@anthropic-ai/sdk')
-    const client = new Anthropic({ apiKey: this.#apiKey, maxRetries: 0 }) // we own the retry loop
+    const client = new Anthropic(options)
     let lastErr
     for (let attempt = 0; attempt <= this.#maxRetries; attempt++) {
       try {
