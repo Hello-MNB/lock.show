@@ -94,7 +94,19 @@ export default function EvidenceCapture() {
   async function submitEvidence(item) {
     await addEvidence({ artist_id: artistId, claim_intent: intent, source_owner_consent: true, ...item })
     logEvent(EVENTS.EVIDENCE_UPLOADED, { artist_id: artistId, evidence_type: item.evidence_type }) // pilot signal (A10)
-    resetForms(); await load(); flash(T.evidence.addedOk)
+    setProcessing(true)
+    try {
+      await processEvidence(artistId)
+      logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId })
+      flash(T.evidence.scannerComplete)
+    } catch (err) {
+      setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
+      flash(T.evidence.addedOk)
+    } finally {
+      setProcessing(false)
+      resetForms()
+      await load()
+    }
   }
 
   async function onFile(e, sourceType) {

@@ -55,9 +55,11 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Install locked marketing dependencies
         run: npm --prefix website-next ci --no-audit --no-fund
+      - name: Install pinned Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Audit application production dependencies
         if: ${{ !cancelled() }}
-        run: npm audit --omit=dev --audit-level=high
+        run: npm audit --omit=dev
       - name: Audit marketing production dependencies
         if: ${{ !cancelled() }}
         run: npm --prefix website-next audit --audit-level=high

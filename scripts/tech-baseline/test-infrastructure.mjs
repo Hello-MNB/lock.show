@@ -34,10 +34,26 @@ check('verification workflow is fail-closed and provisions PostgreSQL', () => {
   assert.match(workflow, /npm ci --no-audit --no-fund/);
   assert.match(workflow, /npm run verify/);
   assert.match(workflow, /npm run tech-baseline:verify/);
-  assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
+  assert.match(workflow, /npm audit --omit=dev(?:\s|$)/);
   assert.match(workflow, /npm --prefix website-next audit --audit-level=high/);
+  assert.match(workflow, /npx playwright install --with-deps chromium/);
   assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
   assert.doesNotMatch(workflow, /\|\|\s*true/);
+});
+
+check('RADAR Scanner is an authenticated persisted application flow', () => {
+  const app = read('src/App.jsx');
+  const dashboard = read('src/features/artist/ArtistDashboard.jsx');
+  const scanner = read('src/features/evidence/EvidenceCapture.jsx');
+  const server = read('server/index.js');
+  assert.match(app, /path="\/artist\/radar\/scanner\/:artistId"/);
+  assert.match(app, /RequireRole role=\{ROLES\.ARTIST\}/);
+  assert.match(dashboard, /\/artist\/radar\/scanner\/\$\{artist\.id\}/);
+  assert.match(scanner, /processEvidence\(artistId\)/);
+  assert.match(server, /app\.post\('\/api\/process-evidence', requireAuth/);
+  assert.match(server, /requireArtistOwner\(req, res, artistId\)/);
+  assert.match(server, /\.from\('claims'\)\.insert/);
+  assert.match(server, /\.from\('evidence_artifacts'\)/);
 });
 
 check('application SPA fallback preserves Vercel API functions', () => {

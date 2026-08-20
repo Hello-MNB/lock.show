@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..', '..');
 const runner = path.join(here, 'run-postgres-negatives.mjs');
+const sql = fs.readFileSync(path.join(root, 'supabase', 'tests', 'tech-baseline', 'rls-negative.sql'), 'utf8');
+
+assert.match(sql, /current_user\s*=\s*'tech_baseline_tenant_a'/);
+assert.match(sql, /SET LOCAL ROLE tech_baseline_ordinary[\s\S]*set_config\('app\.tenant_id', 'tenant-a', true\)/);
+assert.match(sql, /SET LOCAL ROLE tech_baseline_ordinary[\s\S]*set_config\('app\.capability', 'admin\.environment', true\)/);
 const env = { ...process.env };
 delete env.DATABASE_URL;
 delete env.POSTGRES_CONTAINER_ID;

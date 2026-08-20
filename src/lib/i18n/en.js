@@ -1271,8 +1271,10 @@ export const T = {
     },
   },
   evidence: {
-    title: 'Evidence',
-    subtitle: 'Start from what you want to prove — we\'ll ask for the evidence that supports it.',
+    title: 'RADAR Scanner',
+    subtitle: 'Add an authorized source. The Scanner checks it and returns a private, source-bound result with its limits.',
+    scannerCta: 'Run Scanner',
+    scannerComplete: 'Scan complete. The result is saved in your private RADAR.',
     intentTitle: 'What do you want to prove?',
     intentHelp: 'Each claim maps to a verifiable source. No single path is mandatory.',
     intents: {

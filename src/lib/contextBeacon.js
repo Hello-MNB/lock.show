@@ -13,4 +13,3 @@ export function buildContextBeaconModel({
     workspaceType: workspaceType || null,
   }
 }
-

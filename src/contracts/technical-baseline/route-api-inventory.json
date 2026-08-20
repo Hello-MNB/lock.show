@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
   "sourceHashes": {
-    "src/App.jsx": "e98bb959746c98ba5f047c54320b7738587e0801af03a761fd400b6a3952d068",
+    "src/App.jsx": "dcfee60f738f8222425ec9378b4897f9d2237c8daf575c3b6ae8b6282b0d17f4",
     "server/index.js": "8024a33a6efe413280af674cd9a84e4b5f8e5869f1d423f0b56634a2b9e6815b"
   },
   "routes": [
@@ -270,18 +270,18 @@
       }
     },
     {
-      "path": "/artist/offer",
+      "path": "/artist/radar/scanner/:artistId",
       "observedGuard": "role:ARTIST",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 210
+        "line": 208
       }
     },
     {
-      "path": "/evidence/:artistId",
+      "path": "/artist/offer",
       "observedGuard": "role:ARTIST",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
@@ -292,18 +292,18 @@
       }
     },
     {
-      "path": "/agency",
-      "observedGuard": "agency-guard",
+      "path": "/evidence/:artistId",
+      "observedGuard": "role:ARTIST",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 214
+        "line": 212
       }
     },
     {
-      "path": "/agency/requests",
+      "path": "/agency",
       "observedGuard": "agency-guard",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
@@ -314,7 +314,7 @@
       }
     },
     {
-      "path": "/agency/radar",
+      "path": "/agency/requests",
       "observedGuard": "agency-guard",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
@@ -325,18 +325,18 @@
       }
     },
     {
-      "path": "/production",
-      "observedGuard": "production-guard",
+      "path": "/agency/radar",
+      "observedGuard": "agency-guard",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 222
+        "line": 217
       }
     },
     {
-      "path": "/production/events",
+      "path": "/production",
       "observedGuard": "production-guard",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
@@ -347,7 +347,7 @@
       }
     },
     {
-      "path": "/production/requests",
+      "path": "/production/events",
       "observedGuard": "production-guard",
       "requiredCapability": "OPEN_EVIDENCE",
       "returnContract": "OPEN_EVIDENCE",
@@ -358,6 +358,17 @@
       }
     },
     {
+      "path": "/production/requests",
+      "observedGuard": "production-guard",
+      "requiredCapability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "status": "INVENTORIED",
+      "source": {
+        "file": "src/App.jsx",
+        "line": 225
+      }
+    },
+    {
       "path": "/admin",
       "observedGuard": "server-capability:admin.environment",
       "requiredCapability": "admin.environment",
@@ -365,7 +376,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 228
+        "line": 229
       }
     },
     {
@@ -376,7 +387,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 231
+        "line": 232
       }
     },
     {
@@ -387,7 +398,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 234
+        "line": 235
       }
     },
     {
@@ -398,7 +409,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 235
+        "line": 236
       }
     },
     {
@@ -409,7 +420,7 @@
       "status": "INVENTORIED",
       "source": {
         "file": "src/App.jsx",
-        "line": 238
+        "line": 239
       }
     }
   ],

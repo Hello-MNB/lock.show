@@ -205,6 +205,7 @@ export default function App() {
         <Route path="/artist/act/edit" element={<RequireRole role={ROLES.ARTIST}><ActEditor /></RequireRole>} />
         {/* Artist nav "Requests" tab — incoming availability requests. */}
         <Route path="/artist/requests" element={<RequireRole role={ROLES.ARTIST}><ArtistRequests /></RequireRole>} />
+        <Route path="/artist/radar/scanner/:artistId" element={<RequireRole role={ROLES.ARTIST}><EvidenceCapture /></RequireRole>} />
         {/* Free pilot: payment screen gated OFF (PAYMENTS_ENABLED). Route redirects home
             when payments are dormant — no payment surface reachable at launch. */}
         <Route path="/artist/offer" element={<RequireRole role={ROLES.ARTIST}>{PAYMENTS_ENABLED ? <OfferPayment /> : <Navigate to="/artist/home" replace />}</RequireRole>} />
