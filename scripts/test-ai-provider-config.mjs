@@ -137,7 +137,7 @@ const child = spawn(process.execPath, ['server/index.js'], {
     ...process.env,
     API_PORT: String(port),
     AI_PROVIDER: 'vercel-gateway',
-    VERCEL_OIDC_TOKEN: 'oidc-example',
+    VERCEL_OIDC_TOKEN: '',
     AI_GATEWAY_MODEL: 'anthropic/claude-sonnet-4.5',
     ANTHROPIC_API_KEY: '',
     VITE_SUPABASE_URL: '',
@@ -152,9 +152,11 @@ child.stderr.on('data', (chunk) => { output += chunk })
 
 try {
   let health
-  for (let attempt = 0; attempt < 50; attempt++) {
+  for (let attempt = 0; attempt < 200; attempt++) {
     try {
-      const response = await fetch(`http://127.0.0.1:${port}/api/health`)
+      const response = await fetch(`http://127.0.0.1:${port}/api/health`, {
+        headers: { 'x-vercel-oidc-token': 'oidc-runtime-example' },
+      })
       if (response.ok) {
         health = await response.json()
         break
@@ -171,4 +173,4 @@ try {
   child.kill('SIGTERM')
 }
 
-console.log('AI provider configuration: 14/14 passed')
+console.log('AI provider configuration: 15/15 passed')

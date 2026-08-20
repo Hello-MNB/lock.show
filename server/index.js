@@ -33,13 +33,13 @@ function realValue(v) {
 
 const SUPA_URL = realValue(process.env.VITE_SUPABASE_URL)
 const SERVICE_KEY = realValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
-const AI_CONFIG = resolveAiProviderConfig({
+const AI_ENV = {
   ...process.env,
   ANTHROPIC_API_KEY: realValue(process.env.ANTHROPIC_API_KEY),
   AI_GATEWAY_API_KEY: realValue(process.env.AI_GATEWAY_API_KEY),
   VERCEL_OIDC_TOKEN: realValue(process.env.VERCEL_OIDC_TOKEN),
-})
-const MODEL = AI_CONFIG.model
+}
+const AI_CONFIG = resolveAiProviderConfig(AI_ENV)
 
 const admin = SUPA_URL && SERVICE_KEY ? createClient(SUPA_URL, SERVICE_KEY) : null
 
@@ -62,11 +62,15 @@ const COST_PER_ITEM_USD = Number(process.env.COST_PER_ITEM_USD) || 0.02
 const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD) || 50 // hard cap (CFRO)
 const BUDGET_ALERT_AT_USD = Number(process.env.ALERT_AT) || 25 // warn threshold
 
-// Single processor instance: deterministic stub, direct Anthropic, or an
-// explicitly selected Vercel AI Gateway route. VERCEL_OIDC_TOKEN alone never
-// activates paid processing; AI_PROVIDER=vercel-gateway is required.
-// Callers never reference the concrete class — only the AiClaimProcessor interface.
-const processor = createClaimProcessorFromConfig(AI_CONFIG)
+// Vercel Functions provide their short-lived OIDC credential on each request
+// as x-vercel-oidc-token. Local builds may still expose VERCEL_OIDC_TOKEN as an
+// environment variable. In either form the token is accepted only when
+// AI_PROVIDER=vercel-gateway and a valid provider/model identifier is present.
+function aiConfigForRequest(req) {
+  const requestOidcToken = realValue(req?.headers?.['x-vercel-oidc-token'])
+  if (!requestOidcToken) return AI_CONFIG
+  return resolveAiProviderConfig({ ...AI_ENV, VERCEL_OIDC_TOKEN: requestOidcToken })
+}
 
 const app = express()
 
@@ -172,12 +176,19 @@ async function requireArtistOwner(req, res, artistId) {
 // ──────────────────────────────────────────────────────────
 // GET /api/health
 // ──────────────────────────────────────────────────────────
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (req, res) => {
+  const requestAiConfig = aiConfigForRequest(req)
   // 'configured' = a plausibly-shaped provider configuration is present; it
   // does NOT claim any call succeeded or any credits are available.
   // (truthful-provenance rule: liveness is only reported per processed item).
-  const ai = AI_CONFIG.state === 'missing' ? 'mock' : AI_CONFIG.state
-  res.json({ ok: true, supabase: Boolean(admin), ai, provider: AI_CONFIG.provider, model: MODEL })
+  const ai = requestAiConfig.state === 'missing' ? 'mock' : requestAiConfig.state
+  res.json({
+    ok: true,
+    supabase: Boolean(admin),
+    ai,
+    provider: requestAiConfig.provider,
+    model: requestAiConfig.model,
+  })
 })
 
 // GET /api/admin/capability?environment=production
@@ -267,6 +278,9 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
     if (!artistId) return res.status(400).json({ error: 'artistId required' })
     if (!(await requireArtistOwner(req, res, artistId))) return
 
+    const requestAiConfig = aiConfigForRequest(req)
+    const requestProcessor = createClaimProcessorFromConfig(requestAiConfig)
+
     // 'error' items (a previous terminal AI failure — see below) are retryable here.
     const { data: evidence, error: evErr } = await admin
       .from('evidence_artifacts')
@@ -337,7 +351,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       // path — a named provider method only when the API call succeeded,
       // 'deterministic_fallback'
       // when the stub ran after a terminal API failure, 'mock' when no key is set.
-      const { label: labelled, method, aiFailed } = await processor.labelWithMethod(ev)
+      const { label: labelled, method, aiFailed } = await requestProcessor.labelWithMethod(ev)
 
       // Retry of a previously failed item: replace its fallback-labelled claim
       // (never touches 'anthropic'/'mock' claims) so a retry doesn't duplicate.
@@ -357,7 +371,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
         verified_at: new Date().toISOString(),
         visibility: PUBLISHABLE_STATUSES.includes(labelled.status) ? VISIBILITY.PASSPORT_OK : VISIBILITY.MIRROR_ONLY,
         extraction_method: method,
-        model_version: ['anthropic', 'vercel_gateway'].includes(method) ? MODEL : 'mock-v1',
+        model_version: ['anthropic', 'vercel_gateway'].includes(method) ? requestAiConfig.model : 'mock-v1',
         reason_code: labelled.reason || null,
       }
       const { data: inserted } = await admin.from('claims').insert(claim).select().single()
@@ -378,7 +392,7 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       acc[m] = (acc[m] || 0) + 1
       return acc
     }, {})
-    const ai = AI_CONFIG.state === 'missing' ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
+    const ai = requestAiConfig.state === 'missing' ? 'mock' : (methods.deterministic_fallback ? 'degraded' : 'live')
     res.json({ processed: claims.length, deduped: duplicates.length, ai, methods, claims, budget_alert: budgetAlert })
   } catch (e) {
     console.error('[process-evidence]', e)
