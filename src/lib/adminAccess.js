@@ -1,4 +1,9 @@
 const ADMIN_CAPABILITY = 'admin.environment'
+const MISSING_ADMIN_AUTHORITY_STORE_CODES = new Set(['42P01', 'PGRST205'])
+
+export function isMissingAdminAuthorityStoreError(error) {
+  return MISSING_ADMIN_AUTHORITY_STORE_CODES.has(error?.code)
+}
 
 function denied(reason, environmentId = null) {
   return { allowed: false, capability: ADMIN_CAPABILITY, environmentId, reason }
