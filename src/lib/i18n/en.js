@@ -1291,6 +1291,7 @@ export const T = {
     subtitle: 'Add an authorized source. The Scanner checks it and returns a private, source-bound result with its limits.',
     scannerCta: 'Run Scanner',
     scannerComplete: 'Scan complete. The result is saved in your private RADAR.',
+    scannerDegraded: 'The source is saved in your private RADAR, but AI verification did not complete. A safe temporary label was added and you can retry.',
     intentTitle: 'What do you want to prove?',
     intentHelp: 'Each claim maps to a verifiable source. No single path is mandatory.',
     intents: {
@@ -1333,6 +1334,7 @@ export const T = {
     serverRefused: 'Processing was declined by the server (limit or budget reached). Nothing was labeled — your evidence is safe; try again later.',
     collected: 'Collected evidence',
     processed: 'Processed',
+    retryable: 'Waiting to retry',
     pending: 'Pending',
     results: 'Labelling results',
     // The three capture-path cards (claim-first entry, canon A7).
