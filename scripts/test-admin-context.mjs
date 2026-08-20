@@ -7,6 +7,8 @@ import { fileURLToPath } from 'node:url'
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
 import { countRetryableEvidence } from '../src/lib/evidenceState.js'
+import { anthropicKeyState } from '../src/lib/ai/index.js'
+import { AnthropicClaimProcessor } from '../src/lib/ai/anthropic.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { T as he } from '../src/lib/i18n/he.js'
 
@@ -142,6 +144,24 @@ test('RADAR Scanner reports degraded processing truthfully and keeps failed evid
   assert.equal(typeof en.evidence.scannerDegraded, 'string')
   assert.equal(typeof he.evidence.retryable, 'string')
   assert.equal(typeof en.evidence.retryable, 'string')
+})
+
+test('Anthropic configuration rejects a foreign credential without exposing it', () => {
+  assert.equal(anthropicKeyState(), 'missing')
+  assert.equal(anthropicKeyState(''), 'missing')
+  assert.equal(anthropicKeyState('not-an-anthropic-key'), 'misconfigured')
+  assert.equal(anthropicKeyState('sk-ant-api03-example'), 'configured')
+})
+
+test('a misconfigured Anthropic credential degrades locally without a network attempt', async () => {
+  const processor = new AnthropicClaimProcessor('not-an-anthropic-key', 'test-model')
+  const result = await processor.labelWithMethod({
+    evidence_type: 'link',
+    source_type: 'producer-vouch',
+    value: 'Synthetic evidence',
+  })
+  assert.equal(result.method, 'deterministic_fallback')
+  assert.equal(result.aiFailed, true)
 })
 
 test('PASSPORT database firewall keeps private RADAR rationale and snapshot JSON away from anon', () => {
