@@ -96,9 +96,14 @@ export default function EvidenceCapture() {
     logEvent(EVENTS.EVIDENCE_UPLOADED, { artist_id: artistId, evidence_type: item.evidence_type }) // pilot signal (A10)
     setProcessing(true)
     try {
-      await processEvidence(artistId)
+      const result = await processEvidence(artistId)
       logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId })
-      flash(T.evidence.scannerComplete)
+      if (result.ai === 'degraded') {
+        setError(T.evidence.scannerDegraded)
+        flash(T.evidence.scannerDegraded)
+      } else {
+        flash(T.evidence.scannerComplete)
+      }
     } catch (err) {
       setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
       flash(T.evidence.addedOk)
@@ -158,8 +163,9 @@ export default function EvidenceCapture() {
   async function process() {
     setProcessing(true); setError('')
     try {
-      await processEvidence(artistId) // server (real AI) if present; client stub ONLY when no server exists
+      const result = await processEvidence(artistId) // server (real AI) if present; client stub ONLY when no server exists
       logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId }) // pilot signal (A10)
+      if (result.ai === 'degraded') setError(T.evidence.scannerDegraded)
       await load()
     } catch (err) {
       // G12+G14: a server refusal (auth / rate limit / budget) surfaces as its
@@ -349,8 +355,8 @@ export default function EvidenceCapture() {
                   )}
                   <span className="min-w-0 leading-snug">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
                 </span>
-                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
-                  {e.status === 'processed' ? T.evidence.processed : T.evidence.pending}
+                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-good-bg text-good' : e.status === 'error' ? 'bg-need-bg text-need' : 'bg-na-bg text-muted'}`}>
+                  {e.status === 'processed' ? T.evidence.processed : e.status === 'error' ? T.evidence.retryable : T.evidence.pending}
                 </span>
               </li>
             ))}

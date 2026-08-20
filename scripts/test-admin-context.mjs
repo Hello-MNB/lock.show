@@ -127,6 +127,18 @@ test('RADAR Scanner has native Hebrew copy for every claim-first action', () => 
   }
 })
 
+test('RADAR Scanner reports degraded processing truthfully and keeps failed evidence retryable', () => {
+  const capture = read('src/features/evidence/EvidenceCapture.jsx')
+
+  assert.match(capture, /result\.ai === 'degraded'/)
+  assert.match(capture, /T\.evidence\.scannerDegraded/)
+  assert.match(capture, /e\.status === 'error' \? T\.evidence\.retryable/)
+  assert.equal(typeof he.evidence.scannerDegraded, 'string')
+  assert.equal(typeof en.evidence.scannerDegraded, 'string')
+  assert.equal(typeof he.evidence.retryable, 'string')
+  assert.equal(typeof en.evidence.retryable, 'string')
+})
+
 test('PASSPORT database firewall keeps private RADAR rationale and snapshot JSON away from anon', () => {
   const migration = read('supabase/migrations/20260820091500_passport_public_payload_firewall.sql')
   const rollback = read('supabase/rollback/20260820091500_passport_public_payload_firewall.sql')

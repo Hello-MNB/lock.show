@@ -1267,6 +1267,7 @@ export const T = {
     subtitle: 'מוסיפים מקור מורשה. הסורק בודק, מתייג ומחזיר תוצאה פרטית עם מקור ומגבלות.',
     scannerCta: 'הפעלת הסורק',
     scannerComplete: 'הסריקה הושלמה. התוצאה נשמרה ב‑RADAR הפרטי שלך.',
+    scannerDegraded: 'המקור נשמר ב‑RADAR הפרטי, אבל בדיקת ה‑AI לא הושלמה כרגע. הוספנו תיוג זמני בטוח ואפשר לנסות שוב.',
     intentTitle: 'מה חשוב לך להוכיח?',
     intentHelp: 'לכל טענה מתאים מקור שאפשר לבדוק. אין מסלול חובה אחד.',
     intents: {
@@ -1309,6 +1310,7 @@ export const T = {
     serverRefused: 'השרת דחה את העיבוד (הגעת למגבלה או שהתקציב נוצל). שום דבר לא תויג — הראיות שלך שמורות; נסה שוב מאוחר יותר.',
     collected: 'ראיות שנאספו',
     processed: 'עבר עיבוד',
+    retryable: 'ממתין לניסיון חוזר',
     pending: 'ממתין',
     results: 'תוצאות התיוג',
     // The three capture-path cards (claim-first entry, canon A7).
