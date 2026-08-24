@@ -24,6 +24,7 @@ let signupLinks = 0
 let loginLinks = 0
 const forbidden = []
 const brandDefects = []
+const privacyDefects = []
 
 for (const file of files) {
   const html = await readFile(file, 'utf8')
@@ -38,6 +39,13 @@ for (const file of files) {
   }
   if (path.basename(file) === 'index.html' && !html.includes('<title>LOCK SHOW — Trust on Cue</title>')) {
     brandDefects.push(`${file}: homepage title does not use approved tagline`)
+  }
+
+  if (/\+?972[\s-]*54[\s-]*455[\s-]*5060|054[\s-]*455[\s-]*5060|wa\.me\/972544555060/.test(html)) {
+    privacyDefects.push(`${file}: personal phone number exposed`)
+  }
+  if (/BOOKING MANAGER ≠ PRODUCER|DISTINCT ROLES, NEVER MERGED/.test(html)) {
+    privacyDefects.push(`${file}: internal role-governance copy exposed`)
   }
 
   const withoutApprovedName = html.replaceAll('LOCK SHOW', '')
@@ -65,6 +73,9 @@ if (forbidden.length > 0) {
 }
 if (brandDefects.length > 0) {
   throw new Error(`Built pages violate LOCK SHOW identity:\n${brandDefects.join('\n')}`)
+}
+if (privacyDefects.length > 0) {
+  throw new Error(`Built pages expose private/internal content:\n${privacyDefects.join('\n')}`)
 }
 
 console.log(`marketing->app flow PASS: signup=${signupLinks}, login=${loginLinks}, brand=${files.length}/${files.length}, origin=${productionOrigin}`)

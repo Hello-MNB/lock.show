@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/passport/demo' },
-  title: 'Sample Passport — Verified Live Performance Evidence',
-  description: 'A sample LOCK SHOW Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
+  title: 'Sample PASSPORT — Owner-Approved Professional Evidence',
+  description: 'A sample LOCK SHOW PASSPORT. Selected, method-labelled evidence with source and freshness — no score or ranking.',
 }
 
 import { APP_URL } from '@/lib/app-url'
@@ -215,7 +215,7 @@ export default function PassportDemo() {
             color: 'var(--color-stamp-onlight)',
             textTransform: 'uppercase',
           }}>
-            LOCK SHOW · BOOKABILITY PASSPORT
+            LOCK SHOW · PUBLIC PASSPORT
           </span>
         </div>
 
@@ -370,7 +370,7 @@ export default function PassportDemo() {
             margin: '0 0 16px',
             lineHeight: 1.5,
           }}>
-            Build your own Passport. Get verified. Share with booking managers.
+            Build your private RADAR. Approve your PASSPORT. Share it with the people you choose.
           </p>
           <a
             href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
@@ -387,7 +387,7 @@ export default function PassportDemo() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            START YOUR RADAR →
           </a>
         </div>
       </div>

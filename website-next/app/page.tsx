@@ -9,11 +9,11 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   title: 'LOCK SHOW — Trust on Cue',
   description:
-    'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
+    'Build a private RADAR from your professional signals. Publish only the evidence you approve in a shareable LOCK SHOW PASSPORT.',
   openGraph: {
     title: 'LOCK SHOW — Trust on Cue',
     description:
-      'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
+      'Private RADAR. Owner-approved PASSPORT. Every public claim shows its source, method, and freshness.',
     type: 'website',
     url: `${SITE_URL}/`,
   },
@@ -30,18 +30,18 @@ const jsonLd = {
       mainEntity: [
         {
           '@type': 'Question',
-          name: 'What is a Bookability Passport?',
+          name: 'What is a LOCK SHOW PASSPORT?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
+            text: "A LOCK SHOW PASSPORT is a public, owner-approved view of selected professional evidence. Every claim includes its method and review date; the private RADAR never becomes public automatically.",
           },
         },
         {
           '@type': 'Question',
-          name: 'Is LOCK SHOW free for booking managers?',
+          name: 'Can anyone open a shared PASSPORT?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes. Booking managers (מזמיני הופעות) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
+            text: 'Yes. A published PASSPORT opens in the browser without an account. The owner controls what is published and can withdraw it.',
           },
         },
         {
@@ -257,7 +257,7 @@ export default function HomePage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Closed Beta · Tel Aviv
+                  PRIVATE RADAR · PUBLIC PASSPORT
                 </span>
               </div>
 
@@ -273,7 +273,7 @@ export default function HomePage() {
                   marginBottom: '1.5rem',
                 }}
               >
-                Build the proof
+                Turn signals
                 <br />
                 <em
                   style={{
@@ -281,7 +281,7 @@ export default function HomePage() {
                     color: 'var(--color-stamp)',
                   }}
                 >
-                  that books you.
+                  into proof.
                 </em>
               </h1>
 
@@ -295,8 +295,8 @@ export default function HomePage() {
                   marginBottom: '2.25rem',
                 }}
               >
-                The rooms you filled, the nights that sold out — LOCK SHOW turns them
-                into a Passport a booking manager can trust before the first call.
+                Understand your professional signals in a private RADAR. Share only
+                what you approve in a clear, method-labelled PASSPORT.
               </p>
 
               {/* CTAs */}
@@ -325,7 +325,7 @@ export default function HomePage() {
                     textDecoration: 'none',
                   }}
                 >
-                  BUILD YOUR PASSPORT
+                  START YOUR RADAR
                   <Icon id="arrow" size={16} color="var(--color-ink)" />
                 </a>
                 <Link
@@ -411,7 +411,7 @@ export default function HomePage() {
                   textTransform: 'uppercase',
                 }}
               >
-                LOCK SHOW · BOOKABILITY PASSPORT
+                LOCK SHOW · PUBLIC PASSPORT
               </div>
 
               {/* Artist identity */}

@@ -6,7 +6,7 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
+import { SAME_AS, CONTACT_POINTS } from '@/lib/social'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -41,11 +41,11 @@ export const metadata: Metadata = {
     template: '%s | LOCK SHOW',
   },
   description:
-    'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
+    'A private RADAR for understanding professional signals, and an owner-approved PASSPORT for sharing selected evidence with confidence.',
   keywords: [
-    'artist booking proof',
+    'artist intelligence radar',
     'live performance verification',
-    'booking manager',
+    'artist passport',
     'artist passport',
     'אמרגן',
     'אמן',
@@ -111,7 +111,7 @@ const jsonLd = {
       url: SITE_URL,
       name: 'LOCK SHOW',
       description:
-        'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
+    'A private evidence-led RADAR and an owner-approved public PASSPORT for live-entertainment professionals.',
       publisher: { '@id': `${SITE_URL}/#organization` },
       // 'en' only: page bodies are English-only today; the locale toggle
       // covers nav/footer/consent copy, not page content (T-84 HE-scope note).
@@ -143,13 +143,6 @@ const jsonLd = {
       // brand to its official channels (single source: lib/social.ts).
       sameAs: SAME_AS,
       contactPoint: [
-        {
-          '@type': 'ContactPoint',
-          contactType: 'customer support',
-          telephone: WHATSAPP_E164,
-          areaServed: 'IL',
-          availableLanguage: ['he', 'en'],
-        },
         ...CONTACT_POINTS.map((c) => ({
           '@type': 'ContactPoint',
           contactType: c.contactType,
@@ -159,17 +152,17 @@ const jsonLd = {
         })),
       ],
       description:
-        'LOCK SHOW provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
+        'LOCK SHOW turns permissioned professional evidence into a private RADAR and a public PASSPORT approved by its owner.',
     },
     {
       '@type': 'SoftwareApplication',
       '@id': `${SITE_URL}/#software`,
-      name: 'LOCK SHOW — Bookability Passport',
+      name: 'LOCK SHOW — RADAR and PASSPORT',
       url: SITE_URL,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Web',
       description:
-        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (מזמיני הופעות) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
+        'An evidence-led workspace for live entertainment: people build a private RADAR, then publish only selected, method-labeled evidence in an owner-approved PASSPORT.',
       provider: { '@id': `${SITE_URL}/#organization` },
       areaServed: {
         '@type': 'Country',
@@ -182,7 +175,7 @@ const jsonLd = {
         price: '0',
         priceCurrency: 'USD',
         description:
-          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
+          'Public PASSPORT viewing is free. Private RADAR access is available during the pilot.',
       },
     },
   ],

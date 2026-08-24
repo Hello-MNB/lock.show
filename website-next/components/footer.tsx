@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Facebook, Instagram, Linkedin, Mail, Radar, ShieldCheck } from 'lucide-react'
 
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
 import { BrandSymbol } from '@/components/brand-symbol'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
+import { SOCIAL, EMAILS } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -32,8 +33,7 @@ function ConsentPrefsButton({ label }: { label: string }) {
         fontFamily: 'var(--font-heebo)',
         fontSize: '0.875rem',
         color: 'rgba(243,245,239,0.7)',
-        textDecoration: 'underline',
-        textUnderlineOffset: '2px',
+        textDecoration: 'none',
       }}
     >
       {label}
@@ -43,31 +43,33 @@ function ConsentPrefsButton({ label }: { label: string }) {
 
 const FOOTER_LINKS = [
   {
-    heading: 'FOR ARTISTS',
+    heading: 'PRODUCT',
     links: [
-      { href: '/artists',     label: 'Why LOCK SHOW' },
-      { href: '/radar',       label: 'Artist Radar' },
+      { href: '/radar',       label: 'RADAR' },
+      { href: '/passport/demo', label: 'PASSPORT' },
+      { href: '/how-it-works', label: 'How It Works' },
       { href: '/methodology', label: 'Methodology' },
-      { href: '/pricing',     label: 'Pricing' },
     ],
   },
   {
-    heading: 'FOR BOOKERS',
+    heading: 'FOR PEOPLE',
     links: [
-      { href: '/bookers',       label: 'For Booking Managers' },
-      { href: '/producers',     label: 'For Producers' },
-      { href: '/passport/demo', label: 'Sample Passport' },
-      { href: '/how-it-works',  label: 'How It Works' },
+      { href: '/artists',       label: 'Artists' },
+      { href: '/bookers',       label: 'Passport Recipients' },
+      { href: '/producers',     label: 'Claim Confirmers' },
     ],
   },
   {
-    heading: 'LEARN MORE',
+    heading: 'COMPANY',
     links: [
       { href: '/faq',         label: 'FAQ' },
       { href: '/contact',     label: 'Contact' },
+      { href: '/pricing',     label: 'Pilot Access' },
     ],
   },
 ]
+
+const SOCIAL_ICONS = { instagram: Instagram, facebook: Facebook, linkedin: Linkedin }
 
 // T-84 CTA attribution law (docs/SITE-REWRITE-BRIEF.md): footer is shared
 // across every page, so the campaign must be derived from the route, not
@@ -152,7 +154,7 @@ export function Footer() {
               flexShrink: 0,
             }}
           >
-            BUILD YOUR PASSPORT →
+            START YOUR RADAR →
           </a>
         </div>
 
@@ -247,7 +249,9 @@ export function Footer() {
               CONNECT
             </p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {SOCIAL.map(({ key, label, href }) => (
+              {SOCIAL.map(({ key, label, href }) => {
+                const Icon = SOCIAL_ICONS[key]
+                return (
                 <li key={key} style={{ marginBottom: '4px' }}>
                   <a
                     href={href}
@@ -258,31 +262,18 @@ export function Footer() {
                       fontSize: '0.875rem',
                       color: 'rgba(243,245,239,0.7)',
                       textDecoration: 'none',
-                      display: 'inline-block',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
                       padding: '0.4rem 0',
                     }}
                   >
+                    <Icon size={16} aria-hidden="true" />
                     {label}
                   </a>
                 </li>
-              ))}
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-              </li>
+                )
+              })}
               <li style={{ marginBottom: '4px' }}>
                 <a
                   href={`mailto:${EMAILS.hello}`}
@@ -292,10 +283,13 @@ export function Footer() {
                     fontSize: '0.875rem',
                     color: 'rgba(243,245,239,0.7)',
                     textDecoration: 'none',
-                    display: 'inline-block',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
                     padding: '0.4rem 0',
                   }}
                 >
+                  <Mail size={16} aria-hidden="true" />
                   {EMAILS.hello}
                 </a>
               </li>
@@ -303,7 +297,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Entity + firewall notice */}
+        {/* Product promise — public language, not internal governance copy. */}
         <div style={{
           padding: '20px',
           backgroundColor: 'rgba(255,255,255,0.03)',
@@ -311,17 +305,9 @@ export function Footer() {
           borderRadius: '12px',
           marginBottom: '32px',
         }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.75rem',
-            letterSpacing: '0.08em',
-            color: 'rgba(243,245,239,0.55)',
-            margin: 0,
-            lineHeight: 1.8,
-          }}>
-            BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.
-            {' '}EVERY CLAIM SHOWS HOW IT WAS CHECKED. AUDIENCE SIZE ALWAYS SHOWN AS A RANGE.
-            {' '}THE DECISION ALWAYS STAYS WITH THE PERSON BOOKING.
+          <p style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(243,245,239,0.68)', margin: 0, lineHeight: 1.6 }}>
+            <ShieldCheck size={18} color="var(--color-stamp)" aria-hidden="true" />
+            <span><strong style={{ color: 'var(--color-paper)' }}>Private RADAR.</strong> Owner-approved PASSPORT. Trust on Cue.</span>
           </p>
         </div>
 
@@ -340,7 +326,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW · TEL AVIV, ISRAEL
           </p>
           <Link
             href="/contact"
@@ -354,7 +340,7 @@ export function Footer() {
               padding: '0.5rem 0',
             }}
           >
-            CONTACT
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}><Radar size={15} aria-hidden="true" /> CONTACT</span>
           </Link>
         </div>
 

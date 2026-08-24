@@ -1,8 +1,8 @@
 {
   "nav": {
     "artists": "Artists",
-    "bookers": "Booking Managers",
-    "producers": "Producers",
+    "bookers": "Passport Recipients",
+    "producers": "Claim Confirmers",
     "howItWorks": "How It Works",
     "methodology": "Methodology",
     "pricing": "Pricing",
@@ -12,10 +12,10 @@
     "login": "Log in"
   },
   "footer": {
-    "tagline": "Pre-booking proof for independent artists.",
-    "entityNotice": "מזמין הופעות ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
+    "tagline": "Private RADAR. Owner-approved PASSPORT.",
+    "entityNotice": "Private RADAR · Owner-approved PASSPORT · Trust on Cue.",
     "firewallNotice": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE. Evidence, labelled by method.",
-    "copyright": "© 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL",
+    "copyright": "© 2026 LOCK SHOW · TEL AVIV, ISRAEL",
     "privacy": "Privacy",
     "terms": "Terms",
     "accessibility": "Accessibility",
@@ -24,10 +24,10 @@
   },
   "home": {
     "hero": {
-      "badge": "CLOSED BETA · TEL AVIV",
-      "headline": "Build the proof that books you.",
-      "sub": "Every claim on your Passport shows how it was checked and when — so a booking manager can decide before they risk their name on you.",
-      "ctaBuild": "BUILD YOUR PASSPORT →",
+      "badge": "PRIVATE RADAR · PUBLIC PASSPORT",
+      "headline": "Turn signals into proof.",
+      "sub": "Understand your professional signals privately. Publish only what you approve in a clear PASSPORT.",
+      "ctaBuild": "START YOUR RADAR →",
       "ctaDemo": "SEE A SAMPLE PASSPORT"
     },
     "firewall": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE — EVIDENCE, LABELLED BY METHOD",

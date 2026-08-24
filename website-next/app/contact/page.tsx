@@ -1,26 +1,29 @@
 import type { Metadata } from 'next'
+import { CheckCircle2, Clock3, Facebook, Instagram, Languages, Linkedin, Mail, MapPin } from 'lucide-react'
 import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
+import { EMAILS, SOCIAL } from '@/lib/social'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
   title: 'Contact — Get in Touch',
-  description: 'LOCK SHOW is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
+  description: 'Contact LOCK SHOW about RADAR, PASSPORT, pilot access, partnerships, or product feedback.',
 }
 
 const lookingFor = [
-  'Independent artists who want their live draw taken seriously',
-  'Booking managers evaluating unfamiliar talent',
-  'Producers happy to confirm the shows they ran — one click, no account',
-  'Honest feedback — what works, what doesn\'t',
+  'Artists ready to build a private RADAR from their own sources',
+  'Professional teams who need a clear, permissioned PASSPORT',
+  'Partners who can improve source quality and data continuity',
+  'Direct product feedback — what is clear and what still needs work',
 ]
 
 const contactDetails = [
-  { label: 'Location', value: 'Tel Aviv, Israel' },
-  { label: 'Stage', value: 'Closed Beta 2026' },
-  { label: 'Languages', value: 'Hebrew · English' },
+  { label: 'Location', value: 'Tel Aviv, Israel', icon: MapPin },
+  { label: 'Stage', value: 'Pilot 2026', icon: Clock3 },
+  { label: 'Languages', value: 'Hebrew · English', icon: Languages },
 ]
+
+const SOCIAL_ICONS = { instagram: Instagram, facebook: Facebook, linkedin: Linkedin }
 
 export default function Contact() {
   return (
@@ -38,7 +41,7 @@ export default function Contact() {
             textTransform: 'uppercase',
             marginBottom: '16px',
           }}>
-            CONTACT · GET IN TOUCH
+            CONTACT · LOCK SHOW
           </p>
           <h1 style={{
             fontFamily: 'Georgia, "Times New Roman", serif',
@@ -48,10 +51,10 @@ export default function Contact() {
             letterSpacing: '-0.03em',
             margin: '0 0 20px',
           }}>
-            Questions? Ideas? Collaboration?
+            Let&apos;s make the next signal useful.
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            LOCK SHOW is in closed beta. We always want to hear from artists, booking managers, and producers.
+            Tell us where you are in the journey: building your RADAR, preparing a PASSPORT, or reviewing a shared one.
           </p>
           </div>
         </div>
@@ -110,7 +113,9 @@ export default function Contact() {
                 CONTACT INFO
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {contactDetails.map((d) => (
+                {contactDetails.map((d) => {
+                  const Icon = d.icon
+                  return (
                   <div
                     key={d.label}
                     style={{
@@ -122,27 +127,29 @@ export default function Contact() {
                     }}
                   >
                     <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
                       fontFamily: 'var(--font-space-mono)',
                       fontSize: '0.75rem',
                       letterSpacing: '0.08em',
                       color: 'var(--color-tally-onlight)',
                       textTransform: 'uppercase',
                     }}>
-                      {d.label}
+                      <Icon size={16} aria-hidden="true" /> {d.label}
                     </span>
                     <span style={{ fontSize: '1rem', color: 'var(--color-ink)' }}>
                       {d.value}
                     </span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Direct channels */}
               <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(10,13,11,0.08)' }}>
                 <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`mailto:${EMAILS.hello}`}
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -156,18 +163,26 @@ export default function Contact() {
                   }}
                 >
                   <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                    WHATSAPP
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Mail size={17} aria-hidden="true" /> EMAIL</span>
                   </span>
-                  <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
+                  <span dir="ltr" style={{ fontSize: '0.92rem', fontWeight: 700 }}>{EMAILS.hello}</span>
                 </a>
-                <div style={{ display: 'flex', gap: '18px' }}>
-                  {SOCIAL.map(({ key, label, href }) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {SOCIAL.map(({ key, label, href }) => {
+                    const Icon = SOCIAL_ICONS[key]
+                    return (
                     <a
                       key={key}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '7px',
+                        padding: '10px 12px',
+                        border: '1px solid rgba(10,13,11,0.12)',
+                        borderRadius: '10px',
                         fontFamily: 'var(--font-space-mono)',
                         fontSize: '0.75rem',
                         letterSpacing: '0.06em',
@@ -175,9 +190,11 @@ export default function Contact() {
                         textDecoration: 'none',
                       }}
                     >
+                      <Icon size={16} aria-hidden="true" />
                       {label}
                     </a>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -202,15 +219,7 @@ export default function Contact() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {lookingFor.map((item, i) => (
                   <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                    <span style={{
-                      fontFamily: 'var(--font-space-mono)',
-                      fontSize: '0.75rem',
-                      color: 'var(--color-stamp-onlight)',
-                      flexShrink: 0,
-                      paddingTop: '2px',
-                    }}>
-                      ✓
-                    </span>
+                    <CheckCircle2 size={17} color="var(--color-stamp-onlight)" aria-hidden="true" style={{ flexShrink: 0, marginTop: '2px' }} />
                     <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', margin: 0, lineHeight: 1.5 }}>
                       {item}
                     </p>
@@ -243,10 +252,10 @@ export default function Contact() {
             letterSpacing: '-0.02em',
             marginBottom: '12px',
           }}>
-            Ready to start without waiting?
+            Ready to start with your own data?
           </h2>
           <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '28px', fontSize: '1rem', lineHeight: 1.6 }}>
-            Registration is open — free for artists during the pilot.
+            Open a private RADAR. Nothing becomes public until you approve a PASSPORT.
           </p>
           <a
             href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
@@ -264,7 +273,7 @@ export default function Contact() {
               borderRadius: 'var(--radius-sm)',
             }}
           >
-            BUILD YOUR PASSPORT →
+            START YOUR RADAR →
           </a>
         </div>
       </section>
