@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -40,6 +41,20 @@ check('verification workflow is fail-closed and provisions PostgreSQL', () => {
   assert.match(workflow, /npx playwright install --with-deps chromium/);
   assert.doesNotMatch(workflow, /continue-on-error:\s*true/);
   assert.doesNotMatch(workflow, /\|\|\s*true/);
+});
+
+check('destructive PostgreSQL regression rejects libpq target overrides', () => {
+  const runner = path.join(root, 'scripts', 'tech-baseline', 'run-admin-rollback-full-schema.mjs');
+  const result = spawnSync(process.execPath, [runner], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB: 'lock_show_test',
+      DATABASE_URL: 'postgresql://lock_show_test@127.0.0.1/lock_show_test?hostaddr=203.0.113.9',
+    },
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /DATABASE_URL_QUERY_PARAMETERS_FORBIDDEN/);
 });
 
 check('RADAR Scanner is an authenticated persisted application flow', () => {

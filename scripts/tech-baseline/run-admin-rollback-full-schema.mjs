@@ -22,6 +22,10 @@ if (!process.env.DATABASE_URL) {
 const databaseUrl = new URL(process.env.DATABASE_URL)
 const databaseFromUrl = decodeURIComponent(databaseUrl.pathname.replace(/^\//, ''))
 const localHosts = new Set(['127.0.0.1', 'localhost', '[::1]'])
+if (databaseUrl.search !== '') {
+  console.error('DATABASE_URL_QUERY_PARAMETERS_FORBIDDEN: libpq target overrides are not allowed')
+  process.exit(1)
+}
 if (!localHosts.has(databaseUrl.hostname) || databaseFromUrl !== expectedDatabaseName) {
   console.error(`DISPOSABLE_LOCAL_DATABASE_REQUIRED: expected ${expectedDatabaseName} on localhost`)
   process.exit(1)
@@ -53,10 +57,9 @@ function runSql(sql, { singleTransaction = false, label = 'SQL' } = {}) {
   return (result.stdout ?? '').trim()
 }
 
-const databaseIdentity = runSql("select current_database() || '|' || host(inet_server_addr());", { label: 'database preflight' })
-const [databaseName, serverAddress] = databaseIdentity.split('|')
-if (databaseName !== expectedDatabaseName || !['127.0.0.1', '::1'].includes(serverAddress)) {
-  throw new Error(`DISPOSABLE_LOCAL_DATABASE_REQUIRED: refusing destructive schema setup in ${databaseIdentity}`)
+const databaseName = runSql('select current_database();', { label: 'database preflight' })
+if (databaseName !== expectedDatabaseName) {
+  throw new Error(`DISPOSABLE_LOCAL_DATABASE_REQUIRED: refusing destructive schema setup in ${databaseName}`)
 }
 
 runSql(`
