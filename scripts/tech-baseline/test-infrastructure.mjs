@@ -30,7 +30,8 @@ check('verification workflow is fail-closed and provisions PostgreSQL', () => {
   const workflow = read('.github/workflows/verify.yml');
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /push:/);
-  assert.match(workflow, /postgres:16/);
+  assert.match(workflow, /postgres:17\.6-alpine/);
+  assert.match(workflow, /LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB:\s*lock_show_test/);
   assert.match(workflow, /npm ci --no-audit --no-fund/);
   assert.match(workflow, /npm run verify/);
   assert.match(workflow, /npm run tech-baseline:verify/);

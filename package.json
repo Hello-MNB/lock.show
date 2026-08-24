@@ -22,6 +22,7 @@
     "test:security": "node scripts/test-security-denial.mjs",
     "test:guardrails": "node scripts/test-guardrails.mjs",
     "test:admin-context": "node scripts/test-admin-context.mjs",
+    "test:admin-rollback-full-schema": "node scripts/tech-baseline/run-admin-rollback-full-schema.mjs",
     "test:google-auth": "node scripts/test-google-id-token-auth.mjs",
     "test:passport-runtime": "node scripts/test-passport-runtime.mjs",
     "test:roster-invite": "node scripts/test-roster-invite.mjs",
@@ -35,7 +36,7 @@
     "registry:events": "node scripts/generate-event-registry.mjs",
     "verify": "npm run test:nav && npm run test:isolation && npm run test:canon && npm run test:security && npm run test:guardrails && npm run test:admin-context && npm run test:google-auth && npm run test:passport-runtime && npm run test:roster-invite && npm run test:identity-workspace && npm run test:premium-ui && npm run test:ai-provider && npm run test:ds && npm run check:styles && npm run lint:i18n && npm run validate:registry && npm run validate:deltas && node scripts/generate-event-registry.mjs --check && npm run build && npm run build:demo && npm run test:fit",
     "test:fit": "node scripts/test-fit.mjs",
-    "tech-baseline:test": "node scripts/tech-baseline/test-infrastructure.mjs && node scripts/tech-baseline/test-contract-scanner.mjs && node scripts/tech-baseline/test-repository-contracts.mjs && node scripts/tech-baseline/test-route-inventory.mjs && node scripts/tech-baseline/test-locale-source-scanner.mjs && node scripts/tech-baseline/test-postgres-runner.mjs && node scripts/tech-baseline/test-security-scanner.mjs && node scripts/tech-baseline/test-migration-inventory.mjs && npm run test:admin-context && npm run test:ai-provider && npm run test:roster-invite",
+    "tech-baseline:test": "node scripts/tech-baseline/test-infrastructure.mjs && node scripts/tech-baseline/test-contract-scanner.mjs && node scripts/tech-baseline/test-repository-contracts.mjs && node scripts/tech-baseline/test-route-inventory.mjs && node scripts/tech-baseline/test-locale-source-scanner.mjs && node scripts/tech-baseline/test-postgres-runner.mjs && npm run test:admin-rollback-full-schema && node scripts/tech-baseline/test-security-scanner.mjs && node scripts/tech-baseline/test-migration-inventory.mjs && npm run test:admin-context && npm run test:ai-provider && npm run test:roster-invite",
     "test:radar-internal": "node scripts/test-radar-internal-scan.mjs",
     "tech-baseline:verify": "npm run tech-baseline:test && npm run test:radar-internal && node scripts/tech-baseline/generate-types.mjs --check && node scripts/tech-baseline/generate-route-inventory.mjs --check && node scripts/tech-baseline/generate-migration-inventory.mjs --check && node scripts/tech-baseline/scan-locale-source.mjs && node scripts/tech-baseline/scan-security.mjs && npm run lint:i18n && npm run validate:registry && npm run test:ds"
   },

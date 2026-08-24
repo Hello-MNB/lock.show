@@ -191,7 +191,9 @@ test('admin migration is fail-closed, environment-bound and rollback-backed', ()
   assert.doesNotMatch(migration, /insert into public\.environment_admin_membership[\s\S]*from public\.profiles profile[\s\S]*profile\.role = 'operator'/i)
   assert.doesNotMatch(migration.match(/create or replace function public\.is_operator\(\)[\s\S]*?\$\$;/i)?.[0] ?? '', /profiles[\s\S]*role = 'operator'/i)
   assert.match(rollback, /drop table if exists public\.environment_admin_membership/i)
-  assert.doesNotMatch(rollback, /profiles[\s\S]*role = 'operator'|create or replace function public\.is_operator/i)
+  assert.doesNotMatch(rollback, /profiles[\s\S]*role = 'operator'|drop function if exists public\.is_operator/i)
+  assert.match(rollback, /create or replace function public\.is_operator\(\)[\s\S]*select false;/i)
+  assert.match(rollback, /create or replace function public\.is_operator\(\)[\s\S]*drop function if exists public\.has_admin_capability/is)
 })
 
 test('explicit production Admin grant creates only a new provenance-bound authority row', () => {

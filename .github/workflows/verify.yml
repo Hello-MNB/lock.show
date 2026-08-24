@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 25
     services:
       postgres:
-        image: postgres:16.4-alpine
+        image: postgres:17.6-alpine
         env:
           POSTGRES_DB: lock_show_test
           POSTGRES_USER: lock_show_test
@@ -39,6 +39,7 @@ jobs:
       PGDATABASE: lock_show_test
       PGUSER: lock_show_test
       PGPASSWORD: lock_show_test
+      LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB: lock_show_test
 
     steps:
       - name: Checkout
