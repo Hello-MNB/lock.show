@@ -116,7 +116,7 @@
   },
   "migrations": {
     "status": "FIRST_SLICE_MIGRATION_SELECTED_UNAPPLIED",
-    "included": ["20260820042812"],
+    "included": ["20260820042812", "20260824173241"],
     "excluded": ["040", "041", "042", "043", "044", "045", "046", "047", "048", "049", "050", "051"]
   },
   "operations": {
