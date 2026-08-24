@@ -6,7 +6,8 @@
     "id": "PD-005",
     "status": "MIGRATION_SELECTED_UNAPPLIED",
     "included": [
-      "20260820042812"
+      "20260820042812",
+      "20260824173241"
     ],
     "excluded": [
       "040",
@@ -532,7 +533,7 @@
       "id": "20260820042812",
       "file": "supabase/migrations/20260820042812_environment_admin_membership.sql",
       "direction": "up",
-      "sha256": "bf485f9a1251d37d728b03ad7c346354657c66ca35481f29558a9ac757d2d2af",
+      "sha256": "2fec6b83fadfb94d7989443f4f94f445aa5536e1f5da392f94d8bec142e341bc",
       "dependencyEvidence": "PD-005_ENVIRONMENT_ADMIN_AUTHORITY",
       "rollback": "PRESENT",
       "selectedForFirstSlice": true
@@ -599,6 +600,15 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260824173241",
+      "file": "supabase/migrations/20260824173241_explicit_hello_admin_grant.sql",
+      "direction": "up",
+      "sha256": "a9b244224d466797d8d1d57fe7566c02fe4b2200686959a036b49f9831ee8893",
+      "dependencyEvidence": "APP_ADMIN_EXPLICIT_PROVENANCE_GRANT",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": true
     }
   ]
 }

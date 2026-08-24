@@ -11,7 +11,7 @@ assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 const inventory = JSON.parse(result.stdout);
 
 assert.equal(inventory.firstSlice.status, 'MIGRATION_SELECTED_UNAPPLIED');
-assert.deepEqual(inventory.firstSlice.included, ['20260820042812']);
+assert.deepEqual(inventory.firstSlice.included, ['20260820042812', '20260824173241']);
 assert.equal(inventory.liveState, 'OPEN_EVIDENCE');
 assert.ok(inventory.files.some((entry) => entry.id === '039' && entry.direction === 'up'));
 assert.ok(inventory.files.every((entry) => entry.id.length === 14 || Number(entry.id) <= 39));
@@ -21,6 +21,16 @@ const adminMigration = inventory.files.find((entry) => entry.id === '20260820042
 assert.equal(adminMigration?.direction, 'up');
 assert.equal(adminMigration?.rollback, 'PRESENT');
 assert.equal(adminMigration?.selectedForFirstSlice, true);
+assert.equal(adminMigration?.dependencyEvidence, 'PD-005_ENVIRONMENT_ADMIN_AUTHORITY');
+const explicitGrantMigration = inventory.files.find((entry) => entry.id === '20260824173241');
+assert.equal(explicitGrantMigration?.direction, 'up');
+assert.equal(explicitGrantMigration?.rollback, 'PRESENT');
+assert.equal(explicitGrantMigration?.selectedForFirstSlice, true);
+assert.equal(explicitGrantMigration?.dependencyEvidence, 'APP_ADMIN_EXPLICIT_PROVENANCE_GRANT');
+assert.deepEqual(
+  inventory.files.filter((entry) => entry.selectedForFirstSlice).map((entry) => entry.id),
+  ['20260820042812', '20260824173241'],
+);
 const rosterMigration = inventory.files.find((entry) => entry.id === '20260820210117' && entry.direction === 'up');
 assert.equal(rosterMigration?.rollback, 'PRESENT');
 assert.equal(rosterMigration?.dependencyEvidence, 'ROSTER_INVITATION_CONSENT');

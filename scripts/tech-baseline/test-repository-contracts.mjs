@@ -13,6 +13,8 @@ const contract = JSON.parse(fs.readFileSync(manifest, 'utf8'));
 const productSource = contract.sources.find((source) => source.id === 'B4-30.10');
 assert.equal(productSource?.revision, currentProductRevision, 'B4-30.10 source pin must match the exact current Product PASS revision');
 assert.equal(contract.navigationProjection.sourceRevision, currentProductRevision, 'Navigation projection must use the exact current Product PASS revision');
+assert.equal(contract.migrations?.status, 'FIRST_SLICE_MIGRATION_SELECTED_UNAPPLIED');
+assert.deepEqual(contract.migrations?.included, ['20260820042812', '20260824173241']);
 
 const scan = spawnSync(process.execPath, [path.join(here, 'scan-contracts.mjs'), manifest], { cwd: root, encoding: 'utf8' });
 assert.equal(scan.status, 0, `${scan.stdout}\n${scan.stderr}`);

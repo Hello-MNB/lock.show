@@ -12,6 +12,7 @@ create table if not exists public.environment_admin_membership (
   environment_id text not null check (environment_id in ('production', 'preview', 'staging', 'development')),
   status text not null default 'active' check (status in ('active', 'revoked', 'expired')),
   capabilities text[] not null default array[]::text[],
+  grant_source text not null,
   expires_at timestamptz,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
@@ -49,21 +50,6 @@ $$;
 
 revoke all on function public.has_admin_capability(text, text) from public, anon;
 grant execute on function public.has_admin_capability(text, text) to authenticated;
-
--- Preserve current authorized operators during the transition, without making
--- profiles.role the continuing source of authority. This is the only automatic
--- grant in the migration and is exact, reviewable, and reversible.
-insert into public.environment_admin_membership (
-  person_id,
-  environment_id,
-  status,
-  capabilities,
-  created_by
-)
-select profile.id, 'production', 'active', array['admin.environment']::text[], profile.id
-from public.profiles profile
-where profile.role = 'operator'
-on conflict (person_id, environment_id) do nothing;
 
 create or replace function public.is_operator()
 returns boolean

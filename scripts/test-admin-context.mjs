@@ -181,15 +181,75 @@ test('admin migration is fail-closed, environment-bound and rollback-backed', ()
   const rollback = read('supabase/rollback/20260820042812_environment_admin_membership.sql')
 
   assert.match(migration, /create table if not exists public\.environment_admin_membership/i)
+  assert.match(migration, /grant_source text not null/i)
   assert.match(migration, /force row level security/i)
   assert.match(migration, /revoke all on table public\.environment_admin_membership from public, anon, authenticated/i)
   assert.match(migration, /membership\.environment_id = requested_environment/i)
   assert.match(migration, /membership\.status = 'active'/i)
   assert.match(migration, /membership\.expires_at is null or membership\.expires_at > now\(\)/i)
   assert.match(migration, /select public\.has_admin_capability\('production', 'admin\.environment'\)/i)
+  assert.doesNotMatch(migration, /insert into public\.environment_admin_membership[\s\S]*from public\.profiles profile[\s\S]*profile\.role = 'operator'/i)
   assert.doesNotMatch(migration.match(/create or replace function public\.is_operator\(\)[\s\S]*?\$\$;/i)?.[0] ?? '', /profiles[\s\S]*role = 'operator'/i)
   assert.match(rollback, /drop table if exists public\.environment_admin_membership/i)
-  assert.match(rollback, /where id = auth\.uid\(\) and role = 'operator'/i)
+  assert.doesNotMatch(rollback, /profiles[\s\S]*role = 'operator'|drop function if exists public\.is_operator/i)
+  assert.match(rollback, /create or replace function public\.is_operator\(\)[\s\S]*select false;/i)
+  assert.match(rollback, /create or replace function public\.is_operator\(\)[\s\S]*drop function if exists public\.has_admin_capability/is)
+})
+
+test('explicit production Admin grant creates only a new provenance-bound authority row', () => {
+  const migrationNames = fs.readdirSync(path.join(root, 'supabase/migrations'))
+    .filter((name) => name.endsWith('_explicit_hello_admin_grant.sql'))
+  assert.equal(migrationNames.length, 1, 'expected one CLI-created explicit production Admin grant migration')
+  const [migrationName] = migrationNames
+  const migrationPath = `supabase/migrations/${migrationName}`
+  const rollbackPath = `supabase/rollback/${migrationName}`
+  const grantSource = '20260824173241_explicit_hello_admin_grant'
+  const approvedAuthUserId = 'bd6af802-607c-4faf-93d4-e0a32f10804e'
+
+  assert.equal(fs.existsSync(path.join(root, migrationPath)), true, 'explicit production Admin grant migration must exist')
+  assert.equal(fs.existsSync(path.join(root, rollbackPath)), true, 'explicit production Admin grant rollback must exist')
+
+  const migration = read(migrationPath)
+  const rollback = read(rollbackPath)
+  const authorityMigration = read('supabase/migrations/20260820042812_environment_admin_membership.sql')
+
+  assert.match(migration, /from auth\.users/i)
+  assert.match(migration, new RegExp(`id = '${approvedAuthUserId}'::uuid`, 'i'))
+  assert.match(migration, /lower\(email\) = 'hello@lock\.show'/i)
+  assert.match(migration, /email_confirmed_at is not null/i)
+  assert.match(migration, /deleted_at is null/i)
+  assert.match(migration, /banned_until is null or banned_until <= now\(\)/i)
+  assert.match(migration, /if v_identity_count <> 1 then/i)
+  assert.match(migration, /if exists \(\s*select 1\s*from public\.environment_admin_membership\s*where person_id = v_person_id\s*and environment_id = 'production'/is)
+  assert.match(migration, /raise exception 'explicit_admin_grant_membership_exists'/i)
+  assert.match(migration, /insert into public\.environment_admin_membership/i)
+  assert.match(migration, new RegExp(`v_person_id, 'production', 'active', array\\['admin\\.environment'\\]::text\\[\\], v_person_id, '${grantSource}'`, 'i'))
+  assert.doesNotMatch(migration, /on conflict|environment_admin_membership\.capabilities.*\|\| excluded\.capabilities/is)
+  assert.match(migration, /revoke all on table public\.environment_admin_membership from public, anon, authenticated/i)
+  assert.match(migration, /revoke all on table public\.environment_admin_membership from service_role;\s*grant select on table public\.environment_admin_membership to service_role/i)
+  assert.match(migration, /grant select on table public\.environment_admin_membership to service_role/i)
+  assert.doesNotMatch(migration, /profiles\.role|platform_owner|workspace ownership|user_metadata|app_metadata/i)
+
+  assert.match(authorityMigration, /security definer/i)
+  assert.match(authorityMigration, /set search_path = ''/i)
+  assert.match(authorityMigration, /from public\.environment_admin_membership membership/i)
+  assert.match(authorityMigration, /membership\.person_id = auth\.uid\(\)/i)
+  assert.match(authorityMigration, /grant execute on function public\.has_admin_capability\(text, text\) to authenticated/i)
+
+  assert.match(rollback, /v_provenance_count integer/i)
+  assert.match(rollback, /if v_provenance_count <> 1 then/i)
+  assert.match(rollback, /v_expected_membership_count integer/i)
+  assert.match(rollback, /if v_expected_membership_count <> 1 then/i)
+  assert.match(rollback, /delete from public\.environment_admin_membership/i)
+  assert.match(rollback, /person_id = v_person_id/i)
+  assert.match(rollback, /environment_id = 'production'/i)
+  assert.match(rollback, new RegExp(`grant_source = '${grantSource}'`, 'i'))
+  assert.match(rollback, /status = 'active'/i)
+  assert.match(rollback, /capabilities = array\['admin\.environment'\]::text\[\]/i)
+  assert.match(rollback, /expires_at is null/i)
+  assert.doesNotMatch(rollback, /from auth\.users|hello@lock\.show/i)
+  assert.doesNotMatch(rollback, /update public\.environment_admin_membership|array_remove|cardinality\(capabilities\)/i)
+  assert.doesNotMatch(rollback, /drop table|drop function|profiles\.role|platform_owner/i)
 })
 
 test('application routes and navigation consume the capability gate without leaking Admin into customer navigation', () => {

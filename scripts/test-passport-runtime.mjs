@@ -135,3 +135,36 @@ test('republish fails before any snapshot write can occur', () => {
   const snapshotInsert = publishRoute.indexOf(".from('passport_versions')")
   assert.ok(guard >= 0 && snapshotInsert > guard, 'republish guard must run before snapshot insertion')
 })
+
+test('malformed public PASSPORT identifiers return the unpublished 404 before a database read', () => {
+  const server = read('server/index.js')
+  const publicRoute = server.slice(server.indexOf("app.get('/api/passport/:artistId'"), server.indexOf("app.post('/api/passport-signal'"))
+  const invalidIdGuard = publicRoute.indexOf("if (!isUuid(artistId)) return res.status(404).json({ error: 'Artist not published.' })")
+  const artistRead = publicRoute.indexOf(".from('artists')")
+
+  assert.ok(invalidIdGuard >= 0, 'malformed IDs must have the same non-disclosing 404 as unpublished artists')
+  assert.ok(artistRead > invalidIdGuard, 'malformed IDs must be rejected before any artists read')
+})
+
+test('canonical UUIDv7-shaped public PASSPORT identifiers reach the configured-client gate', async () => {
+  process.env.VERCEL = '1'
+  process.env.VITE_SUPABASE_URL = ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY = ''
+  const { default: app } = await import(new URL('../server/index.js', import.meta.url))
+  const listener = await new Promise((resolve) => {
+    const server = app.listen(0, () => resolve(server))
+  })
+
+  try {
+    const port = listener.address().port
+    const valid = await fetch(`http://127.0.0.1:${port}/api/passport/01890f1e-6c2e-7cc0-8000-000000000001`)
+    const malformed = await fetch(`http://127.0.0.1:${port}/api/passport/audit-invalid`)
+
+    assert.equal(valid.status, 503, 'canonical UUIDv7-shaped IDs must pass syntax validation')
+    assert.deepEqual(await valid.json(), { error: 'Supabase admin client not configured.' })
+    assert.equal(malformed.status, 404)
+    assert.deepEqual(await malformed.json(), { error: 'Artist not published.' })
+  } finally {
+    await new Promise((resolve, reject) => listener.close((error) => error ? reject(error) : resolve()))
+  }
+})

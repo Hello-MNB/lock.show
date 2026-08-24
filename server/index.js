@@ -33,6 +33,11 @@ function realValue(v) {
   return s
 }
 
+function isUuid(value) {
+  return typeof value === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+}
+
 const SUPA_URL = realValue(process.env.VITE_SUPABASE_URL)
 const SERVICE_KEY = realValue(process.env.SUPABASE_SERVICE_ROLE_KEY)
 const AI_ENV = {
@@ -696,10 +701,11 @@ app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
 // ──────────────────────────────────────────────────────────
 app.get('/api/passport/:artistId', async (req, res) => {
   try {
+    const { artistId } = req.params
+    if (!isUuid(artistId)) return res.status(404).json({ error: 'Artist not published.' })
     if (!admin) {
       return res.status(503).json({ error: 'Supabase admin client not configured.' })
     }
-    const { artistId } = req.params
 
     // Live publish flag gates visibility even though we serve a snapshot.
     const { data: pub, error: pErr } = await admin
