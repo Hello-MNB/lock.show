@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { BottomSheet, Spinner } from '../../components/ui.jsx'
-import { createWorkspace } from '../../lib/orgs.js'
+import { createWorkspace, getWorkspaceCreationCapabilities } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
 import { useAdminAccess } from '../../context/AdminAccessContext.jsx'
 
@@ -58,6 +58,16 @@ export default function ContextSwitcher() {
   const [switchTarget, setSwitchTarget] = useState(null)
   const [switchBusy, setSwitchBusy] = useState(false)
   const [switchError, setSwitchError] = useState('')
+  const [availableTypes, setAvailableTypes] = useState([])
+
+  useEffect(() => {
+    if (!open || adminMode) return
+    let activeRequest = true
+    getWorkspaceCreationCapabilities()
+      .then((types) => { if (activeRequest) setAvailableTypes(types) })
+      .catch(() => { if (activeRequest) setAvailableTypes([]) })
+    return () => { activeRequest = false }
+  }, [open, adminMode])
 
   const active = memberships?.find((m) => m.organization?.id === activeOrgId) || null
   const isAgency = ['agency', 'agency_plus'].includes(active?.organization?.plan)
@@ -193,7 +203,7 @@ export default function ContextSwitcher() {
               <div>
                 <span className="mb-1 block text-xs text-muted">{T.org.newWorkspaceTypeLabel}</span>
                 <div className="flex gap-1.5" role="radiogroup" aria-label={T.org.newWorkspaceTypeLabel}>
-                  {NEW_WORKSPACE_TYPES.map((t) => (
+                  {NEW_WORKSPACE_TYPES.filter((type) => availableTypes.includes(type)).map((t) => (
                     <button key={t} type="button" role="radio" aria-checked={wsType === t}
                       onClick={() => setWsType(t)}
                       className={`chip min-h-[36px] flex-1 border px-2 py-1 text-xs transition ${
@@ -215,7 +225,7 @@ export default function ContextSwitcher() {
                 </button>
               </div>
             </form>
-          ) : (
+          ) : availableTypes.length > 0 ? (
             <button
               type="button"
               onClick={() => setCreating(true)}
@@ -223,7 +233,7 @@ export default function ContextSwitcher() {
             >
               {T.nav.addWorkspace}
             </button>
-          ))}
+          ) : null)}
           <p className="mt-1 text-center text-[10px] text-faint">{T.org.switchNote}</p>
         </div>
       </BottomSheet>

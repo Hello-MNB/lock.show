@@ -81,6 +81,14 @@ export async function createWorkspace({ name, type = 'artist' } = {}) {
   return { ok: true, id: data }
 }
 
+export async function getWorkspaceCreationCapabilities() {
+  if (DEMO) return ['artist', 'agency', 'production']
+  const { data, error } = await supabase.rpc('get_workspace_creation_capabilities')
+  if (error) throw error
+  const byDatabaseType = { artist: 'artist', management: 'agency', producer: 'production' }
+  return (data || []).map((type) => byDatabaseType[type]).filter(Boolean)
+}
+
 // ── Memberships + active-org context (O3) ──
 export async function getMyMemberships() {
   if (DEMO) return demoMemberships

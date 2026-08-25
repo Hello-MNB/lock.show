@@ -14,6 +14,7 @@ drop function if exists public.resend_workspace_invitation(uuid,bigint,uuid);
 drop function if exists public.rename_workspace(uuid,text,bigint,uuid);
 drop function if exists public.commit_workspace_context(uuid,bigint,uuid,text);
 drop function if exists public.resolve_primary_workspace(text);
+drop function if exists public.get_workspace_creation_capabilities();
 drop table if exists public.workspace_authority_receipt;
 
 alter table public.organization_membership drop constraint if exists organization_membership_status_check;

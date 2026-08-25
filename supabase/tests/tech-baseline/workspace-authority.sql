@@ -7,6 +7,7 @@ declare
 begin
   foreach required_function in array array[
     'resolve_primary_workspace',
+    'get_workspace_creation_capabilities',
     'commit_workspace_context',
     'rename_workspace',
     'resend_workspace_invitation',
@@ -73,6 +74,9 @@ begin
   if v_result->>'outcome'<>'RESOLVED_PRIMARY'
      or v_result->'workspace'->>'id'<>'20000000-0000-4000-8000-000000000001' then
     raise exception 'primary_resolution_failed:%',v_result;
+  end if;
+  if public.get_workspace_creation_capabilities()<>array['artist','management','producer']::text[] then
+    raise exception 'workspace_creation_capability_failed';
   end if;
 
   v_result:=public.commit_workspace_context(

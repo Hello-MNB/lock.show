@@ -151,6 +151,19 @@ exception when others then
 end;
 $$;
 
+create or replace function public.get_workspace_creation_capabilities()
+returns text[]
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case when auth.uid() is null
+    then array[]::text[]
+    else array['artist','management','producer']::text[]
+  end;
+$$;
+
 create or replace function public.commit_workspace_context(
   p_target uuid,
   p_expected_context_version bigint,
@@ -379,6 +392,7 @@ begin
 end; $$;
 
 revoke all on function public.resolve_primary_workspace(text) from public, anon;
+revoke all on function public.get_workspace_creation_capabilities() from public, anon;
 revoke all on function public.commit_workspace_context(uuid,bigint,uuid,text) from public, anon;
 revoke all on function public.rename_workspace(uuid,text,bigint,uuid) from public, anon;
 revoke all on function public.resend_workspace_invitation(uuid,bigint,uuid) from public, anon;
@@ -387,6 +401,7 @@ revoke all on function public.change_workspace_member_authority(uuid,text,text,b
 revoke all on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,uuid) from public, anon;
 
 grant execute on function public.resolve_primary_workspace(text) to authenticated;
+grant execute on function public.get_workspace_creation_capabilities() to authenticated;
 grant execute on function public.commit_workspace_context(uuid,bigint,uuid,text) to authenticated;
 grant execute on function public.rename_workspace(uuid,text,bigint,uuid) to authenticated;
 grant execute on function public.resend_workspace_invitation(uuid,bigint,uuid) to authenticated;
