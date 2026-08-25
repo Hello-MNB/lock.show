@@ -34,11 +34,13 @@ select 'APP_SHELL_DB_CONTRACT_PRESENT' as result;
 
 insert into auth.users(id,email,email_confirmed_at) values
   ('10000000-0000-4000-8000-000000000001','owner@example.test',now()),
-  ('10000000-0000-4000-8000-000000000002','member@example.test',now())
+  ('10000000-0000-4000-8000-000000000002','member@example.test',now()),
+  ('10000000-0000-4000-8000-000000000003','ordinary@example.test',now())
 on conflict (id) do nothing;
 insert into public.person(id,email,display_name) values
   ('10000000-0000-4000-8000-000000000001','owner@example.test','Owner'),
-  ('10000000-0000-4000-8000-000000000002','member@example.test','Member')
+  ('10000000-0000-4000-8000-000000000002','member@example.test','Member'),
+  ('10000000-0000-4000-8000-000000000003','ordinary@example.test','Ordinary')
 on conflict (id) do nothing;
 
 insert into public.organization(id,name,workspace_type,created_by) values
@@ -87,6 +89,8 @@ begin
     '50000000-0000-4000-8000-000000000002');
   if v_result->>'afterName'<>'Northline Representation' or (v_result->>'authorityVersion')::int<>2 then
     raise exception 'rename_transaction_failed:%',v_result; end if;
+  if public.rename_workspace('20000000-0000-4000-8000-000000000002','Northline Representation',1,
+    '50000000-0000-4000-8000-000000000002')<>v_result then raise exception 'rename_idempotency_failed'; end if;
 
   v_result:=public.resend_workspace_invitation('30000000-0000-4000-8000-000000000004',1,
     '50000000-0000-4000-8000-000000000003');
@@ -106,6 +110,16 @@ begin
   v_result:=public.transfer_workspace_ownership('20000000-0000-4000-8000-000000000002',
     '30000000-0000-4000-8000-000000000003',1,1,'50000000-0000-4000-8000-000000000006');
   if v_result->>'status'<>'COMMITTED' then raise exception 'ownership_transfer_failed:%',v_result; end if;
+
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
+  begin
+    perform public.rename_workspace('20000000-0000-4000-8000-000000000002','Unauthorized Rename',2,
+      '50000000-0000-4000-8000-000000000007');
+    raise exception 'ordinary_member_renamed_workspace';
+  exception when others then
+    if sqlerrm<>'not_authorized' then raise; end if;
+  end;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 end
 $$;
 

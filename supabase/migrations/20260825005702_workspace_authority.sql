@@ -15,6 +15,8 @@ alter table public.organization_membership
   add column if not exists invite_expires_at timestamptz,
   add column if not exists invite_last_sent_at timestamptz,
   add column if not exists suspended_at timestamptz;
+alter table public.organization_membership
+  alter column invite_expires_at set default (now() + interval '14 days');
 
 alter table public.organization_membership
   drop constraint if exists organization_membership_status_check;
@@ -236,6 +238,9 @@ declare
   v_after jsonb;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
   if not public.has_org_role(p_organization, array['owner','admin']) then raise exception 'not_authorized'; end if;
   if v_name is null or char_length(v_name) < 2 or char_length(v_name) > 80
      or v_name ~ '[[:cntrl:]]' then raise exception 'workspace_name_invalid'; end if;
@@ -267,6 +272,9 @@ as $$
 declare v_uid uuid := auth.uid(); v_member public.organization_membership%rowtype; v_after jsonb;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
   select * into v_member from public.organization_membership where id=p_membership for update;
   if v_member.id is null or v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if not public.has_org_role(v_member.organization_id,array['owner','admin']) then raise exception 'not_authorized'; end if;
@@ -291,6 +299,9 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_uid uuid:=auth.uid(); v_member public.organization_membership%rowtype; v_after jsonb;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
   select * into v_member from public.organization_membership where id=p_membership for update;
   if v_member.id is null or v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if not public.has_org_role(v_member.organization_id,array['owner','admin']) then raise exception 'not_authorized'; end if;
@@ -312,6 +323,9 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_uid uuid:=auth.uid(); v_member public.organization_membership%rowtype; v_after jsonb; v_owner_count integer;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
   select * into v_member from public.organization_membership where id=p_membership for update;
   if v_member.id is null then raise exception 'membership_not_found'; end if;
   if not public.has_org_role(v_member.organization_id,array['owner']) then raise exception 'owner_required'; end if;
@@ -343,6 +357,9 @@ declare v_uid uuid:=auth.uid(); v_owner public.organization_membership%rowtype;
   v_successor public.organization_membership%rowtype; v_after jsonb;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
   select * into v_owner from public.organization_membership
    where organization_id=p_organization and person_id=v_uid and org_role='owner' and status='active' for update;
   if v_owner.id is null then raise exception 'owner_required'; end if;

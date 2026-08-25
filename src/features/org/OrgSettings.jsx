@@ -14,7 +14,7 @@ export default function OrgSettings() {
   const { T } = useLang()
   const toast = useToast()
   const nav = useNavigate()
-  const { signOut } = useAuth()
+  const { signOut, user } = useAuth()
   const { activeOrgId, isOwner, isAdmin, isAgency, reload } = useOrg()
   const [org, setOrg] = useState(null)
   const [name, setName] = useState('')
@@ -26,6 +26,7 @@ export default function OrgSettings() {
   const [transferTo, setTransferTo] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [reason, setReason] = useState('')
+  const [renameOpen, setRenameOpen] = useState(false)
 
   useEffect(() => { (async () => {
     if (!activeOrgId) { setLoading(false); return }
@@ -37,13 +38,24 @@ export default function OrgSettings() {
 
   async function save() {
     setBusy(true); setError('')
-    try { await updateOrg(activeOrgId, { name }); await reload(); toast.show(T.org.savedToast) }
+    try {
+      const receipt = await updateOrg(activeOrgId, { name })
+      if (receipt?.status !== 'COMMITTED') throw new Error('workspace_rename_receipt_missing')
+      setOrg((current) => ({ ...current, name: receipt.afterName, authority_version: receipt.authorityVersion }))
+      setRenameOpen(false)
+      await reload(); toast.show(T.org.savedToast)
+    }
     catch (e) { setError(e.message || T.common.error) } finally { setBusy(false) }
   }
   async function doTransfer() {
     if (!transferTo) return
     setBusy(true)
-    try { await transferOwnership(activeOrgId, transferTo.person.id); setTransferOpen(false); setTransferTo(null); await reload() }
+    try {
+      const ownerMembership = members.find((candidate) => candidate.person?.id === user?.id && candidate.org_role === 'owner' && candidate.status === 'active')
+      if (!ownerMembership) throw new Error('owner_membership_receipt_missing')
+      await transferOwnership(activeOrgId, transferTo, ownerMembership)
+      setTransferOpen(false); setTransferTo(null); await reload()
+    }
     catch (e) { setError(e.message || T.common.error) } finally { setBusy(false) }
   }
   async function doDelete() {
@@ -75,7 +87,7 @@ export default function OrgSettings() {
           {org?.slug && <span className="chip border border-line bg-surface2 font-mono text-[11px] text-ink">{T.org.slugLabel}: {org.slug}</span>}
           {org?.created_at && <span className="chip border border-line bg-surface2 font-mono text-[11px] text-ink">{T.org.createdLabel}: {new Date(org.created_at).toLocaleDateString()}</span>}
         </div>
-        {isAdmin && <button className="btn-primary w-full mt-4" onClick={save} disabled={busy}>{busy ? <Spinner /> : T.org.save}</button>}
+        {isAdmin && <button className="btn-primary w-full mt-4" onClick={() => setRenameOpen(true)} disabled={busy || name.trim() === org?.name}>{T.org.save}</button>}
       </div>
 
       {/* ── G8 · N10 — entitlement VISIBILITY (display only). FREE-PILOT ruling
@@ -118,6 +130,14 @@ export default function OrgSettings() {
       </div>
 
       {/* 2-step ownership transfer (never leaves the org ownerless) */}
+      <BottomSheet open={renameOpen} onClose={() => setRenameOpen(false)} title={T.org.nameLabel}>
+        <p className="text-sm text-muted">{org?.name || '—'} → {name.trim()}</p>
+        <div className="mt-4 flex gap-2">
+          <button className="btn-primary flex-1" onClick={save} disabled={busy || !name.trim()}>{busy ? <Spinner /> : T.org.save}</button>
+          <button className="btn-ghost" onClick={() => setRenameOpen(false)} disabled={busy}>{T.common.cancel}</button>
+        </div>
+      </BottomSheet>
+
       <BottomSheet open={transferOpen} onClose={() => { setTransferOpen(false); setTransferTo(null) }} title={T.org.transferTitle}>
         {!transferTo ? (
           <>

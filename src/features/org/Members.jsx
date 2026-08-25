@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
+import { useAuth } from '../auth/AuthProvider.jsx'
 import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, transferOwnership, resendInvite } from '../../lib/orgs.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -13,6 +14,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export default function Members() {
   const { T } = useLang()
   const toast = useToast()
+  const { user } = useAuth()
   const { activeOrgId, isAdmin, isOwner, reload } = useOrg()
   const [members, setMembers] = useState([])
   const [sub, setSub] = useState(null)
@@ -47,15 +49,15 @@ export default function Members() {
       if (members.some((m) => m.invited_email === e || m.person?.email === e)) { setInviteErr(`${T.org.errAlreadyMember}: ${e}`); return }
     }
     setBusy(true)
-    const optimistic = list.map((e, i) => ({ id: `pending-${i}-${e}`, org_role: inviteRole, status: 'invited', invited_email: e, person: null, _optimistic: true }))
-    setMembers((prev) => [...prev, ...optimistic])
     try {
-      for (const e of list) await inviteMember(activeOrgId, e, inviteRole)
-      toast.show(T.org.toastInviteSent)
+      for (const e of list) {
+        const receipt = await inviteMember(activeOrgId, e, inviteRole)
+        if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_receipt_missing')
+      }
+      toast.show(T.org.invitedRow)
       setEmails(''); setInviteOpen(false)
       await load()
     } catch (err) {
-      setMembers((prev) => prev.filter((m) => !m._optimistic))
       setInviteErr(String(err.message).includes('SEAT_LIMIT') ? T.org.seatCapSoft : (err.message || T.common.error))
     } finally { setBusy(false) }
   }
@@ -64,8 +66,11 @@ export default function Members() {
     if (m.org_role === 'owner' && role !== 'owner' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); return }
     setBusy(true)
     try {
-      if (role === 'owner') await transferOwnership(activeOrgId, m.person.id)
-      else await changeMemberRole(m.id, role)
+      if (role === 'owner') {
+        const ownerMembership = members.find((candidate) => candidate.person?.id === user?.id && candidate.org_role === 'owner' && candidate.status === 'active')
+        if (!ownerMembership) throw new Error('owner_membership_receipt_missing')
+        await transferOwnership(activeOrgId, m, ownerMembership)
+      } else await changeMemberRole(m, role)
       await load(); await reload()
     } finally { setBusy(false) }
   }
@@ -75,10 +80,15 @@ export default function Members() {
     if (!m) return
     if (m.org_role === 'owner' && m.status === 'active' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); setRemoveTarget(null); return }
     setBusy(true)
-    try { await removeMember(m.id); await load() } finally { setBusy(false); setRemoveTarget(null) }
+    try { await removeMember(m); await load() } finally { setBusy(false); setRemoveTarget(null) }
   }
 
-  async function resend(m) { await resendInvite(m.id); toast.show(T.org.toastInviteResent) }
+  async function resend(m) {
+    const receipt = await resendInvite(m)
+    if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_delivery_receipt_missing')
+    await load()
+    toast.show(T.org.invitedRow)
+  }
 
   if (loading) return <Loading />
 

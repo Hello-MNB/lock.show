@@ -67,3 +67,6 @@ jobs:
         env:
           POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
         run: npm run test:workspace-authority:db
+      - name: Build bounded application candidate
+        if: ${{ !cancelled() }}
+        run: npm run build

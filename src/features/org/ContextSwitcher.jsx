@@ -24,6 +24,11 @@ function workspaceTypeLabel(role, isAgency, T, isProducerWorkspace) {
 // orgs.createWorkspace maps these onto the migration-027 DB values
 // (artist / management / producer).
 const NEW_WORKSPACE_TYPES = ['artist', 'agency', 'production']
+const membershipTypeLabel = (workspaceType, T) => ({
+  artist: T.org.newWorkspaceTypeArtist,
+  management: T.org.newWorkspaceTypeAgency,
+  producer: T.org.newWorkspaceTypeProduction,
+}[workspaceType] || workspaceType)
 
 // O3 — Workspace / account switcher. Canon ROUND 4: person → workspace →
 // role; switching lives TOP-RIGHT (never bottom-left, never a re-registration).
@@ -50,8 +55,11 @@ export default function ContextSwitcher() {
   const [wsType, setWsType] = useState('artist')
   const [wsBusy, setWsBusy] = useState(false)
   const [wsError, setWsError] = useState('')
+  const [switchTarget, setSwitchTarget] = useState(null)
+  const [switchBusy, setSwitchBusy] = useState(false)
+  const [switchError, setSwitchError] = useState('')
 
-  const active = memberships?.find((m) => m.organization?.id === activeOrgId) || memberships?.[0]
+  const active = memberships?.find((m) => m.organization?.id === activeOrgId) || null
   const isAgency = ['agency', 'agency_plus'].includes(active?.organization?.plan)
   const typeLabel = adminMode ? T.org.privateAdminWorkspace : workspaceTypeLabel(role, isAgency, T, isProducerWorkspace)
   const initial = (profile?.full_name || 'G').trim().charAt(0).toUpperCase() || 'G'
@@ -66,6 +74,21 @@ export default function ContextSwitcher() {
     setOpen(false)
     setCreating(false)
     setWsError('')
+    setSwitchTarget(null)
+    setSwitchError('')
+  }
+
+  async function commitSwitch() {
+    if (!switchTarget || switchBusy) return
+    setSwitchBusy(true); setSwitchError('')
+    try {
+      await switchOrg(switchTarget.organization.id)
+      closeSheet()
+    } catch (error) {
+      setSwitchError(error.message || T.common.error)
+    } finally {
+      setSwitchBusy(false)
+    }
   }
 
   async function submitCreate(e) {
@@ -124,17 +147,33 @@ export default function ContextSwitcher() {
             return (
               <button
                 key={m.organization?.id}
-                onClick={() => { switchOrg(m.organization?.id); closeSheet() }}
+                onClick={() => { if (!isActive) setSwitchTarget(m) }}
                 className={`card w-full text-start flex items-center justify-between ${isActive ? 'border-accent' : ''}`}
               >
                 <div className="min-w-0">
                   <p className="text-ink text-sm font-medium truncate">{m.organization?.name}</p>
-                  <p className="text-xs text-muted">{orgRoleLabel(m.org_role, T)}</p>
+                  <p className="text-xs text-muted">{membershipTypeLabel(m.organization?.workspace_type, T)} · {orgRoleLabel(m.org_role, T)}</p>
                 </div>
                 {isActive && <span className="text-accent" aria-label="active">✓</span>}
               </button>
             )
           })}
+
+          {!adminMode && switchTarget && (
+            <div className="card border-accent/50" role="status" aria-live="polite">
+              <p className="text-xs text-muted">{active?.organization?.name || '—'} → {switchTarget.organization?.name}</p>
+              <p className="mt-1 text-xs text-ink">{membershipTypeLabel(switchTarget.organization?.workspace_type, T)} · {orgRoleLabel(switchTarget.org_role, T)}</p>
+              {switchError && <p className="mt-2 text-xs text-amber">{switchError}</p>}
+              <div className="mt-3 flex gap-2">
+                <button type="button" className="btn-primary flex-1" onClick={commitSwitch} disabled={switchBusy}>
+                  {switchBusy ? <Spinner /> : T.org.switchOrg}
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setSwitchTarget(null)} disabled={switchBusy}>
+                  {T.common.cancel}
+                </button>
+              </div>
+            </div>
+          )}
 
           {!adminMode && adminAllowed && (
             <button type="button" onClick={async () => { await enterAdmin(); closeSheet() }} className="card w-full text-start border-amber/40">

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
-import { getMyMemberships, getActiveOrgId, setActiveOrg as persistActiveOrg } from '../lib/orgs.js'
+import { getMyMemberships, resolvePrimaryWorkspace, commitActiveWorkspace } from '../lib/orgs.js'
 import { ROLES } from '../lib/constants.js'
 import { logEvent, EVENTS } from '../lib/analytics.js'
 
@@ -17,8 +17,6 @@ import { logEvent, EVENTS } from '../lib/analytics.js'
 // only moving a highlighted pill in the switcher sheet.
 const OrgCtx = createContext(null)
 export const useOrg = () => useContext(OrgCtx) || {}
-
-const ACTIVE_ORG_KEY = 'gigproof_active_org_id'
 
 // Base (profile) roles whose EFFECTIVE role is recomputed from the active
 // workspace's functional_role. Per the entity model (spec §3), role derives from
@@ -38,6 +36,8 @@ export function OrgProvider({ children }) {
   const nav = useNavigate()
   const [memberships, setMemberships] = useState([])
   const [activeOrgId, setActiveOrgIdState] = useState(null)
+  const [contextVersion, setContextVersion] = useState(0)
+  const [resolutionOutcome, setResolutionOutcome] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -46,17 +46,13 @@ export function OrgProvider({ children }) {
     try {
       const m = await getMyMemberships()
       setMemberships(m)
-      // Restore order: this device's explicit last choice (localStorage) →
-      // server-persisted active_role_context → the membership matching the
-      // current profile role (keeps each role's existing default home on
-      // first load) → first membership.
-      const stored = localStorage.getItem(ACTIVE_ORG_KEY)
-      const storedValid = stored && m.some((mm) => mm.organization?.id === stored)
-      const roleMatchId = m.find((mm) => mm.functional_role === authRole)?.organization?.id
-      const active = storedValid ? stored : ((await getActiveOrgId()) || roleMatchId || m[0]?.organization?.id || null)
-      setActiveOrgIdState(active)
+      const resolution = await resolvePrimaryWorkspace(window.location.pathname)
+      setResolutionOutcome(resolution?.outcome || 'ERROR_OR_OFFLINE')
+      setContextVersion(resolution?.contextVersion || 0)
+      setActiveOrgIdState(resolution?.outcome === 'RESOLVED_PRIMARY' ? resolution.workspace?.id : null)
     } catch {
       setMemberships([])
+      setResolutionOutcome('ERROR_OR_OFFLINE')
     } finally {
       setLoading(false)
     }
@@ -64,19 +60,25 @@ export function OrgProvider({ children }) {
 
   useEffect(() => { load() }, [load])
 
-  // Switching a workspace is client-side derivation only (no RLS/db writes
-  // beyond the existing active_role_context upsert) — persist locally so a
-  // reload keeps the chosen workspace, then send the user to "/" so RoleHome
-  // (App.jsx) re-routes into the NEW workspace's home + nav set.
+  // Context/nav never changes until the server returns a committed receipt.
+  // Client storage is not an authority source and is deliberately absent.
   const switchOrg = useCallback(async (orgId) => {
-    setActiveOrgIdState(orgId)
-    try { localStorage.setItem(ACTIVE_ORG_KEY, orgId) } catch { /* storage unavailable — in-memory only */ }
-    try { await persistActiveOrg(orgId) } catch { /* non-blocking */ }
+    const receipt = await commitActiveWorkspace({
+      orgId,
+      contextVersion,
+      idempotencyKey: crypto.randomUUID(),
+      returnTo: '/',
+    })
+    if (receipt?.status !== 'COMMITTED') throw new Error('workspace_switch_not_committed')
+    setActiveOrgIdState(receipt.workspace.id)
+    setContextVersion(receipt.contextVersion)
+    setResolutionOutcome('RESOLVED_PRIMARY')
     logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
-    nav('/')
-  }, [nav])
+    nav(receipt.route || '/')
+    return receipt
+  }, [contextVersion, nav])
 
-  const active = memberships.find((m) => m.organization?.id === activeOrgId) || memberships[0] || null
+  const active = memberships.find((m) => m.organization?.id === activeOrgId) || null
   const plan = active?.organization?.plan || 'solo'
   // workspace_type (migration 027) — a SEPARATE axis from functional_role/plan:
   // a production company (e.g. INSOMNIA TLV) has functional_role='agency' (same
@@ -96,6 +98,8 @@ export function OrgProvider({ children }) {
   const value = {
     loading,
     memberships,
+    resolutionOutcome,
+    contextVersion,
     activeOrgId: active?.organization?.id || null,
     activeOrg: active?.organization || null,
     orgRole: active?.org_role || null,
