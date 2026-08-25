@@ -110,7 +110,7 @@
   },
   "navigationProjection": {
     "sourceId": "PD-005",
-    "sourceRevision": "AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC",
+    "sourceRevision": "AIroW354BKBxKYPyEUbQ6LRoTrSbUOd5nWSqbRHnIbu7mJCENTzpO7EC6iS1qjuOerOR1WPrLmTFdobVy4tvVk9RVJnwuNbLvtrn1vn_S4Cv",
     "semantics": "OPEN_NAV_TRUTH_001",
     "universal": false,
     "items": []
@@ -131,8 +131,8 @@
     "negatives": ["cross-tenant-read", "cross-tenant-write", "ordinary-user-admin", "anon-private-read"]
   },
   "migrations": {
-    "status": "FIRST_SLICE_MIGRATION_SELECTED_UNAPPLIED",
-    "included": ["20260820042812", "20260824173241"],
+    "status": "APP_SHELL_WORKSPACE_AUTHORITY_SELECTED_UNAPPLIED",
+    "included": ["20260820042812", "20260824173241", "20260825005702"],
     "excluded": ["040", "041", "042", "043", "044", "045", "046", "047", "048", "049", "050", "051"]
   },
   "operations": {

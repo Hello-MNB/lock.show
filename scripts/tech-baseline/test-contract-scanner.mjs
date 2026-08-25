@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const scanner = path.join(here, 'scan-contracts.mjs');
-const productRevision = 'AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC';
+const productRevision = 'AIroW354BKBxKYPyEUbQ6LRoTrSbUOd5nWSqbRHnIbu7mJCENTzpO7EC6iS1qjuOerOR1WPrLmTFdobVy4tvVk9RVJnwuNbLvtrn1vn_S4Cv';
 
 const valid = {
   schemaVersion: '1.0.0',
