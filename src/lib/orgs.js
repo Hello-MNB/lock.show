@@ -251,9 +251,14 @@ export async function getMembers(orgId) {
 export async function inviteMember(orgId, email, role) {
   if (DEMO) return { status: 'DELIVERY_REQUIRED', token: 'demo-token' }
   const inviteRole = role === 'admin' ? 'admin' : 'member'
-  const { data, error } = await supabase.rpc('invite_member', { p_org: orgId, p_email: email, p_role: inviteRole })
+  const { data, error } = await supabase.rpc('invite_member', {
+    p_org: orgId,
+    p_email: email,
+    p_role: inviteRole,
+    p_idempotency_key: crypto.randomUUID(),
+  })
   if (error) throw error
-  return { status: 'DELIVERY_REQUIRED', token: data }
+  return data
 }
 export async function changeMemberRole(member, role, status = 'active') {
   if (DEMO) return { status: 'COMMITTED' }

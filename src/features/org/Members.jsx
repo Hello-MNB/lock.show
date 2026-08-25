@@ -6,6 +6,16 @@ import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } 
 import { useLang } from '../../context/LangContext.jsx'
 
 const roleLabel = (r, T) => ({ owner: T.org.roleOwner, admin: T.org.roleAdmin, member: T.org.roleMember }[r] || r)
+const memberStatusLabel = (status, T) => ({
+  active: T.org.statusActive,
+  invited: T.org.invitePendingDelivery,
+  suspended: T.org.statusSuspended,
+  revoked: T.org.statusRevoked,
+  expired: T.org.statusExpired,
+  cancelled: T.org.statusCancelled,
+  declined: T.org.statusDeclined,
+  inactive: T.org.statusInactive,
+}[status] || T.org.statusInactive)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // O2 — Team. Sheet-based multi-invite with optimistic rows, role legend, soft seat
@@ -74,6 +84,14 @@ export default function Members() {
     } finally { setBusy(false) }
   }
 
+  async function setMembershipStatus(m, status) {
+    setBusy(true)
+    try {
+      await changeMemberRole(m, m.org_role, status)
+      await load(); await reload()
+    } finally { setBusy(false) }
+  }
+
   async function doRemove() {
     const m = removeTarget
     if (!m) return
@@ -136,18 +154,24 @@ export default function Members() {
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-ink text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
-                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitePendingDelivery : T.org.statusActive}</p>
+                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {memberStatusLabel(m.status, T)}</p>
               </div>
-              {(m.status === 'invited' ? isAdmin : isOwner) && (
+              {((m.status === 'invited' && isAdmin) || (isOwner && m.org_role !== 'owner' && ['active', 'suspended'].includes(m.status))) && (
                 <div className="flex gap-1 shrink-0">
                   {m.status === 'invited' ? (
                     <>
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => resend(m)} disabled={busy || m._optimistic}>{T.org.resend}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy || m._optimistic}>{T.org.cancelInvite}</button>
                     </>
-                  ) : isOwner && m.org_role !== 'owner' && (
+                  ) : m.status === 'active' ? (
                     <>
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, m.org_role === 'admin' ? 'member' : 'admin')} disabled={busy}>{T.org.changeRole}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setMembershipStatus(m, 'suspended')} disabled={busy}>{T.org.suspendMember}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setMembershipStatus(m, 'active')} disabled={busy}>{T.org.reactivateMember}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
                     </>
                   )}

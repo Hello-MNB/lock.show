@@ -28,12 +28,30 @@ update public.organization_membership
    set invite_expires_at = coalesce(invite_expires_at, created_at + interval '14 days')
  where status = 'invited';
 
+do $$
+begin
+  if exists (
+    select 1
+      from public.organization_membership
+     where status='invited' and invited_email is not null
+     group by organization_id, lower(btrim(invited_email))
+    having count(*) > 1
+  ) then
+    raise exception 'workspace_invitation_duplicate_reconciliation_required';
+  end if;
+end;
+$$;
+
+create unique index if not exists workspace_pending_invitation_email_unique
+  on public.organization_membership(organization_id, (lower(btrim(invited_email))))
+  where status='invited' and invited_email is not null;
+
 create table if not exists public.workspace_authority_receipt (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid not null references auth.users(id) on delete restrict,
   organization_id uuid references public.organization(id) on delete set null,
   action text not null check (action in (
-    'context.switch', 'workspace.rename', 'invitation.accept', 'invitation.decline',
+    'context.switch', 'workspace.rename', 'invitation.create', 'invitation.accept', 'invitation.decline',
     'invitation.resend', 'invitation.cancel',
     'membership.change', 'ownership.offer', 'ownership.respond',
     'ownership.cancel', 'ownership.transfer'
@@ -99,6 +117,8 @@ $$;
 -- RPC-only so no RLS write path can bypass version, receipt or owner guards.
 drop policy if exists mem_admin_write on public.organization_membership;
 revoke insert, update, delete on public.organization_membership from anon, authenticated;
+drop policy if exists ra_admin_write on public.role_assignment;
+revoke insert, update, delete on public.role_assignment from anon, authenticated;
 drop policy if exists org_admin_update on public.organization;
 revoke update on public.organization from anon, authenticated;
 drop policy if exists arc_self on public.active_role_context;
@@ -211,22 +231,57 @@ exception when others then
 end;
 $$;
 
-create or replace function public.invite_member(p_org uuid, p_email text, p_role text default 'member')
-returns text
+drop function if exists public.invite_member(uuid,text,text);
+create function public.invite_member(
+  p_org uuid, p_email text, p_role text, p_idempotency_key uuid
+)
+returns jsonb
 language plpgsql
 security definer
 set search_path = ''
 as $$
-declare v_token text; v_role text := coalesce(nullif(p_role, ''), 'member');
+declare
+  v_uid uuid := auth.uid();
+  v_token text;
+  v_role text := coalesce(nullif(p_role, ''), 'member');
+  v_email text := lower(btrim(p_email));
+  v_membership uuid;
+  v_expires_at timestamptz;
+  v_after jsonb;
 begin
-  if auth.uid() is null then raise exception 'not_authenticated'; end if;
-  if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not_authorized'; end if;
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  if p_idempotency_key is null then raise exception 'idempotency_key_required'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and action='invitation.create' and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
+  if v_email is null or char_length(v_email)>320
+     or v_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then
+    raise exception 'invitation_email_invalid';
+  end if;
   if v_role not in ('member','admin') then raise exception 'workspace_owner_invite_forbidden'; end if;
+  perform public.lock_workspace_authority(p_org);
+  if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not_authorized'; end if;
+  if exists (
+    select 1 from public.organization_membership
+     where organization_id=p_org and status='invited'
+       and lower(btrim(invited_email))=v_email
+  ) then
+    raise exception 'invitation_pending_duplicate';
+  end if;
   v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
   insert into public.organization_membership(
     organization_id, person_id, org_role, status, invited_email, invited_by, invite_token
-  ) values (p_org, null, v_role, 'invited', lower(p_email), auth.uid(), v_token);
-  return v_token;
+  ) values (p_org, null, v_role, 'invited', v_email, v_uid, v_token)
+  returning id, invite_expires_at into v_membership, v_expires_at;
+  v_after:=jsonb_build_object('status','DELIVERY_REQUIRED','membershipId',v_membership,
+    'token',v_token,'expiresAt',v_expires_at,'authorityVersion',1);
+  insert into public.workspace_authority_receipt(
+    actor_id,organization_id,action,idempotency_key,before_state,after_state
+  ) values (
+    v_uid,p_org,'invitation.create',p_idempotency_key,
+    jsonb_build_object('email',v_email,'role',v_role),v_after
+  );
+  return v_after;
 end;
 $$;
 
@@ -426,9 +481,10 @@ begin
   select after_state into v_after from public.workspace_authority_receipt
    where actor_id=v_uid and idempotency_key=p_idempotency_key;
   if v_after is not null then return v_after; end if;
-  if not public.has_org_role(p_organization, array['owner','admin']) then raise exception 'not_authorized'; end if;
   if v_name is null or char_length(v_name) < 2 or char_length(v_name) > 80
      or v_name ~ '[[:cntrl:]]' then raise exception 'workspace_name_invalid'; end if;
+  perform public.lock_workspace_authority(p_organization);
+  if not public.has_org_role(p_organization, array['owner','admin']) then raise exception 'not_authorized'; end if;
   select * into v_org from public.organization where id = p_organization for update;
   if v_org.id is null then raise exception 'workspace_not_found'; end if;
   if v_org.authority_version <> p_expected_version then raise exception 'workspace_version_conflict'; end if;
@@ -460,9 +516,12 @@ begin
   select after_state into v_after from public.workspace_authority_receipt
    where actor_id=v_uid and idempotency_key=p_idempotency_key;
   if v_after is not null then return v_after; end if;
+  select * into v_member from public.organization_membership where id=p_membership;
+  if v_member.id is null then raise exception 'invitation_not_pending'; end if;
+  perform public.lock_workspace_authority(v_member.organization_id);
   select * into v_member from public.organization_membership where id=p_membership for update;
-  if v_member.id is null or v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if not public.has_org_role(v_member.organization_id,array['owner','admin']) then raise exception 'not_authorized'; end if;
+  if v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if v_member.authority_version <> p_expected_version then raise exception 'membership_version_conflict'; end if;
   if v_member.invite_expires_at is not null and v_member.invite_expires_at <= now() then
     update public.organization_membership set status='expired',authority_version=authority_version+1 where id=p_membership;
@@ -492,9 +551,12 @@ begin
   select after_state into v_after from public.workspace_authority_receipt
    where actor_id=v_uid and idempotency_key=p_idempotency_key;
   if v_after is not null then return v_after; end if;
+  select * into v_member from public.organization_membership where id=p_membership;
+  if v_member.id is null then raise exception 'invitation_not_pending'; end if;
+  perform public.lock_workspace_authority(v_member.organization_id);
   select * into v_member from public.organization_membership where id=p_membership for update;
-  if v_member.id is null or v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if not public.has_org_role(v_member.organization_id,array['owner','admin']) then raise exception 'not_authorized'; end if;
+  if v_member.status <> 'invited' then raise exception 'invitation_not_pending'; end if;
   if v_member.authority_version <> p_expected_version then raise exception 'membership_version_conflict'; end if;
   update public.organization_membership set status='cancelled',invite_token=null,
     authority_version=authority_version+1 where id=p_membership;
@@ -521,6 +583,8 @@ begin
   perform public.lock_workspace_authority(v_member.organization_id);
   select * into v_member from public.organization_membership where id=p_membership for update;
   if not public.has_org_role(v_member.organization_id,array['owner']) then raise exception 'owner_required'; end if;
+  if v_member.person_id is null then raise exception 'membership_person_required'; end if;
+  if v_member.status not in ('active','suspended') then raise exception 'membership_state_terminal'; end if;
   if p_role = 'owner' then raise exception 'ownership_offer_required'; end if;
   if p_role not in ('admin','member') or p_status not in ('active','suspended','revoked') then
     raise exception 'membership_authority_invalid'; end if;
@@ -734,7 +798,7 @@ begin
 end; $$;
 
 revoke all on function public.resolve_primary_workspace(text) from public, anon;
-revoke all on function public.invite_member(uuid,text,text) from public, anon;
+revoke all on function public.invite_member(uuid,text,text,uuid) from public, anon;
 revoke all on function public.get_workspace_creation_capabilities() from public, anon;
 revoke all on function public.accept_invite(text) from public, anon;
 revoke all on function public.decline_workspace_invitation(text) from public, anon;
@@ -751,7 +815,7 @@ revoke all on function public.cancel_workspace_ownership_offer(uuid,uuid) from p
 revoke all on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,bigint,bigint,timestamptz,uuid) from public, anon;
 
 grant execute on function public.resolve_primary_workspace(text) to authenticated;
-grant execute on function public.invite_member(uuid,text,text) to authenticated;
+grant execute on function public.invite_member(uuid,text,text,uuid) to authenticated;
 grant execute on function public.get_workspace_creation_capabilities() to authenticated;
 grant execute on function public.accept_invite(text) to authenticated;
 grant execute on function public.decline_workspace_invitation(text) to authenticated;

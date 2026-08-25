@@ -67,6 +67,7 @@ runSql(`
   end $$;
   create schema auth;
   grant usage on schema public, auth to anon, authenticated;
+  alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated;
   create table auth.users (
     id uuid primary key, email text, email_confirmed_at timestamptz,
     deleted_at timestamptz, banned_until timestamptz,
@@ -286,6 +287,16 @@ runSql(`
     end if;
     if to_regprocedure('public.accept_invite(text)') is null then
       raise exception 'legacy_accept_invite_not_restored';
+    end if;
+    if to_regprocedure('public.invite_member(uuid,text,text,uuid)') is not null
+       or to_regprocedure('public.invite_member(uuid,text,text)') is null then
+      raise exception 'legacy_invite_member_not_restored';
+    end if;
+    if not exists (
+      select 1 from pg_policies
+       where schemaname='public' and tablename='role_assignment' and policyname='ra_admin_write'
+    ) or not has_table_privilege('authenticated','public.role_assignment','update') then
+      raise exception 'legacy_role_assignment_write_contract_not_restored';
     end if;
   end $$;
   select 'APP_SHELL_WORKSPACE_AUTHORITY_ROLLBACK_OK' as result;

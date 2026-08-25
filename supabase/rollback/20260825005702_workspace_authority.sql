@@ -2,6 +2,12 @@
 -- Refuses to erase lifecycle state that the pre-migration constraint cannot represent.
 do $$
 begin
+  if exists (select 1 from public.workspace_authority_receipt) then
+    raise exception 'workspace_authority_rollback_requires_receipt_reconciliation';
+  end if;
+  if exists (select 1 from public.workspace_ownership_offer) then
+    raise exception 'workspace_authority_rollback_requires_offer_reconciliation';
+  end if;
   if exists (select 1 from public.organization_membership where status in ('inactive','cancelled','declined','revoked','expired')) then
     raise exception 'workspace_authority_rollback_requires_membership_state_reconciliation';
   end if;
@@ -22,6 +28,8 @@ drop function if exists public.resolve_primary_workspace(text);
 drop function if exists public.get_workspace_creation_capabilities();
 drop function if exists public.decline_workspace_invitation(text);
 drop function if exists public.accept_invite(text);
+drop function if exists public.invite_member(uuid,text,text,uuid);
+drop index if exists public.workspace_pending_invitation_email_unique;
 drop table if exists public.workspace_ownership_offer;
 drop table if exists public.workspace_authority_receipt;
 
@@ -68,6 +76,12 @@ create policy mem_admin_write on public.organization_membership for all
   using (public.has_org_role(organization_id, array['owner','admin']))
   with check (public.has_org_role(organization_id, array['owner','admin']));
 grant insert, update, delete on public.organization_membership to anon, authenticated;
+
+drop policy if exists ra_admin_write on public.role_assignment;
+create policy ra_admin_write on public.role_assignment for all
+  using (public.has_org_role(organization_id, array['owner','admin']))
+  with check (public.has_org_role(organization_id, array['owner','admin']));
+grant insert, update, delete on public.role_assignment to anon, authenticated;
 
 drop policy if exists org_admin_update on public.organization;
 create policy org_admin_update on public.organization for update
