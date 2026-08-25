@@ -59,6 +59,8 @@ jobs:
           docker exec "$POSTGRES_CONTAINER_ID" postgres --version | grep '17.6'
       - name: Install locked application dependencies
         run: npm ci --no-audit --no-fund
+      - name: Install locked Playwright Chromium runtime
+        run: npm exec playwright install --with-deps chromium
       - name: RED application-shell contract
         if: ${{ !cancelled() }}
         run: npm run test:workspace-authority
