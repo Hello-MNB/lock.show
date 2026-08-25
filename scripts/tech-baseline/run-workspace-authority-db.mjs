@@ -37,6 +37,24 @@ function runSql(sql, label) {
   }
 }
 
+function runSqlExpectFailure(sql, label, expected) {
+  try {
+    execFileSync('docker', psqlArgs, {
+      input: sql,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      maxBuffer: 24 * 1024 * 1024,
+    })
+  } catch (error) {
+    const output = `${error.stdout ?? ''}${error.stderr ?? ''}`
+    if (!output.includes(expected)) {
+      throw new Error(`${label}:unexpected_failure:${output}`, { cause: error })
+    }
+    return
+  }
+  throw new Error(`${label}:unexpected_success`)
+}
+
 runSql(`
   drop schema if exists public cascade;
   drop schema if exists auth cascade;
@@ -132,8 +150,113 @@ runSql(`
 `, 'workspace authority concurrency readback')
 
 runSql(`
-  delete from public.workspace_ownership_offer;
-  delete from public.workspace_authority_receipt;
+  insert into public.organization(id,name,workspace_type,created_by,authority_version)
+  values('20000000-0000-4000-8000-000000000003','Race Workspace','management',
+    '10000000-0000-4000-8000-000000000001',1);
+  insert into public.subscription(organization_id,plan,seats_included,seats_used,status)
+  values('20000000-0000-4000-8000-000000000003','solo',10,2,'active');
+  insert into public.organization_membership(
+    id,organization_id,person_id,org_role,status,joined_at,authority_version
+  ) values
+    ('30000000-0000-4000-8000-000000000010','20000000-0000-4000-8000-000000000003',
+      '10000000-0000-4000-8000-000000000001','owner','active',now(),1),
+    ('30000000-0000-4000-8000-000000000011','20000000-0000-4000-8000-000000000003',
+      '10000000-0000-4000-8000-000000000002','admin','active',now(),10),
+    ('30000000-0000-4000-8000-000000000012','20000000-0000-4000-8000-000000000003',
+      null,'member','invited',null,1);
+  update public.organization_membership
+     set invited_email='race.invite@example.test',invite_token='race-invite-token',
+         invite_expires_at=now()+interval '7 days'
+   where id='30000000-0000-4000-8000-000000000012';
+`, 'workspace authority revoke race fixtures')
+
+async function runRevocationRace({ label, version, actorKey, mutationSql, resetSql }) {
+  runSql(`
+    update public.organization_membership
+       set org_role='admin',status='active',authority_version=${version},suspended_at=null
+     where id='30000000-0000-4000-8000-000000000011';
+    update public.organization set name='Race Workspace',authority_version=1
+     where id='20000000-0000-4000-8000-000000000003';
+    update public.organization_membership
+       set status='invited',authority_version=1,invite_token='race-invite-token',
+           invite_expires_at=now()+interval '7 days'
+     where id='30000000-0000-4000-8000-000000000012';
+    ${resetSql ?? ''}
+  `, `${label} reset`)
+
+  const revoke = spawnSql(`
+    begin;
+    set role authenticated;
+    select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+    select public.change_workspace_member_authority(
+      '30000000-0000-4000-8000-000000000011','admin','revoked',${version},
+      '${actorKey}');
+    select pg_sleep(2);
+    commit;
+  `)
+  await new Promise((resolveDelay) => setTimeout(resolveDelay, 300))
+  const mutation = spawnSql(`
+    begin;
+    set role authenticated;
+    select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+    ${mutationSql}
+    commit;
+  `)
+  const [revokeResult, mutationResult] = await Promise.all([revoke, mutation])
+  if (revokeResult.code !== 0) throw new Error(`${label}_REVOKE_FAILED:${revokeResult.stderr}`)
+  if (mutationResult.code === 0 || !mutationResult.stderr.includes('not_authorized')) {
+    throw new Error(`${label}_AUTHORITY_RACE_FAILED:${mutationResult.code}:${mutationResult.stdout}:${mutationResult.stderr}`)
+  }
+}
+
+await runRevocationRace({
+  label: 'REVOKE_VS_RENAME', version: 10,
+  actorKey: '50000000-0000-4000-8000-000000000030',
+  mutationSql: `select public.rename_workspace('20000000-0000-4000-8000-000000000003',
+    'Race Rename',1,'50000000-0000-4000-8000-000000000031');`,
+})
+await runRevocationRace({
+  label: 'REVOKE_VS_INVITE', version: 20,
+  actorKey: '50000000-0000-4000-8000-000000000032',
+  mutationSql: `select public.invite_member('20000000-0000-4000-8000-000000000003',
+    'race.new@example.test','member','50000000-0000-4000-8000-000000000033');`,
+})
+await runRevocationRace({
+  label: 'REVOKE_VS_RESEND', version: 30,
+  actorKey: '50000000-0000-4000-8000-000000000034',
+  mutationSql: `select public.resend_workspace_invitation(
+    '30000000-0000-4000-8000-000000000012',1,'50000000-0000-4000-8000-000000000035');`,
+})
+await runRevocationRace({
+  label: 'REVOKE_VS_CANCEL', version: 40,
+  actorKey: '50000000-0000-4000-8000-000000000036',
+  mutationSql: `select public.cancel_workspace_invitation(
+    '30000000-0000-4000-8000-000000000012',1,'50000000-0000-4000-8000-000000000037');`,
+})
+
+runSql(`
+  delete from public.organization_membership
+   where id in (
+    '30000000-0000-4000-8000-000000000004',
+    '30000000-0000-4000-8000-000000000005',
+    '30000000-0000-4000-8000-000000000006',
+    '30000000-0000-4000-8000-000000000012'
+   );
+  delete from public.organization_membership
+   where organization_id='20000000-0000-4000-8000-000000000003';
+  delete from public.subscription where organization_id='20000000-0000-4000-8000-000000000003';
+  delete from public.organization where id='20000000-0000-4000-8000-000000000003';
+`, 'workspace authority rollback guard fixture normalization')
+
+const rollbackSql = readFileSync(resolve(rollbackDirectory, '20260825005702_workspace_authority.sql'), 'utf8')
+runSqlExpectFailure(rollbackSql, 'workspace authority receipt rollback guard',
+  'workspace_authority_rollback_requires_receipt_reconciliation')
+runSql('delete from public.workspace_authority_receipt', 'workspace authority receipt reconciliation')
+runSqlExpectFailure(rollbackSql, 'workspace authority ownership-offer rollback guard',
+  'workspace_authority_rollback_requires_offer_reconciliation')
+runSql('delete from public.workspace_ownership_offer', 'workspace authority ownership-offer reconciliation')
+
+runSql(`
   delete from public.role_assignment where person_id::text like '10000000-0000-4000-8000-%';
   delete from public.active_role_context where person_id::text like '10000000-0000-4000-8000-%';
   delete from public.organization_membership where organization_id::text like '20000000-0000-4000-8000-%';
@@ -143,8 +266,7 @@ runSql(`
   delete from auth.users where id::text like '10000000-0000-4000-8000-%';
 `, 'workspace authority rollback fixture reconciliation')
 
-runSql(readFileSync(resolve(rollbackDirectory, '20260825005702_workspace_authority.sql'), 'utf8'),
-  'workspace authority rollback')
+runSql(rollbackSql, 'workspace authority rollback')
 runSql(`
   do $$ begin
     if to_regclass('public.workspace_authority_receipt') is not null then

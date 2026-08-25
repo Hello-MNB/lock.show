@@ -133,6 +133,48 @@ begin
   if public.decline_workspace_invitation('decline-token')<>v_result then raise exception 'decline_invitation_idempotency_failed'; end if;
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 
+  v_result:=public.invite_member('20000000-0000-4000-8000-000000000002',
+    'new.member@example.test','member','50000000-0000-4000-8000-000000000016');
+  if v_result->>'status'<>'DELIVERY_REQUIRED' or v_result->>'membershipId' is null then
+    raise exception 'initial_invitation_receipt_failed:%',v_result;
+  end if;
+  if public.invite_member('20000000-0000-4000-8000-000000000002',
+    'new.member@example.test','member','50000000-0000-4000-8000-000000000016')<>v_result then
+    raise exception 'initial_invitation_idempotency_failed';
+  end if;
+  begin
+    perform public.invite_member('20000000-0000-4000-8000-000000000002',
+      ' New.Member@Example.Test ','member','50000000-0000-4000-8000-000000000017');
+    raise exception 'normalized_pending_invitation_duplicate_was_allowed';
+  exception when others then
+    if sqlerrm<>'invitation_pending_duplicate' then raise; end if;
+  end;
+
+  begin
+    perform public.change_workspace_member_authority('30000000-0000-4000-8000-000000000006','member','active',1,
+      '50000000-0000-4000-8000-000000000018');
+    raise exception 'unbound_invitation_became_active';
+  exception when others then
+    if sqlerrm<>'membership_person_required' then raise; end if;
+  end;
+
+  v_result:=public.change_workspace_member_authority('30000000-0000-4000-8000-000000000005','member','suspended',2,
+    '50000000-0000-4000-8000-000000000019');
+  if v_result->>'membershipStatus'<>'suspended' then raise exception 'membership_suspend_failed:%',v_result; end if;
+  v_result:=public.change_workspace_member_authority('30000000-0000-4000-8000-000000000005','member','active',3,
+    '50000000-0000-4000-8000-000000000020');
+  if v_result->>'membershipStatus'<>'active' then raise exception 'membership_reactivate_failed:%',v_result; end if;
+  v_result:=public.change_workspace_member_authority('30000000-0000-4000-8000-000000000005','member','revoked',4,
+    '50000000-0000-4000-8000-000000000021');
+  if v_result->>'membershipStatus'<>'revoked' then raise exception 'membership_revoke_failed:%',v_result; end if;
+  begin
+    perform public.change_workspace_member_authority('30000000-0000-4000-8000-000000000005','member','active',5,
+      '50000000-0000-4000-8000-000000000022');
+    raise exception 'terminal_membership_was_reactivated';
+  exception when others then
+    if sqlerrm<>'membership_state_terminal' then raise; end if;
+  end;
+
   begin
     perform public.change_workspace_member_authority('30000000-0000-4000-8000-000000000001','admin','active',1,
       '50000000-0000-4000-8000-000000000005');
@@ -142,7 +184,8 @@ begin
   end;
 
   begin
-    perform public.invite_member('20000000-0000-4000-8000-000000000002','forbidden@example.test','owner');
+    perform public.invite_member('20000000-0000-4000-8000-000000000002','forbidden@example.test','owner',
+      '50000000-0000-4000-8000-000000000023');
     raise exception 'ordinary_owner_invite_was_allowed';
   exception when others then
     if sqlerrm<>'workspace_owner_invite_forbidden' then raise; end if;
@@ -216,6 +259,13 @@ begin
   exception when others then
     if sqlerrm<>'not_authorized' then raise; end if;
   end;
+  begin
+    update public.role_assignment set functional_role='producer'
+     where id='40000000-0000-4000-8000-000000000002';
+    raise exception 'role_assignment_direct_update_was_allowed';
+  exception when insufficient_privilege then
+    null;
+  end;
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 end
 $$;
@@ -235,7 +285,10 @@ begin
   end if;
   if has_table_privilege('authenticated','public.workspace_ownership_offer','select')
      or has_table_privilege('authenticated','public.organization_membership','update')
-     or has_table_privilege('authenticated','public.active_role_context','update') then
+     or has_table_privilege('authenticated','public.active_role_context','update')
+     or has_table_privilege('authenticated','public.role_assignment','insert')
+     or has_table_privilege('authenticated','public.role_assignment','update')
+     or has_table_privilege('authenticated','public.role_assignment','delete') then
     raise exception 'browser_can_bypass_workspace_authority_rpcs';
   end if;
   if not exists (

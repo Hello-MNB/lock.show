@@ -118,5 +118,30 @@ assert.match(adminAccessSource, /sessionStorage/,
   'Admin safe return must survive refresh and capability revocation within the same browser session')
 assert.match(adminAccessSource, /readAdminReturnPath/,
   'Admin exit and revoke paths must validate and reuse the exact prior lawful route')
+assert.match(migration, /drop policy if exists ra_admin_write/,
+  'functional RoleAssignment writes must not bypass versioned authority RPCs')
+assert.match(migration, /revoke insert, update, delete on public\.role_assignment from anon, authenticated/,
+  'browser roles must not mutate the server-resolved functional role directly')
+assert.match(migration, /create function public\.invite_member\([\s\S]*p_idempotency_key uuid/,
+  'initial invitation creation must be server-idempotent')
+assert.match(migration, /invitation_pending_duplicate/,
+  'pending invitations must be duplicate-safe after normalized server comparison')
+assert.match(migration, /membership_person_required/,
+  'generic membership authority changes must reject unbound invitations')
+assert.match(migration, /membership_state_terminal/,
+  'terminal membership authority states must not be silently reactivated')
+assert.match(membersSource, /statusSuspended/,
+  'team UI must render suspended members truthfully')
+assert.match(membersSource, /reactivateMember/,
+  'team UI must expose explicit reactivation rather than a role-toggle side effect')
+const rollback = source('supabase/rollback/20260825005702_workspace_authority.sql')
+assert.match(rollback, /workspace_authority_rollback_requires_receipt_reconciliation/,
+  'rollback must refuse to erase unreconciled authority receipts')
+assert.match(rollback, /workspace_authority_rollback_requires_offer_reconciliation/,
+  'rollback must refuse to erase ownership-offer history')
+const dbRunner = source('scripts/tech-baseline/run-workspace-authority-db.mjs')
+for (const label of ['REVOKE_VS_RENAME', 'REVOKE_VS_INVITE', 'REVOKE_VS_RESEND', 'REVOKE_VS_CANCEL']) {
+  assert.match(dbRunner, new RegExp(label), `${label} must have a real two-connection race fixture`)
+}
 
 console.log('APP_SHELL_WORKSPACE_AUTHORITY_OK')
