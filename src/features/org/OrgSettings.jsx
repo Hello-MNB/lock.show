@@ -15,7 +15,7 @@ export default function OrgSettings() {
   const toast = useToast()
   const nav = useNavigate()
   const { signOut, user } = useAuth()
-  const { activeOrgId, isOwner, isAdmin, isAgency, reload } = useOrg()
+  const { activeOrgId, isOwner, isAdmin, isAgency, reload, registerDirtyWork } = useOrg()
   const [org, setOrg] = useState(null)
   const [name, setName] = useState('')
   const [members, setMembers] = useState([])
@@ -35,6 +35,11 @@ export default function OrgSettings() {
       if (isOwner) setMembers(await getMembers(activeOrgId))
     } finally { setLoading(false) }
   })() }, [activeOrgId, isOwner])
+
+  useEffect(() => {
+    registerDirtyWork?.('workspace-settings', Boolean(org && name.trim() !== org.name))
+    return () => registerDirtyWork?.('workspace-settings', false)
+  }, [name, org, registerDirtyWork])
 
   async function save() {
     setBusy(true); setError('')

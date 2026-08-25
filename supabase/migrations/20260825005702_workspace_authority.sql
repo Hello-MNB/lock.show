@@ -22,7 +22,7 @@ alter table public.organization_membership
   drop constraint if exists organization_membership_status_check;
 alter table public.organization_membership
   add constraint organization_membership_status_check
-  check (status in ('active', 'invited', 'suspended', 'cancelled', 'revoked', 'expired'));
+  check (status in ('active', 'invited', 'suspended', 'cancelled', 'declined', 'revoked', 'expired'));
 
 update public.organization_membership
    set invite_expires_at = coalesce(invite_expires_at, created_at + interval '14 days')
@@ -33,7 +33,8 @@ create table if not exists public.workspace_authority_receipt (
   actor_id uuid not null references auth.users(id) on delete restrict,
   organization_id uuid references public.organization(id) on delete set null,
   action text not null check (action in (
-    'context.switch', 'workspace.rename', 'invitation.resend', 'invitation.cancel',
+    'context.switch', 'workspace.rename', 'invitation.accept', 'invitation.decline',
+    'invitation.resend', 'invitation.cancel',
     'membership.change', 'ownership.transfer'
   )),
   idempotency_key uuid not null,
@@ -148,6 +149,88 @@ begin
   return jsonb_build_object('outcome', 'NO_ELIGIBLE', 'returnTo', p_return_to);
 exception when others then
   return jsonb_build_object('outcome', 'ERROR_OR_OFFLINE', 'returnTo', p_return_to);
+end;
+$$;
+
+drop function if exists public.accept_invite(text);
+create function public.accept_invite(p_token text)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_member public.organization_membership%rowtype;
+  v_replay jsonb;
+  v_hash text := encode(public.digest(p_token, 'sha256'), 'hex');
+begin
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_replay from public.workspace_authority_receipt
+   where actor_id=v_uid and action='invitation.accept' and before_state->>'tokenHash'=v_hash;
+  if v_replay is not null then return (v_replay->>'organizationId')::uuid; end if;
+
+  select * into v_member from public.organization_membership
+   where invite_token=p_token and status='invited' for update;
+  if v_member.id is null then raise exception 'invitation_invalid_or_used'; end if;
+  if v_member.invite_expires_at is not null and v_member.invite_expires_at<=now() then
+    update public.organization_membership set status='expired',invite_token=null,
+      authority_version=authority_version+1 where id=v_member.id;
+    raise exception 'invitation_expired';
+  end if;
+  select lower(email) into v_email from auth.users where id=v_uid;
+  if v_member.invited_email is not null and lower(v_member.invited_email)<>coalesce(v_email,'') then
+    raise exception 'invitation_wrong_person';
+  end if;
+
+  insert into public.person(id,email) values(v_uid,v_email) on conflict(id) do nothing;
+  update public.organization_membership set person_id=v_uid,status='active',joined_at=now(),
+    invite_token=null,authority_version=authority_version+1 where id=v_member.id;
+  insert into public.role_assignment(organization_id,person_id,functional_role)
+    values(v_member.organization_id,v_uid,'booking_manager')
+    on conflict do nothing;
+  insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+    values(v_uid,v_member.organization_id,'invitation.accept',v_member.id,
+      jsonb_build_object('tokenHash',v_hash,'membershipId',v_member.id,'status','invited'),
+      jsonb_build_object('status','COMMITTED','organizationId',v_member.organization_id,
+        'membershipId',v_member.id,'membershipStatus','active','authorityVersion',v_member.authority_version+1));
+  return v_member.organization_id;
+end;
+$$;
+
+create or replace function public.decline_workspace_invitation(p_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_email text;
+  v_member public.organization_membership%rowtype;
+  v_after jsonb;
+  v_hash text := encode(public.digest(p_token, 'sha256'), 'hex');
+begin
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+   where actor_id=v_uid and action='invitation.decline' and before_state->>'tokenHash'=v_hash;
+  if v_after is not null then return v_after; end if;
+  select * into v_member from public.organization_membership
+   where invite_token=p_token and status='invited' for update;
+  if v_member.id is null then raise exception 'invitation_invalid_or_used'; end if;
+  select lower(email) into v_email from auth.users where id=v_uid;
+  if v_member.invited_email is not null and lower(v_member.invited_email)<>coalesce(v_email,'') then
+    raise exception 'invitation_wrong_person';
+  end if;
+  update public.organization_membership set status='declined',invite_token=null,
+    authority_version=authority_version+1 where id=v_member.id;
+  v_after:=jsonb_build_object('status','COMMITTED','organizationId',v_member.organization_id,
+    'membershipId',v_member.id,'membershipStatus','declined','authorityVersion',v_member.authority_version+1);
+  insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+    values(v_uid,v_member.organization_id,'invitation.decline',v_member.id,
+      jsonb_build_object('tokenHash',v_hash,'membershipId',v_member.id,'status','invited'),v_after);
+  return v_after;
 end;
 $$;
 
@@ -393,6 +476,8 @@ end; $$;
 
 revoke all on function public.resolve_primary_workspace(text) from public, anon;
 revoke all on function public.get_workspace_creation_capabilities() from public, anon;
+revoke all on function public.accept_invite(text) from public, anon;
+revoke all on function public.decline_workspace_invitation(text) from public, anon;
 revoke all on function public.commit_workspace_context(uuid,bigint,uuid,text) from public, anon;
 revoke all on function public.rename_workspace(uuid,text,bigint,uuid) from public, anon;
 revoke all on function public.resend_workspace_invitation(uuid,bigint,uuid) from public, anon;
@@ -402,6 +487,8 @@ revoke all on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigi
 
 grant execute on function public.resolve_primary_workspace(text) to authenticated;
 grant execute on function public.get_workspace_creation_capabilities() to authenticated;
+grant execute on function public.accept_invite(text) to authenticated;
+grant execute on function public.decline_workspace_invitation(text) to authenticated;
 grant execute on function public.commit_workspace_context(uuid,bigint,uuid,text) to authenticated;
 grant execute on function public.rename_workspace(uuid,text,bigint,uuid) to authenticated;
 grant execute on function public.resend_workspace_invitation(uuid,bigint,uuid) to authenticated;

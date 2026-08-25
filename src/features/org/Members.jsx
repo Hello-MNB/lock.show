@@ -15,7 +15,7 @@ export default function Members() {
   const { T } = useLang()
   const toast = useToast()
   const { user } = useAuth()
-  const { activeOrgId, isAdmin, isOwner, reload } = useOrg()
+  const { activeOrgId, isAdmin, isOwner, reload, registerDirtyWork } = useOrg()
   const [members, setMembers] = useState([])
   const [sub, setSub] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -26,6 +26,11 @@ export default function Members() {
   const [emails, setEmails] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [inviteErr, setInviteErr] = useState('')
+
+  useEffect(() => {
+    registerDirtyWork?.('workspace-invitation', Boolean(emails.trim()))
+    return () => registerDirtyWork?.('workspace-invitation', false)
+  }, [emails, registerDirtyWork])
 
   async function load() {
     if (!activeOrgId) { setLoading(false); return }

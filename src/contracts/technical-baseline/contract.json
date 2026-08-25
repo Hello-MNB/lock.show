@@ -4,9 +4,25 @@
     {
       "id": "B4-30.10",
       "version": "7.1",
-      "revision": "AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC",
+      "revision": "AIroW354BKBxKYPyEUbQ6LRoTrSbUOd5nWSqbRHnIbu7mJCENTzpO7EC6iS1qjuOerOR1WPrLmTFdobVy4tvVk9RVJnwuNbLvtrn1vn_S4Cv",
       "url": "https://docs.google.com/document/d/1PvYcghY5aMK4TgdTqCaAmp8BuqNz_GrRBEUIec0OVvc",
       "authority": "product",
+      "status": "accepted"
+    },
+    {
+      "id": "B4-35.40",
+      "version": "6.42",
+      "revision": "AIroW34OQHc38efs7FL-RCrr-lnmj_UYdLcJnTdHDzDrLIasYdDrnR8Jq8mUI5lR47O4hVO5cj2LNoyLdlk4sUUhiX8GU2gvT2TZLsNkGOUM",
+      "url": "https://docs.google.com/document/d/1klkaUnciPuC6heDsAxs_eqGQO9rCaZB-5hjmApQ0eWM",
+      "authority": "experience",
+      "status": "accepted"
+    },
+    {
+      "id": "B4-35.50",
+      "version": "4.44",
+      "revision": "AIroW34dRindgwKV0J_sBrSmy9BC3l3f640kzIO_xbWkFgSsRBtNaS1lQ6KAo53XznVIV-UnxuHrjL0fqlywWZv9fNDOScIBbaHeYT133pS0",
+      "url": "https://docs.google.com/document/d/1O8Sz51xdLNKdrvITBRQoMwsBQi2EhpHkPn5u-U_Nl8g",
+      "authority": "experience-acceptance",
       "status": "accepted"
     },
     {
@@ -19,17 +35,17 @@
     },
     {
       "id": "B4-40.20",
-      "version": "2.20",
-      "revision": "AIroW36WC5t_VnL9MI33VX2udi12Z__MAcgJt_z--gMIbABGuGtROfsaeN0eCgk9RJkdohkjFOoEcg7FjgHjNbOONbroE6I52M4lh8gg5jWM",
+      "version": "2.32",
+      "revision": "AIroW35i4gmlMg1AfSRZfFtW0_xuMqx_RbAsXWiOrIo-4I7Mu7edDxK-D8fwG8Jt1rPmrJh168CdBV547L2IOiOX03XBgP7IxZvVGYWPnGFJ",
       "url": "https://docs.google.com/document/d/1qwCdgdg4P5TBON5c7Xb3GPbb9ttRNoZnIgyEYtkX1Eo",
       "authority": "technology",
-      "status": "stale-packet"
+      "status": "active-execution-queue"
     }
   ],
   "repository": {
     "remote": "https://github.com/Hello-MNB/lock.show.git",
-    "base": "ef98d91992408a612b047c632717e053457b0c8d",
-    "branch": "codex/tech-baseline-align-01",
+    "base": "4c7a2834aa56f3cd385f3e8819cb40459f7e11c9",
+    "branch": "codex/app-shell-workspace-authority-v1-20260825",
     "surfaceModel": "one-repo-two-properties",
     "marketingPath": "website-next",
     "applicationPath": "src"

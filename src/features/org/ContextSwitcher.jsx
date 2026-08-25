@@ -46,7 +46,7 @@ export default function ContextSwitcher() {
   // role: the ACTIVE workspace's effective role (ROUND 4), so the label under
   // the avatar follows whichever workspace is selected right now, not a single
   // static profile role.
-  const { memberships, activeOrgId, switchOrg, role, isProducerWorkspace, reload } = useOrg()
+  const { memberships, activeOrgId, switchOrg, role, isProducerWorkspace, reload, dirtyWork } = useOrg()
   const { profile } = useAuth()
   const { allowed: adminAllowed, adminMode, enterAdmin, exitAdmin } = useAdminAccess()
   const [open, setOpen] = useState(false)
@@ -95,7 +95,7 @@ export default function ContextSwitcher() {
       await switchOrg(switchTarget.organization.id)
       closeSheet()
     } catch (error) {
-      setSwitchError(error.message || T.common.error)
+      setSwitchError(error.message === 'DIRTY_WORK_BLOCKED' ? T.dashboard.applyTitle : (error.message || T.common.error))
     } finally {
       setSwitchBusy(false)
     }
@@ -173,9 +173,10 @@ export default function ContextSwitcher() {
             <div className="card border-accent/50" role="status" aria-live="polite">
               <p className="text-xs text-muted">{active?.organization?.name || '—'} → {switchTarget.organization?.name}</p>
               <p className="mt-1 text-xs text-ink">{membershipTypeLabel(switchTarget.organization?.workspace_type, T)} · {orgRoleLabel(switchTarget.org_role, T)}</p>
+              {dirtyWork?.state === 'DIRTY' && <p className="mt-2 text-xs text-amber">{T.dashboard.applyTitle}</p>}
               {switchError && <p className="mt-2 text-xs text-amber">{switchError}</p>}
               <div className="mt-3 flex gap-2">
-                <button type="button" className="btn-primary flex-1" onClick={commitSwitch} disabled={switchBusy}>
+                <button type="button" className="btn-primary flex-1" onClick={commitSwitch} disabled={switchBusy || dirtyWork?.state === 'DIRTY'}>
                   {switchBusy ? <Spinner /> : T.org.switchOrg}
                 </button>
                 <button type="button" className="btn-ghost" onClick={() => setSwitchTarget(null)} disabled={switchBusy}>

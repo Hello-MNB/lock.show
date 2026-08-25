@@ -8,6 +8,8 @@ begin
   foreach required_function in array array[
     'resolve_primary_workspace',
     'get_workspace_creation_capabilities',
+    'accept_invite',
+    'decline_workspace_invitation',
     'commit_workspace_context',
     'rename_workspace',
     'resend_workspace_invitation',
@@ -37,11 +39,15 @@ insert into auth.users(id,email,email_confirmed_at) values
   ('10000000-0000-4000-8000-000000000001','owner@example.test',now()),
   ('10000000-0000-4000-8000-000000000002','member@example.test',now()),
   ('10000000-0000-4000-8000-000000000003','ordinary@example.test',now())
+  ,('10000000-0000-4000-8000-000000000004','invitee@example.test',now())
+  ,('10000000-0000-4000-8000-000000000005','declinee@example.test',now())
 on conflict (id) do nothing;
 insert into public.person(id,email,display_name) values
   ('10000000-0000-4000-8000-000000000001','owner@example.test','Owner'),
   ('10000000-0000-4000-8000-000000000002','member@example.test','Member'),
   ('10000000-0000-4000-8000-000000000003','ordinary@example.test','Ordinary')
+  ,('10000000-0000-4000-8000-000000000004','invitee@example.test','Invitee')
+  ,('10000000-0000-4000-8000-000000000005','declinee@example.test','Declinee')
 on conflict (id) do nothing;
 
 insert into public.organization(id,name,workspace_type,created_by) values
@@ -54,10 +60,16 @@ insert into public.organization_membership(id,organization_id,person_id,org_role
   ('30000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','owner','active',now()),
   ('30000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','owner','active',now()),
   ('30000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000002','member','active',now()),
-  ('30000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000002',null,'member','invited',null);
+  ('30000000-0000-4000-8000-000000000004','20000000-0000-4000-8000-000000000002',null,'member','invited',null),
+  ('30000000-0000-4000-8000-000000000005','20000000-0000-4000-8000-000000000002',null,'member','invited',null),
+  ('30000000-0000-4000-8000-000000000006','20000000-0000-4000-8000-000000000002',null,'member','invited',null);
 update public.organization_membership
-   set invited_email='invitee@example.test', invite_expires_at=now()+interval '7 days'
+   set invited_email='cancel@example.test', invite_token='cancel-token', invite_expires_at=now()+interval '7 days'
  where id='30000000-0000-4000-8000-000000000004';
+update public.organization_membership set invited_email='invitee@example.test',invite_token='accept-token',
+  invite_expires_at=now()+interval '7 days' where id='30000000-0000-4000-8000-000000000005';
+update public.organization_membership set invited_email='declinee@example.test',invite_token='decline-token',
+  invite_expires_at=now()+interval '7 days' where id='30000000-0000-4000-8000-000000000006';
 insert into public.role_assignment(id,organization_id,person_id,functional_role) values
   ('40000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','artist'),
   ('40000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','artist_manager');
@@ -102,6 +114,19 @@ begin
   v_result:=public.cancel_workspace_invitation('30000000-0000-4000-8000-000000000004',2,
     '50000000-0000-4000-8000-000000000004');
   if v_result->>'membershipStatus'<>'cancelled' then raise exception 'cancel_invitation_failed:%',v_result; end if;
+
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',false);
+  if public.accept_invite('accept-token')<>'20000000-0000-4000-8000-000000000002'::uuid then
+    raise exception 'accept_invitation_failed';
+  end if;
+  if public.accept_invite('accept-token')<>'20000000-0000-4000-8000-000000000002'::uuid then
+    raise exception 'accept_invitation_idempotency_failed';
+  end if;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000005',false);
+  v_result:=public.decline_workspace_invitation('decline-token');
+  if v_result->>'membershipStatus'<>'declined' then raise exception 'decline_invitation_failed:%',v_result; end if;
+  if public.decline_workspace_invitation('decline-token')<>v_result then raise exception 'decline_invitation_idempotency_failed'; end if;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 
   begin
     perform public.change_workspace_member_authority('30000000-0000-4000-8000-000000000001','admin','active',1,

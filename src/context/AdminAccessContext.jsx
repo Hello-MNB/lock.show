@@ -1,10 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
 
 const AdminAccessCtx = createContext(null)
 const ADMIN_ENVIRONMENT = 'production'
-const RETURN_KEY = 'lock_show_admin_return_path'
 
 export const useAdminAccess = () => useContext(AdminAccessCtx) || {}
 
@@ -14,6 +13,7 @@ export function AdminAccessProvider({ children }) {
   const location = useLocation()
   const [loading, setLoading] = useState(Boolean(user))
   const [access, setAccess] = useState({ allowed: false, reason: 'not_checked' })
+  const returnPath = useRef('/')
   const adminMode = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
 
   const preflight = useCallback(async () => {
@@ -44,22 +44,36 @@ export function AdminAccessProvider({ children }) {
 
   useEffect(() => { preflight() }, [preflight])
 
+  useEffect(() => {
+    if (!adminMode) return undefined
+    const refresh = () => { if (document.visibilityState === 'visible') preflight() }
+    const timer = window.setInterval(preflight, 60_000)
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [adminMode, preflight])
+
   const enterAdmin = useCallback(async () => {
     const current = await preflight()
     if (!current.allowed) return current
-    try { sessionStorage.setItem(RETURN_KEY, location.pathname + location.search) } catch { /* in-memory navigation still works */ }
+    returnPath.current = location.pathname + location.search
     nav('/admin')
     return current
   }, [location.pathname, location.search, nav, preflight])
 
   const exitAdmin = useCallback(() => {
-    let target = '/'
-    try {
-      target = sessionStorage.getItem(RETURN_KEY) || '/'
-      sessionStorage.removeItem(RETURN_KEY)
-    } catch { /* safe default */ }
+    const target = returnPath.current || '/'
+    returnPath.current = '/'
     nav(target === '/admin' || target.startsWith('/admin/') ? '/' : target)
   }, [nav])
+
+  useEffect(() => {
+    if (adminMode && !loading && !access.allowed) nav('/', { replace: true })
+  }, [access.allowed, adminMode, loading, nav])
 
   const value = useMemo(() => ({
     ...access,

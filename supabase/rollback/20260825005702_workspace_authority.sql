@@ -2,7 +2,7 @@
 -- Refuses to erase lifecycle state that the pre-migration constraint cannot represent.
 do $$
 begin
-  if exists (select 1 from public.organization_membership where status in ('cancelled','revoked','expired')) then
+  if exists (select 1 from public.organization_membership where status in ('cancelled','declined','revoked','expired')) then
     raise exception 'workspace_authority_rollback_requires_membership_state_reconciliation';
   end if;
 end $$;
@@ -15,7 +15,30 @@ drop function if exists public.rename_workspace(uuid,text,bigint,uuid);
 drop function if exists public.commit_workspace_context(uuid,bigint,uuid,text);
 drop function if exists public.resolve_primary_workspace(text);
 drop function if exists public.get_workspace_creation_capabilities();
+drop function if exists public.decline_workspace_invitation(text);
+drop function if exists public.accept_invite(text);
 drop table if exists public.workspace_authority_receipt;
+
+create function public.accept_invite(p_token text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare v_id uuid; v_org uuid; v_invited_email text; v_uid uuid := auth.uid(); v_email text;
+begin
+  if v_uid is null then raise exception 'not authenticated'; end if;
+  select id, organization_id, invited_email into v_id, v_org, v_invited_email
+    from public.organization_membership where invite_token = p_token and status = 'invited';
+  if v_id is null then raise exception 'invalid or used invite'; end if;
+  select email into v_email from auth.users where id = v_uid;
+  if v_invited_email is not null and lower(v_invited_email) <> lower(coalesce(v_email, '')) then
+    raise exception 'invite email mismatch';
+  end if;
+  insert into public.person(id, email) values (v_uid, v_email) on conflict (id) do nothing;
+  update public.organization_membership
+     set person_id = v_uid, status = 'active', joined_at = now(), invite_token = null
+   where id = v_id;
+  insert into public.role_assignment(organization_id, person_id, functional_role)
+    values (v_org, v_uid, 'booking_manager');
+  return v_org;
+end; $$;
 
 alter table public.organization_membership drop constraint if exists organization_membership_status_check;
 alter table public.organization_membership add constraint organization_membership_status_check

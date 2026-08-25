@@ -38,6 +38,7 @@ export function OrgProvider({ children }) {
   const [activeOrgId, setActiveOrgIdState] = useState(null)
   const [contextVersion, setContextVersion] = useState(0)
   const [resolutionOutcome, setResolutionOutcome] = useState(null)
+  const [dirtyWork, setDirtyWork] = useState({ state: 'CLEAN', owners: [] })
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -63,6 +64,7 @@ export function OrgProvider({ children }) {
   // Context/nav never changes until the server returns a committed receipt.
   // Client storage is not an authority source and is deliberately absent.
   const switchOrg = useCallback(async (orgId) => {
+    if (dirtyWork.state === 'DIRTY') throw new Error('DIRTY_WORK_BLOCKED')
     const receipt = await commitActiveWorkspace({
       orgId,
       contextVersion,
@@ -76,7 +78,15 @@ export function OrgProvider({ children }) {
     logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
     nav(receipt.route || '/')
     return receipt
-  }, [contextVersion, nav])
+  }, [contextVersion, dirtyWork.state, nav])
+
+  const registerDirtyWork = useCallback((owner, isDirty) => {
+    setDirtyWork((current) => {
+      const owners = new Set(current.owners)
+      if (isDirty) owners.add(owner); else owners.delete(owner)
+      return { state: owners.size ? 'DIRTY' : 'CLEAN', owners: [...owners] }
+    })
+  }, [])
 
   const active = memberships.find((m) => m.organization?.id === activeOrgId) || null
   const plan = active?.organization?.plan || 'solo'
@@ -111,6 +121,8 @@ export function OrgProvider({ children }) {
     isOwner: active?.org_role === 'owner',
     isAdmin: ['owner', 'admin'].includes(active?.org_role),
     switchOrg,
+    dirtyWork,
+    registerDirtyWork,
     reload: load,
   }
   return <OrgCtx.Provider value={value}>{children}</OrgCtx.Provider>

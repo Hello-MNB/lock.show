@@ -70,3 +70,12 @@ jobs:
       - name: Build bounded application candidate
         if: ${{ !cancelled() }}
         run: npm run build
+      - name: Audit application production dependencies
+        if: ${{ !cancelled() }}
+        run: npm audit --omit=dev
+      - name: Verify technical baseline and migration inventory
+        if: ${{ !cancelled() }}
+        run: npm run tech-baseline:verify
+      - name: Verify existing application chain
+        if: ${{ !cancelled() }}
+        run: npm run verify

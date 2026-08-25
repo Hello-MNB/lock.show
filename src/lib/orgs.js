@@ -242,6 +242,12 @@ export async function acceptInvite(token) {
   if (error) throw error
   return data
 }
+export async function declineInvite(token) {
+  if (DEMO) return { status: 'COMMITTED', membershipStatus: 'declined' }
+  const { data, error } = await supabase.rpc('decline_workspace_invitation', { p_token: token })
+  if (error) throw error
+  return data
+}
 // O4 — show who/what/where before the invitee is a member (SECURITY DEFINER RPC).
 export async function getInviteInfo(token) {
   if (DEMO) return demoInviteInfo

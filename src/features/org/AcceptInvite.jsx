@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { acceptInvite, getInviteInfo } from '../../lib/orgs.js'
+import { acceptInvite, declineInvite, getInviteInfo } from '../../lib/orgs.js'
 import { PageShell, Wordmark, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -30,6 +30,12 @@ export default function AcceptInvite() {
     catch (e) { setError(T.org.acceptInvalid) } finally { setBusy(false) }
   }
 
+  async function decline() {
+    setBusy(true); setError('')
+    try { await declineInvite(token); nav('/', { replace: true }) }
+    catch { setError(T.org.acceptInvalid) } finally { setBusy(false) }
+  }
+
   if (loading || infoLoading) return <Loading />
   const orgName = info?.org_name || ''
 
@@ -52,7 +58,10 @@ export default function AcceptInvite() {
                 <Link to="/login" state={{ from: `/invite/${token}` }} className="btn-ghost block">{T.login.cta}</Link>
               </>
             ) : (
-              <button className="btn-primary w-full" onClick={accept} disabled={busy}>{busy ? <Spinner /> : T.org.join}</button>
+              <div className="space-y-2">
+                <button className="btn-primary w-full" onClick={accept} disabled={busy}>{busy ? <Spinner /> : T.org.join}</button>
+                <button className="btn-ghost w-full" onClick={decline} disabled={busy}>{T.common.decline}</button>
+              </div>
             )}
           </>
         )}

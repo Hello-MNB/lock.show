@@ -5,6 +5,7 @@ import process from 'node:process'
 
 const root = resolve(import.meta.dirname, '..', '..')
 const migrationsDirectory = resolve(root, 'supabase', 'migrations')
+const rollbackDirectory = resolve(root, 'supabase', 'rollback')
 const migrations = readdirSync(migrationsDirectory).filter((name) => name.endsWith('_workspace_authority.sql'))
 
 if (migrations.length !== 1) {
@@ -78,5 +79,39 @@ for (const name of forwardMigrations) {
 
 runSql(readFileSync(resolve(root, 'supabase', 'tests', 'tech-baseline', 'workspace-authority.sql'), 'utf8'),
   'workspace authority SQL contract')
+
+runSql(`
+  delete from public.workspace_authority_receipt;
+  delete from public.role_assignment where person_id::text like '10000000-0000-4000-8000-%';
+  delete from public.active_role_context where person_id::text like '10000000-0000-4000-8000-%';
+  delete from public.organization_membership where organization_id::text like '20000000-0000-4000-8000-%';
+  delete from public.subscription where organization_id::text like '20000000-0000-4000-8000-%';
+  delete from public.organization where id::text like '20000000-0000-4000-8000-%';
+  delete from public.person where id::text like '10000000-0000-4000-8000-%';
+  delete from auth.users where id::text like '10000000-0000-4000-8000-%';
+`, 'workspace authority rollback fixture reconciliation')
+
+runSql(readFileSync(resolve(rollbackDirectory, '20260825005702_workspace_authority.sql'), 'utf8'),
+  'workspace authority rollback')
+runSql(`
+  do $$ begin
+    if to_regclass('public.workspace_authority_receipt') is not null then
+      raise exception 'workspace_authority_receipt_survived_rollback';
+    end if;
+    if to_regprocedure('public.resolve_primary_workspace(text)') is not null
+       or to_regprocedure('public.commit_workspace_context(uuid,bigint,uuid,text)') is not null
+       or to_regprocedure('public.decline_workspace_invitation(text)') is not null then
+      raise exception 'workspace_authority_function_survived_rollback';
+    end if;
+    if exists (select 1 from information_schema.columns
+      where table_schema='public' and table_name='organization_membership' and column_name='authority_version') then
+      raise exception 'workspace_authority_column_survived_rollback';
+    end if;
+    if to_regprocedure('public.accept_invite(text)') is null then
+      raise exception 'legacy_accept_invite_not_restored';
+    end if;
+  end $$;
+  select 'APP_SHELL_WORKSPACE_AUTHORITY_ROLLBACK_OK' as result;
+`, 'workspace authority rollback readback')
 
 console.log('APP_SHELL_WORKSPACE_AUTHORITY_DB_OK')

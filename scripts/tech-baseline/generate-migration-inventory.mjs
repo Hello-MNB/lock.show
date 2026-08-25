@@ -8,10 +8,11 @@ const root = path.resolve(here, '..', '..');
 const migrationsDir = path.join(root, 'supabase', 'migrations');
 const rollbackDir = path.join(root, 'supabase', 'rollback');
 const output = path.join(root, 'src', 'contracts', 'technical-baseline', 'migration-inventory.json');
-const selectedMigrationIds = ['20260820042812', '20260824173241'];
+const selectedMigrationIds = ['20260820042812', '20260824173241', '20260825005702'];
 const timestampEvidence = {
   '20260820042812': 'PD-005_ENVIRONMENT_ADMIN_AUTHORITY',
   '20260824173241': 'APP_ADMIN_EXPLICIT_PROVENANCE_GRANT',
+  '20260825005702': 'APP_SHELL_WORKSPACE_AUTHORITY',
   '20260820091500': 'PASSPORT_PUBLIC_PAYLOAD_FIREWALL',
   '20260820210117': 'ROSTER_INVITATION_CONSENT'
 };
@@ -44,7 +45,7 @@ for (const name of names.sort()) {
 
 const inventory = {
   schemaVersion: '1.0.0',
-  repositoryBase: 'ef98d91992408a612b047c632717e053457b0c8d',
+  repositoryBase: '4c7a2834aa56f3cd385f3e8819cb40459f7e11c9',
   liveState: 'OPEN_EVIDENCE',
   firstSlice: {
     id: 'PD-005',
