@@ -1,0 +1,83 @@
+name: App shell authority
+
+on:
+  push:
+    branches:
+      - codex/app-shell-workspace-authority-v1-20260825
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-shell-authority-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres@sha256:b86568d3e0fe1dfaeff52714f9da36f206a30e4c49131b82bf96982d78627409
+        env:
+          POSTGRES_DB: lock_show_test
+          POSTGRES_USER: lock_show_test
+          POSTGRES_PASSWORD: lock_show_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lock_show_test -d lock_show_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DATABASE_URL: postgresql://lock_show_test:lock_show_test@127.0.0.1:5432/lock_show_test
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: lock_show_test
+      PGUSER: lock_show_test
+      PGPASSWORD: lock_show_test
+      LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB: lock_show_test
+
+    steps:
+      - name: Checkout exact branch commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Set up repository Node contract
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Pin npm and verify runtimes
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          npm install --global npm@11.13.0 --no-audit --no-fund
+          node -e "if (process.version !== 'v22.23.2') throw new Error('NODE_VERSION_DRIFT:' + process.version)"
+          node -e "const { execFileSync } = require('node:child_process'); const version = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim(); if (version !== '11.13.0') throw new Error('NPM_VERSION_DRIFT:' + version)"
+          docker exec "$POSTGRES_CONTAINER_ID" postgres --version | grep '17.6'
+      - name: Install locked application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install locked Playwright Chromium runtime
+        run: npm exec playwright install --with-deps chromium
+      - name: RED application-shell contract
+        if: ${{ !cancelled() }}
+        run: npm run test:workspace-authority
+      - name: RED database authority contract
+        if: ${{ !cancelled() }}
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: npm run test:workspace-authority:db
+      - name: Build bounded application candidate
+        if: ${{ !cancelled() }}
+        run: npm run build
+      - name: Audit application production dependencies
+        if: ${{ !cancelled() }}
+        run: npm audit --omit=dev
+      - name: Verify technical baseline and migration inventory
+        if: ${{ !cancelled() }}
+        run: npm run tech-baseline:verify
+      - name: Verify existing application chain
+        if: ${{ !cancelled() }}
+        run: npm run verify

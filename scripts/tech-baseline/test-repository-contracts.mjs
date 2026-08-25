@@ -7,14 +7,14 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..', '..');
 const manifest = path.join(root, 'src', 'contracts', 'technical-baseline', 'contract.json');
-const currentProductRevision = 'AIroW371UC10YF2gfrHMw9fZIbkXfjVV7D1EbPvVBKlGDSJdQB9THqGF44uwvfivHmylhfW8-iG7dv7lUlchgZlz2_Jkum2neOAh7XLN6PwC';
+const currentProductRevision = 'AIroW354BKBxKYPyEUbQ6LRoTrSbUOd5nWSqbRHnIbu7mJCENTzpO7EC6iS1qjuOerOR1WPrLmTFdobVy4tvVk9RVJnwuNbLvtrn1vn_S4Cv';
 
 const contract = JSON.parse(fs.readFileSync(manifest, 'utf8'));
 const productSource = contract.sources.find((source) => source.id === 'B4-30.10');
 assert.equal(productSource?.revision, currentProductRevision, 'B4-30.10 source pin must match the exact current Product PASS revision');
 assert.equal(contract.navigationProjection.sourceRevision, currentProductRevision, 'Navigation projection must use the exact current Product PASS revision');
-assert.equal(contract.migrations?.status, 'FIRST_SLICE_MIGRATION_SELECTED_UNAPPLIED');
-assert.deepEqual(contract.migrations?.included, ['20260820042812', '20260824173241']);
+assert.equal(contract.migrations?.status, 'APP_SHELL_WORKSPACE_AUTHORITY_SELECTED_UNAPPLIED');
+assert.deepEqual(contract.migrations?.included, ['20260820042812', '20260824173241', '20260825005702']);
 
 const scan = spawnSync(process.execPath, [path.join(here, 'scan-contracts.mjs'), manifest], { cwd: root, encoding: 'utf8' });
 assert.equal(scan.status, 0, `${scan.stdout}\n${scan.stderr}`);

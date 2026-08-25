@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
-import { getMyMemberships, getActiveOrgId, setActiveOrg as persistActiveOrg } from '../lib/orgs.js'
-import { ROLES } from '../lib/constants.js'
+import { getMyMemberships, resolvePrimaryWorkspace, commitActiveWorkspace, normalizeFunctionalRole } from '../lib/orgs.js'
 import { logEvent, EVENTS } from '../lib/analytics.js'
 
 // Active-organization context. The org is the tenant; this exposes which org the
@@ -18,8 +17,6 @@ import { logEvent, EVENTS } from '../lib/analytics.js'
 const OrgCtx = createContext(null)
 export const useOrg = () => useContext(OrgCtx) || {}
 
-const ACTIVE_ORG_KEY = 'gigproof_active_org_id'
-
 // Base (profile) roles whose EFFECTIVE role is recomputed from the active
 // workspace's functional_role. Per the entity model (spec §3), role derives from
 // the OrgContext, not the static profile field. OPERATOR is deliberately excluded
@@ -31,32 +28,33 @@ const ACTIVE_ORG_KEY = 'gigproof_active_org_id'
 // active membership's functional_role DIFFERS from the base role (i.e. an actual
 // switch); a membership-less account has no active.functional_role and falls back
 // to authRole, so those personas are unaffected.
-const ORG_DERIVED_ROLES = [ROLES.ARTIST, ROLES.AGENCY, ROLES.BOOKER, ROLES.PRODUCER]
-
 export function OrgProvider({ children }) {
   const { user, role: authRole } = useAuth()
   const nav = useNavigate()
   const [memberships, setMemberships] = useState([])
   const [activeOrgId, setActiveOrgIdState] = useState(null)
+  const [contextVersion, setContextVersion] = useState(0)
+  const [resolutionOutcome, setResolutionOutcome] = useState(null)
+  const [resolvedRole, setResolvedRole] = useState(null)
+  const [dirtyWork, setDirtyWork] = useState({ state: 'CLEAN', owners: [] })
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    if (!user) { setMemberships([]); setActiveOrgIdState(null); setLoading(false); return }
+    if (!user) { setMemberships([]); setActiveOrgIdState(null); setResolvedRole(null); setLoading(false); return }
     setLoading(true)
     try {
       const m = await getMyMemberships()
       setMemberships(m)
-      // Restore order: this device's explicit last choice (localStorage) →
-      // server-persisted active_role_context → the membership matching the
-      // current profile role (keeps each role's existing default home on
-      // first load) → first membership.
-      const stored = localStorage.getItem(ACTIVE_ORG_KEY)
-      const storedValid = stored && m.some((mm) => mm.organization?.id === stored)
-      const roleMatchId = m.find((mm) => mm.functional_role === authRole)?.organization?.id
-      const active = storedValid ? stored : ((await getActiveOrgId()) || roleMatchId || m[0]?.organization?.id || null)
-      setActiveOrgIdState(active)
+      const resolution = await resolvePrimaryWorkspace(window.location.pathname)
+      setResolutionOutcome(resolution?.outcome || 'ERROR_OR_OFFLINE')
+      setContextVersion(resolution?.contextVersion || 0)
+      setActiveOrgIdState(resolution?.outcome === 'RESOLVED_PRIMARY' ? resolution.workspace?.id : null)
+      if (resolution?.outcome === 'RESOLVED_PRIMARY') setResolvedRole(resolution?.role)
+      else setResolvedRole(null)
     } catch {
       setMemberships([])
+      setResolutionOutcome('ERROR_OR_OFFLINE')
+      setResolvedRole(null)
     } finally {
       setLoading(false)
     }
@@ -64,19 +62,35 @@ export function OrgProvider({ children }) {
 
   useEffect(() => { load() }, [load])
 
-  // Switching a workspace is client-side derivation only (no RLS/db writes
-  // beyond the existing active_role_context upsert) — persist locally so a
-  // reload keeps the chosen workspace, then send the user to "/" so RoleHome
-  // (App.jsx) re-routes into the NEW workspace's home + nav set.
+  // Context/nav never changes until the server returns a committed receipt.
+  // Client storage is not an authority source and is deliberately absent.
   const switchOrg = useCallback(async (orgId) => {
-    setActiveOrgIdState(orgId)
-    try { localStorage.setItem(ACTIVE_ORG_KEY, orgId) } catch { /* storage unavailable — in-memory only */ }
-    try { await persistActiveOrg(orgId) } catch { /* non-blocking */ }
+    if (dirtyWork.state === 'DIRTY') throw new Error('DIRTY_WORK_BLOCKED')
+    const receipt = await commitActiveWorkspace({
+      orgId,
+      contextVersion,
+      idempotencyKey: crypto.randomUUID(),
+      returnTo: '/',
+    })
+    if (receipt?.status !== 'COMMITTED') throw new Error('workspace_switch_not_committed')
+    setActiveOrgIdState(receipt.workspace.id)
+    setContextVersion(receipt.contextVersion)
+    setResolutionOutcome('RESOLVED_PRIMARY')
+    setResolvedRole(receipt.role)
     logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
-    nav('/')
-  }, [nav])
+    nav(receipt.route || '/')
+    return receipt
+  }, [contextVersion, dirtyWork.state, nav])
 
-  const active = memberships.find((m) => m.organization?.id === activeOrgId) || memberships[0] || null
+  const registerDirtyWork = useCallback((owner, isDirty) => {
+    setDirtyWork((current) => {
+      const owners = new Set(current.owners)
+      if (isDirty) owners.add(owner); else owners.delete(owner)
+      return { state: owners.size ? 'DIRTY' : 'CLEAN', owners: [...owners] }
+    })
+  }, [])
+
+  const active = memberships.find((m) => m.organization?.id === activeOrgId) || null
   const plan = active?.organization?.plan || 'solo'
   // workspace_type (migration 027) — a SEPARATE axis from functional_role/plan:
   // a production company (e.g. INSOMNIA TLV) has functional_role='agency' (same
@@ -89,13 +103,14 @@ export function OrgProvider({ children }) {
 
   // Effective role — recomputed from the ACTIVE workspace every time
   // activeOrgId changes, not read once from a static profile field.
-  const role = (authRole && ORG_DERIVED_ROLES.includes(authRole) && active?.functional_role)
-    ? active.functional_role
-    : authRole
+  const serverRole = normalizeFunctionalRole(resolvedRole?.type)
+  const role = resolutionOutcome === 'RESOLVED_PRIMARY' ? serverRole : authRole
 
   const value = {
     loading,
     memberships,
+    resolutionOutcome,
+    contextVersion,
     activeOrgId: active?.organization?.id || null,
     activeOrg: active?.organization || null,
     orgRole: active?.org_role || null,
@@ -107,6 +122,8 @@ export function OrgProvider({ children }) {
     isOwner: active?.org_role === 'owner',
     isAdmin: ['owner', 'admin'].includes(active?.org_role),
     switchOrg,
+    dirtyWork,
+    registerDirtyWork,
     reload: load,
   }
   return <OrgCtx.Provider value={value}>{children}</OrgCtx.Provider>

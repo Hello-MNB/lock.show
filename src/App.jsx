@@ -15,6 +15,7 @@ import {
   requireProductionRedirect,
 } from './lib/navigation.js'
 import { locationReturnPath, savePendingReturn } from './lib/pendingReturn.js'
+import { requiresWorkspaceForRole } from './lib/workspaceAuthority.js'
 
 import AppShell from './components/layout/AppShell.jsx'
 import SetupNotice from './features/setup/SetupNotice.jsx'
@@ -52,6 +53,7 @@ import Billing from './features/org/Billing.jsx'
 import AcceptInvite from './features/org/AcceptInvite.jsx'
 import RosterInvite from './features/agency/RosterInvite.jsx'
 import ConsentBanner from './components/ConsentBanner.jsx'
+import ContextSwitcher from './features/org/ContextSwitcher.jsx'
 
 function LoginRedirect({ location }) {
   const from = locationReturnPath(location) || '/'
@@ -71,11 +73,12 @@ function RequireAuth({ children }) {
 // "/" (RoleHome), which redirects them to their OWN home — no dead-ends, no loop.
 // `role` comes from useOrg() (ROUND 4: the ACTIVE workspace's derived role), NOT
 // the static useAuth() profile role — so a workspace switch actually re-gates.
-function RequireRole({ role: need, children }) {
+function RequireRole({ role: need, workspaceRequired = requiresWorkspaceForRole(Array.isArray(need) ? need[0] : need), children }) {
   const { user, loading: authLoading } = useAuth()
-  const { role, loading: orgLoading } = useOrg()
+  const { role, activeOrgId, resolutionOutcome, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
+  if (workspaceRequired && user && (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId)) return <Navigate to={ROUTES.home} replace />
   const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
   if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
@@ -101,9 +104,10 @@ function RequireAdmin({ children }) {
 // normalizes to ROLES.AGENCY today.
 function RequireAgency({ children }) {
   const { user, loading: authLoading } = useAuth()
-  const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
+  const { role, isAgency, isProducerWorkspace, activeOrgId, resolutionOutcome, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
+  if (user && (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId)) return <Navigate to={ROUTES.home} replace />
   const redirect = requireAgencyRedirect({ user, role, isAgency, isProducerWorkspace })
   if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
@@ -116,9 +120,10 @@ function RequireAgency({ children }) {
 // migration 027 / ENTITY-ARCHITECTURE.md refactor step 5).
 function RequireProduction({ children }) {
   const { user, loading: authLoading } = useAuth()
-  const { role, isAgency, isProducerWorkspace, loading: orgLoading } = useOrg()
+  const { role, isAgency, isProducerWorkspace, activeOrgId, resolutionOutcome, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
+  if (user && (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId)) return <Navigate to={ROUTES.home} replace />
   const redirect = requireProductionRedirect({ user, role, isAgency, isProducerWorkspace })
   if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
@@ -130,9 +135,24 @@ function RequireProduction({ children }) {
 // switch (OrgContext.switchOrg navigates here) land on the NEW workspace's home.
 function RoleHome() {
   const { user, loading: authLoading } = useAuth()
-  const { role, isProducerWorkspace, loading: orgLoading } = useOrg()
+  const { T } = useLang()
+  const { role, isProducerWorkspace, activeOrgId, resolutionOutcome, loading: orgLoading } = useOrg()
   if (authLoading || orgLoading) return <Loading />
   if (!user) return <Navigate to={ROUTES.login} replace />
+  if (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId) {
+    const stateLabel = resolutionOutcome === 'PENDING_ONLY'
+      ? T.org.invitedRow
+      : resolutionOutcome === 'ERROR_OR_OFFLINE' ? T.common.error : T.org.switchOrg
+    return (
+      <PageShell max="max-w-md">
+        <div className="card mt-16 text-center" role="status" aria-live="polite">
+          <h1 className="font-display text-xl font-bold text-ink">{stateLabel}</h1>
+          <p className="mt-2 text-sm text-muted">{T.org.switchNote}</p>
+          <div className="mt-5 flex justify-center"><ContextSwitcher /></div>
+        </div>
+      </PageShell>
+    )
+  }
   // Single source of truth for role→home routing (src/lib/navigation.js), so a
   // workspace switch lands on the NEW workspace's home and the contract test can
   // prove every entity's landing.
@@ -239,11 +259,11 @@ export default function App() {
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
 
         {/* booker */}
-        <Route path="/discover" element={<RequireRole role={ROLES.BOOKER}><BookerHome /></RequireRole>} />
+        <Route path="/discover" element={<RequireRole role={ROLES.BOOKER} workspaceRequired={false}><BookerHome /></RequireRole>} />
 
         {/* producer workspace */}
-        <Route path="/producer" element={<RequireRole role={ROLES.PRODUCER}><ProducerHome /></RequireRole>} />
-        <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER}><ProducerReceivedPassports /></RequireRole>} />
+        <Route path="/producer" element={<RequireRole role={ROLES.PRODUCER} workspaceRequired={false}><ProducerHome /></RequireRole>} />
+        <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER} workspaceRequired={false}><ProducerReceivedPassports /></RequireRole>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { BottomSheet, Spinner } from '../../components/ui.jsx'
-import { createWorkspace } from '../../lib/orgs.js'
+import { createWorkspace, getWorkspaceCreationCapabilities } from '../../lib/orgs.js'
 import { ROLES } from '../../lib/constants.js'
 import { useAdminAccess } from '../../context/AdminAccessContext.jsx'
 
@@ -24,6 +24,11 @@ function workspaceTypeLabel(role, isAgency, T, isProducerWorkspace) {
 // orgs.createWorkspace maps these onto the migration-027 DB values
 // (artist / management / producer).
 const NEW_WORKSPACE_TYPES = ['artist', 'agency', 'production']
+const membershipTypeLabel = (workspaceType, T) => ({
+  artist: T.org.newWorkspaceTypeArtist,
+  management: T.org.newWorkspaceTypeAgency,
+  producer: T.org.newWorkspaceTypeProduction,
+}[workspaceType] || workspaceType)
 
 // O3 — Workspace / account switcher. Canon ROUND 4: person → workspace →
 // role; switching lives TOP-RIGHT (never bottom-left, never a re-registration).
@@ -41,7 +46,7 @@ export default function ContextSwitcher() {
   // role: the ACTIVE workspace's effective role (ROUND 4), so the label under
   // the avatar follows whichever workspace is selected right now, not a single
   // static profile role.
-  const { memberships, activeOrgId, switchOrg, role, isProducerWorkspace, reload } = useOrg()
+  const { memberships, activeOrgId, switchOrg, role, isProducerWorkspace, reload, dirtyWork } = useOrg()
   const { profile } = useAuth()
   const { allowed: adminAllowed, adminMode, enterAdmin, exitAdmin } = useAdminAccess()
   const [open, setOpen] = useState(false)
@@ -50,8 +55,21 @@ export default function ContextSwitcher() {
   const [wsType, setWsType] = useState('artist')
   const [wsBusy, setWsBusy] = useState(false)
   const [wsError, setWsError] = useState('')
+  const [switchTarget, setSwitchTarget] = useState(null)
+  const [switchBusy, setSwitchBusy] = useState(false)
+  const [switchError, setSwitchError] = useState('')
+  const [availableTypes, setAvailableTypes] = useState([])
 
-  const active = memberships?.find((m) => m.organization?.id === activeOrgId) || memberships?.[0]
+  useEffect(() => {
+    if (!open || adminMode) return
+    let activeRequest = true
+    getWorkspaceCreationCapabilities()
+      .then((types) => { if (activeRequest) setAvailableTypes(types) })
+      .catch(() => { if (activeRequest) setAvailableTypes([]) })
+    return () => { activeRequest = false }
+  }, [open, adminMode])
+
+  const active = memberships?.find((m) => m.organization?.id === activeOrgId) || null
   const isAgency = ['agency', 'agency_plus'].includes(active?.organization?.plan)
   const typeLabel = adminMode ? T.org.privateAdminWorkspace : workspaceTypeLabel(role, isAgency, T, isProducerWorkspace)
   const initial = (profile?.full_name || 'G').trim().charAt(0).toUpperCase() || 'G'
@@ -66,6 +84,21 @@ export default function ContextSwitcher() {
     setOpen(false)
     setCreating(false)
     setWsError('')
+    setSwitchTarget(null)
+    setSwitchError('')
+  }
+
+  async function commitSwitch() {
+    if (!switchTarget || switchBusy) return
+    setSwitchBusy(true); setSwitchError('')
+    try {
+      await switchOrg(switchTarget.organization.id)
+      closeSheet()
+    } catch (error) {
+      setSwitchError(error.message === 'DIRTY_WORK_BLOCKED' ? T.dashboard.applyTitle : (error.message || T.common.error))
+    } finally {
+      setSwitchBusy(false)
+    }
   }
 
   async function submitCreate(e) {
@@ -124,20 +157,41 @@ export default function ContextSwitcher() {
             return (
               <button
                 key={m.organization?.id}
-                onClick={() => { switchOrg(m.organization?.id); closeSheet() }}
+                onClick={() => { if (!isActive) setSwitchTarget(m) }}
                 className={`card w-full text-start flex items-center justify-between ${isActive ? 'border-accent' : ''}`}
               >
                 <div className="min-w-0">
                   <p className="text-ink text-sm font-medium truncate">{m.organization?.name}</p>
-                  <p className="text-xs text-muted">{orgRoleLabel(m.org_role, T)}</p>
+                  <p className="text-xs text-muted">{membershipTypeLabel(m.organization?.workspace_type, T)} · {orgRoleLabel(m.org_role, T)}</p>
                 </div>
                 {isActive && <span className="text-accent" aria-label="active">✓</span>}
               </button>
             )
           })}
 
+          {!adminMode && switchTarget && (
+            <div className="card border-accent/50" role="status" aria-live="polite">
+              <p className="text-xs text-muted">{active?.organization?.name || '—'} → {switchTarget.organization?.name}</p>
+              <p className="mt-1 text-xs text-ink">{membershipTypeLabel(switchTarget.organization?.workspace_type, T)} · {orgRoleLabel(switchTarget.org_role, T)}</p>
+              {dirtyWork?.state === 'DIRTY' && <p className="mt-2 text-xs text-amber">{T.dashboard.applyTitle}</p>}
+              {switchError && <p className="mt-2 text-xs text-amber">{switchError}</p>}
+              <div className="mt-3 flex gap-2">
+                <button type="button" className="btn-primary flex-1" onClick={commitSwitch} disabled={switchBusy || dirtyWork?.state === 'DIRTY'}>
+                  {switchBusy ? <Spinner /> : T.org.switchOrg}
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setSwitchTarget(null)} disabled={switchBusy}>
+                  {T.common.cancel}
+                </button>
+              </div>
+            </div>
+          )}
+
           {!adminMode && adminAllowed && (
-            <button type="button" onClick={async () => { await enterAdmin(); closeSheet() }} className="card w-full text-start border-amber/40">
+            <button type="button" disabled={dirtyWork?.state === 'DIRTY'} onClick={async () => {
+              const result = await enterAdmin({ dirtyWork })
+              if (result?.allowed) closeSheet()
+              else if (result?.reason === 'DIRTY_WORK_BLOCKED') setSwitchError(T.dashboard.applyTitle)
+            }} className="card w-full text-start border-amber/40 disabled:opacity-50">
               <p className="text-sm font-semibold text-ink">{T.org.enterPrivateAdmin}</p>
               <p className="text-xs text-muted">{T.org.adminEnvironmentProduction}</p>
             </button>
@@ -154,7 +208,7 @@ export default function ContextSwitcher() {
               <div>
                 <span className="mb-1 block text-xs text-muted">{T.org.newWorkspaceTypeLabel}</span>
                 <div className="flex gap-1.5" role="radiogroup" aria-label={T.org.newWorkspaceTypeLabel}>
-                  {NEW_WORKSPACE_TYPES.map((t) => (
+                  {NEW_WORKSPACE_TYPES.filter((type) => availableTypes.includes(type)).map((t) => (
                     <button key={t} type="button" role="radio" aria-checked={wsType === t}
                       onClick={() => setWsType(t)}
                       className={`chip min-h-[36px] flex-1 border px-2 py-1 text-xs transition ${
@@ -176,7 +230,7 @@ export default function ContextSwitcher() {
                 </button>
               </div>
             </form>
-          ) : (
+          ) : availableTypes.length > 0 ? (
             <button
               type="button"
               onClick={() => setCreating(true)}
@@ -184,7 +238,7 @@ export default function ContextSwitcher() {
             >
               {T.nav.addWorkspace}
             </button>
-          ))}
+          ) : null)}
           <p className="mt-1 text-center text-[10px] text-faint">{T.org.switchNote}</p>
         </div>
       </BottomSheet>

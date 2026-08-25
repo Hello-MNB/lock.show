@@ -1,13 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "repositoryBase": "ef98d91992408a612b047c632717e053457b0c8d",
+  "repositoryBase": "4c7a2834aa56f3cd385f3e8819cb40459f7e11c9",
   "liveState": "OPEN_EVIDENCE",
   "firstSlice": {
     "id": "PD-005",
     "status": "MIGRATION_SELECTED_UNAPPLIED",
     "included": [
       "20260820042812",
-      "20260824173241"
+      "20260824173241",
+      "20260825005702"
     ],
     "excluded": [
       "040",
@@ -607,6 +608,15 @@
       "direction": "up",
       "sha256": "a9b244224d466797d8d1d57fe7566c02fe4b2200686959a036b49f9831ee8893",
       "dependencyEvidence": "APP_ADMIN_EXPLICIT_PROVENANCE_GRANT",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": true
+    },
+    {
+      "id": "20260825005702",
+      "file": "supabase/migrations/20260825005702_workspace_authority.sql",
+      "direction": "up",
+      "sha256": "d5de4b49ab171f9f1e53dc4e2dd8625ececd6f1b13328cc0ca2ee0228ec9f1d3",
+      "dependencyEvidence": "APP_SHELL_WORKSPACE_AUTHORITY",
       "rollback": "PRESENT",
       "selectedForFirstSlice": true
     }

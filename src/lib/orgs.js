@@ -14,7 +14,7 @@ import {
 // 5 top-level ROLES used for nav/routing (ROUND 4: the ACTIVE workspace's
 // functional_role drives nav/home, not a single global profile role). Client-
 // side normalization only — never writes back to the DB.
-function normalizeFunctionalRole(fr) {
+export function normalizeFunctionalRole(fr) {
   switch (fr) {
     case 'artist': return ROLES.ARTIST
     case 'booking_manager': case 'booker': case 'venue_programmer': return ROLES.BOOKER
@@ -81,6 +81,14 @@ export async function createWorkspace({ name, type = 'artist' } = {}) {
   return { ok: true, id: data }
 }
 
+export async function getWorkspaceCreationCapabilities() {
+  if (DEMO) return ['artist', 'agency', 'production']
+  const { data, error } = await supabase.rpc('get_workspace_creation_capabilities')
+  if (error) throw error
+  const byDatabaseType = { artist: 'artist', management: 'agency', producer: 'production' }
+  return (data || []).map((type) => byDatabaseType[type]).filter(Boolean)
+}
+
 // ── Memberships + active-org context (O3) ──
 export async function getMyMemberships() {
   if (DEMO) return demoMemberships
@@ -89,7 +97,7 @@ export async function getMyMemberships() {
     // workspace_type (migration 027) drives the production-vs-management workspace
     // split — read alongside plan (tier) so OrgContext can derive BOTH axes: the
     // functional_role (nav role) and the org's workspace_type (production nav set).
-    .select('id, org_role, status, organization:organization_id(id, name, slug, plan, workspace_type)')
+    .select('id, org_role, status, authority_version, organization:organization_id(id, name, slug, plan, workspace_type, authority_version)')
     .eq('status', 'active')
   if (error) throw error
   const memberships = data ?? []
@@ -130,13 +138,36 @@ export async function getActiveOrgId() {
   return data?.active_organization_id ?? null
 }
 
-export async function setActiveOrg(orgId) {
-  if (DEMO) return
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const { error } = await supabase.from('active_role_context')
-    .upsert({ person_id: user.id, active_organization_id: orgId, updated_at: new Date().toISOString() })
+export async function resolvePrimaryWorkspace(returnTo = '/') {
+  if (DEMO) {
+    const workspaceId = await getActiveOrgId()
+    const membership = demoMemberships.find((candidate) => candidate.organization?.id === workspaceId)
+    return {
+      outcome: 'RESOLVED_PRIMARY',
+      contextVersion: 1,
+      workspace: membership?.organization || { id: workspaceId, workspace_type: 'artist' },
+      role: { id: membership?.id, type: membership?.functional_role },
+      route: membership?.organization?.workspace_type === 'management' ? '/agency'
+        : membership?.organization?.workspace_type === 'producer' ? '/production' : '/artist/home',
+      returnTo,
+      rationale: 'demo_server_fixture',
+    }
+  }
+  const { data, error } = await supabase.rpc('resolve_primary_workspace', { p_return_to: returnTo })
   if (error) throw error
+  return data
+}
+
+export async function commitActiveWorkspace({ orgId, contextVersion, idempotencyKey, returnTo = '/' }) {
+  if (DEMO) return { status: 'COMMITTED', contextVersion: contextVersion + 1, workspace: { id: orgId }, route: '/' }
+  const { data, error } = await supabase.rpc('commit_workspace_context', {
+    p_target: orgId,
+    p_expected_context_version: contextVersion,
+    p_idempotency_key: idempotencyKey,
+    p_return_to: returnTo,
+  })
+  if (error) throw error
+  return data
 }
 
 // ── Organization settings (O1) ──
@@ -147,18 +178,58 @@ export async function getOrg(orgId) {
   return data
 }
 export async function updateOrg(orgId, patch) {
-  if (DEMO) return
-  const { error } = await supabase.from('organization').update(patch).eq('id', orgId)
+  if (DEMO) return { status: 'COMMITTED', afterName: patch.name }
+  const current = await getOrg(orgId)
+  const { data, error } = await supabase.rpc('rename_workspace', {
+    p_organization: orgId,
+    p_name: patch.name,
+    p_expected_version: current.authority_version,
+    p_idempotency_key: crypto.randomUUID(),
+  })
   if (error) throw error
+  return data
 }
-export async function transferOwnership(orgId, toPersonId) {
-  if (DEMO) return
-  const { data: { user } } = await supabase.auth.getUser()
-  await supabase.from('organization_membership').update({ org_role: 'admin' })
-    .eq('organization_id', orgId).eq('person_id', user.id)
-  const { error } = await supabase.from('organization_membership').update({ org_role: 'owner' })
-    .eq('organization_id', orgId).eq('person_id', toPersonId)
+export async function transferOwnership(org, successorMembership, ownerMembership, contextVersion) {
+  if (DEMO) return { status: 'COMMITTED' }
+  const { data, error } = await supabase.rpc('transfer_workspace_ownership', {
+    p_organization: org.id,
+    p_successor_membership: successorMembership.id,
+    p_expected_workspace_version: org.authority_version,
+    p_expected_owner_version: ownerMembership.authority_version,
+    p_expected_successor_version: successorMembership.authority_version,
+    p_expected_context_version: contextVersion,
+    p_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    p_idempotency_key: crypto.randomUUID(),
+  })
   if (error) throw error
+  return data
+}
+export async function getOwnershipOffers(orgId) {
+  if (DEMO) return []
+  const { data, error } = await supabase.rpc('list_my_workspace_ownership_offers', { p_organization: orgId })
+  if (error) throw error
+  return data ?? []
+}
+export async function respondOwnershipOffer(offer, decision, successorMembership, contextVersion) {
+  if (DEMO) return { status: decision === 'accepted' ? 'COMMITTED' : 'DECLINED' }
+  const { data, error } = await supabase.rpc('respond_workspace_ownership_offer', {
+    p_offer: offer.id,
+    p_decision: decision,
+    p_expected_successor_version: successorMembership.authority_version,
+    p_expected_context_version: contextVersion,
+    p_idempotency_key: crypto.randomUUID(),
+  })
+  if (error) throw error
+  return data
+}
+export async function cancelOwnershipOffer(offer) {
+  if (DEMO) return { status: 'CANCELLED' }
+  const { data, error } = await supabase.rpc('cancel_workspace_ownership_offer', {
+    p_offer: offer.id,
+    p_idempotency_key: crypto.randomUUID(),
+  })
+  if (error) throw error
+  return data
 }
 export async function deleteOrg(orgId) {
   if (DEMO) return
@@ -171,33 +242,59 @@ export async function getMembers(orgId) {
   if (DEMO) return demoMembers
   const { data, error } = await supabase
     .from('organization_membership')
-    .select('id, org_role, status, invited_email, person:person_id(id, email, display_name)')
+    .select('id, org_role, status, invited_email, authority_version, invite_expires_at, invite_last_sent_at, person:person_id(id, email, display_name)')
     .eq('organization_id', orgId)
     .order('created_at')
   if (error) throw error
   return data ?? []
 }
 export async function inviteMember(orgId, email, role) {
-  if (DEMO) return 'demo-token'
-  const { data, error } = await supabase.rpc('invite_member', { p_org: orgId, p_email: email, p_role: role || 'member' })
+  if (DEMO) return { status: 'DELIVERY_REQUIRED', token: 'demo-token' }
+  const inviteRole = role === 'admin' ? 'admin' : 'member'
+  const { data, error } = await supabase.rpc('invite_member', {
+    p_org: orgId,
+    p_email: email,
+    p_role: inviteRole,
+    p_idempotency_key: crypto.randomUUID(),
+  })
   if (error) throw error
   return data
 }
-export async function changeMemberRole(memId, role) {
-  if (DEMO) return
-  const { error } = await supabase.from('organization_membership').update({ org_role: role }).eq('id', memId)
+export async function changeMemberRole(member, role, status = 'active') {
+  if (DEMO) return { status: 'COMMITTED' }
+  const { data, error } = await supabase.rpc('change_workspace_member_authority', {
+    p_membership: member.id,
+    p_role: role,
+    p_status: status,
+    p_expected_version: member.authority_version,
+    p_idempotency_key: crypto.randomUUID(),
+  })
   if (error) throw error
+  return data
 }
-export async function removeMember(memId) {
-  if (DEMO) return
-  const { error } = await supabase.from('organization_membership').delete().eq('id', memId)
+export async function removeMember(member) {
+  if (DEMO) return { status: 'COMMITTED' }
+  const rpc = member.status === 'invited' ? 'cancel_workspace_invitation' : 'change_workspace_member_authority'
+  const params = member.status === 'invited'
+    ? { p_membership: member.id, p_expected_version: member.authority_version, p_idempotency_key: crypto.randomUUID() }
+    : { p_membership: member.id, p_role: member.org_role, p_status: 'revoked', p_expected_version: member.authority_version,
+        p_idempotency_key: crypto.randomUUID() }
+  const { data, error } = await supabase.rpc(rpc, params)
   if (error) throw error
+  return data
 }
 
 // ── Accept invite (O4) ──
 export async function acceptInvite(token) {
   if (DEMO) return demoOrg.id
   const { data, error } = await supabase.rpc('accept_invite', { p_token: token })
+  if (error) throw error
+  if (!data) throw new Error('invitation_expired')
+  return data
+}
+export async function declineInvite(token) {
+  if (DEMO) return { status: 'COMMITTED', membershipStatus: 'declined' }
+  const { data, error } = await supabase.rpc('decline_workspace_invitation', { p_token: token })
   if (error) throw error
   return data
 }
@@ -209,8 +306,15 @@ export async function getInviteInfo(token) {
   return (data && data[0]) || null
 }
 // Resend = re-emit the invite (email provider is Phase-2); the membership/token persist.
-export async function resendInvite(/* memId */) {
-  if (DEMO) return
+export async function resendInvite(member) {
+  if (DEMO) return { status: 'DELIVERY_REQUIRED' }
+  const { data, error } = await supabase.rpc('resend_workspace_invitation', {
+    p_membership: member.id,
+    p_expected_version: member.authority_version,
+    p_idempotency_key: crypto.randomUUID(),
+  })
+  if (error) throw error
+  return data
 }
 // Cancel a pending invite = remove the invited membership row.
 export const cancelInvite = removeMember

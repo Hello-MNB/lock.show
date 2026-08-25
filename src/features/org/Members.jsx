@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
-import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, transferOwnership, resendInvite } from '../../lib/orgs.js'
+import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, resendInvite } from '../../lib/orgs.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
 const roleLabel = (r, T) => ({ owner: T.org.roleOwner, admin: T.org.roleAdmin, member: T.org.roleMember }[r] || r)
+const memberStatusLabel = (status, T) => ({
+  active: T.org.statusActive,
+  invited: T.org.invitePendingDelivery,
+  suspended: T.org.statusSuspended,
+  revoked: T.org.statusRevoked,
+  expired: T.org.statusExpired,
+  cancelled: T.org.statusCancelled,
+  declined: T.org.statusDeclined,
+  inactive: T.org.statusInactive,
+}[status] || T.org.statusInactive)
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // O2 — Team. Sheet-based multi-invite with optimistic rows, role legend, soft seat
@@ -13,7 +23,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export default function Members() {
   const { T } = useLang()
   const toast = useToast()
-  const { activeOrgId, isAdmin, isOwner, reload } = useOrg()
+  const { activeOrgId, isAdmin, isOwner, reload, registerDirtyWork } = useOrg()
   const [members, setMembers] = useState([])
   const [sub, setSub] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,6 +34,11 @@ export default function Members() {
   const [emails, setEmails] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [inviteErr, setInviteErr] = useState('')
+
+  useEffect(() => {
+    registerDirtyWork?.('workspace-invitation', Boolean(emails.trim()))
+    return () => registerDirtyWork?.('workspace-invitation', false)
+  }, [emails, registerDirtyWork])
 
   async function load() {
     if (!activeOrgId) { setLoading(false); return }
@@ -47,15 +62,15 @@ export default function Members() {
       if (members.some((m) => m.invited_email === e || m.person?.email === e)) { setInviteErr(`${T.org.errAlreadyMember}: ${e}`); return }
     }
     setBusy(true)
-    const optimistic = list.map((e, i) => ({ id: `pending-${i}-${e}`, org_role: inviteRole, status: 'invited', invited_email: e, person: null, _optimistic: true }))
-    setMembers((prev) => [...prev, ...optimistic])
     try {
-      for (const e of list) await inviteMember(activeOrgId, e, inviteRole)
-      toast.show(T.org.toastInviteSent)
+      for (const e of list) {
+        const receipt = await inviteMember(activeOrgId, e, inviteRole)
+        if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_receipt_missing')
+      }
+      toast.show(T.org.inviteDeliveryRequired, 'warn')
       setEmails(''); setInviteOpen(false)
       await load()
     } catch (err) {
-      setMembers((prev) => prev.filter((m) => !m._optimistic))
       setInviteErr(String(err.message).includes('SEAT_LIMIT') ? T.org.seatCapSoft : (err.message || T.common.error))
     } finally { setBusy(false) }
   }
@@ -64,8 +79,15 @@ export default function Members() {
     if (m.org_role === 'owner' && role !== 'owner' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); return }
     setBusy(true)
     try {
-      if (role === 'owner') await transferOwnership(activeOrgId, m.person.id)
-      else await changeMemberRole(m.id, role)
+      await changeMemberRole(m, role)
+      await load(); await reload()
+    } finally { setBusy(false) }
+  }
+
+  async function setMembershipStatus(m, status) {
+    setBusy(true)
+    try {
+      await changeMemberRole(m, m.org_role, status)
       await load(); await reload()
     } finally { setBusy(false) }
   }
@@ -75,10 +97,27 @@ export default function Members() {
     if (!m) return
     if (m.org_role === 'owner' && m.status === 'active' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); setRemoveTarget(null); return }
     setBusy(true)
-    try { await removeMember(m.id); await load() } finally { setBusy(false); setRemoveTarget(null) }
+    try { await removeMember(m); await load() } finally { setBusy(false); setRemoveTarget(null) }
   }
 
-  async function resend(m) { await resendInvite(m.id); toast.show(T.org.toastInviteResent) }
+  async function resend(m) {
+    setBusy(true)
+    try {
+      const receipt = await resendInvite(m)
+      await load()
+      if (receipt?.status === 'EXPIRED') {
+        toast.show(T.org.inviteExpired, 'warn')
+        return
+      }
+      if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_delivery_receipt_missing')
+      toast.show(T.org.inviteDeliveryRequired, 'warn')
+    } catch (error) {
+      await load().catch(() => {})
+      toast.show(error.message || T.common.error, 'warn')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   if (loading) return <Loading />
 
@@ -115,19 +154,24 @@ export default function Members() {
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-ink text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
-                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitedRow : T.org.statusActive}</p>
+                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {memberStatusLabel(m.status, T)}</p>
               </div>
-              {isAdmin && (
+              {((m.status === 'invited' && isAdmin) || (isOwner && m.org_role !== 'owner' && ['active', 'suspended'].includes(m.status))) && (
                 <div className="flex gap-1 shrink-0">
                   {m.status === 'invited' ? (
                     <>
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => resend(m)} disabled={busy || m._optimistic}>{T.org.resend}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy || m._optimistic}>{T.org.cancelInvite}</button>
                     </>
-                  ) : m.org_role !== 'owner' && (
+                  ) : m.status === 'active' ? (
                     <>
-                      {isOwner && m.person && <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, 'owner')} disabled={busy}>{T.org.roleOwner}</button>}
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, m.org_role === 'admin' ? 'member' : 'admin')} disabled={busy}>{T.org.changeRole}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setMembershipStatus(m, 'suspended')} disabled={busy}>{T.org.suspendMember}</button>
+                      <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
+                    </>
+                  ) : (
+                    <>
+                      <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setMembershipStatus(m, 'active')} disabled={busy}>{T.org.reactivateMember}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
                     </>
                   )}
