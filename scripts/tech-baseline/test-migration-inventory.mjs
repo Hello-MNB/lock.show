@@ -31,7 +31,7 @@ const workspaceAuthorityMigration = inventory.files.find((entry) => entry.id ===
 assert.equal(workspaceAuthorityMigration?.direction, 'up');
 assert.equal(workspaceAuthorityMigration?.rollback, 'PRESENT');
 assert.equal(workspaceAuthorityMigration?.selectedForFirstSlice, true);
-assert.equal(workspaceAuthorityMigration?.dependencyEvidence, 'APP_SHELL_WORKSPACE_AUTHORITY_ACCEPTED');
+assert.equal(workspaceAuthorityMigration?.dependencyEvidence, 'APP_SHELL_WORKSPACE_AUTHORITY');
 assert.deepEqual(
   inventory.files.filter((entry) => entry.selectedForFirstSlice).map((entry) => entry.id),
   ['20260820042812', '20260824173241', '20260825005702'],
