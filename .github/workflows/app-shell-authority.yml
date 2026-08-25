@@ -39,7 +39,6 @@ jobs:
       PGUSER: lock_show_test
       PGPASSWORD: lock_show_test
       LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB: lock_show_test
-      POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
 
     steps:
       - name: Checkout exact branch commit
@@ -51,6 +50,8 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Pin npm and verify runtimes
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
         run: |
           npm install --global npm@11.13.0 --no-audit --no-fund
           node -e "if (process.version !== 'v22.23.2') throw new Error('NODE_VERSION_DRIFT:' + process.version)"
@@ -63,5 +64,6 @@ jobs:
         run: npm run test:workspace-authority
       - name: RED database authority contract
         if: ${{ !cancelled() }}
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
         run: npm run test:workspace-authority:db
-
