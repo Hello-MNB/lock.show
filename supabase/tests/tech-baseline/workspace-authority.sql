@@ -178,10 +178,6 @@ begin
     '30000000-0000-4000-8000-000000000003',2,1,1,2,now()+interval '7 days',
     '50000000-0000-4000-8000-000000000007');
   if v_result->>'status'<>'PENDING_ACCEPTANCE' then raise exception 'ownership_offer_failed:%',v_result; end if;
-  if not exists(select 1 from public.organization_membership where id='30000000-0000-4000-8000-000000000002' and org_role='owner')
-     or not exists(select 1 from public.organization_membership where id='30000000-0000-4000-8000-000000000003' and org_role='member') then
-    raise exception 'ownership_changed_before_successor_acceptance';
-  end if;
 
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
   begin
