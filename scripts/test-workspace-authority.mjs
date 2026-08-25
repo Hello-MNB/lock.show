@@ -106,5 +106,17 @@ assert.match(source('src/context/AdminAccessContext.jsx'), /DIRTY_WORK_BLOCKED/,
 assert.doesNotMatch(source('src/features/org/Members.jsx'), /setRole\(m, 'owner'\)/, 'team controls must not bypass ownership acceptance')
 assert.match(source('src/features/org/OrgSettings.jsx'), /respondToOwnership/, 'successor must receive an explicit ownership response path')
 assert.match(source('src/features/org/OrgSettings.jsx'), /cancelOwnership/, 'outgoing owner must be able to cancel a pending offer')
+assert.match(migration, /if v_offer\.status<>'pending' then raise exception 'ownership_offer_not_cancellable'/,
+  'an accepted ownership transfer must be terminal and cannot be relabelled as cancelled')
+const membersSource = source('src/features/org/Members.jsx')
+assert.match(membersSource, /inviteDeliveryRequired/,
+  'invite and resend UI must expose that delivery is still required')
+assert.match(membersSource, /receipt\?\.status === 'EXPIRED'/,
+  'expired resend must reload and render a truthful terminal state')
+const adminAccessSource = source('src/context/AdminAccessContext.jsx')
+assert.match(adminAccessSource, /sessionStorage/,
+  'Admin safe return must survive refresh and capability revocation within the same browser session')
+assert.match(adminAccessSource, /readAdminReturnPath/,
+  'Admin exit and revoke paths must validate and reuse the exact prior lawful route')
 
 console.log('APP_SHELL_WORKSPACE_AUTHORITY_OK')

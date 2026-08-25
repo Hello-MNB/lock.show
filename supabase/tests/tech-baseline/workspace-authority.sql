@@ -199,6 +199,15 @@ begin
     if sqlerrm<>'ownership_offer_not_pending' then raise; end if;
   end;
 
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+  begin
+    perform public.cancel_workspace_ownership_offer((v_result->>'offerId')::uuid,
+      '50000000-0000-4000-8000-000000000015');
+    raise exception 'accepted_ownership_offer_was_cancelled';
+  exception when others then
+    if sqlerrm<>'ownership_offer_not_cancellable' then raise; end if;
+  end;
+
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
   begin
     perform public.rename_workspace('20000000-0000-4000-8000-000000000002','Unauthorized Rename',2,

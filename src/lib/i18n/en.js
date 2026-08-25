@@ -995,6 +995,8 @@ export const T = {
     inviteEmailsLabel: 'Booking agent email (several allowed, comma-separated)',
     inviteRoleLabel: 'Role',
     invitedRow: 'Invited',
+    invitePendingDelivery: 'Pending delivery',
+    inviteDeliveryRequired: 'Invitation saved. Delivery is not yet confirmed.',
     resend: 'Resend',
     cancelInvite: 'Cancel invite',
     errInvalidEmail: 'Invalid email address',

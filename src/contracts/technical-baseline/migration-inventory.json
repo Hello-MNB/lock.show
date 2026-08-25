@@ -615,7 +615,7 @@
       "id": "20260825005702",
       "file": "supabase/migrations/20260825005702_workspace_authority.sql",
       "direction": "up",
-      "sha256": "647fc051ff4323f3bad578004e6413011e8ea466af26755ca8683f1e042bb58f",
+      "sha256": "2a77f2b055b61b25bb8d0bc095f6fdd46f4a472d8e36e5c24d624a9e86bae535",
       "dependencyEvidence": "APP_SHELL_WORKSPACE_AUTHORITY",
       "rollback": "PRESENT",
       "selectedForFirstSlice": true

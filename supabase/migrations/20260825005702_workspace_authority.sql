@@ -711,7 +711,7 @@ begin
   perform public.lock_workspace_authority(v_offer.organization_id);
   select * into v_offer from public.workspace_ownership_offer where id=p_offer for update;
   if v_offer.proposed_by<>v_uid then raise exception 'owner_required'; end if;
-  if v_offer.status not in ('pending','accepted') then raise exception 'ownership_offer_not_cancellable'; end if;
+  if v_offer.status<>'pending' then raise exception 'ownership_offer_not_cancellable'; end if;
   update public.workspace_ownership_offer set status='cancelled' where id=p_offer;
   v_after:=jsonb_build_object('status','CANCELLED','offerId',p_offer,'organizationId',v_offer.organization_id);
   insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)

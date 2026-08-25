@@ -57,7 +57,7 @@ export default function Members() {
         const receipt = await inviteMember(activeOrgId, e, inviteRole)
         if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_receipt_missing')
       }
-      toast.show(T.org.invitedRow)
+      toast.show(T.org.inviteDeliveryRequired, 'warn')
       setEmails(''); setInviteOpen(false)
       await load()
     } catch (err) {
@@ -83,10 +83,22 @@ export default function Members() {
   }
 
   async function resend(m) {
-    const receipt = await resendInvite(m)
-    if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_delivery_receipt_missing')
-    await load()
-    toast.show(T.org.invitedRow)
+    setBusy(true)
+    try {
+      const receipt = await resendInvite(m)
+      await load()
+      if (receipt?.status === 'EXPIRED') {
+        toast.show(T.org.inviteExpired, 'warn')
+        return
+      }
+      if (receipt?.status !== 'DELIVERY_REQUIRED') throw new Error('invitation_delivery_receipt_missing')
+      toast.show(T.org.inviteDeliveryRequired, 'warn')
+    } catch (error) {
+      await load().catch(() => {})
+      toast.show(error.message || T.common.error, 'warn')
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (loading) return <Loading />
@@ -124,7 +136,7 @@ export default function Members() {
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="text-ink text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
-                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitedRow : T.org.statusActive}</p>
+                <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitePendingDelivery : T.org.statusActive}</p>
               </div>
               {(m.status === 'invited' ? isAdmin : isOwner) && (
                 <div className="flex gap-1 shrink-0">

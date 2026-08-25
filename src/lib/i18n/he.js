@@ -975,6 +975,8 @@ export const T = {
     inviteEmailsLabel: 'אימייל של האמרגן (אפשר כמה, מופרדים בפסיק)',
     inviteRoleLabel: 'תפקיד',
     invitedRow: 'הוזמן',
+    invitePendingDelivery: 'ממתין למסירה',
+    inviteDeliveryRequired: 'ההזמנה נשמרה. המסירה עדיין לא אושרה.',
     resend: 'שלח שוב',
     cancelInvite: 'בטל הזמנה',
     errInvalidEmail: 'כתובת לא תקינה',
