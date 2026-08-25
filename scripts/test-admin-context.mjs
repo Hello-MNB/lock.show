@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
+import { build } from 'esbuild'
 
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
@@ -14,6 +15,184 @@ import { T as he } from '../src/lib/i18n/he.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
+
+let adminContextModule
+async function loadAdminContextModule() {
+  if (adminContextModule) return adminContextModule
+  const stubs = {
+    react: `export const createContext = () => ({}); export const useCallback = (value) => value; export const useContext = () => null; export const useEffect = () => {}; export const useMemo = (value) => value(); export const useRef = (value) => ({ current: value }); export const useState = (value) => [value, () => {}];`,
+    'react/jsx-runtime': `export const jsx = () => null; export const jsxs = () => null; export const Fragment = Symbol('Fragment');`,
+    'react-router-dom': `export const useLocation = () => ({ pathname: '/', search: '' }); export const useNavigate = () => () => {};`,
+    '../features/auth/AuthProvider.jsx': `export const useAuth = () => ({ user: null, session: null });`,
+  }
+  const output = await build({
+    entryPoints: [path.join(root, 'src/context/AdminAccessContext.jsx')],
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    write: false,
+    plugins: [{
+      name: 'admin-context-test-stubs',
+      setup(esbuild) {
+        esbuild.onResolve({ filter: /^(react(?:\/jsx-runtime)?|react-router-dom|\.\.\/features\/auth\/AuthProvider\.jsx)$/ }, ({ path: importPath }) => ({
+          path: importPath,
+          namespace: 'admin-context-test-stub',
+        }))
+        esbuild.onLoad({ filter: /.*/, namespace: 'admin-context-test-stub' }, ({ path: importPath }) => ({
+          contents: stubs[importPath],
+          loader: 'js',
+        }))
+      },
+    }],
+  })
+  const source = Buffer.from(output.outputFiles[0].text).toString('base64')
+  adminContextModule = await import(`data:text/javascript;base64,${source}`)
+  return adminContextModule
+}
+
+test('Admin return paths are user-scoped, persisted for reload and reject Admin or protocol-relative targets', async () => {
+  const {
+    adminReturnStorageKey,
+    isSafeAdminReturnPath,
+    readAdminReturnPath,
+    writeAdminReturnPath,
+  } = await loadAdminContextModule()
+  const values = new Map()
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+
+  assert.equal(adminReturnStorageKey('user-a'), 'lockshow:admin-return:user-a')
+  assert.equal(isSafeAdminReturnPath('/agency?tab=team'), true)
+  assert.equal(isSafeAdminReturnPath('//evil.example'), false)
+  assert.equal(isSafeAdminReturnPath('/admin'), false)
+  assert.equal(isSafeAdminReturnPath('/admin/audit'), false)
+
+  writeAdminReturnPath('user-a', '/agency?tab=team', storage)
+  assert.equal(readAdminReturnPath('user-a', storage), '/agency?tab=team')
+  assert.equal(readAdminReturnPath('user-b', storage), null)
+  writeAdminReturnPath('user-a', '//evil.example', storage)
+  assert.equal(readAdminReturnPath('user-a', storage), '/agency?tab=team')
+})
+
+test('storage failure preserves the lawful in-memory return before falling back to root', async () => {
+  const { readAdminReturnPath, resolveAdminReturnPath } = await loadAdminContextModule()
+  const unavailableStorage = { getItem: () => { throw new Error('blocked') } }
+
+  assert.equal(readAdminReturnPath('user-a', unavailableStorage), null)
+  assert.equal(resolveAdminReturnPath(null, '/artist/home'), '/artist/home')
+  assert.equal(resolveAdminReturnPath(null, '/admin'), '/')
+  assert.equal(resolveAdminReturnPath(null, '//evil.example'), '/')
+})
+
+test('denied or revoked Admin state clears the return and navigates with replace', async () => {
+  const { leaveAdminContext, writeAdminReturnPath } = await loadAdminContextModule()
+  const values = new Map()
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+  writeAdminReturnPath('user-a', '/agency', storage)
+  const navigation = []
+  const memoryRef = { current: '/artist/home' }
+
+  const target = leaveAdminContext({
+    userId: 'user-a',
+    memoryRef,
+    storage,
+    navigate: (...args) => navigation.push(args),
+    replace: true,
+  })
+
+  assert.equal(target, '/agency')
+  assert.equal(memoryRef.current, '/')
+  assert.equal(readMap(values, 'lockshow:admin-return:user-a'), null)
+  assert.deepEqual(navigation, [['/agency', { replace: true }]])
+})
+
+test('background capability revalidation updates authority without blanking the Admin UI', async () => {
+  const { runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const loading = []
+  const access = []
+
+  const result = await runAdminCapabilityPreflight({
+    user: { id: 'user-a' },
+    accessToken: 'token',
+    background: true,
+    fetchImpl: async () => ({ ok: false, json: async () => ({ reason: 'revoked' }) }),
+    setAccess: (value) => access.push(value),
+    setLoading: (value) => loading.push(value),
+  })
+
+  assert.deepEqual(result, { allowed: false, reason: 'revoked' })
+  assert.deepEqual(access, [{ allowed: false, reason: 'revoked' }])
+  assert.deepEqual(loading, [])
+})
+
+test('foreground capability preflight owns the loading lifecycle', async () => {
+  const { runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const loading = []
+
+  await runAdminCapabilityPreflight({
+    user: { id: 'user-a' },
+    accessToken: 'token',
+    fetchImpl: async () => ({ ok: true, json: async () => ({ allowed: true }) }),
+    setAccess: () => {},
+    setLoading: (value) => loading.push(value),
+  })
+
+  assert.deepEqual(loading, [true, false])
+})
+
+test('Admin revalidation subscribes to timer, focus and visible-tab signals and fully cleans up', async () => {
+  const { subscribeAdminRevalidation } = await loadAdminContextModule()
+  const windowListeners = new Map()
+  const documentListeners = new Map()
+  let visibilityState = 'visible'
+  let timerCallback
+  let clearedTimer
+  const calls = []
+  const windowRef = {
+    addEventListener: (name, fn) => windowListeners.set(name, fn),
+    removeEventListener: (name, fn) => { if (windowListeners.get(name) === fn) windowListeners.delete(name) },
+    setInterval: (fn, ms) => { timerCallback = fn; assert.equal(ms, 60_000); return 41 },
+    clearInterval: (id) => { clearedTimer = id },
+  }
+  const documentRef = {
+    addEventListener: (name, fn) => documentListeners.set(name, fn),
+    removeEventListener: (name, fn) => { if (documentListeners.get(name) === fn) documentListeners.delete(name) },
+    get visibilityState() { return visibilityState },
+  }
+
+  const cleanup = subscribeAdminRevalidation({
+    windowRef,
+    documentRef,
+    revalidate: (options) => calls.push(options),
+  })
+  timerCallback()
+  windowListeners.get('focus')()
+  visibilityState = 'hidden'
+  documentListeners.get('visibilitychange')()
+  visibilityState = 'visible'
+  documentListeners.get('visibilitychange')()
+
+  assert.deepEqual(calls, [
+    { background: true },
+    { background: true },
+    { background: true },
+  ])
+  cleanup()
+  assert.equal(clearedTimer, 41)
+  assert.equal(windowListeners.size, 0)
+  assert.equal(documentListeners.size, 0)
+})
+
+function readMap(values, key) {
+  return values.has(key) ? values.get(key) : null
+}
 
 test('an artist can also hold an active environment-bound admin capability', () => {
   const result = resolveAdminCapability({
