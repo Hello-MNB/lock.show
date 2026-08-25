@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
-import { getOrg, updateOrg, deleteOrg, getMembers, transferOwnership } from '../../lib/orgs.js'
+import { getOrg, updateOrg, deleteOrg, getMembers, transferOwnership, getOwnershipOffers, respondOwnershipOffer, cancelOwnershipOffer } from '../../lib/orgs.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -15,7 +15,7 @@ export default function OrgSettings() {
   const toast = useToast()
   const nav = useNavigate()
   const { signOut, user } = useAuth()
-  const { activeOrgId, isOwner, isAdmin, isAgency, reload, registerDirtyWork } = useOrg()
+  const { activeOrgId, contextVersion, isOwner, isAdmin, isAgency, reload, registerDirtyWork } = useOrg()
   const [org, setOrg] = useState(null)
   const [name, setName] = useState('')
   const [members, setMembers] = useState([])
@@ -24,6 +24,7 @@ export default function OrgSettings() {
   const [error, setError] = useState('')
   const [transferOpen, setTransferOpen] = useState(false)
   const [transferTo, setTransferTo] = useState(null)
+  const [ownershipOffers, setOwnershipOffers] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [reason, setReason] = useState('')
   const [renameOpen, setRenameOpen] = useState(false)
@@ -32,7 +33,8 @@ export default function OrgSettings() {
     if (!activeOrgId) { setLoading(false); return }
     try {
       const o = await getOrg(activeOrgId); setOrg(o); setName(o?.name || '')
-      if (isOwner) setMembers(await getMembers(activeOrgId))
+      setMembers(await getMembers(activeOrgId))
+      setOwnershipOffers(await getOwnershipOffers(activeOrgId))
     } finally { setLoading(false) }
   })() }, [activeOrgId, isOwner])
 
@@ -58,10 +60,30 @@ export default function OrgSettings() {
     try {
       const ownerMembership = members.find((candidate) => candidate.person?.id === user?.id && candidate.org_role === 'owner' && candidate.status === 'active')
       if (!ownerMembership) throw new Error('owner_membership_receipt_missing')
-      await transferOwnership(activeOrgId, transferTo, ownerMembership)
+      const receipt = await transferOwnership(org, transferTo, ownerMembership, contextVersion)
+      if (!['COMMITTED', 'PENDING_ACCEPTANCE'].includes(receipt?.status)) throw new Error('ownership_receipt_missing')
       setTransferOpen(false); setTransferTo(null); await reload()
+      setMembers(await getMembers(activeOrgId)); setOwnershipOffers(await getOwnershipOffers(activeOrgId))
     }
     catch (e) { setError(e.message || T.common.error) } finally { setBusy(false) }
+  }
+  async function respondToOwnership(offer, decision) {
+    const successor = members.find((candidate) => candidate.id === offer.successorMembershipId && candidate.person?.id === user?.id)
+    if (!successor) return
+    setBusy(true); setError('')
+    try {
+      const receipt = await respondOwnershipOffer(offer, decision, successor, contextVersion)
+      if (!['COMMITTED', 'DECLINED', 'EXPIRED', 'INVALIDATED'].includes(receipt?.status)) throw new Error('ownership_response_receipt_missing')
+      await reload(); setMembers(await getMembers(activeOrgId)); setOwnershipOffers(await getOwnershipOffers(activeOrgId))
+    } catch (e) { setError(e.message || T.common.error) } finally { setBusy(false) }
+  }
+  async function cancelOwnership(offer) {
+    setBusy(true); setError('')
+    try {
+      const receipt = await cancelOwnershipOffer(offer)
+      if (receipt?.status !== 'CANCELLED') throw new Error('ownership_cancel_receipt_missing')
+      setOwnershipOffers(await getOwnershipOffers(activeOrgId))
+    } catch (e) { setError(e.message || T.common.error) } finally { setBusy(false) }
   }
   async function doDelete() {
     setBusy(true); setError('')
@@ -75,7 +97,9 @@ export default function OrgSettings() {
 
   if (loading) return <Loading />
   const entity = isAgency ? T.org.entityAgency : T.org.entitySolo
-  const transferable = members.filter((m) => m.status === 'active' && m.org_role !== 'owner' && m.person)
+  const transferable = members.filter((m) => m.status === 'active' && m.person && m.person.id !== user?.id)
+  const successorOffers = ownershipOffers.filter((offer) => offer.successorPersonId === user?.id)
+  const outgoingOffers = ownershipOffers.filter((offer) => offer.successorPersonId !== user?.id)
 
   return (
     <PageShell>
@@ -133,6 +157,23 @@ export default function OrgSettings() {
           <p className="text-xs text-muted">{T.org.adminCantDelete}</p>
         )}
       </div>
+
+      {successorOffers.map((offer) => (
+        <div key={offer.id} className="card mt-4 border border-accent/40">
+          <p className="text-sm text-ink mb-2">{T.org.transferTitle}</p>
+          <p className="text-xs text-muted mb-3">{T.org.transferHint}</p>
+          <div className="flex gap-2">
+            <button className="btn-primary flex-1" disabled={busy} onClick={() => respondToOwnership(offer, 'accepted')}>{T.common.accept}</button>
+            <button className="btn-ghost" disabled={busy} onClick={() => respondToOwnership(offer, 'declined')}>{T.common.decline}</button>
+          </div>
+        </div>
+      ))}
+      {isOwner && outgoingOffers.map((offer) => (
+        <div key={offer.id} className="card mt-4 border border-line">
+          <p className="text-sm text-ink mb-2">{T.org.transferTitle}</p>
+          <button className="btn-ghost w-full" disabled={busy} onClick={() => cancelOwnership(offer)}>{T.common.cancel}</button>
+        </div>
+      ))}
 
       {/* 2-step ownership transfer (never leaves the org ownerless) */}
       <BottomSheet open={renameOpen} onClose={() => setRenameOpen(false)} title={T.org.nameLabel}>

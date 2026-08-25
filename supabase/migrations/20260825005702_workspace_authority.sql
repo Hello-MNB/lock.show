@@ -22,7 +22,7 @@ alter table public.organization_membership
   drop constraint if exists organization_membership_status_check;
 alter table public.organization_membership
   add constraint organization_membership_status_check
-  check (status in ('active', 'invited', 'suspended', 'cancelled', 'declined', 'revoked', 'expired'));
+  check (status in ('active', 'inactive', 'invited', 'suspended', 'cancelled', 'declined', 'revoked', 'expired'));
 
 update public.organization_membership
    set invite_expires_at = coalesce(invite_expires_at, created_at + interval '14 days')
@@ -35,7 +35,8 @@ create table if not exists public.workspace_authority_receipt (
   action text not null check (action in (
     'context.switch', 'workspace.rename', 'invitation.accept', 'invitation.decline',
     'invitation.resend', 'invitation.cancel',
-    'membership.change', 'ownership.transfer'
+    'membership.change', 'ownership.offer', 'ownership.respond',
+    'ownership.cancel', 'ownership.transfer'
   )),
   idempotency_key uuid not null,
   before_state jsonb not null default '{}'::jsonb,
@@ -47,6 +48,64 @@ create table if not exists public.workspace_authority_receipt (
 alter table public.workspace_authority_receipt enable row level security;
 alter table public.workspace_authority_receipt force row level security;
 revoke all on table public.workspace_authority_receipt from public, anon, authenticated;
+
+create table if not exists public.workspace_ownership_offer (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organization(id) on delete cascade,
+  outgoing_owner_membership_id uuid not null references public.organization_membership(id) on delete restrict,
+  successor_membership_id uuid not null references public.organization_membership(id) on delete restrict,
+  successor_person_id uuid not null references auth.users(id) on delete restrict,
+  status text not null default 'pending'
+    check (status in ('pending','accepted','declined','cancelled','expired','invalidated')),
+  workspace_version bigint not null,
+  owner_version bigint not null,
+  successor_version bigint not null,
+  outgoing_context_version bigint not null,
+  accepted_context_version bigint,
+  expires_at timestamptz not null,
+  proposed_by uuid not null references auth.users(id) on delete restrict,
+  accepted_at timestamptz,
+  consumed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists workspace_ownership_offer_one_pending
+  on public.workspace_ownership_offer(organization_id, outgoing_owner_membership_id)
+  where status = 'pending';
+
+alter table public.workspace_ownership_offer enable row level security;
+alter table public.workspace_ownership_offer force row level security;
+revoke all on table public.workspace_ownership_offer from public, anon, authenticated;
+
+-- All authority-changing RPCs acquire this same Workspace row lock before
+-- locking memberships or counting owners. That makes the last-owner invariant
+-- serializable even when two owners act concurrently.
+create or replace function public.lock_workspace_authority(p_organization uuid)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_version bigint;
+begin
+  select authority_version into v_version
+    from public.organization where id=p_organization for update;
+  if v_version is null then raise exception 'workspace_not_found'; end if;
+  return v_version;
+end;
+$$;
+
+-- Browser clients may read the two authority surfaces, but every mutation is
+-- RPC-only so no RLS write path can bypass version, receipt or owner guards.
+drop policy if exists mem_admin_write on public.organization_membership;
+revoke insert, update, delete on public.organization_membership from anon, authenticated;
+drop policy if exists org_admin_update on public.organization;
+revoke update on public.organization from anon, authenticated;
+drop policy if exists arc_self on public.active_role_context;
+drop policy if exists arc_self_read on public.active_role_context;
+create policy arc_self_read on public.active_role_context for select
+  using (person_id = auth.uid());
+revoke insert, update, delete on public.active_role_context from anon, authenticated;
 
 create or replace function public.resolve_primary_workspace(p_return_to text default null)
 returns jsonb
@@ -152,6 +211,25 @@ exception when others then
 end;
 $$;
 
+create or replace function public.invite_member(p_org uuid, p_email text, p_role text default 'member')
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_token text; v_role text := coalesce(nullif(p_role, ''), 'member');
+begin
+  if auth.uid() is null then raise exception 'not_authenticated'; end if;
+  if not public.has_org_role(p_org, array['owner','admin']) then raise exception 'not_authorized'; end if;
+  if v_role not in ('member','admin') then raise exception 'workspace_owner_invite_forbidden'; end if;
+  v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+  insert into public.organization_membership(
+    organization_id, person_id, org_role, status, invited_email, invited_by, invite_token
+  ) values (p_org, null, v_role, 'invited', lower(p_email), auth.uid(), v_token);
+  return v_token;
+end;
+$$;
+
 drop function if exists public.accept_invite(text);
 create function public.accept_invite(p_token text)
 returns uuid
@@ -163,6 +241,7 @@ declare
   v_uid uuid := auth.uid();
   v_email text;
   v_member public.organization_membership%rowtype;
+  v_workspace_type text;
   v_replay jsonb;
   v_hash text := encode(public.digest(p_token, 'sha256'), 'hex');
 begin
@@ -174,10 +253,15 @@ begin
   select * into v_member from public.organization_membership
    where invite_token=p_token and status='invited' for update;
   if v_member.id is null then raise exception 'invitation_invalid_or_used'; end if;
+  if v_member.org_role = 'owner' then raise exception 'invitation_owner_role_forbidden'; end if;
   if v_member.invite_expires_at is not null and v_member.invite_expires_at<=now() then
     update public.organization_membership set status='expired',invite_token=null,
       authority_version=authority_version+1 where id=v_member.id;
-    raise exception 'invitation_expired';
+    insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+      values(v_uid,v_member.organization_id,'invitation.accept',v_member.id,
+        jsonb_build_object('tokenHash',v_hash,'membershipId',v_member.id,'status','invited'),
+        jsonb_build_object('status','EXPIRED','organizationId',v_member.organization_id,'membershipId',v_member.id));
+    return null;
   end if;
   select lower(email) into v_email from auth.users where id=v_uid;
   if v_member.invited_email is not null and lower(v_member.invited_email)<>coalesce(v_email,'') then
@@ -187,8 +271,13 @@ begin
   insert into public.person(id,email) values(v_uid,v_email) on conflict(id) do nothing;
   update public.organization_membership set person_id=v_uid,status='active',joined_at=now(),
     invite_token=null,authority_version=authority_version+1 where id=v_member.id;
+  select workspace_type into v_workspace_type from public.organization where id=v_member.organization_id;
   insert into public.role_assignment(organization_id,person_id,functional_role)
-    values(v_member.organization_id,v_uid,'booking_manager')
+    values(v_member.organization_id,v_uid,case v_workspace_type
+      when 'artist' then 'artist'
+      when 'producer' then 'producer'
+      else 'artist_manager'
+    end)
     on conflict do nothing;
   insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
     values(v_uid,v_member.organization_id,'invitation.accept',v_member.id,
@@ -377,7 +466,12 @@ begin
   if v_member.authority_version <> p_expected_version then raise exception 'membership_version_conflict'; end if;
   if v_member.invite_expires_at is not null and v_member.invite_expires_at <= now() then
     update public.organization_membership set status='expired',authority_version=authority_version+1 where id=p_membership;
-    raise exception 'invitation_expired';
+    v_after:=jsonb_build_object('status','EXPIRED','membershipId',p_membership,
+      'authorityVersion',v_member.authority_version+1);
+    insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+      values(v_uid,v_member.organization_id,'invitation.resend',p_idempotency_key,
+        jsonb_build_object('authorityVersion',v_member.authority_version),v_after);
+    return v_after;
   end if;
   update public.organization_membership set invite_last_sent_at=now(),authority_version=authority_version+1 where id=p_membership;
   v_after := jsonb_build_object('status','DELIVERY_REQUIRED','membershipId',p_membership,
@@ -422,10 +516,13 @@ begin
   select after_state into v_after from public.workspace_authority_receipt
    where actor_id=v_uid and idempotency_key=p_idempotency_key;
   if v_after is not null then return v_after; end if;
-  select * into v_member from public.organization_membership where id=p_membership for update;
+  select * into v_member from public.organization_membership where id=p_membership;
   if v_member.id is null then raise exception 'membership_not_found'; end if;
+  perform public.lock_workspace_authority(v_member.organization_id);
+  select * into v_member from public.organization_membership where id=p_membership for update;
   if not public.has_org_role(v_member.organization_id,array['owner']) then raise exception 'owner_required'; end if;
-  if p_role not in ('owner','admin','member') or p_status not in ('active','suspended','revoked') then
+  if p_role = 'owner' then raise exception 'ownership_offer_required'; end if;
+  if p_role not in ('admin','member') or p_status not in ('active','suspended','revoked') then
     raise exception 'membership_authority_invalid'; end if;
   if v_member.authority_version <> p_expected_version then raise exception 'membership_version_conflict'; end if;
   if v_member.org_role='owner' and (p_role<>'owner' or p_status<>'active') then
@@ -444,37 +541,200 @@ begin
   return v_after;
 end; $$;
 
-create or replace function public.transfer_workspace_ownership(
-  p_organization uuid, p_successor_membership uuid, p_expected_owner_version bigint,
-  p_expected_successor_version bigint, p_idempotency_key uuid
+create or replace function public.offer_workspace_ownership(
+  p_organization uuid, p_successor_membership uuid, p_expected_workspace_version bigint,
+  p_expected_owner_version bigint, p_expected_successor_version bigint,
+  p_expected_context_version bigint, p_expires_at timestamptz, p_idempotency_key uuid
 )
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_uid uuid:=auth.uid(); v_owner public.organization_membership%rowtype;
-  v_successor public.organization_membership%rowtype; v_after jsonb;
+  v_successor public.organization_membership%rowtype; v_after jsonb; v_offer uuid;
+  v_workspace_version bigint; v_context public.active_role_context%rowtype;
 begin
   if v_uid is null then raise exception 'not_authenticated'; end if;
   select after_state into v_after from public.workspace_authority_receipt
    where actor_id=v_uid and idempotency_key=p_idempotency_key;
   if v_after is not null then return v_after; end if;
+  if p_expires_at is null or p_expires_at<=now() or p_expires_at>now()+interval '14 days' then
+    raise exception 'ownership_offer_expiry_invalid';
+  end if;
+  v_workspace_version:=public.lock_workspace_authority(p_organization);
+  if v_workspace_version<>p_expected_workspace_version then raise exception 'workspace_version_conflict'; end if;
   select * into v_owner from public.organization_membership
    where organization_id=p_organization and person_id=v_uid and org_role='owner' and status='active' for update;
   if v_owner.id is null then raise exception 'owner_required'; end if;
   select * into v_successor from public.organization_membership
    where id=p_successor_membership and organization_id=p_organization and status='active' for update;
   if v_successor.id is null or v_successor.person_id is null then raise exception 'successor_not_eligible'; end if;
+  if v_successor.id=v_owner.id then raise exception 'successor_not_eligible'; end if;
   if v_owner.authority_version<>p_expected_owner_version or v_successor.authority_version<>p_expected_successor_version then
     raise exception 'membership_version_conflict'; end if;
-  update public.organization_membership set org_role='admin',authority_version=authority_version+1 where id=v_owner.id;
-  update public.organization_membership set org_role='owner',authority_version=authority_version+1 where id=v_successor.id;
-  v_after:=jsonb_build_object('status','COMMITTED','organizationId',p_organization,
-    'previousOwnerMembershipId',v_owner.id,'ownerMembershipId',v_successor.id);
+  select * into v_context from public.active_role_context where person_id=v_uid for update;
+  if v_context.active_organization_id<>p_organization
+     or coalesce(v_context.context_version,0)<>p_expected_context_version then
+    raise exception 'context_version_conflict';
+  end if;
+  if v_successor.org_role='owner' then
+    update public.organization_membership set org_role='admin',authority_version=authority_version+1
+      where id=v_owner.id;
+    v_after:=jsonb_build_object('status','COMMITTED','organizationId',p_organization,
+      'previousOwnerMembershipId',v_owner.id,'ownerMembershipId',v_successor.id,
+      'acceptanceRequired',false);
+  else
+    update public.workspace_ownership_offer set status='cancelled'
+      where organization_id=p_organization and outgoing_owner_membership_id=v_owner.id
+        and status='pending';
+    insert into public.workspace_ownership_offer(
+      organization_id,outgoing_owner_membership_id,successor_membership_id,successor_person_id,
+      workspace_version,owner_version,successor_version,outgoing_context_version,expires_at,proposed_by
+    ) values(p_organization,v_owner.id,v_successor.id,v_successor.person_id,
+      v_workspace_version,v_owner.authority_version,v_successor.authority_version,
+      v_context.context_version,p_expires_at,v_uid)
+    returning id into v_offer;
+    v_after:=jsonb_build_object('status','PENDING_ACCEPTANCE','offerId',v_offer,
+      'organizationId',p_organization,'successorMembershipId',v_successor.id,
+      'expiresAt',p_expires_at,'acceptanceRequired',true);
+  end if;
   insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
-    values(v_uid,p_organization,'ownership.transfer',p_idempotency_key,
-      jsonb_build_object('ownerMembershipId',v_owner.id),v_after);
+    values(v_uid,p_organization,case when v_successor.org_role='owner' then 'ownership.transfer' else 'ownership.offer' end,
+      p_idempotency_key,
+      jsonb_build_object('ownerMembershipId',v_owner.id,'ownerVersion',v_owner.authority_version,
+        'successorMembershipId',v_successor.id,'successorVersion',v_successor.authority_version,
+        'workspaceVersion',v_workspace_version),v_after);
   return v_after;
 end; $$;
 
+create or replace function public.list_my_workspace_ownership_offers(p_organization uuid)
+returns jsonb language sql stable security definer set search_path = '' as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+    'id',o.id,'status',o.status,'organizationId',o.organization_id,
+    'successorMembershipId',o.successor_membership_id,'successorPersonId',o.successor_person_id,
+    'outgoingOwnerMembershipId',o.outgoing_owner_membership_id,'expiresAt',o.expires_at,
+    'workspaceVersion',o.workspace_version,'ownerVersion',o.owner_version,
+    'successorVersion',o.successor_version,'outgoingContextVersion',o.outgoing_context_version,
+    'acceptedContextVersion',o.accepted_context_version
+  ) order by o.created_at desc),'[]'::jsonb)
+  from public.workspace_ownership_offer o
+  where o.organization_id=p_organization
+    and (o.successor_person_id=auth.uid() or o.proposed_by=auth.uid())
+    and o.status in ('pending','accepted');
+$$;
+
+create or replace function public.respond_workspace_ownership_offer(
+  p_offer uuid, p_decision text, p_expected_successor_version bigint,
+  p_expected_context_version bigint, p_idempotency_key uuid
+)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid:=auth.uid(); v_offer public.workspace_ownership_offer%rowtype;
+  v_successor public.organization_membership%rowtype; v_owner public.organization_membership%rowtype;
+  v_context public.active_role_context%rowtype; v_owner_context public.active_role_context%rowtype;
+  v_after jsonb; v_workspace_version bigint;
+begin
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  if p_decision not in ('accepted','declined') then raise exception 'ownership_response_invalid'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+    where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
+  select * into v_offer from public.workspace_ownership_offer where id=p_offer;
+  if v_offer.id is null then raise exception 'ownership_offer_not_found'; end if;
+  v_workspace_version:=public.lock_workspace_authority(v_offer.organization_id);
+  select * into v_offer from public.workspace_ownership_offer where id=p_offer for update;
+  if v_offer.status<>'pending' then raise exception 'ownership_offer_not_pending'; end if;
+  if v_offer.expires_at<=now() then
+    update public.workspace_ownership_offer set status='expired' where id=p_offer;
+    v_after:=jsonb_build_object('status','EXPIRED','offerId',p_offer,'organizationId',v_offer.organization_id);
+    insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+      values(v_uid,v_offer.organization_id,'ownership.respond',p_idempotency_key,
+        jsonb_build_object('offerId',p_offer,'status','pending'),v_after);
+    return v_after;
+  end if;
+  if v_offer.successor_person_id<>v_uid then raise exception 'ownership_offer_wrong_person'; end if;
+  select * into v_successor from public.organization_membership
+    where id=v_offer.successor_membership_id and organization_id=v_offer.organization_id for update;
+  select * into v_owner from public.organization_membership
+    where id=v_offer.outgoing_owner_membership_id and organization_id=v_offer.organization_id for update;
+  select * into v_context from public.active_role_context where person_id=v_uid for update;
+  select * into v_owner_context from public.active_role_context where person_id=v_offer.proposed_by for update;
+  if v_workspace_version<>v_offer.workspace_version
+     or v_owner.id is null or v_owner.org_role<>'owner' or v_owner.status<>'active'
+     or v_owner.authority_version<>v_offer.owner_version
+     or v_successor.status<>'active' or v_successor.person_id<>v_uid
+     or v_successor.authority_version<>p_expected_successor_version
+     or v_successor.authority_version<>v_offer.successor_version
+     or coalesce(v_owner_context.context_version,0)<>v_offer.outgoing_context_version then
+    update public.workspace_ownership_offer set status='invalidated' where id=p_offer;
+    v_after:=jsonb_build_object('status','INVALIDATED','offerId',p_offer,'organizationId',v_offer.organization_id);
+    insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+      values(v_uid,v_offer.organization_id,'ownership.respond',p_idempotency_key,
+        jsonb_build_object('offerId',p_offer,'status','pending'),v_after);
+    return v_after;
+  end if;
+  if v_context.active_organization_id<>v_offer.organization_id
+     or coalesce(v_context.context_version,0)<>p_expected_context_version then
+    update public.workspace_ownership_offer set status='invalidated' where id=p_offer;
+    v_after:=jsonb_build_object('status','INVALIDATED','offerId',p_offer,'organizationId',v_offer.organization_id);
+    insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+      values(v_uid,v_offer.organization_id,'ownership.respond',p_idempotency_key,
+        jsonb_build_object('offerId',p_offer,'status','pending'),v_after);
+    return v_after;
+  end if;
+  if p_decision='accepted' then
+    update public.organization_membership set org_role='admin',authority_version=authority_version+1
+      where id=v_owner.id;
+    update public.organization_membership set org_role='owner',authority_version=authority_version+1
+      where id=v_successor.id;
+  end if;
+  update public.workspace_ownership_offer set status=p_decision,
+    accepted_context_version=case when p_decision='accepted' then v_context.context_version else null end,
+    accepted_at=case when p_decision='accepted' then now() else null end where id=p_offer;
+  v_after:=jsonb_build_object('status',case when p_decision='accepted' then 'COMMITTED' else 'DECLINED' end,
+    'offerId',p_offer,'organizationId',v_offer.organization_id,'contextVersion',v_context.context_version,
+    'previousOwnerMembershipId',v_owner.id,'ownerMembershipId',v_successor.id);
+  insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+    values(v_uid,v_offer.organization_id,'ownership.respond',p_idempotency_key,
+      jsonb_build_object('offerId',p_offer,'status','pending'),v_after);
+  return v_after;
+end; $$;
+
+create or replace function public.cancel_workspace_ownership_offer(
+  p_offer uuid, p_idempotency_key uuid
+)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid:=auth.uid(); v_offer public.workspace_ownership_offer%rowtype; v_after jsonb;
+begin
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  select after_state into v_after from public.workspace_authority_receipt
+    where actor_id=v_uid and idempotency_key=p_idempotency_key;
+  if v_after is not null then return v_after; end if;
+  select * into v_offer from public.workspace_ownership_offer where id=p_offer;
+  if v_offer.id is null then raise exception 'ownership_offer_not_found'; end if;
+  perform public.lock_workspace_authority(v_offer.organization_id);
+  select * into v_offer from public.workspace_ownership_offer where id=p_offer for update;
+  if v_offer.proposed_by<>v_uid then raise exception 'owner_required'; end if;
+  if v_offer.status not in ('pending','accepted') then raise exception 'ownership_offer_not_cancellable'; end if;
+  update public.workspace_ownership_offer set status='cancelled' where id=p_offer;
+  v_after:=jsonb_build_object('status','CANCELLED','offerId',p_offer,'organizationId',v_offer.organization_id);
+  insert into public.workspace_authority_receipt(actor_id,organization_id,action,idempotency_key,before_state,after_state)
+    values(v_uid,v_offer.organization_id,'ownership.cancel',p_idempotency_key,
+      jsonb_build_object('offerId',p_offer,'status',v_offer.status),v_after);
+  return v_after;
+end; $$;
+
+drop function if exists public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,uuid);
+create function public.transfer_workspace_ownership(
+  p_organization uuid, p_successor_membership uuid, p_expected_workspace_version bigint,
+  p_expected_owner_version bigint, p_expected_successor_version bigint,
+  p_expected_context_version bigint, p_expires_at timestamptz, p_idempotency_key uuid
+)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+begin
+  return public.offer_workspace_ownership(p_organization,p_successor_membership,
+    p_expected_workspace_version,p_expected_owner_version,p_expected_successor_version,
+    p_expected_context_version,p_expires_at,p_idempotency_key);
+end; $$;
+
 revoke all on function public.resolve_primary_workspace(text) from public, anon;
+revoke all on function public.invite_member(uuid,text,text) from public, anon;
 revoke all on function public.get_workspace_creation_capabilities() from public, anon;
 revoke all on function public.accept_invite(text) from public, anon;
 revoke all on function public.decline_workspace_invitation(text) from public, anon;
@@ -483,9 +743,15 @@ revoke all on function public.rename_workspace(uuid,text,bigint,uuid) from publi
 revoke all on function public.resend_workspace_invitation(uuid,bigint,uuid) from public, anon;
 revoke all on function public.cancel_workspace_invitation(uuid,bigint,uuid) from public, anon;
 revoke all on function public.change_workspace_member_authority(uuid,text,text,bigint,uuid) from public, anon;
-revoke all on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,uuid) from public, anon;
+revoke all on function public.lock_workspace_authority(uuid) from public, anon, authenticated;
+revoke all on function public.offer_workspace_ownership(uuid,uuid,bigint,bigint,bigint,bigint,timestamptz,uuid) from public, anon, authenticated;
+revoke all on function public.list_my_workspace_ownership_offers(uuid) from public, anon;
+revoke all on function public.respond_workspace_ownership_offer(uuid,text,bigint,bigint,uuid) from public, anon;
+revoke all on function public.cancel_workspace_ownership_offer(uuid,uuid) from public, anon;
+revoke all on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,bigint,bigint,timestamptz,uuid) from public, anon;
 
 grant execute on function public.resolve_primary_workspace(text) to authenticated;
+grant execute on function public.invite_member(uuid,text,text) to authenticated;
 grant execute on function public.get_workspace_creation_capabilities() to authenticated;
 grant execute on function public.accept_invite(text) to authenticated;
 grant execute on function public.decline_workspace_invitation(text) to authenticated;
@@ -494,7 +760,12 @@ grant execute on function public.rename_workspace(uuid,text,bigint,uuid) to auth
 grant execute on function public.resend_workspace_invitation(uuid,bigint,uuid) to authenticated;
 grant execute on function public.cancel_workspace_invitation(uuid,bigint,uuid) to authenticated;
 grant execute on function public.change_workspace_member_authority(uuid,text,text,bigint,uuid) to authenticated;
-grant execute on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,uuid) to authenticated;
+grant execute on function public.list_my_workspace_ownership_offers(uuid) to authenticated;
+grant execute on function public.respond_workspace_ownership_offer(uuid,text,bigint,bigint,uuid) to authenticated;
+grant execute on function public.cancel_workspace_ownership_offer(uuid,uuid) to authenticated;
+grant execute on function public.transfer_workspace_ownership(uuid,uuid,bigint,bigint,bigint,bigint,timestamptz,uuid) to authenticated;
 
 comment on table public.workspace_authority_receipt is
   'Immutable server receipts for Workspace context and authority transactions. No browser enumeration.';
+comment on table public.workspace_ownership_offer is
+  'Single-use version-bound successor acceptance for Workspace ownership. RPC-only; no browser enumeration.';

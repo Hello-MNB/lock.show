@@ -187,7 +187,11 @@ export default function ContextSwitcher() {
           )}
 
           {!adminMode && adminAllowed && (
-            <button type="button" onClick={async () => { await enterAdmin(); closeSheet() }} className="card w-full text-start border-amber/40">
+            <button type="button" disabled={dirtyWork?.state === 'DIRTY'} onClick={async () => {
+              const result = await enterAdmin({ dirtyWork })
+              if (result?.allowed) closeSheet()
+              else if (result?.reason === 'DIRTY_WORK_BLOCKED') setSwitchError(T.dashboard.applyTitle)
+            }} className="card w-full text-start border-amber/40 disabled:opacity-50">
               <p className="text-sm font-semibold text-ink">{T.org.enterPrivateAdmin}</p>
               <p className="text-xs text-muted">{T.org.adminEnvironmentProduction}</p>
             </button>

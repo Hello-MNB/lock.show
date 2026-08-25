@@ -69,3 +69,7 @@ export function getWorkspaceDestinations(workspaceType) {
 export function canDiscoverPrivateAdmin(capability, currentEnvironment) {
   return Boolean(capability?.allowed && capability.environment && capability.environment === currentEnvironment)
 }
+
+export function requiresWorkspaceForRole(role) {
+  return role !== 'booker' && role !== 'producer'
+}

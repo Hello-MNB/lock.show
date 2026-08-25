@@ -15,6 +15,7 @@ import {
   requireProductionRedirect,
 } from './lib/navigation.js'
 import { locationReturnPath, savePendingReturn } from './lib/pendingReturn.js'
+import { requiresWorkspaceForRole } from './lib/workspaceAuthority.js'
 
 import AppShell from './components/layout/AppShell.jsx'
 import SetupNotice from './features/setup/SetupNotice.jsx'
@@ -72,12 +73,12 @@ function RequireAuth({ children }) {
 // "/" (RoleHome), which redirects them to their OWN home — no dead-ends, no loop.
 // `role` comes from useOrg() (ROUND 4: the ACTIVE workspace's derived role), NOT
 // the static useAuth() profile role — so a workspace switch actually re-gates.
-function RequireRole({ role: need, children }) {
+function RequireRole({ role: need, workspaceRequired = requiresWorkspaceForRole(Array.isArray(need) ? need[0] : need), children }) {
   const { user, loading: authLoading } = useAuth()
   const { role, activeOrgId, resolutionOutcome, loading: orgLoading } = useOrg()
   const loc = useLocation()
   if (authLoading || orgLoading) return <Loading />
-  if (user && (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId)) return <Navigate to={ROUTES.home} replace />
+  if (workspaceRequired && user && (resolutionOutcome !== 'RESOLVED_PRIMARY' || !activeOrgId)) return <Navigate to={ROUTES.home} replace />
   const redirect = requireRoleRedirect({ need, user, role, demo: DEMO })
   if (redirect === ROUTES.login) return <LoginRedirect location={loc} />
   if (redirect) return <Navigate to={redirect} replace />
@@ -258,11 +259,11 @@ export default function App() {
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
 
         {/* booker */}
-        <Route path="/discover" element={<RequireRole role={ROLES.BOOKER}><BookerHome /></RequireRole>} />
+        <Route path="/discover" element={<RequireRole role={ROLES.BOOKER} workspaceRequired={false}><BookerHome /></RequireRole>} />
 
         {/* producer workspace */}
-        <Route path="/producer" element={<RequireRole role={ROLES.PRODUCER}><ProducerHome /></RequireRole>} />
-        <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER}><ProducerReceivedPassports /></RequireRole>} />
+        <Route path="/producer" element={<RequireRole role={ROLES.PRODUCER} workspaceRequired={false}><ProducerHome /></RequireRole>} />
+        <Route path="/producer/received" element={<RequireRole role={ROLES.PRODUCER} workspaceRequired={false}><ProducerReceivedPassports /></RequireRole>} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

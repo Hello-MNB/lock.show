@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useOrg } from '../../context/OrgContext.jsx'
-import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, transferOwnership, resendInvite } from '../../lib/orgs.js'
+import { getMembers, getSubscription, inviteMember, changeMemberRole, removeMember, resendInvite } from '../../lib/orgs.js'
 import { PageShell, Field, Spinner, ErrorNote, Loading, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 
@@ -14,7 +13,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export default function Members() {
   const { T } = useLang()
   const toast = useToast()
-  const { user } = useAuth()
   const { activeOrgId, isAdmin, isOwner, reload, registerDirtyWork } = useOrg()
   const [members, setMembers] = useState([])
   const [sub, setSub] = useState(null)
@@ -71,11 +69,7 @@ export default function Members() {
     if (m.org_role === 'owner' && role !== 'owner' && ownersCount <= 1) { toast.show(T.org.lastOwnerProtected, 'warn'); return }
     setBusy(true)
     try {
-      if (role === 'owner') {
-        const ownerMembership = members.find((candidate) => candidate.person?.id === user?.id && candidate.org_role === 'owner' && candidate.status === 'active')
-        if (!ownerMembership) throw new Error('owner_membership_receipt_missing')
-        await transferOwnership(activeOrgId, m, ownerMembership)
-      } else await changeMemberRole(m, role)
+      await changeMemberRole(m, role)
       await load(); await reload()
     } finally { setBusy(false) }
   }
@@ -132,16 +126,15 @@ export default function Members() {
                 <p className="text-ink text-sm font-medium truncate">{m.person?.display_name || m.person?.email || m.invited_email}</p>
                 <p className="text-xs text-muted">{roleLabel(m.org_role, T)} · {m.status === 'invited' ? T.org.invitedRow : T.org.statusActive}</p>
               </div>
-              {isAdmin && (
+              {(m.status === 'invited' ? isAdmin : isOwner) && (
                 <div className="flex gap-1 shrink-0">
                   {m.status === 'invited' ? (
                     <>
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => resend(m)} disabled={busy || m._optimistic}>{T.org.resend}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy || m._optimistic}>{T.org.cancelInvite}</button>
                     </>
-                  ) : m.org_role !== 'owner' && (
+                  ) : isOwner && m.org_role !== 'owner' && (
                     <>
-                      {isOwner && m.person && <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, 'owner')} disabled={busy}>{T.org.roleOwner}</button>}
                       <button className="chip border border-line bg-surface2 text-xs text-ink min-h-[36px] px-2" onClick={() => setRole(m, m.org_role === 'admin' ? 'member' : 'admin')} disabled={busy}>{T.org.changeRole}</button>
                       <button className="chip border border-line bg-surface2 text-xs text-amber min-h-[36px] px-2" onClick={() => setRemoveTarget(m)} disabled={busy}>{T.org.removeMember}</button>
                     </>

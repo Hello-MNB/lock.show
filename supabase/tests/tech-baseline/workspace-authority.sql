@@ -15,6 +15,9 @@ begin
     'resend_workspace_invitation',
     'cancel_workspace_invitation',
     'change_workspace_member_authority',
+    'list_my_workspace_ownership_offers',
+    'respond_workspace_ownership_offer',
+    'cancel_workspace_ownership_offer',
     'transfer_workspace_ownership'
   ] loop
     if not exists (
@@ -74,7 +77,9 @@ insert into public.role_assignment(id,organization_id,person_id,functional_role)
   ('40000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','artist'),
   ('40000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','artist_manager');
 insert into public.active_role_context(person_id,active_organization_id,context_version)
-values('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001',1);
+values
+  ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001',1),
+  ('10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000002',1);
 
 set role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
@@ -136,9 +141,67 @@ begin
     if sqlerrm<>'last_active_owner_required' then raise; end if;
   end;
 
+  begin
+    perform public.invite_member('20000000-0000-4000-8000-000000000002','forbidden@example.test','owner');
+    raise exception 'ordinary_owner_invite_was_allowed';
+  exception when others then
+    if sqlerrm<>'workspace_owner_invite_forbidden' then raise; end if;
+  end;
+
+  begin
+    perform public.change_workspace_member_authority('30000000-0000-4000-8000-000000000003','owner','active',1,
+      '50000000-0000-4000-8000-000000000006');
+    raise exception 'generic_owner_promotion_was_allowed';
+  exception when others then
+    if sqlerrm<>'ownership_offer_required' then raise; end if;
+  end;
+
+  begin
+    perform public.transfer_workspace_ownership('20000000-0000-4000-8000-000000000002',
+      '30000000-0000-4000-8000-000000000002',2,1,1,2,now()+interval '7 days',
+      '50000000-0000-4000-8000-000000000013');
+    raise exception 'self_ownership_transfer_was_allowed';
+  exception when others then
+    if sqlerrm<>'successor_not_eligible' then raise; end if;
+  end;
+
+  begin
+    perform public.transfer_workspace_ownership('20000000-0000-4000-8000-000000000002',
+      '30000000-0000-4000-8000-000000000004',2,1,2,2,now()+interval '7 days',
+      '50000000-0000-4000-8000-000000000014');
+    raise exception 'cancelled_successor_was_allowed';
+  exception when others then
+    if sqlerrm<>'successor_not_eligible' then raise; end if;
+  end;
+
   v_result:=public.transfer_workspace_ownership('20000000-0000-4000-8000-000000000002',
-    '30000000-0000-4000-8000-000000000003',1,1,'50000000-0000-4000-8000-000000000006');
-  if v_result->>'status'<>'COMMITTED' then raise exception 'ownership_transfer_failed:%',v_result; end if;
+    '30000000-0000-4000-8000-000000000003',2,1,1,2,now()+interval '7 days',
+    '50000000-0000-4000-8000-000000000007');
+  if v_result->>'status'<>'PENDING_ACCEPTANCE' then raise exception 'ownership_offer_failed:%',v_result; end if;
+  if not exists(select 1 from public.organization_membership where id='30000000-0000-4000-8000-000000000002' and org_role='owner')
+     or not exists(select 1 from public.organization_membership where id='30000000-0000-4000-8000-000000000003' and org_role='member') then
+    raise exception 'ownership_changed_before_successor_acceptance';
+  end if;
+
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
+  begin
+    perform public.respond_workspace_ownership_offer((v_result->>'offerId')::uuid,'accepted',1,0,
+      '50000000-0000-4000-8000-000000000008');
+    raise exception 'wrong_successor_accepted_offer';
+  exception when others then
+    if sqlerrm<>'ownership_offer_wrong_person' then raise; end if;
+  end;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+  v_result:=public.respond_workspace_ownership_offer((v_result->>'offerId')::uuid,'accepted',1,1,
+    '50000000-0000-4000-8000-000000000009');
+  if v_result->>'status'<>'COMMITTED' then raise exception 'ownership_acceptance_failed:%',v_result; end if;
+  begin
+    perform public.respond_workspace_ownership_offer((v_result->>'offerId')::uuid,'accepted',2,1,
+      '50000000-0000-4000-8000-000000000010');
+    raise exception 'ownership_offer_replayed';
+  exception when others then
+    if sqlerrm<>'ownership_offer_not_pending' then raise; end if;
+  end;
 
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false);
   begin
@@ -164,6 +227,11 @@ begin
   end if;
   if has_table_privilege('authenticated','public.workspace_authority_receipt','select') then
     raise exception 'browser_can_enumerate_authority_receipts';
+  end if;
+  if has_table_privilege('authenticated','public.workspace_ownership_offer','select')
+     or has_table_privilege('authenticated','public.organization_membership','update')
+     or has_table_privilege('authenticated','public.active_role_context','update') then
+    raise exception 'browser_can_bypass_workspace_authority_rpcs';
   end if;
   if not exists (
     select 1 from public.organization_membership

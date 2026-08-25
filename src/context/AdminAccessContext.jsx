@@ -57,7 +57,8 @@ export function AdminAccessProvider({ children }) {
     }
   }, [adminMode, preflight])
 
-  const enterAdmin = useCallback(async () => {
+  const enterAdmin = useCallback(async ({ dirtyWork } = {}) => {
+    if (dirtyWork?.state === 'DIRTY') return { allowed: false, reason: 'DIRTY_WORK_BLOCKED' }
     const current = await preflight()
     if (!current.allowed) return current
     returnPath.current = location.pathname + location.search

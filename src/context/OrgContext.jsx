@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
-import { getMyMemberships, resolvePrimaryWorkspace, commitActiveWorkspace } from '../lib/orgs.js'
-import { ROLES } from '../lib/constants.js'
+import { getMyMemberships, resolvePrimaryWorkspace, commitActiveWorkspace, normalizeFunctionalRole } from '../lib/orgs.js'
 import { logEvent, EVENTS } from '../lib/analytics.js'
 
 // Active-organization context. The org is the tenant; this exposes which org the
@@ -29,8 +28,6 @@ export const useOrg = () => useContext(OrgCtx) || {}
 // active membership's functional_role DIFFERS from the base role (i.e. an actual
 // switch); a membership-less account has no active.functional_role and falls back
 // to authRole, so those personas are unaffected.
-const ORG_DERIVED_ROLES = [ROLES.ARTIST, ROLES.AGENCY, ROLES.BOOKER, ROLES.PRODUCER]
-
 export function OrgProvider({ children }) {
   const { user, role: authRole } = useAuth()
   const nav = useNavigate()
@@ -38,11 +35,12 @@ export function OrgProvider({ children }) {
   const [activeOrgId, setActiveOrgIdState] = useState(null)
   const [contextVersion, setContextVersion] = useState(0)
   const [resolutionOutcome, setResolutionOutcome] = useState(null)
+  const [resolvedRole, setResolvedRole] = useState(null)
   const [dirtyWork, setDirtyWork] = useState({ state: 'CLEAN', owners: [] })
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    if (!user) { setMemberships([]); setActiveOrgIdState(null); setLoading(false); return }
+    if (!user) { setMemberships([]); setActiveOrgIdState(null); setResolvedRole(null); setLoading(false); return }
     setLoading(true)
     try {
       const m = await getMyMemberships()
@@ -51,9 +49,12 @@ export function OrgProvider({ children }) {
       setResolutionOutcome(resolution?.outcome || 'ERROR_OR_OFFLINE')
       setContextVersion(resolution?.contextVersion || 0)
       setActiveOrgIdState(resolution?.outcome === 'RESOLVED_PRIMARY' ? resolution.workspace?.id : null)
+      if (resolution?.outcome === 'RESOLVED_PRIMARY') setResolvedRole(resolution?.role)
+      else setResolvedRole(null)
     } catch {
       setMemberships([])
       setResolutionOutcome('ERROR_OR_OFFLINE')
+      setResolvedRole(null)
     } finally {
       setLoading(false)
     }
@@ -75,6 +76,7 @@ export function OrgProvider({ children }) {
     setActiveOrgIdState(receipt.workspace.id)
     setContextVersion(receipt.contextVersion)
     setResolutionOutcome('RESOLVED_PRIMARY')
+    setResolvedRole(receipt.role)
     logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
     nav(receipt.route || '/')
     return receipt
@@ -101,9 +103,8 @@ export function OrgProvider({ children }) {
 
   // Effective role — recomputed from the ACTIVE workspace every time
   // activeOrgId changes, not read once from a static profile field.
-  const role = (authRole && ORG_DERIVED_ROLES.includes(authRole) && active?.functional_role)
-    ? active.functional_role
-    : authRole
+  const serverRole = normalizeFunctionalRole(resolvedRole?.type)
+  const role = resolutionOutcome === 'RESOLVED_PRIMARY' ? serverRole : authRole
 
   const value = {
     loading,

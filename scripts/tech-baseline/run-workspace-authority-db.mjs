@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -81,6 +81,58 @@ runSql(readFileSync(resolve(root, 'supabase', 'tests', 'tech-baseline', 'workspa
   'workspace authority SQL contract')
 
 runSql(`
+  update public.organization_membership
+     set org_role='owner'
+   where id='30000000-0000-4000-8000-000000000002';
+`, 'workspace authority concurrency fixture')
+
+function spawnSql(sql) {
+  const child = spawn('docker', psqlArgs, { stdio: ['pipe', 'pipe', 'pipe'] })
+  let stdout = ''
+  let stderr = ''
+  child.stdout.on('data', (chunk) => { stdout += chunk })
+  child.stderr.on('data', (chunk) => { stderr += chunk })
+  child.stdin.end(sql)
+  return new Promise((resolveResult) => child.on('close', (code) => resolveResult({ code, stdout, stderr })))
+}
+
+const concurrentA = spawnSql(`
+  begin;
+  set role authenticated;
+  select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+  select public.change_workspace_member_authority(
+    '30000000-0000-4000-8000-000000000002','admin','active',2,
+    '50000000-0000-4000-8000-000000000011');
+  select pg_sleep(2);
+  commit;
+`)
+await new Promise((resolveDelay) => setTimeout(resolveDelay, 300))
+const concurrentB = spawnSql(`
+  begin;
+  set role authenticated;
+  select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+  select public.change_workspace_member_authority(
+    '30000000-0000-4000-8000-000000000003','admin','active',2,
+    '50000000-0000-4000-8000-000000000012');
+  commit;
+`)
+const [resultA, resultB] = await Promise.all([concurrentA, concurrentB])
+if (resultA.code !== 0) throw new Error(`CONCURRENT_OWNER_A_FAILED:${resultA.stderr}`)
+if (resultB.code === 0 || !resultB.stderr.includes('last_active_owner_required')) {
+  throw new Error(`CONCURRENT_LAST_OWNER_GUARD_FAILED:${resultB.code}:${resultB.stdout}:${resultB.stderr}`)
+}
+runSql(`
+  do $$ begin
+    if (select count(*) from public.organization_membership
+      where organization_id='20000000-0000-4000-8000-000000000002'
+        and org_role='owner' and status='active') <> 1 then
+      raise exception 'concurrent_owner_count_invalid';
+    end if;
+  end $$;
+`, 'workspace authority concurrency readback')
+
+runSql(`
+  delete from public.workspace_ownership_offer;
   delete from public.workspace_authority_receipt;
   delete from public.role_assignment where person_id::text like '10000000-0000-4000-8000-%';
   delete from public.active_role_context where person_id::text like '10000000-0000-4000-8000-%';
@@ -97,6 +149,9 @@ runSql(`
   do $$ begin
     if to_regclass('public.workspace_authority_receipt') is not null then
       raise exception 'workspace_authority_receipt_survived_rollback';
+    end if;
+    if to_regclass('public.workspace_ownership_offer') is not null then
+      raise exception 'workspace_ownership_offer_survived_rollback';
     end if;
     if to_regprocedure('public.resolve_primary_workspace(text)') is not null
        or to_regprocedure('public.commit_workspace_context(uuid,bigint,uuid,text)') is not null
