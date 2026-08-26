@@ -16,6 +16,7 @@
 import { supabase } from './supabase.js'
 import { DEMO } from './demo.js'
 import { safeLandingLocation } from './attribution.js'
+import { isQaIdentityEmail } from './qaIdentity.js'
 
 const KEY = 'gigproof_events'
 const MAX_EVENTS = 100
@@ -58,15 +59,15 @@ async function persist(name, props) {
     const { data } = await supabase.auth.getSession()
     // T-57: seed actors mark their own rows AT WRITE TIME. The 037 backfill was
     // one-time — without this, ongoing seed activity counts as real (the T-56
-    // witness walk proved it; rows had to be patched by hand). @gigproof.test
-    // is the seed domain (docs/team/TEST-LOGINS.md). Column exists live (037).
+    // witness walk proved it; rows had to be patched by hand). The canonical
+    // LOCK SHOW QA identity and legacy seed identities stay demo-classified.
     const email = data?.session?.user?.email || ''
     await supabase.from('analytics_event').insert({
       event_name: name,
       actor_user_id: data?.session?.user?.id ?? null,
       actor_role: props?.role ?? null,
       properties: props && Object.keys(props).length ? props : null,
-      ...(email.endsWith('@gigproof.test') ? { is_demo: true } : {}),
+      ...(isQaIdentityEmail(email) ? { is_demo: true } : {}),
     })
   } catch { /* best-effort — a measurement write must never surface to the user */ }
 }

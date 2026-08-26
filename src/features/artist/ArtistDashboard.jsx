@@ -11,6 +11,7 @@ import { claimPlanet } from '../../lib/radarUniverse.js'
 import { PAYMENTS_ENABLED } from '../../lib/constants.js'
 import RadarUniverse, { useFullStage } from './RadarUniverse.jsx'
 import { appUrl } from '../../lib/appUrl.js'
+import { loadArtistDashboardData } from './loadArtistDashboardData.js'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
 // Bounded dimension states + ONE next action. FIREWALL: rule-based states only —
@@ -200,15 +201,24 @@ export default function ArtistDashboard() {
       const a = await getMyArtist(user.id)
       setArtist(a)
       if (a) {
-        try { setAct(await getMyAct(a.id)) } catch { setAct(null) }
-        setItems(await listProfileItems(a.id))
-        setClaims(await listClaims(a.id))
-        setEnt(await getEntitlement(a.id))
-        try {
-          const reqs = await listRequestsForArtist(a.id)
-          setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
-          setOpenReqs(reqs.filter((r) => r.status === 'new').length)
-        } catch { setReqCount(0); setOpenReqs(0) } // post-M8 ladder input — tolerate absence
+        // These reads are independent once the Artist is known. Running them
+        // serially made the entire Radar disappear behind a skeleton for the
+        // sum of every network round trip. Keep required evidence reads
+        // fail-closed while optional Act/request reads degrade locally.
+        const data = await loadArtistDashboardData(a.id, {
+          getAct: getMyAct,
+          listItems: listProfileItems,
+          listClaims,
+          getEntitlement,
+          listRequests: listRequestsForArtist,
+        })
+        setAct(data.act)
+        setItems(data.items)
+        setClaims(data.claims)
+        setEnt(data.entitlement)
+        const reqs = data.requests ?? []
+        setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
+        setOpenReqs(reqs.filter((r) => r.status === 'new').length)
         setShared(hasShareEvent(a.id)) // M7 — localStorage ring buffer (works offline); server-side share query = P1
         setDirty(isPassportDirty(a.id))
         if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal

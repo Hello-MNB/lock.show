@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
+import { build } from 'esbuild'
 
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
 import { buildContextBeaconModel, contextRoleKey, contextWorkspaceTypeKey } from '../src/lib/contextBeacon.js'
@@ -14,6 +15,467 @@ import { T as he } from '../src/lib/i18n/he.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
+
+let adminContextModule
+async function loadAdminContextModule() {
+  if (adminContextModule) return adminContextModule
+  const stubs = {
+    react: `const h = () => globalThis.__ADMIN_REACT_HARNESS__; export const createContext = () => ({ Provider: (props) => { if (h()) h().contextValue = props.value; return props.children } }); export const useCallback = (value, deps) => h()?.useCallback(value, deps) ?? value; export const useContext = () => null; export const useEffect = (effect, deps) => h()?.useEffect(effect, deps); export const useMemo = (factory, deps) => h()?.useMemo(factory, deps) ?? factory(); export const useRef = (value) => h()?.useRef(value) ?? ({ current: value }); export const useState = (value) => h()?.useState(value) ?? [typeof value === 'function' ? value() : value, () => {}];`,
+    'react/jsx-runtime': `const render = (type, props) => typeof type === 'function' ? type(props) : ({ type, props }); export const jsx = render; export const jsxs = render; export const Fragment = Symbol('Fragment');`,
+    'react-router-dom': `const h = () => globalThis.__ADMIN_REACT_HARNESS__; export const useLocation = () => h()?.location ?? ({ pathname: '/', search: '' }); export const useNavigate = () => h()?.navigate ?? (() => {});`,
+    '../features/auth/AuthProvider.jsx': `export const useAuth = () => globalThis.__ADMIN_REACT_HARNESS__?.auth ?? ({ loading: false, user: null, session: null });`,
+  }
+  const output = await build({
+    entryPoints: [path.join(root, 'src/context/AdminAccessContext.jsx')],
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    write: false,
+    plugins: [{
+      name: 'admin-context-test-stubs',
+      setup(esbuild) {
+        esbuild.onResolve({ filter: /^(react(?:\/jsx-runtime)?|react-router-dom|\.\.\/features\/auth\/AuthProvider\.jsx)$/ }, ({ path: importPath }) => ({
+          path: importPath,
+          namespace: 'admin-context-test-stub',
+        }))
+        esbuild.onLoad({ filter: /.*/, namespace: 'admin-context-test-stub' }, ({ path: importPath }) => ({
+          contents: stubs[importPath],
+          loader: 'js',
+        }))
+      },
+    }],
+  })
+  const source = Buffer.from(output.outputFiles[0].text).toString('base64')
+  adminContextModule = await import(`data:text/javascript;base64,${source}`)
+  return adminContextModule
+}
+
+function createAdminComponentHarness({ auth, pathname = '/admin', storageValues = new Map(), fetchImpl }) {
+  const hooks = []
+  const pendingEffects = []
+  const navigation = []
+  let hookIndex = 0
+  let dirty = false
+  const previousGlobals = {
+    harness: globalThis.__ADMIN_REACT_HARNESS__,
+    window: globalThis.window,
+    document: globalThis.document,
+    fetch: globalThis.fetch,
+  }
+  const sessionStorage = {
+    getItem: (key) => storageValues.get(key) ?? null,
+    setItem: (key, value) => storageValues.set(key, value),
+    removeItem: (key) => storageValues.delete(key),
+  }
+  const windowListeners = new Map()
+  const documentListeners = new Map()
+  const windowRef = {
+    sessionStorage,
+    setInterval: () => 73,
+    clearInterval: () => {},
+    addEventListener: (name, callback) => windowListeners.set(name, callback),
+    removeEventListener: (name, callback) => { if (windowListeners.get(name) === callback) windowListeners.delete(name) },
+  }
+  const documentRef = {
+    visibilityState: 'visible',
+    addEventListener: (name, callback) => documentListeners.set(name, callback),
+    removeEventListener: (name, callback) => { if (documentListeners.get(name) === callback) documentListeners.delete(name) },
+  }
+  const harness = {
+    auth,
+    contextValue: null,
+    location: { pathname, search: '' },
+    navigate: (...args) => navigation.push(args),
+    useState(initial) {
+      const index = hookIndex++
+      if (!hooks[index]) hooks[index] = { kind: 'state', value: typeof initial === 'function' ? initial() : initial }
+      const setValue = (next) => {
+        const value = typeof next === 'function' ? next(hooks[index].value) : next
+        if (!Object.is(value, hooks[index].value)) {
+          hooks[index].value = value
+          dirty = true
+        }
+      }
+      return [hooks[index].value, setValue]
+    },
+    useRef(initial) {
+      const index = hookIndex++
+      if (!hooks[index]) hooks[index] = { kind: 'ref', value: { current: initial } }
+      return hooks[index].value
+    },
+    useCallback(value, deps) {
+      return memoized(indexForHook(), value, deps)
+    },
+    useMemo(factory, deps) {
+      const index = indexForHook()
+      const previous = hooks[index]
+      if (!previous || !sameDependencies(previous.deps, deps)) {
+        hooks[index] = { kind: 'memo', deps, value: factory() }
+      }
+      return hooks[index].value
+    },
+    useEffect(effect, deps) {
+      const index = indexForHook()
+      const previous = hooks[index]
+      if (!previous || !sameDependencies(previous.deps, deps)) {
+        pendingEffects.push({ index, effect, cleanup: previous?.cleanup })
+        hooks[index] = { kind: 'effect', deps, cleanup: previous?.cleanup }
+      }
+    },
+    render(module, { flushEffects = true } = {}) {
+      hookIndex = 0
+      dirty = false
+      module.AdminAccessProvider({ children: null })
+      while (flushEffects && pendingEffects.length) {
+        const pending = pendingEffects.shift()
+        pending.cleanup?.()
+        hooks[pending.index].cleanup = pending.effect()
+      }
+    },
+    async settle(module, turns = 12) {
+      for (let turn = 0; turn < turns; turn += 1) {
+        harness.render(module)
+        await Promise.resolve()
+        await Promise.resolve()
+        if (!dirty && pendingEffects.length === 0) return
+      }
+      throw new Error('component harness did not settle')
+    },
+    unmount() {
+      for (const hook of hooks) hook?.cleanup?.()
+      globalThis.__ADMIN_REACT_HARNESS__ = previousGlobals.harness
+      globalThis.window = previousGlobals.window
+      globalThis.document = previousGlobals.document
+      globalThis.fetch = previousGlobals.fetch
+    },
+  }
+
+  function indexForHook() {
+    return hookIndex++
+  }
+  function memoized(index, value, deps) {
+    const previous = hooks[index]
+    if (!previous || !sameDependencies(previous.deps, deps)) hooks[index] = { kind: 'memo', deps, value }
+    return hooks[index].value
+  }
+
+  globalThis.__ADMIN_REACT_HARNESS__ = harness
+  globalThis.window = windowRef
+  globalThis.document = documentRef
+  globalThis.fetch = fetchImpl
+  return { harness, navigation, storageValues, windowListeners, documentListeners }
+}
+
+function sameDependencies(previous, next) {
+  return Array.isArray(previous)
+    && Array.isArray(next)
+    && previous.length === next.length
+    && previous.every((value, index) => Object.is(value, next[index]))
+}
+
+function deferred() {
+  let resolve
+  let reject
+  const promise = new Promise((accept, fail) => { resolve = accept; reject = fail })
+  return { promise, resolve, reject }
+}
+
+const capabilityResponse = (ok, result) => ({ ok, json: async () => result })
+
+test('hard reload waits for delayed auth restoration before preflight and keeps an allowed Admin on /admin', async () => {
+  const module = await loadAdminContextModule()
+  const storageValues = new Map([['lockshow:admin-return:user-a', '/agency']])
+  const requests = []
+  const runtime = createAdminComponentHarness({
+    auth: { loading: true, user: null, session: null },
+    storageValues,
+    fetchImpl: async (...args) => {
+      requests.push(args)
+      return capabilityResponse(true, { allowed: true, environmentId: 'production' })
+    },
+  })
+  try {
+    await runtime.harness.settle(module)
+    assert.equal(requests.length, 0)
+    assert.deepEqual(runtime.navigation, [])
+
+    runtime.harness.auth = { loading: false, user: { id: 'user-a' }, session: { access_token: 'token-a' } }
+    await runtime.harness.settle(module)
+
+    assert.equal(requests.length, 1)
+    assert.equal(runtime.harness.contextValue.allowed, true)
+    assert.equal(runtime.harness.contextValue.loading, false)
+    assert.deepEqual(runtime.navigation, [])
+  } finally {
+    runtime.harness.unmount()
+  }
+})
+
+test('settled auth denial after hard reload replaces /admin with the restored per-user return', async () => {
+  const module = await loadAdminContextModule()
+  const storageValues = new Map([['lockshow:admin-return:user-a', '/agency']])
+  const runtime = createAdminComponentHarness({
+    auth: { loading: true, user: null, session: null },
+    storageValues,
+    fetchImpl: async () => capabilityResponse(false, { allowed: false, reason: 'revoked' }),
+  })
+  try {
+    await runtime.harness.settle(module)
+    assert.deepEqual(runtime.navigation, [])
+    runtime.harness.auth = { loading: false, user: { id: 'user-a' }, session: { access_token: 'token-a' } }
+    await runtime.harness.settle(module)
+    assert.deepEqual(runtime.navigation, [['/agency', { replace: true }]])
+  } finally {
+    runtime.harness.unmount()
+  }
+})
+
+test('a stale success cannot overwrite the latest denial', async () => {
+  const { createAdminPreflightGate, runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const first = deferred()
+  const second = deferred()
+  const pending = [first, second]
+  const access = []
+  const gate = createAdminPreflightGate('user-a:token-a:production')
+  const input = {
+    user: { id: 'user-a' }, accessToken: 'token-a', identity: 'user-a:token-a:production', requestGate: gate,
+    fetchImpl: () => pending.shift().promise, setAccess: (value) => access.push(value), setLoading: () => {},
+  }
+
+  const older = runAdminCapabilityPreflight(input)
+  const latest = runAdminCapabilityPreflight({ ...input, background: true })
+  second.resolve(capabilityResponse(false, { reason: 'revoked' }))
+  assert.deepEqual(await latest, { allowed: false, reason: 'revoked' })
+  first.resolve(capabilityResponse(true, { allowed: true }))
+  assert.deepEqual(await older, { allowed: false, reason: 'stale_preflight' })
+  assert.deepEqual(access, [{ allowed: false, reason: 'revoked' }])
+})
+
+test('a stale failure cannot replace the latest success', async () => {
+  const { createAdminPreflightGate, runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const first = deferred()
+  const second = deferred()
+  const pending = [first, second]
+  const access = []
+  const gate = createAdminPreflightGate('user-a:token-a:production')
+  const input = {
+    user: { id: 'user-a' }, accessToken: 'token-a', identity: 'user-a:token-a:production', requestGate: gate,
+    fetchImpl: () => pending.shift().promise, setAccess: (value) => access.push(value), setLoading: () => {},
+  }
+
+  const older = runAdminCapabilityPreflight(input)
+  const latest = runAdminCapabilityPreflight({ ...input, background: true })
+  second.resolve(capabilityResponse(true, { allowed: true }))
+  assert.deepEqual(await latest, { allowed: true })
+  first.reject(new Error('older network failure'))
+  assert.deepEqual(await older, { allowed: false, reason: 'stale_preflight' })
+  assert.deepEqual(access, [{ allowed: true }])
+})
+
+test('auth identity change invalidates an in-flight capability result', async () => {
+  const { createAdminPreflightGate, runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const response = deferred()
+  const access = []
+  const gate = createAdminPreflightGate('user-a:token-a:production')
+  const pending = runAdminCapabilityPreflight({
+    user: { id: 'user-a' }, accessToken: 'token-a', identity: 'user-a:token-a:production', requestGate: gate,
+    fetchImpl: () => response.promise, setAccess: (value) => access.push(value), setLoading: () => {},
+  })
+  gate.setIdentity('user-a:token-b:production')
+  response.resolve(capabilityResponse(true, { allowed: true }))
+
+  assert.deepEqual(await pending, { allowed: false, reason: 'stale_preflight' })
+  assert.deepEqual(access, [])
+})
+
+test('auth identity change synchronously hides authority before effects can clear prior state', async () => {
+  const module = await loadAdminContextModule()
+  const changedAuthStates = [
+    { loading: false, user: { id: 'user-b' }, session: { access_token: 'token-a' } },
+    { loading: false, user: { id: 'user-a' }, session: { access_token: 'token-b' } },
+  ]
+  for (const changedAuth of changedAuthStates) {
+    const runtime = createAdminComponentHarness({
+      auth: { loading: false, user: { id: 'user-a' }, session: { access_token: 'token-a' } },
+      fetchImpl: async () => capabilityResponse(true, { allowed: true, environmentId: 'production' }),
+    })
+    try {
+      await runtime.harness.settle(module)
+      assert.equal(runtime.harness.contextValue.allowed, true)
+      assert.equal(runtime.harness.contextValue.loading, false)
+
+      runtime.harness.auth = changedAuth
+      runtime.harness.render(module, { flushEffects: false })
+
+      assert.equal(runtime.harness.contextValue.allowed, false)
+      assert.equal(runtime.harness.contextValue.loading, true)
+    } finally {
+      runtime.harness.unmount()
+    }
+  }
+})
+
+test('unmount invalidates an in-flight capability result', async () => {
+  const { createAdminPreflightGate, runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const response = deferred()
+  const access = []
+  const loading = []
+  const gate = createAdminPreflightGate('user-a:token-a:production')
+  const pending = runAdminCapabilityPreflight({
+    user: { id: 'user-a' }, accessToken: 'token-a', identity: 'user-a:token-a:production', requestGate: gate,
+    fetchImpl: () => response.promise, setAccess: (value) => access.push(value), setLoading: (value) => loading.push(value),
+  })
+  gate.dispose()
+  response.resolve(capabilityResponse(true, { allowed: true }))
+
+  assert.deepEqual(await pending, { allowed: false, reason: 'stale_preflight' })
+  assert.deepEqual(access, [])
+  assert.deepEqual(loading, [true])
+})
+
+test('Admin return paths are user-scoped, persisted for reload and reject Admin or protocol-relative targets', async () => {
+  const {
+    adminReturnStorageKey,
+    isSafeAdminReturnPath,
+    readAdminReturnPath,
+    writeAdminReturnPath,
+  } = await loadAdminContextModule()
+  const values = new Map()
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+
+  assert.equal(adminReturnStorageKey('user-a'), 'lockshow:admin-return:user-a')
+  assert.equal(isSafeAdminReturnPath('/agency?tab=team'), true)
+  assert.equal(isSafeAdminReturnPath('//evil.example'), false)
+  assert.equal(isSafeAdminReturnPath('/admin'), false)
+  assert.equal(isSafeAdminReturnPath('/admin/audit'), false)
+
+  writeAdminReturnPath('user-a', '/agency?tab=team', storage)
+  assert.equal(readAdminReturnPath('user-a', storage), '/agency?tab=team')
+  assert.equal(readAdminReturnPath('user-b', storage), null)
+  writeAdminReturnPath('user-a', '//evil.example', storage)
+  assert.equal(readAdminReturnPath('user-a', storage), '/agency?tab=team')
+})
+
+test('storage failure preserves the lawful in-memory return before falling back to root', async () => {
+  const { readAdminReturnPath, resolveAdminReturnPath } = await loadAdminContextModule()
+  const unavailableStorage = { getItem: () => { throw new Error('blocked') } }
+
+  assert.equal(readAdminReturnPath('user-a', unavailableStorage), null)
+  assert.equal(resolveAdminReturnPath(null, '/artist/home'), '/artist/home')
+  assert.equal(resolveAdminReturnPath(null, '/admin'), '/')
+  assert.equal(resolveAdminReturnPath(null, '//evil.example'), '/')
+})
+
+test('denied or revoked Admin state clears the return and navigates with replace', async () => {
+  const { leaveAdminContext, writeAdminReturnPath } = await loadAdminContextModule()
+  const values = new Map()
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
+  }
+  writeAdminReturnPath('user-a', '/agency', storage)
+  const navigation = []
+  const memoryRef = { current: '/artist/home' }
+
+  const target = leaveAdminContext({
+    userId: 'user-a',
+    memoryRef,
+    storage,
+    navigate: (...args) => navigation.push(args),
+    replace: true,
+  })
+
+  assert.equal(target, '/agency')
+  assert.equal(memoryRef.current, '/')
+  assert.equal(readMap(values, 'lockshow:admin-return:user-a'), null)
+  assert.deepEqual(navigation, [['/agency', { replace: true }]])
+})
+
+test('background capability revalidation updates authority without blanking the Admin UI', async () => {
+  const { runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const loading = []
+  const access = []
+
+  const result = await runAdminCapabilityPreflight({
+    user: { id: 'user-a' },
+    accessToken: 'token',
+    background: true,
+    fetchImpl: async () => ({ ok: false, json: async () => ({ reason: 'revoked' }) }),
+    setAccess: (value) => access.push(value),
+    setLoading: (value) => loading.push(value),
+  })
+
+  assert.deepEqual(result, { allowed: false, reason: 'revoked' })
+  assert.deepEqual(access, [{ allowed: false, reason: 'revoked' }])
+  assert.deepEqual(loading, [])
+})
+
+test('foreground capability preflight owns the loading lifecycle', async () => {
+  const { runAdminCapabilityPreflight } = await loadAdminContextModule()
+  const loading = []
+
+  await runAdminCapabilityPreflight({
+    user: { id: 'user-a' },
+    accessToken: 'token',
+    fetchImpl: async () => ({ ok: true, json: async () => ({ allowed: true }) }),
+    setAccess: () => {},
+    setLoading: (value) => loading.push(value),
+  })
+
+  assert.deepEqual(loading, [true, false])
+})
+
+test('Admin revalidation subscribes to timer, focus and visible-tab signals and fully cleans up', async () => {
+  const { subscribeAdminRevalidation } = await loadAdminContextModule()
+  const windowListeners = new Map()
+  const documentListeners = new Map()
+  let visibilityState = 'visible'
+  let timerCallback
+  let clearedTimer
+  const calls = []
+  const windowRef = {
+    addEventListener: (name, fn) => windowListeners.set(name, fn),
+    removeEventListener: (name, fn) => { if (windowListeners.get(name) === fn) windowListeners.delete(name) },
+    setInterval: (fn, ms) => { timerCallback = fn; assert.equal(ms, 60_000); return 41 },
+    clearInterval: (id) => { clearedTimer = id },
+  }
+  const documentRef = {
+    addEventListener: (name, fn) => documentListeners.set(name, fn),
+    removeEventListener: (name, fn) => { if (documentListeners.get(name) === fn) documentListeners.delete(name) },
+    get visibilityState() { return visibilityState },
+  }
+
+  const cleanup = subscribeAdminRevalidation({
+    windowRef,
+    documentRef,
+    revalidate: (options) => calls.push(options),
+  })
+  timerCallback()
+  windowListeners.get('focus')()
+  visibilityState = 'hidden'
+  documentListeners.get('visibilitychange')()
+  visibilityState = 'visible'
+  documentListeners.get('visibilitychange')()
+
+  assert.deepEqual(calls, [
+    { background: true },
+    { background: true },
+    { background: true },
+  ])
+  cleanup()
+  assert.equal(clearedTimer, 41)
+  assert.equal(windowListeners.size, 0)
+  assert.equal(documentListeners.size, 0)
+})
+
+function readMap(values, key) {
+  return values.has(key) ? values.get(key) : null
+}
 
 test('an artist can also hold an active environment-bound admin capability', () => {
   const result = resolveAdminCapability({
