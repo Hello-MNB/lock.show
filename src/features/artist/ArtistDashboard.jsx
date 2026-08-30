@@ -178,6 +178,7 @@ export default function ArtistDashboard() {
   const [dirty, setDirty] = useState(false)
   const [pubSheet, setPubSheet] = useState(false)
   const [noAction, setNoAction] = useState(false)
+  const [loadedContextKey, setLoadedContextKey] = useState(null)
   const noActionReceipt = useRef(null)
   const loadRevision = useRef(0)
   // IA: claim review is a MODE of the Radar — incrementing this opens the
@@ -200,12 +201,14 @@ export default function ArtistDashboard() {
   // mobile / 3.5rem md+ reserve the Tailwind class already encodes.
   const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
   const access = resolveArtistFirstValueAccess({ user, activeOrgId, memberships })
+  const currentContextKey = access.allowed ? `${user.id}:${activeOrgId}` : null
 
   async function load() {
     const requestRevision = ++loadRevision.current
     const isStale = () => requestRevision !== loadRevision.current
     setLoadError(false)
     if (!access.allowed) {
+      setLoadedContextKey(null)
       setArtist(null)
       setAct(null)
       setItems([])
@@ -234,6 +237,7 @@ export default function ArtistDashboard() {
         setOpenReqs(reqs.filter((r) => r.status === 'new').length)
         setShared(hasShareEvent(a.id)) // M7 — localStorage ring buffer (works offline); server-side share query = P1
         setDirty(isPassportDirty(a.id))
+        setLoadedContextKey(currentContextKey)
         if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal
       } else {
         setArtist(null)
@@ -243,6 +247,7 @@ export default function ArtistDashboard() {
         setEnt(null)
         setReqCount(0)
         setOpenReqs(0)
+        setLoadedContextKey(currentContextKey)
       }
     } catch {
       if (!isStale()) setLoadError(true)
@@ -367,7 +372,7 @@ export default function ArtistDashboard() {
     await doPublish()
   }
 
-  if (loading || orgLoading) return <Loading />
+  if (loading || orgLoading || (access.allowed && loadedContextKey !== currentContextKey)) return <Loading />
   if (loadError) return <PageShell><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   if (!access.allowed) {
     const denied = access.reason === 'revoked' ? T.radar.firstValue.revoked : T.radar.firstValue.wrongWorkspace

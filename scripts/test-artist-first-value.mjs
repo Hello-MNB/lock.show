@@ -126,6 +126,7 @@ await test('invalidates stale Artist reads when the active workspace changes', (
   assert.match(source, /loadRevision = useRef\(0\)/)
   assert.match(source, /requestRevision !== loadRevision\.current/)
   assert.match(source, /loadRevision\.current \+= 1/)
+  assert.match(source, /loadedContextKey !== currentContextKey/)
 })
 
 console.log(`Artist first value: ${passed}/9 passed`)
