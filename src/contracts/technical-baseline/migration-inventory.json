@@ -618,6 +618,15 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260830220500",
+      "file": "supabase/migrations/20260830220500_authoritative_context_switch.sql",
+      "direction": "up",
+      "sha256": "8c50bb9bb168bcbe1aed69d727f9db091c5e70b0ee2b15e2baaa2e0798a6d085",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }
