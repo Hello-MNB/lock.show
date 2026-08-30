@@ -129,4 +129,14 @@ await test('invalidates stale Artist reads when the active workspace changes', (
   assert.match(source, /loadedContextKey !== currentContextKey/)
 })
 
-console.log(`Artist first value: ${passed}/9 passed`)
+await test('keeps ART-01 in the standard gate and binds server reads to active membership', () => {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
+  const orgModel = fs.readFileSync(path.join(root, 'supabase/migrations/008_org_first_model.sql'), 'utf8')
+  const liveFixes = fs.readFileSync(path.join(root, 'supabase/migrations/015_live_fixes.sql'), 'utf8')
+  assert.match(packageJson.scripts.verify, /npm run test:artist-first-value/)
+  assert.match(orgModel, /current_org_ids\(\)[\s\S]*status = 'active'/)
+  assert.match(orgModel, /drop policy if exists artists_owner on public\.artists/)
+  assert.match(liveFixes, /create policy artists_org on public\.artists[\s\S]*owner_organization_id in \(select public\.current_org_ids\(\)\)/)
+})
+
+console.log(`Artist first value: ${passed}/10 passed`)
