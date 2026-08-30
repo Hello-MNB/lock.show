@@ -2,7 +2,8 @@ import { supabase } from './supabase.js'
 import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot } from './passportApi.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
-import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct } from './demo.js'
+import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct, demoOrg } from './demo.js'
+import { selectArtistForWorkspace } from '../features/artist/artistFirstValue.js'
 
 // In DEMO mode every function returns local fixtures (no Supabase client exists).
 
@@ -36,6 +37,30 @@ export async function getMyArtist(userId) {
     .maybeSingle()
   if (error) throw error
   return data
+}
+
+// ART-01 / SCR-RADAR-HOME: private RADAR must resolve the Artist through the
+// active owner Organization, not merely through the durable Person. This
+// deliberately fails closed for legacy unbound rows and for another active
+// workspace; RLS remains the server-side enforcement layer.
+export async function getMyArtistForWorkspace(userId, organizationId) {
+  if (!userId || !organizationId) return null
+  if (DEMO) {
+    return selectArtistForWorkspace(
+      [{ ...demoArtist, owner_organization_id: demoOrg.id }],
+      { userId, organizationId },
+    )
+  }
+  const { data, error } = await supabase
+    .from('artists')
+    .select('*')
+    .eq('created_by', userId)
+    .eq('owner_organization_id', organizationId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return selectArtistForWorkspace(data ? [data] : [], { userId, organizationId })
 }
 
 export async function listMyArtists(userId) {

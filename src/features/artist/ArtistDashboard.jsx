@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtist, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent } from '../../lib/db.js'
+import { getMyArtistForWorkspace, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent } from '../../lib/db.js'
 import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useOrg } from '../../context/OrgContext.jsx'
 import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { isPrimaryPlanet, primaryPlanets, planetEmphasisOrder } from '../../lib/genreWeights.js'
@@ -11,6 +12,7 @@ import { claimPlanet } from '../../lib/radarUniverse.js'
 import { PAYMENTS_ENABLED } from '../../lib/constants.js'
 import RadarUniverse, { useFullStage } from './RadarUniverse.jsx'
 import { appUrl } from '../../lib/appUrl.js'
+import { buildArtistFirstValueModel, resolveArtistFirstValueAccess } from './artistFirstValue.js'
 
 // ── A9 Artist Radar (canon LF-A1, linear) ────────────────────────────────────
 // Bounded dimension states + ONE next action. FIREWALL: rule-based states only —
@@ -156,6 +158,7 @@ function MilestoneStrip({ artist, items, claims, reqCount, shared, T }) {
 export default function ArtistDashboard() {
   const { T } = useLang()
   const { user } = useAuth()
+  const { activeOrgId, memberships, loading: orgLoading } = useOrg()
   const nav = useNavigate()
   const loc = useLocation()
   const toast = useToast()
@@ -174,6 +177,9 @@ export default function ArtistDashboard() {
   const [needPubConsent, setNeedPubConsent] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [pubSheet, setPubSheet] = useState(false)
+  const [noAction, setNoAction] = useState(false)
+  const noActionReceipt = useRef(null)
+  const loadRevision = useRef(0)
   // IA: claim review is a MODE of the Radar — incrementing this opens the
   // radar's "Needs you" review panel in place (no navigation).
   const [reviewSignal, setReviewSignal] = useState(0)
@@ -193,30 +199,55 @@ export default function ArtistDashboard() {
   // no-overflow); a real px height otherwise, matching the SAME 7.5rem
   // mobile / 3.5rem md+ reserve the Tailwind class already encodes.
   const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
+  const access = resolveArtistFirstValueAccess({ user, activeOrgId, memberships })
 
   async function load() {
+    const requestRevision = ++loadRevision.current
+    const isStale = () => requestRevision !== loadRevision.current
     setLoadError(false)
+    if (!access.allowed) {
+      setArtist(null)
+      setAct(null)
+      setItems([])
+      setClaims([])
+      setLoading(false)
+      return
+    }
     try {
-      const a = await getMyArtist(user.id)
-      setArtist(a)
+      const a = await getMyArtistForWorkspace(user.id, activeOrgId)
+      if (isStale()) return
       if (a) {
-        try { setAct(await getMyAct(a.id)) } catch { setAct(null) }
-        setItems(await listProfileItems(a.id))
-        setClaims(await listClaims(a.id))
-        setEnt(await getEntitlement(a.id))
-        try {
-          const reqs = await listRequestsForArtist(a.id)
-          setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
-          setOpenReqs(reqs.filter((r) => r.status === 'new').length)
-        } catch { setReqCount(0); setOpenReqs(0) } // post-M8 ladder input — tolerate absence
+        const [nextAct, nextItems, nextClaims, nextEnt, reqs] = await Promise.all([
+          getMyAct(a.id).catch(() => null),
+          listProfileItems(a.id),
+          listClaims(a.id),
+          getEntitlement(a.id),
+          listRequestsForArtist(a.id).catch(() => []),
+        ])
+        if (isStale()) return
+        setArtist(a)
+        setAct(nextAct)
+        setItems(nextItems)
+        setClaims(nextClaims)
+        setEnt(nextEnt)
+        setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
+        setOpenReqs(reqs.filter((r) => r.status === 'new').length)
         setShared(hasShareEvent(a.id)) // M7 — localStorage ring buffer (works offline); server-side share query = P1
         setDirty(isPassportDirty(a.id))
         if (!radarLogged.current) { radarLogged.current = true; logEvent(EVENTS.RADAR_OPENED, { artist_id: a.id }) } // pilot signal
+      } else {
+        setArtist(null)
+        setAct(null)
+        setItems([])
+        setClaims([])
+        setEnt(null)
+        setReqCount(0)
+        setOpenReqs(0)
       }
     } catch {
-      setLoadError(true)
+      if (!isStale()) setLoadError(true)
     } finally {
-      setLoading(false)
+      if (!isStale()) setLoading(false)
     }
   }
   // Watchdog (owner hit 17 Jul): if load() neither finishes nor fails within
@@ -225,14 +256,23 @@ export default function ArtistDashboard() {
   // 15s per-request abort in supabase.js covers in-flight hangs; this covers
   // the rest. A skeleton must never be a dead-end (§10.6).
   useEffect(() => {
+    if (orgLoading) return undefined
     let done = false
+    setLoading(true)
+    setNoAction(false)
     const watchdog = setTimeout(() => {
       if (!done) { setLoadError(true); setLoading(false) }
     }, 20_000)
     load().finally(() => { done = true; clearTimeout(watchdog) })
-    return () => clearTimeout(watchdog)
-  }, [user.id])
+    return () => {
+      loadRevision.current += 1
+      clearTimeout(watchdog)
+    }
+  }, [user.id, activeOrgId, orgLoading, access.allowed, access.reason])
   useEffect(() => () => clearTimeout(copiedTimer.current), [])
+  useEffect(() => {
+    if (noAction) noActionReceipt.current?.focus()
+  }, [noAction])
 
   // G7 — the artist's SHARE action (the ladder's share step, DEPLOY-GAPS G7).
   // The copied link carries the ?s=1 share marker so the public Passport can
@@ -327,8 +367,17 @@ export default function ArtistDashboard() {
     await doPublish()
   }
 
-  if (loading) return <Loading />
+  if (loading || orgLoading) return <Loading />
   if (loadError) return <PageShell><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
+  if (!access.allowed) {
+    const denied = access.reason === 'revoked' ? T.radar.firstValue.revoked : T.radar.firstValue.wrongWorkspace
+    return (
+      <PageShell>
+        <EmptyState title={denied}
+          action={<Link to="/" className="btn-primary">{T.radar.firstValue.safeReturn}</Link>} />
+      </PageShell>
+    )
+  }
   if (!artist || !artist.stage_name) {
     return (
       <PageShell>
@@ -339,6 +388,19 @@ export default function ArtistDashboard() {
   }
 
   const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs, act), act, artist, T)
+  const firstValue = buildArtistFirstValueModel({
+    artist,
+    act,
+    organizationName: access.organizationName,
+    items,
+    claims,
+  })
+  const evidenceLabel = firstValue.evidenceState === 'empty'
+    ? T.radar.firstValue.evidenceEmpty
+    : firstValue.evidenceState === 'thin' ? T.radar.firstValue.evidenceThin : T.radar.firstValue.evidenceSupported
+  const freshnessLabel = firstValue.freshness === 'fresh'
+    ? T.radar.firstValue.evidenceFresh
+    : firstValue.freshness === 'stale' ? T.radar.firstValue.evidenceStale : T.radar.firstValue.evidenceUnknown
 
   // G2 — genre emphasis guidance: the first two planets buyers weigh in this
   // artist's genre family. Names only, joined for one wording-only line.
@@ -389,6 +451,46 @@ export default function ArtistDashboard() {
           <Link to="/artist/act/edit" className="tap-target font-mono text-[11px] font-bold uppercase tracking-[0.07em] text-muted hover:text-ink hover:underline">{T.actEditor.edit} ›</Link>
         </div>
       </div>
+
+      <section
+        data-product-id="ART-01"
+        data-screen-id="SCR-RADAR-HOME"
+        data-workflow-id="WF-RAD-01"
+        data-flow-id="FLOW-ART-01"
+        data-handoff-product-ids="ART-02 ART-03"
+        aria-labelledby="artist-first-value-question"
+        className="mb-3 shrink-0 rounded-2xl border border-line bg-surface px-4 py-3 shadow-card"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-accent">{T.radar.firstValue.privateLabel}</p>
+            <h2 id="artist-first-value-question" className="mt-1 font-display text-base font-bold leading-snug text-ink">{T.radar.firstValue.question}</h2>
+            <p className="mt-1 text-xs text-muted">{T.radar.firstValue.context(firstValue.actName, firstValue.organizationName)}</p>
+          </div>
+          <div className="grid min-w-[12rem] gap-1 text-xs sm:text-end">
+            <p><span className="font-semibold text-ink">{evidenceLabel}</span> · {freshnessLabel}</p>
+            <p className="text-muted">{T.radar.firstValue.goal(firstValue.goal || T.radar.firstValue.goalUnknown)}</p>
+          </div>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+          <p className="min-w-0 flex-1 text-xs text-muted">
+            <span className="font-semibold text-ink">{T.radar.firstValue.next(nextAction.title)}</span>
+            {' · '}{T.radar.firstValue.methodLimit}
+          </p>
+          {noAction ? (
+            <button type="button" className="tap-target text-xs font-semibold text-accent underline-offset-4 hover:underline" onClick={() => setNoAction(false)}>
+              {T.radar.firstValue.resume}
+            </button>
+          ) : (
+            <button type="button" className="tap-target text-xs font-semibold text-muted underline-offset-4 hover:text-ink hover:underline" onClick={() => setNoAction(true)}>
+              {T.radar.firstValue.noAction}
+            </button>
+          )}
+        </div>
+        <p ref={noActionReceipt} tabIndex={-1} aria-live="polite" className="sr-only">
+          {noAction ? T.radar.firstValue.noActionReceipt : ''}
+        </p>
+      </section>
 
       {/* ── THE UNIVERSE — the Radar IS evidence collection; review/confirm
             open as panels inside it (reviewSignal). Full-stage (md+): flexes

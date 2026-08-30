@@ -27,6 +27,7 @@
     "test:passport-runtime": "node scripts/test-passport-runtime.mjs",
     "test:roster-invite": "node scripts/test-roster-invite.mjs",
     "test:identity-workspace": "node scripts/test-identity-workspace-boundary.mjs",
+    "test:artist-first-value": "node scripts/test-artist-first-value.mjs",
     "test:premium-ui": "node scripts/test-premium-ui.mjs",
     "test:ai-provider": "node scripts/test-ai-provider-config.mjs",
     "test:ds": "node scripts/test-ds-drift.mjs",
