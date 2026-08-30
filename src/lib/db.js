@@ -40,9 +40,10 @@ export async function getMyArtist(userId) {
 }
 
 // ART-01 / SCR-RADAR-HOME: private RADAR must resolve the Artist through the
-// active owner Organization, not merely through the durable Person. This
-// deliberately fails closed for legacy unbound rows and for another active
-// workspace; RLS remains the server-side enforcement layer.
+// database-selected active owner Organization, not merely through the durable
+// Person or a caller-selected organization id. The arguments remain only for
+// demo parity and a client-side response-integrity check; the RPC derives both
+// identity and active Workspace from authenticated server state.
 export async function getMyArtistForWorkspace(userId, organizationId) {
   if (!userId || !organizationId) return null
   if (DEMO) {
@@ -52,15 +53,9 @@ export async function getMyArtistForWorkspace(userId, organizationId) {
     )
   }
   const { data, error } = await supabase
-    .from('artists')
-    .select('*')
-    .eq('created_by', userId)
-    .eq('owner_organization_id', organizationId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
+    .rpc('get_my_artist_for_active_workspace')
   if (error) throw error
-  return selectArtistForWorkspace(data ? [data] : [], { userId, organizationId })
+  return selectArtistForWorkspace(data || [], { userId, organizationId })
 }
 
 export async function listMyArtists(userId) {
