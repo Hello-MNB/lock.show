@@ -63,6 +63,7 @@ export default function Onboarding() {
   const [f, setF] = useState({ stage_name: '', city: '' })
   const [link, setLink] = useState('')
   const [sourceConsent, setSourceConsent] = useState(false)
+  const [savedCandidates, setSavedCandidates] = useState([])
   const consentAlready = current?.consentAccepted === true
 
   useEffect(() => {
@@ -78,18 +79,29 @@ export default function Onboarding() {
   async function loadEntry() {
     const run = ++generation.current
     busyRef.current = false; finished.current = false; setSaving(false)
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setLoadedKey(null); setSavedCandidates([])
     try {
       const state = await client.read()
       if (run !== generation.current || liveKey.current !== contextKey) return
       if (!accepts(state)) throw new Error('entry_context_unavailable')
-      setCurrent(state); setLoadedKey(contextKey)
       const draft = drafts.current.get(contextKey)
+      let candidates = []
+      if (state.artistId && state.actId && state.consentAccepted && !draft?.pending) {
+        const readback = await getEvidenceWorkbench(state.artistId, state.actId)
+        if (run !== generation.current || liveKey.current !== contextKey) return
+        if (readback.artistId !== state.artistId || readback.actId !== state.actId
+          || readback.authority?.actorId !== user.id || readback.authority.workspaceId !== state.workspaceId
+          || Number(readback.authority.contextVersion) !== state.contextVersion || readback.authority.owner !== true
+          || !Array.isArray(readback.objects)) throw new Error('entry_readback_unavailable')
+        candidates = readback.objects.filter(object => object.id && Number.isSafeInteger(object.version)
+          && object.version > 0 && ['candidate', 'proposed'].includes(object.state))
+      }
+      setCurrent(state); setLoadedKey(contextKey); setSavedCandidates(candidates)
       setPending(draft?.pending || null)
       setF(draft?.f || { stage_name: state.artist?.stage_name || '', city: state.artist?.city || '' })
       setLink(draft?.link || ''); setSourceConsent(draft?.sourceConsent || false); setConsentChecked(draft?.consentChecked || false)
       // A saved UI step is not an authoritative candidate receipt.
-      setStep(state.artist?.stage_name && state.consentAccepted ? Math.min(draft?.step || 2, 2) : 1)
+      setStep(candidates.length ? 3 : state.artist?.stage_name && state.consentAccepted ? Math.min(draft?.step || 2, 2) : 1)
     } catch {
       if (run === generation.current) setError(T.onboarding.entryRetry)
     } finally { if (run === generation.current) setLoading(false) }
@@ -295,6 +307,16 @@ export default function Onboarding() {
       {/* Step 3 shows only the saved candidate from an authoritative receipt. */}
       {step === 3 && (
         <div>
+          {savedCandidates.length > 0 ? <section data-entry-restored="true" className="card">
+            <h2 ref={stepFocus} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.evidenceActions.title}</h2>
+            <p className="mb-4 text-xs text-muted">{T.evidenceActions.boundary}</p>
+            {savedCandidates.map(object => <div key={object.id} data-evidence-object={object.id} className="mb-3 min-w-0 break-words rounded-xl border border-line bg-surface2 p-3">
+              <p dir="auto" className="text-sm font-semibold text-ink">{object.title || object.value || T.evidenceActions.untitled}</p>
+              {object.value && object.title && object.value !== object.title && <p dir="auto" className="text-xs text-muted">{object.value}</p>}
+              <p className="mt-1 text-xs text-muted">{T.evidenceActions.states[object.state]}</p>
+            </div>)}
+            <button type="button" className="btn-ghost w-full" onClick={() => nav(`/evidence/${encodeURIComponent(current.artistId)}?act=${encodeURIComponent(current.actId)}`)}>{T.evidenceActions.title}</button>
+          </section> :
           <div className="card">
             <h2 ref={stepFocus} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.revealTitle}</h2>
             <p className="mb-4 text-xs text-muted">{T.onboarding.revealSub}</p>
@@ -307,7 +329,7 @@ export default function Onboarding() {
               <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-gold">✦ {T.onboarding.revealFound}</span>
             </div>
             <p className="mt-3 text-[11px] leading-relaxed text-faint">{T.onboarding.revealScope}</p>
-          </div>
+          </div>}
           <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur">
             <button type="button" className="btn-primary w-full" onClick={finish}>
               {T.onboarding.revealCta}

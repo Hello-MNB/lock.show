@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import test, { after } from 'node:test'
 import fs from 'node:fs'
 import vm from 'node:vm'
 import os from 'node:os'
@@ -18,6 +18,52 @@ const entryCopy = {
     jobBookerDescription: 'לבחון את המידע הזמין על אמן לפני החלטה על הזמנה.',
     jobSelectionHelp: 'בחרו לפי מה שתרצו לעשות עכשיו.', jobEyebrow: 'מתחילים כאן' },
 }
+test('RT001 Back/remount reads the governed candidate instead of offering an empty duplicate intake',async()=>{
+  const source=fs.readFileSync(new URL('../src/features/artist/Onboarding.jsx',import.meta.url),'utf8')
+  const begin=source.indexOf('  async function loadEntry()'),end=source.indexOf('\n  useEffect(',begin)
+  const state={actorId:'person-a',status:'ready',workspaceId:'org-a',contextVersion:2,artistId:'artist-a',actId:'act-b',version:1,consentAccepted:true,artist:{stage_name:'Entry'}}
+  const object={id:'same-candidate',state:'candidate',version:1,value:'https://example.test/original'}
+  let step,saved=[],requested=[]
+  const sandbox={generation:{current:0},busyRef:{current:false},finished:{current:false},liveKey:{current:'context'},contextKey:'context',
+    client:{read:async()=>state},accepts:s=>s.actorId==='person-a',user:{id:'person-a'},drafts:{current:new Map()},
+    getEvidenceWorkbench:async(a,b)=>{requested.push([a,b]);return {artistId:a,actId:b,authority:{actorId:'person-a',workspaceId:'org-a',contextVersion:2,owner:true},objects:[object]}},
+    setSaving(){},setLoading(){},setError(){},setCurrent(){},setLoadedKey(){},setPending(){},setF(){},setLink(){},setSourceConsent(){},setConsentChecked(){},
+    setStep:v=>{step=v},setSavedCandidates:v=>{saved=v},T:{onboarding:{entryRetry:'retry'}}}
+  vm.createContext(sandbox)
+  await vm.runInContext(`(function(){${source.slice(begin,end)}\n;return loadEntry})()`,sandbox)()
+  assert.equal(step,3,'a server-held candidate must remain reachable on Back without resubmission')
+  assert.equal(saved[0]?.id,'same-candidate');assert.equal(saved[0]?.value,'https://example.test/original')
+  assert.deepEqual(requested,[['artist-a','act-b']])
+})
+test('RT001 restored results fail closed for context/authority drift, revoke and obsolete reads',async()=>{
+  const source=fs.readFileSync(new URL('../src/features/artist/Onboarding.jsx',import.meta.url),'utf8')
+  const begin=source.indexOf('  async function loadEntry()'),end=source.indexOf('\n  useEffect(',begin)
+  for(const variant of ['artist','act','actor','workspace','version','owner','revoked','obsolete','withdrawn','no-link','pending']) {
+    const state={actorId:'person-a',status:'ready',workspaceId:'org-a',contextVersion:2,artistId:'artist-a',actId:'act-b',version:1,consentAccepted:true,artist:{stage_name:'Entry'}}
+    const readback={artistId:'artist-a',actId:'act-b',authority:{actorId:'person-a',workspaceId:'org-a',contextVersion:2,owner:true},objects:[{id:'candidate-a',version:1,state:'candidate',value:'https://example.test/source'}]}
+    let step,loaded='old',saved=['old'],error='',reads=0,pending
+    if(variant==='artist')readback.artistId='artist-wrong'
+    if(variant==='act')readback.actId='act-wrong'
+    if(variant==='actor')readback.authority.actorId='person-wrong'
+    if(variant==='workspace')readback.authority.workspaceId='org-wrong'
+    if(variant==='version')readback.authority.contextVersion=3
+    if(variant==='owner')readback.authority.owner=false
+    if(variant==='withdrawn')readback.objects[0].state='withdrawn'
+    if(variant==='no-link')readback.objects=[]
+    const unresolved={kind:'evidence',request:{key:'same-key'}}
+    const sandbox={generation:{current:0},busyRef:{current:false},finished:{current:false},liveKey:{current:'context'},contextKey:'context',
+      client:{read:async()=>state},accepts:()=>true,user:{id:'person-a'},drafts:{current:new Map(variant==='pending'?[['context',{pending:unresolved,step:2,link:'https://example.test/draft'}]]:[])},
+      getEvidenceWorkbench:async()=>{reads++;if(variant==='revoked')throw new Error('denied');if(variant==='obsolete')sandbox.generation.current++;return readback},
+      setSaving(){},setLoading(){},setError:v=>{error=v},setCurrent(){},setLoadedKey:v=>{loaded=v},setPending:v=>{pending=v},setF(){},setLink(){},setSourceConsent(){},setConsentChecked(){},
+      setStep:v=>{step=v},setSavedCandidates:v=>{saved=v},T:{onboarding:{entryRetry:'retry'}}}
+    vm.createContext(sandbox)
+    await vm.runInContext(`(function(){${source.slice(begin,end)}\n;return loadEntry})()`,sandbox)()
+    assert.equal(saved.length,0,variant+' cannot expose obsolete/private or withdrawn data')
+    if(['withdrawn','no-link','pending'].includes(variant))assert.equal(step,2,variant+' remains safe intake/recovery, never saved proof')
+    else {assert.equal(loaded,null,variant);assert.equal(step,undefined,variant);if(variant!=='obsolete')assert.equal(error,'retry',variant)}
+    if(variant==='pending'){assert.equal(reads,0);assert.equal(pending,unresolved)}
+  }
+})
 test('ENT001 returning to the server-proven default Act preserves its original Artist fields',async()=>{
   const source=fs.readFileSync(new URL('../src/features/artist/RadarUniverse.jsx',import.meta.url),'utf8')
   const start=source.indexOf('async function pickAct('),end=source.indexOf('\n  // D6',start)
@@ -190,6 +236,11 @@ async function startEntryFixture() {
 }
 
 if(process.argv.includes('--serve'))await startEntryFixture()
+if(process.argv.includes('--self-contained-browser')) {
+  const fixture=await startEntryFixture()
+  process.env.ENTRY_FIXTURE_URL=`http://127.0.0.1:${fixture.httpServer.address().port}`
+  after(async()=>{await fixture.close();console.log('ENTRY_TEMPORARY_FIXTURE_STOPPED')})
+}
 
 if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/EN at 390/768/1440', async () => {
   const {chromium}=await import('playwright')
@@ -248,12 +299,42 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         await page.waitForURL('**/artist/home')
         const pendingSource=page.locator('[data-entry-pending=true]')
         await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
+        const question=page.locator('#artist-first-value-question')
+        const hierarchy=await question.evaluate(node=>({width:node.getBoundingClientRect().width,
+          lines:node.getBoundingClientRect().height/parseFloat(getComputedStyle(node).lineHeight),
+          cardWidth:node.closest('section').getBoundingClientRect().width}))
+        if(process.env.ENTRY_SCREENSHOT_DIR) {
+          fs.mkdirSync(process.env.ENTRY_SCREENSHOT_DIR,{recursive:true})
+          const card=page.locator('section[aria-labelledby="artist-first-value-question"]')
+          await card.scrollIntoViewIfNeeded()
+          await page.screenshot({path:path.join(process.env.ENTRY_SCREENSHOT_DIR,`entry-${lang}-${width}.png`),fullPage:true})
+          await card.screenshot({path:path.join(process.env.ENTRY_SCREENSHOT_DIR,`card-${lang}-${width}.png`)})
+        }
+        assert.ok(hierarchy.width>=Math.min(240,hierarchy.cardWidth-40),`RT002 question column squeezed: ${JSON.stringify({lang,width,...hierarchy})}`)
+        assert.ok(hierarchy.lines<=4.1,`RT002 pathological word-per-line question: ${JSON.stringify({lang,width,...hierarchy})}`)
         assert.equal(await page.getByText(t.dashboard.empty,{exact:true}).count(),0)
         await pendingSource.getByRole('button',{name:t.evidenceActions.title,exact:true}).click()
         await page.waitForURL(`**/evidence/${proof.current.artistId}?act=${proof.current.actId}`)
         await page.getByRole('button').filter({hasText:'https://example.test/artist'}).waitFor()
         await page.goBack();await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
         await page.reload();await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
+        await page.goBack();await page.waitForURL('**/onboarding')
+        const restored=page.locator('[data-entry-restored=true]')
+        const sameObject=restored.locator(`[data-evidence-object="${proof.objects[0].id}"]`)
+        await sameObject.getByText('https://example.test/artist',{exact:true}).waitFor()
+        await sameObject.getByText(t.evidenceActions.states.candidate,{exact:true}).waitFor()
+        await restored.getByText(t.evidenceActions.boundary,{exact:true}).waitFor()
+        if(process.env.ENTRY_SCREENSHOT_DIR) {
+          await restored.scrollIntoViewIfNeeded()
+          await page.screenshot({path:path.join(process.env.ENTRY_SCREENSHOT_DIR,`back-${lang}-${width}.png`),fullPage:true})
+        }
+        assert.equal(await page.getByRole('button',{name:t.onboarding.entryStartScan,exact:true}).count(),0,'Back cannot silently offer duplicate submission')
+        await page.reload();await sameObject.waitFor()
+        await page.goForward();await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
+        await page.goBack();await sameObject.waitFor()
+        await restored.getByRole('button',{name:t.evidenceActions.title,exact:true}).focus();await page.keyboard.press('Enter')
+        await page.waitForURL(`**/evidence/${proof.current.artistId}?act=${proof.current.actId}`)
+        assert.deepEqual((await(await fetch(origin+'/__entry-fixture/state')).json()).objects,proof.objects,'Back/reload/forward/review creates no duplicate and changes no candidate')
         assert.deepEqual(errors,[])
         cells++;console.log(`ENTRY_BROWSER_CELL ${lang} ${width}: signup/selection/basics/consent/candidate/keyboard/direction/fit`)
       } catch(error) { console.error(JSON.stringify({lang,width,url:page.url(),body:(await page.locator('body').innerText()).slice(0,1800),errors}));throw error }

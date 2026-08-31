@@ -508,19 +508,19 @@ export default function ArtistDashboard() {
         aria-labelledby="artist-first-value-question"
         className="mb-3 shrink-0 rounded-2xl border border-line bg-surface px-4 py-3 shadow-card"
       >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
+        <div className="grid min-w-0 grid-cols-1 items-start gap-3 xl:grid-cols-2">
+          <div className="min-w-0">
             <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-accent">{T.radar.firstValue.privateLabel}</p>
             <h2 id="artist-first-value-question" className="mt-1 font-display text-base font-bold leading-snug text-ink">{T.radar.firstValue.question}</h2>
             <p className="mt-1 text-xs text-muted">{T.radar.firstValue.context(firstValue.actName, firstValue.organizationName)}</p>
           </div>
-          <div className="grid min-w-0 max-w-full gap-1 break-words text-xs sm:text-end">
+          <div className="grid min-w-0 max-w-full gap-1 break-words text-xs xl:text-end">
             <p><span className="font-semibold text-ink">{evidenceLabel}</span> · {freshnessLabel}</p>
             <p className="text-muted">{T.radar.firstValue.goal(firstValue.goal || T.radar.firstValue.goalUnknown)}</p>
           </div>
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
-          <p className="min-w-0 flex-1 text-xs text-muted">
+          <p className="min-w-0 flex-1 basis-64 text-xs text-muted">
             <span className="font-semibold text-ink">{T.radar.firstValue.next(nextAction.title)}</span>
             {' · '}{T.radar.firstValue.methodLimit}
           </p>
