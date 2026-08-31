@@ -11,6 +11,7 @@ import { clearPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { uploadFile } from '../../lib/storage.js'
 import { evidenceFileError, EVIDENCE, methodLabelFor } from '../../lib/constants.js'
+import { entryOriginSelection } from '../../lib/artistEntry.js'
 import { Upload, Link2, ScanSearch } from 'lucide-react'
 
 const PATHS = [
@@ -21,7 +22,7 @@ const PATHS = [
 
 // ART-02 / REP-05 / SCR-REP-ACTION. No extraction, truth or publication is
 // inferred from file storage, a proposal, a local role or a successful HTTP call.
-export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null, requestedAction = null, onReturn = null }) {
+export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null, requestedAction = null, onReturn = null, originObject = null, originReceipt = null, originVersion = null }) {
   const { T } = useLang()
   const S = T.evidenceActions
   const { user } = useAuth()
@@ -42,10 +43,10 @@ export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null
   const busyRef = useRef(false)
   const currentScope = useRef('')
   const focusRef = useRef(null)
-  const scope = [artistId, actId, activeOrgId, contextVersion, contextUnresolved].join('|')
+  const scope = [user?.id, artistId, actId, activeOrgId, contextVersion, contextUnresolved, originObject, originReceipt, originVersion].join('|')
   currentScope.current = scope
   const matches = (value) => value?.artistId === artistId && !!value.actId && (!actId || value.actId === actId)
-    && value.authority?.workspaceId === activeOrgId && Number(value.authority.contextVersion) === Number(contextVersion)
+    && value.authority?.actorId === user?.id && value.authority?.workspaceId === activeOrgId && Number(value.authority.contextVersion) === Number(contextVersion)
   const valid = matches(data) && !contextUnresolved
   const object = valid ? data.objects.find(item => item.id === selectedId) : null
   const evidence = valid ? data.objects : []
@@ -58,11 +59,17 @@ export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null
     const captured = currentScope.current
     const value = await getEvidenceWorkbench(artistId, actId)
     if (operation !== generation.current || captured !== currentScope.current || !matches(value)) throw new Error('context changed')
+    if ((originObject || originReceipt || originVersion) && (!selectedActId || selectedActId === requestedActId)) {
+      const origin = entryOriginSelection(value, user.id, originObject, originReceipt, originVersion)
+      select(origin.id)
+      setReceipt(origin.originReceipt)
+    }
     setData(value)
     return value
   }
   useEffect(() => {
     const current = ++generation.current
+    setData(null); select(''); setReceipt(null)
     setStatus('loading')
     reload().then(() => { if (generation.current === current) setStatus('ready') })
       .catch(() => { if (generation.current === current) setStatus('denied') })
@@ -253,7 +260,7 @@ export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null
 export default function EvidenceCapture() {
   const { artistId } = useParams()
   const [query] = useSearchParams()
-  return <PageShell><EvidenceActionWorkbench artistId={artistId} actId={query.get('act')} /></PageShell>
+  return <PageShell><EvidenceActionWorkbench artistId={artistId} actId={query.get('act')} originObject={query.get('object')} originReceipt={query.get('receipt')} originVersion={query.get('objectVersion')} /></PageShell>
 }
 
 // Read-only source continuity. Preparing a new candidate is explicit, version

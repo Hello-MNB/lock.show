@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
 import { getEvidenceWorkbench, commitEvidenceAction, resolveEvidenceAction } from '../../lib/db.js'
-import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { createArtistEntryClient, firstLinkRequest } from '../../lib/artistEntry.js'
+import { mirrorEntryCompletion, entryAnalyticsAllowed } from '../../lib/analytics.js'
+import { createArtistEntryClient, firstLinkRequest, entryOriginObjects } from '../../lib/artistEntry.js'
 import { useOrg } from '../../context/OrgContext.jsx'
 import { PageShell, Field, Spinner, ErrorNote, Loading } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
@@ -93,8 +93,8 @@ export default function Onboarding() {
           || readback.authority?.actorId !== user.id || readback.authority.workspaceId !== state.workspaceId
           || Number(readback.authority.contextVersion) !== state.contextVersion || readback.authority.owner !== true
           || !Array.isArray(readback.objects)) throw new Error('entry_readback_unavailable')
-        candidates = readback.objects.filter(object => object.id && Number.isSafeInteger(object.version)
-          && object.version > 0 && ['candidate', 'proposed'].includes(object.state))
+        candidates = entryOriginObjects(readback, user.id)
+        if (readback.objects.some(object => object.state !== 'withdrawn') && !candidates.length) throw new Error('entry_readback_unavailable')
       }
       setCurrent(state); setLoadedKey(contextKey); setSavedCandidates(candidates)
       setPending(draft?.pending || null)
@@ -133,6 +133,10 @@ export default function Onboarding() {
       if (readback.authority.actorId !== user.id || readback.authority.workspaceId !== state.workspaceId
         || Number(readback.authority.contextVersion) !== state.contextVersion || object?.state !== 'candidate'
         || Number(object.version) !== Number(result.receipt.objectVersion)) throw new Error('entry_readback_unavailable')
+      const origins = entryOriginObjects(readback, user.id)
+      if (!origins.some(item => item.id === request.objectId && item.originReceipt.id === result.receipt.id)) throw new Error('entry_readback_unavailable')
+      if (run !== generation.current || liveKey.current !== contextKey) return
+      setSavedCandidates(origins)
     }
     if (run !== generation.current || liveKey.current !== contextKey) return
     setCurrent(state); setPending(null)
@@ -203,8 +207,16 @@ export default function Onboarding() {
       const state = await client.read()
       if (run !== generation.current || liveKey.current !== contextKey) return
       if (!accepts(state) || !state.artist?.stage_name || !state.consentAccepted) throw new Error('entry_unavailable')
+      const completion = await client.complete(state, entryAnalyticsAllowed())
+      if (run !== generation.current || liveKey.current !== contextKey || completion.status === 'retired') return
+      // Measurement failure/refusal cannot become a new Product Finish gate.
+      // Recheck authority after an unknown response; never fabricate an event.
+      const finalState = completion.current || await client.read()
+      if (run !== generation.current || liveKey.current !== contextKey) return
+      if (!accepts(finalState) || !finalState.artist?.stage_name || !finalState.consentAccepted) throw new Error('entry_unavailable')
+      await mirrorEntryCompletion(completion)
+      if (run !== generation.current || liveKey.current !== contextKey) return
       finished.current = true
-      logEvent(EVENTS.ONBOARDING_COMPLETE)
       const pendingReturn = readPendingReturn({ consume: true })
       nav(pendingReturn || '/artist/home', { state: { fromEntry: true } })
     } catch { if (run === generation.current) setError(T.onboarding.entryRetry) }
@@ -314,8 +326,9 @@ export default function Onboarding() {
               <p dir="auto" className="text-sm font-semibold text-ink">{object.title || object.value || T.evidenceActions.untitled}</p>
               {object.value && object.title && object.value !== object.title && <p dir="auto" className="text-xs text-muted">{object.value}</p>}
               <p className="mt-1 text-xs text-muted">{T.evidenceActions.states[object.state]}</p>
+              <p data-entry-receipt={object.originReceipt.id} className="mt-1 break-all text-xs text-muted">{T.evidenceActions.upload} · {object.originReceipt.committedAt} · {T.evidenceActions.receipt}: {object.originReceipt.id} · v{object.originReceipt.objectVersion}</p>
+              <button type="button" className="btn-ghost w-full" onClick={() => nav(`/evidence/${encodeURIComponent(current.artistId)}?act=${encodeURIComponent(current.actId)}&object=${encodeURIComponent(object.id)}&receipt=${encodeURIComponent(object.originReceipt.id)}&objectVersion=${object.originReceipt.objectVersion}`)}>{T.evidenceActions.title}</button>
             </div>)}
-            <button type="button" className="btn-ghost w-full" onClick={() => nav(`/evidence/${encodeURIComponent(current.artistId)}?act=${encodeURIComponent(current.actId)}`)}>{T.evidenceActions.title}</button>
           </section> :
           <div className="card">
             <h2 ref={stepFocus} tabIndex={-1} className="font-display mb-1 text-xl font-bold tracking-[-0.01em] text-ink">{T.onboarding.revealTitle}</h2>

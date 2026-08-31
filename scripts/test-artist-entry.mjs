@@ -6,6 +6,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createHash, randomUUID } from 'node:crypto'
+import { entryOriginObjects, entryOriginSelection } from '../src/lib/artistEntry.js'
 
 // Exact bounded Language v5.7 / ENTRY01–05 values, accepted by LS10 7/7.
 const entryCopy = {
@@ -23,17 +24,101 @@ test('RT001 Back/remount reads the governed candidate instead of offering an emp
   const begin=source.indexOf('  async function loadEntry()'),end=source.indexOf('\n  useEffect(',begin)
   const state={actorId:'person-a',status:'ready',workspaceId:'org-a',contextVersion:2,artistId:'artist-a',actId:'act-b',version:1,consentAccepted:true,artist:{stage_name:'Entry'}}
   const object={id:'same-candidate',state:'candidate',version:1,value:'https://example.test/original'}
+  const receipt={id:'upload-receipt',action:'upload',actorId:'person-a',workspaceId:'org-a',artistId:'artist-a',actId:'act-b',contextVersion:2,objectId:object.id,objectVersion:1,committedAt:'2026-08-31T00:00:00Z'}
   let step,saved=[],requested=[]
   const sandbox={generation:{current:0},busyRef:{current:false},finished:{current:false},liveKey:{current:'context'},contextKey:'context',
-    client:{read:async()=>state},accepts:s=>s.actorId==='person-a',user:{id:'person-a'},drafts:{current:new Map()},
-    getEvidenceWorkbench:async(a,b)=>{requested.push([a,b]);return {artistId:a,actId:b,authority:{actorId:'person-a',workspaceId:'org-a',contextVersion:2,owner:true},objects:[object]}},
+    client:{read:async()=>state},entryOriginObjects,accepts:s=>s.actorId==='person-a',user:{id:'person-a'},drafts:{current:new Map()},
+    getEvidenceWorkbench:async(a,b)=>{requested.push([a,b]);return {artistId:a,actId:b,authority:{actorId:'person-a',workspaceId:'org-a',contextVersion:2,owner:true},objects:[object],history:[{action:'upload',receipt}]}},
     setSaving(){},setLoading(){},setError(){},setCurrent(){},setLoadedKey(){},setPending(){},setF(){},setLink(){},setSourceConsent(){},setConsentChecked(){},
     setStep:v=>{step=v},setSavedCandidates:v=>{saved=v},T:{onboarding:{entryRetry:'retry'}}}
   vm.createContext(sandbox)
   await vm.runInContext(`(function(){${source.slice(begin,end)}\n;return loadEntry})()`,sandbox)()
   assert.equal(step,3,'a server-held candidate must remain reachable on Back without resubmission')
   assert.equal(saved[0]?.id,'same-candidate');assert.equal(saved[0]?.value,'https://example.test/original')
+  assert.equal(saved[0]?.originReceipt?.id,'upload-receipt','Back must retain the matched immutable receipt, not only the source')
   assert.deepEqual(requested,[['artist-a','act-b']])
+})
+test('EVT029 same explicit Finish after remount does not create a second completion',async()=>{
+  const source=fs.readFileSync(new URL('../src/features/artist/Onboarding.jsx',import.meta.url),'utf8')
+  const begin=source.indexOf('  async function finish()'),end=source.indexOf('\n  async function recoverPending',begin)
+  const state={actorId:'person-a',status:'ready',workspaceId:'org-a',contextVersion:2,version:1,artistId:'artist-a',actId:'act-b',consentAccepted:true,artist:{stage_name:'Entry'}}
+  let emitted=0,navigated=0
+  const seen=new Set()
+  const completion={status:'recorded',eventId:'basics-history-a',actorId:'person-a',workspaceId:'org-a',artistId:'artist-a',recordedAt:'2026-08-31T01:00:00Z',current:state}
+  for(let mount=0;mount<2;mount++) {
+    const sandbox={busyRef:{current:false},pending:null,finished:{current:false},generation:{current:0},liveKey:{current:'scope'},contextKey:'scope',
+      user:{id:'person-a'},client:{read:async()=>state,complete:async()=>completion},accepts:()=>true,
+      setSaving(){},setError(){},logEvent(){emitted++},EVENTS:{ONBOARDING_COMPLETE:'onboarding_completed'},
+      mirrorEntryCompletion:async(r)=>{if(!seen.has(r.eventId)){seen.add(r.eventId);emitted++}},entryAnalyticsAllowed:()=>true,
+      readPendingReturn:()=>null,nav(){navigated++},T:{onboarding:{entryRetry:'retry'}}}
+    vm.createContext(sandbox)
+    await vm.runInContext(`(function(){${source.slice(begin,end)}\n;return finish})()`,sandbox)()
+  }
+  assert.equal(navigated,2,'lawful return remains usable')
+  assert.equal(emitted,1,'a remount is not a new committed entry completion')
+})
+test('RT001 origin match preserves current confirmed state and rejects unrelated or future history',()=>{
+  const r={id:'receipt-a',action:'upload',actorId:'person-a',workspaceId:'org-a',artistId:'artist-a',actId:'act-a',contextVersion:1,objectId:'object-a',objectVersion:1,committedAt:'2026-08-31T00:00:00Z'}
+  const w={artistId:'artist-a',actId:'act-a',authority:{actorId:'person-a',workspaceId:'org-a',contextVersion:3},objects:[{id:'object-a',version:3,state:'confirmed'}],history:[{action:'upload',receipt:r}]}
+  const result=entryOriginSelection(w,'person-a','object-a','receipt-a',1)
+  assert.equal(result.state,'confirmed');assert.equal(result.version,3);assert.equal(result.originReceipt.objectVersion,1)
+  for(const [key,value] of Object.entries({id:'unrelated',actorId:'person-b',workspaceId:'org-b',artistId:'artist-b',actId:'act-b',objectId:'object-b',objectVersion:4,contextVersion:4,committedAt:null})){
+    const changed={...w,history:[{action:'upload',receipt:{...r,[key]:value}}]}
+    assert.throws(()=>entryOriginSelection(changed,'person-a','object-a','receipt-a',1),key)
+  }
+  assert.throws(()=>entryOriginSelection({...w,history:[]},'person-a','object-a','receipt-a',1))
+  assert.throws(()=>entryOriginSelection({...w,objects:[{...w.objects[0],state:'withdrawn'}]},'person-a','object-a','receipt-a',1))
+})
+test('EVT029 real local mirror survives remount/ring eviction, never re-inserts remotely, and respects refusal',async()=>{
+  const source=fs.readFileSync(new URL('../src/lib/analytics.js',import.meta.url),'utf8').replace(/^import .*$/gm,'').replaceAll('export ','').replaceAll('import.meta.env?.DEV','false')
+  const storage=new Map();let remote=0
+  const sandbox={localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},supabase:{from(){remote++;throw new Error('duplicate sink')}},DEMO:false,console}
+  const r={status:'recorded',eventId:'canonical-a',actorId:'person-a',recordedAt:'2026-08-31T05:00:00Z'}
+  for(let mount=0;mount<3;mount++){
+    vm.createContext(sandbox)
+    const mirror=vm.runInContext(`(function(){${source};return mirrorEntryCompletion})()`,sandbox)
+    await mirror(r)
+    assert.equal(JSON.parse(storage.get('gigproof_events')).filter(e=>e.name==='onboarding_completed').length,1)
+  }
+  storage.set('gigproof_events','[]')
+  const mirror=vm.runInContext(`(function(){${source};return mirrorEntryCompletion})()`,sandbox)
+  await mirror(r);assert.equal(JSON.parse(storage.get('gigproof_events')).length,0,'ack survives ring eviction')
+  await mirror({...r,eventId:'canonical-b',actorId:'person-b'});assert.equal(JSON.parse(storage.get('gigproof_events')).length,1)
+  storage.set('gigproof_consent',JSON.stringify({value:'denied',at:Date.now()}))
+  await mirror({...r,eventId:'canonical-c'});assert.equal(JSON.parse(storage.get('gigproof_events')).length,1)
+  await mirror({status:'uncertain'});assert.equal(remote,0)
+})
+test('EVT029 lost acknowledgement retries identical scope; unknown and retired responses never claim delivery',async()=>{
+  const {createArtistEntryClient}=await import('../src/lib/artistEntry.js')
+  const current={actorId:'person-a',status:'ready',workspaceId:'org-a',artistId:'artist-a',actId:'act-a',contextVersion:3,version:8}
+  const calls=[]
+  const ack={status:'recorded',eventId:'history-a',actorId:'person-a',recordedAt:'2026-08-31T05:00:00Z',current}
+  const client=createArtistEntryClient({actorId:'person-a',rpc:async(name,args)=>{
+    calls.push({name,args});if(calls.length===1)throw new Error('response lost');return {data:ack}
+  }})
+  assert.deepEqual(await client.complete(current),ack);assert.equal(calls.length,2);assert.deepEqual(calls[0],calls[1])
+  assert.equal(calls[0].args.p_request.actorId,undefined);assert.equal(calls[0].args.p_request.eventId,undefined)
+  const unknown=createArtistEntryClient({actorId:'person-a',rpc:async()=>{throw new Error('503')}})
+  assert.equal((await unknown.complete(current)).status,'uncertain')
+  let resolve
+  const retired=createArtistEntryClient({actorId:'person-a',rpc:()=>new Promise(r=>{resolve=r})})
+  const pending=retired.complete(current);retired.retire();resolve({data:ack});assert.equal((await pending).status,'retired')
+  const wrong=createArtistEntryClient({actorId:'person-a',rpc:async()=>({data:{...ack,current:{...current,actorId:'other'}}})})
+  assert.equal((await wrong.complete(current)).status,'uncertain')
+})
+test('EVT029 telemetry refusal/unavailability never blocks lawful Product Finish or fabricates an event',async()=>{
+  const source=fs.readFileSync(new URL('../src/features/artist/Onboarding.jsx',import.meta.url),'utf8')
+  const begin=source.indexOf('  async function finish()'),end=source.indexOf('\n  async function recoverPending',begin)
+  for(const status of ['not_recorded','uncertain']){
+    let navigation=0,delivered=0,requested
+    const state={actorId:'person-a',status:'ready',workspaceId:'org-a',contextVersion:1,artist:{stage_name:'Artist'},consentAccepted:true}
+    const sandbox={busyRef:{current:false},pending:null,finished:{current:false},generation:{current:0},liveKey:{current:'scope'},contextKey:'scope',
+      client:{read:async()=>state,complete:async(s,allowed)=>{requested=allowed;return {status,...(status==='not_recorded'?{current:state}:{})}}},accepts:()=>true,
+      setSaving(){},setError(){},mirrorEntryCompletion:r=>{if(r.status==='recorded')delivered++},entryAnalyticsAllowed:()=>false,
+      readPendingReturn:()=>null,nav(){navigation++},T:{onboarding:{entryRetry:'retry'}}}
+    vm.createContext(sandbox);await vm.runInContext(`(function(){${source.slice(begin,end)};return finish})()`,sandbox)()
+    assert.equal(requested,false);assert.equal(navigation,1,status);assert.equal(delivered,0,status)
+  }
 })
 test('RT001 restored results fail closed for context/authority drift, revoke and obsolete reads',async()=>{
   const source=fs.readFileSync(new URL('../src/features/artist/Onboarding.jsx',import.meta.url),'utf8')
@@ -52,7 +137,7 @@ test('RT001 restored results fail closed for context/authority drift, revoke and
     if(variant==='no-link')readback.objects=[]
     const unresolved={kind:'evidence',request:{key:'same-key'}}
     const sandbox={generation:{current:0},busyRef:{current:false},finished:{current:false},liveKey:{current:'context'},contextKey:'context',
-      client:{read:async()=>state},accepts:()=>true,user:{id:'person-a'},drafts:{current:new Map(variant==='pending'?[['context',{pending:unresolved,step:2,link:'https://example.test/draft'}]]:[])},
+      client:{read:async()=>state},entryOriginObjects,accepts:()=>true,user:{id:'person-a'},drafts:{current:new Map(variant==='pending'?[['context',{pending:unresolved,step:2,link:'https://example.test/draft'}]]:[])},
       getEvidenceWorkbench:async()=>{reads++;if(variant==='revoked')throw new Error('denied');if(variant==='obsolete')sandbox.generation.current++;return readback},
       setSaving(){},setLoading(){},setError:v=>{error=v},setCurrent(){},setLoadedKey:v=>{loaded=v},setPending:v=>{pending=v},setF(){},setLink(){},setSourceConsent(){},setConsentChecked(){},
       setStep:v=>{step=v},setSavedCandidates:v=>{saved=v},T:{onboarding:{entryRetry:'retry'}}}
@@ -130,7 +215,7 @@ async function startEntryFixture() {
   let initialized=false,basics=false,consentAccepted=false,version=0,scenario='success',objects=[]
   const notice={version:'SYNTHETIC-ENTRY-NOTICE-1',purpose:'Synthetic service-profile test purpose',
     noticeUrl:'https://example.test/synthetic-notice',termsUrl:'https://example.test/synthetic-terms',effectiveAt:'2026-08-01T00:00:00Z'}
-  const receipts=new Map(),fences=new Set()
+  const receipts=new Map(),fences=new Set(),completionEvents=new Map()
   const user={id:actor,email:'entry-fixture@example.test',aud:'authenticated',role:'authenticated',
     email_confirmed_at:'2026-08-31T00:00:00Z',identities:[{id:actor,provider:'email'}],app_metadata:{provider:'email'},user_metadata:{}}
   const token=[{alg:'HS256',typ:'JWT'},{sub:actor,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600},'fixture-signature']
@@ -140,7 +225,8 @@ async function startEntryFixture() {
   const state=()=>({actorId:actor,status:initialized?'ready':'uninitialized',workspaceId:initialized?workspace:null,
     contextVersion:0,version,artistId:basics?artist:null,actId:basics?act:null,artist:basics?{id:artist,...artistFields}:null,
     serviceNotice:scenario==='notice-missing'?null:notice,consentAccepted})
-  const workbench=()=>({artistId:artist,actId:act,stageName:artistFields.stage_name,acts:[{id:act,stageName:artistFields.stage_name}],version:objects.length,authority:{actorId:actor,workspaceId:workspace,contextVersion:0,owner:true,role:'artist'},objects,history:[],legacyClaims:[],legacyItems:[]})
+  const workbench=()=>({artistId:artist,actId:act,stageName:artistFields.stage_name,acts:[{id:act,stageName:artistFields.stage_name}],version:objects.length,authority:{actorId:actor,workspaceId:workspace,contextVersion:0,owner:true,role:'artist'},objects,
+    history:[...receipts.values()].filter(r=>r.action==='upload').map(receipt=>({action:'upload',receipt,before:{},after:objects.find(o=>o.id===receipt.objectId),reason:null,provenance:'Artist supplied link'})),legacyClaims:[],legacyItems:[]})
   const reply=(res,status,body)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(body))}
   let port
   const vite=await createServer({root:snapshot,configFile:false,envFile:false,css:{postcss:{plugins:[tailwind(frozenTailwind),autoprefixer()]}},plugins:[{
@@ -151,11 +237,11 @@ async function startEntryFixture() {
       let raw='';for await(const chunk of req)raw+=chunk
       let body={};try{body=raw?JSON.parse(raw):{}}catch{return reply(res,400,{error:'invalid fixture input'})}
       if(uri.pathname==='/__entry-fixture/reset'&&req.method==='POST') {
-        initialized=false;basics=false;consentAccepted=false;version=0;objects=[];receipts.clear();fences.clear();artistFields={stage_name:'',city:''}
+        initialized=false;basics=false;consentAccepted=false;version=0;objects=[];receipts.clear();fences.clear();completionEvents.clear();artistFields={stage_name:'',city:''}
         scenario=body.scenario||'success';return reply(res,200,{scenario,synthetic:true})
       }
       if(uri.pathname==='/__entry-fixture/scenario'&&req.method==='POST'){scenario=body.scenario;return reply(res,200,{scenario})}
-      if(uri.pathname==='/__entry-fixture/state')return reply(res,200,{scenario,current:state(),objects,fingerprint,synthetic:true})
+      if(uri.pathname==='/__entry-fixture/state')return reply(res,200,{scenario,current:state(),objects,history:workbench().history,completionEvents:[...completionEvents.values()],fingerprint,synthetic:true})
       if(uri.pathname.endsWith('/auth/v1/signup'))return reply(res,200,scenario==='confirmation-pending'?{user,session:null}:session())
       if(uri.pathname.endsWith('/auth/v1/token'))return reply(res,scenario==='confirmation-pending'?400:200,
         scenario==='confirmation-pending'?{code:'email_not_confirmed',message:'Email not confirmed'}:session())
@@ -166,6 +252,17 @@ async function startEntryFixture() {
       if(uri.pathname.startsWith('/api/events'))return reply(res,200,{ok:true})
       if(req.headers.authorization!==`Bearer ${token}`)return reply(res,401,{message:'fixture authentication required'})
       const rpc=uri.pathname.split('/').at(-1)
+      if(rpc==='complete_artist_entry') {
+        const r=body.p_request,s=state()
+        if(scenario==='revoked'||!basics||!consentAccepted||['workspaceId','artistId','actId','contextVersion'].some(k=>r[k]!==s[k]))return reply(res,403,{code:'42501'})
+        if(scenario==='completion-unavailable')return reply(res,503,{message:'unavailable'})
+        const first=[...receipts.values()].find(r=>r.action==='basics')
+        if(!r.telemetry||!first)return reply(res,200,{status:'not_recorded',actorId:actor,current:s})
+        if(!completionEvents.has(first.id))completionEvents.set(first.id,{id:first.id,event_name:'onboarding_completed',actor_user_id:actor,created_at:new Date().toISOString()})
+        const event=completionEvents.get(first.id)
+        if(scenario==='completion-response-lost'){scenario='success';res.destroy();return}
+        return reply(res,200,{status:'recorded',eventId:event.id,actorId:actor,recordedAt:event.created_at,current:s})
+      }
       if(rpc==='profiles')return reply(res,200,initialized?{id:actor,role:'artist',full_name:null}:null)
       if(rpc==='active_role_context')return reply(res,200,initialized?{active_organization_id:workspace,context_version:0}:null)
       if(rpc==='select_context_switch_targets')return reply(res,200,initialized?[{membership_id:actor,organization_id:workspace,
@@ -213,7 +310,7 @@ async function startEntryFixture() {
         if(!receipts.has(body.key)) {
           if(uri.pathname.endsWith('/resolve'))return reply(res,200,{status:'not_committed'})
           objects.push({id:body.objectId,version:1,state:'candidate',title:body.payload.title,value:body.payload.value})
-          receipts.set(body.key,{...body,id:randomUUID(),version:body.expectedVersion+1,objectVersion:1,committedAt:new Date().toISOString()})
+          receipts.set(body.key,{...body,id:randomUUID(),actorId:actor,version:body.expectedVersion+1,objectVersion:1,committedAt:new Date().toISOString()})
         }
         if(scenario==='link-response-lost'&&uri.pathname.endsWith('/commit')){res.destroy();return}
         return reply(res,200,{status:'committed',receipt:receipts.get(body.key)})
@@ -258,6 +355,7 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
       // retain their 10s limit and are not made dependent on cold compilation.
       page.setDefaultNavigationTimeout(30000)
       const errors=[];page.on('pageerror',error=>errors.push(error.message))
+      page.on('console',message=>{if(message.type()==='error')console.error('ENTRY_BROWSER_CONSOLE '+message.text())})
       await page.addInitScript(lang=>{if(!localStorage.getItem('gigproof_lang'))localStorage.setItem('gigproof_lang',lang)},lang)
       const t=dictionaries[lang]
       try {
@@ -289,7 +387,7 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         await page.getByLabel(t.onboarding.entrySourceConsent,{exact:true}).check()
         const submit=page.getByRole('button',{name:t.onboarding.entryStartScan,exact:true})
         await submit.focus();await page.keyboard.press('Enter')
-        await page.getByRole('heading',{name:t.onboarding.revealTitle,exact:true}).waitFor()
+        await page.locator('[data-entry-restored=true]').waitFor()
         assert.equal(await page.evaluate(()=>document.documentElement.dir),lang==='he'?'rtl':'ltr')
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'no horizontal document overflow')
         const proof=await(await fetch(origin+'/__entry-fixture/state')).json()
@@ -297,6 +395,8 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         assert.notEqual(proof.current.artistId,proof.current.actId,'distinct Act witness')
         await page.getByRole('button',{name:t.onboarding.revealCta,exact:true}).click()
         await page.waitForURL('**/artist/home')
+        const eventCount=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('gigproof_events')||'[]').filter(e=>e.name==='onboarding_completed').length)
+        assert.equal(await eventCount(),1)
         const pendingSource=page.locator('[data-entry-pending=true]')
         await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
         const question=page.locator('#artist-first-value-question')
@@ -323,6 +423,8 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         const sameObject=restored.locator(`[data-evidence-object="${proof.objects[0].id}"]`)
         await sameObject.getByText('https://example.test/artist',{exact:true}).waitFor()
         await sameObject.getByText(t.evidenceActions.states.candidate,{exact:true}).waitFor()
+        const upload=proof.history.find(row=>row.receipt.objectId===proof.objects[0].id).receipt
+        await sameObject.locator(`[data-entry-receipt="${upload.id}"]`).waitFor()
         await restored.getByText(t.evidenceActions.boundary,{exact:true}).waitFor()
         if(process.env.ENTRY_SCREENSHOT_DIR) {
           await restored.scrollIntoViewIfNeeded()
@@ -332,8 +434,16 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         await page.reload();await sameObject.waitFor()
         await page.goForward();await pendingSource.getByText('https://example.test/artist',{exact:true}).waitFor()
         await page.goBack();await sameObject.waitFor()
+        await page.getByRole('button',{name:t.onboarding.revealCta,exact:true}).click();await page.waitForURL('**/artist/home')
+        assert.equal(await eventCount(),1,'same entry Back/Finish is not another completion')
+        await page.goBack();await sameObject.waitFor();await page.reload();await sameObject.waitFor()
+        await page.getByRole('button',{name:t.onboarding.revealCta,exact:true}).click();await page.waitForURL('**/artist/home')
+        assert.equal(await eventCount(),1,'same entry reload/Finish is not another completion')
+        assert.equal((await(await fetch(origin+'/__entry-fixture/state')).json()).completionEvents.length,1)
+        await page.goBack();await sameObject.waitFor()
         await restored.getByRole('button',{name:t.evidenceActions.title,exact:true}).focus();await page.keyboard.press('Enter')
-        await page.waitForURL(`**/evidence/${proof.current.artistId}?act=${proof.current.actId}`)
+        await page.waitForURL(url=>url.pathname===`/evidence/${proof.current.artistId}`&&url.searchParams.get('object')===proof.objects[0].id)
+        await page.getByText(`${t.evidenceActions.receipt}: ${upload.id}`,{exact:true}).first().waitFor()
         assert.deepEqual((await(await fetch(origin+'/__entry-fixture/state')).json()).objects,proof.objects,'Back/reload/forward/review creates no duplicate and changes no candidate')
         assert.deepEqual(errors,[])
         cells++;console.log(`ENTRY_BROWSER_CELL ${lang} ${width}: signup/selection/basics/consent/candidate/keyboard/direction/fit`)
@@ -405,7 +515,7 @@ if(process.argv.includes('--browser-negative'))test('30 actual entry denial, dra
                 assert.equal((await(await fetch(origin+'/__entry-fixture/state')).json()).objects.length,0)
                 await mode('success');await page.getByRole('button',{name:t.onboarding.entryStartScan,exact:true}).click()
               }
-              await page.getByRole('heading',{name:t.onboarding.revealTitle,exact:true}).waitFor()
+              await page.locator('[data-entry-restored=true]').waitFor()
               assert.equal((await(await fetch(origin+'/__entry-fixture/state')).json()).objects.length,1)
             }
           }
@@ -471,7 +581,7 @@ if(process.argv.includes('--reflow'))test('ENT reflow preserves privacy actions 
       await page.locator('input[inputmode=url]').fill('https://example.test/private-pending')
       await page.getByLabel(t.onboarding.entrySourceConsent,{exact:true}).check()
       await page.getByRole('button',{name:t.onboarding.entryStartScan,exact:true}).click()
-      await page.getByRole('heading',{name:t.onboarding.revealTitle,exact:true}).waitFor()
+    await page.locator('[data-entry-restored=true]').waitFor()
       await page.getByRole('button',{name:t.onboarding.revealCta,exact:true}).click()
       const pending=page.locator('[data-entry-pending=true]');await pending.waitFor()
       await page.evaluate(()=>document.documentElement.style.fontSize='200%')

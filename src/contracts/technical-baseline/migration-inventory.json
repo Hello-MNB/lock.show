@@ -645,6 +645,15 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831082000",
+      "file": "supabase/migrations/20260831082000_artist_entry_completion_idempotency.sql",
+      "direction": "up",
+      "sha256": "6e941219d79aef038ac934228c79502ecdc807f949c5cd05d84f3fb7cc1655c5",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

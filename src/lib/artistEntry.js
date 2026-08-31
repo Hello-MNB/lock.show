@@ -32,6 +32,24 @@ export function createArtistEntryClient({ actorId, rpc = defaultRpc }) {
   }
   return {
     retire() { generation += 1 },
+    async complete(current, telemetry = true) {
+      const start = generation
+      const request = { workspaceId: current.workspaceId, artistId: current.artistId, actId: current.actId,
+        contextVersion: current.contextVersion, telemetry }
+      // Retrying the same explicit Finish cannot choose a new completion ID.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const result = await call('complete_artist_entry', request)
+          if (start !== generation) return { status: 'retired' }
+          if (!validCurrent(result?.current, actorId) || result.actorId !== actorId
+            || ['workspaceId', 'artistId', 'actId', 'contextVersion'].some(k => result.current[k] !== current[k])
+            || !['recorded', 'not_recorded'].includes(result.status)
+            || (result.status === 'recorded' && (!result.eventId || !result.recordedAt))) throw new Error('artist_entry_unavailable')
+          return result
+        } catch { if (start !== generation) return { status: 'retired' } }
+      }
+      return { status: 'uncertain' }
+    },
     async read() {
       const start = generation
       const current = await call('read_artist_entry')
@@ -64,6 +82,34 @@ export function createArtistEntryClient({ actorId, rpc = defaultRpc }) {
       return result
     },
   }
+}
+
+// An upload receipt proves a historical action, never the object's current
+// truth/publication state. The fresh governed projection supplies that state.
+export function entryOriginObjects(workbench, actorId) {
+  const authority = workbench?.authority
+  if (authority?.actorId !== actorId || !Array.isArray(workbench.objects) || !Array.isArray(workbench.history)) return []
+  return workbench.objects.flatMap(object => {
+    if (!object.id || !Number.isSafeInteger(object.version) || object.version < 1 || object.state === 'withdrawn') return []
+    const matches = workbench.history.filter(row => {
+      const r = row.receipt
+      return row.action === 'upload' && r?.action === 'upload' && r.id && r.committedAt
+        && r.actorId === actorId && r.workspaceId === authority.workspaceId
+        && r.artistId === workbench.artistId && r.actId === workbench.actId && r.objectId === object.id
+        && Number.isSafeInteger(r.contextVersion) && r.contextVersion <= Number(authority.contextVersion)
+        && Number.isSafeInteger(r.objectVersion) && r.objectVersion > 0 && r.objectVersion <= object.version
+    })
+    if (matches.length !== 1) return []
+    return [{ ...object, originReceipt: matches[0].receipt }]
+  })
+}
+
+export function entryOriginSelection(workbench, actorId, objectId, receiptId, objectVersion) {
+  const object = entryOriginObjects(workbench, actorId).find(item => item.id === objectId)
+  if (!object || object.originReceipt.id !== receiptId || object.originReceipt.objectVersion !== Number(objectVersion)) {
+    throw new Error('evidence_action_unavailable')
+  }
+  return object
 }
 
 export function firstLinkRequest(workbench, value, sourceConsent) {
