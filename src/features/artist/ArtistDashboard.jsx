@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtistForWorkspace, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, publishPassport, unpublishArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent } from '../../lib/db.js'
+import { getMyArtistForWorkspace, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent, getEvidenceWorkbench } from '../../lib/db.js'
+import { publicationSelection } from '../../lib/passportApi.js'
+import { EvidenceActionWorkbench } from '../evidence/EvidenceCapture.jsx'
 import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { useOrg } from '../../context/OrgContext.jsx'
-import { isPassportDirty, clearPassportDirty, markPassportDirty } from '../../lib/passportState.js'
+import { isPassportDirty, markPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { isPrimaryPlanet, primaryPlanets, planetEmphasisOrder } from '../../lib/genreWeights.js'
 import { claimPlanet } from '../../lib/radarUniverse.js'
@@ -157,8 +159,8 @@ function MilestoneStrip({ artist, items, claims, reqCount, shared, T }) {
 
 export default function ArtistDashboard() {
   const { T } = useLang()
-  const { user } = useAuth()
-  const { activeOrgId, memberships, loading: orgLoading } = useOrg()
+  const { user, demo } = useAuth()
+  const { activeOrgId, memberships, contextVersion, contextUnresolved, loading: orgLoading } = useOrg()
   const nav = useNavigate()
   const loc = useLocation()
   const toast = useToast()
@@ -177,6 +179,10 @@ export default function ArtistDashboard() {
   const [needPubConsent, setNeedPubConsent] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [pubSheet, setPubSheet] = useState(false)
+  const [publication, setPublication] = useState(null)
+  const [publicationAct, setPublicationAct] = useState(null)
+  const publicationContext = useRef(null)
+  const publicationControl = useRef(null)
   const [noAction, setNoAction] = useState(false)
   const [loadedContextKey, setLoadedContextKey] = useState(null)
   const noActionReceipt = useRef(null)
@@ -202,6 +208,8 @@ export default function ArtistDashboard() {
   const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
   const access = resolveArtistFirstValueAccess({ user, activeOrgId, memberships })
   const currentContextKey = access.allowed ? `${user.id}:${activeOrgId}` : null
+  const publicationContextKey = access.allowed && !contextUnresolved ? `${currentContextKey}:${contextVersion}` : null
+  publicationContext.current = publicationContextKey
 
   async function load() {
     const requestRevision = ++loadRevision.current
@@ -230,6 +238,7 @@ export default function ArtistDashboard() {
         if (isStale()) return
         setArtist(a)
         setAct(nextAct)
+        setPublicationAct({ id: nextAct?.id, contextKey: publicationContextKey })
         setItems(nextItems)
         setClaims(nextClaims)
         setEnt(nextEnt)
@@ -285,16 +294,35 @@ export default function ArtistDashboard() {
   // only — never a score/percent, firewall-safe). share_link_created fires on
   // the real copy action; if the clipboard is blocked the visible link below
   // the button stays selectable, and no event is logged (nothing was copied).
-  const shareUrl = artist ? appUrl(`/passport/${artist.id}?s=1`) : ''
+  const [governedShare, setGovernedShare] = useState(null)
+  const shareUrl = artist ? appUrl(governedShare?.context === publicationContextKey && governedShare?.actId === publicationAct?.id
+    ? governedShare.path : `/passport/${artist.id}?s=1`) : ''
+  async function readSharePath() {
+    if (demo) return `/passport/${artist.id}?s=1`
+    const captured = publicationContext.current
+    const selectedAct = publicationAct?.contextKey === captured ? publicationAct.id : null
+    if (!captured || !selectedAct) throw new Error('context changed')
+    const fresh = await getEvidenceWorkbench(artist.id, selectedAct)
+    if (captured !== publicationContext.current || fresh.artistId !== artist.id || fresh.actId !== selectedAct
+      || fresh.authority?.workspaceId !== activeOrgId || Number(fresh.authority.contextVersion) !== Number(contextVersion)) throw new Error('context changed')
+    const purpose = fresh.publication?.actId === selectedAct ? fresh.publication?.purpose : null
+    const path = `/passport/${artist.id}?s=1${purpose ? `&purpose=${encodeURIComponent(purpose)}` : ''}`
+    setGovernedShare({ context: captured, actId: selectedAct, path })
+    return path
+  }
   async function copyShareLink() {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      const captured = publicationContext.current
+      const path = await readSharePath()
+      if (captured !== publicationContext.current) return
+      await navigator.clipboard.writeText(appUrl(path))
+      if (captured !== publicationContext.current) return
       setLinkCopied(true)
       clearTimeout(copiedTimer.current)
       copiedTimer.current = setTimeout(() => setLinkCopied(false), 2000)
       logEvent(EVENTS.SHARE_LINK_CREATED, { artist_id: artist.id }) // pilot signal — share step of the North-Star chain
       setShared(true) // M7 lights immediately — the ring buffer now holds the event
-    } catch { /* clipboard blocked — the link stays visible/selectable below */ }
+    } catch { /* failed authority read never guesses a purpose or announces success */ }
   }
 
   // Landing here straight from the shortened entry — the "we're scanning /
@@ -321,8 +349,9 @@ export default function ArtistDashboard() {
   }
   async function refreshItems() { setItems(await listProfileItems(artist.id)) }
 
-  // A11 readiness HARD-BLOCK (canon): publish is DISABLED at zero supported
-  // claims — an empty public Passport must be impossible, not discouraged.
+  // The dashboard opens selection, not publication. A11's hard block remains
+  // on the exact server-read projection and atomic action in the workbench;
+  // legacy local claim lists cannot decide the selected Act's eligibility.
   const supportedCount = claims.filter((c) =>
     ['verified', 'supporting'].includes(c.verification_status) && c.artist_approved).length
   const canPublish = supportedCount > 0
@@ -330,46 +359,47 @@ export default function ArtistDashboard() {
   async function togglePublish() {
     if (publishing) return
     setPubError('')
-    if (!artist.published && !canPublish) { setPubError(T.dashboard.readinessBlock); return }
     if (artist.published) {
-      setPublishing(true)
-      try {
-        const updated = await unpublishArtist(artist)
-        setArtist(updated)
-        logEvent(EVENTS.PASSPORT_UNPUBLISHED, { artist_id: artist.id }) // pilot signal — with PASSPORT_PUBLISHED timestamps this yields publish cadence / staleness (CFRO v2.4 recurring-revenue evidence)
-      } catch (e) {
-        setPubError(T.dashboard.publishError)
-      } finally {
-        setPublishing(false)
-      }
+      openPublication('withdraw')
       return
     }
     // Publishing on: require public-publish consent first (once).
     setPublishing(true)
-    const ok = await hasConsent(user.id, 'public-publish')
-    setPublishing(false)
-    if (!ok) { setNeedPubConsent(true); return }
-    await doPublish()
+    const captured = publicationContextKey
+    try {
+      const ok = await hasConsent(user.id, 'public-publish')
+      if (captured !== publicationContext.current) return
+      if (!ok) { setNeedPubConsent(true); return }
+      openPublication('publish')
+    } catch { if (captured === publicationContext.current) setPubError(T.dashboard.publishError) }
+    finally { setPublishing(false) }
   }
 
-  async function doPublish() {
-    setPublishing(true)
-    try {
-      await publishPassport(artist.id) // server writes the immutable snapshot
-      setArtist({ ...artist, published: true })
-      clearPassportDirty(artist.id); setDirty(false)
-      logEvent(EVENTS.PASSPORT_PUBLISHED, { artist_id: artist.id }) // pilot signal — the North-Star chain's publish step
-    } catch (e) {
-      setPubError(T.dashboard.publishError)
-    } finally {
-      setPublishing(false)
-    }
+  function openPublication(action) {
+    const selected = publicationSelection({ artistId: artist.id,
+      actId: publicationAct?.contextKey === publicationContextKey ? publicationAct.id : null, action,
+      contextKey: publicationContextKey }, publicationContext.current)
+    if (!selected) { setPubError(T.dashboard.publishError); return }
+    setPublication(selected)
+    setPubSheet(false)
   }
 
   async function agreeAndPublish() {
-    try { await recordConsentScope(user.id, 'public-publish') } catch { /* non-blocking */ }
-    setNeedPubConsent(false)
-    await doPublish()
+    const captured = publicationContextKey
+    setPublishing(true)
+    try {
+      await recordConsentScope(user.id, 'public-publish')
+      if (captured !== publicationContext.current) return
+      setNeedPubConsent(false)
+      openPublication('publish')
+    } catch { if (captured === publicationContext.current) setPubError(T.dashboard.publishError) }
+    finally { setPublishing(false) }
+  }
+
+  async function returnFromPublication() {
+    setPublication(null)
+    await load()
+    requestAnimationFrame(() => publicationControl.current?.focus())
   }
 
   if (loading || orgLoading || (access.allowed && loadedContextKey !== currentContextKey)) return <Loading />
@@ -391,6 +421,11 @@ export default function ArtistDashboard() {
       </PageShell>
     )
   }
+
+  if (publication) return <PageShell>
+    <EvidenceActionWorkbench artistId={publication.artistId} actId={publication.actId}
+      requestedAction={publication.action} onReturn={returnFromPublication} />
+  </PageShell>
 
   const nextAction = withGenreNote(pickNextAction(artist, items, claims, T, openReqs, act), act, artist, T)
   const firstValue = buildArtistFirstValueModel({
@@ -444,7 +479,7 @@ export default function ArtistDashboard() {
     // returns — those are single-screen by nature.)
     <div className="h-[calc(100dvh-7.5rem)] px-4 py-3 sm:px-8 md:h-[calc(100dvh-3.5rem)] md:py-6"
       style={vhFallbackPx != null ? { height: `${Math.max(vhFallbackPx, 0)}px` } : undefined}>
-      <div className="animate-fade-in mx-auto flex h-full max-w-xl flex-col overflow-hidden md:max-w-[1360px]">
+      <div className="animate-fade-in mx-auto flex h-full max-w-xl flex-col overflow-y-auto md:overflow-hidden md:max-w-[1360px]">
       <div className="mb-3 flex shrink-0 items-baseline justify-between gap-3">
         <div>
           <h1 className="font-display mb-0.5 text-2xl font-bold tracking-[-0.01em] text-ink">{T.radar.artistTitle}</h1>
@@ -502,6 +537,9 @@ export default function ArtistDashboard() {
             to own the column's remaining height; the next-step card floats
             INSIDE it (see RadarUniverse) instead of stacking below. ── */}
       <RadarUniverse artist={artist} act={act} items={items} claims={claims} onClaimsChange={setClaims}
+        onPublicationActSelected={id => {
+          if (publicationContextKey === publicationContext.current) setPublicationAct({ id, contextKey: publicationContextKey })
+        }}
         onArtistChange={saveArtist} onActChange={saveAct} onItemsRefresh={refreshItems}
         reviewSignal={reviewSignal} focusPlanet={focusPlanet} focusSignal={focusSignal}
         nextAction={nextAction} onNextAction={runNextAction} />
@@ -510,7 +548,7 @@ export default function ArtistDashboard() {
             viewport): next step (mobile), journey, guidance, quick links,
             passport state. Nothing removed — re-housed; it scrolls INTERNALLY
             when tight, the page itself never does. ── */}
-      <div className="mt-3 min-h-0 flex-1 overflow-y-auto md:max-h-[34vh] md:flex-none">
+      <div className="mt-3 shrink-0 md:min-h-0 md:overflow-y-auto md:max-h-[34vh] md:flex-none">
 
         {/* ── ONE dominant next step — the coach's single clearest move. Mobile
               only (docked first so it stays in first view): on the full-stage
@@ -559,6 +597,7 @@ export default function ArtistDashboard() {
 
             {/* passport state — ONE line; controls live in a sheet, not on the screen */}
             <button
+              ref={publicationControl}
               onClick={() => setPubSheet(true)}
               className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-line bg-surface px-3 py-2.5 text-start transition-colors hover:border-line2">
               <span className="text-xs text-muted">
@@ -578,11 +617,14 @@ export default function ArtistDashboard() {
       <div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-ink">{artist.published ? T.dashboard.publishOn : T.dashboard.publishOff}</span>
-          <button onClick={togglePublish} disabled={publishing || (!artist.published && !canPublish)}
-            className={`chip min-h-[40px] px-4 py-2 transition ${publishing || (!artist.published && !canPublish) ? 'opacity-60' : ''} ${artist.published ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
+          <button onClick={togglePublish} disabled={publishing || contextUnresolved}
+            className={`chip min-h-[40px] px-4 py-2 transition ${publishing || contextUnresolved ? 'opacity-60' : ''} ${artist.published ? 'bg-good-bg text-good' : 'bg-na-bg text-muted'}`}>
             {publishing ? T.dashboard.publishing : artist.published ? T.dashboard.statusActive : T.dashboard.statusOff}
           </button>
         </div>
+        {!canPublish && <p className="mt-2 text-xs text-need">{T.dashboard.readinessBlock}</p>}
+        {artist.published && <button className="btn-ghost mt-3" disabled={publishing || contextUnresolved}
+          onClick={() => openPublication('replace')}>{T.evidenceActions.replace}</button>}
         {needPubConsent && (
           <div className="mt-3 rounded-xl border border-line2 bg-surface2 p-3 text-start">
             <p className="mb-1 font-bold text-ink">{T.consent.publishTitle}</p>
@@ -622,7 +664,7 @@ export default function ArtistDashboard() {
                 ? <Link to="/artist/offer" className="font-semibold text-ink/80 underline decoration-line2 hover:text-ink">{T.offer.getPassport} · {T.offer.price}</Link>
                 : <>{T.offer.freePilot ?? 'Free during the pilot.'}</>}
           {artist.published && (
-            <Link to={`/passport/${artist.id}`} className="ms-3 font-semibold text-ink/80 underline decoration-line2 hover:text-ink">{T.dashboard.viewPublic} →</Link>
+            <Link to={`/passport/${artist.id}`} onClick={async event => { event.preventDefault(); const captured = publicationContext.current; try { const path = await readSharePath(); if (captured === publicationContext.current) nav(path) } catch { if (captured === publicationContext.current) setPubError(T.dashboard.publishError) } }} className="ms-3 font-semibold text-ink/80 underline decoration-line2 hover:text-ink">{T.dashboard.viewPublic} →</Link>
           )}
         </p>
       </div>

@@ -1,11 +1,29 @@
 import { supabase } from './supabase.js'
-import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot } from './passportApi.js'
+import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot, performEvidenceAction, recoverEvidenceAction } from './passportApi.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
 import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct, demoOrg } from './demo.js'
 import { selectArtistForWorkspace } from '../features/artist/artistFirstValue.js'
 
 // In DEMO mode every function returns local fixtures (no Supabase client exists).
+
+// KU03: demo never fabricates an authoritative receipt. Browser verification
+// uses a separately disclosed local fixture transport; hosted calls use JWTs.
+export async function getEvidenceWorkbench(artistId, actId) {
+  const response = await fetch(`/api/evidence-actions/workbench/${encodeURIComponent(artistId)}/${encodeURIComponent(actId || 'current')}`, { headers: await authHeaders() })
+  if (!response.ok) throw new Error('evidence_action_unavailable')
+  return response.json()
+}
+export async function commitEvidenceAction(request) { return performEvidenceAction(request, await authHeaders()) }
+export async function resolveEvidenceAction(request) { return recoverEvidenceAction(request, await authHeaders()) }
+export async function scanEvidenceCandidate(request) {
+  const response = await fetch('/api/evidence-actions/scan', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify(request) })
+  if (!response.ok) throw new Error('evidence_action_unavailable')
+  const result = await response.json()
+  if (result.candidateOnly !== true || typeof result.statement !== 'string') throw new Error('evidence_action_unavailable')
+  return result
+}
 
 // ── Profiles ─────────────────────────────────────────────
 export async function getProfile(userId) {
@@ -555,13 +573,13 @@ export async function updateItemVisibility(id, visibility) {
 // ── Public Passport — immutable server snapshot ───────────
 // One version is identical for owner and recipient. The browser never rebuilds
 // a public Passport from live RADAR tables; edits require explicit re-publish.
-export async function getPublicPassport(id) {
+export async function getPublicPassport(id, { purpose, session, signal } = {}) {
   if (DEMO) return demoPassportPayload
   // Sample passport — the booker/login "see a sample" escape hatch. artists.id is
   // a uuid, so 'demo-artist' would throw 22P02 on live and dead-end the one
   // no-link-in-hand path (flow-gap B). Serve the canned demo payload instead.
   if (id === 'demo-artist') return demoPassportPayload
-  return readPassportSnapshot(id)
+  return readPassportSnapshot(id, fetch, { purpose, accessToken: session?.access_token, signal })
 }
 
 // ── Passport publish/revoke — authenticated server actions ─

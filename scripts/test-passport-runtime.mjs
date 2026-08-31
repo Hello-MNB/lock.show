@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
+import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 import {
@@ -9,7 +10,6 @@ import {
   readPassportSnapshot,
   unpublishPassportSnapshot,
 } from '../src/lib/passportApi.js'
-import { assertInitialPassportPublish } from '../server/passportPublishPolicy.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -81,14 +81,13 @@ test('runtime wiring never publishes from the browser or serves live-table fallb
   const sitePackage = JSON.parse(read('website-next/package.json'))
   const publishRoute = server.slice(server.indexOf("app.post('/api/publish/:artistId'"), server.indexOf("app.get('/api/passport/:artistId'"))
   const publicRoute = server.slice(server.indexOf("app.get('/api/passport/:artistId'"), server.indexOf("app.post('/api/passport-signal'"))
-  const snapshotInsert = publishRoute.indexOf(".from('passport_versions')")
-  const publishFlag = publishRoute.indexOf(".from('artists').update({ published: true })")
 
-  assert.match(db, /return readPassportSnapshot\(id\)/)
+  assert.match(db, /return readPassportSnapshot\(id, fetch, \{ purpose, accessToken: session\?\.access_token, signal \}\)/)
   assert.match(db, /return publishPassportSnapshot\(artistId, await authHeaders\(\)\)/)
   assert.match(db, /await unpublishPassportSnapshot\(artist\.id, await authHeaders\(\)\)/)
   assert.doesNotMatch(db, /from\('artists'\)\.update\(\{ published: true \}\)/)
-  assert.ok(snapshotInsert >= 0 && publishFlag > snapshotInsert, 'snapshot must exist before the public flag opens')
+  assert.match(publishRoute, /handleEvidenceAction\(req, res, 'commit'\)/)
+  assert.doesNotMatch(publishRoute, /\.from\('passport_versions'\)|\.from\('artists'\)\.update/)
   assert.match(server, /app\.post\('\/api\/unpublish\/:artistId', requireAuth/)
   assert.match(publicRoute, /passport_snapshot_missing/)
   assert.doesNotMatch(publicRoute, /buildSafePayload\(artistId\)/)
@@ -122,18 +121,14 @@ test('runtime wiring never publishes from the browser or serves live-table fallb
   assert.equal(fs.existsSync(path.join(root, 'website-next/proxy.ts')), false)
 })
 
-test('republish fails before any snapshot write can occur', () => {
-  assert.doesNotThrow(() => assertInitialPassportPublish({ published: false }))
-  assert.throws(
-    () => assertInitialPassportPublish({ published: true }),
-    (error) => error.status === 409 && error.code === 'passport_republish_requires_transaction',
-  )
-
-  const server = read('server/index.js')
-  const publishRoute = server.slice(server.indexOf("app.post('/api/publish/:artistId'"), server.indexOf("app.get('/api/passport/:artistId'"))
-  const guard = publishRoute.indexOf('assertInitialPassportPublish')
-  const snapshotInsert = publishRoute.indexOf(".from('passport_versions')")
-  assert.ok(guard >= 0 && snapshotInsert > guard, 'republish guard must run before snapshot insertion')
+test('publication uses a real atomic transaction, immutable receipt and fail-closed rollback', () => {
+  const ci = process.env.LOCK_SHOW_ALLOW_DESTRUCTIVE_TEST_DB === 'lock_show_test'
+  const result = spawnSync(process.execPath, ['scripts/tech-baseline/run-representative-evidence-actions.mjs', ...(ci ? ['--ci'] : [])], {
+    cwd: root, env: process.env, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
+  })
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`)
+  assert.match(result.stdout, /KU03_POSTGRES=18\/18/)
+  assert.match(result.stdout, /KU03_ATOMIC_ROLLBACK=4\/4/)
 })
 
 test('malformed public PASSPORT identifiers return the unpublished 404 before a database read', () => {

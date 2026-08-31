@@ -1,4 +1,22 @@
 export const T = {
+  evidenceActions: {
+    replace: 'Approve a replacement projection', selectionRequired: 'Select the exact evidence and review the action; nothing has been published or withdrawn yet',
+    act: 'Act — server-authorized scope', legacy: 'Existing claims and track record', prepare: 'Prepare a governed candidate from this source',
+    legacyBoundary: 'Original wording, verification, visibility and disputes remain unchanged. To correct or review a source, enter a reason and provenance above and explicitly prepare a new private candidate. This neither confirms nor publishes the original.',
+    history: 'Action history and receipts', before: 'Before', after: 'After',
+    prepared: 'Prepared private draft — review before proposing; not verified',
+    title: 'Evidence and representative actions', boundary: 'Upload creates a private candidate. Proposal, truth confirmation and publication are separate decisions.',
+    titleLabel: 'Evidence title', value: 'Source link', reason: 'Reason', provenance: 'Source and provenance', statement: 'Exact proposed statement',
+    audience: 'Named recipient Person ID', purpose: 'Recipient purpose', expiresAt: 'Access expires', sourceConsent: 'I am authorized to contribute this source; protected third-party data is excluded.',
+    rights: 'Rights permit this selected use', visibility: 'This statement may be included in the selected projection', conflict: 'There is an unresolved material conflict',
+    upload: 'Submit candidate link', file: 'Upload candidate file', change: 'Record metadata change', propose: 'Submit non-binding proposal',
+    confirm: 'Confirm the displayed statement — not publication', publish: 'Approve this exact projection and publish', withdraw: 'Withdraw and preserve history',
+    selected: 'Selected evidence', preview: 'Publication preview', receipt: 'Immutable receipt', recover: 'Resolve this request with the server', retry: 'Retry authorized read',
+    empty: 'No contributed evidence in this context.', untitled: 'Evidence', contextRequired: 'An authorized current Workspace is required.', back: 'Return to Artist workspace',
+    eligibility: 'Confirmation does not verify a source. Publication stays blocked without current supporting evidence, rights, visibility and no material conflict.',
+    states: { candidate: 'Candidate only', proposed: 'Non-binding proposal', confirmed: 'Artist confirmed; publication separate', withdrawn: 'Withdrawn; history retained' },
+    status: { loading: 'Checking the server…', ready: 'Current authorized context loaded.', committed: 'Action recorded; current server state read back.', not_committed: 'The server fenced this request: no action committed. Your draft is preserved.', uncertain: 'Outcome unresolved. Other actions are blocked; your draft is preserved.', denied: 'This action or context is unavailable. Your draft is preserved.', fileError: 'The file type or size is not supported.' },
+  },
   cookieConsent: {
     ariaLabel: 'Cookie consent',
     message:

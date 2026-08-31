@@ -14,7 +14,7 @@ import { VISIBILITY, PUBLISHABLE_STATUSES } from '../src/lib/constants.js'
 import { sanitizePassportPayload } from '../src/lib/passportPublicPayload.js'
 import { T as en } from '../src/lib/i18n/en.js'
 import { isMissingAdminAuthorityStoreError, resolveAdminCapability } from '../src/lib/adminAccess.js'
-import { assertInitialPassportPublish } from './passportPublishPolicy.js'
+import { executeEvidenceAction } from './passportPublishPolicy.js'
 import { normalizeRosterInvitation, rosterInvitationHash } from './rosterInvitePolicy.js'
 import { deliverRosterInvitation } from './rosterInviteDelivery.js'
 
@@ -158,6 +158,55 @@ async function requireAuth(req, res, next) {
     res.status(401).json({ error: 'auth_required' })
   }
 }
+
+// The user JWT, not the service identity, crosses this RPC boundary. The DB
+// selects current Workspace and rechecks membership, role, grant and versions.
+function evidenceUserClient(req) {
+  return createClient(SUPA_URL, SERVICE_KEY, {
+    global: { headers: { Authorization: req.headers.authorization } },
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  })
+}
+async function handleEvidenceAction(req, res, mode) {
+  try {
+    const result = await executeEvidenceAction(evidenceUserClient(req), req.body, mode)
+    res.set('Cache-Control', 'no-store').json(result)
+  } catch {
+    res.status(403).json({ error: 'forbidden' })
+  }
+}
+app.post('/api/evidence-actions/commit', requireAuth, (req, res) => handleEvidenceAction(req, res, 'commit'))
+app.post('/api/evidence-actions/resolve', requireAuth, (req, res) => handleEvidenceAction(req, res, 'resolve'))
+// Scanner output is an untrusted, editable preparation. The separate action
+// RPC records it as candidate-only; extraction never grants verification.
+app.post('/api/evidence-actions/scan', requireAuth, async (req, res) => {
+  try {
+    const { artistId, actId, objectId, workspaceId, contextVersion, expectedObjectVersion } = req.body || {}
+    if (![artistId, actId, objectId, workspaceId].every(isUuid)) throw new Error('denied')
+    const { data, error } = await evidenceUserClient(req).rpc('get_evidence_workbench', { p_artist: artistId, p_act: actId })
+    const object = data?.objects?.find(item => item.id === objectId)
+    if (error || !object || object.state !== 'candidate' || data.authority.workspaceId !== workspaceId
+      || Number(data.authority.contextVersion) !== contextVersion || Number(object.version) !== expectedObjectVersion
+      || (!data.authority.owner && !data.authority.scope.includes('upload'))) throw new Error('denied')
+    if ((dailyItemCount.get(dayKey(req.userId)) || 0) >= MAX_ITEMS_PER_USER_DAY) throw new Error('denied')
+    if (await monthlySpendEstimateUsd() >= MONTHLY_BUDGET_USD) throw new Error('denied')
+    const config = aiConfigForRequest(req)
+    const { label, method, aiFailed } = await createClaimProcessorFromConfig(config).labelWithMethod(object)
+    bumpDailyCount(req.userId, 1)
+    res.set('Cache-Control', 'no-store').json({ statement: label.value || object.value,
+      ai: aiFailed ? 'degraded' : method === 'mock' ? 'mock' : 'live', candidateOnly: true })
+  } catch { res.status(403).json({ error: 'forbidden' }) }
+})
+app.get('/api/evidence-actions/workbench/:artistId/:actId', requireAuth, async (req, res) => {
+  try {
+    if (!isUuid(req.params.artistId) || (req.params.actId !== 'current' && !isUuid(req.params.actId))) throw new Error('denied')
+    const { data, error } = await evidenceUserClient(req).rpc('get_evidence_workbench', {
+      p_artist: req.params.artistId, p_act: req.params.actId === 'current' ? null : req.params.actId,
+    })
+    if (error || !data) throw new Error('denied')
+    res.set('Cache-Control', 'no-store').json(data)
+  } catch { res.status(403).json({ error: 'forbidden' }) }
+})
 
 // Ownership gate (G11-3): artists.created_by must equal the authenticated user.
 // Writes the failure response itself; caller just returns false.
@@ -475,6 +524,11 @@ app.post('/api/process-evidence', requireAuth, async (req, res) => {
       .eq('artist_id', artistId)
       .in('status', ['submitted', 'error'])
     if (evErr) throw evErr
+    // Managed candidates only use the versioned KU03 Scanner/preparation path.
+    // The historical batch must not bypass its action history or Act boundary.
+    if ((evidence || []).some(ev => ev.ku03_state && ev.ku03_state !== 'legacy')) {
+      return res.status(403).json({ error: 'forbidden' })
+    }
 
     // Dedup (G14-4): skip pending items whose content hash was already processed
     // for THIS artist (cross-batch: compare against processed rows in the DB;
@@ -647,51 +701,10 @@ async function buildSafePayload(artistId) {
 // silently change what a buyer already saw until the artist re-publishes.
 // ──────────────────────────────────────────────────────────
 app.post('/api/publish/:artistId', requireAuth, async (req, res) => {
-  try {
-    if (!admin) {
-      return res.status(400).json({
-        error: 'Supabase not configured. Add a real SUPABASE_SERVICE_ROLE_KEY to .env.local.',
-      })
-    }
-    const { artistId } = req.params
-    if (!(await requireArtistOwner(req, res, artistId))) return
-
-    // Until publish + version + receipt can run in one DB transaction, a
-    // replacement publish is blocked before any snapshot write. The existing
-    // public version therefore cannot change behind a failed response.
-    const { data: currentArtist, error: currentErr } = await admin
-      .from('artists').select('id, published').eq('id', artistId).maybeSingle()
-    if (currentErr) throw currentErr
-    if (!currentArtist) return res.status(404).json({ error: 'Artist not found.' })
-    try {
-      assertInitialPassportPublish(currentArtist)
-    } catch (policyError) {
-      return res.status(policyError.status || 409).json({ error: policyError.code })
-    }
-
-    const payload = await buildSafePayload(artistId)
-    if (!payload) return res.status(404).json({ error: 'Artist not found.' })
-
-    // Fail closed: a public flag never opens unless its immutable version exists.
-    const { data: version, error: snapErr } = await admin
-      .from('passport_versions')
-      .insert({ artist_id: artistId, snapshot: payload })
-      .select('id, created_at')
-      .single()
-    if (snapErr) throw snapErr
-
-    const { error: upErr } = await admin.from('artists').update({ published: true }).eq('id', artistId)
-    if (upErr) throw upErr
-
-    res.json({
-      ok: true,
-      published: true,
-      receipt: { id: randomUUID(), action: 'published', passportVersionId: version.id, at: version.created_at },
-    })
-  } catch (e) {
-    console.error('[publish]', e)
-    res.status(500).json({ error: 'server_error' })
+  if (req.body?.artistId !== req.params.artistId || !['publish', 'replace'].includes(req.body?.action)) {
+    return res.status(403).json({ error: 'forbidden' })
   }
+  return handleEvidenceAction(req, res, 'commit')
 })
 
 // ──────────────────────────────────────────────────────────
@@ -716,13 +729,25 @@ app.get('/api/passport/:artistId', async (req, res) => {
     // Prefer the immutable snapshot written at publish time.
     const { data: snap, error: sErr } = await admin
       .from('passport_versions')
-      .select('snapshot')
+      .select('snapshot,ku03_audience,ku03_purpose,ku03_expires_at,ku03_object_id')
       .eq('artist_id', artistId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
     if (sErr) throw sErr
-    if (snap?.snapshot) return res.json(sanitizePassportPayload(snap.snapshot))
+    if (snap?.ku03_object_id) {
+      const token = /^Bearer\s+(.+)$/i.exec(req.headers.authorization || '')?.[1]
+      const identity = token ? await admin.auth.getUser(token) : null
+      if (!identity?.data?.user || identity.data.user.id !== snap.ku03_audience
+        || req.query.purpose !== snap.ku03_purpose || Date.parse(snap.ku03_expires_at) <= Date.now()) {
+        return res.status(404).json({ error: 'Artist not published.' })
+      }
+      const { data: source, error: sourceError } = await admin.from('evidence_artifacts')
+        .select('ku03_state,ku03_rights,ku03_visibility,ku03_conflict').eq('id', snap.ku03_object_id).maybeSingle()
+      if (sourceError || !source || source.ku03_state !== 'confirmed' || !source.ku03_rights
+        || !source.ku03_visibility || source.ku03_conflict) return res.status(404).json({ error: 'Artist not published.' })
+    }
+    if (snap?.snapshot) return res.set('Cache-Control', 'private, no-store').json(sanitizePassportPayload(snap.snapshot))
 
     // A published flag without a version is an inconsistent legacy state. Never
     // rebuild from live RADAR: that would bypass the owner's exact preview.
@@ -737,22 +762,10 @@ app.get('/api/passport/:artistId', async (req, res) => {
 // Owner-controlled revocation. The immutable history remains private/auditable,
 // while the live publish gate closes immediately for every new recipient read.
 app.post('/api/unpublish/:artistId', requireAuth, async (req, res) => {
-  try {
-    if (!admin) return res.status(503).json({ error: 'supabase_admin_unavailable' })
-    const { artistId } = req.params
-    if (!(await requireArtistOwner(req, res, artistId))) return
-
-    const { error } = await admin.from('artists').update({ published: false }).eq('id', artistId)
-    if (error) throw error
-    res.json({
-      ok: true,
-      published: false,
-      receipt: { id: randomUUID(), action: 'unpublished', artistId, at: new Date().toISOString() },
-    })
-  } catch (e) {
-    console.error('[unpublish]', e)
-    res.status(500).json({ error: 'server_error' })
+  if (req.body?.artistId !== req.params.artistId || req.body?.action !== 'withdraw') {
+    return res.status(403).json({ error: 'forbidden' })
   }
+  return handleEvidenceAction(req, res, 'commit')
 })
 
 // ──────────────────────────────────────────────────────────

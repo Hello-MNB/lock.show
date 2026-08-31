@@ -1,408 +1,296 @@
-import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getArtist, addEvidence, listEvidence, listClaims, hasConsent, recordConsentScope, processEvidence, updateAct } from '../../lib/db.js'
-import { uploadFile } from '../../lib/storage.js'
-import { logEvent, EVENTS } from '../../lib/analytics.js'
-import { countRetryableEvidence } from '../../lib/evidenceState.js'
-import { EVIDENCE, evidenceFileError } from '../../lib/constants.js'
-import { PageShell, Field, Spinner, ErrorNote, Loading, SourceLabel } from '../../components/ui.jsx'
-import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
+import { useOrg } from '../../context/OrgContext.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { PageShell } from '../../components/ui.jsx'
+import { getEvidenceWorkbench, commitEvidenceAction, resolveEvidenceAction, scanEvidenceCandidate } from '../../lib/db.js'
+import { countRetryableEvidence } from '../../lib/evidenceState.js'
+import { emitGovernedConfirmation, emitGovernedPublication } from '../../lib/passportApi.js'
+import { clearPassportDirty } from '../../lib/passportState.js'
+import { logEvent, EVENTS } from '../../lib/analytics.js'
+import { uploadFile } from '../../lib/storage.js'
+import { evidenceFileError, EVIDENCE, methodLabelFor } from '../../lib/constants.js'
 import { Upload, Link2, ScanSearch } from 'lucide-react'
 
-// A pasted link is recognized live, the way the Radar's setup does it: name
-// the platform + show its logo, never just swallow the text silently.
-function LinkPlatformHint({ value }) {
-  const { T } = useLang()
-  const platform = detectPlatform(value)
-  if (!platform) return null
-  return (
-    <p className="mb-3 -mt-2 flex items-center gap-1.5 text-xs font-semibold text-ink">
-      <PlatformLogo name={platform} size={15} className="text-gold" />
-      {T.evidence.platformRecognized(platform.charAt(0).toUpperCase() + platform.slice(1))}
-    </p>
-  )
-}
-
-// ── Claim-first evidence capture (canon A7) ──────────────────────────────────
-// The artist starts from WHAT THEY WANT TO PROVE; the system requests the
-// matching evidence. Three capture paths, presented as cards:
-//   UPLOAD a document · CONNECT a source · DECLARE a band.
-// Each intent maps to its evidence ask + source_type (canon claim→source table).
-// Card copy lives in i18n (T.evidence.paths[key].title/desc) — EN + HE.
 const PATHS = [
   { key: 'upload', Icon: Upload, intents: ['drew-crowd', 'sold-via-link', 'produced-event'] },
   { key: 'connect', Icon: Link2, intents: ['rebooked', 'consistent-frequency', 'producer-confirm'] },
   { key: 'declare', Icon: ScanSearch, intents: ['community'] },
 ]
 
-export default function EvidenceCapture() {
-  const { T, BANDS } = useLang()
-  const { artistId } = useParams()
+// ART-02 / REP-05 / SCR-REP-ACTION. No extraction, truth or publication is
+// inferred from file storage, a proposal, a local role or a successful HTTP call.
+export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null, requestedAction = null, onReturn = null }) {
+  const { T } = useLang()
+  const S = T.evidenceActions
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [artist, setArtist] = useState(null)
-  const [evidence, setEvidence] = useState([])
-  const [claims, setClaims] = useState([])
-  const [error, setError] = useState('')
-  const [toast, setToast] = useState('')
-  const [processing, setProcessing] = useState(false)
-
-  // claim-first: which claim the artist wants to prove (null = path cards)
+  const { activeOrgId, contextVersion, contextUnresolved } = useOrg()
+  const [data, setData] = useState(null)
+  const [selectedActId, setSelectedActId] = useState(null)
+  const actId = selectedActId || requestedActId
+  const [selectedId, select] = useState('')
+  const [draft, setDraft] = useState({ title: '', value: '', statement: '', reason: '', provenance: '', audience: '', purpose: '', expiresAt: '', rights: false, visibility: false, conflict: true, sourceConsent: false })
+  const [status, setStatus] = useState('loading')
+  const [busy, setBusy] = useState(false)
+  const [pending, setPending] = useState(null)
+  const [receipt, setReceipt] = useState(null)
+  const [scannerMessage, setScannerMessage] = useState('')
   const [intent, setIntent] = useState(null)
-
-  // Third-party evidence consent gate (collected inline here, not upfront).
-  const [evConsent, setEvConsent] = useState(false)
-  const [consentBusy, setConsentBusy] = useState(false)
-
-  // per-intent form state
-  const [band, setBand] = useState('')
-  const [bandUrl, setBandUrl] = useState('')
-  const [textVal, setTextVal] = useState('')
-  const [numVal, setNumVal] = useState('')
-  const [uploading, setUploading] = useState(false)
-
-  async function load() {
-    try {
-      const a = await getArtist(artistId); setArtist(a)
-      setEvConsent(await hasConsent(user.id, 'evidence-storage'))
-      setEvidence(await listEvidence(artistId))
-      setClaims(await listClaims(artistId))
-    } catch (err) {
-      setError(err.message || T.common.error)
-    } finally {
-      setLoading(false)
-    }
-  }
-  useEffect(() => { load() }, [artistId])
-
-  function flash(msg) { setToast(msg); setTimeout(() => setToast(''), 2200) }
-  function resetForms() { setBand(''); setBandUrl(''); setTextVal(''); setNumVal('') }
-
-  async function acceptEvidenceConsent() {
-    setConsentBusy(true); setError('')
-    try {
-      await recordConsentScope(user.id, 'evidence-storage')
-      setEvConsent(true)
-    } catch (e) {
-      setError(e.message || T.common.error)
-    } finally {
-      setConsentBusy(false)
-    }
-  }
-
-  // every artifact carries the claim intent + source-authority confirmation
-  async function submitEvidence(item) {
-    await addEvidence({ artist_id: artistId, claim_intent: intent, source_owner_consent: true, ...item })
-    logEvent(EVENTS.EVIDENCE_UPLOADED, { artist_id: artistId, evidence_type: item.evidence_type }) // pilot signal (A10)
-    setProcessing(true)
-    try {
-      const result = await processEvidence(artistId)
-      logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId })
-      if (result.ai === 'degraded') {
-        setError(T.evidence.scannerDegraded)
-        flash(T.evidence.scannerDegraded)
-      } else {
-        flash(T.evidence.scannerComplete)
-      }
-    } catch (err) {
-      setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
-      flash(T.evidence.addedOk)
-    } finally {
-      setProcessing(false)
-      resetForms()
-      await load()
-    }
-  }
-
-  async function onFile(e, sourceType) {
-    const file = e.target.files?.[0]; if (!file) return
-    const bad = evidenceFileError(file)
-    if (bad) { setError(bad === 'size' ? T.evidence.errFileSize : T.evidence.errFileType); e.target.value = ''; return }
-    setUploading(true); setError('')
-    try {
-      const { url } = await uploadFile('evidence', user.id, file)
-      await submitEvidence({ evidence_type: 'file', source_type: sourceType, file_url: url, value: file.name })
-    } catch (err) { setError(err.message) } finally { setUploading(false) }
-  }
-
-  async function addBand() {
-    if (!band) return
-    setError('')
-    try {
-      await submitEvidence({
-        evidence_type: 'band',
-        source_type: bandUrl ? 'public-profile' : 'self-band',
-        value: band, public_url: bandUrl || null,
-      })
-    } catch (err) { setError(err.message) }
-  }
-
-  async function addLink(sourceType) {
-    if (!textVal) return
-    setError('')
-    try {
-      const isUrl = /^https?:\/\//i.test(textVal.trim())
-      await submitEvidence({
-        evidence_type: 'link', source_type: sourceType,
-        value: textVal, public_url: isUrl ? textVal.trim() : null,
-      })
-    } catch (err) { setError(err.message) }
-  }
-
-  // community: a NUMBER only — Amendment 13 forbids member lists/screenshots.
-  async function addCommunityCount() {
-    const n = parseInt(numVal, 10)
-    if (!Number.isFinite(n) || n <= 0) return
-    setError('')
-    try {
-      await updateAct(artistId, { community_count_declared: n }) // working-only; public sees a band, never this integer
-      await submitEvidence({ evidence_type: 'band', source_type: 'self-band', value: String(n) })
-    } catch (err) { setError(err.message) }
-  }
-
-  async function process() {
-    setProcessing(true); setError('')
-    try {
-      const result = await processEvidence(artistId) // server (real AI) if present; client stub ONLY when no server exists
-      logEvent(EVENTS.EVIDENCE_PROCESSED, { artist_id: artistId }) // pilot signal (A10)
-      if (result.ai === 'degraded') setError(T.evidence.scannerDegraded)
-      await load()
-    } catch (err) {
-      // G12+G14: a server refusal (auth / rate limit / budget) surfaces as its
-      // own honest state — never masked by stub output (db.js throws code
-      // 'server_refused'; evidence stays 'submitted' and retryable).
-      setError(err?.code === 'server_refused' ? T.evidence.serverRefused : (err.message || T.common.error))
-    } finally { setProcessing(false) }
-  }
-
-  if (loading) return <Loading />
-
-  // Gate: no evidence add/processing without third-party evidence consent.
-  if (!evConsent) {
-    return (
-      <PageShell>
-        <div className="mb-6 flex items-center justify-end">
-          <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
-        </div>
-        <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
-        <ErrorNote>{error}</ErrorNote>
-        <div className="card">
-          <p className="mb-1 font-bold text-ink">{T.consent.evidenceTitle}</p>
-          <p className="mb-4 text-sm text-muted">{T.consent.evidence}</p>
-          <button className="btn-primary w-full" onClick={acceptEvidenceConsent} disabled={consentBusy}>
-            {consentBusy ? <Spinner /> : T.consent.evidenceGateCta}
-          </button>
-        </div>
-      </PageShell>
-    )
-  }
-
+  const generation = useRef(0)
+  const emittedReceipts = useRef(new Set())
+  const busyRef = useRef(false)
+  const currentScope = useRef('')
+  const focusRef = useRef(null)
+  const scope = [artistId, actId, activeOrgId, contextVersion, contextUnresolved].join('|')
+  currentScope.current = scope
+  const matches = (value) => value?.artistId === artistId && !!value.actId && (!actId || value.actId === actId)
+    && value.authority?.workspaceId === activeOrgId && Number(value.authority.contextVersion) === Number(contextVersion)
+  const valid = matches(data) && !contextUnresolved
+  const object = valid ? data.objects.find(item => item.id === selectedId) : null
+  const evidence = valid ? data.objects : []
   const retryable = countRetryableEvidence(evidence)
+  const owner = valid && data.authority.owner === true
+  const allowed = (scopeName) => owner || (valid && data.authority.scope.includes(scopeName))
+  const update = (key, value) => setDraft(before => ({ ...before, [key]: value }))
 
-  return (
-    <PageShell max="max-w-3xl">
-      <div className="mb-6 flex items-center justify-end">
-        <Link to="/artist/home" className="tap-target text-sm text-muted transition-colors hover:text-ink">{T.common.back}</Link>
+  async function reload(operation = generation.current) {
+    const captured = currentScope.current
+    const value = await getEvidenceWorkbench(artistId, actId)
+    if (operation !== generation.current || captured !== currentScope.current || !matches(value)) throw new Error('context changed')
+    setData(value)
+    return value
+  }
+  useEffect(() => {
+    const current = ++generation.current
+    setStatus('loading')
+    reload().then(() => { if (generation.current === current) setStatus('ready') })
+      .catch(() => { if (generation.current === current) setStatus('denied') })
+    return () => { generation.current++ }
+  }, [scope])
+  useEffect(() => { focusRef.current?.focus() }, [])
+
+  async function settle(outcome, operation, capturedScope) {
+    if (operation !== generation.current || capturedScope !== currentScope.current) return
+    if (outcome.status === 'committed' || outcome.status === 'not_committed') {
+      try {
+        const fresh = await reload()
+        if (operation !== generation.current || capturedScope !== currentScope.current) return
+        if (outcome.status === 'committed' && Number(fresh.version) < Number(outcome.receipt.version)) throw new Error('readback stale')
+        // Retire every older continuation only AFTER authoritative recovery.
+        generation.current++
+        emitGovernedConfirmation(outcome, fresh, emittedReceipts.current,
+          props => logEvent(EVENTS.CLAIM_CONFIRMED, props))
+        emitGovernedPublication(outcome, fresh, emittedReceipts.current, (kind, props) => {
+          if (kind === 'published') {
+            clearPassportDirty(props.artist_id)
+            logEvent(EVENTS.PASSPORT_PUBLISHED, props)
+          } else logEvent(EVENTS.PASSPORT_UNPUBLISHED, props)
+        })
+        setReceipt(outcome.receipt || null)
+        setPending(null); setStatus(outcome.status); setBusy(false); busyRef.current = false
+        focusRef.current?.focus()
+        return
+      } catch { /* keep draft and unresolved request; never guess success */ }
+    }
+    if (operation !== generation.current || capturedScope !== currentScope.current) return
+    setPending(outcome.status === 'denied' ? null : outcome.request)
+    setStatus(outcome.status === 'denied' ? 'denied' : 'uncertain')
+    setBusy(false); busyRef.current = false
+  }
+  async function act(action, override = null) {
+    if (!valid || busyRef.current || pending || (action !== 'upload' && !object)) return
+    const payload = override || (action === 'upload' ? { evidence_type: intent === 'community' ? 'band' : 'link',
+      source_type: intent === 'community' ? 'self-band' : ['rebooked','producer-confirm'].includes(intent) ? 'producer-vouch' : 'public-profile',
+      claim_intent: intent, ...(intent === 'community' ? { communityCount: Number(draft.value) } : {}),
+      value: draft.value, public_url: draft.value, title: draft.title, sourceConsent: draft.sourceConsent,
+      reason: draft.reason, provenance: draft.provenance } : action === 'propose' ?
+      { statement: draft.statement, reason: draft.reason, provenance: draft.provenance } : action === 'change' ?
+      { title: draft.title, reason: draft.reason, provenance: draft.provenance } : action === 'confirm' ?
+      { rights: draft.rights, visibility: draft.visibility, conflict: draft.conflict, reason: draft.reason, provenance: draft.provenance } :
+      { audience: draft.audience, purpose: draft.purpose, expiresAt: draft.expiresAt,
+        reason: draft.reason, provenance: draft.provenance })
+    const request = { artistId, actId: data.actId, objectId: action === 'upload' ? crypto.randomUUID() : object.id,
+      workspaceId: data.authority.workspaceId, contextVersion: Number(data.authority.contextVersion),
+      expectedVersion: Number(data.version), expectedObjectVersion: action === 'upload' ? 0 : Number(object.version),
+      action, payload, key: crypto.randomUUID() }
+    const operation = ++generation.current
+    const capturedScope = scope
+    setPending(request); busyRef.current = true; setBusy(true); setStatus('loading')
+    const outcome = await commitEvidenceAction(request).catch(() => ({ status: 'uncertain', request }))
+    await settle(outcome, operation, capturedScope)
+  }
+  async function recover() {
+    if (!pending) return
+    const operation = generation.current
+    const capturedScope = scope
+    const outcome = await resolveEvidenceAction(pending).catch(() => ({ status: 'uncertain', request: pending }))
+    await settle(outcome, operation, capturedScope)
+  }
+  async function fileSelected(event) {
+    const file = event.target.files?.[0]
+    if (!file || busyRef.current || !draft.sourceConsent) return
+    if (evidenceFileError(file)) { setStatus('fileError'); return }
+    const captured = currentScope.current
+    busyRef.current = true; setBusy(true)
+    try {
+      const uploaded = await uploadFile('evidence', user.id, file)
+      if (captured !== currentScope.current) return
+      busyRef.current = false
+      await act('upload', { evidence_type: 'file', source_type: ['drew-crowd','sold-via-link'].includes(intent) ? 'ticket-export' : intent === 'produced-event' ? 'screenshot' : 'self-reported', value: file.name,
+        claim_intent: intent,
+        file_url: uploaded.url, title: draft.title || file.name, sourceConsent: true,
+        reason: draft.reason, provenance: draft.provenance })
+    } catch { if (captured === currentScope.current) setStatus('denied') }
+    finally { if (!pending) { busyRef.current = false; setBusy(false) } }
+  }
+  async function processEvidence(artistId) {
+    if (!object || pending || busyRef.current || object.state !== 'candidate') return
+    const captured = currentScope.current
+    busyRef.current = true; setBusy(true); setScannerMessage('')
+    try {
+      const result = await scanEvidenceCandidate({ artistId, actId: data.actId, objectId: object.id,
+        workspaceId: data.authority.workspaceId, contextVersion: Number(data.authority.contextVersion), expectedObjectVersion: Number(object.version) })
+      if (captured !== currentScope.current) return
+      update('statement', result.statement)
+      setScannerMessage(result.ai === 'degraded' ? T.evidence.scannerDegraded : S.prepared)
+      busyRef.current = false
+      await act('prepare', { statement: result.statement, processingFailed: result.ai === 'degraded',
+        reason: draft.reason, provenance: draft.provenance })
+    } catch { if (captured === currentScope.current) setScannerMessage(T.evidence.scannerDegraded) }
+    finally { busyRef.current = false; setBusy(false) }
+  }
+  const textField = (key, type = 'text') => <label className="block min-w-0 text-sm" key={key}>
+    <span className="mb-1 block">{key === 'title' ? S.titleLabel : key === 'value' && intent === 'community' ? T.evidence.communityLabel : S[key]}</span>
+    <input className="field w-full min-w-0" type={type} value={draft[key]}
+      onChange={event => update(key, event.target.value)} />
+  </label>
+  return <section className="card space-y-4" aria-label={S.title} data-ku03-workbench>
+    <h2 className="font-display text-xl font-bold" tabIndex={-1} ref={focusRef}>{S.title}</h2>
+    <p className="text-sm text-muted">{S.boundary}</p>
+    {requestedAction && <p>{S.selectionRequired} — {S[requestedAction]}</p>}
+    <p role="status" aria-live="polite" aria-atomic="true">{S.status[status] || S.status.ready}</p>
+    {scannerMessage && <p role="status">{scannerMessage}</p>}
+    {receipt && <p className="break-all text-sm">{S.receipt}: {receipt.id}</p>}
+    {valid && owner && !busy && !pending && data.publication?.purpose && data.publication.actId === data.actId &&
+      <Link className="tap-target inline-flex text-sm underline" to={`/passport/${encodeURIComponent(artistId)}?purpose=${encodeURIComponent(data.publication.purpose)}`}>{T.dashboard.viewPublic}</Link>}
+    {pending && <button type="button" className="btn-ghost" onClick={recover}>{S.recover}</button>}
+    {!valid && !pending && <button type="button" className="btn-ghost" onClick={() => reload().then(() => setStatus('ready')).catch(() => setStatus('denied'))}>{S.retry}</button>}
+    <fieldset disabled={!valid || busy || !!pending} className="min-w-0 space-y-4">
+      <legend className="text-sm">{valid ? data.stageName : S.contextRequired}</legend>
+      <div className="space-y-2">{PATHS.map(path => <section key={path.key} className="premium-panel p-3">
+        <h3 className="flex gap-2 font-semibold"><path.Icon size={20} aria-hidden="true" />{T.evidence.paths[path.key].title}</h3>
+        <p className="text-sm">{T.evidence.paths[path.key].desc}</p>
+        <div className="flex flex-wrap gap-2">{path.intents.map(key => <button key={key} type="button" aria-pressed={intent === key}
+          className="btn-ghost" onClick={() => setIntent(key)}>{T.evidence.intents[key]}</button>)}</div>
+      </section>)}</div>
+      {intent && <p>{T.evidence.intentAsk[intent]}</p>}
+      {intent === 'community' && <p>{T.evidence.communityPII}</p>}
+      {valid && <label className="block text-sm">{S.act}
+        <select className="field w-full min-w-0" value={data.actId} onChange={e => { setSelectedActId(e.target.value); select('') }}>
+          {(data.acts || []).map(item => <option key={item.id} value={item.id}>{item.stageName}</option>)}
+        </select>
+      </label>}
+      {textField('title')}{textField('value', intent === 'community' ? 'number' : ['rebooked','producer-confirm'].includes(intent) ? 'text' : 'url')}{textField('reason')}{textField('provenance')}
+      <label className="flex gap-2 text-sm"><input type="checkbox" checked={draft.sourceConsent} onChange={e => update('sourceConsent', e.target.checked)} />{S.sourceConsent}</label>
+      <div className="flex flex-wrap gap-3">
+        <button type="button" className="btn-primary" disabled={!allowed('upload') || !draft.sourceConsent || !draft.value} onClick={() => act('upload')}>{S.upload}</button>
+        {intent !== 'community' && <label className="btn-ghost cursor-pointer">{S.file}<input type="file" accept={EVIDENCE.ACCEPT} className="block max-w-full text-sm" disabled={!allowed('upload') || !draft.sourceConsent} onChange={fileSelected} /></label>}
       </div>
-      <h1 className="font-display mb-1 text-2xl font-bold tracking-[-0.01em] text-ink">{T.evidence.title}</h1>
-      <p className="mb-4 text-sm text-muted">{T.evidence.subtitle}</p>
-      <ErrorNote>{error}</ErrorNote>
-      {toast && (
-        <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink" role="status">
-          <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />{toast}
-        </p>
-      )}
-
-      {/* ── Step 1: three capture paths, as cards ── */}
-      {!intent && (
-        <div className="mb-4 space-y-3">
-          {PATHS.map((p) => (
-            <div key={p.key} className="premium-panel data-cue p-5">
-              <div className="mb-2 flex items-center gap-3">
-                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line2 bg-surface2 text-accent"><p.Icon size={19} strokeWidth={1.7} /></span>
-                <div className="min-w-0">
-                  <p className="font-display text-base font-bold text-ink">{T.evidence.paths[p.key].title}</p>
-                  <p className="text-xs text-muted">{T.evidence.paths[p.key].desc}</p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {p.intents.map((k) => (
-                  <button key={k} type="button" onClick={() => { setIntent(k); setError('') }}
-                    className="min-h-[44px] rounded-xl border border-line bg-surface2 px-3 py-2 text-sm font-semibold text-ink/90 transition-colors hover:border-line2">
-                    {T.evidence.intents[k]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+      {valid && <LegacyEvidenceReview data={data} T={T} canPrepare={allowed('upload') && draft.sourceConsent && !!draft.reason && !!draft.provenance}
+        onPrepare={(kind, row) => act('upload', { legacyKind: kind, legacyId: row.id, legacyFingerprint: row.fingerprint,
+          sourceConsent: draft.sourceConsent, reason: draft.reason, provenance: draft.provenance })} />}
+      {valid && data.objects.length === 0 && <p>{S.empty}</p>}
+      {valid && retryable > 0 && <p>{T.evidence.retryable}: {retryable}</p>}
+      {evidence.filter(e => e.status === 'error').map(e => <p key={e.id}>{e.title}: {e.status === 'error' ? T.evidence.retryable : ''}</p>)}
+      {valid && data.objects.map(item => <button type="button" key={item.id}
+        className="block w-full break-words rounded-lg border border-line p-3 text-start"
+        aria-pressed={selectedId === item.id} onClick={() => select(item.id)}>
+        {item.title || S.untitled} — {S.states[item.state] || S.states.candidate}
+        {item.claim && <span className="block">{item.claim.statement} · {T.methodLabel[methodLabelFor({ verification_status: item.claim.verification })]}</span>}
+      </button>)}
+      {object && <div className="space-y-3 border-t border-line pt-3">
+        <p>{S.selected}: {object.title || S.untitled}</p>
+        {object.preparedStatement && <p>{S.prepared}: {object.preparedStatement}</p>}
+        <button className="btn-ghost" type="button" disabled={!allowed('upload') || object.state !== 'candidate'} onClick={() => processEvidence(artistId)}>{T.evidence.scannerCta}</button>
+        {textField('statement')}
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-ghost" type="button" disabled={!allowed('edit') || object.state === 'withdrawn'} onClick={() => act('change')}>{S.change}</button>
+          <button className="btn-ghost" type="button" disabled={!allowed('publish') || !draft.statement || !['candidate', 'proposed'].includes(object.state)} onClick={() => act('propose')}>{S.propose}</button>
         </div>
-      )}
-
-      {/* ── Step 2: the matching evidence request ── */}
-      {intent && (
-        <div className="card mb-4">
-          <div className="mb-1 flex items-center justify-between">
-            <p className="font-display text-base font-bold text-ink">{T.evidence.intents[intent]}</p>
-            <button type="button" className="min-h-[40px] text-xs text-muted transition-colors hover:text-ink" onClick={() => { setIntent(null); resetForms() }}>
-              {T.evidence.changeIntent}
-            </button>
-          </div>
-          <p className="mb-4 text-xs text-muted">{T.evidence.intentAsk[intent]}</p>
-
-          {/* drew-crowd: strongest = export/settlement file; also band + public link */}
-          {intent === 'drew-crowd' && (
-            <>
-              <p className="mb-1 text-sm font-semibold text-ink">{T.evidence.uploadFile}</p>
-              <input type="file" accept={EVIDENCE.ACCEPT} onChange={(e) => onFile(e, 'ticket-export')} className="mb-1 text-sm text-muted" />
-              <p className="mb-4 text-xs text-muted">{T.evidence.fileHint}</p>
-              {uploading && <Spinner />}
-              <p className="mb-1 text-sm font-semibold text-ink">{T.evidence.bandEntry}</p>
-              <Field label={T.onboarding.freqBand}>
-                <div className="flex flex-wrap gap-2">
-                  {BANDS.frequency.map((o) => (
-                    <button key={o} onClick={() => setBand(o)}
-                      className={`chip min-h-[44px] border px-4 py-2 font-mono transition-colors ${band === o ? 'border-accent/70 bg-surface2 font-bold text-ink' : 'border-line2 bg-surface2 text-ink/85 hover:border-line2'}`}>{o}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label={T.evidence.publicUrl}>
-                <input className="field" dir="ltr" value={bandUrl} onChange={(e) => setBandUrl(e.target.value)} placeholder="https://…" />
-              </Field>
-              <LinkPlatformHint value={bandUrl} />
-              <button className="btn-ghost w-full" onClick={addBand}>{T.common.add}</button>
-            </>
-          )}
-
-          {/* sold-via-link: UTM/coupon export upload */}
-          {intent === 'sold-via-link' && (
-            <>
-              <input type="file" accept={EVIDENCE.ACCEPT} onChange={(e) => onFile(e, 'ticket-export')} className="mb-1 text-sm text-muted" />
-              <p className="text-xs text-muted">{T.evidence.fileHint}</p>
-              {uploading && <Spinner />}
-            </>
-          )}
-
-          {/* rebooked: venue/producer reference */}
-          {intent === 'rebooked' && (
-            <>
-              <Field label={T.evidence.referenceLabel}>
-                <input className="field" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder={T.evidence.referencePlaceholder} />
-              </Field>
-              <button className="btn-ghost w-full" onClick={() => addLink('producer-vouch')}>{T.common.add}</button>
-            </>
-          )}
-
-          {/* community: NUMBER ONLY (Amendment 13 — no member lists, ever) */}
-          {intent === 'community' && (
-            <>
-              <Field label={T.evidence.communityLabel}>
-                <input className="field" type="number" min="1" inputMode="numeric" value={numVal} onChange={(e) => setNumVal(e.target.value)} placeholder="1200" />
-              </Field>
-              <p className="mb-3 text-xs text-need">{T.evidence.communityPII}</p>
-              <button className="btn-ghost w-full" onClick={addCommunityCount}>{T.common.add}</button>
-            </>
-          )}
-
-          {/* produced-event: public link or poster file */}
-          {intent === 'produced-event' && (
-            <>
-              <Field label={T.evidence.publicUrl}>
-                <input className="field" dir="ltr" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder="https://…" />
-              </Field>
-              <LinkPlatformHint value={textVal} />
-              <button className="btn-ghost mb-4 w-full" onClick={() => addLink('public-profile')}>{T.common.add}</button>
-              <p className="mb-1 text-sm font-semibold text-ink">{T.evidence.uploadFile}</p>
-              <input type="file" accept={EVIDENCE.ACCEPT} onChange={(e) => onFile(e, 'screenshot')} className="text-sm text-muted" />
-              {uploading && <Spinner />}
-            </>
-          )}
-
-          {/* consistent-frequency: public lineup link */}
-          {intent === 'consistent-frequency' && (
-            <>
-              <Field label={T.evidence.publicUrl}>
-                <input className="field" dir="ltr" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder="https://…" />
-              </Field>
-              <LinkPlatformHint value={textVal} />
-              <button className="btn-ghost w-full" onClick={() => addLink('public-profile')}>{T.common.add}</button>
-            </>
-          )}
-
-          {/* producer-confirm: contact → one-claim confirmation link (P1 flow) */}
-          {intent === 'producer-confirm' && (
-            <>
-              <Field label={T.evidence.producerContactLabel}>
-                <input className="field" value={textVal} onChange={(e) => setTextVal(e.target.value)} placeholder={T.evidence.producerContactPlaceholder} />
-              </Field>
-              <button className="btn-ghost w-full" onClick={() => addLink('producer-vouch')}>{T.common.add}</button>
-            </>
-          )}
-
-          <p className="mt-3 text-[11px] text-muted">{T.evidence.authorityNote}</p>
+        {['rights', 'visibility', 'conflict'].map(key => <label key={key} className="flex gap-2 text-sm">
+          <input type="checkbox" checked={draft[key]} onChange={e => update(key, e.target.checked)} />{S[key]}
+        </label>)}
+        <button className="btn-ghost" type="button" disabled={!owner || object.state !== 'proposed'} onClick={() => act('confirm')}>{S.confirm}</button>
+        <p className="text-sm">{S.eligibility}</p>
+        {textField('audience')}{textField('purpose')}{textField('expiresAt', 'datetime-local')}
+        <p className="break-words text-sm">{S.preview}: {object.claim?.statement || S.empty}</p>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-primary" type="button" disabled={!owner || object.state !== 'confirmed'
+            || !object.rights || !object.visibility || object.conflict || !['supporting', 'verified'].includes(object.claim?.verification)
+            || !draft.audience || !draft.purpose || !draft.expiresAt} onClick={() => act('publish')}>{S.publish}</button>
+          <button className="btn-ghost" type="button" disabled={!owner || object.state !== 'confirmed'
+            || !object.rights || !object.visibility || object.conflict || !['supporting', 'verified'].includes(object.claim?.verification)
+            || !draft.audience || !draft.purpose || !draft.expiresAt} onClick={() => act('replace')}>{S.replace}</button>
+          <button className="btn-ghost" type="button" disabled={object.state === 'withdrawn' || (!owner && object.state !== 'proposed')} onClick={() => act('withdraw')}>{S.withdraw}</button>
         </div>
-      )}
+      </div>}
+    </fieldset>
+    {valid && data.history?.length > 0 && <details className="min-w-0"><summary className="tap-target cursor-pointer">{S.history}</summary>
+      {data.history.map(item => <article key={item.receipt.id} className="border-t border-line py-2 text-sm break-words">
+        <p>{S[item.action] || item.action} · {item.receipt.committedAt}</p>
+        <p>{S.reason}: {item.reason} · {S.provenance}: {item.provenance}</p>
+        <p>{S.receipt}: {item.receipt.id}</p>
+        <p>{S.before}: {item.before?.statement || item.before?.title || item.before?.original?.value || '—'}</p>
+        <p>{S.after}: {item.after?.statement || item.after?.title || '—'}</p>
+      </article>)}
+    </details>}
+    {onReturn ? <button type="button" className="btn-ghost" disabled={busy || !!pending} onClick={onReturn}>{S.back}</button>
+      : pending || busy ? <span aria-disabled="true">{S.back}</span>
+        : <Link className="tap-target inline-flex items-center text-sm underline" to="/artist/home">{S.back}</Link>}
+  </section>
+}
+export default function EvidenceCapture() {
+  const { artistId } = useParams()
+  const [query] = useSearchParams()
+  return <PageShell><EvidenceActionWorkbench artistId={artistId} actId={query.get('act')} /></PageShell>
+}
 
-      {/* submitted evidence */}
-      {evidence.length > 0 && (
-        <div className="card mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.collected}</p>
-          <ul className="space-y-2">
-            {evidence.map((e) => (
-              <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
-                <span className="flex min-w-0 items-center gap-1.5 text-ink/90">
-                  {detectPlatform(e.public_url || e.source_type) && (
-                    <PlatformLogo name={detectPlatform(e.public_url || e.source_type)} size={14} className="shrink-0 text-muted" />
-                  )}
-                  <span className="min-w-0 leading-snug">{e.value || e.evidence_type} <span className="font-mono text-[10px] text-faint">· {e.source_type}</span></span>
-                </span>
-                <span className={`chip shrink-0 ${e.status === 'processed' ? 'bg-good-bg text-good' : e.status === 'error' ? 'bg-need-bg text-need' : 'bg-na-bg text-muted'}`}>
-                  {e.status === 'processed' ? T.evidence.processed : e.status === 'error' ? T.evidence.retryable : T.evidence.pending}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* processing — skeleton shimmer, never a bare spinner */}
-      {processing && (
-        <div className="card mb-4" role="status" aria-live="polite">
-          <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
-            <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-            {T.evidence.processingTitle}
-          </p>
-          <p className="mb-3 text-xs text-muted">{T.evidence.processingNote}</p>
-          <div className="space-y-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="animate-pulse rounded-xl border border-line bg-surface2 px-3 py-3">
-                <div className="mb-2 h-3 w-2/3 rounded bg-line" />
-                <div className="h-2.5 w-1/3 rounded bg-na-bg" />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* resulting claims */}
-      {!processing && claims.length > 0 && (
-        <div className="card mb-4">
-          <p className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-muted">{T.evidence.results}</p>
-          <ul className="space-y-2">
-            {claims.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface2 px-3 py-2 text-sm">
-                <span className="min-w-0 leading-snug text-ink/90">{c.value || c.claim_type}</span>
-                <SourceLabel status={c.verification_status} methodLabel={c.method_label} expiresAt={c.expires_at} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <button className="btn-primary w-full" onClick={process} disabled={processing || retryable === 0}>
-        {processing ? <><Spinner /> {T.evidence.processing}</> : `${T.evidence.process}${retryable ? ` (${retryable})` : ''}`}
-      </button>
-    </PageShell>
-  )
+// Read-only source continuity. Preparing a new candidate is explicit, version
+// checked and receipted; it does not migrate or confirm the original row.
+export function LegacyEvidenceReview({ data, T, canPrepare, onPrepare }) {
+  const S = T.evidenceActions
+  const claims = data.legacyClaims || []
+  const items = data.legacyItems || []
+  if (!claims.length && !items.length) return null
+  const destination = row => row.visibility === 'passport-ok' ? T.claims.passportOk : T.claims.mirrorOnly
+  const sourceLink = row => /^https?:\/\//i.test(row.public_url || '')
+    ? <a className="underline break-all" href={row.public_url} target="_blank" rel="noopener noreferrer">{row.public_url}</a> : null
+  const prepare = (kind, row) => <button type="button" className="btn-ghost" disabled={!canPrepare}
+    onClick={() => onPrepare(kind, row)}>{S.prepare}</button>
+  return <section className="space-y-3" aria-label={S.legacy} data-ku03-legacy>
+    <h3 className="font-bold">{S.legacy}</h3><p className="text-sm">{S.legacyBoundary}</p>
+    {[[T.claims.needsReview, claims.filter(c => !c.artist_approved)],
+      [T.claims.passportOk, claims.filter(c => c.artist_approved && c.visibility === 'passport-ok')],
+      [T.claims.mirrorOnly, claims.filter(c => c.artist_approved && c.visibility !== 'passport-ok')]].map(([label, rows]) => rows.length > 0 &&
+      <section key={label}><h4 className="font-semibold">{label} ({rows.length})</h4>
+        {rows.map(row => <article className="my-2 space-y-1 rounded-lg border border-line p-3 break-words" key={row.id} data-legacy-id={row.id}>
+          <p className="font-semibold">{row.public_wording || row.value}</p>
+          {row.public_wording && row.public_wording !== row.value && <p>{row.value}</p>}
+          <p>{T.methodLabel[methodLabelFor(row)]} · {row.source_type} · {row.reason_code}</p>
+          <p>{destination(row)} · {row.artist_approved ? T.claims.approvedChip : T.claims.needsReview}</p>
+          {row.status === 'disputed' && <p>{T.claims.flaggedChip}</p>}
+          {row.limitation_text && <p>{T.claims.limitationLabel}: {row.limitation_text}</p>}
+          <p>{row.reviewed_at || row.updated_at || row.created_at}</p>{sourceLink(row)}
+          {prepare('claim', row)}
+        </article>)}
+      </section>)}
+    {items.length > 0 && <section><h4 className="font-semibold">{T.claims.itemsTitle} ({items.length})</h4>
+      {items.map(row => <article className="my-2 space-y-1 rounded-lg border border-line p-3 break-words" key={row.id} data-legacy-id={row.id}>
+        <p className="font-semibold">{row.title}</p><p>{row.detail}</p><p>{row.item_date}</p>
+        <p>{T.methodLabel[row.source_status === 'public-verified' ? 'source-linked' : 'artist-declared']} · {destination(row)}</p>
+        {sourceLink(row)}{prepare('item', row)}
+      </article>)}
+    </section>}
+  </section>
 }

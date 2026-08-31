@@ -143,7 +143,7 @@ function planetXY(angle, radius = PLANET_ORBIT_PCT) {
   return { x: 50 + radius * Math.cos(rad), y: 50 + radius * Math.sin(rad) }
 }
 
-export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
+export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, onPublicationActSelected, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
   const { T } = useLang()
   const S = T.radar.universe
   const nav = useNavigate()
@@ -283,6 +283,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
         })
       }
       setActiveActId(id)
+      onPublicationActSelected?.(id)
       localStorage.setItem('gigproof_active_act', id)
       logEvent(EVENTS.ACT_SWITCHED, { act_id: id }) // pilot signal (A10)
       setActSheet(false)
@@ -370,7 +371,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // N4 — own-history frame (§5.10): the artist's own recent confirmations.
   const history = useMemo(() => ownHistory(effClaims), [effClaims])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
-  const evidenceRoute = `/evidence/${artist.id}`
+  const evidenceRoute = `/evidence/${artist.id}?act=${encodeURIComponent(activeActId)}`
 
   // The platform ring — real detected platforms + one trailing "+ connect" node.
   const platformNodes = useMemo(() => derivePlatformNodes(effItems, effClaims), [effItems, effClaims])
