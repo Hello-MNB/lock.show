@@ -654,6 +654,15 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831091843",
+      "file": "supabase/migrations/20260831091843_evidence_source_permission_guard.sql",
+      "direction": "up",
+      "sha256": "8adc6750f76562600d60d8f63ddf77412eb27fdad4700bfb828ce2494bf31a4a",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

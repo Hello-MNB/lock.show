@@ -9,6 +9,48 @@ import { createHash, randomUUID } from 'node:crypto'
 import { entryOriginObjects, entryOriginSelection } from '../src/lib/artistEntry.js'
 import * as entryOriginContract from '../src/lib/artistEntry.js'
 
+// R13 case numbers refer to the original entry manifest, not APP00-ACC row
+// numbers. These are URL-reference witnesses; no external content is acquired.
+const sourceOutcomeWorkbench = { artistId: 'artist-source', actId: 'act-source', version: 3,
+  authority: { actorId: 'person-source', workspaceId: 'workspace-source', contextVersion: 2 } }
+
+test('CASE19 supported HTTP(S) reference preserves subject and candidate-only ceiling', () => {
+  for (const value of ['https://source.example.test/artist', 'http://source.example.test/artist']) {
+    const request = entryOriginContract.firstLinkRequest(sourceOutcomeWorkbench, value, true)
+    assert.equal(request.action, 'upload')
+    assert.equal(request.artistId, sourceOutcomeWorkbench.artistId)
+    assert.equal(request.actId, sourceOutcomeWorkbench.actId)
+    assert.equal(request.workspaceId, sourceOutcomeWorkbench.authority.workspaceId)
+    assert.equal(request.payload.value, value)
+    assert.equal(request.payload.public_url, undefined)
+    assert.equal(request.payload.source_status, undefined)
+    assert.equal(request.payload.verification_status, undefined)
+    assert.equal(request.payload.sourceConsent, true)
+  }
+})
+
+test('CASE19 uninspected private or unsupported-provider URL cannot assert public-profile identity', () => {
+  for (const value of ['https://private.example.test/restricted/item', 'https://unknown-provider.example.test/item']) {
+    const request = entryOriginContract.firstLinkRequest(sourceOutcomeWorkbench, value, true)
+    // An HTTP(S) URL and the contributor's permission do not establish public
+    // availability or profile identity. There is deliberately no provider mock.
+    assert.notEqual(request.payload.source_type, 'public-profile', value)
+    assert.equal(request.payload.source_type, 'self-reported')
+    assert.equal(request.payload.value, value)
+  }
+})
+
+test('CASE19 malformed or unsupported protocol fails before candidate creation', () => {
+  for (const value of ['not a URL', 'javascript:alert(1)', 'file:///private/source', 'ftp://source.example.test/item', 'https://name:secret@source.example.test/item']) {
+    assert.throws(() => entryOriginContract.firstLinkRequest(sourceOutcomeWorkbench, value, true))
+  }
+})
+
+test('CASE20 permission withdrawn before submit prevents a new capture request', () => {
+  assert.throws(() => entryOriginContract.firstLinkRequest(sourceOutcomeWorkbench, 'https://source.example.test/item', false))
+  assert.throws(() => entryOriginContract.firstLinkRequest(sourceOutcomeWorkbench, 'https://source.example.test/item', undefined))
+})
+
 // Execute the production reload/settle functions, not a simulated UI decision.
 function originWorkbenchHarness(workbench, request, uploadReceipt) {
   const source=fs.readFileSync(new URL('../src/features/evidence/EvidenceCapture.jsx',import.meta.url),'utf8')

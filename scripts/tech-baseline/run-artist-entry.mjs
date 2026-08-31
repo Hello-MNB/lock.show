@@ -116,6 +116,108 @@ if (process.argv.includes('--disposable')) {
       }
       const finishRequest = (s, telemetry=true) => ({workspaceId:s.workspaceId,artistId:s.artistId,actId:s.actId,contextVersion:s.contextVersion,telemetry})
       const complete = (s, telemetry=true) => call(finishRequest(s,telemetry),'complete_artist_entry')
+      const permissionSubject = async () => {
+        const state = await read()
+        const workbench = (await client.query('select public.get_evidence_workbench($1,$2) result', [state.artistId,state.actId])).rows[0].result
+        const upload = firstLinkRequest(workbench, 'https://source.example.test/permission-guard', true)
+        const receipt = await call(upload, 'commit_evidence_action')
+        return { state, upload, receipt }
+      }
+      const dependentRequest = (subject, action) => ({ ...subject.upload, action, key: crypto.randomUUID(),
+        expectedVersion: subject.receipt.version, expectedObjectVersion: subject.receipt.objectVersion,
+        payload: { statement: 'Synthetic attributed private contribution' } })
+      for (const action of ['prepare', 'propose']) {
+        await test(`CASE20 permitted ${action} retries once, revoked replay denies but immutable history remains readable`, async () => {
+          const subject = await permissionSubject(), request = dependentRequest(subject, action)
+          const receipt = await call(request, 'commit_evidence_action')
+          assert.equal(receipt.action, action)
+          assert.deepEqual(await call(request, 'commit_evidence_action'), receipt)
+          await client.query('reset role')
+          const before = (await client.query('select receipt from private.evidence_action_history where object_id=$1 order by committed_at,id', [request.objectId])).rows
+          assert.equal(before.length, 2)
+          await client.query('update public.evidence_artifacts set source_owner_consent=false where id=$1', [request.objectId])
+          await as()
+          await deny(() => call(request, 'commit_evidence_action'), 'evidence_action_unavailable')
+          // Resolve preserves a historical acknowledgement, not fresh authority.
+          const resolved = await call(request, 'resolve_evidence_action')
+          assert.deepEqual(resolved.receipt, receipt)
+          await client.query('reset role')
+          assert.deepEqual((await client.query('select receipt from private.evidence_action_history where object_id=$1 order by committed_at,id', [request.objectId])).rows, before)
+          assert.equal((await client.query('select count(*)::int n from public.passport_versions where artist_id=$1', [request.artistId])).rows[0].n, 0)
+        })
+      }
+      for (const field of ['workspaceId', 'artistId', 'actId', 'objectId', 'contextVersion', 'expectedVersion', 'expectedObjectVersion']) {
+        await test(`CASE20 otherwise permitted prepare rejects mismatched ${field} uniformly`, async () => {
+          const subject = await permissionSubject(), request = dependentRequest(subject, 'prepare')
+          const invalid = { ...request, [field]: field.includes('Version') ? Number(request[field]) + 1 : crypto.randomUUID() }
+          await deny(() => call(invalid, 'commit_evidence_action'), 'evidence_action_unavailable')
+          assert.equal((await call(request, 'commit_evidence_action')).action, 'prepare')
+        })
+      }
+      await test('CASE20 wrong actor and direct table permission restoration cannot bypass the guard', async () => {
+        const subject = await permissionSubject(), request = dependentRequest(subject, 'propose')
+        await as(fresh)
+        await deny(() => call(request, 'commit_evidence_action'), 'evidence_action_unavailable')
+        await as()
+        await deny(() => client.query('update public.evidence_artifacts set source_owner_consent=true where id=$1', [request.objectId]), 'permission denied for table evidence_artifacts')
+        assert.equal((await call(request, 'commit_evidence_action')).action, 'propose')
+      })
+      for (const action of ['prepare', 'propose']) {
+        await test(`CASE20 withdrawn stored source permission denies subsequent ${action}`, async () => {
+          const state = await read()
+          const workbench = (await client.query('select public.get_evidence_workbench($1,$2) result', [state.artistId,state.actId])).rows[0].result
+          const request = firstLinkRequest(workbench, 'https://source.example.test/permission-withdrawn', true)
+          const uploaded = await call(request, 'commit_evidence_action')
+          assert.ok(uploaded.id && uploaded.committedAt)
+          assert.equal(uploaded.action, 'upload')
+          assert.equal(uploaded.objectId, request.objectId)
+          await client.query('reset role')
+          const before = (await client.query('select source_owner_consent,ku03_state,ku03_version from public.evidence_artifacts where id=$1', [request.objectId])).rows[0]
+          assert.equal(before.source_owner_consent, true)
+          assert.equal(before.ku03_state, 'candidate')
+          assert.equal((await client.query('select count(*)::int n from public.passport_versions where artist_id=$1', [state.artistId])).rows[0].n, 0)
+          // Fixture-only state injection models an already withdrawn permission.
+          // This is NOT a user-facing revocation operation or lifecycle proof;
+          // the real authenticated RPC must enforce the persisted permission.
+          await client.query('update public.evidence_artifacts set source_owner_consent=false where id=$1', [request.objectId])
+          await as()
+          const current = (await client.query('select public.get_evidence_workbench($1,$2) result', [state.artistId,state.actId])).rows[0].result
+          const next = { ...request, action, key: crypto.randomUUID(), expectedVersion: Number(current.version),
+            expectedObjectVersion: Number(before.ku03_version), payload: { statement: 'Synthetic private contribution after permission withdrawal' } }
+          await deny(async () => {
+            const continued = await call(next, 'commit_evidence_action')
+            console.log('CASE20 unexpected dependent receipt '+JSON.stringify({ action: continued.action, objectVersion: continued.objectVersion }))
+          }, 'evidence_action_unavailable')
+          await client.query('reset role')
+          const after = (await client.query('select source_owner_consent,ku03_state,ku03_version from public.evidence_artifacts where id=$1', [request.objectId])).rows[0]
+          assert.deepEqual(after, { ...before, source_owner_consent: false })
+          assert.equal((await client.query('select count(*)::int n from private.evidence_action_history where object_id=$1', [request.objectId])).rows[0].n, 1)
+          assert.equal((await client.query('select count(*)::int n from public.claims where evidence_id=$1', [request.objectId])).rows[0].n, 0)
+        })
+      }
+      await test('CASE20 forward reapplication preserves function security and operational rollback preserves data/reconciliation', async () => {
+        const subject = await permissionSubject()
+        await client.query('reset role')
+        const metadata = async () => (await client.query("select proowner,proacl,prosecdef,proconfig,prosrc from pg_proc where oid='public.commit_evidence_action(jsonb)'::regprocedure")).rows[0]
+        const beforeFunction = await metadata()
+        const forward = fs.readFileSync(path.join(root,'supabase/migrations/20260831091843_evidence_source_permission_guard.sql'),'utf8')
+        await client.query(forward)
+        assert.deepEqual(await metadata(), beforeFunction)
+        assert.equal(beforeFunction.prosecdef, true)
+        assert.deepEqual(beforeFunction.proconfig, ['search_path=""'])
+        assert.equal((await client.query("select has_function_privilege('anon','public.commit_evidence_action(jsonb)','execute') allowed")).rows[0].allowed,false)
+        const snapshot = async () => (await client.query('select to_jsonb(e) object,(select jsonb_agg(to_jsonb(h) order by h.committed_at,h.id) from private.evidence_action_history h where h.object_id=e.id) history from public.evidence_artifacts e where e.id=$1',[subject.upload.objectId])).rows[0]
+        const before = await snapshot()
+        await client.query(fs.readFileSync(path.join(root,'supabase/rollback/20260831091843_evidence_source_permission_guard.sql'),'utf8'))
+        await as()
+        await deny(() => call(dependentRequest(subject,'prepare'),'commit_evidence_action'),'permission denied for function commit_evidence_action')
+        assert.deepEqual((await call(subject.upload,'resolve_evidence_action')).receipt,subject.receipt)
+        await client.query('reset role')
+        assert.deepEqual(await snapshot(),before)
+        await client.query(forward)
+        assert.equal((await client.query("select has_function_privilege('authenticated','public.commit_evidence_action(jsonb)','execute') allowed")).rows[0].allowed,false)
+        assert.equal((await metadata()).prosrc,beforeFunction.prosrc)
+      })
       await test('29 canonical completion is explicit-Finish-time, once after later basics/context edits',async()=>{
         const s=await read();let first
         try{first=await complete(s)}catch(error){assert.fail('server completion is unavailable: '+error.code)}
@@ -309,6 +411,18 @@ if (process.argv.includes('--disposable')) {
         }
         assert.fail('second real request was not observed waiting for the actor lock')
       }
+      for (const action of ['prepare','propose']) {
+        await concurrent(`CASE20 ${action} waits for in-flight stored permission withdrawal and then denies`, async (a,b) => {
+          await as(); const subject=await permissionSubject(); await client.query('reset role')
+          await a.query('reset role'); await a.query('begin')
+          await a.query('update public.evidence_artifacts set source_owner_consent=false where id=$1',[subject.upload.objectId])
+          const pending=rpc(b,dependentRequest(subject,action),'commit_evidence_action').then(result=>({unexpected:result}),error=>({code:error.code,message:error.message}))
+          await waitForLock(b.processID); await a.query('commit')
+          assert.deepEqual(await pending,{code:'42501',message:'evidence_action_unavailable'})
+          assert.equal(Number((await client.query('select ku03_version from public.evidence_artifacts where id=$1',[subject.upload.objectId])).rows[0].ku03_version),1)
+          assert.equal((await client.query('select count(*)::int n from private.evidence_action_history where object_id=$1',[subject.upload.objectId])).rows[0].n,1)
+        })
+      }
       await concurrent('04 concurrent fresh initialization establishes one Setup, even with different request keys',async(a,b)=>{
         const newcomer=crypto.randomUUID();await client.query('insert into auth.users(id,email,email_confirmed_at) values($1,$2,now())',[newcomer,'concurrent-entry@example.test'])
         for(const c of [a,b])await c.query("select set_config('request.jwt.claim.sub',$1,false)",[newcomer])
@@ -401,6 +515,31 @@ if (process.argv.includes('--disposable')) {
         assert.equal((await client.query('select ku03_state from public.evidence_artifacts where id=$1',[request.objectId])).rows[0].ku03_state,'candidate')
         assert.equal((await client.query('select count(*)::int n from public.passport_versions where artist_id=$1',[state.artistId])).rows[0].n,0)
         passed++;console.log('OK 17 actual caller/SDK/HTTP/RPC + Express/evidence/PG, fresh identity, candidate only')
+        // Exercise the real caller and Express route against the same local PG
+        // database through separate HTTP connections. Commit the fixture state
+        // before calling HTTP; holding its row lock would test a fixture deadlock.
+        // Fixture restoration below is not a user-facing re-consent operation.
+        try {
+          await client.query('update public.evidence_artifacts set source_owner_consent=false where id=$1',[request.objectId])
+          for(const action of ['prepare','propose']) {
+            const deniedRequest={...request,action,key:crypto.randomUUID(),expectedVersion:outcome.receipt.version,
+              expectedObjectVersion:outcome.receipt.objectVersion,payload:{statement:'Synthetic dependent use'}}
+            const responses=[]
+            const result=await performEvidenceAction(deniedRequest,{Authorization:`Bearer ${token}`},async(route,options)=>{
+              const response=await fetch(`http://127.0.0.1:${server.address().port}${route}`,{...options,signal:AbortSignal.timeout(10000)})
+              responses.push({status:response.status,body:await response.clone().text()});return response
+            })
+            assert.equal(result.status,'denied');assert.equal(responses.length,1)
+            assert.equal(responses[0].status,403)
+            assert.ok(!responses[0].body.includes(request.objectId) && !responses[0].body.includes(request.payload.value))
+            await client.query('reset role')
+            assert.equal((await client.query('select count(*)::int n from private.evidence_action_history where object_id=$1',[request.objectId])).rows[0].n,1)
+            passed++;console.log(`OK CASE20 actual caller/Express/RPC/PG revoked ${action} denial is non-disclosing and never retries`)
+          }
+        } finally {
+          await client.query('reset role')
+          await client.query('update public.evidence_artifacts set source_owner_consent=true where id=$1',[request.objectId])
+        }
         // Migration020's compatibility trigger legitimately uses the same UUID
         // for two separate rows. Entity distinction is not numeric inequality.
         const artistRow=(await client.query('select id,created_by,owner_organization_id from public.artists where id=$1',[state.artistId])).rows[0]

@@ -152,6 +152,8 @@ export function firstLinkRequest(workbench, value, sourceConsent) {
   return { action: 'upload', key: crypto.randomUUID(), objectId: crypto.randomUUID(),
     artistId: workbench.artistId, actId: workbench.actId, workspaceId: workbench.authority.workspaceId,
     contextVersion: Number(workbench.authority.contextVersion), expectedVersion: Number(workbench.version), expectedObjectVersion: 0,
-    payload: { evidence_type: 'link', source_type: 'public-profile', value: url.href, title: url.href,
+    // This records the Artist's reference, not acquired content or an assessed
+    // public profile. Keep the existing attribution vocabulary and ceiling.
+    payload: { evidence_type: 'link', source_type: 'self-reported', value: url.href, title: url.href,
       sourceConsent: true, provenance: 'Artist supplied link' } }
 }
