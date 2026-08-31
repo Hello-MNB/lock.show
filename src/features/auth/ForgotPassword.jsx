@@ -59,7 +59,7 @@ export default function ForgotPassword() {
       <form onSubmit={onSubmit}>
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.login.email}>
-          <input className="field" type="email" dir="ltr" autoComplete="email"
+          <input aria-label={T.login.email} className="field" type="email" dir="ltr" autoComplete="email"
             placeholder="you@stage.com"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>

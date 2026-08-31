@@ -636,6 +636,15 @@
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831044500",
+      "file": "supabase/migrations/20260831044500_artist_entry.sql",
+      "direction": "up",
+      "sha256": "c9adaf2a290b160aa0cf1d767f6de205b0b8232ae8d0196af4b48bf782cae356",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider.jsx'
-import { getMyArtistForWorkspace, upsertArtist, getMyAct, updateAct, listProfileItems, listClaims, listRequestsForArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent, getEvidenceWorkbench } from '../../lib/db.js'
+import { getMyArtistForWorkspace, upsertArtist, updateAct, listProfileItems, listRequestsForArtist, hasConsent, recordConsentScope, getEntitlement, hasShareEvent, getEvidenceWorkbench, getArtistRadarContext } from '../../lib/db.js'
 import { publicationSelection } from '../../lib/passportApi.js'
 import { EvidenceActionWorkbench } from '../evidence/EvidenceCapture.jsx'
 import { PageShell, Loading, EmptyState, ErrorState, BottomSheet, useToast } from '../../components/ui.jsx'
@@ -78,7 +78,7 @@ function pickNextAction(artist, items, claims, T, openRequests = 0, act = null) 
   const exp = items.filter((i) => i.item_type !== 'link')
   const pending = claims.filter((c) => !c.artist_approved)
   const supported = claims.filter((c) => ['verified', 'supporting'].includes(c.verification_status))
-  const evidenceRoute = `/evidence/${artist.id}`
+  const evidenceRoute = `/evidence/${artist.id}${act?.id ? `?act=${encodeURIComponent(act.id)}` : ''}`
 
   if (pending.length > 0) {
     // R-5 (T-82, §8.2 L669): walk the FAMILY EMPHASIS order over the planets
@@ -169,6 +169,7 @@ export default function ArtistDashboard() {
   const [act, setAct] = useState(null)
   const [items, setItems] = useState([])
   const [claims, setClaims] = useState([])
+  const [governedEvidence, setGovernedEvidence] = useState([])
   const [ent, setEnt] = useState(null)
   const [openReqs, setOpenReqs] = useState(0) // 'new' availability requests — post-M8 ladder
   const [reqCount, setReqCount] = useState(0) // ANY request ever — the M7/M8 journey waypoint
@@ -207,20 +208,22 @@ export default function ArtistDashboard() {
   // mobile / 3.5rem md+ reserve the Tailwind class already encodes.
   const vhFallbackPx = useViewportHeightFallback(fullStage ? 3.5 : 7.5)
   const access = resolveArtistFirstValueAccess({ user, activeOrgId, memberships })
-  const currentContextKey = access.allowed ? `${user.id}:${activeOrgId}` : null
+  const currentContextKey = access.allowed && !contextUnresolved ? `${user.id}:${activeOrgId}:${contextVersion}` : null
   const publicationContextKey = access.allowed && !contextUnresolved ? `${currentContextKey}:${contextVersion}` : null
   publicationContext.current = publicationContextKey
 
   async function load() {
     const requestRevision = ++loadRevision.current
-    const isStale = () => requestRevision !== loadRevision.current
+    const capturedContext = publicationContextKey
+    const isStale = () => requestRevision !== loadRevision.current || capturedContext !== publicationContext.current
     setLoadError(false)
-    if (!access.allowed) {
+    if (!access.allowed || contextUnresolved) {
       setLoadedContextKey(null)
       setArtist(null)
       setAct(null)
       setItems([])
       setClaims([])
+      setGovernedEvidence([])
       setLoading(false)
       return
     }
@@ -228,19 +231,19 @@ export default function ArtistDashboard() {
       const a = await getMyArtistForWorkspace(user.id, activeOrgId)
       if (isStale()) return
       if (a) {
-        const [nextAct, nextItems, nextClaims, nextEnt, reqs] = await Promise.all([
-          getMyAct(a.id).catch(() => null),
-          listProfileItems(a.id),
-          listClaims(a.id),
+        const [governed, nextEnt, reqs] = await Promise.all([
+          getArtistRadarContext(a.id, { actorId: user.id, workspaceId: activeOrgId, contextVersion: Number(contextVersion) }),
           getEntitlement(a.id),
           listRequestsForArtist(a.id).catch(() => []),
         ])
         if (isStale()) return
+        const { act: nextAct, items: nextItems, claims: nextClaims } = governed
         setArtist(a)
         setAct(nextAct)
         setPublicationAct({ id: nextAct?.id, contextKey: publicationContextKey })
         setItems(nextItems)
         setClaims(nextClaims)
+        setGovernedEvidence(governed.objects)
         setEnt(nextEnt)
         setReqCount(reqs.length) // M7/M8 journey waypoint — any request ever
         setOpenReqs(reqs.filter((r) => r.status === 'new').length)
@@ -253,6 +256,7 @@ export default function ArtistDashboard() {
         setAct(null)
         setItems([])
         setClaims([])
+        setGovernedEvidence([])
         setEnt(null)
         setReqCount(0)
         setOpenReqs(0)
@@ -282,7 +286,7 @@ export default function ArtistDashboard() {
       loadRevision.current += 1
       clearTimeout(watchdog)
     }
-  }, [user.id, activeOrgId, orgLoading, access.allowed, access.reason])
+  }, [user.id, activeOrgId, contextVersion, contextUnresolved, orgLoading, access.allowed, access.reason])
   useEffect(() => () => clearTimeout(copiedTimer.current), [])
   useEffect(() => {
     if (noAction) noActionReceipt.current?.focus()
@@ -328,7 +332,7 @@ export default function ArtistDashboard() {
   // Landing here straight from the shortened entry — the "we're scanning /
   // here's what needs you" moment (one quiet toast, once per arrival).
   useEffect(() => {
-    if (loading || !loc.state?.fromEntry || arrivalShown.current) return
+    if (loading || !artist || loadError || loadedContextKey !== currentContextKey || !loc.state?.fromEntry || arrivalShown.current) return
     arrivalShown.current = true
     toast.show(T.radar.scanKickoff)
     window.history.replaceState({}, '') // don't re-fire on refresh
@@ -343,8 +347,11 @@ export default function ArtistDashboard() {
   }
   // Act-level fills (goal) — same in-place pattern, different table.
   async function saveAct(patch) {
-    const updated = await updateAct(artist.id, patch)
-    setAct((prev) => ({ ...(prev || { id: artist.id }), ...(updated || patch) }))
+    if (!act?.id || !publicationContextKey) throw new Error('context changed')
+    const captured = publicationContextKey
+    const updated = await updateAct(act.id, patch)
+    if (captured !== publicationContext.current) throw new Error('context changed')
+    setAct((prev) => ({ ...prev, ...(updated || patch) }))
     return updated
   }
   async function refreshItems() { setItems(await listProfileItems(artist.id)) }
@@ -402,7 +409,7 @@ export default function ArtistDashboard() {
     requestAnimationFrame(() => publicationControl.current?.focus())
   }
 
-  if (loading || orgLoading || (access.allowed && loadedContextKey !== currentContextKey)) return <Loading />
+  if (contextUnresolved || loading || orgLoading || (access.allowed && loadedContextKey !== currentContextKey)) return <Loading />
   if (loadError) return <PageShell><ErrorState title={T.common.error} onRetry={() => { setLoading(true); load() }} /></PageShell>
   if (!access.allowed) {
     const denied = access.reason === 'revoked' ? T.radar.firstValue.revoked : T.radar.firstValue.wrongWorkspace
@@ -507,7 +514,7 @@ export default function ArtistDashboard() {
             <h2 id="artist-first-value-question" className="mt-1 font-display text-base font-bold leading-snug text-ink">{T.radar.firstValue.question}</h2>
             <p className="mt-1 text-xs text-muted">{T.radar.firstValue.context(firstValue.actName, firstValue.organizationName)}</p>
           </div>
-          <div className="grid min-w-[12rem] gap-1 text-xs sm:text-end">
+          <div className="grid min-w-0 max-w-full gap-1 break-words text-xs sm:text-end">
             <p><span className="font-semibold text-ink">{evidenceLabel}</span> · {freshnessLabel}</p>
             <p className="text-muted">{T.radar.firstValue.goal(firstValue.goal || T.radar.firstValue.goalUnknown)}</p>
           </div>
@@ -536,7 +543,8 @@ export default function ArtistDashboard() {
             open as panels inside it (reviewSignal). Full-stage (md+): flexes
             to own the column's remaining height; the next-step card floats
             INSIDE it (see RadarUniverse) instead of stacking below. ── */}
-      <RadarUniverse artist={artist} act={act} items={items} claims={claims} onClaimsChange={setClaims}
+      <RadarUniverse key={`${publicationContextKey}:${act?.id}`} artist={artist} act={act} items={items} claims={claims} onClaimsChange={setClaims}
+        governedEvidence={governedEvidence} authorityScope={{ actorId: user.id, workspaceId: activeOrgId, contextVersion: Number(contextVersion) }}
         onPublicationActSelected={id => {
           if (publicationContextKey === publicationContext.current) setPublicationAct({ id, contextKey: publicationContextKey })
         }}

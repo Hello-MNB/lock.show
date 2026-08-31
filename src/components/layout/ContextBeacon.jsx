@@ -25,16 +25,16 @@ export default function ContextBeacon() {
   return (
     <section className="order-3 min-w-0 basis-full md:order-1 md:basis-auto md:flex-1" aria-label={T.org.contextBeaconLabel}>
       <div className="min-w-0 text-xs">
-        <p className="flex min-w-0 items-center gap-2">
+        <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <span className="shrink-0 font-semibold text-muted">{T.org.contextWorkspaceLabel}</span>
-          <strong className="truncate text-sm text-ink">{adminMode ? T.org.privateAdminWorkspace : (model.workspaceName || T.org.contextNoWorkspace)}</strong>
+          <strong className="min-w-0 max-w-full break-words text-sm text-ink">{adminMode ? T.org.privateAdminWorkspace : (model.workspaceName || T.org.contextNoWorkspace)}</strong>
           <span className="shrink-0 text-faint">·</span>
           <span className="shrink-0 font-semibold text-muted">{T.org.contextRoleLabel}</span>
           <span className="shrink-0 text-ink">{roleLabel}</span>
         </p>
-        <p className="mt-0.5 flex min-w-0 items-center gap-2 text-[11px] text-muted">
+        <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
           <span className="shrink-0 text-faint">{T.org.contextPersonLabel}</span>
-          <span className="truncate">{model.personName}</span>
+          <span className="min-w-0 max-w-full break-words">{model.personName}</span>
           <span aria-hidden>·</span>
           <span className="shrink-0 text-faint">{T.org.contextEnvironmentLabel}</span>
           <span className="flex shrink-0 items-center gap-1.5">
@@ -42,7 +42,7 @@ export default function ContextBeacon() {
             {environmentLabel}
           </span>
           <span aria-hidden>·</span>
-          <span className="truncate">{workspaceTypeLabel}</span>
+          <span className="min-w-0 max-w-full break-words">{workspaceTypeLabel}</span>
         </p>
       </div>
       {adminMode && (

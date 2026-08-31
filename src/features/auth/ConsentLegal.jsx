@@ -8,9 +8,11 @@ import { useLang } from '../../context/LangContext.jsx'
 // fires at publish (Onboarding step 7 / ArtistDashboard / ClaimReview);
 // marketing consent lives in Settings as an optional toggle — all four write
 // through the SAME consent_records table via recordConsentScope below.
-export default function ConsentLegal({ checked, onChange }) {
+export default function ConsentLegal({ checked, onChange, notice, onDecision }) {
   const { T } = useLang()
+  if (!notice) return <p role="status" className="card text-sm text-muted">{T.onboarding.entryNoticeUnavailable}</p>
   return (
+    <div>
     <label className="card flex cursor-pointer items-start gap-3 transition hover:bg-raise">
       <input
         type="checkbox"
@@ -21,11 +23,19 @@ export default function ConsentLegal({ checked, onChange }) {
       <span className="block">
         <span className="block text-sm font-semibold text-ink">
           {T.consent.inlineTitle}
-          <span className="ms-2 rounded-full bg-accent/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-accent">required</span>
+          <span className="ms-2 rounded-full bg-accent/15 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-accent">{T.common.required}</span>
         </span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted">{T.consent.inlineAgree}</span>
       </span>
     </label>
+    <p className="mt-2 text-xs text-muted">{notice.purpose} · {notice.version} · <time dateTime={notice.effectiveAt}>{notice.effectiveAt}</time></p>
+    <div className="mt-2 flex flex-wrap gap-3 text-sm">
+      <a className="underline" href={notice.noticeUrl} target="_blank" rel="noopener noreferrer">{T.consent.privacyTitle}</a>
+      <a className="underline" href={notice.termsUrl} target="_blank" rel="noopener noreferrer">{T.onboarding.entryTerms}</a>
+      <button type="button" className="btn-ghost" onClick={() => onDecision('declined')}>{T.onboarding.entryDecline}</button>
+      <button type="button" className="btn-ghost" onClick={() => onDecision('deferred')}>{T.consent.decline}</button>
+    </div>
+    </div>
   )
 }
 

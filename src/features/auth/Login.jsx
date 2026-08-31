@@ -110,7 +110,7 @@ export default function Login() {
         )}
         <ErrorNote>{error}</ErrorNote>
         <Field label={T.login.email} error={fieldErrors.email}>
-          <input className="field" type="email" dir="ltr" autoComplete="email"
+          <input aria-label={T.login.email} className="field" type="email" dir="ltr" autoComplete="email"
             placeholder="you@stage.com" aria-invalid={!!fieldErrors.email}
             value={email}
             onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: undefined })) }} />
@@ -118,7 +118,7 @@ export default function Login() {
         <Field label={T.login.password} error={fieldErrors.password}>
           {/* show/hide toggle — a spec component (§17.B.2), B1 finding 3 */}
           <div className="relative">
-            <input className="field pe-16" type={showPw ? 'text' : 'password'} autoComplete="current-password"
+            <input aria-label={T.login.password} className="field pe-16" type={showPw ? 'text' : 'password'} autoComplete="current-password"
               placeholder="••••••••" aria-invalid={!!fieldErrors.password}
               value={password}
               onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: undefined })) }} />
