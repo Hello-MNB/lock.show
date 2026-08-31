@@ -11,7 +11,7 @@ import { clearPassportDirty } from '../../lib/passportState.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { uploadFile } from '../../lib/storage.js'
 import { evidenceFileError, EVIDENCE, methodLabelFor } from '../../lib/constants.js'
-import { entryOriginSelection } from '../../lib/artistEntry.js'
+import { entryOriginSelection, entryOriginAfterWithdrawal } from '../../lib/artistEntry.js'
 import { Upload, Link2, ScanSearch } from 'lucide-react'
 
 const PATHS = [
@@ -55,12 +55,15 @@ export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null
   const allowed = (scopeName) => owner || (valid && data.authority.scope.includes(scopeName))
   const update = (key, value) => setDraft(before => ({ ...before, [key]: value }))
 
-  async function reload(operation = generation.current) {
+  async function reload(operation = generation.current, outcome = null) {
     const captured = currentScope.current
     const value = await getEvidenceWorkbench(artistId, actId)
     if (operation !== generation.current || captured !== currentScope.current || !matches(value)) throw new Error('context changed')
     if ((originObject || originReceipt || originVersion) && (!selectedActId || selectedActId === requestedActId)) {
-      const origin = entryOriginSelection(value, user.id, originObject, originReceipt, originVersion)
+      const origin = outcome?.status === 'committed' && outcome.request?.action === 'withdraw'
+        && outcome.request.objectId === originObject
+        ? entryOriginAfterWithdrawal(value, user.id, outcome, originObject, originReceipt, originVersion)
+        : entryOriginSelection(value, user.id, originObject, originReceipt, originVersion)
       select(origin.id)
       setReceipt(origin.originReceipt)
     }
@@ -81,7 +84,7 @@ export function EvidenceActionWorkbench({ artistId, actId: requestedActId = null
     if (operation !== generation.current || capturedScope !== currentScope.current) return
     if (outcome.status === 'committed' || outcome.status === 'not_committed') {
       try {
-        const fresh = await reload()
+        const fresh = await reload(operation, outcome)
         if (operation !== generation.current || capturedScope !== currentScope.current) return
         if (outcome.status === 'committed' && Number(fresh.version) < Number(outcome.receipt.version)) throw new Error('readback stale')
         // Retire every older continuation only AFTER authoritative recovery.

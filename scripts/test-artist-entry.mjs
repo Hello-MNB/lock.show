@@ -7,6 +7,135 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createHash, randomUUID } from 'node:crypto'
 import { entryOriginObjects, entryOriginSelection } from '../src/lib/artistEntry.js'
+import * as entryOriginContract from '../src/lib/artistEntry.js'
+
+// Execute the production reload/settle functions, not a simulated UI decision.
+function originWorkbenchHarness(workbench, request, uploadReceipt) {
+  const source=fs.readFileSync(new URL('../src/features/evidence/EvidenceCapture.jsx',import.meta.url),'utf8')
+  const extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)))
+  const state={pending:request,status:'loading',data:null,receipt:null,selected:null,focus:0,effects:0}
+  const sandbox={...entryOriginContract,generation:{current:1},currentScope:{current:'same'},
+    getEvidenceWorkbench:async()=>workbench,artistId:request.artistId,actId:request.actId,
+    matches:w=>w.artistId===request.artistId&&w.actId===request.actId&&w.authority?.actorId===uploadReceipt.actorId
+      &&w.authority.workspaceId===request.workspaceId&&w.authority.contextVersion===request.contextVersion,
+    originObject:uploadReceipt.objectId,originReceipt:uploadReceipt.id,originVersion:String(uploadReceipt.objectVersion),
+    selectedActId:null,requestedActId:request.actId,user:{id:uploadReceipt.actorId},contextUnresolved:false,
+    select:v=>{state.selected=v},setReceipt:v=>{state.receipt=v},setData:v=>{state.data=v},setPending:v=>{state.pending=v},
+    setStatus:v=>{state.status=v},setBusy(){},busyRef:{current:true},focusRef:{current:{focus(){state.focus++}}},
+    emitGovernedConfirmation(){state.effects++},emitGovernedPublication(){state.effects++},emittedReceipts:{current:new Set()}}
+  vm.createContext(sandbox)
+  const functions=vm.runInContext(`(function(){${extract('  async function reload(','\n  useEffect(')}\n${extract('  async function settle(','\n  async function act(')};return {reload,settle}})()`,sandbox)
+  return {...functions,state,sandbox}
+}
+
+function withdrawnOrigin() {
+  const upload={id:'upload-a',key:'upload-key',action:'upload',actorId:'person-a',workspaceId:'org-a',artistId:'artist-a',actId:'act-b',contextVersion:2,objectId:'object-a',version:1,objectVersion:1,committedAt:'2026-08-31T00:00:00Z'}
+  const request={action:'withdraw',key:'withdraw-key',workspaceId:'org-a',artistId:'artist-a',actId:'act-b',contextVersion:2,objectId:'object-a',expectedVersion:1,expectedObjectVersion:1,payload:{reason:'Synthetic withdrawal'}}
+  const receipt={...upload,...request,id:'withdraw-a',version:2,objectVersion:2,committedAt:'2026-08-31T01:00:00Z'}
+  const workbench={artistId:request.artistId,actId:request.actId,version:2,authority:{actorId:upload.actorId,workspaceId:request.workspaceId,contextVersion:2,owner:true},objects:[{id:request.objectId,version:2,state:'withdrawn'}],history:[{action:'upload',receipt:upload},{action:'withdraw',receipt}]}
+  return {upload,request,receipt,workbench,outcome:{status:'committed',request,receipt}}
+}
+
+test('ORIGIN-WITHDRAW committed terminal readback clears pending and retires older continuation',async()=>{
+  const {upload,request,receipt,workbench,outcome}=withdrawnOrigin()
+  const harness=originWorkbenchHarness(workbench,request,upload)
+  await harness.settle(outcome,1,'same')
+  assert.equal(harness.state.status,'committed','matching withdrawal receipt must not remain uncertain')
+  assert.equal(harness.state.pending,null);assert.equal(harness.state.receipt.id,receipt.id)
+  assert.equal(harness.state.data.objects[0].state,'withdrawn')
+  const settled=structuredClone(harness.state)
+  await harness.settle(outcome,1,'same')
+  assert.deepEqual(harness.state,settled,'retired continuation cannot re-lock or repeat effects')
+})
+
+test('ORIGIN-WITHDRAW initial withdrawn, invalid or unrelated links still deny before exposing data',async()=>{
+  for(const kind of ['withdrawn','unrelated','missing-history']) {
+    const {upload,request,workbench}=withdrawnOrigin()
+    if(kind==='unrelated')upload.id='unrelated'
+    if(kind==='missing-history')workbench.history=[]
+    const h=originWorkbenchHarness(workbench,request,upload)
+    await assert.rejects(h.reload(),/evidence_action_unavailable/)
+    assert.equal(h.state.data,null);assert.equal(h.state.receipt,null)
+  }
+})
+
+test('ORIGIN-WITHDRAW lost response recovers the same immutable receipt without another commit',async()=>{
+  const {performEvidenceAction}=await import('../src/lib/passportApi.js')
+  const {upload,request,workbench,outcome}=withdrawnOrigin(),calls=[]
+  const recovered=await performEvidenceAction(request,{},async(url)=>{
+    calls.push(url)
+    if(url.endsWith('/commit'))throw new Error('committed response lost')
+    return new Response(JSON.stringify(outcome),{status:200,headers:{'content-type':'application/json'}})
+  })
+  const h=originWorkbenchHarness(workbench,request,upload)
+  await h.settle(recovered,1,'same')
+  assert.deepEqual(calls,['/api/evidence-actions/commit','/api/evidence-actions/resolve'])
+  assert.equal(h.state.pending,null);assert.equal(h.state.receipt.id,outcome.receipt.id)
+})
+
+test('ORIGIN-WITHDRAW mismatched receipt, current context, object and history fail closed',async()=>{
+  const mutations=[
+    x=>{x.outcome.receipt={...x.receipt,actorId:'other'}},
+    x=>{x.outcome.receipt={...x.receipt,key:'other'}},
+    x=>{x.outcome.receipt={...x.receipt,objectId:'other'}},
+    x=>{x.workbench.authority.workspaceId='other'},
+    x=>{x.workbench.authority.actorId='other'},
+    x=>{x.workbench.authority.contextVersion++},
+    x=>{x.workbench.actId='other'},
+    x=>{x.workbench.version=1},
+    x=>{x.workbench.objects[0].version=1},
+    x=>{x.workbench.objects[0].state='candidate'},
+    x=>{x.workbench.history=x.workbench.history.filter(r=>r.action!=='withdraw')},
+    x=>{x.workbench.history.push(x.workbench.history[1])},
+    x=>{x.workbench.history[1]={...x.workbench.history[1],receipt:{...x.receipt,committedAt:'other'}}},
+    x=>{x.upload.id='unrelated-upload'},
+  ]
+  for(const mutate of mutations) {
+    const x=withdrawnOrigin();x.upload={...x.upload};mutate(x)
+    const h=originWorkbenchHarness(x.workbench,x.request,x.upload)
+    await h.settle(x.outcome,1,'same')
+    assert.equal(h.state.status,'uncertain');assert.equal(h.state.pending.key,x.request.key)
+    assert.equal(h.state.data,null);assert.equal(h.state.receipt,null);assert.equal(h.state.effects,0)
+  }
+})
+
+test('ORIGIN-WITHDRAW revoked or stale read continuation cannot expose terminal data or re-lock recovery',async()=>{
+  const x=withdrawnOrigin(),h=originWorkbenchHarness(x.workbench,x.request,x.upload)
+  h.sandbox.getEvidenceWorkbench=async()=>{throw new Error('revoked')}
+  await h.settle(x.outcome,1,'same');assert.equal(h.state.status,'uncertain');assert.equal(h.state.data,null)
+  let release
+  h.sandbox.getEvidenceWorkbench=()=>new Promise(resolve=>{release=resolve})
+  const old=h.settle(x.outcome,1,'same')
+  h.sandbox.getEvidenceWorkbench=async()=>x.workbench
+  await h.settle(x.outcome,1,'same')
+  const recovered=structuredClone(h.state)
+  release(x.workbench);await old
+  assert.deepEqual(h.state,recovered)
+  h.sandbox.currentScope.current='different-context'
+  await h.settle(x.outcome,1,'same');assert.deepEqual(h.state,recovered)
+})
+
+test('ORIGIN-WITHDRAW unknown remains pending; server noncommit unlocks the unchanged candidate without action',async()=>{
+  const x=withdrawnOrigin()
+  x.workbench.objects[0]={id:x.request.objectId,version:1,state:'candidate'}
+  x.workbench.version=1;x.workbench.history=x.workbench.history.slice(0,1)
+  const h=originWorkbenchHarness(x.workbench,x.request,x.upload)
+  await h.settle({status:'uncertain',request:x.request},1,'same')
+  assert.equal(h.state.pending.key,x.request.key);assert.equal(h.state.status,'uncertain')
+  await h.settle({status:'not_committed',request:x.request},1,'same')
+  assert.equal(h.state.pending,null);assert.equal(h.state.status,'not_committed')
+  assert.equal(h.state.data.objects[0].state,'candidate');assert.equal(h.state.receipt,null)
+})
+
+test('ORIGIN-WITHDRAW current newer object and unrelated projection/history are never replaced by receipt state',async()=>{
+  const x=withdrawnOrigin()
+  x.workbench.version=4;x.workbench.objects[0]={...x.workbench.objects[0],version:3,state:'confirmed'}
+  x.workbench.objects.push({id:'other-private-object',version:1,state:'candidate',value:'unchanged'})
+  const before=structuredClone(x.workbench),h=originWorkbenchHarness(x.workbench,x.request,x.upload)
+  await h.settle(x.outcome,1,'same')
+  assert.equal(h.state.pending,null);assert.deepEqual(h.state.data,before);assert.deepEqual(x.workbench,before)
+  assert.equal(h.state.receipt.objectVersion,2);assert.equal(h.state.data.objects[0].version,3)
+})
 
 // Exact bounded Language v5.7 / ENTRY01–05 values, accepted by LS10 7/7.
 const entryCopy = {
@@ -212,7 +341,7 @@ async function startEntryFixture() {
   const fingerprint=createHash('sha256').update(JSON.stringify(hashes)).digest('hex')
   const actor='81000000-0000-4000-8000-000000000099',workspace='83000000-0000-4000-8000-000000000099'
   const artist='84000000-0000-4000-8000-000000000099',act='85000000-0000-4000-8000-000000000099'
-  let initialized=false,basics=false,consentAccepted=false,version=0,scenario='success',objects=[]
+  let initialized=false,basics=false,consentAccepted=false,version=0,scenario='success',objects=[],evidenceVersion=0,evidenceHistory=[]
   const notice={version:'SYNTHETIC-ENTRY-NOTICE-1',purpose:'Synthetic service-profile test purpose',
     noticeUrl:'https://example.test/synthetic-notice',termsUrl:'https://example.test/synthetic-terms',effectiveAt:'2026-08-01T00:00:00Z'}
   const receipts=new Map(),fences=new Set(),completionEvents=new Map()
@@ -225,8 +354,8 @@ async function startEntryFixture() {
   const state=()=>({actorId:actor,status:initialized?'ready':'uninitialized',workspaceId:initialized?workspace:null,
     contextVersion:0,version,artistId:basics?artist:null,actId:basics?act:null,artist:basics?{id:artist,...artistFields}:null,
     serviceNotice:scenario==='notice-missing'?null:notice,consentAccepted})
-  const workbench=()=>({artistId:artist,actId:act,stageName:artistFields.stage_name,acts:[{id:act,stageName:artistFields.stage_name}],version:objects.length,authority:{actorId:actor,workspaceId:workspace,contextVersion:0,owner:true,role:'artist'},objects,
-    history:[...receipts.values()].filter(r=>r.action==='upload').map(receipt=>({action:'upload',receipt,before:{},after:objects.find(o=>o.id===receipt.objectId),reason:null,provenance:'Artist supplied link'})),legacyClaims:[],legacyItems:[]})
+  const workbench=()=>({artistId:artist,actId:act,stageName:artistFields.stage_name,acts:[{id:act,stageName:artistFields.stage_name}],version:evidenceVersion,authority:{actorId:actor,workspaceId:workspace,contextVersion:0,owner:true,role:'artist'},objects,
+    history:evidenceHistory,legacyClaims:[],legacyItems:[]})
   const reply=(res,status,body)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(body))}
   let port
   const vite=await createServer({root:snapshot,configFile:false,envFile:false,css:{postcss:{plugins:[tailwind(frozenTailwind),autoprefixer()]}},plugins:[{
@@ -237,7 +366,7 @@ async function startEntryFixture() {
       let raw='';for await(const chunk of req)raw+=chunk
       let body={};try{body=raw?JSON.parse(raw):{}}catch{return reply(res,400,{error:'invalid fixture input'})}
       if(uri.pathname==='/__entry-fixture/reset'&&req.method==='POST') {
-        initialized=false;basics=false;consentAccepted=false;version=0;objects=[];receipts.clear();fences.clear();completionEvents.clear();artistFields={stage_name:'',city:''}
+        initialized=false;basics=false;consentAccepted=false;version=0;objects=[];evidenceVersion=0;evidenceHistory=[];receipts.clear();fences.clear();completionEvents.clear();artistFields={stage_name:'',city:''}
         scenario=body.scenario||'success';return reply(res,200,{scenario,synthetic:true})
       }
       if(uri.pathname==='/__entry-fixture/scenario'&&req.method==='POST'){scenario=body.scenario;return reply(res,200,{scenario})}
@@ -306,13 +435,24 @@ async function startEntryFixture() {
         return reply(res,200,workbench())
       }
       if(uri.pathname==='/api/evidence-actions/commit'||uri.pathname==='/api/evidence-actions/resolve') {
-        if(scenario==='link-denied')return reply(res,403,{error:'evidence_action_unavailable'})
+        if(scenario==='link-denied'||scenario==='revoked'||!basics||body.artistId!==artist||body.actId!==act
+          ||body.workspaceId!==workspace||body.contextVersion!==0)return reply(res,403,{error:'evidence_action_unavailable'})
+        if(scenario==='withdraw-uncertain'&&uri.pathname.endsWith('/resolve'))return reply(res,503,{error:'unavailable'})
         if(!receipts.has(body.key)) {
           if(uri.pathname.endsWith('/resolve'))return reply(res,200,{status:'not_committed'})
-          objects.push({id:body.objectId,version:1,state:'candidate',title:body.payload.title,value:body.payload.value})
-          receipts.set(body.key,{...body,id:randomUUID(),actorId:actor,version:body.expectedVersion+1,objectVersion:1,committedAt:new Date().toISOString()})
+          const old=objects.find(o=>o.id===body.objectId),before=old?structuredClone(old):{}
+          if(body.expectedVersion!==evidenceVersion||body.expectedObjectVersion!==(old?.version||0)
+            ||!['upload','withdraw'].includes(body.action)||(body.action==='withdraw'&&(!old||old.state==='withdrawn')))
+            return reply(res,403,{error:'evidence_action_unavailable'})
+          const after=body.action==='upload'?{id:body.objectId,version:1,state:'candidate',title:body.payload.title,value:body.payload.value}
+            :{...old,version:old.version+1,state:'withdrawn'}
+          objects=old?objects.map(o=>o.id===old.id?after:o):[...objects,after]
+          evidenceVersion++
+          const receipt={...body,id:randomUUID(),actorId:actor,version:evidenceVersion,objectVersion:after.version,committedAt:new Date().toISOString()}
+          receipts.set(body.key,receipt)
+          evidenceHistory.push({action:body.action,receipt,before,after:structuredClone(after),reason:body.payload.reason||null,provenance:body.payload.provenance||null})
         }
-        if(scenario==='link-response-lost'&&uri.pathname.endsWith('/commit')){res.destroy();return}
+        if(['link-response-lost','withdraw-response-lost','withdraw-uncertain'].includes(scenario)&&uri.pathname.endsWith('/commit')){res.destroy();return}
         return reply(res,200,{status:'committed',receipt:receipts.get(body.key)})
       }
       return reply(res,200,[])
@@ -445,6 +585,30 @@ if(process.argv.includes('--browser'))test('30 non-DEMO actual entry journey HE/
         await page.waitForURL(url=>url.pathname===`/evidence/${proof.current.artistId}`&&url.searchParams.get('object')===proof.objects[0].id)
         await page.getByText(`${t.evidenceActions.receipt}: ${upload.id}`,{exact:true}).first().waitFor()
         assert.deepEqual((await(await fetch(origin+'/__entry-fixture/state')).json()).objects,proof.objects,'Back/reload/forward/review creates no duplicate and changes no candidate')
+        const originUrl=page.url()
+        const withdrawalScenario=width===390?'success':width===768?'withdraw-response-lost':'withdraw-uncertain'
+        await fetch(origin+'/__entry-fixture/scenario',{method:'POST',body:JSON.stringify({scenario:withdrawalScenario})})
+        await page.getByRole('button',{name:t.evidenceActions.withdraw,exact:true}).focus();await page.keyboard.press('Enter')
+        if(withdrawalScenario==='withdraw-uncertain') {
+          await page.getByText(t.evidenceActions.status.uncertain,{exact:true}).waitFor()
+          assert.equal(await page.getByRole('link',{name:t.evidenceActions.back,exact:true}).count(),0)
+          await fetch(origin+'/__entry-fixture/scenario',{method:'POST',body:JSON.stringify({scenario:'success'})})
+          await page.getByRole('button',{name:t.evidenceActions.recover,exact:true}).click()
+        }
+        await page.getByText(t.evidenceActions.status.committed,{exact:true}).waitFor()
+        const terminal=await(await fetch(origin+'/__entry-fixture/state')).json()
+        const withdrawal=terminal.history.find(row=>row.action==='withdraw').receipt
+        assert.equal(terminal.objects.length,1);assert.equal(terminal.objects[0].state,'withdrawn')
+        assert.equal(terminal.objects[0].id,proof.objects[0].id);assert.equal(terminal.objects[0].version,2)
+        assert.deepEqual(terminal.history[0],proof.history[0],'upload history is immutable after withdrawal')
+        await page.getByText(`${t.evidenceActions.receipt}: ${withdrawal.id}`,{exact:true}).first().waitFor()
+        assert.equal(await page.getByRole('button',{name:t.evidenceActions.withdraw,exact:true}).isDisabled(),true)
+        await page.getByRole('link',{name:t.evidenceActions.back,exact:true}).click();await page.waitForURL('**/artist/home')
+        assert.equal(await page.locator('[data-entry-pending=true]').count(),0)
+        await page.goto(originUrl);await page.getByText(t.evidenceActions.status.denied,{exact:true}).waitFor()
+        assert.equal(await page.getByRole('button').filter({hasText:'https://example.test/artist'}).count(),0,'initial withdrawn-origin URL still fails closed')
+        assert.deepEqual((await(await fetch(origin+'/__entry-fixture/state')).json()).history,terminal.history,'return and invalid URL do not create another action')
+        console.log(`ORIGIN_WITHDRAW_BROWSER ${lang} ${width}: ${withdrawalScenario}, matched terminal receipt/safe return/initial denial`)
         assert.deepEqual(errors,[])
         cells++;console.log(`ENTRY_BROWSER_CELL ${lang} ${width}: signup/selection/basics/consent/candidate/keyboard/direction/fit`)
       } catch(error) { console.error(JSON.stringify({lang,width,url:page.url(),body:(await page.locator('body').innerText()).slice(0,1800),errors}));throw error }

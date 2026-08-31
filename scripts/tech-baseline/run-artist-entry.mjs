@@ -8,6 +8,7 @@ import pg from 'pg'
 import { createServer } from 'node:http'
 import { createClient } from '@supabase/supabase-js'
 import { createArtistEntryClient, firstLinkRequest, entryOriginObjects, entryOriginSelection } from '../../src/lib/artistEntry.js'
+import * as entryOriginContract from '../../src/lib/artistEntry.js'
 import { performEvidenceAction } from '../../src/lib/passportApi.js'
 import vm from 'node:vm'
 
@@ -425,6 +426,56 @@ if (process.argv.includes('--disposable')) {
         for(const changed of [{objectId:crypto.randomUUID()},{receiptId:crypto.randomUUID()},{version:2}])
           assert.throws(()=>entryOriginSelection(projection,fresh,changed.objectId||request.objectId,changed.receiptId||outcome.receipt.id,changed.version||1))
         assert.equal(entryOriginObjects(projection,actor).length,0)
+        // Real authenticated commit/readback, fed into the exact component
+        // functions. Roll back this witness so adjacent landing data is intact.
+        await client.query('begin');await as(fresh)
+        try {
+          const withdrawal={action:'withdraw',key:crypto.randomUUID(),artistId:state.artistId,actId:state.actId,
+            objectId:request.objectId,workspaceId:scope.workspaceId,contextVersion:scope.contextVersion,
+            expectedVersion:projection.version,expectedObjectVersion:origin.version,
+            payload:{reason:'Disposable origin withdrawal',provenance:'Local regression fixture'}}
+          const receipt=(await client.query('select public.commit_evidence_action($1::jsonb) result',[withdrawal])).rows[0].result
+          const terminal=(await client.query('select public.get_evidence_workbench($1,$2) result',[state.artistId,state.actId])).rows[0].result
+          assert.equal(terminal.objects.find(o=>o.id===request.objectId).state,'withdrawn')
+          const component=fs.readFileSync(path.join(root,'src/features/evidence/EvidenceCapture.jsx'),'utf8')
+          const extract=(start,end)=>component.slice(component.indexOf(start),component.indexOf(end,component.indexOf(start)))
+          const ui={pending:withdrawal,status:'loading',receipt:null,data:projection}
+          const bindings={...entryOriginContract,generation:{current:1},currentScope:{current:'same'},
+            getEvidenceWorkbench:async()=>terminal,artistId:state.artistId,actId:state.actId,
+            matches:w=>w.authority.actorId===fresh&&w.authority.workspaceId===scope.workspaceId&&w.authority.contextVersion===scope.contextVersion,
+            originObject:request.objectId,originReceipt:outcome.receipt.id,originVersion:'1',selectedActId:null,requestedActId:state.actId,
+            user:{id:fresh},contextUnresolved:false,select(){},setReceipt:v=>{ui.receipt=v},setData:v=>{ui.data=v},setPending:v=>{ui.pending=v},
+            setStatus:v=>{ui.status=v},setBusy(){},busyRef:{current:true},focusRef:{current:null},
+            emitGovernedConfirmation(){},emitGovernedPublication(){},emittedReceipts:{current:new Set()}}
+          vm.createContext(bindings)
+          const settle=vm.runInContext(`(function(){${extract('  async function reload(','\n  useEffect(')}\n${extract('  async function settle(','\n  async function act(')};return settle})()`,bindings)
+          await settle({status:'committed',receipt,request:withdrawal},1,'same')
+          assert.equal(ui.status,'committed','actual PG withdrawal + component must settle, not stay uncertain')
+          assert.equal(ui.pending,null);assert.equal(ui.receipt.id,receipt.id)
+          assert.deepEqual(ui.data,terminal)
+          passed++;console.log('OK 24 ORIGIN-WITHDRAW real PG terminal receipt + actual component settles without revival')
+          assert.throws(()=>entryOriginSelection(terminal,fresh,request.objectId,outcome.receipt.id,1))
+          const resolved=(await client.query('select public.resolve_evidence_action($1::jsonb) result',[withdrawal])).rows[0].result
+          assert.equal(resolved.status,'committed');assert.deepEqual(resolved.receipt,receipt)
+          const settled=structuredClone(ui)
+          await settle({status:'committed',receipt:resolved.receipt,request:withdrawal},1,'same')
+          assert.deepEqual(ui,settled)
+          const repeated=(await client.query('select public.commit_evidence_action($1::jsonb) result',[withdrawal])).rows[0].result
+          assert.deepEqual(repeated,receipt)
+          assert.deepEqual((await client.query('select public.get_evidence_workbench($1,$2) result',[state.artistId,state.actId])).rows[0].result,terminal)
+          passed++;console.log('OK 24 initial terminal URL denied; lost acknowledgement/repeated resolve/replay preserve exact PG receipt/history')
+          for(const delta of [{objectId:crypto.randomUUID()},{workspaceId:crypto.randomUUID()},{contextVersion:withdrawal.contextVersion+1}])
+            await deny(()=>client.query('select public.resolve_evidence_action($1::jsonb)',[{...withdrawal,...delta}]),'evidence_action_unavailable')
+          await as(actor)
+          await deny(()=>client.query('select public.get_evidence_workbench($1,$2)',[state.artistId,state.actId]),'evidence_action_unavailable')
+          await as(fresh)
+          await client.query('savepoint revoked_origin');await client.query('reset role')
+          await client.query("update public.organization_membership set status='suspended' where person_id=$1",[fresh]);await as(fresh)
+          await deny(()=>client.query('select public.get_evidence_workbench($1,$2)',[state.artistId,state.actId]),'evidence_action_unavailable')
+          await client.query('rollback to savepoint revoked_origin')
+          passed++;console.log('OK 24 real PG wrong origin/workspace/context/person and revoked membership remain non-disclosing')
+        } catch(error) {failed++;console.error('RED 24 ORIGIN-WITHDRAW: '+error.message)}
+        finally {await client.query('rollback');await client.query('reset role')}
         passed++;console.log('OK 24 real governed history maps exact origin receipt/object/version and rejects unrelated selection')
         sandbox.getArtistRadarContext=landing
         const caller=name=>{

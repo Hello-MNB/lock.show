@@ -86,19 +86,23 @@ export function createArtistEntryClient({ actorId, rpc = defaultRpc }) {
 
 // An upload receipt proves a historical action, never the object's current
 // truth/publication state. The fresh governed projection supplies that state.
+function originReceipts(workbench, actorId, object) {
+  return workbench.history.filter(row => {
+    const r = row.receipt
+    return row.action === 'upload' && r?.action === 'upload' && r.id && r.committedAt
+      && r.actorId === actorId && r.workspaceId === workbench.authority.workspaceId
+      && r.artistId === workbench.artistId && r.actId === workbench.actId && r.objectId === object.id
+      && Number.isSafeInteger(r.contextVersion) && r.contextVersion <= Number(workbench.authority.contextVersion)
+      && Number.isSafeInteger(r.objectVersion) && r.objectVersion > 0 && r.objectVersion <= object.version
+  })
+}
+
 export function entryOriginObjects(workbench, actorId) {
   const authority = workbench?.authority
   if (authority?.actorId !== actorId || !Array.isArray(workbench.objects) || !Array.isArray(workbench.history)) return []
   return workbench.objects.flatMap(object => {
     if (!object.id || !Number.isSafeInteger(object.version) || object.version < 1 || object.state === 'withdrawn') return []
-    const matches = workbench.history.filter(row => {
-      const r = row.receipt
-      return row.action === 'upload' && r?.action === 'upload' && r.id && r.committedAt
-        && r.actorId === actorId && r.workspaceId === authority.workspaceId
-        && r.artistId === workbench.artistId && r.actId === workbench.actId && r.objectId === object.id
-        && Number.isSafeInteger(r.contextVersion) && r.contextVersion <= Number(authority.contextVersion)
-        && Number.isSafeInteger(r.objectVersion) && r.objectVersion > 0 && r.objectVersion <= object.version
-    })
+    const matches = originReceipts(workbench, actorId, object)
     if (matches.length !== 1) return []
     return [{ ...object, originReceipt: matches[0].receipt }]
   })
@@ -110,6 +114,34 @@ export function entryOriginSelection(workbench, actorId, objectId, receiptId, ob
     throw new Error('evidence_action_unavailable')
   }
   return object
+}
+
+// This is an outcome readback, NOT admission through a withdrawn origin URL.
+// The server still selects the actor's current authorized projection. History
+// proves the exact completed action; it never replaces the current object.
+export function entryOriginAfterWithdrawal(workbench, actorId, outcome, objectId, receiptId, objectVersion) {
+  const r = outcome?.receipt, request = outcome?.request, authority = workbench?.authority
+  const unavailable = () => { throw new Error('evidence_action_unavailable') }
+  if (outcome?.status !== 'committed' || request?.action !== 'withdraw' || request.objectId !== objectId
+    || !r?.id || !r.committedAt || r.actorId !== actorId || authority?.actorId !== actorId
+    || request.workspaceId !== authority.workspaceId || request.contextVersion !== Number(authority.contextVersion)
+    || request.artistId !== workbench.artistId || request.actId !== workbench.actId
+    || !['key', 'action', 'objectId', 'artistId', 'actId', 'workspaceId', 'contextVersion'].every(k => r[k] === request[k])
+    || !Number.isSafeInteger(request.expectedVersion) || !Number.isSafeInteger(request.expectedObjectVersion)
+    || r.version !== request.expectedVersion + 1 || r.objectVersion !== request.expectedObjectVersion + 1
+    || !Number.isSafeInteger(workbench.version) || workbench.version < r.version
+    || !Array.isArray(workbench.objects) || !Array.isArray(workbench.history)) return unavailable()
+  const object = workbench.objects.find(item => item.id === objectId)
+  if (!object || !Number.isSafeInteger(object.version) || object.version < r.objectVersion
+    || (object.version === r.objectVersion && object.state !== 'withdrawn')) return unavailable()
+  const history = workbench.history.filter(row => row.receipt?.id === r.id)
+  const fields = ['id', 'key', 'action', 'actorId', 'workspaceId', 'artistId', 'actId', 'objectId', 'contextVersion', 'version', 'objectVersion', 'committedAt']
+  if (history.length !== 1 || history[0].action !== 'withdraw'
+    || !fields.every(k => history[0].receipt[k] === r[k])) return unavailable()
+  const origins = originReceipts(workbench, actorId, object)
+  if (origins.length !== 1 || origins[0].receipt.id !== receiptId
+    || origins[0].receipt.objectVersion !== Number(objectVersion)) return unavailable()
+  return { ...object, originReceipt: origins[0].receipt }
 }
 
 export function firstLinkRequest(workbench, value, sourceConsent) {
