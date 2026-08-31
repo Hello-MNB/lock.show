@@ -1,9 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
-import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
 import { BrandSymbol } from '@/components/brand-symbol'
 import { SOCIAL } from '@/lib/social'
@@ -69,20 +67,10 @@ const FOOTER_LINKS = [
   },
 ]
 
-// T-84 CTA attribution law (docs/SITE-REWRITE-BRIEF.md): footer is shared
-// across every page, so the campaign must be derived from the route, not
-// hardcoded — otherwise 100% of footer-driven signups attribute via referrer
-// only.
-function pageSlug(pathname: string | null): string {
-  if (!pathname || pathname === '/') return 'home'
-  return pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, '-')
-}
 
 export function Footer() {
   const { messages } = useLocale()
   const t = messages.footer
-  const pathname = usePathname()
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=footer`
 
   return (
     <footer
@@ -128,24 +116,6 @@ export function Footer() {
             </Link>
 
           </div>
-          <a
-            href={signupHref}
-            style={{
-              display: 'inline-block',
-              padding: '15px 24px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            BUILD YOUR PASSPORT →
-          </a>
         </div>
 
         {/* Link columns */}

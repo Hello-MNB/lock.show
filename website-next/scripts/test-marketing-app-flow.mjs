@@ -40,6 +40,51 @@ async function assertRemovedAsset(directory) {
 await assertRemovedAsset('public')
 if (process.argv.includes('--removal-source')) process.exit(0)
 
+// R1-SITE-NO-COLLECTION-22: exact frozen compound units, not a global word ban.
+const claimUnits = [
+  ['C01', 'app/page.tsx', ['What is a Bookability Passport?', 'public, method-labelled profile showing only verified claims']],
+  ['C02', 'app/page.tsx', ['How is evidence verified?', 'Each claim carries a method label']],
+  ['C03', 'app/contact/page.tsx', ['Producers happy to confirm the shows they ran']],
+  ['C04', 'app/how-it-works/page.tsx', ['The one who ran your show.']],
+  ['C05', 'app/how-it-works/page.tsx', ['They confirm in thirty seconds.', 'No account, no password. They see']],
+  ['C06', 'app/passport/demo/page.tsx', ['READY TO BUILD YOURS?', 'Build your own Passport. Get verified.']],
+  ['C07', 'app/page.tsx', ['One tap confirms a night you ran']],
+  ['C08', 'app/page.tsx', ['Get them confirmed', 'A producer who was there taps one link.']],
+  ['C09', 'app/artists/page.tsx', ["title: 'Invite.'", 'One WhatsApp message to the producer who ran your night.']],
+  ['C10', 'app/artists/page.tsx', ['One-tap links to bring a producer in to confirm a show']],
+  ['C11', 'app/how-it-works/page.tsx', ['Sign up and set the stage.', 'Email, name, genre, where you play.']],
+  ['C12', 'app/how-it-works/page.tsx', ['Three people, one link, and about thirty seconds']],
+  ['C13', 'app/how-it-works/page.tsx', ['Your first night takes', 'two minutes to log.']],
+  ['C14', 'app/passport/demo/page.tsx', ['Sample Passport — Verified Live Performance Evidence', 'verified strengths only.']],
+  ['C15', 'app/page.tsx', ['We check everything', 'Nothing reaches your Passport until']],
+  ['C16', 'app/methodology/page.tsx', ['Methodology — How Evidence Is Verified', 'Every claim in a LOCK SHOW Passport carries a method label']],
+  ['C17', 'app/producers/page.tsx', ['For Producers — 20 Seconds, No Account', 'An artist you booked is asking one small favor:', 'Twenty seconds of your word turns']],
+  ['C18', 'app/producers/page.tsx', ['Twenty seconds to say so.']],
+  ['C19', 'app/producers/page.tsx', ['An artist you booked is asking a small favor between professionals:']],
+  ['C20', 'app/producers/page.tsx', ['A link lands in your WhatsApp', 'From an artist you actually booked, about a night you actually ran.']],
+  ['C21', 'app/producers/page.tsx', ['const steps =', 'steps.map(', 'TWENTY SECONDS, START TO FINISH', 'We never chase you again.']],
+  ['C22', 'app/producers/page.tsx', ['Curious where those twenty seconds end up?', 'you confirmed — nowhere else.']],
+]
+const noCollectionSources = [...new Set([...claimUnits.map(([, file]) => file),
+  'app/radar/page.tsx', 'components/nav.tsx', 'components/footer.tsx'])]
+const sourceContents = Object.fromEntries(await Promise.all(noCollectionSources.map(async (file) =>
+  [file, await readFile(path.join(websiteRoot, file), 'utf8')])))
+function assertClaimUnits(contents, label) {
+  const failures = claimUnits.filter(([, file, markers]) => markers.some((marker) => contents[file].includes(marker)))
+  if (failures.length) throw new Error(`${label} claim units RETURN ${22 - failures.length}/22: ${failures.map(([id]) => id).join(', ')}`)
+  console.log(`${label} exact compound claim units: 22/22 absent`)
+}
+assertClaimUnits(sourceContents, 'Source')
+for (const [file, content] of Object.entries(sourceContents)) {
+  if (/\/signup\b|signupHref/.test(content)) throw new Error(`${file}: withdrawn signup definition/control remains`)
+}
+const navSource = sourceContents['components/nav.tsx']
+if ((navSource.match(/href=\{loginHref\}/g) || []).length !== 2 ||
+    !navSource.includes('/login?utm_source=site&utm_campaign=${slug}&utm_content=nav') ||
+    !navSource.includes('<LocaleToggle />')) throw new Error('Invited Login or locale controls changed')
+console.log('Source signup: 0 definitions/controls; invited Login: 2/2 consumers retained')
+if (process.argv.includes('--no-collection-source')) process.exit(0)
+
 // WEB-R1-FORM-DISABLE-001: prove source removal and the actual exported surface.
 // Restoring the deleted caller/component or a direct browser write must fail.
 async function runtimeTextFiles(directory) {
@@ -71,7 +116,7 @@ async function assertPublicFormDisabled() {
     ['rendered contact has no form or PII input', !/<(?:form|input|textarea|select)\b/i.test(contactHtml)],
     ['exported HTML/JS has no public REST write', !directWrite.test(exported)],
     ['exported HTML/JS has no waitlist CTA/privacy promise', !withdrawnCopy.test(exported)],
-    ['contact canonical and existing app handoff retained', contactHtml.includes('rel="canonical" href="https://lock.show/contact"') && contactHtml.includes(`${productionOrigin}/signup?utm_source=site&amp;utm_campaign=contact`)],
+    ['contact canonical and invited Login retained without signup', contactHtml.includes('rel="canonical" href="https://lock.show/contact"') && contactHtml.includes(`${productionOrigin}/login?utm_source=site&amp;utm_campaign=contact`) && !contactHtml.includes('/signup')],
   ]
   const failures = checks.filter(([, passed]) => !passed).map(([name]) => name)
   if (failures.length) throw new Error(`Public form disable RETURN ${checks.length - failures.length}/${checks.length}:\n${failures.join('\n')}`)
@@ -160,7 +205,25 @@ if (!(await readFile(path.join(websiteRoot, 'out', 'faq.html'), 'utf8')).include
 }
 console.log(`Removal adjacency: contact=${removalPages.length}/${removalPages.length}, parsed schemas=${schemaCount}, raster=absent, no-guarantee=preserved`)
 
-if (signupLinks === 0 || loginLinks === 0) {
+const builtContents = {}
+for (const file of noCollectionSources.filter((file) => file.startsWith('app/'))) {
+  const route = file.replace(/^app\//, '').replace(/\/page\.tsx$/, '').replace(/^page\.tsx$/, 'index')
+  const html = await readFile(path.join(websiteRoot, 'out', `${route}.html`), 'utf8')
+  // Include metadata and JSON-LD as well as visible prose; normalize markup splits.
+  builtContents[file] = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+  const canonical = route === 'index' ? '/' : `/${route}`
+  const canonicalHref = html.match(/<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1]
+  if (!canonicalHref || new URL(canonicalHref).href !== new URL(canonical, 'https://lock.show').href) throw new Error(`${route}: canonical lost`)
+  if (/<(?:form|input|textarea|select)\b/i.test(html)) throw new Error(`${route}: unexpected public collection control`)
+  if (/<(?:a|button)\b[^>]*>\s*<\/(?:a|button)>/i.test(html)) throw new Error(`${route}: empty interactive control`)
+  for (const match of html.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) JSON.parse(match[1])
+}
+assertClaimUnits(builtContents, 'Exported prose/metadata/JSON-LD')
+const producersHtml = await readFile(path.join(websiteRoot, 'out/producers.html'), 'utf8')
+for (const marker of ['You know what happened that night.', 'For Producers | LOCK SHOW', 'href="/passport/demo"']) {
+  if (!producersHtml.includes(marker)) throw new Error(`Producers preserved surface missing: ${marker}`)
+}
+if (signupLinks !== 0 || loginLinks === 0) {
   throw new Error(`Built marketing flow is incomplete: signup=${signupLinks}, login=${loginLinks}`)
 }
 if (forbidden.length > 0) {
@@ -170,4 +233,4 @@ if (brandDefects.length > 0) {
   throw new Error(`Built pages violate LOCK SHOW identity:\n${brandDefects.join('\n')}`)
 }
 
-console.log(`marketing->app flow PASS: signup=${signupLinks}, login=${loginLinks}, brand=${files.length}/${files.length}, origin=${productionOrigin}`)
+console.log(`no-collection informational flow PASS: signup=${signupLinks}, invitedLogin=${loginLinks}, brand=${files.length}/${files.length}, origin=${productionOrigin}`)

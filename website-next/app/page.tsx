@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { APP_URL } from '@/lib/app-url'
 
 const SITE_URL = 'https://lock.show'
 
@@ -28,22 +27,6 @@ const jsonLd = {
     {
       '@type': 'FAQPage',
       mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is a Bookability Passport?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'How is evidence verified?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Each claim carries a method label — TICKET EXPORT, PRODUCER-CONFIRMED, PLATFORM DATA, OPERATOR-REVIEWED, or SELF-REPORTED — alongside a review date. The label is always visible. Producers confirm individual claims via a bounded magic link; no account required.',
-          },
-        },
         {
           '@type': 'Question',
           name: 'What does LOCK SHOW not do?',
@@ -260,26 +243,6 @@ export default function HomePage() {
                   marginBottom: '2rem',
                 }}
               >
-                <a
-                  href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=hero`}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    background: 'var(--color-stamp)',
-                    color: 'var(--color-ink)',
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    padding: '0.95rem 1.75rem',
-                    borderRadius: '10px',
-                    textDecoration: 'none',
-                  }}
-                >
-                  BUILD YOUR PASSPORT
-                  <Icon id="arrow" size={16} color="var(--color-ink)" />
-                </a>
                 <Link
                   href="/passport/demo"
                   style={{
@@ -645,7 +608,6 @@ export default function HomePage() {
                   image: '/lockshow-persona-producer-v1.webp',
                   tag: 'PRODUCER',
                   title: 'You were there. Say so.',
-                  body: 'One tap confirms a night you ran — twenty seconds, no account, and an artist you believe in gets further.',
                   href: '/producers',
                   cta: 'FOR PRODUCERS',
                 },
@@ -972,16 +934,6 @@ export default function HomePage() {
                   body: 'Gigs, crowds, rooms. Everything stays private until you say otherwise.',
                 },
                 {
-                  step: '02',
-                  title: 'Get them confirmed',
-                  body: 'A producer who was there taps one link. Twenty seconds, no account.',
-                },
-                {
-                  step: '03',
-                  title: 'We check everything',
-                  body: 'Nothing reaches your Passport until it has actually been checked.',
-                },
-                {
                   step: '04',
                   title: 'Share your Passport',
                   body: 'One link that speaks for you before the first phone call.',
@@ -1167,39 +1119,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── FINAL CTA ─────────────────────────────────────────────────── */}
-        <section
-          style={{
-            background: 'var(--color-ink)',
-            padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
-            textAlign: 'center',
-          }}
-        >
-          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-
-
-            <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=final`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '1rem 2.5rem',
-                borderRadius: '10px',
-                textDecoration: 'none',
-              }}
-            >
-              REQUEST ACCESS
-              <Icon id="arrow" size={16} color="var(--color-ink)" />
-            </a>
-          </div>
-        </section>
       </main>
     </>
   )

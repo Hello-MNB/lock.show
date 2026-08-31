@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { APP_URL } from '@/lib/app-url'
 import { SOCIAL } from '@/lib/social'
 
 export const metadata: Metadata = {
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
 const lookingFor = [
   'Independent artists who want their live draw taken seriously',
   'Booking managers evaluating unfamiliar talent',
-  'Producers happy to confirm the shows they ran — one click, no account',
   'Honest feedback — what works, what doesn\'t',
 ]
 
@@ -187,34 +185,6 @@ export default function Contact() {
         `}</style>
       </section>
 
-      {/* CTA BAND */}
-      <section style={{
-        backgroundColor: 'var(--color-night)',
-        color: 'var(--color-paper)',
-        padding: '56px 24px',
-        textAlign: 'center',
-      }}>
-        <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-          <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
-            style={{
-              display: 'inline-block',
-              padding: '14px 32px',
-              backgroundColor: 'transparent',
-              color: 'var(--color-paper)',
-              border: '1px solid rgba(243,245,239,0.35)',
-              fontFamily: 'var(--font-space-mono)',
-              fontWeight: 700,
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
-            }}
-          >
-            BUILD YOUR PASSPORT →
-          </a>
-        </div>
-      </section>
 
     </main>
   )

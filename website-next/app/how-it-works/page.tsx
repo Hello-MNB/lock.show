@@ -7,18 +7,12 @@ export const metadata: Metadata = {
   description: 'See exactly how a gig becomes evidence a booking manager can trust — three people, three simple steps, no signup required to view.',
 }
 
-import { APP_URL } from '@/lib/app-url'
 
 const players = [
   {
     letter: 'A',
     role: 'Artist',
     body: 'That\'s you. You log the nights you\'ve played, invite the person who ran them to back you up, and decide exactly what the world gets to see.',
-  },
-  {
-    letter: 'B',
-    role: 'Producer',
-    body: 'The one who ran your show. They get a single link, tap confirm in about thirty seconds, and they\'re done — no account, no password, no app.',
   },
   {
     letter: 'C',
@@ -29,11 +23,6 @@ const players = [
 
 const steps = [
   {
-    num: '01',
-    title: 'Sign up and set the stage.',
-    body: 'Email, name, genre, where you play. Two minutes, and you have a home for your history.',
-  },
-  {
     num: '02',
     title: 'Log a night you played.',
     body: 'Date, venue, roughly how many people were in the room. It lands in your private Radar — only you can see it there.',
@@ -42,11 +31,6 @@ const steps = [
     num: '03',
     title: 'Send the producer one link.',
     body: 'LOCK SHOW gives you a unique link for that night. WhatsApp it to the producer who ran the show — that\'s the whole ask.',
-  },
-  {
-    num: '04',
-    title: 'They confirm in thirty seconds.',
-    body: 'No account, no password. They see the date and the venue, tap confirm, done. Your night now carries their word, not just yours.',
   },
   {
     num: '05',
@@ -122,10 +106,6 @@ export default function HowItWorks() {
               <br />
 
             </h1>
-            <p style={{ fontSize: '1.05rem', color: 'rgba(243,245,239,0.72)', maxWidth: '520px', lineHeight: 1.65, margin: 0 }}>
-              Three people, one link, and about thirty seconds of someone
-              else&apos;s time. Here&apos;s the whole walk-through.
-            </p>
           </div>
         </div>
       </section>
@@ -426,40 +406,8 @@ export default function HowItWorks() {
         }}
       >
         <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-          <h2 style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            fontWeight: 400,
-            fontSize: 'clamp(1.9rem, 4.5vw, 3rem)',
-            letterSpacing: '-0.045em',
-            lineHeight: 1.0,
-            color: 'var(--color-paper)',
-            marginBottom: '1rem',
-          }}>
-            Your first night takes
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              two minutes to log.
-            </em>
-          </h2>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=how-it-works`}
-              style={{
-                display: 'inline-block',
-                padding: '0.95rem 2rem',
-                backgroundColor: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.78rem',
-                letterSpacing: '0.08em',
-                textDecoration: 'none',
-                borderRadius: '10px',
-                fontWeight: 700,
-              }}
-            >
-              BUILD YOUR PASSPORT →
-            </a>
             <Link
               href="/passport/demo"
               style={{

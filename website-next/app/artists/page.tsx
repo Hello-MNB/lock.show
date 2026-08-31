@@ -15,7 +15,6 @@ export const metadata: Metadata = {
   },
 }
 
-import { APP_URL } from '@/lib/app-url'
 
 const ICON_PATHS: Record<string, string> = {
   arrow:
@@ -97,11 +96,6 @@ const steps = [
     body: 'Your gigs, your numbers, your story — private in your Radar until you say otherwise.',
   },
   {
-    num: '02',
-    title: 'Invite.',
-    body: 'One WhatsApp message to the producer who ran your night. They confirm it in a tap.',
-  },
-  {
     num: '03',
     title: 'We check.',
     body: 'Every claim gets a proper look before it goes anywhere near your Passport.',
@@ -116,7 +110,6 @@ const steps = [
 const radarFeatures = [
   'Every night you\'ve played, gathered in one place',
   'A clear picture of what to build next — no guesswork',
-  'One-tap links to bring a producer in to confirm a show',
   'Private by default. Nothing moves without your OK',
 ]
 
@@ -234,26 +227,6 @@ export default function ArtistsPage() {
 
           {/* CTAs */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <a
-              href={`${APP_URL}/signup?role=artist`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 1.75rem',
-                borderRadius: '10px',
-                textDecoration: 'none',
-              }}
-            >
-              BUILD YOUR PASSPORT
-              <Icon id="arrow" size={15} color="var(--color-ink)" />
-            </a>
             <Link
               href="/passport/demo"
               style={{
@@ -854,26 +827,6 @@ export default function ArtistsPage() {
               flexWrap: 'wrap',
             }}
           >
-            <a
-              href={`${APP_URL}/signup?role=artist`}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                padding: '0.95rem 2rem',
-                borderRadius: '10px',
-                textDecoration: 'none',
-              }}
-            >
-              BUILD YOUR PASSPORT
-              <Icon id="arrow" size={15} color="var(--color-ink)" />
-            </a>
             <Link
               href="/passport/demo"
               style={{

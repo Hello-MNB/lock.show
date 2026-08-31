@@ -3,8 +3,6 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/methodology' },
-  title: 'Methodology — How Evidence Is Verified',
-  description: 'Every claim in a LOCK SHOW Passport carries a method label — the source and process by which it was verified. No bare numbers. No unattributed data.',
 }
 
 const methodLabels = [
