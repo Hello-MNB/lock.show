@@ -1,3 +1,28 @@
+# CURRENT AUTHORITY FENCE
+
+Current native Google Drive Owner artifacts govern their bounded professional concerns;
+Maria retains final Product and Business authority. Follow current user instructions and
+the current governed sources, including B4-00.20 and the applicable Technology authorities.
+The repository, prototypes, local documents and older instructions are implementation
+source or evidence only, not Product/Business canon or independent execution authority.
+
+Before material work, or when restoring lost context, rehydrate the relevant current native
+Drive Owner sources and the exact authorized build/candidate state. Reuse accepted
+onboarding where its authority map remains current; do not revive stale local memory rules.
+Preserve the commissioned LOCK.SHOW R1 scope, current Technology approvals, file/action
+allowlists, independent QA and Maria-reserved release decisions. This fence grants no new
+implementation, publication, provider, deployment or cleanup permission.
+
+Use only the explicitly authorized clean isolated worktree for development or commits.
+The dirty primary checkout C:\Users\user\lock.show remains a read-only preservation and
+recovery source; do not mutate it or use it as a development or release source.
+
+All remaining text below is preserved historical implementation guidance. It must not
+override current governed sources or current user instructions. Its Product positions,
+authority claims, language mandates and memory requirements are not current directives.
+
+## HISTORICAL IMPLEMENTATION GUIDANCE — NOT CURRENT AUTHORITY
+
 WHAT THE APP IS
 
 Pre-booking proof / risk-reduction tool. Helps artists build provable professional identity,
