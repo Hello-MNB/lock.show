@@ -1,12 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
-import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
 import { BrandSymbol } from '@/components/brand-symbol'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
+import { SOCIAL } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -69,20 +67,10 @@ const FOOTER_LINKS = [
   },
 ]
 
-// T-84 CTA attribution law (docs/SITE-REWRITE-BRIEF.md): footer is shared
-// across every page, so the campaign must be derived from the route, not
-// hardcoded — otherwise 100% of footer-driven signups attribute via referrer
-// only.
-function pageSlug(pathname: string | null): string {
-  if (!pathname || pathname === '/') return 'home'
-  return pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, '-')
-}
 
 export function Footer() {
   const { messages } = useLocale()
   const t = messages.footer
-  const pathname = usePathname()
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=footer`
 
   return (
     <footer
@@ -126,34 +114,8 @@ export function Footer() {
               <BrandSymbol size={36} />
               LOCK SHOW
             </Link>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.1em',
-              color: 'rgba(243,245,239,0.55)',
-              margin: 0,
-            }}>
-              Trust on Cue
-            </p>
+
           </div>
-          <a
-            href={signupHref}
-            style={{
-              display: 'inline-block',
-              padding: '15px 24px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              fontWeight: 700,
-              flexShrink: 0,
-            }}
-          >
-            BUILD YOUR PASSPORT →
-          </a>
         </div>
 
         {/* Link columns */}
@@ -266,39 +228,8 @@ export function Footer() {
                   </a>
                 </li>
               ))}
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-              </li>
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={`mailto:${EMAILS.hello}`}
-                  dir="ltr"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  {EMAILS.hello}
-                </a>
-              </li>
+
+
             </ul>
           </div>
         </div>
@@ -340,7 +271,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW
           </p>
           <Link
             href="/contact"

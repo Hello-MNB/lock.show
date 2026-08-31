@@ -84,59 +84,204 @@ export async function createWorkspace({ name, type = 'artist' } = {}) {
 // ── Memberships + active-org context (O3) ──
 export async function getMyMemberships() {
   if (DEMO) return demoMemberships
-  const { data, error } = await supabase
-    .from('organization_membership')
-    // workspace_type (migration 027) drives the production-vs-management workspace
-    // split — read alongside plan (tier) so OrgContext can derive BOTH axes: the
-    // functional_role (nav role) and the org's workspace_type (production nav set).
-    .select('id, org_role, status, organization:organization_id(id, name, slug, plan, workspace_type)')
-    .eq('status', 'active')
+  const { data, error } = await supabase.rpc('select_context_switch_targets')
   if (error) throw error
-  const memberships = data ?? []
-  // Attach the CALLER's functional_role per org (role_assignment, migration 008)
-  // so OrgContext can derive the effective nav/routing role from the ACTIVE
-  // workspace instead of a single global profile role (ROUND 4 canon: person →
-  // workspace → role). Read-only, best-effort: any failure here just leaves
-  // functional_role unset and the caller falls back to the profile role — it
-  // never blocks the membership list itself from loading.
-  try {
-    const { data: { user } = {} } = await supabase.auth.getUser()
-    if (user && memberships.length) {
-      const { data: roles } = await supabase
-        .from('role_assignment')
-        .select('organization_id, functional_role')
-        .eq('person_id', user.id)
-      const byOrg = new Map((roles || []).map((r) => [r.organization_id, r.functional_role]))
-      for (const m of memberships) m.functional_role = normalizeFunctionalRole(byOrg.get(m.organization?.id))
-    }
-  } catch { /* non-blocking */ }
-  return memberships
+  return (data ?? []).map((row) => ({
+    id: row.membership_id,
+    org_role: row.org_role,
+    status: 'active',
+    functional_role: normalizeFunctionalRole(row.functional_role),
+    functional_role_db: row.functional_role,
+    context_version: Number(row.context_version || 0),
+    organization: {
+      id: row.organization_id,
+      name: row.organization_name,
+      slug: row.organization_slug,
+      plan: row.plan,
+      workspace_type: row.workspace_type,
+    },
+  }))
 }
 
-export async function getActiveOrgId() {
+let demoCommittedContext = null
+const demoContextReceipts = new Map()
+const demoContextNoncommits = new Map()
+
+export async function getActiveContext() {
   if (DEMO) {
+    if (demoCommittedContext) return demoCommittedContext
     // Respect the demo persona just picked at the login chooser so each entity
     // lands on ITS OWN workspace (audit #2: was hardcoded to the artist org, so
     // the agency chip wrongly landed on /artist/home). artist→artist org,
     // agency/booker→management org, producer→producer org.
     try {
       const r = localStorage.getItem('gigproof_demo_role')
-      if (r === 'agency' || r === 'booker') return 'demo-org-3'
-      if (r === 'producer') return 'demo-org-2'
+      if (r === 'agency' || r === 'booker') return { organizationId: 'demo-org-3', contextVersion: 0 }
+      if (r === 'producer') return { organizationId: 'demo-org-2', contextVersion: 0 }
     } catch { /* storage unavailable — fall through to artist org */ }
-    return demoOrg.id
+    return { organizationId: demoOrg.id, contextVersion: 0 }
   }
-  const { data } = await supabase.from('active_role_context').select('active_organization_id').maybeSingle()
-  return data?.active_organization_id ?? null
+  const { data, error } = await supabase
+    .from('active_role_context')
+    .select('active_organization_id, context_version')
+    .maybeSingle()
+  if (error) throw error
+  return data ? {
+    organizationId: data.active_organization_id,
+    contextVersion: Number(data.context_version || 0),
+  } : null
 }
 
-export async function setActiveOrg(orgId) {
-  if (DEMO) return
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const { error } = await supabase.from('active_role_context')
-    .upsert({ person_id: user.id, active_organization_id: orgId, updated_at: new Date().toISOString() })
+export async function getActiveOrgId() {
+  return (await getActiveContext())?.organizationId ?? null
+}
+
+function mapContextReceipt(row) {
+  if (!row) return null
+  return {
+    receiptId: row.receipt_id,
+    idempotencyKey: row.idempotency_key,
+    previousOrganizationId: row.previous_organization_id,
+    activeOrganizationId: row.active_organization_id,
+    targetArtistId: row.target_artist_id,
+    previousContextVersion: Number(row.previous_context_version),
+    contextVersion: Number(row.context_version),
+    committedAt: row.committed_at,
+  }
+}
+
+export async function preflightActiveContextSwitch({
+  targetOrganizationId,
+  targetArtistId = null,
+  expectedContextVersion,
+}) {
+  if (DEMO) {
+    const membership = demoMemberships.find((item) => item.organization?.id === targetOrganizationId)
+    return membership ? {
+      ok: true,
+      targetOrganizationId,
+      targetOrganizationName: membership.organization?.name || '',
+      targetFunctionalRole: membership.functional_role || null,
+      expectedContextVersion,
+    } : { ok: false, reason: 'context_not_available' }
+  }
+  const { data, error } = await supabase.rpc('preflight_context_switch', {
+    p_target_organization_id: targetOrganizationId,
+    p_target_artist_id: targetArtistId,
+    p_expected_context_version: expectedContextVersion,
+  }).maybeSingle()
   if (error) throw error
+  return data?.eligible ? {
+    ok: true,
+    targetOrganizationId: data.target_organization_id,
+    targetOrganizationName: data.target_organization_name,
+    targetFunctionalRole: data.target_functional_role,
+    expectedContextVersion: Number(data.expected_context_version),
+  } : { ok: false, reason: 'context_not_available' }
+}
+
+export async function commitActiveContextSwitch({
+  targetOrganizationId,
+  targetArtistId = null,
+  expectedContextVersion,
+  idempotencyKey,
+}) {
+  if (DEMO) {
+    const current = await getActiveContext()
+    if (demoContextNoncommits.has(idempotencyKey)) throw new Error('context_switch_conflict')
+    const previous = demoContextReceipts.get(idempotencyKey)
+    if (previous) {
+      if (previous.activeOrganizationId !== targetOrganizationId || previous.targetArtistId !== targetArtistId
+          || previous.previousContextVersion !== expectedContextVersion) throw new Error('context_switch_conflict')
+      if (current.organizationId !== previous.activeOrganizationId || current.contextVersion !== previous.contextVersion) {
+        throw new Error('context_switch_stale')
+      }
+      return previous
+    }
+    if (current.contextVersion !== expectedContextVersion) throw new Error('context_switch_stale')
+    const receipt = {
+      receiptId: idempotencyKey,
+      idempotencyKey,
+      previousOrganizationId: current.organizationId,
+      activeOrganizationId: targetOrganizationId,
+      targetArtistId,
+      previousContextVersion: expectedContextVersion,
+      contextVersion: expectedContextVersion + 1,
+      committedAt: new Date().toISOString(),
+    }
+    demoCommittedContext = { organizationId: targetOrganizationId, contextVersion: receipt.contextVersion }
+    demoContextReceipts.set(idempotencyKey, receipt)
+    return receipt
+  }
+  const { data, error } = await supabase.rpc('commit_context_switch', {
+    p_target_organization_id: targetOrganizationId,
+    p_target_artist_id: targetArtistId,
+    p_expected_context_version: expectedContextVersion,
+    p_idempotency_key: idempotencyKey,
+  }).maybeSingle()
+  if (error) throw error
+  return mapContextReceipt(data)
+}
+
+export async function getContextSwitchReceipt(idempotencyKey) {
+  if (DEMO) {
+    const receipt = demoContextReceipts.get(idempotencyKey)
+    const current = await getActiveContext()
+    return receipt?.activeOrganizationId === current.organizationId && receipt?.contextVersion === current.contextVersion
+      ? receipt : null
+  }
+  const { data, error } = await supabase.rpc('get_context_switch_receipt', {
+    p_idempotency_key: idempotencyKey,
+  }).maybeSingle()
+  if (error) throw error
+  return mapContextReceipt(data)
+}
+
+// Settle this actor's original key: return immutable commit history or durably
+// fence noncommit under the same lock. Neither outcome is applied as current;
+// recovery separately reads current ARC + eligibility. Never submit a new switch.
+export async function getContextSwitchOutcome(idempotencyKey, preflight) {
+  if (DEMO) {
+    const current = await getActiveContext()
+    const receipt = demoContextReceipts.get(idempotencyKey)
+    const fence = demoContextNoncommits.get(idempotencyKey)
+    if (receipt) {
+      if (receipt.activeOrganizationId !== preflight.targetOrganizationId
+          || receipt.targetArtistId !== (preflight.targetArtistId ?? null)
+          || receipt.previousContextVersion !== preflight.expectedContextVersion) throw new Error('context_switch_conflict')
+      return receipt
+    }
+    if (fence) {
+      if (fence.targetOrganizationId !== preflight.targetOrganizationId
+          || fence.targetArtistId !== (preflight.targetArtistId ?? null)
+          || fence.expectedContextVersion !== preflight.expectedContextVersion) throw new Error('context_switch_conflict')
+      return fence
+    }
+    const outcome = {
+      outcome: 'not_committed', outcomeId: idempotencyKey, idempotencyKey,
+      targetOrganizationId: preflight.targetOrganizationId,
+      targetArtistId: preflight.targetArtistId ?? null,
+      expectedContextVersion: preflight.expectedContextVersion,
+      contextVersion: current.contextVersion, resolvedAt: new Date().toISOString(),
+    }
+    demoContextNoncommits.set(idempotencyKey, outcome)
+    return outcome
+  }
+  const { data, error } = await supabase.rpc('resolve_context_switch_outcome', {
+    p_target_organization_id: preflight.targetOrganizationId,
+    p_target_artist_id: preflight.targetArtistId ?? null,
+    p_expected_context_version: preflight.expectedContextVersion,
+    p_idempotency_key: idempotencyKey,
+  })
+  if (error) throw error
+  return data?.outcome === 'committed'
+    ? mapContextReceipt({ ...data.receipt, receipt_id: data.receipt.id }) : data
+}
+
+// The raw client upsert was the authorization defect. Keep a named failure for
+// any stale caller while making the server RPC the only mutation boundary.
+export async function setActiveOrg() {
+  throw new Error('AUTHORITATIVE_CONTEXT_SWITCH_REQUIRED')
 }
 
 // ── Organization settings (O1) ──

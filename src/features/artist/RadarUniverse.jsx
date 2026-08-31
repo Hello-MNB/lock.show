@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, switchAct, createAct } from '../../lib/db.js'
+import { updateClaim, updateAct, addProfileItem, addEvidence, processEvidence, listClaims, listActs, getArtistRadarContext, createAct } from '../../lib/db.js'
 import { logEvent, EVENTS } from '../../lib/analytics.js'
 import { uploadFile } from '../../lib/storage.js'
-import { BottomSheet, Spinner, GpIcon } from '../../components/ui.jsx'
+import { BottomSheet, Spinner, GpIcon, ErrorState } from '../../components/ui.jsx'
 import { PlatformLogo, detectPlatform } from '../../components/PlatformLogo.jsx'
 import { MethodLabel } from './proofBits.jsx'
 import { useLang } from '../../context/LangContext.jsx'
@@ -143,7 +143,7 @@ function planetXY(angle, radius = PLANET_ORBIT_PCT) {
   return { x: 50 + radius * Math.cos(rad), y: 50 + radius * Math.sin(rad) }
 }
 
-export default function RadarUniverse({ artist, act, items, claims, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
+export default function RadarUniverse({ artist, act, items, claims, governedEvidence = [], authorityScope, onClaimsChange, nextAction, onNextAction, onArtistChange, onActChange, onItemsRefresh, onPublicationActSelected, reviewSignal = 0, focusPlanet = null, focusSignal = 0 }) {
   const { T } = useLang()
   const S = T.radar.universe
   const nav = useNavigate()
@@ -229,7 +229,14 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // evidence. `actOverride` is null while viewing the default (prop-driven)
   // Act; it holds the swapped-in identity/evidence once another Act is active.
   const [acts, setActs] = useState([])
-  const [activeActId, setActiveActId] = useState(() => localStorage.getItem('gigproof_active_act') || artist.id)
+  const defaultActId = act?.id
+  const [activeActId, setActiveActId] = useState(defaultActId)
+  const [scopeError, setScopeError] = useState(false)
+  const actRead = useRef(0)
+  const scopeRef = useRef('')
+  const readScope = [artist.id, authorityScope?.actorId, authorityScope?.workspaceId, authorityScope?.contextVersion].join(':')
+  scopeRef.current = readScope
+  useEffect(() => () => { actRead.current += 1 }, [])
   const [actSheet, setActSheet] = useState(false)
   const [actBusy, setActBusy] = useState(false)
   const [newActName, setNewActName] = useState('') // + New Act inline form (A3/N12)
@@ -237,39 +244,40 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
 
   useEffect(() => {
     let cancelled = false
-    listActs(artist.id).then((rows) => { if (!cancelled) setActs(rows || []) }).catch(() => {})
+    listActs(artist.id, defaultActId).then((rows) => { if (!cancelled) setActs(rows || []) })
+      .catch(() => { if (!cancelled) setScopeError(true) })
     return () => { cancelled = true }
-  }, [artist.id])
+  }, [artist.id, defaultActId, readScope])
 
   // Restore a persisted non-default Act once its record has loaded.
   useEffect(() => {
     const stored = localStorage.getItem('gigproof_active_act')
-    if (stored && stored !== artist.id && acts.some((a) => a.id === stored) && !actOverride) {
+    if (stored && stored !== defaultActId && acts.some((a) => a.id === stored) && !actOverride) {
       pickAct(stored)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acts])
 
   async function pickAct(id, actRow = null) {
-    const alreadyActive = id === artist.id ? !actOverride : activeActId === id && !!actOverride
+    const alreadyActive = id === defaultActId ? !actOverride : activeActId === id && !!actOverride
     if (alreadyActive) { setActSheet(false); return }
     if (actBusy) return
+    const run = ++actRead.current, capturedScope = readScope
     setActBusy(true)
     try {
-      if (id === artist.id) {
-        setActOverride(null) // back to the default Act — the prop-driven data
-      } else {
-        const res = await switchAct(id)
+        const res = await getArtistRadarContext(artist.id, authorityScope, id)
+        if (run !== actRead.current || capturedScope !== scopeRef.current) return
         const a = actRow || acts.find((x) => x.id === id) || res.act || {}
         setActOverride({
           act: res.act || a,
           items: res.items || [],
           claims: res.claims || [],
+          objects: res.objects || [],
           // The non-default Act's own identity fields (migration 020: act.stage_name/
           // genre/city/positioning/photo_url); draw/kit fields (bands, sells_tickets,
           // rider…) live only on `artists` today — honestly absent here rather than
           // carried over from the default Act (real-DB depth gap, documented).
-          artist: {
+          artist: id === defaultActId ? artist : {
             ...artist,
             stage_name: a.stage_name || artist.stage_name,
             genre: a.genre ?? null,
@@ -281,15 +289,17 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
             rider_url: null, invoice_ready: null, whatsapp_number: null,
           },
         })
-      }
       setActiveActId(id)
+      onPublicationActSelected?.(id)
       localStorage.setItem('gigproof_active_act', id)
       logEvent(EVENTS.ACT_SWITCHED, { act_id: id }) // pilot signal (A10)
       setActSheet(false)
       setSelected(null)
       flash(S.actSwitch.switchedToast((actRow || acts.find((a) => a.id === id) || {}).stage_name || artist.stage_name))
+    } catch {
+      if (run === actRead.current && capturedScope === scopeRef.current) setScopeError(true)
     } finally {
-      setActBusy(false)
+      if (run === actRead.current && capturedScope === scopeRef.current) setActBusy(false)
     }
   }
 
@@ -311,7 +321,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     if (!name || actBusy) return
     setActBusy(true)
     try {
-      const row = await createAct(activeActId || artist.id, { stage_name: name })
+      const row = await createAct(activeActId, { stage_name: name })
       logEvent(EVENTS.ACT_CREATED, { act_id: row.id }) // pilot signal (A10)
       setActs((prev) => [...prev, row])
       setNewActName('')
@@ -330,6 +340,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   const effItems = actOverride?.items || items
   const effClaims = actOverride?.claims || claims
   const effAct = actOverride?.act || act
+  const pendingEvidence = (actOverride?.objects || governedEvidence).filter(item => ['candidate', 'proposed'].includes(item.state))
 
   const uni = useMemo(() => buildUniverse({ artist: effArtist, act: effAct, items: effItems, claims: effClaims, T }), [effArtist, effAct, effItems, effClaims, T])
 
@@ -370,7 +381,7 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
   // N4 — own-history frame (§5.10): the artist's own recent confirmations.
   const history = useMemo(() => ownHistory(effClaims), [effClaims])
   const worlds = useMemo(() => deriveWorlds({ artist: effArtist, items: effItems }), [effArtist, effItems])
-  const evidenceRoute = `/evidence/${artist.id}`
+  const evidenceRoute = `/evidence/${artist.id}?act=${encodeURIComponent(activeActId)}`
 
   // The platform ring — real detected platforms + one trailing "+ connect" node.
   const platformNodes = useMemo(() => derivePlatformNodes(effItems, effClaims), [effItems, effClaims])
@@ -494,12 +505,24 @@ export default function RadarUniverse({ artist, act, items, claims, onClaimsChan
     (selected === 'prokit' && sel.state === 'locked') || batchable.length >= 2
   )
 
+  if (scopeError || !activeActId) return <ErrorState title={T.evidenceActions.contextRequired} onRetry={() => nav(0)} />
+
   return (
     // Viewport law (T-35/§10.2): inside the dashboard's fixed-height column this
     // panel FLEXES to the remaining height on md+ (min-h-0 + flex-1 instead of a
     // fixed min-h) — the universe square below derives its size from this height,
     // so the whole radar scales to fit rather than pushing the page past the fold.
     <div className="premium-stage mobile-open-surface relative shrink-0 p-4 sm:p-5 md:flex md:min-h-0 md:flex-1 md:flex-col md:justify-center md:p-8">
+      {pendingEvidence.length > 0 && <section data-entry-pending="true" aria-label={T.evidenceActions.title}
+        className="relative z-10 mb-3 max-h-40 shrink-0 overflow-y-auto rounded-xl border border-line bg-surface p-3 text-xs md:mt-14">
+        <p className="text-muted">{T.evidenceActions.boundary}</p>
+        {pendingEvidence.map(item => <div key={item.id} className="mt-2 min-w-0 break-words">
+          <span className="font-semibold text-ink">{item.title || item.value || T.evidenceActions.untitled}</span>
+          <span className="ms-2 text-muted">{T.evidenceActions.states[item.state]}</span>
+        </div>)}
+        <button type="button" disabled={actBusy} className="tap-target mt-1 font-semibold text-accent underline"
+          onClick={() => nav(evidenceRoute)}>{T.evidenceActions.title}</button>
+      </section>}
       {/* the ONE warm light — backstage lamp above the artist (gold budget: this + method labels).
           Full-stage (md+): the same aura, sized for a taller cinematic canvas. */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-24 h-64 md:-top-16 md:h-[600px]"

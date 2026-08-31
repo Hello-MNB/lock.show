@@ -135,6 +135,28 @@ try {
 // ────────────────────────────────────────────────────────────
 console.log('\nG13 · PART 2 — static scoping inventory (act_id vs artist_id)')
 
+// Mechanism inventory only, not authorization proof. The real entry runner
+// separately exercises these actual callers through SDK/HTTP/PostgreSQL.
+function governedActRead(src, switchBody) {
+  const start = src.indexOf('export async function getArtistRadarContext(')
+  const end = src.indexOf('\nexport async function ', start + 1)
+  if (start < 0 || end < 0) return false
+  const helper = src.slice(start, end).replace(/\/\/[^\n]*/g, '')
+  const body = switchBody.replace(/\/\/[^\n]*/g, '')
+  const migration = readFileSync(join(root, 'supabase/migrations/20260831044500_artist_entry.sql'), 'utf8')
+  const sql = migration.slice(migration.indexOf('create function public.read_artist_radar_context(')).replace(/--[^\n]*/g, '')
+  return /return\s+getArtistRadarContext\(artistId,\s*scope,\s*actId\)/.test(body)
+    && /supabase\.rpc\('read_artist_radar_context',\s*\{\s*p_artist:\s*artistId,\s*p_act:\s*requestedActId\s*\}\)/.test(helper)
+    && /!requestedActId\s*\|\|\s*value\.actId\s*===\s*requestedActId/.test(helper)
+    && /data\.act\?\.id\s*!==\s*data\.actId/.test(helper)
+    && /return data\b/.test(helper)
+    && /public\.get_evidence_workbench\(p_artist,p_act\)/.test(sql)
+    && /selected:=\(current_state->>'actId'\)::uuid/.test(sql)
+    && /from public\.profile_items i where i\.artist_id=p_artist and i\.act_id=selected/.test(sql)
+    && /from public\.claims c where c\.artist_id=p_artist and c\.act_id=selected/.test(sql)
+    && /from public\.act a where a\.id=selected/.test(sql)
+}
+
 function inventory(file, label) {
   const src = readFileSync(join(root, file), 'utf8')
   // Split on exported/route-level function boundaries, keep names.
@@ -150,11 +172,13 @@ function inventory(file, label) {
     const act = (body.match(/\.eq\('act_id'/g) || []).length
     const artist = (body.match(/\.eq\('artist_id'/g) || []).length
       + (body.match(/\.in\('artist_id'/g) || []).length
-    if (act || artist) rows.push({ name: marks[i].name, act, artist })
+    const governedRpc = file === 'src/lib/db.js' && marks[i].name === 'switchAct' && governedActRead(src, body)
+    if (act || artist || governedRpc) rows.push({ name: marks[i].name, act, artist, governedRpc })
   }
   console.log(`  ${label}:`)
   for (const r of rows) {
-    const scope = r.act && r.artist ? 'act_id + artist_id'
+    const scope = r.governedRpc ? 'Act-bound governed RPC (mechanism only)'
+      : r.act && r.artist ? 'act_id + artist_id'
       : r.act ? 'act_id ✅' : 'artist_id ⚠'
     console.log(`    · ${r.name.padEnd(32)} ${scope}`)
   }
@@ -164,11 +188,11 @@ function inventory(file, label) {
 const dbRows = inventory('src/lib/db.js', 'src/lib/db.js')
 const serverRows = inventory('server/index.js', 'server/index.js')
 
-const actScoped = [...dbRows, ...serverRows].filter((r) => r.act > 0).map((r) => r.name)
-const artistScoped = [...dbRows, ...serverRows].filter((r) => r.act === 0 && r.artist > 0).map((r) => r.name)
+const actScoped = [...dbRows, ...serverRows].filter((r) => r.act > 0 || r.governedRpc).map((r) => r.name)
+const artistScoped = [...dbRows, ...serverRows].filter((r) => r.act === 0 && !r.governedRpc && r.artist > 0).map((r) => r.name)
 
 check('static analysis found scoped reads in both files', dbRows.length > 0 && serverRows.length > 0)
-check('switchAct is act_id-scoped', actScoped.includes('switchAct'))
+check('switchAct forwards the requested Act through the exact governed scoped-return chain (mechanism inventory)', actScoped.includes('switchAct'))
 
 findings.push(
   `act_id-scoped paths: ${actScoped.join(', ') || '(none)'}`,

@@ -1,10 +1,49 @@
 import { supabase } from './supabase.js'
-import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot } from './passportApi.js'
+import { publishPassportSnapshot, readPassportSnapshot, unpublishPassportSnapshot, performEvidenceAction, recoverEvidenceAction } from './passportApi.js'
 import { VISIBILITY, PUBLISHABLE_STATUSES } from './constants.js'
 import { StubClaimProcessor } from './ai/stub.js'
-import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct } from './demo.js'
+import { DEMO, demoArtist, demoArtist2, demoActs, demoItems, demoEvidence, demoClaims, demoRequests, demoEntitlement, demoConsents, demoAudit, demoPassportPayload, demoSwitchAct, demoOrg } from './demo.js'
+import { selectArtistForWorkspace } from '../features/artist/artistFirstValue.js'
 
 // In DEMO mode every function returns local fixtures (no Supabase client exists).
+
+// KU03: demo never fabricates an authoritative receipt. Browser verification
+// uses a separately disclosed local fixture transport; hosted calls use JWTs.
+export async function getEvidenceWorkbench(artistId, actId) {
+  const response = await fetch(`/api/evidence-actions/workbench/${encodeURIComponent(artistId)}/${encodeURIComponent(actId || 'current')}`, { headers: await authHeaders() })
+  if (!response.ok) throw new Error('evidence_action_unavailable')
+  return response.json()
+}
+
+// A selected Act is a request, never a grant. The existing RPC resolves the
+// default and enforces the authenticated actor/workspace/action authority.
+// The projection and authority are read under A's per-person/context locks.
+export async function getArtistRadarContext(artistId, scope, requestedActId = null) {
+  if (DEMO) {
+    const projection = await switchAct(requestedActId || artistId)
+    return { artistId, actId: projection.act.id, ...projection, objects: [], history: [] }
+  }
+  const matches = value => value?.artistId === artistId && !!value.actId
+    && (!requestedActId || value.actId === requestedActId)
+    && value.authority?.actorId === scope?.actorId
+    && value.authority?.workspaceId === scope?.workspaceId
+    && Number.isSafeInteger(scope?.contextVersion)
+    && Number(value.authority?.contextVersion) === scope.contextVersion
+  const { data, error } = await supabase.rpc('read_artist_radar_context', { p_artist: artistId, p_act: requestedActId })
+  if (error || !matches(data) || data.authority.owner !== true || data.act?.id !== data.actId
+    || !Array.isArray(data.objects) || !Array.isArray(data.items) || !Array.isArray(data.claims)) throw new Error('evidence_action_unavailable')
+  return data
+}
+export async function commitEvidenceAction(request) { return performEvidenceAction(request, await authHeaders()) }
+export async function resolveEvidenceAction(request) { return recoverEvidenceAction(request, await authHeaders()) }
+export async function scanEvidenceCandidate(request) {
+  const response = await fetch('/api/evidence-actions/scan', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: JSON.stringify(request) })
+  if (!response.ok) throw new Error('evidence_action_unavailable')
+  const result = await response.json()
+  if (result.candidateOnly !== true || typeof result.statement !== 'string') throw new Error('evidence_action_unavailable')
+  return result
+}
 
 // ── Profiles ─────────────────────────────────────────────
 export async function getProfile(userId) {
@@ -36,6 +75,25 @@ export async function getMyArtist(userId) {
     .maybeSingle()
   if (error) throw error
   return data
+}
+
+// ART-01 / SCR-RADAR-HOME: private RADAR must resolve the Artist through the
+// database-selected active owner Organization, not merely through the durable
+// Person or a caller-selected organization id. The arguments remain only for
+// demo parity and a client-side response-integrity check; the RPC derives both
+// identity and active Workspace from authenticated server state.
+export async function getMyArtistForWorkspace(userId, organizationId) {
+  if (!userId || !organizationId) return null
+  if (DEMO) {
+    return selectArtistForWorkspace(
+      [{ ...demoArtist, owner_organization_id: demoOrg.id }],
+      { userId, organizationId },
+    )
+  }
+  const { data, error } = await supabase
+    .rpc('get_my_artist_for_active_workspace')
+  if (error) throw error
+  return selectArtistForWorkspace(data || [], { userId, organizationId })
 }
 
 export async function listMyArtists(userId) {
@@ -138,17 +196,12 @@ export async function updateAct(actId, patch) {
 // The default Act shares its id with `artists` (migration 020's transition
 // rule) — listActs resolves that Act's person_id first, then returns every
 // Act the same Person holds (radar center-star Act-switch, Design Spec §MULTI-ACT).
-export async function listActs(artistId) {
+export async function listActs(artistId, selectedActId = null) {
   if (DEMO) return demoActs
-  const { data: mine, error: e1 } = await supabase.from('act').select('person_id').eq('id', artistId).maybeSingle()
-  if (e1) throw e1
-  if (!mine?.person_id) return []
-  const { data, error } = await supabase.from('act')
-    .select('id, stage_name, genre, city, positioning, photo_url, is_default, created_at')
-    .eq('person_id', mine.person_id)
-    .order('created_at', { ascending: true })
-  if (error) throw error
-  return data ?? []
+  const { data, error } = await supabase.rpc('read_artist_radar_context', { p_artist: artistId, p_act: selectedActId })
+  if (error || data?.authority?.owner !== true || !Array.isArray(data.acts)
+    || !data.acts.some(row => row.id === data.actId)) throw new Error('evidence_action_unavailable')
+  return data.acts
 }
 
 // Create a SECOND (or third…) Act for the same Person (rel-07.13 A3/N12).
@@ -181,17 +234,10 @@ export async function createAct(currentActId, { stage_name, genre = null }) {
 // Act has no matching `artists` row, so artists-only fields (draw bands,
 // sells_tickets, rider, WhatsApp…) aren't yet act-scoped in the schema; callers
 // should treat those as honestly absent for a non-default Act.
-export async function switchAct(actId) {
+export async function switchAct(actId, artistId, scope) {
   if (DEMO) return demoSwitchAct(actId)
-  const [actRes, itemsRes, claimsRes] = await Promise.all([
-    supabase.from('act').select('*').eq('id', actId).maybeSingle(),
-    supabase.from('profile_items').select('*').eq('act_id', actId).order('created_at', { ascending: false }),
-    supabase.from('claims').select('*').eq('act_id', actId).order('created_at', { ascending: false }),
-  ])
-  if (actRes.error) throw actRes.error
-  if (itemsRes.error) throw itemsRes.error
-  if (claimsRes.error) throw claimsRes.error
-  return { act: actRes.data, items: itemsRes.data ?? [], claims: claimsRes.data ?? [] }
+  if (!artistId || !scope) throw new Error('evidence_action_unavailable')
+  return getArtistRadarContext(artistId, scope, actId)
 }
 
 // Roster-wide claim states for the agency radar — WORKFLOW facts (what waits),
@@ -535,13 +581,13 @@ export async function updateItemVisibility(id, visibility) {
 // ── Public Passport — immutable server snapshot ───────────
 // One version is identical for owner and recipient. The browser never rebuilds
 // a public Passport from live RADAR tables; edits require explicit re-publish.
-export async function getPublicPassport(id) {
+export async function getPublicPassport(id, { purpose, session, signal } = {}) {
   if (DEMO) return demoPassportPayload
   // Sample passport — the booker/login "see a sample" escape hatch. artists.id is
   // a uuid, so 'demo-artist' would throw 22P02 on live and dead-end the one
   // no-link-in-hand path (flow-gap B). Serve the canned demo payload instead.
   if (id === 'demo-artist') return demoPassportPayload
-  return readPassportSnapshot(id)
+  return readPassportSnapshot(id, fetch, { purpose, accessToken: session?.access_token, signal })
 }
 
 // ── Passport publish/revoke — authenticated server actions ─

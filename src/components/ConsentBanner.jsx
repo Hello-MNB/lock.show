@@ -147,7 +147,7 @@ export default function ConsentBanner() {
       className="fixed inset-x-0 z-[90] border-t border-line bg-bg2/95 px-4 py-2.5 backdrop-blur sm:px-6"
     >
       <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2">
-        <p className="min-w-[14rem] flex-1 text-xs leading-snug text-muted">
+        <p className="min-w-0 max-w-full flex-1 basis-[14rem] break-words text-xs leading-snug text-muted">
           {t.message}{' '}
           <a
             href="https://lock.show/privacy"
@@ -158,7 +158,7 @@ export default function ConsentBanner() {
             {t.privacyLink}
           </a>
         </p>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <button type="button" className="btn-ghost !py-2 !px-4" onClick={() => decide('denied')}>
             {t.decline}
           </button>

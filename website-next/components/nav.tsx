@@ -77,7 +77,6 @@ export function Nav() {
 
   const slug = pageSlug(pathname)
   const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${slug}&utm_content=nav`
-  const signupHref = `${APP_URL}/signup?utm_source=site&utm_campaign=${slug}&utm_content=nav`
 
   return (
     <nav
@@ -121,18 +120,7 @@ export function Nav() {
         >
           <BrandSymbol size={36} />
           <span>LOCK SHOW</span>
-          <span
-            className="brand-tagline"
-            style={{
-              fontSize: '0.65rem',
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              color: 'var(--color-tally)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Trust on Cue
-          </span>
+
         </Link>
 
         {/* Desktop links */}
@@ -184,23 +172,6 @@ export function Nav() {
             }}
           >
             {nav.login}
-          </a>
-          <a
-            href={signupHref}
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              color: 'var(--color-ink)',
-              textDecoration: 'none',
-              backgroundColor: 'var(--color-stamp)',
-              padding: '15px 18px',
-              borderRadius: '10px',
-              whiteSpace: 'nowrap',
-              fontWeight: 700,
-            }}
-          >
-            {nav.getStarted}
           </a>
         </div>
 
@@ -288,25 +259,6 @@ export function Nav() {
             }}
           >
             {nav.login}
-          </a>
-          <a
-            href={signupHref}
-            style={{
-              display: 'block',
-              marginTop: '10px',
-              padding: '15px 20px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 700,
-            }}
-          >
-            {nav.getStarted}
           </a>
         </div>
       )}

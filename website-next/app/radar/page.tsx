@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   description: 'Your private workspace to see what proof you have, what\'s missing, and exactly what to do next — visible only to you, never public.',
 }
 
-import { APP_URL } from '@/lib/app-url'
 
 const dimensions = [
   {
@@ -530,23 +529,6 @@ export default function Radar() {
             Your evidence, organized. Your career, legible.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a
-              href={`${APP_URL}/signup?utm_source=site&utm_campaign=radar`}
-              style={{
-                display: 'inline-block',
-                padding: '15px 32px',
-                backgroundColor: 'var(--color-stamp)',
-                color: 'var(--color-ink)',
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.08em',
-                textDecoration: 'none',
-                borderRadius: 'var(--radius-sm)',
-                fontWeight: 700,
-              }}
-            >
-              BUILD YOUR PASSPORT →
-            </a>
             <a
               href="/passport/demo"
               style={{

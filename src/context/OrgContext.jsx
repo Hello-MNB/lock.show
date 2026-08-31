@@ -1,7 +1,16 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthProvider.jsx'
-import { getMyMemberships, getActiveOrgId, setActiveOrg as persistActiveOrg } from '../lib/orgs.js'
+import {
+  getMyMemberships,
+  getActiveContext,
+  preflightActiveContextSwitch,
+  commitActiveContextSwitch,
+  getContextSwitchReceipt,
+  getContextSwitchOutcome,
+} from '../lib/orgs.js'
+import { preflightContextSwitch, commitContextSwitch, recoverContextSwitch } from '../lib/contextSwitch.js'
+import { useLang } from './LangContext.jsx'
 import { ROLES } from '../lib/constants.js'
 import { logEvent, EVENTS } from '../lib/analytics.js'
 
@@ -34,49 +43,181 @@ const ACTIVE_ORG_KEY = 'gigproof_active_org_id'
 const ORG_DERIVED_ROLES = [ROLES.ARTIST, ROLES.AGENCY, ROLES.BOOKER, ROLES.PRODUCER]
 
 export function OrgProvider({ children }) {
+  const { T } = useLang()
   const { user, role: authRole } = useAuth()
   const nav = useNavigate()
   const [memberships, setMemberships] = useState([])
   const [activeOrgId, setActiveOrgIdState] = useState(null)
+  const [contextVersion, setContextVersion] = useState(0)
+  const [contextError, setContextError] = useState('')
   const [loading, setLoading] = useState(true)
+  const appliedReceiptIds = useRef(new Set())
+  const [contextUnresolved, setContextUnresolved] = useState(false)
+  const [recovering, setRecovering] = useState(false)
+  const unresolvedRef = useRef(false)
+  const unresolvedRequestRef = useRef(null)
+  const recoveringRef = useRef(false)
+  const contentRef = useRef(null)
+  const recoveryButtonRef = useRef(null)
+  const previousFocusRef = useRef(null)
+  const loadGeneration = useRef(0)
+  const commitGeneration = useRef(0)
+
+  const markUnresolved = useCallback((request) => {
+    if (request) unresolvedRequestRef.current = request
+    if (!unresolvedRef.current) previousFocusRef.current = document.activeElement
+    unresolvedRef.current = true
+    loadGeneration.current += 1
+    // Freeze synchronously, before React's next render. Keep the subtree mounted
+    // so dirty fields/drafts survive failed readbacks; stale labels are hidden.
+    if (contentRef.current) {
+      contentRef.current.inert = true
+      contentRef.current.hidden = true
+    }
+    setContextUnresolved(true)
+  }, [])
+
+  const markResolved = useCallback(() => {
+    unresolvedRef.current = false
+    unresolvedRequestRef.current = null
+    if (contentRef.current) { contentRef.current.inert = false; contentRef.current.hidden = false }
+    setContextUnresolved(false)
+  }, [])
+
+  useEffect(() => {
+    if (contextUnresolved) recoveryButtonRef.current?.focus()
+  }, [contextUnresolved])
 
   const load = useCallback(async () => {
-    if (!user) { setMemberships([]); setActiveOrgIdState(null); setLoading(false); return }
+    if (unresolvedRef.current) return { ok: false, reason: 'uncertain' }
+    const generation = ++loadGeneration.current
+    if (!user) {
+      setMemberships([]); setActiveOrgIdState(null); setContextVersion(0); setContextError(''); setLoading(false)
+      return
+    }
     setLoading(true)
     try {
-      const m = await getMyMemberships()
+      const [m, serverContext] = await Promise.all([getMyMemberships(), getActiveContext()])
+      if (generation !== loadGeneration.current) return
       setMemberships(m)
-      // Restore order: this device's explicit last choice (localStorage) →
-      // server-persisted active_role_context → the membership matching the
-      // current profile role (keeps each role's existing default home on
-      // first load) → first membership.
-      const stored = localStorage.getItem(ACTIVE_ORG_KEY)
-      const storedValid = stored && m.some((mm) => mm.organization?.id === stored)
-      const roleMatchId = m.find((mm) => mm.functional_role === authRole)?.organization?.id
-      const active = storedValid ? stored : ((await getActiveOrgId()) || roleMatchId || m[0]?.organization?.id || null)
-      setActiveOrgIdState(active)
+      const serverActive = serverContext?.organizationId || null
+      const serverActiveIsEligible = serverActive && m.some((item) => item.organization?.id === serverActive)
+      setActiveOrgIdState(serverActiveIsEligible ? serverActive : null)
+      setContextVersion(Number(serverContext?.contextVersion || 0))
+      setContextError(serverActive && !serverActiveIsEligible ? 'not_available' : '')
+      try {
+        if (serverActiveIsEligible) localStorage.setItem(ACTIVE_ORG_KEY, serverActive)
+        else localStorage.removeItem(ACTIVE_ORG_KEY)
+      } catch { /* local cache is never authority */ }
     } catch {
+      if (generation !== loadGeneration.current) return
       setMemberships([])
+      setActiveOrgIdState(null)
+      setContextError('load_failed')
     } finally {
-      setLoading(false)
+      if (generation === loadGeneration.current) setLoading(false)
     }
   }, [user, authRole])
 
   useEffect(() => { load() }, [load])
 
-  // Switching a workspace is client-side derivation only (no RLS/db writes
-  // beyond the existing active_role_context upsert) — persist locally so a
-  // reload keeps the chosen workspace, then send the user to "/" so RoleHome
-  // (App.jsx) re-routes into the NEW workspace's home + nav set.
-  const switchOrg = useCallback(async (orgId) => {
-    setActiveOrgIdState(orgId)
-    try { localStorage.setItem(ACTIVE_ORG_KEY, orgId) } catch { /* storage unavailable — in-memory only */ }
-    try { await persistActiveOrg(orgId) } catch { /* non-blocking */ }
-    logEvent(EVENTS.WORKSPACE_SWITCHED, { org_id: orgId }) // pilot signal (A10)
-    nav('/')
-  }, [nav])
+  const recoverOrgContext = useCallback(async () => {
+    if (recoveringRef.current) return { ok: false, reason: 'uncertain' }
+    recoveringRef.current = true
+    setRecovering(true)
+    try {
+      return await recoverContextSwitch({
+        ...unresolvedRequestRef.current,
+        resolveCommitOutcome: getContextSwitchOutcome,
+        readCurrentContext: async () => {
+          const [currentMemberships, current] = await Promise.all([getMyMemberships(), getActiveContext()])
+          if (!currentMemberships.some((item) => item.organization?.id === current?.organizationId)) {
+            throw new Error('context_not_available')
+          }
+          return { ...current, memberships: currentMemberships }
+        },
+        applyContext: (current) => {
+          setMemberships(current.memberships)
+          setActiveOrgIdState(current.organizationId)
+          setContextVersion(current.contextVersion)
+          setContextError('')
+          setLoading(false)
+          try { localStorage.setItem(ACTIVE_ORG_KEY, current.organizationId) } catch { /* cache only */ }
+          // Only successful authoritative re-entry retires older pending commit
+          // continuations. Failed/pending recovery leaves their generation live.
+          commitGeneration.current += 1
+          markResolved()
+          requestAnimationFrame(() => {
+            const previous = previousFocusRef.current
+            if (previous?.isConnected && !previous.disabled) previous.focus()
+            else contentRef.current?.querySelector('button:not([disabled]), a[href]')?.focus()
+          })
+        },
+        markUnresolved,
+      })
+    } finally {
+      recoveringRef.current = false
+      setRecovering(false)
+    }
+  }, [markUnresolved, markResolved])
 
-  const active = memberships.find((m) => m.organization?.id === activeOrgId) || memberships[0] || null
+  const preflightOrgSwitch = useCallback(async (orgId, { artistId = null } = {}) => (
+    unresolvedRef.current ? { ok: false, reason: 'uncertain' } : preflightContextSwitch({
+      targetOrganizationId: orgId,
+      targetArtistId: artistId,
+      currentContext: { organizationId: activeOrgId, contextVersion },
+      requestPreflight: preflightActiveContextSwitch,
+    })
+  ), [activeOrgId, contextVersion])
+
+  const commitOrgSwitch = useCallback(async (preflight, {
+    idempotencyKey,
+    announce,
+    focusReturn,
+  } = {}) => {
+    if (unresolvedRef.current) return { ok: false, reason: 'uncertain' }
+    const generation = commitGeneration.current
+    return commitContextSwitch({
+      preflight,
+      idempotencyKey,
+      isCurrent: () => generation === commitGeneration.current,
+      requestCommit: commitActiveContextSwitch,
+      resolveReceipt: getContextSwitchReceipt,
+      readCurrentContext: getActiveContext,
+      markUnresolved,
+      markResolved,
+      applyReceipt: (receipt) => {
+        loadGeneration.current += 1
+        setActiveOrgIdState(receipt.activeOrganizationId)
+        setContextVersion(receipt.contextVersion)
+        setContextError('')
+        appliedReceiptIds.current.add(receipt.receiptId)
+      },
+      persistLocal: (orgId) => localStorage.setItem(ACTIVE_ORG_KEY, orgId),
+      announce,
+      logCommitted: (receipt) => logEvent(EVENTS.WORKSPACE_SWITCHED, {
+        org_id: receipt.activeOrganizationId,
+        receipt_id: receipt.receiptId,
+        context_version: receipt.contextVersion,
+      }),
+      navigate: () => nav('/'),
+      focusReturn,
+      receiptAlreadyApplied: (receiptId) => appliedReceiptIds.current.has(receiptId),
+    })
+  }, [nav, markUnresolved, markResolved])
+
+  // Compatibility path for the post-create flow. Normal user switching uses
+  // the visible preflight/confirm UI below; this still preserves the same
+  // server-authoritative preflight → receipt boundary.
+  const switchOrg = useCallback(async (orgId, options = {}) => {
+    const preflight = await preflightOrgSwitch(orgId, options)
+    if (!preflight.ok) return preflight
+    const idempotencyKey = globalThis.crypto?.randomUUID?.()
+    if (!idempotencyKey) return { ok: false, reason: 'idempotency_unavailable' }
+    return commitOrgSwitch(preflight, { idempotencyKey })
+  }, [preflightOrgSwitch, commitOrgSwitch])
+
+  const active = memberships.find((m) => m.organization?.id === activeOrgId) || null
   const plan = active?.organization?.plan || 'solo'
   // workspace_type (migration 027) — a SEPARATE axis from functional_role/plan:
   // a production company (e.g. INSOMNIA TLV) has functional_role='agency' (same
@@ -97,6 +238,9 @@ export function OrgProvider({ children }) {
     loading,
     memberships,
     activeOrgId: active?.organization?.id || null,
+    contextVersion,
+    contextError,
+    contextUnresolved,
     activeOrg: active?.organization || null,
     orgRole: active?.org_role || null,
     role,
@@ -107,7 +251,29 @@ export function OrgProvider({ children }) {
     isOwner: active?.org_role === 'owner',
     isAdmin: ['owner', 'admin'].includes(active?.org_role),
     switchOrg,
+    preflightOrgSwitch,
+    commitOrgSwitch,
     reload: load,
   }
-  return <OrgCtx.Provider value={value}>{children}</OrgCtx.Provider>
+  return (
+    <OrgCtx.Provider value={value}>
+      <div ref={contentRef} hidden={contextUnresolved} inert={contextUnresolved ? '' : undefined}>
+        {children}
+      </div>
+      {contextUnresolved && (
+        <section role="alertdialog" aria-modal="true" aria-labelledby="context-recovery-title"
+          aria-describedby="context-recovery-description" className="fixed inset-0 z-[100] overflow-y-auto bg-bg p-4">
+          <div className="card mx-auto mt-8 w-full min-w-0 max-w-md space-y-4">
+            <h1 id="context-recovery-title" className="break-words text-lg font-semibold text-ink">{T.org.switchUnresolvedTitle}</h1>
+            <p id="context-recovery-description" role="status" className="break-words text-sm text-muted">{T.org.switchErrorUncertain}</p>
+            <button ref={recoveryButtonRef} type="button" className="btn-primary w-full whitespace-normal break-words"
+              aria-disabled={recovering} onClick={recoverOrgContext}
+              onKeyDown={(event) => { if (event.key === 'Tab') event.preventDefault() }}>
+              {recovering ? T.org.switchRecovering : T.org.switchRecover}
+            </button>
+          </div>
+        </section>
+      )}
+    </OrgCtx.Provider>
+  )
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { Wordmark, BottomSheet, PageShell } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
+import { useAuth } from '../auth/AuthProvider.jsx'
 import { getPublicPassport, recordPassportView, recordProfessionalReaction } from '../../lib/db.js'
 import { logEvent, EVENTS, isReturnVisit } from '../../lib/analytics.js'
 import { deriveSections, PassportSkeleton } from './passportKit.jsx'
@@ -11,8 +12,9 @@ import PassportProductionView from './PassportProductionView.jsx'
 import PassportPrivateView from './PassportPrivateView.jsx'
 
 // ── A15 · The public Passport — the WEDGE (warm cinematic night) ─────────────
-// Public, buyer-facing, no login. Reads LIVE via anon + RLS; the firewall is
-// physical (published-gate + passport-ok RLS + 016/025 column grants).
+// Legacy/sample views retain their existing behavior. Managed snapshots require
+// an authenticated recipient and the explicit handoff purpose at the server.
+// No persona selection or client state supplies publication/read authority.
 // This file is the LOADER: it fetches, guards the load states, owns the persona
 // (§8.4 four faces: Booking ⇄ Representation ⇄ Production ⇄ Private & corporate)
 // and the conversion sheet, and delegates the actual page to one of four persona
@@ -29,6 +31,22 @@ export { MethodLabel, BandPill } from './passportKit.jsx'
 const VIEW_KEYS = ['rep', 'production', 'private']
 
 export default function Passport() {
+  const { id } = useParams()
+  const [query] = useSearchParams()
+  const { user, session, loading } = useAuth()
+  const purpose = query.get('purpose')
+  const boundary = useRef({ generation: 0 })
+  const next = { id, purpose, person: user?.id, token: session?.access_token, loading }
+  if (Object.keys(next).some(key => next[key] !== boundary.current[key])) {
+    boundary.current = { ...next, generation: boundary.current.generation + 1 }
+  }
+  // A keyed boundary discards the prior protected snapshot in this render,
+  // before effects run. Keys contain no session token or private purpose.
+  return loading ? <PassportSkeleton />
+    : <PassportContent key={boundary.current.generation} purpose={purpose} session={session} />
+}
+
+function PassportContent({ purpose, session }) {
   const { T } = useLang()
   const { id } = useParams()
   const nav = useNavigate()
@@ -58,14 +76,17 @@ export default function Passport() {
   // double-log). Only when the URL carries the ?s=1 share marker the artist's
   // copied link appends — an organic open is a passport_view, not a share open.
   const shareOpenLogged = useRef(false)
+  const active = useRef(true)
+  useEffect(() => { active.current = true; return () => { active.current = false } }, [])
 
   useEffect(() => {
     let alive = true
+    const controller = new AbortController()
     setView('loading')
     setPhotoOk(true)
     ;(async () => {
       try {
-        const data = await getPublicPassport(id)
+        const data = await getPublicPassport(id, { purpose, session, signal: controller.signal })
         if (!alive) return
         if (!data.artist) { setView('notfound'); return }
         if (!data.artist.published) { setView('unpublished'); return }
@@ -91,8 +112,8 @@ export default function Passport() {
         if (alive) setView('error')
       }
     })()
-    return () => { alive = false }
-  }, [id, attempt])
+    return () => { alive = false; controller.abort() }
+  }, [id, attempt, purpose, session?.access_token])
 
   if (view === 'loading') return <PassportSkeleton />
   if (view !== 'ready') {
@@ -134,13 +155,14 @@ export default function Passport() {
     setBusy(true)
     try {
       await recordProfessionalReaction(id, actionType)
+      if (!active.current) return
       // GATE signal — a booking professional REACTED to a real Passport (canon
       // P0-5: a view is not a reaction; this is). Sample passport never measured.
       if (id !== 'demo-artist') logEvent(EVENTS.PROFESSIONAL_REACTION, { artist_id: id, action: actionType })
       if (toRequest) { setSheet(false); nav(`/passport/${id}/request`); return }
       setReceipt(label)
-    } catch { setReceipt(label) } // reaction is best-effort for the visitor
-    finally { setBusy(false) }
+    } catch { if (active.current) setReceipt(label) } // reaction is best-effort for the visitor
+    finally { if (active.current) setBusy(false) }
   }
 
   // §8.4 four faces — same evidence pool (data), a different view component

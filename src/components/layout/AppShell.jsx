@@ -42,10 +42,10 @@ export default function AppShell() {
       {/* Top bar — the ONE shared header: language toggle, notification bell,
           workspace switcher, top-right, every breakpoint (canon: no scattered
           chrome — the wordmark lives ONCE, in the sidebar, never here). */}
-      <header className="shell-utility-bar sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-bg/90 px-4 py-2 backdrop-blur-xl md:flex-nowrap md:ps-[272px]">
+      <header className="shell-utility-bar sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-bg/90 px-4 py-2 backdrop-blur-xl md:ps-[272px]">
         <Wordmark className="order-1 me-auto md:hidden" />
         <ContextBeacon />
-        <div className="order-2 ms-auto flex shrink-0 items-center gap-1 md:order-2">
+        <div className="order-2 ms-auto flex min-w-0 max-w-full flex-wrap items-center gap-1 md:order-2">
           <LanguageToggle />
           <NotificationBell />
           <ContextSwitcher />

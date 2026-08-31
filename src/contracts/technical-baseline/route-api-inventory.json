@@ -2,7 +2,7 @@
   "schemaVersion": "1.0.0",
   "sourceHashes": {
     "src/App.jsx": "e71d0bd835b5e78759c49db093a5d32e683708f2bf8ce24b52eea8e1002b2d97",
-    "server/index.js": "dca10d115ddbcb840f596ad357f5eaf570b40ce4b21ae948373ce802ad6b5603"
+    "server/index.js": "68db13002c6d15d86d55dd521abc57d1f6b44949490d55c59a9657cf15e3dcc3"
   },
   "routes": [
     {
@@ -437,6 +437,50 @@
   ],
   "apis": [
     {
+      "method": "POST",
+      "path": "/api/evidence-actions/commit",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 178
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/evidence-actions/resolve",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 179
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/evidence-actions/scan",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 182
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/api/evidence-actions/workbench/:artistId/:actId",
+      "observedAuth": "requireAuth",
+      "capability": "OPEN_EVIDENCE",
+      "returnContract": "OPEN_EVIDENCE",
+      "source": {
+        "file": "server/index.js",
+        "line": 200
+      }
+    },
+    {
       "method": "GET",
       "path": "/api/health",
       "observedAuth": "public-or-inline",
@@ -444,7 +488,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 186
+        "line": 235
       }
     },
     {
@@ -455,7 +499,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 222
+        "line": 271
       }
     },
     {
@@ -466,7 +510,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 275
+        "line": 324
       }
     },
     {
@@ -477,7 +521,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 305
+        "line": 354
       }
     },
     {
@@ -488,7 +532,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 354
+        "line": 403
       }
     },
     {
@@ -499,7 +543,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 385
+        "line": 434
       }
     },
     {
@@ -510,7 +554,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 457
+        "line": 506
       }
     },
     {
@@ -521,7 +565,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 649
+        "line": 703
       }
     },
     {
@@ -532,7 +576,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 702
+        "line": 715
       }
     },
     {
@@ -543,7 +587,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 739
+        "line": 764
       }
     },
     {
@@ -554,7 +598,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 762
+        "line": 775
       }
     },
     {
@@ -565,7 +609,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 846
+        "line": 859
       }
     },
     {
@@ -576,7 +620,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 948
+        "line": 961
       }
     },
     {
@@ -587,7 +631,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 1013
+        "line": 1026
       }
     },
     {
@@ -598,7 +642,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 1049
+        "line": 1062
       }
     },
     {
@@ -609,7 +653,7 @@
       "returnContract": "OPEN_EVIDENCE",
       "source": {
         "file": "server/index.js",
-        "line": 1074
+        "line": 1087
       }
     }
   ],

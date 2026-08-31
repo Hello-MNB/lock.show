@@ -609,6 +609,60 @@
       "dependencyEvidence": "APP_ADMIN_EXPLICIT_PROVENANCE_GRANT",
       "rollback": "PRESENT",
       "selectedForFirstSlice": true
+    },
+    {
+      "id": "20260830202149",
+      "file": "supabase/migrations/20260830202149_artist_active_workspace_authorization.sql",
+      "direction": "up",
+      "sha256": "4c30bfdec6ec642677850f1fe11f877e9ae50a35bd5ef1b82973c021e2249287",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260830220500",
+      "file": "supabase/migrations/20260830220500_authoritative_context_switch.sql",
+      "direction": "up",
+      "sha256": "8c50bb9bb168bcbe1aed69d727f9db091c5e70b0ee2b15e2baaa2e0798a6d085",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260830221500",
+      "file": "supabase/migrations/20260830221500_representative_evidence_actions.sql",
+      "direction": "up",
+      "sha256": "b79cf9052ed0e0eaddc5ebc5fea33f767070192aa847b193f5dd6bf6485f1377",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831044500",
+      "file": "supabase/migrations/20260831044500_artist_entry.sql",
+      "direction": "up",
+      "sha256": "c9adaf2a290b160aa0cf1d767f6de205b0b8232ae8d0196af4b48bf782cae356",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831082000",
+      "file": "supabase/migrations/20260831082000_artist_entry_completion_idempotency.sql",
+      "direction": "up",
+      "sha256": "6e941219d79aef038ac934228c79502ecdc807f949c5cd05d84f3fb7cc1655c5",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
+    },
+    {
+      "id": "20260831091843",
+      "file": "supabase/migrations/20260831091843_evidence_source_permission_guard.sql",
+      "direction": "up",
+      "sha256": "8adc6750f76562600d60d8f63ddf77412eb27fdad4700bfb828ce2494bf31a4a",
+      "dependencyEvidence": "UNDECLARED_IN_FILENAME",
+      "rollback": "PRESENT",
+      "selectedForFirstSlice": false
     }
   ]
 }

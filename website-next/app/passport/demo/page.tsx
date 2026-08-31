@@ -2,11 +2,8 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/passport/demo' },
-  title: 'Sample Passport — Verified Live Performance Evidence',
-  description: 'A sample LOCK SHOW Bookability Passport. Method-labeled, producer-confirmed evidence. No score, no ranking — verified strengths only.',
 }
 
-import { APP_URL } from '@/lib/app-url'
 
 // --- Demo data: fictional artist "Dana Lev" ---
 
@@ -345,51 +342,6 @@ export default function PassportDemo() {
           </p>
         </div>
 
-        {/* CTA */}
-        <div style={{
-          marginTop: '40px',
-          padding: '24px',
-          backgroundColor: 'rgba(200,240,77,0.05)',
-          border: '1px solid rgba(200,240,77,0.2)',
-          borderRadius: 'var(--radius-sm)',
-          textAlign: 'center',
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.65rem',
-            letterSpacing: '0.1em',
-            color: 'var(--color-stamp-onlight)',
-            margin: '0 0 8px',
-          }}>
-            READY TO BUILD YOURS?
-          </p>
-          <p style={{
-            fontFamily: 'var(--font-heebo)',
-            fontSize: '0.9rem',
-            color: 'var(--color-tally-onlight)',
-            margin: '0 0 16px',
-            lineHeight: 1.5,
-          }}>
-            Build your own Passport. Get verified. Share with booking managers.
-          </p>
-          <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=passport-demo`}
-            style={{
-              display: 'inline-block',
-              padding: '12px 28px',
-              backgroundColor: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: 'var(--font-space-mono)',
-              fontWeight: 700,
-              fontSize: '0.7rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: 'var(--radius-sm)',
-            }}
-          >
-            BUILD YOUR PASSPORT →
-          </a>
-        </div>
       </div>
       </div>
 

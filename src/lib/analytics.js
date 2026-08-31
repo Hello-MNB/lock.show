@@ -20,6 +20,34 @@ import { safeLandingLocation } from './attribution.js'
 const KEY = 'gigproof_events'
 const MAX_EVENTS = 100
 
+// Reuse the existing optional choice without turning telemetry into Product
+// authority. No source data or consent assertion is sent as event properties.
+export function entryAnalyticsAllowed() {
+  try { return JSON.parse(localStorage.getItem('gigproof_consent') || 'null')?.value !== 'denied' }
+  catch { return false }
+}
+
+export async function mirrorEntryCompletion(receipt) {
+  if (receipt?.status !== 'recorded' || !receipt.eventId || !receipt.actorId || !receipt.recordedAt || !entryAnalyticsAllowed()) return
+  const mirror = () => {
+    try {
+      // Actor-scoped durable acknowledgement survives ring eviction/remount.
+      // It is only a local mirror; the database event is the canonical sink.
+      const marker = `lock_entry_ack:${receipt.actorId}:${receipt.eventId}`
+      if (localStorage.getItem(marker)) return
+      const events = JSON.parse(localStorage.getItem(KEY) || '[]')
+      if (!events.some(event => event.id === receipt.eventId)) {
+        events.unshift({ id: receipt.eventId, name: EVENTS.ONBOARDING_COMPLETE, props: {}, ts: receipt.recordedAt })
+        localStorage.setItem(KEY, JSON.stringify(events.slice(0, MAX_EVENTS)))
+      }
+      localStorage.setItem(marker, '1')
+    } catch { /* blocked storage does not block Finish or claim delivery */ }
+  }
+  if (globalThis.navigator?.locks) await navigator.locks.request('lock-entry-event-mirror', mirror)
+  else mirror()
+  // Deliberately no persist(): complete_artist_entry already wrote this event.
+}
+
 // The canonical event vocabulary — MUST match analytics_event's event_name CHECK
 // (024 + 028). Anything here persists to the DB; anything else is dev-only.
 const CANON = new Set([

@@ -3,24 +3,13 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/producers' },
-  title: 'For Producers — 20 Seconds, No Account',
-  description:
-    'An artist you booked is asking one small favor: confirm what happened at one show. One tap, no account, nothing else ever asked of you.',
   openGraph: {
     url: '/producers',
     title: 'For Producers | LOCK SHOW',
-    description: 'You were there that night. Twenty seconds of your word turns one good show into something an artist can build on.',
     type: 'website',
   },
 }
 
-const steps = [
-  'A WhatsApp lands: “hey — got 20 seconds?”',
-  'You tap the link. It opens right in your browser.',
-  'One show. The date, the venue, the crowd you remember.',
-  'You confirm — or correct what’s off. Your call.',
-  'Back to your production. We never chase you again.',
-]
 
 const whyItMatters = [
   {
@@ -108,25 +97,7 @@ export default function ProducersPage() {
             }}
           >
             You know what happened that night.
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              Twenty seconds to say so.
-            </em>
           </h1>
-          <p
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
-              lineHeight: 1.65,
-              color: 'rgba(243,245,239,0.78)',
-              maxWidth: '520px',
-              marginBottom: '2.25rem',
-            }}
-          >
-            An artist you booked is asking a small favor between professionals: open one link,
-            glance at one show, tap confirm — or correct it. No account, no app, nothing else
-            ever asked of you.
-          </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
             <Link
               href="/passport/demo"
@@ -204,11 +175,6 @@ export default function ProducersPage() {
             }}
           >
             {[
-              {
-                icon: 'link',
-                title: 'A link lands in your WhatsApp',
-                body: 'From an artist you actually booked, about a night you actually ran. It opens in your browser — no account, no download, no password.',
-              },
               {
                 icon: 'clip',
                 title: 'One show, the way you remember it',
@@ -371,59 +337,8 @@ export default function ProducersPage() {
         </div>
       </section>
 
-      {/* ── TWENTY SECONDS, START TO FINISH ──────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)', textAlign: 'center' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div
-            style={{
-              background: 'var(--color-night)',
-              padding: 'clamp(1.25rem, 3vw, 2rem)',
-              borderRadius: '16px',
-              marginBottom: '2rem',
-              textAlign: 'left',
-            }}
-          >
-            <p
-              style={{
-                fontFamily: 'var(--font-space-mono), monospace',
-                fontSize: '0.75rem',
-                color: 'var(--color-stamp)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                marginBottom: '1rem',
-              }}
-            >
-              TWENTY SECONDS, START TO FINISH
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {steps.map((step) => (
-                <p
-                  key={step}
-                  style={{
-                    fontFamily: 'var(--font-space-mono), monospace',
-                    fontSize: '0.85rem',
-                    color: 'rgba(243,245,239,0.78)',
-                    letterSpacing: '0.02em',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {step}
-                </p>
-              ))}
-            </div>
-          </div>
-          <p
-            style={{
-              fontFamily: 'var(--font-heebo), system-ui, sans-serif',
-              fontSize: '1rem',
-              color: 'var(--color-tally-onlight)',
-              lineHeight: 1.6,
-              marginBottom: '1.5rem',
-            }}
-          >
-            Curious where those twenty seconds end up? Your name sits right on the show
-            you confirmed — nowhere else.
-          </p>
           <Link
             href="/passport/demo"
             style={{

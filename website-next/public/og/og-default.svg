@@ -38,15 +38,7 @@
   >LOCK SHOW</text>
 
   <!-- Tagline -->
-  <text
-    x="113"
-    y="220"
-    font-family="'Space Mono', monospace"
-    font-weight="400"
-    font-size="18"
-    fill="#5c655e"
-    letter-spacing="2"
-  >Trust on Cue</text>
+
 
   <!-- Main headline -->
   <text

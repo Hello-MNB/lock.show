@@ -3,17 +3,33 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthProvider.jsx'
 import { upsertProfile } from '../../lib/db.js'
 import { bootstrapOrg } from '../../lib/orgs.js'
-import { PageShell, Wordmark, GpIcon } from '../../components/ui.jsx'
+import { PageShell, Wordmark, GpIcon, LanguageToggle } from '../../components/ui.jsx'
 import { useLang } from '../../context/LangContext.jsx'
 import { ROLES } from '../../lib/constants.js'
 import { selectRoute } from '../../lib/navigation.js'
 import { PENDING_ROLE_KEY, JOB_ROLES } from './roleHint.js'
+import { createArtistEntryClient } from '../../lib/artistEntry.js'
+import { useOrg } from '../../context/OrgContext.jsx'
+import { ErrorNote } from '../../components/ui.jsx'
 
 export default function UserTypeSelect() {
   const { T } = useLang()
   const { user, reloadProfile } = useAuth()
   const nav = useNavigate()
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(null)
+  const { reload: reloadOrg } = useOrg()
+  const entryRef = useRef(null)
+  const actorRef = useRef(user?.id)
+  const busyRef = useRef(false)
+  if (actorRef.current !== user?.id) {
+    entryRef.current?.retire()
+    entryRef.current = null
+    actorRef.current = user?.id
+  }
+  useEffect(() => () => entryRef.current?.retire(), [])
+  useEffect(() => { busyRef.current = false; setBusy(false); setPending(null); setError('') }, [user?.id])
 
   // Jobs-first framing (canon §5): the question is "what would you like to do
   // first?", never a role list. Same underlying role values are written
@@ -38,22 +54,41 @@ export default function UserTypeSelect() {
   const ROLE_OPTIONS = [
     {
       key: ROLES.ARTIST, label: T.roleSelect.jobArtist, route: selectRoute(ROLES.ARTIST), icon: 'gp-artist',
-      what: 'Build a Passport of provable evidence — bands and confirmed facts, never a score.',
+      what: T.roleSelect.jobArtistDescription,
     },
     {
       key: ROLES.AGENCY, label: T.roleSelect.jobAgency, route: selectRoute(ROLES.AGENCY), icon: 'gp-manager',
-      what: 'Keep your whole roster’s proof in one place — ready to send, always current.',
+      what: T.roleSelect.jobAgencyDescription,
     },
     {
       key: ROLES.BOOKER, label: T.roleSelect.jobBooker, route: selectRoute(ROLES.BOOKER), icon: 'gp-booking',
-      what: 'Evaluate an unfamiliar artist on method-labeled evidence before you risk your name.',
+      what: T.roleSelect.jobBookerDescription,
     },
   ]
 
   async function choose(role, route) {
-    if (busy) return
+    if (busyRef.current || !user) return
+    busyRef.current = true
     setBusy(true)
-    if (user) {
+    setError('')
+    const actor = user.id
+    try {
+      if (role === ROLES.ARTIST) {
+        entryRef.current ||= createArtistEntryClient({ actorId: actor })
+        const unresolved = pending?.actorId === actor ? pending.request : null
+        const request = unresolved || { action: 'initialize', key: crypto.randomUUID() }
+        const result = unresolved ? await entryRef.current.recover(request) : await entryRef.current.commit(request)
+        if (actorRef.current !== actor || result.status === 'retired') return
+        if (result.status === 'uncertain') { setPending({ actorId: actor, request }); setError(T.onboarding.entryUncertain); return }
+        setPending(null)
+        if (!['committed', 'reconciled'].includes(result.status)) { setError(T.onboarding.entryRetry); return }
+        await reloadProfile()
+        await reloadOrg?.()
+        if (actorRef.current !== actor) return
+        sessionStorage.removeItem(PENDING_ROLE_KEY)
+        nav(route)
+        return
+      }
       const full_name = user.user_metadata?.full_name || user.user_metadata?.name || null
       await upsertProfile({ id: user.id, role, full_name })
       // Org-first: auto-create the person's personal solo org + owner membership +
@@ -70,8 +105,12 @@ export default function UserTypeSelect() {
         }
       }
       await reloadProfile()
+      nav(route)
+    } catch {
+      if (actorRef.current === actor) setError(T.onboarding.entryRetry)
+    } finally {
+      if (actorRef.current === actor) { busyRef.current = false; setBusy(false) }
     }
-    nav(route)
   }
 
   // Cross-funnel seam: if the visitor arrived via a persona-specific CTA on
@@ -85,7 +124,6 @@ export default function UserTypeSelect() {
     if (autoChoseRef.current) return
     const hint = sessionStorage.getItem(PENDING_ROLE_KEY)
     if (!hint) return
-    sessionStorage.removeItem(PENDING_ROLE_KEY)
     if (!JOB_ROLES.includes(hint)) return
     const match = ROLE_OPTIONS.find((r) => r.key === hint)
     if (!match) return
@@ -96,14 +134,20 @@ export default function UserTypeSelect() {
 
   return (
     <PageShell max="max-w-md">
+      <div className="mb-3 flex justify-end"><LanguageToggle /></div>
+      <ErrorNote>{error}</ErrorNote>
+      {pending?.actorId === user?.id && <div className="mb-3">
+        <p role="status" className="text-sm text-muted">{T.onboarding.entryUncertain}</p>
+        <button type="button" disabled={busy} className="btn-primary mt-2" onClick={() => choose(ROLES.ARTIST, selectRoute(ROLES.ARTIST))}>{T.onboarding.entryRecover}</button>
+      </div>}
       <div className="mb-8 text-center">
         <Wordmark className="mb-4 justify-center" />
-        <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">One quick question</p>
+        <p className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-gold">{T.roleSelect.jobEyebrow}</p>
         <h1 className="text-2xl font-bold text-ink">{T.roleSelect.jobTitle}</h1>
       </div>
       <div className="space-y-3">
         {ROLE_OPTIONS.map((r) => (
-          <button key={r.key} onClick={() => choose(r.key, r.route)} disabled={busy}
+          <button key={r.key} onClick={() => choose(r.key, r.route)} disabled={busy || (pending && r.key !== ROLES.ARTIST)}
             className="card group w-full text-start transition hover:bg-raise disabled:opacity-50">
             <div className="flex items-start gap-4">
               <span className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface2 text-gold transition group-hover:text-accent" aria-hidden>
@@ -118,7 +162,7 @@ export default function UserTypeSelect() {
           </button>
         ))}
       </div>
-      <p className="mt-6 text-center text-[11px] text-faint">You can change this later in Settings.</p>
+      <p className="mt-6 text-center text-[11px] text-faint">{T.roleSelect.jobSelectionHelp}</p>
     </PageShell>
   )
 }

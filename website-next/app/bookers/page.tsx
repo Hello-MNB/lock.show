@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/bookers' },
   title: 'For Booking Managers — Book With Context, Not Guesswork',
   description:
-    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK SHOW Passport and see checked, dated evidence in two minutes — free for booking managers, always. No account, no signup.',
+    'Your name is on the line every time you book an unfamiliar artist. Open their LOCK SHOW Passport and see checked, dated evidence in two minutes. No account, no signup.',
   openGraph: {
     url: '/bookers',
     title: 'For Booking Managers | LOCK SHOW',
     description:
-      'Book with context, not guesswork. Checked evidence in two minutes — free for booking managers, always.',
+      'Book with context, not guesswork. Checked evidence in two minutes.',
     type: 'website',
   },
 }
@@ -53,7 +53,7 @@ const passportFeatures = [
   {
     label: 'NO ACCOUNT, EVER',
     title: 'One link, two minutes, zero friction.',
-    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install. LOCK SHOW is free for booking managers, always.',
+    body: 'The artist sends a link. You open it in any browser — no app, no signup, nothing to install.',
   },
 ]
 
@@ -193,7 +193,7 @@ export default function BookersPage() {
               marginTop: '1.5rem',
             }}
           >
-            FREE FOR BOOKING MANAGERS — ALWAYS. NO ACCOUNT, NO SIGNUP.
+            NO ACCOUNT, NO SIGNUP.
           </p>
         </div>
       </section>
@@ -492,8 +492,7 @@ export default function BookersPage() {
               lineHeight: 1.6,
             }}
           >
-            Open it. See the room before you say yes. LOCK SHOW is free for booking
-            managers — always. No signup, no account, no catch.
+            Open it. See the room before you say yes. No signup, no account, no catch.
           </p>
           <Link
             href="/passport/demo"

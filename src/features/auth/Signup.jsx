@@ -131,21 +131,21 @@ export default function Signup() {
         <ErrorNote>{error}</ErrorNote>
         <div className="grid grid-cols-2 gap-3">
           <Field label={T.signup.firstName}>
-            <input className="field" placeholder={T.signup.firstNamePlaceholder} autoComplete="given-name"
+            <input aria-label={T.signup.firstName} className="field" placeholder={T.signup.firstNamePlaceholder} autoComplete="given-name"
               value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
           </Field>
           <Field label={T.signup.lastName}>
-            <input className="field" placeholder={T.signup.lastNamePlaceholder} autoComplete="family-name"
+            <input aria-label={T.signup.lastName} className="field" placeholder={T.signup.lastNamePlaceholder} autoComplete="family-name"
               value={lastName} onChange={(e) => setLastName(e.target.value)} required />
           </Field>
         </div>
         <Field label={T.signup.email}>
-          <input className="field" type="email" dir="ltr" autoComplete="email"
+          <input aria-label={T.signup.email} className="field" type="email" dir="ltr" autoComplete="email"
             placeholder="you@stage.com"
             value={email} onChange={(e) => setEmail(e.target.value)} required />
         </Field>
         <Field label={T.signup.password} hint={T.common.minChars}>
-          <input className="field" type="password" autoComplete="new-password" minLength={6}
+          <input aria-label={T.signup.password} className="field" type="password" autoComplete="new-password" minLength={6}
             placeholder="••••••••"
             value={password} onChange={(e) => setPassword(e.target.value)} required />
         </Field>

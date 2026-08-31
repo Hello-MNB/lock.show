@@ -16,7 +16,7 @@ const faqs = [
       },
       {
         q: 'What problem does it solve?',
-        a: 'Booking managers in Israel and internationally face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK SHOW gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
+        a: 'Booking managers face the same problem: an unfamiliar artist sends a name, a link, maybe some screenshots. There is no standardised way to evaluate live draw without already knowing the artist or calling around. LOCK SHOW gives the booking manager a structured, method-labelled document — and gives the artist a way to prove their track record.',
       },
       {
         q: 'What is a Bookability Passport?',
@@ -37,15 +37,11 @@ const faqs = [
       },
       {
         q: 'Who is a "booking manager" (mazmin hofa\'ot)?',
-        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. LOCK SHOW is free for booking managers — no account required to view a Passport.',
+        a: 'A booking manager (mazmin hofa\'ot) is the person who evaluates artists for events and takes reputational risk if a booking goes wrong. They receive Passport links, open them in a browser, and decide. This is a different role from an amargan, the artist\'s own agent or representation office. No account required to view a Passport.',
       },
       {
         q: 'Who is a "producer" (mefik)?',
         a: 'A producer (mefik) is the person who ran a specific event — took financial risk, sold tickets, managed the venue. They confirm the gig record via a bounded magic link. A producer is NOT the same as a booking manager. These are distinct roles and are never merged in this system.',
-      },
-      {
-        q: 'Is LOCK SHOW free for booking managers?',
-        a: 'Yes. A booking manager never needs to create an account, sign up, or pay to view a Passport. They receive a link, open it in a browser, and see the evidence.',
       },
       {
         q: 'Does a producer need an account to verify a gig?',
@@ -235,9 +231,7 @@ export default function FAQ() {
           }}>
             Still have questions?
           </h2>
-          <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '32px', lineHeight: 1.6 }}>
-            Reach out directly — we&apos;re in closed beta and talk to everyone.
-          </p>
+
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
               href="/contact"
