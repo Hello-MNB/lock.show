@@ -121,18 +121,7 @@ export function Nav() {
         >
           <BrandSymbol size={36} />
           <span>LOCK SHOW</span>
-          <span
-            className="brand-tagline"
-            style={{
-              fontSize: '0.65rem',
-              fontWeight: 500,
-              letterSpacing: '0.04em',
-              color: 'var(--color-tally)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Trust on Cue
-          </span>
+
         </Link>
 
         {/* Desktop links */}

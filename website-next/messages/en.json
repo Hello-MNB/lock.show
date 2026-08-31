@@ -15,7 +15,7 @@
     "tagline": "Pre-booking proof for independent artists.",
     "entityNotice": "מזמין הופעות ≠ מפיק · BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.",
     "firewallNotice": "NO SCORE · NO RANKING · NO PREDICTION · NO GUARANTEE. Evidence, labelled by method.",
-    "copyright": "© 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL",
+    "copyright": "© 2026 LOCK SHOW",
     "privacy": "Privacy",
     "terms": "Terms",
     "accessibility": "Accessibility",
@@ -24,8 +24,8 @@
   },
   "home": {
     "hero": {
-      "badge": "CLOSED BETA · TEL AVIV",
-      "headline": "Build the proof that books you.",
+      "badge": "",
+      "headline": "Build the proof",
       "sub": "Every claim on your Passport shows how it was checked and when — so a booking manager can decide before they risk their name on you.",
       "ctaBuild": "BUILD YOUR PASSPORT →",
       "ctaDemo": "SEE A SAMPLE PASSPORT"
@@ -43,7 +43,7 @@
       "booker": {
         "tag": "מזמין הופעות · BOOKING MANAGER",
         "title": "Evaluate before you risk your name",
-        "body": "Read a Bookability Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing. Viewing is always free.",
+        "body": "Read a Bookability Passport in under two minutes. Every claim shows its method and review date — no algorithm, no guessing.",
         "cta": "FOR BOOKING MANAGERS →"
       },
       "producer": {
@@ -55,7 +55,7 @@
     },
     "ctaFinal": {
       "heading": "Ready to build your proof profile?",
-      "sub": "Closed beta — Israeli artists only. Early access is limited.",
+      "sub": "",
       "cta": "REQUEST ACCESS →"
     }
   },
@@ -107,8 +107,8 @@
   "common": {
     "reviewed": "REVIEWED",
     "sampleFictional": "FICTIONAL ARTIST FOR ILLUSTRATION ONLY",
-    "closedBeta": "CLOSED BETA",
-    "telAviv": "TEL AVIV, ISRAEL"
+    "closedBeta": "",
+    "telAviv": ""
   },
   "consent": {
     "ariaLabel": "Cookie consent",

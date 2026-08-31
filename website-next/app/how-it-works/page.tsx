@@ -23,7 +23,7 @@ const players = [
   {
     letter: 'C',
     role: 'Booking Manager',
-    body: 'The one deciding on the next room. They open your Passport in a browser and see real nights, checked and dated — no signup, no wall between you and the yes.',
+    body: 'The one deciding on the next room. They open your Passport in a browser and see real nights, checked and dated — no signup.',
   },
 ]
 
@@ -120,9 +120,7 @@ export default function HowItWorks() {
             }}>
               From a night you played
               <br />
-              <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-                to a night you&apos;re booked.
-              </em>
+
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'rgba(243,245,239,0.72)', maxWidth: '520px', lineHeight: 1.65, margin: 0 }}>
               Three people, one link, and about thirty seconds of someone
@@ -443,10 +441,7 @@ export default function HowItWorks() {
               two minutes to log.
             </em>
           </h2>
-          <p style={{ fontSize: '1rem', color: 'rgba(243,245,239,0.72)', marginBottom: '2.25rem', lineHeight: 1.7, maxWidth: '420px', marginLeft: 'auto', marginRight: 'auto' }}>
-            Free to build and publish during the pilot — and always free for a
-            booking manager to open.
-          </p>
+
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
               href={`${APP_URL}/signup?utm_source=site&utm_campaign=how-it-works`}

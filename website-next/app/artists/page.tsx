@@ -3,9 +3,9 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/artists' },
-  title: 'Your Sets Fill Rooms. Now Fill the Calendar.',
+  title: 'Your Sets Fill Rooms.',
   description:
-    'The nights you already played can open the rooms you want next. LOCK SHOW turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
+    'LOCK SHOW turns your real gig history into one link a booking manager can trust — built by you, published only when you say so.',
   openGraph: {
     url: '/artists',
     title: 'For Artists | LOCK SHOW',
@@ -124,7 +124,6 @@ const passportFeatures = [
   'Only what\'s been checked — with how it was checked, in plain sight',
   'Your crowd shown as an honest range, e.g. 200–350 — never a made-up exact number',
   'Every night dated, so it reads fresh, not recycled',
-  'Always free for booking managers to open — no wall between you and the yes',
 ]
 
 export default function ArtistsPage() {
@@ -216,9 +215,7 @@ export default function ArtistsPage() {
           >
             Your sets fill rooms.
             <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              Now fill the calendar.
-            </em>
+
           </h1>
 
           {/* Sub */}
@@ -231,9 +228,8 @@ export default function ArtistsPage() {
               marginBottom: '2.25rem',
             }}
           >
-            The nights you&apos;ve already played can open the rooms you
-            haven&apos;t. LOCK SHOW turns your real gig history into one link a
-            booking manager can trust — and it starts tonight.
+            LOCK SHOW turns your real gig history into one link a
+            booking manager can trust.
           </p>
 
           {/* CTAs */}
@@ -289,7 +285,7 @@ export default function ArtistsPage() {
               marginTop: '1.5rem',
             }}
           >
-            FREE FOR ISRAELI ARTISTS DURING THE PILOT · REAL NIGHTS, CHECKED
+            REAL NIGHTS, CHECKED
           </p>
         </div>
 
@@ -847,48 +843,9 @@ export default function ArtistsPage() {
         }}
       >
         <div style={{ maxWidth: '640px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.14em',
-              color: 'var(--color-stamp)',
-              textTransform: 'uppercase',
-              marginBottom: '1.5rem',
-            }}
-          >
-            CLOSED BETA · ISRAEL
-          </p>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.055em',
-              lineHeight: 0.96,
-              color: 'var(--color-paper)',
-              marginBottom: '1.75rem',
-            }}
-          >
-            The next room
-            <br />
-            <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-              is already waiting.
-            </em>
-          </h2>
-          <p
-            style={{
-              fontSize: '1rem',
-              color: 'rgba(243,245,239,0.72)',
-              lineHeight: 1.7,
-              maxWidth: '400px',
-              margin: '0 auto 2.5rem',
-            }}
-          >
-            Early access, Israeli artists first. Free to build, free to
-            publish during the pilot — and always free for booking managers
-            to open. Start with one link tonight.
-          </p>
+
+
+
           <div
             style={{
               display: 'flex',

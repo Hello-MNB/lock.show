@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY } from '@/lib/social'
+import { SOCIAL } from '@/lib/social'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/contact' },
   title: 'Contact — Get in Touch',
-  description: 'LOCK SHOW is in closed beta. We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
+  description: 'We want to hear from artists, booking managers, and producers. Questions, feedback, and collaboration welcome.',
 }
 
 const lookingFor = [
@@ -17,8 +17,6 @@ const lookingFor = [
 ]
 
 const contactDetails = [
-  { label: 'Location', value: 'Tel Aviv, Israel' },
-  { label: 'Stage', value: 'Closed Beta 2026' },
   { label: 'Languages', value: 'Hebrew · English' },
 ]
 
@@ -51,7 +49,7 @@ export default function Contact() {
             Questions? Ideas? Collaboration?
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'var(--color-tally-onlight)', maxWidth: '500px', lineHeight: 1.6, margin: 0 }}>
-            LOCK SHOW is in closed beta. We always want to hear from artists, booking managers, and producers.
+            We always want to hear from artists, booking managers, and producers.
           </p>
           </div>
         </div>
@@ -139,27 +137,7 @@ export default function Contact() {
 
               {/* Direct channels */}
               <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid rgba(10,13,11,0.08)' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 16px',
-                    backgroundColor: 'var(--color-night)',
-                    color: 'var(--color-paper)',
-                    borderRadius: 'var(--radius-sm)',
-                    textDecoration: 'none',
-                    marginBottom: '14px',
-                  }}
-                >
-                  <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                    WHATSAPP
-                  </span>
-                  <span dir="ltr" style={{ fontSize: '1rem', fontWeight: 700 }}>{WHATSAPP_DISPLAY}</span>
-                </a>
+
                 <div style={{ display: 'flex', gap: '18px' }}>
                   {SOCIAL.map(({ key, label, href }) => (
                     <a
@@ -237,17 +215,6 @@ export default function Contact() {
         textAlign: 'center',
       }}>
         <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-          <h2 style={{
-            fontFamily: 'var(--font-archivo)',
-            fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-            letterSpacing: '-0.02em',
-            marginBottom: '12px',
-          }}>
-            Ready to start without waiting?
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.65)', marginBottom: '28px', fontSize: '1rem', lineHeight: 1.6 }}>
-            Registration is open — free for artists during the pilot.
-          </p>
           <a
             href={`${APP_URL}/signup?utm_source=site&utm_campaign=contact`}
             style={{

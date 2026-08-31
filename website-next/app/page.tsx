@@ -7,11 +7,11 @@ const SITE_URL = 'https://lock.show'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
-  title: 'LOCK SHOW — Trust on Cue',
+  title: 'LOCK SHOW',
   description:
     'Turn the nights you played into a Passport a booking manager can trust — every claim checked, dated, and signed by the night it happened.',
   openGraph: {
-    title: 'LOCK SHOW — Trust on Cue',
+    title: 'LOCK SHOW',
     description:
       'The rooms you filled become a Passport a booking manager can trust before the first call. Every claim shows how it was checked and when.',
     type: 'website',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
 }
 
-// Page-level JSON-LD: FAQPage ONLY. WebSite/Organization live in the root
+// Page-level JSON-LD: FAQPage ONLY. WebSite lives in the root
 // layout's graph — duplicating them here with different @ids/urls created a
 // conflicting entity graph (audit G8 finding).
 const jsonLd = {
@@ -34,14 +34,6 @@ const jsonLd = {
           acceptedAnswer: {
             '@type': 'Answer',
             text: "A Bookability Passport is a public, method-labelled profile showing only verified claims about an artist's live performance history. Every claim includes the evidence method and review date — so booking managers can evaluate without guessing.",
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Is LOCK SHOW free for booking managers?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Booking managers (מזמיני הופעות) view Bookability Passports at no cost — always. Artists build and publish their Passport for free during the pilot.',
           },
         },
         {
@@ -228,38 +220,7 @@ export default function HomePage() {
             {/* ── LEFT: hero copy ── */}
             <div>
               {/* Pulsing badge */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '1.75rem',
-                }}
-              >
-                <span
-                  className="pulse-dot"
-                  style={{
-                    display: 'inline-block',
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    background: 'var(--color-stamp)',
-                    boxShadow: '0 0 10px var(--color-stamp)',
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: 'var(--font-space-mono)',
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.14em',
-                    color: 'var(--color-stamp)',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Closed Beta · Tel Aviv
-                </span>
-              </div>
+
 
               {/* Headline */}
               <h1
@@ -274,15 +235,6 @@ export default function HomePage() {
                 }}
               >
                 Build the proof
-                <br />
-                <em
-                  style={{
-                    fontStyle: 'italic',
-                    color: 'var(--color-stamp)',
-                  }}
-                >
-                  that books you.
-                </em>
               </h1>
 
               {/* Sub */}
@@ -361,7 +313,6 @@ export default function HomePage() {
                 {[
                   { icon: 'approved', text: 'Real nights, checked' },
                   { icon: 'lock',     text: 'You control what’s public' },
-                  { icon: 'approved', text: 'Free for artists in the pilot' },
                 ].map(({ icon, text }) => (
                   <div
                     key={text}
@@ -679,7 +630,6 @@ export default function HomePage() {
                   image: '/lockshow-persona-artist-v1.webp',
                   tag: 'ARTIST',
                   title: 'Your nights already tell the story',
-                  body: 'Turn the gigs you played into a Passport that opens the next room. Free during the pilot.',
                   href: '/artists',
                   cta: 'FOR ARTISTS',
                 },
@@ -687,7 +637,7 @@ export default function HomePage() {
                   image: '/lockshow-persona-manager-v1.webp',
                   tag: 'BOOKING MANAGER',
                   title: 'Say yes with a clear head',
-                  body: 'Read an artist’s real history in two minutes — before your name goes on the line. Always free.',
+                  body: 'Read an artist’s real history in two minutes — before your name goes on the line.',
                   href: '/bookers',
                   cta: 'FOR BOOKING MANAGERS',
                 },
@@ -736,9 +686,9 @@ export default function HomePage() {
                     >
                       {title}
                     </h3>
-                    <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+                    {body && <p style={{ fontSize: '1rem', color: 'var(--color-tally-onlight)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
                       {body}
-                    </p>
+                    </p>}
                     <Link
                       href={href}
                       style={{
@@ -1226,29 +1176,8 @@ export default function HomePage() {
           }}
         >
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <h2
-              style={{
-                fontFamily: 'var(--font-archivo)',
-                fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
-                fontWeight: 900,
-                letterSpacing: '-0.02em',
-                color: 'var(--color-paper)',
-                marginBottom: '1rem',
-                lineHeight: 1.15,
-              }}
-            >
-              The next room is waiting.
-            </h2>
-            <p
-              style={{
-                fontSize: '1rem',
-                color: 'rgba(243,245,239,0.6)',
-                marginBottom: '2rem',
-                lineHeight: 1.65,
-              }}
-            >
-              Closed beta — Israeli artists only, free while we build this together.
-            </p>
+
+
             <a
               href={`${APP_URL}/signup?utm_source=site&utm_campaign=home&utm_content=final`}
               style={{

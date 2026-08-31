@@ -6,7 +6,6 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
-import { SAME_AS, WHATSAPP_E164, CONTACT_POINTS } from '@/lib/social'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -25,7 +24,6 @@ const dmMono = DM_Mono({
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-ZX907M2NY8'
 
 const SITE_URL = 'https://lock.show'
-const OG_IMAGE = `${SITE_URL}/og/og-default.png`
 
 // Next.js App Router viewport export
 export const viewport = {
@@ -37,7 +35,7 @@ export const viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'LOCK SHOW — Trust on Cue',
+    default: 'LOCK SHOW',
     template: '%s | LOCK SHOW',
   },
   description:
@@ -73,21 +71,10 @@ export const metadata: Metadata = {
     // nav/footer/consent copy only, not page content — T-84 HE-scope note).
     // Claiming he_IL here would overclaim translated content that doesn't exist.
     siteName: 'LOCK SHOW',
-    images: [
-      {
-        url: OG_IMAGE,
-        width: 1200,
-        height: 630,
-        alt: 'LOCK SHOW — Trust on Cue',
-        type: 'image/png',
-      },
-    ],
   },
   twitter: {
     // No verified @lock handle exists yet — omit `site`/`creator` rather than
     // claim a handle that may belong to someone else. Add back once secured.
-    card: 'summary_large_image',
-    images: [OG_IMAGE],
   },
   // Canonical is declared PER PAGE (relative, resolved via metadataBase) —
   // a global canonical here made every subpage claim the homepage as its
@@ -99,7 +86,7 @@ export const metadata: Metadata = {
   },
 }
 
-// JSON-LD: WebSite + Organization + SoftwareApplication schema.
+// JSON-LD: WebSite + SoftwareApplication schema.
 // No SearchAction on WebSite — the site has no internal search.
 // No aggregateRating / review anywhere — firewall: no scores, and we have none.
 const jsonLd = {
@@ -110,56 +97,9 @@ const jsonLd = {
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
       name: 'LOCK SHOW',
-      description:
-        'Pre-booking proof and risk-reduction tool for independent artists and booking managers.',
-      publisher: { '@id': `${SITE_URL}/#organization` },
       // 'en' only: page bodies are English-only today; the locale toggle
       // covers nav/footer/consent copy, not page content (T-84 HE-scope note).
       inLanguage: ['en'],
-    },
-    {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}/#organization`,
-      name: 'LOCK SHOW',
-      url: SITE_URL,
-      logo: {
-        '@type': 'ImageObject',
-        url: OG_IMAGE,
-      },
-      foundingLocation: {
-        '@type': 'Place',
-        name: 'Tel Aviv, Israel',
-      },
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Tel Aviv',
-        addressCountry: 'IL',
-      },
-      areaServed: {
-        '@type': 'Country',
-        name: 'Israel',
-      },
-      // Verified profiles — search + AI answer-engines use sameAs to bind the
-      // brand to its official channels (single source: lib/social.ts).
-      sameAs: SAME_AS,
-      contactPoint: [
-        {
-          '@type': 'ContactPoint',
-          contactType: 'customer support',
-          telephone: WHATSAPP_E164,
-          areaServed: 'IL',
-          availableLanguage: ['he', 'en'],
-        },
-        ...CONTACT_POINTS.map((c) => ({
-          '@type': 'ContactPoint',
-          contactType: c.contactType,
-          email: c.email,
-          areaServed: 'IL',
-          availableLanguage: ['he', 'en'],
-        })),
-      ],
-      description:
-        'LOCK SHOW provides standardized, method-labeled proof of live performance for independent artists. Free for booking managers.',
     },
     {
       '@type': 'SoftwareApplication',
@@ -170,20 +110,8 @@ const jsonLd = {
       operatingSystem: 'Web',
       description:
         'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (מזמיני הופעות) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
-      provider: { '@id': `${SITE_URL}/#organization` },
-      areaServed: {
-        '@type': 'Country',
-        name: 'Israel',
-      },
       // 'en' only — see WebSite node above for the same HE-scope note.
       inLanguage: ['en'],
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
-        description:
-          'Free, unlimited access for booking managers to review a Passport. Artist access is by arrangement during the closed beta — no public pricing tier is locked yet.',
-      },
     },
   ],
 }

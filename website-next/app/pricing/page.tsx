@@ -1,18 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { APP_URL } from '@/lib/app-url'
 
 export const metadata: Metadata = {
   alternates: { canonical: '/pricing' },
-  title: 'Pricing — What Each Person Pays',
-  description:
-    'Artists build and publish free during the pilot. Booking managers read Passports free, always. Producers never need an account. Agency roster plans come later.',
+  title: 'Pricing',
   openGraph: {
     url: '/pricing',
     title: 'Pricing | LOCK SHOW',
-    description:
-      'One page, four honest answers — artist, booking manager, producer, agency. And the things money can never buy here.',
     type: 'website',
   },
 }
@@ -21,28 +16,21 @@ export const metadata: Metadata = {
 const seats = [
   {
     label: 'FOR ARTISTS',
-    price: 'Free during the pilot',
-    line: 'Build your Radar, shape your story, publish your Passport — all of it free while the pilot runs.',
     points: [
       'A full first scan of your gig and platform history',
       'Your private Radar workspace — only you see it',
       'Publishing your Passport, on your approval',
       'Full export and delete, any time',
     ],
-    cta: { text: 'START FREE IN THE PILOT →', href: `${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=seats`, primary: true },
-    note: 'The pilot is a closed beta for Israeli artists. When pricing comes, it will be set with the artists already inside.',
   },
   {
     label: 'FOR BOOKING MANAGERS',
-    price: 'Free, always',
-    line: 'You receive proof — you don’t pay for it. Opening a Passport someone sends you never costs a thing.',
     points: [
       'Open any shared Passport link — no account needed',
       'Every claim carries its source and date',
       'Reply with an availability request in one tap',
     ],
     cta: { text: 'How booking managers use LOCK SHOW →', href: '/bookers', primary: false },
-    note: 'This one is permanent. A paywall between you and the proof would defeat the whole idea.',
   },
   {
     label: 'FOR PRODUCERS',
@@ -55,18 +43,6 @@ const seats = [
     ],
     cta: { text: 'What producers confirm →', href: '/producers', primary: false },
     note: 'Your word is the product here. Charging you for giving it would be absurd.',
-  },
-  {
-    label: 'FOR AGENCIES & ROSTERS',
-    price: 'Plans come later',
-    line: 'Roster tools are coming for agencies — one view across every artist you represent. Pricing arrives with them.',
-    points: [
-      'One screen across the whole roster',
-      'Artists keep ownership of their own Passports',
-      'Built with the first offices that raise a hand',
-    ],
-    cta: { text: 'Register roster interest →', href: '/contact', primary: false },
-    note: 'No numbers yet, on purpose. We’d rather build it with you than guess at it.',
   },
 ]
 
@@ -81,28 +57,12 @@ const neverForSale = [
 /* ── FAQ (visible + JSON-LD share this source) ──────────── */
 const faq = [
   {
-    q: 'Is LOCK SHOW free for artists?',
-    a: 'Yes — free during the pilot. The pilot is a closed beta for Israeli artists: building your Radar and publishing your Passport cost nothing while it runs. When the pilot ends, pricing will be set together with the artists already inside — and we will say so clearly before anything changes.',
-  },
-  {
     q: 'Can a paid plan ever buy a better Passport?',
     a: 'No — and this is the one permanent promise on this page. A paid plan never buys publication, a badge, or a better spot. Those aren’t for sale. What a Passport shows is decided by what actually happened and by the artist’s own approval — never by money.',
   },
   {
-    q: 'Do booking managers pay to read a Passport?',
-    a: 'No. Reading a Passport is free, always. A booking manager receiving a Passport link opens it in the browser — no account, no paywall. That stays true permanently.',
-  },
-  {
     q: 'Do producers need an account or a plan?',
     a: 'Never. A producer confirming a show taps one link, looks at one night they ran, and answers. There is nothing to pay, nothing to join, and no account is ever created for them.',
-  },
-  {
-    q: 'What will agencies and rosters pay?',
-    a: 'Roster tools for agencies and management offices are coming, and pricing arrives with them. No numbers are set yet — the plans will be built with the first offices that join.',
-  },
-  {
-    q: 'What happens to artist pricing after the pilot?',
-    a: 'It gets decided with the founding artists, based on real usage — not announced at them. Whatever comes, the not-for-sale list above does not move: publication, badges, and placement will never be things money can buy.',
   },
 ]
 
@@ -169,41 +129,11 @@ export default function Pricing() {
             >
               Four people make a booking happen.
               <br />
-              <em style={{ fontStyle: 'italic', color: 'var(--color-stamp)' }}>
-                Here&apos;s what each one pays.
-              </em>
+
             </h1>
-            <p
-              style={{
-                fontFamily: sans,
-                fontSize: 'clamp(1rem, 1.8vw, 1.1rem)',
-                lineHeight: 1.65,
-                color: 'rgba(243,245,239,0.78)',
-                maxWidth: '520px',
-                marginBottom: '2.25rem',
-              }}
-            >
-              The short version: during the pilot, almost nobody pays anything. And the
-              things that make proof worth trusting are never for sale — to anyone.
-            </p>
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
-              <a
-                href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=hero`}
-                style={{
-                  background: 'var(--color-stamp)',
-                  color: 'var(--color-ink)',
-                  fontFamily: mono,
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  padding: '0.95rem 1.75rem',
-                  textDecoration: 'none',
-                  borderRadius: '10px',
-                  display: 'inline-block',
-                }}
-              >
-                START FREE IN THE PILOT →
-              </a>
+
               <Link
                 href="/passport/demo"
                 style={{
@@ -241,18 +171,7 @@ export default function Pricing() {
       {/* ── THE FOUR ANSWERS ──────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <p
-            style={{
-              fontFamily: mono,
-              fontSize: '0.75rem',
-              color: 'var(--color-tally-onlight)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: '0.5rem',
-            }}
-          >
-            THE FOUR ANSWERS
-          </p>
+
           <h2
             style={{
               fontFamily: heading,
@@ -263,19 +182,7 @@ export default function Pricing() {
           >
             Whoever you are in the room, here&apos;s your answer.
           </h2>
-          <p
-            style={{
-              fontFamily: sans,
-              fontSize: '1rem',
-              color: 'var(--color-tally-onlight)',
-              lineHeight: 1.6,
-              maxWidth: '560px',
-              marginBottom: '2.5rem',
-            }}
-          >
-            Artist, booking manager, producer, agency — one card each, no fine print
-            hiding underneath.
-          </p>
+
 
           <div
             style={{
@@ -309,7 +216,7 @@ export default function Pricing() {
                 >
                   {seat.label}
                 </p>
-                <h3
+                {seat.price && (<h3
                   style={{
                     fontFamily: 'Georgia, "Times New Roman", serif',
                     fontWeight: 400,
@@ -321,8 +228,8 @@ export default function Pricing() {
                   }}
                 >
                   {seat.price}
-                </h3>
-                <p
+                </h3>)}
+                {seat.line && (<p
                   style={{
                     fontFamily: sans,
                     fontSize: '1rem',
@@ -332,7 +239,7 @@ export default function Pricing() {
                   }}
                 >
                   {seat.line}
-                </p>
+                </p>)}
                 <div style={{ height: '1px', background: 'var(--color-mist)' }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                   {seat.points.map((point) => (
@@ -354,7 +261,7 @@ export default function Pricing() {
                     </div>
                   ))}
                 </div>
-                <p
+                {seat.note && (<p
                   style={{
                     fontFamily: sans,
                     fontSize: '1rem',
@@ -365,8 +272,8 @@ export default function Pricing() {
                   }}
                 >
                   {seat.note}
-                </p>
-                {seat.cta.primary ? (
+                </p>)}
+                {seat.cta && (seat.cta.primary ? (
                   <a
                     href={seat.cta.href}
                     style={{
@@ -404,7 +311,7 @@ export default function Pricing() {
                   >
                     {seat.cta.text}
                   </Link>
-                )}
+                ))}
               </div>
             ))}
           </div>
@@ -504,57 +411,6 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── AFTER THE PILOT — honest, no "forever" ────────── */}
-      <section
-        style={{
-          background: 'var(--color-paper)',
-          padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)',
-          borderBottom: '1px solid var(--color-mist)',
-        }}
-      >
-        <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-          <div style={{ maxWidth: '720px' }}>
-            <p
-              style={{
-                fontFamily: mono,
-                fontSize: '0.75rem',
-                color: 'var(--color-tally-onlight)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                marginBottom: '0.5rem',
-              }}
-            >
-              AFTER THE PILOT
-            </p>
-            <h2
-              style={{
-                fontFamily: heading,
-                fontSize: 'clamp(1.5rem, 3.5vw, 2rem)',
-                color: 'var(--color-ink)',
-                marginBottom: '1rem',
-              }}
-            >
-              We&apos;d rather tell you the truth than promise you forever.
-            </h2>
-            <p
-              style={{
-                fontFamily: sans,
-                fontSize: '1rem',
-                color: 'var(--color-tally-onlight)',
-                lineHeight: 1.7,
-                margin: 0,
-              }}
-            >
-              Right now LOCK SHOW is in a closed pilot with Israeli artists, and artists build
-              free. When the pilot ends, artist pricing gets worked out with the founding
-              artists — in the open, based on real use, before anything changes. Booking
-              managers reading Passports stay free, producers never need an account, and
-              the not-for-sale list above doesn&apos;t move. That&apos;s the deal.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* ── PRICING FAQ ───────────────────────────────────── */}
       <section style={{ background: 'var(--color-paper)', padding: 'clamp(3rem, 8vw, 6rem) max(24px, 4vw)' }}>
         <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
@@ -619,59 +475,6 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── DARK CLOSING CTA ──────────────────────────────── */}
-      <section
-        style={{
-          background: 'var(--color-night)',
-          color: 'var(--color-paper)',
-          padding: 'clamp(3.5rem, 9vw, 6.5rem) max(24px, 4vw)',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ maxWidth: '560px', margin: '0 auto' }}>
-          <h2
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontWeight: 400,
-              fontSize: 'clamp(1.9rem, 4vw, 2.75rem)',
-              letterSpacing: '-0.04em',
-              lineHeight: 1.05,
-              marginBottom: '1rem',
-            }}
-          >
-            The pilot is open. The price is your time.
-          </h2>
-          <p
-            style={{
-              fontFamily: sans,
-              fontSize: '1rem',
-              color: 'rgba(243,245,239,0.72)',
-              lineHeight: 1.65,
-              marginBottom: '2rem',
-            }}
-          >
-            Start with one link. Radar helps you build from there — and every show you
-            play makes the next room easier to enter.
-          </p>
-          <a
-            href={`${APP_URL}/signup?utm_source=site&utm_campaign=pricing&utm_content=final`}
-            style={{
-              background: 'var(--color-stamp)',
-              color: 'var(--color-ink)',
-              fontFamily: mono,
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              padding: '0.95rem 1.75rem',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              display: 'inline-block',
-            }}
-          >
-            START FREE IN THE PILOT →
-          </a>
-        </div>
-      </section>
     </main>
   )
 }

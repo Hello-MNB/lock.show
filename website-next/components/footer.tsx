@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { APP_URL } from '@/lib/app-url'
 import { useLocale } from '@/lib/locale-context'
 import { BrandSymbol } from '@/components/brand-symbol'
-import { SOCIAL, WHATSAPP_URL, WHATSAPP_DISPLAY, EMAILS } from '@/lib/social'
+import { SOCIAL } from '@/lib/social'
 
 const CONSENT_STORAGE_KEY = 'gigproof_consent'
 
@@ -126,15 +126,7 @@ export function Footer() {
               <BrandSymbol size={36} />
               LOCK SHOW
             </Link>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.1em',
-              color: 'rgba(243,245,239,0.55)',
-              margin: 0,
-            }}>
-              Trust on Cue
-            </p>
+
           </div>
           <a
             href={signupHref}
@@ -266,39 +258,8 @@ export function Footer() {
                   </a>
                 </li>
               ))}
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  WhatsApp <span dir="ltr" style={{ color: 'rgba(243,245,239,0.55)' }}>{WHATSAPP_DISPLAY}</span>
-                </a>
-              </li>
-              <li style={{ marginBottom: '4px' }}>
-                <a
-                  href={`mailto:${EMAILS.hello}`}
-                  dir="ltr"
-                  style={{
-                    fontFamily: 'var(--font-heebo)',
-                    fontSize: '0.875rem',
-                    color: 'rgba(243,245,239,0.7)',
-                    textDecoration: 'none',
-                    display: 'inline-block',
-                    padding: '0.4rem 0',
-                  }}
-                >
-                  {EMAILS.hello}
-                </a>
-              </li>
+
+
             </ul>
           </div>
         </div>
@@ -340,7 +301,7 @@ export function Footer() {
             color: 'rgba(243,245,239,0.55)',
             margin: 0,
           }}>
-            © 2026 LOCK SHOW · CLOSED BETA · TEL AVIV, ISRAEL
+            © 2026 LOCK SHOW
           </p>
           <Link
             href="/contact"

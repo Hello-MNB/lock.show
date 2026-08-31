@@ -15,14 +15,12 @@
 - [x] No `netlify.toml` anywhere
 - [x] No `console.log` in source
 - [x] Firewall: zero violations
-- [x] `public/og/og-default.png` — exists (1200×630)
 - [x] `public/llms.txt` — exists
 - [x] `app/robots.ts` + `app/sitemap.ts` — exist
 - [x] `app/favicon.ico` — exists
 - [x] Default Next.js boilerplate SVGs removed from `public/`
 - [x] Stale `i18n/` directory removed (superseded by `messages/`)
 - [x] `website-next/.gitignore` covers `.next/`, `out/`, `*.tsbuildinfo`, `.env*`
-- [ ] OG image: `og-default.svg` must also be committed (source), `og-default.png` is the runtime asset
 
 ---
 
@@ -85,7 +83,6 @@ https://lock.show/contact
 https://lock.show/llms.txt     → plain text ✓
 https://lock.show/sitemap.xml  → XML ✓
 https://lock.show/robots.txt   → plain text ✓
-https://lock.show/og/og-default.png → 1200×630 image ✓
 ```
 
 WhatsApp test (390px): send `lock.show/passport/demo` link — verify OG card renders, page is readable on mobile.
