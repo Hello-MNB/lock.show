@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import WaitlistForm from '../../components/waitlist-form'
 import { APP_URL } from '@/lib/app-url'
 import { SOCIAL } from '@/lib/social'
 
@@ -68,25 +67,6 @@ export default function Contact() {
             alignItems: 'start',
           }}
         >
-
-          {/* FORM COLUMN */}
-          <div>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.12em',
-              color: 'var(--color-tally-onlight)',
-              textTransform: 'uppercase',
-              marginBottom: '24px',
-            }}>
-              SEND A MESSAGE
-            </p>
-
-            {/* First-party waitlist capture — writes to waitlist_signup
-                (migration 026; write-only for the public, operator-only read).
-                No Formspree, no third parties — matching the promise below. */}
-            <WaitlistForm />
-          </div>
 
           {/* INFO COLUMN */}
           <div className="m-divide" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

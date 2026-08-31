@@ -40,6 +40,46 @@ async function assertRemovedAsset(directory) {
 await assertRemovedAsset('public')
 if (process.argv.includes('--removal-source')) process.exit(0)
 
+// WEB-R1-FORM-DISABLE-001: prove source removal and the actual exported surface.
+// Restoring the deleted caller/component or a direct browser write must fail.
+async function runtimeTextFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true })
+  const nested = await Promise.all(entries.map(async (entry) => {
+    const absolute = path.join(directory, entry.name)
+    if (entry.isDirectory()) return runtimeTextFiles(absolute)
+    return entry.isFile() && /\.(?:[cm]?[jt]sx?|html)$/.test(entry.name) ? [absolute] : []
+  }))
+  return nested.flat()
+}
+async function assertPublicFormDisabled() {
+  const sourceFiles = (await Promise.all(['app', 'components', 'lib', 'public']
+    .map((directory) => runtimeTextFiles(path.join(websiteRoot, directory))))).flat()
+  const runtimeSource = (await Promise.all(sourceFiles.map((file) => readFile(file, 'utf8')))).join('\n')
+  const contactSource = await readFile(path.join(websiteRoot, 'app/contact/page.tsx'), 'utf8')
+  const contactHtml = await readFile(path.join(websiteRoot, 'out/contact.html'), 'utf8')
+  const exportedFiles = await runtimeTextFiles(path.join(websiteRoot, 'out'))
+  const exported = (await Promise.all(exportedFiles.map((file) => readFile(file, 'utf8')))).join('\n')
+  const componentExists = await stat(path.join(websiteRoot, 'components/waitlist-form.tsx'))
+    .then(() => true, (error) => { if (error.code === 'ENOENT') return false; throw error })
+  const directWrite = /waitlist_signup|\/rest\/v1\//i
+  const withdrawnCopy = /JOIN THE WAITLIST|No spam|No third parties|No third-party service touches|Data is not shared with third parties/i
+  const checks = [
+    ['component deleted', !componentExists],
+    ['contact import/render/comments removed', !/WaitlistForm|waitlist-form|waitlist_signup|First-party waitlist|SEND A MESSAGE|No Formspree/.test(contactSource)],
+    ['runtime source has no direct public REST write', !directWrite.test(runtimeSource)],
+    ['runtime source has no waitlist CTA/privacy promise', !withdrawnCopy.test(runtimeSource)],
+    ['rendered contact has no form or PII input', !/<(?:form|input|textarea|select)\b/i.test(contactHtml)],
+    ['exported HTML/JS has no public REST write', !directWrite.test(exported)],
+    ['exported HTML/JS has no waitlist CTA/privacy promise', !withdrawnCopy.test(exported)],
+    ['contact canonical and existing app handoff retained', contactHtml.includes('rel="canonical" href="https://lock.show/contact"') && contactHtml.includes(`${productionOrigin}/signup?utm_source=site&amp;utm_campaign=contact`)],
+  ]
+  const failures = checks.filter(([, passed]) => !passed).map(([name]) => name)
+  if (failures.length) throw new Error(`Public form disable RETURN ${checks.length - failures.length}/${checks.length}:\n${failures.join('\n')}`)
+  console.log(`Public form disable: ${checks.length}/${checks.length}, source files=${sourceFiles.length}, exported HTML/JS=${exportedFiles.length}; no provider request executed`)
+}
+await assertPublicFormDisabled()
+if (process.argv.includes('--form-disable')) process.exit(0)
+
 if (!source.includes(`|| '${productionOrigin}'`)) {
   throw new Error(`APP_URL must fail closed to ${productionOrigin}`)
 }
