@@ -118,6 +118,14 @@ export function emitGovernedPublication(outcome, current, seen, emit) {
   if (Number(object?.version) !== Number(receipt.objectVersion)
     || object.state !== (request.action === 'withdraw' ? 'withdrawn' : 'confirmed')
     || (request.action !== 'withdraw' && !receipt.passportVersionId)) return false
+  if (request.action === 'withdraw') {
+    const transition = receipt.publicationTransition
+    const recorded = current.history.find(item => item.receipt.id === receipt.id)?.receipt.publicationTransition
+    if (!transition || transition.fromPublished !== true || transition.toPublished !== false
+      || !transition.passportVersionId || transition.objectId !== request.objectId || transition.actId !== request.actId
+      || current.publication !== null
+      || !recorded || ['fromPublished', 'toPublished', 'passportVersionId', 'objectId', 'actId'].some(key => recorded[key] !== transition[key])) return false
+  }
   seen.add(receipt.id)
   try { emit(request.action === 'withdraw' ? 'unpublished' : 'published', { artist_id: request.artistId }) } catch { /* best-effort measurement only */ }
   return true

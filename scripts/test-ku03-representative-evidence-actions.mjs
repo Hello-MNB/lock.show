@@ -138,6 +138,51 @@ test('publication signal waits for exact current history readback and is emitted
   api.emitGovernedPublication?.(outcome, current, seen, emit)
   assert.deepEqual(signals, [['published', { artist_id: request.artistId }]])
 })
+const withdrawalRequest = {...request,action:'withdraw'}
+const withdrawalProof = {fromPublished:true,toPublished:false,passportVersionId:'snapshot-exact',objectId:request.objectId,actId:request.actId}
+function withdrawalFixture(proof) {
+  const actionReceipt={...receipt,action:'withdraw',publicationTransition:proof}
+  return {outcome:{status:'committed',request:withdrawalRequest,receipt:actionReceipt},current:{
+    artistId:request.artistId,actId:request.actId,version:1,publication:null,
+    authority:{workspaceId:request.workspaceId,contextVersion:0},objects:[{id:request.objectId,version:1,state:'withdrawn'}],history:[{receipt:actionReceipt}]}}
+}
+test('private withdrawal without a server publication transition emits zero', () => {
+  const {outcome,current}=withdrawalFixture(null),events=[]
+  api.emitGovernedPublication(outcome,current,new Set(),(...args)=>events.push(args))
+  assert.deepEqual(events,[])
+})
+test('old withdrawal receipt without transition proof never guesses unpublication', () => {
+  const {outcome,current}=withdrawalFixture(undefined),events=[]
+  api.emitGovernedPublication(outcome,current,new Set(),(...args)=>events.push(args))
+  assert.deepEqual(events,[])
+})
+test('exact server withdrawal transition emits once after recovery and replay', async () => {
+  const {outcome,current}=withdrawalFixture(withdrawalProof),events=[],seen=new Set(),emit=(...args)=>events.push(args)
+  const recovered=await api.recoverEvidenceAction(withdrawalRequest,{},async()=>json(outcome))
+  api.emitGovernedPublication(recovered,current,seen,emit)
+  api.emitGovernedPublication(outcome,current,seen,emit)
+  assert.deepEqual(events,[['unpublished',{artist_id:request.artistId}]])
+})
+test('wrong object Act version or non-transition proof never emits unpublication', () => {
+  for (const changed of [{objectId:'other'},{actId:'other'},{passportVersionId:null},{fromPublished:false},{toPublished:true}]) {
+    const {outcome,current}=withdrawalFixture({...withdrawalProof,...changed}),events=[]
+    api.emitGovernedPublication(outcome,current,new Set(),(...args)=>events.push(args))
+    assert.deepEqual(events,[])
+  }
+})
+test('withdrawal proof must agree with authoritative history and absent current publication', () => {
+  for (const changed of [{history:[{receipt:{...receipt,action:'withdraw',publicationTransition:null}}]},{publication:{versionId:'newer'}}]) {
+    const {outcome,current}=withdrawalFixture(withdrawalProof),events=[]
+    api.emitGovernedPublication(outcome,{...current,...changed},new Set(),(...args)=>events.push(args))
+    assert.deepEqual(events,[])
+  }
+})
+test('failed recovery emits nothing and does not consume later authoritative event', async () => {
+  const {outcome,current}=withdrawalFixture(withdrawalProof),events=[],seen=new Set(),emit=(...args)=>events.push(args)
+  const unresolved=await api.recoverEvidenceAction(withdrawalRequest,{},async()=>{throw new Error('offline')})
+  api.emitGovernedPublication(unresolved,current,seen,emit);assert.deepEqual(events,[]);assert.equal(seen.size,0)
+  api.emitGovernedPublication(outcome,current,seen,emit);assert.equal(events.length,1)
+})
 test('one authenticated action preserves the exact envelope and returns only its receipt', async () => {
   let calls = 0
   const result = await api.performEvidenceAction(request, { Authorization: 'Bearer fixture' }, async (url, options) => {

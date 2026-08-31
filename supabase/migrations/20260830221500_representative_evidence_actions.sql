@@ -173,6 +173,7 @@ declare authority jsonb; ar public.artists; act_row public.act; ev public.eviden
   object_id uuid:=(p_request->>'objectId')::uuid; k uuid:=(p_request->>'key')::uuid;
   receipt_id uuid:=gen_random_uuid(); version_id uuid; next_version bigint;
   claim_row public.claims; snap jsonb; field text; receipt jsonb; expiry timestamptz; origin jsonb; community_count integer;
+  projection public.passport_versions; publication_transition jsonb:=null;
 begin
   authority:=private.evidence_authority(a,subject_act);
   if k is null or object_id is null or length(p_request::text)>100000 or jsonb_typeof(payload) is distinct from 'object'
@@ -237,6 +238,13 @@ begin
     previous:=jsonb_build_object('title',ev.ku03_title,'value',ev.value,'state',ev.ku03_state,'version',ev.ku03_version);
     select * into claim_row from public.claims where id=ev.ku03_claim_id and evidence_id=object_id and artist_id=a and claims.act_id=subject_act for update;
     previous:=previous||jsonb_build_object('statement',claim_row.value,'claimId',claim_row.id,'confirmed',claim_row.artist_approved);
+    if action in ('change','correct','withdraw') then
+      -- Same serialization boundary as publish/replace, including other Acts.
+      -- Inspect the current projection only after acquiring the Artist lock.
+      select * into ar from public.artists where id=a for update;
+      select * into projection from public.passport_versions v where v.artist_id=a
+        order by v.created_at desc,v.id desc limit 1;
+    end if;
     if action='prepare' then
       if ev.ku03_state<>'candidate' or nullif(payload->>'statement','') is null then raise exception 'denied'; end if;
       -- Extraction is only an editable candidate, never source verification,
@@ -255,7 +263,8 @@ begin
         value=coalesce(payload->>'value',value),ku03_state='candidate',ku03_rights=false,
         ku03_visibility=false,ku03_conflict=true,ku03_version=ku03_version+1 where id=object_id returning * into ev;
       update public.claims set artist_approved=false,visibility='working-only' where evidence_id=object_id;
-      update public.artists set published=false where id=a;
+      update public.artists set published=false where id=a and ar.published
+        and projection.ku03_object_id=object_id and projection.act_id=subject_act;
     elsif action='propose' then
       if ev.ku03_state not in ('candidate','proposed') or nullif(payload->>'statement','') is null then raise exception 'denied'; end if;
       if ev.claim_intent='community' and payload->>'statement' is distinct from ev.value then raise exception 'denied'; end if;
@@ -289,28 +298,37 @@ begin
       select * into ar from public.artists where id=a for update;
       if (action='publish' and ar.published) or (action='replace' and not ar.published)
         then raise exception 'denied'; end if;
+      select * into projection from public.passport_versions v where v.artist_id=a
+        order by v.created_at desc,v.id desc limit 1;
       snap:=jsonb_build_object('artist',jsonb_build_object('id',a,'stage_name',act_row.stage_name,'published',true),
         'items','[]'::jsonb,'claims',jsonb_build_array(jsonb_build_object('id',claim_row.id,'artist_id',a,
         'value',claim_row.value,'public_wording',claim_row.public_wording,'source_type',claim_row.source_type,
         'verification_status',claim_row.verification_status,'method_label',claim_row.method_label)));
-      insert into public.passport_versions(artist_id,act_id,organization_id,snapshot,ku03_audience,ku03_purpose,ku03_expires_at,ku03_object_id)
-      values(a,subject_act,ar.owner_organization_id,snap,(payload->>'audience')::uuid,payload->>'purpose',expiry,object_id)
+      -- now() is transaction-start time: concurrent waiters or multiple actions
+      -- in one transaction must not reorder the served current projection.
+      insert into public.passport_versions(artist_id,act_id,organization_id,snapshot,ku03_audience,ku03_purpose,ku03_expires_at,ku03_object_id,created_at)
+      values(a,subject_act,ar.owner_organization_id,snap,(payload->>'audience')::uuid,payload->>'purpose',expiry,object_id,
+        greatest(clock_timestamp(),projection.created_at+interval '1 microsecond'))
       returning id into version_id;
       update public.artists set published=true where id=a;
     elsif action='withdraw' then
       if not (authority->>'owner')::boolean and ev.ku03_state<>'proposed' then raise exception 'denied'; end if;
       update public.evidence_artifacts set ku03_state='withdrawn',ku03_version=ku03_version+1 where id=object_id returning * into ev;
       update public.claims set artist_approved=false,visibility='working-only' where evidence_id=object_id;
-      -- A private proposal's withdrawal cannot disable another object's projection.
-      update public.artists set published=false where id=a and object_id=(
-        select v.ku03_object_id from public.passport_versions v where v.artist_id=a
-        order by v.created_at desc,v.id desc limit 1);
+      -- The receipt records an observed transition, not the action's label.
+      -- No transition is asserted for private, historical or already-hidden evidence.
+      if ar.published and projection.ku03_object_id=object_id and projection.act_id=subject_act then
+        update public.artists set published=false where id=a;
+        publication_transition:=jsonb_build_object('fromPublished',ar.published,'toPublished',false,
+          'passportVersionId',projection.id,'objectId',projection.ku03_object_id,'actId',projection.act_id);
+      end if;
     else raise exception 'denied'; end if;
   end if;
   update public.act set ku03_version=ku03_version+1 where id=subject_act returning ku03_version into next_version;
   receipt:=jsonb_build_object('id',receipt_id,'actorId',auth.uid(),'key',k,'action',action,'artistId',a,'actId',subject_act,
     'objectId',object_id,'workspaceId',authority->>'workspaceId','contextVersion',authority->'contextVersion',
-    'version',next_version,'objectVersion',ev.ku03_version,'passportVersionId',version_id,'committedAt',clock_timestamp());
+    'version',next_version,'objectVersion',ev.ku03_version,'passportVersionId',version_id,
+    'publicationTransition',publication_transition,'committedAt',clock_timestamp());
   select * into claim_row from public.claims where id=ev.ku03_claim_id;
   after_value:=jsonb_build_object('title',ev.ku03_title,'value',ev.value,'state',ev.ku03_state,'version',ev.ku03_version,
     'statement',claim_row.value,'claimId',claim_row.id,'confirmed',claim_row.artist_approved,

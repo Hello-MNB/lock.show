@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
-import { performEvidenceAction, recoverEvidenceAction, publishPassportSnapshot, unpublishPassportSnapshot, readPassportSnapshot } from '../../src/lib/passportApi.js'
+import { performEvidenceAction, recoverEvidenceAction, publishPassportSnapshot, unpublishPassportSnapshot, readPassportSnapshot, emitGovernedPublication } from '../../src/lib/passportApi.js'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const expected = process.argv.includes('--ci') ? 'lock_show_test' : 'lock_show_representative_evidence_test'
@@ -286,6 +286,28 @@ try {
       const recipientRead = options => readPassportSnapshot(artistId,realFetch,options)
       const read = await recipientRead({purpose:firstRequest.payload.purpose,accessToken:recipientToken})
       assert.equal(read.claims[0].value,'Fixture performance')
+      // Actual existing caller -> Express -> RPC -> PostgreSQL: private edits
+      // and withdrawal neither change the recipient snapshot nor emit unpublication.
+      await client.query('savepoint unrelated_http')
+      const privateObject='74000000-0000-4000-8000-000000000098'
+      const privateUpload=make('upload',{objectId:privateObject,expectedVersion:4})
+      assert.equal((await performEvidenceAction(privateUpload,headers,realFetch)).status,'committed')
+      for (const [index,action] of ['change','correct'].entries()) {
+        const edit=make(action,{objectId:privateObject,expectedVersion:5+index,expectedObjectVersion:1+index,
+          payload:{title:'Private metadata',reason:'Correction',provenance:'Private source'}})
+        assert.equal((await performEvidenceAction(edit,headers,realFetch)).status,'committed')
+        assert.deepEqual(await recipientRead({purpose:firstRequest.payload.purpose,accessToken:recipientToken}),read)
+      }
+      const privateWithdrawal=make('withdraw',{objectId:privateObject,expectedVersion:7,expectedObjectVersion:3})
+      const privateOutcome=await performEvidenceAction(privateWithdrawal,headers,realFetch)
+      assert.equal(privateOutcome.status,'committed')
+      await as(actor)
+      const privateRead=(await client.query('select public.get_evidence_workbench($1,$2) as data',[artistId,artistId])).rows[0].data
+      const privateEvents=[]
+      emitGovernedPublication(privateOutcome,privateRead,new Set(),(...args)=>privateEvents.push(args))
+      assert.deepEqual(privateEvents,[])
+      assert.deepEqual(await recipientRead({purpose:firstRequest.payload.purpose,accessToken:recipientToken}),read)
+      await client.query('rollback to savepoint unrelated_http');await client.query('release savepoint unrelated_http')
       for(const options of [{},{purpose:firstRequest.payload.purpose},{accessToken:recipientToken},
         {purpose:'Wrong purpose',accessToken:recipientToken},{purpose:firstRequest.payload.purpose,accessToken:token}]) {
         assert.deepEqual(await recipientRead(options),{artist:null,items:[],claims:[]})
@@ -315,13 +337,27 @@ try {
       assert.equal(unresolved.status,'uncertain')
       assert.equal((await recoverEvidenceAction(neverReceived,headers,realFetch)).status,'not_committed')
       assert.equal((await performEvidenceAction(neverReceived,headers,realFetch)).status,'denied')
-      const withdrawn=await performEvidenceAction(make('withdraw',{expectedVersion:5,expectedObjectVersion:3}),headers,realFetch)
+      const withdrawalRequest=make('withdraw',{expectedVersion:5,expectedObjectVersion:3})
+      const withdrawn=await performEvidenceAction(withdrawalRequest,headers,async(route,options)=>{
+        const response=await realFetch(route,options)
+        if(route.endsWith('/commit')) {assert.equal(response.status,200);throw new TypeError('withdrawal response lost')}
+        return response
+      })
       assert.equal(withdrawn.status,'committed')
+      const replayed=await recoverEvidenceAction(withdrawalRequest,headers,realFetch)
+      assert.deepEqual(replayed.receipt,withdrawn.receipt)
+      await as(actor)
+      const withdrawalRead=(await client.query('select public.get_evidence_workbench($1,$2) as data',[artistId,artistId])).rows[0].data
+      const events=[],seen=new Set(),emit=(...args)=>events.push(args)
+      emitGovernedPublication(withdrawn,withdrawalRead,seen,emit)
+      emitGovernedPublication(replayed,withdrawalRead,seen,emit)
+      assert.deepEqual(events,[['unpublished',{artist_id:artistId}]])
       assert.deepEqual(await recipientRead({purpose:firstRequest.payload.purpose,accessToken:recipientToken}),{artist:null,items:[],claims:[]})
       await client.query('reset role')
       assert.equal((await client.query('select count(*)::int as n from public.passport_versions')).rows[0].n,2)
       assert.equal((await client.query('select published from public.artists where id=$1',[artistId])).rows[0].published,false)
       console.log('KU03_CALLER_EXPRESS_POSTGRES=publish/replace/withdraw + wrong-context/role/stale + lost-response/fenced-noncommit; real DB, local Auth/PostgREST adapter')
+      console.log('KU03_D1_D2_CALLER=unrelated change/correct preserve recipient snapshot; private withdrawal event0; actual lost-response withdrawal/replay event1')
     } finally {
       await new Promise(resolve=>server.close(resolve))
       await new Promise(resolve=>bridge.close(resolve))
@@ -394,6 +430,107 @@ try {
       assert.equal((await client.query('select artist_approved from public.claims where evidence_id=$1', [objectId])).rows[0].artist_approved, true)
     }
   })
+  // D1/D2: real rows and receipts, not an action-name or fixture-only event oracle.
+  const otherObject = '74000000-0000-4000-8000-000000000099'
+  const otherAct = '77000000-0000-4000-8000-000000000099'
+  const editPayload = { title: 'Unrelated private title', reason: 'Metadata correction', provenance: 'Original source' }
+  const protectedPublication = async (versionId) => {
+    await client.query('reset role')
+    return (await client.query(`select
+      (select published from public.artists where id=$1) as published,
+      (select to_jsonb(v) from public.passport_versions v where id=$2) as snapshot,
+      (select jsonb_agg(to_jsonb(c) order by c.id) from public.claims c where c.evidence_id=$3) as claims,
+      (select to_jsonb(e) from public.evidence_artifacts e where e.id=$3) as evidence`, [artistId,versionId,objectId])).rows[0]
+  }
+  let correctionCase = 29
+  for (const action of ['change','correct']) for (const separateAct of [false,true]) {
+    await test(`${correctionCase++} ${action} unrelated candidate preserves publication${separateAct ? ' across distinct Acts' : ''}`, async () => {
+      await eligible(); const published = await call(publication())
+      await owner("update public.artist_access set scope=array['view','upload','edit'],ku03_edit_fields=array['title']")
+      if (separateAct) await owner(`insert into public.act(id,person_id,organization_id,stage_name,is_default)
+        values ('${otherAct}','${actor}','${workspaceId}','Distinct Act',false)`)
+      const person = action === 'change' ? representative : actor
+      const selectedAct = separateAct ? otherAct : artistId
+      const selectedWorkspace = action === 'change' ? repWorkspace : workspaceId
+      await as(person)
+      await call(make('upload',{objectId:otherObject,actId:selectedAct,workspaceId:selectedWorkspace,expectedVersion:separateAct ? 0 : 4}))
+      const before = await protectedPublication(published.passportVersionId)
+      const priorAct = (await client.query('select to_jsonb(a) as row from public.act a where id=$1',[artistId])).rows
+      await as(person)
+      const request = make(action,{objectId:otherObject,actId:selectedAct,workspaceId:selectedWorkspace,
+        expectedVersion:separateAct ? 1 : 5,expectedObjectVersion:1,payload:editPayload})
+      const receipt = await call(request)
+      assert.deepEqual(await call(request),receipt,'same-key edit retry is identical')
+      assert.deepEqual(await protectedPublication(published.passportVersionId),before)
+      if (separateAct) assert.deepEqual((await client.query('select to_jsonb(a) as row from public.act a where id=$1',[artistId])).rows,priorAct)
+      const history = (await client.query('select before_state,after_state,reason,provenance from private.evidence_action_history where request_key=$1',[request.key])).rows
+      assert.equal(history.length,1);assert.equal(history[0].after_state.title,editPayload.title)
+      assert.equal(history[0].reason,editPayload.reason);assert.equal(history[0].provenance,editPayload.provenance)
+    })
+  }
+  for (const action of ['change','correct']) {
+    await test(`${correctionCase++} ${action} current published evidence invalidates access without rewriting snapshot`, async () => {
+      await eligible();const published=await call(publication()),before=await protectedPublication(published.passportVersionId)
+      await as(actor)
+      await call(make(action,{expectedVersion:4,expectedObjectVersion:3,payload:editPayload}))
+      const after=await protectedPublication(published.passportVersionId)
+      assert.equal(after.published,false);assert.deepEqual(after.snapshot,before.snapshot)
+      assert.equal(after.evidence.ku03_state,'candidate');assert.equal(after.evidence.ku03_rights,false)
+      assert.equal(after.claims[0].artist_approved,false);assert.equal(after.claims[0].visibility,'working-only')
+    })
+  }
+  for (const action of ['change','correct']) {
+    await test(`${correctionCase++} ${action} historical object cannot invalidate its replacement`, async () => {
+      await eligible();const old=await call(publication())
+      await call(make('upload',{objectId:otherObject,expectedVersion:4}))
+      await call(make('propose',{objectId:otherObject,expectedVersion:5,expectedObjectVersion:1,payload:{statement:'Replacement proof'}}))
+      await call(make('confirm',{objectId:otherObject,expectedVersion:6,expectedObjectVersion:2,payload:{rights:true,visibility:true,conflict:false}}))
+      await owner(`update public.claims set verification_status='supporting' where evidence_id='${otherObject}'`)
+      await as(actor)
+      const replacement=await call({...publication(),action:'replace',objectId:otherObject,expectedVersion:7})
+      await client.query('reset role')
+      const snapshots=(await client.query('select to_jsonb(v) as row from public.passport_versions v order by id')).rows
+      await as(actor);await call(make(action,{expectedVersion:8,expectedObjectVersion:3,payload:editPayload}))
+      await client.query('reset role')
+      assert.equal((await client.query('select published from public.artists where id=$1',[artistId])).rows[0].published,true)
+      assert.deepEqual((await client.query('select to_jsonb(v) as row from public.passport_versions v order by id')).rows,snapshots)
+      assert.notEqual(old.passportVersionId,replacement.passportVersionId)
+    })
+  }
+  await test('37 unrelated private withdrawal emits no publication event from real receipt and readback', async () => {
+    await eligible();await call(publication())
+    await owner("update public.artist_access set scope=array['view','upload','publish']")
+    await as(representative)
+    await call(make('upload',{workspaceId:repWorkspace,objectId:otherObject,expectedVersion:4}))
+    await call(make('propose',{workspaceId:repWorkspace,objectId:otherObject,expectedVersion:5,expectedObjectVersion:1,payload:{statement:'Private proposal'}}))
+    const request=make('withdraw',{workspaceId:repWorkspace,objectId:otherObject,expectedVersion:6,expectedObjectVersion:2})
+    const receipt=await call(request), current=(await client.query('select public.get_evidence_workbench($1,$2) as data',[artistId,artistId])).rows[0].data
+    const events=[];emitGovernedPublication({status:'committed',request,receipt},current,new Set(),(...args)=>events.push(args))
+    await client.query('reset role')
+    assert.equal((await client.query('select published from public.artists where id=$1',[artistId])).rows[0].published,true)
+    assert.deepEqual(events,[])
+  })
+  await test('38 actual withdrawal receipt proves transition and recovery emits once', async () => {
+    await eligible();const published=await call(publication())
+    const request=make('withdraw',{expectedVersion:4,expectedObjectVersion:3})
+    const receipt=await call(request)
+    const recovered=await call(request,'resolve_evidence_action')
+    const current=(await client.query('select public.get_evidence_workbench($1,$2) as data',[artistId,artistId])).rows[0].data
+    assert.deepEqual(receipt.publicationTransition,{fromPublished:true,toPublished:false,passportVersionId:published.passportVersionId,objectId,actId:artistId})
+    assert.deepEqual(recovered.receipt,receipt);assert.deepEqual(await call(request),receipt)
+    const events=[],seen=new Set(),emit=(...args)=>events.push(args)
+    emitGovernedPublication({...recovered,request},current,seen,emit)
+    emitGovernedPublication({status:'committed',request,receipt},current,seen,emit)
+    assert.deepEqual(events,[['unpublished',{artist_id:artistId}]])
+  })
+  await test('39 serialized replacement is newer than its historical snapshot even within one transaction', async () => {
+    await eligible();const first=await call(publication())
+    const second=await call({...publication(),action:'replace',expectedVersion:4})
+    await client.query('reset role')
+    const {rows:[row]}=await client.query('select newer.created_at > older.created_at as newer from public.passport_versions newer,public.passport_versions older where newer.id=$1 and older.id=$2',[second.passportVersionId,first.passportVersionId])
+    assert.equal(row.newer,true,'current projection must not be chosen by random UUID among tied transaction timestamps')
+  })
+  console.log(`KU03_D1_D2=${11 - failures.filter(name => /^(29|3[0-9]) /.test(name)).length}/11`)
   console.log(`KU03_NONBINDING_PROPOSAL=${2 - failures.filter(name => /^(27|28) /.test(name)).length}/2`)
   console.log(`KU03_PUBLICATION_BOUNDARY=${2 - failures.filter(name => /^(24|25) /.test(name)).length}/2`)
   assert.equal(failures.length, 0, `failed cases: ${failures.join(', ')}`)
@@ -406,7 +543,9 @@ try {
       (select jsonb_agg(to_jsonb(v) order by id) from public.passport_versions v) as snapshots,
       (select jsonb_agg(to_jsonb(h) order by id) from private.evidence_action_history h) as history,
       (select published from public.artists where id=$1) as published,
-      (select ku03_version from public.act where id=$1) as version`, [artistId])).rows[0]
+      (select ku03_version from public.act where id=$1) as version,
+      (select jsonb_agg(to_jsonb(e) order by id) from public.evidence_artifacts e) as evidence,
+      (select jsonb_agg(to_jsonb(c) order by id) from public.claims c) as claims`, [artistId])).rows[0]
     const before = await readState()
     await client.query(`create function pg_temp.reject_action_receipt() returns trigger language plpgsql as
       $$ begin raise exception 'fixture receipt persistence failure'; end $$;
@@ -419,6 +558,12 @@ try {
     const after = await readState()
     for (const key of ['snapshots', 'history', 'published', 'version']) assert.deepEqual(after[key], before[key], key)
     console.log('KU03_ATOMIC_ROLLBACK=4/4')
+    for (const action of ['change','correct','withdraw']) {
+      await as(actor)
+      await deny(make(action,{expectedVersion:4,expectedObjectVersion:3,payload:editPayload}))
+      await client.query('reset role');assert.deepEqual(await readState(),before,`${action} cannot leave invalidation without its receipt`)
+    }
+    console.log('KU03_D1_D2_INVALIDATION_ROLLBACK=3/3; snapshot/history/publication/Act/evidence/claims preserved')
     await client.query('drop trigger fixture_receipt_failure on private.evidence_action_history')
     await as(actor)
     const second = await call(replacement)
@@ -447,6 +592,44 @@ try {
     await assert.rejects(() => peers[1].query('select public.commit_evidence_action($1)', [notReceived]), /evidence_action_unavailable/)
     console.log('KU03_DELAYED_COMMIT_FENCE=2/2')
   } finally { await client.query('rollback'); await Promise.all(peers.map(peer => peer.end())) }
+  // Distinct actors and Acts share the publication lock. Exercise both actual
+  // lock orders; neither transaction sees the other's uncommitted fixture data.
+  await as(actor)
+  await call(make('propose',{expectedVersion:1,expectedObjectVersion:1,payload:{statement:'Concurrent source'}}))
+  await call(make('confirm',{expectedVersion:2,expectedObjectVersion:2,payload:{rights:true,visibility:true,conflict:false}}))
+  await owner(`update public.claims set verification_status='supporting' where evidence_id='${objectId}';
+    insert into public.act(id,person_id,organization_id,stage_name,is_default) values ('${otherAct}','${actor}','${workspaceId}','Concurrent Act',false);
+    update public.artist_access set scope=array['view','upload','edit'],ku03_edit_fields=array['title']`)
+  await as(actor);const originalPublication=await call(publication())
+  await as(representative);await call(make('upload',{objectId:otherObject,actId:otherAct,workspaceId:repWorkspace}))
+  await client.query('reset role')
+  const immutableBefore=(await client.query('select to_jsonb(v) as row from public.passport_versions v where id=$1',[originalPublication.passportVersionId])).rows
+  const participants=[new pg.Client({connectionString:url.toString()}),new pg.Client({connectionString:url.toString()})]
+  try {
+    const pids=[]
+    for (const [i,peer] of participants.entries()) {
+      await peer.connect();await peer.query(`set request.jwt.claim.sub='${[actor,representative][i]}';set role authenticated;set statement_timeout='10s'`)
+      pids.push((await peer.query('select pg_backend_pid() as id')).rows[0].id)
+    }
+    for (const first of [0,1]) {
+      const requests=[{...publication(),action:'replace',expectedVersion:4+first},
+        make('change',{objectId:otherObject,actId:otherAct,workspaceId:repWorkspace,expectedVersion:1+first,expectedObjectVersion:1+first,payload:editPayload})]
+      await Promise.all(participants.map(peer=>peer.query('begin')))
+      await participants[first].query('select public.commit_evidence_action($1)',[requests[first]])
+      const second=1-first
+      const waiting=participants[second].query('select public.commit_evidence_action($1)',[requests[second]])
+      let blocked=false
+      for (let attempt=0;attempt<100&&!blocked;attempt++) {
+        blocked=(await client.query('select cardinality(pg_blocking_pids($1))>0 as blocked',[pids[second]])).rows[0].blocked
+        if(!blocked)await new Promise(resolve=>setTimeout(resolve,10))
+      }
+      assert.equal(blocked,true,'other Act action must wait for the Artist publication lock')
+      await participants[first].query('commit');await waiting;await participants[second].query('commit')
+      assert.equal((await client.query('select published from public.artists where id=$1',[artistId])).rows[0].published,true)
+      assert.deepEqual((await client.query('select to_jsonb(v) as row from public.passport_versions v where id=$1',[originalPublication.passportVersionId])).rows,immutableBefore)
+    }
+    console.log('KU03_D1_CROSS_ACT_SERIALIZATION=2/2; real blocking observed in both orders')
+  } finally {await Promise.all(participants.map(async peer=>{await peer.query('rollback').catch(()=>{});await peer.end()}))}
   const history = (await client.query('select jsonb_agg(to_jsonb(h) order by id) as rows from private.evidence_action_history h')).rows
   await client.query(fs.readFileSync(path.join(root, 'supabase/rollback/20260830221500_representative_evidence_actions.sql'), 'utf8'))
   const permissions = (await client.query(`select

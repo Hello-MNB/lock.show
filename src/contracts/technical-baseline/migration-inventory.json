@@ -632,7 +632,7 @@
       "id": "20260830221500",
       "file": "supabase/migrations/20260830221500_representative_evidence_actions.sql",
       "direction": "up",
-      "sha256": "51b15112cde27483900e567589045c51d5e09f5f777c95bdb2f27f9a8fe78873",
+      "sha256": "b79cf9052ed0e0eaddc5ebc5fea33f767070192aa847b193f5dd6bf6485f1377",
       "dependencyEvidence": "UNDECLARED_IN_FILENAME",
       "rollback": "PRESENT",
       "selectedForFirstSlice": false
