@@ -3,276 +3,97 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { useLocale } from '@/lib/locale-context'
-import type { Locale } from '@/lib/i18n'
-import { BrandSymbol } from '@/components/brand-symbol'
-
 import { APP_URL } from '@/lib/app-url'
+import { useLocale } from '@/lib/locale-context'
+import { marketingCopy } from '@/lib/marketing-copy'
+import { BrandSymbol } from '@/components/brand-symbol'
+import { TrackedLink } from '@/components/tracked-link'
 
-const NAV_LINK_KEYS = [
-  { href: '/artists',      key: 'artists'      },
-  { href: '/bookers',      key: 'bookers'      },
-  { href: '/producers',    key: 'producers'    },
-  // How-it-works + Methodology demoted from the top nav (owner IA ruling 10 Jul:
-  // each audience page tells its own story; the reference pages stay reachable
-  // from the footer + deep links — never a 404).
-  { href: '/pricing',      key: 'pricing'      },
+const links = [
+  { href: '/how-it-works', key: 'how' },
+  { href: '/artists', key: 'artists' },
+  { href: '/professionals', key: 'professionals' },
+  { href: '/trust', key: 'trust' },
+  { href: '/faq', key: 'faq' },
 ] as const
 
-// T-84 CTA attribution law (docs/SITE-REWRITE-BRIEF.md): nav is shared across
-// every page, so the campaign must be derived from the route, not hardcoded —
-// otherwise 100% of nav-driven signups attribute via referrer only.
-function pageSlug(pathname: string | null): string {
+function pageSlug(pathname: string | null) {
   if (!pathname || pathname === '/') return 'home'
   return pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, '-')
 }
 
-function LocaleToggle() {
-  const { locale, setLocale } = useLocale()
-  const next: Locale = locale === 'en' ? 'he' : 'en'
-  const label = locale === 'en' ? 'עב' : 'EN'
-  // Honest scope (T-84, 20 Jul): this toggle switches menu, footer, and
-  // cookie-banner copy only — page content stays in English. aria-label +
-  // title say so explicitly rather than implying a full-site translation.
-  const scopedLabel =
-    locale === 'en'
-      ? 'Show menu and footer in Hebrew (page content stays in English)'
-      : 'Show menu and footer in English'
-  return (
-    <button
-      onClick={() => setLocale(next)}
-      aria-label={scopedLabel}
-      title={scopedLabel}
-      style={{
-        fontFamily: 'var(--font-space-mono)',
-        fontSize: '0.75rem',
-        letterSpacing: '0.06em',
-        color: 'var(--color-tally)',
-        background: 'none',
-        border: '1px solid rgba(255,255,255,0.15)',
-        borderRadius: '10px',
-        padding: '15px 12px',
-        cursor: 'pointer',
-        flexShrink: 0,
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
 export function Nav() {
-  const [open, setOpen] = useState(false)
-  const { messages } = useLocale()
-  const nav = messages.nav
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const { locale, setLocale, dir } = useLocale()
+  const copy = marketingCopy[locale]
+  const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${pageSlug(pathname)}&utm_content=nav`
+  const navigation = links.map((link) => ({ ...link, label: copy.nav[link.key] }))
 
-  const navLinks = NAV_LINK_KEYS.map(({ href, key }) => ({
-    href,
-    label: nav[key as keyof typeof nav] as string,
-  }))
-
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(`${href}/`)
-
-  const slug = pageSlug(pathname)
-  const loginHref = `${APP_URL}/login?utm_source=site&utm_campaign=${slug}&utm_content=nav`
+  function switchLocale() {
+    setLocale(locale === 'en' ? 'he' : 'en')
+    setOpen(false)
+  }
 
   return (
-    <nav
-      role="navigation"
-      aria-label="Main navigation"
-      style={{
-        backgroundColor: 'var(--nav-bg)',
-        backdropFilter: 'var(--nav-blur)',
-        WebkitBackdropFilter: 'var(--nav-blur)',
-        borderBottom: '1px solid var(--nav-border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      <div style={{
-        maxWidth: '1100px',
-        margin: '0 auto',
-        padding: '0 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: '64px',
-      }}>
-        {/* LOCK SHOW wordmark + Spotlight Lens symbol */}
-        <Link
-          href="/"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            fontFamily: 'var(--font-space-mono)',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            letterSpacing: '0.06em',
-            color: 'var(--color-paper)',
-            textDecoration: 'none',
-            flexShrink: 0,
-          }}
-          aria-label="LOCK SHOW home"
-        >
-          <BrandSymbol size={36} />
+    <nav className="site-nav" aria-label={locale === 'he' ? 'ניווט ראשי' : 'Main navigation'} dir={dir}>
+      <div className="site-nav-inner">
+        <Link href="/" className="site-wordmark" aria-label={locale === 'he' ? 'דף הבית של LOCK SHOW' : 'LOCK SHOW home'}>
+          <BrandSymbol size={34} />
           <span>LOCK SHOW</span>
-
         </Link>
 
-        {/* Desktop links */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '28px',
-          }}
-          className="nav-desktop"
-        >
-          {navLinks.map(({ href, label }) => {
-            const active = isActive(href)
+        <div className="site-nav-desktop">
+          {navigation.map((item) => {
+            const active = pathname === item.href
             return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  fontFamily: 'var(--font-heebo)',
-                  fontSize: '0.875rem',
-                  fontWeight: active ? 700 : 400,
-                  color: active ? 'var(--color-paper)' : 'var(--color-tally)',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                  position: 'relative',
-                  paddingBottom: '4px',
-                  borderBottom: active
-                    ? '2px solid var(--color-stamp)'
-                    : '2px solid transparent',
-                }}
-              >
-                {label}
+              <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} className="site-nav-link">
+                {item.label}
               </Link>
             )
           })}
-          <LocaleToggle />
-          <a
-            href={loginHref}
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              color: 'var(--color-paper)',
-              textDecoration: 'none',
-              padding: '15px 12px',
-              whiteSpace: 'nowrap',
-              fontWeight: 600,
-            }}
+          <button type="button" className="site-language" onClick={switchLocale} aria-label={copy.nav.switchLanguage}>
+            {copy.nav.switchLanguage}
+          </button>
+          <a className="site-login" href={loginHref}>{copy.nav.login}</a>
+          <TrackedLink
+            href="/early-access#request"
+            eventName="early_access_cta_click"
+            eventContext="nav"
+            className="button button-primary button-nav"
           >
-            {nav.login}
-          </a>
+            {copy.nav.earlyAccess}
+          </TrackedLink>
         </div>
 
-        {/* Mobile hamburger — 44px min touch target */}
         <button
-          aria-label={open ? nav.closeMenu : nav.openMenu}
+          type="button"
+          className="site-menu-button"
           aria-expanded={open}
-          aria-controls="mobile-menu"
-          onClick={() => setOpen(!open)}
-          className="nav-mobile-btn"
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            padding: '8px',
-            minWidth: '44px',
-            minHeight: '44px',
-            display: 'none',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '5px',
-          }}
+          aria-controls="site-mobile-menu"
+          onClick={() => setOpen((value) => !value)}
         >
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', transition: 'all 0.2s', transform: open ? 'rotate(45deg) translate(5px, 5px)' : 'none' }} />
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', opacity: open ? 0 : 1, transition: 'all 0.2s' }} />
-          <span style={{ display: 'block', width: '20px', height: '2px', backgroundColor: 'var(--color-paper)', transition: 'all 0.2s', transform: open ? 'rotate(-45deg) translate(5px, -5px)' : 'none' }} />
+          {open ? copy.nav.closeMenu : copy.nav.openMenu}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
-        <div
-          id="mobile-menu"
-          style={{
-            backgroundColor: 'rgba(10,13,11,0.97)',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            padding: '16px 24px 24px',
-          }}
-          className="nav-mobile-menu"
-        >
-          {navLinks.map(({ href, label }) => {
-            const active = isActive(href)
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                aria-current={active ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontFamily: 'var(--font-heebo)',
-                  fontSize: '1rem',
-                  fontWeight: active ? 700 : 400,
-                  color: active ? 'var(--color-stamp)' : 'var(--color-paper)',
-                  textDecoration: 'none',
-                  padding: '14px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                {label}
-              </Link>
-            )
-          })}
-          <div style={{ paddingTop: '16px', paddingBottom: '4px' }}>
-            <LocaleToggle />
-          </div>
-          <a
-            href={loginHref}
-            style={{
-              display: 'block',
-              marginTop: '12px',
-              padding: '15px 20px',
-              border: '1px solid var(--color-mist, rgba(255,255,255,.15))',
-              color: 'var(--color-paper)',
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              textDecoration: 'none',
-              borderRadius: '10px',
-              textAlign: 'center',
-              fontWeight: 600,
-            }}
+        <div id="site-mobile-menu" className="site-mobile-menu">
+          {navigation.map((item) => (
+            <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>{item.label}</Link>
+          ))}
+          <button type="button" onClick={switchLocale}>{copy.nav.switchLanguage}</button>
+          <a href={loginHref}>{copy.nav.login}</a>
+          <TrackedLink
+            href="/early-access#request"
+            eventName="early_access_cta_click"
+            eventContext="mobile_nav"
+            className="button button-primary"
           >
-            {nav.login}
-          </a>
+            {copy.nav.earlyAccess}
+          </TrackedLink>
         </div>
       )}
-
-      <style>{`
-        @media (max-width: 768px) {
-          .nav-desktop { display: none !important; }
-          .nav-mobile-btn { display: flex !important; }
-          .brand-tagline { display: none !important; }
-        }
-        @media (min-width: 769px) {
-          .nav-mobile-menu { display: none !important; }
-        }
-      `}</style>
     </nav>
   )
 }

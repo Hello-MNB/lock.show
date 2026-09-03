@@ -47,9 +47,6 @@ export async function getMessages(locale: Locale = DEFAULT_LOCALE) {
   }
 }
 
-// ─── Type definitions ──────────────────────────────────────────────────────
-// Derived from messages/en.json — keep in sync.
-
 export interface Messages {
   consent: {
     ariaLabel: string
@@ -58,76 +55,5 @@ export interface Messages {
     accept: string
     decline: string
     preferences: string
-  }
-  nav: {
-    artists: string
-    bookers: string
-    producers: string
-    howItWorks: string
-    methodology: string
-    pricing: string
-    getStarted: string
-    login: string
-    openMenu: string
-    closeMenu: string
-  }
-  footer: {
-    tagline: string
-    entityNotice: string
-    firewallNotice: string
-    copyright: string
-    privacy: string
-    terms: string
-    accessibility: string
-    consentPrefs: string
-    contact: string
-  }
-  home: {
-    hero: {
-      badge: string
-      headline: string
-      sub: string
-      ctaBuild: string
-      ctaDemo: string
-    }
-    firewall: string
-    actors: {
-      heading: string
-      sub: string
-      artist: { tag: string; title: string; body: string; cta: string }
-      booker: { tag: string; title: string; body: string; cta: string }
-      producer: { tag: string; title: string; body: string; cta: string }
-    }
-    ctaFinal: { heading: string; sub: string; cta: string }
-  }
-  passport: {
-    demoBanner: string
-    footer: string
-    sections: {
-      draw: string
-      performance: string
-      community: string
-      readiness: string
-      feeContext: string
-    }
-    methodLabels: {
-      ticketExport: string
-      producerConfirmed: string
-      platformData: string
-      operatorReviewed: string
-      selfReported: string
-    }
-    bandNote: string
-    streamingNote: string
-  }
-  methodology: {
-    firewallPrinciple: string
-    methodLabels: Record<string, { label: string; desc: string }>
-  }
-  common: {
-    reviewed: string
-    sampleFictional: string
-    closedBeta: string
-    telAviv: string
   }
 }

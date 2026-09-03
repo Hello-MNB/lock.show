@@ -3,6 +3,41 @@
   "ignoreCommand": "bash -c 'if [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ]; then exit 1; fi; if git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- .; then exit 0; else exit 1; fi'",
   "redirects": [
     {
+      "source": "/bookers",
+      "destination": "/professionals",
+      "permanent": true
+    },
+    {
+      "source": "/producers",
+      "destination": "/professionals",
+      "permanent": true
+    },
+    {
+      "source": "/methodology",
+      "destination": "/trust",
+      "permanent": true
+    },
+    {
+      "source": "/radar",
+      "destination": "/how-it-works",
+      "permanent": true
+    },
+    {
+      "source": "/pricing",
+      "destination": "/early-access",
+      "permanent": false
+    },
+    {
+      "source": "/contact",
+      "destination": "/early-access",
+      "permanent": true
+    },
+    {
+      "source": "/passport/demo",
+      "destination": "/sample",
+      "permanent": true
+    },
+    {
       "source": "/app/",
       "destination": "https://app.lock.show/",
       "permanent": false

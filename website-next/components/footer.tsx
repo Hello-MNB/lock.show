@@ -1,294 +1,40 @@
 'use client'
 
 import Link from 'next/link'
-
 import { useLocale } from '@/lib/locale-context'
+import { marketingCopy } from '@/lib/marketing-copy'
 import { BrandSymbol } from '@/components/brand-symbol'
-import { SOCIAL } from '@/lib/social'
-
-const CONSENT_STORAGE_KEY = 'gigproof_consent'
-
-function ConsentPrefsButton({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        try {
-          localStorage.removeItem(CONSENT_STORAGE_KEY)
-        } catch {
-          // localStorage unavailable — nothing to clear
-        }
-        window.location.reload()
-      }}
-      style={{
-        display: 'block',
-        marginTop: '2px',
-        padding: '0.4rem 0',
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        fontFamily: 'var(--font-heebo)',
-        fontSize: '0.875rem',
-        color: 'rgba(243,245,239,0.7)',
-        textDecoration: 'underline',
-        textUnderlineOffset: '2px',
-      }}
-    >
-      {label}
-    </button>
-  )
-}
-
-const FOOTER_LINKS = [
-  {
-    heading: 'FOR ARTISTS',
-    links: [
-      { href: '/artists',     label: 'Why LOCK SHOW' },
-      { href: '/radar',       label: 'Artist Radar' },
-      { href: '/methodology', label: 'Methodology' },
-      { href: '/pricing',     label: 'Pricing' },
-    ],
-  },
-  {
-    heading: 'FOR BOOKERS',
-    links: [
-      { href: '/bookers',       label: 'For Booking Managers' },
-      { href: '/producers',     label: 'For Producers' },
-      { href: '/passport/demo', label: 'Sample Passport' },
-      { href: '/how-it-works',  label: 'How It Works' },
-    ],
-  },
-  {
-    heading: 'LEARN MORE',
-    links: [
-      { href: '/faq',         label: 'FAQ' },
-      { href: '/contact',     label: 'Contact' },
-    ],
-  },
-]
-
 
 export function Footer() {
-  const { messages } = useLocale()
-  const t = messages.footer
-
+  const { locale, dir } = useLocale()
+  const copy = marketingCopy[locale]
   return (
-    <footer
-      style={{
-        backgroundColor: 'var(--color-night)',
-        color: 'rgba(255,255,255,0.7)',
-        padding: '56px max(24px, 4vw) 32px',
-      }}
-      aria-label="Site footer"
-    >
-      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-
-        {/* Top row: wordmark + CTA */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          gap: '24px',
-          marginBottom: '48px',
-          paddingBottom: '32px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-        }}>
+    <footer className="site-footer" dir={dir}>
+      <div className="marketing-container">
+        <div className="site-footer-grid">
           <div>
-            <Link
-              href="/"
-              aria-label="LOCK SHOW home"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                fontFamily: 'var(--font-space-mono)',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                letterSpacing: '0.06em',
-                color: 'var(--color-paper)',
-                textDecoration: 'none',
-                marginBottom: '6px',
-              }}
-            >
-              <BrandSymbol size={36} />
-              LOCK SHOW
-            </Link>
-
+            <div className="site-wordmark site-footer-wordmark"><BrandSymbol size={34} /><span>LOCK SHOW</span></div>
+            <p>{copy.common.privacyLine}</p>
+          </div>
+          <div>
+            <p className="marketing-kicker">{locale === 'he' ? 'מידע' : 'Explore'}</p>
+            <Link href="/how-it-works">{copy.nav.how}</Link>
+            <Link href="/artists">{copy.nav.artists}</Link>
+            <Link href="/professionals">{copy.nav.professionals}</Link>
+            <Link href="/trust">{copy.nav.trust}</Link>
+            <Link href="/faq">{copy.nav.faq}</Link>
+          </div>
+          <div>
+            <p className="marketing-kicker">{locale === 'he' ? 'מדיניות' : 'Policies'}</p>
+            <Link href="/privacy">{locale === 'he' ? 'פרטיות' : 'Privacy'}</Link>
+            <Link href="/terms">{locale === 'he' ? 'תנאי שימוש' : 'Terms'}</Link>
+            <Link href="/accessibility">{locale === 'he' ? 'נגישות' : 'Accessibility'}</Link>
           </div>
         </div>
-
-        {/* Link columns */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '32px',
-          marginBottom: '48px',
-        }}>
-          {FOOTER_LINKS.map(({ heading, links }) => (
-            <div key={heading}>
-              <p style={{
-                fontFamily: 'var(--font-space-mono)',
-                fontSize: '0.75rem',
-                letterSpacing: '0.14em',
-                color: 'rgba(243,245,239,0.55)',
-                margin: '0 0 16px',
-              }}>
-                {heading}
-              </p>
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                {links.map(({ href, label }) => (
-                  <li key={href} style={{ marginBottom: '4px' }}>
-                    <Link
-                      href={href}
-                      style={{
-                        fontFamily: 'var(--font-heebo)',
-                        fontSize: '0.875rem',
-                        color: 'rgba(243,245,239,0.7)',
-                        textDecoration: 'none',
-                        display: 'inline-block',
-                        padding: '0.4rem 0',
-                      }}
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-
-          {/* Legal column — locale-aware (footer.* keys) */}
-          <div>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.14em',
-              color: 'rgba(243,245,239,0.55)',
-              margin: '0 0 16px',
-            }}>
-              LEGAL
-            </p>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {[
-                { href: '/privacy',       label: t.privacy },
-                { href: '/terms',         label: t.terms },
-                { href: '/accessibility', label: t.accessibility },
-              ].map(({ href, label }) => (
-                <li key={href} style={{ marginBottom: '4px' }}>
-                  <Link
-                    href={href}
-                    style={{
-                      fontFamily: 'var(--font-heebo)',
-                      fontSize: '0.875rem',
-                      color: 'rgba(243,245,239,0.7)',
-                      textDecoration: 'none',
-                      display: 'inline-block',
-                      padding: '0.4rem 0',
-                    }}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
-              <li style={{ marginBottom: '4px' }}>
-                <ConsentPrefsButton label={t.consentPrefs} />
-              </li>
-            </ul>
-          </div>
-
-          {/* Connect — official channels (single source: lib/social.ts) */}
-          <div>
-            <p style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.14em',
-              color: 'rgba(243,245,239,0.55)',
-              margin: '0 0 16px',
-            }}>
-              CONNECT
-            </p>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {SOCIAL.map(({ key, label, href }) => (
-                <li key={key} style={{ marginBottom: '4px' }}>
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: 'var(--font-heebo)',
-                      fontSize: '0.875rem',
-                      color: 'rgba(243,245,239,0.7)',
-                      textDecoration: 'none',
-                      display: 'inline-block',
-                      padding: '0.4rem 0',
-                    }}
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-
-
-            </ul>
-          </div>
+        <div className="site-footer-bottom">
+          <p>© 2026 LOCK SHOW</p>
+          <p>{copy.common.disclaimer}</p>
         </div>
-
-        {/* Entity + firewall notice */}
-        <div style={{
-          padding: '20px',
-          backgroundColor: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '12px',
-          marginBottom: '32px',
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.75rem',
-            letterSpacing: '0.08em',
-            color: 'rgba(243,245,239,0.55)',
-            margin: 0,
-            lineHeight: 1.8,
-          }}>
-            BOOKING MANAGER ≠ PRODUCER — DISTINCT ROLES, NEVER MERGED.
-            {' '}EVERY CLAIM SHOWS HOW IT WAS CHECKED. AUDIENCE SIZE ALWAYS SHOWN AS A RANGE.
-            {' '}THE DECISION ALWAYS STAYS WITH THE PERSON BOOKING.
-          </p>
-        </div>
-
-        {/* Bottom bar */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}>
-          <p style={{
-            fontFamily: 'var(--font-space-mono)',
-            fontSize: '0.75rem',
-            letterSpacing: '0.08em',
-            color: 'rgba(243,245,239,0.55)',
-            margin: 0,
-          }}>
-            © 2026 LOCK SHOW
-          </p>
-          <Link
-            href="/contact"
-            style={{
-              fontFamily: 'var(--font-space-mono)',
-              fontSize: '0.75rem',
-              letterSpacing: '0.08em',
-              color: 'rgba(243,245,239,0.7)',
-              textDecoration: 'none',
-              display: 'inline-block',
-              padding: '0.5rem 0',
-            }}
-          >
-            CONTACT
-          </Link>
-        </div>
-
       </div>
     </footer>
   )

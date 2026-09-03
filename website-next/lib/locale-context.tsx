@@ -7,7 +7,7 @@
  * Strategy:
  *   - Server HTML always renders EN (SEO baseline).
  *   - Locale toggle is client-side; persisted to localStorage.
- *   - HE strings are scaffold — not shipped until native-editor pass.
+ *   - All marketing content and shared controls switch together.
  *
  * Usage:
  *   const { locale, messages, setLocale, dir } = useLocale()
@@ -33,7 +33,7 @@ const MESSAGE_MAP: Record<Locale, Messages> = {
   he: heMessages as Messages,
 }
 
-const STORAGE_KEY = 'gp_locale'
+const STORAGE_KEY = 'lockshow_locale'
 
 // ─── Context ───────────────────────────────────────────────────────────────
 

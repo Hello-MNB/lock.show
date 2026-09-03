@@ -18,7 +18,7 @@ type Choice = 'granted' | 'denied'
 declare global {
   interface Window {
     dataLayer: unknown[]
-    gtag: (...args: unknown[]) => void
+    gtag?: (...args: unknown[]) => void
   }
 }
 
@@ -44,13 +44,13 @@ function storeChoice(value: Choice) {
 
 function loadGA(gaId: string) {
   if (document.getElementById('ga4-src')) return
-  window.gtag('consent', 'update', { analytics_storage: 'granted' })
+  window.gtag?.('consent', 'update', { analytics_storage: 'granted' })
   const s = document.createElement('script')
   s.id = 'ga4-src'
   s.async = true
   s.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`
   document.head.appendChild(s)
-  window.gtag('config', gaId, { anonymize_ip: true })
+  window.gtag?.('config', gaId, { anonymize_ip: true })
 }
 
 export function ConsentBanner({ gaId }: { gaId: string }) {
@@ -131,7 +131,7 @@ export function ConsentBanner({ gaId }: { gaId: string }) {
               padding: '8px 16px',
               borderRadius: 10,
               border: 'none',
-              background: 'linear-gradient(180deg,#BEE24E,#9FD531)',
+              background: 'var(--color-stamp, #C8F04D)',
               color: '#12160A',
               fontSize: 14,
               fontWeight: 800,

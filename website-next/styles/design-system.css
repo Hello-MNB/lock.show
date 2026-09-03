@@ -4,8 +4,8 @@
  * SINGLE SOURCE OF TRUTH for all visual tokens.
  * Edit values here; everything else inherits.
  *
- * Palette: dark-first. Lime accent. No scores, no gauges.
- * Typefaces: Manrope (body + display) · DM Mono (labels + mono)
+ * Palette: Night Base + Paper/Light + Signal Lime. No violet or gradients.
+ * Typefaces: Rubik (body/UI) · Fraunces (Latin display) · DM Mono (metadata)
  * ─────────────────────────────────────────────────────
  */
 
@@ -51,7 +51,7 @@
   --radius-full: 9999px;
 
   /* Nav glass effect */
-  --nav-bg:     rgba(10, 13, 11, 0.88);
+  --nav-bg:     rgba(10, 11, 15, 0.94);
   --nav-blur:   blur(18px);
   --nav-border: rgba(255, 255, 255, 0.08);
 

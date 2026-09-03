@@ -1,15 +1,21 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
-import { Manrope, DM_Mono } from 'next/font/google'
+import { Rubik, Fraunces, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { LocaleProvider } from '@/lib/locale-context'
 import { ConsentBanner } from '@/components/consent-banner'
 
-const manrope = Manrope({
+const rubik = Rubik({
+  subsets: ['latin', 'hebrew'],
+  variable: '--font-body',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
   subsets: ['latin'],
-  variable: '--font-heebo',
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -39,17 +45,14 @@ export const metadata: Metadata = {
     template: '%s | LOCK SHOW',
   },
   description:
-    'Standardized, method-labeled proof of live performance for independent artists. Built for booking managers who need to verify before they risk their name.',
+    'A private professional-evidence workspace for artists and acts, with permissioned PASSPORT sharing for selected recipients.',
   keywords: [
-    'artist booking proof',
-    'live performance verification',
-    'booking manager',
+    'artist professional evidence',
+    'live performance context',
     'artist passport',
-    'אמרגן',
     'אמן',
     'LOCK SHOW',
-    'verified gig history',
-    'music industry verification',
+    'music industry evidence',
   ],
   authors: [{ name: 'LOCK SHOW', url: SITE_URL }],
   creator: 'LOCK SHOW',
@@ -71,8 +74,15 @@ export const metadata: Metadata = {
     // nav/footer/consent copy only, not page content — T-84 HE-scope note).
     // Claiming he_IL here would overclaim translated content that doesn't exist.
     siteName: 'LOCK SHOW',
+    title: 'LOCK SHOW',
+    description: 'Private RADAR. Guided improvement. Permissioned PASSPORT.',
+    images: [{ url: '/og/og-default.svg', width: 1200, height: 630, alt: 'LOCK SHOW' }],
   },
   twitter: {
+    card: 'summary_large_image',
+    title: 'LOCK SHOW',
+    description: 'Private RADAR. Guided improvement. Permissioned PASSPORT.',
+    images: ['/og/og-default.svg'],
     // No verified @lock handle exists yet — omit `site`/`creator` rather than
     // claim a handle that may belong to someone else. Add back once secured.
   },
@@ -86,7 +96,8 @@ export const metadata: Metadata = {
   },
 }
 
-// JSON-LD: WebSite + SoftwareApplication schema.
+// JSON-LD: bounded website identity only. Product and Organization assertions
+// remain out of structured data until their release authority is explicit.
 // No SearchAction on WebSite — the site has no internal search.
 // No aggregateRating / review anywhere — firewall: no scores, and we have none.
 const jsonLd = {
@@ -97,21 +108,7 @@ const jsonLd = {
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
       name: 'LOCK SHOW',
-      // 'en' only: page bodies are English-only today; the locale toggle
-      // covers nav/footer/consent copy, not page content (T-84 HE-scope note).
-      inLanguage: ['en'],
-    },
-    {
-      '@type': 'SoftwareApplication',
-      '@id': `${SITE_URL}/#software`,
-      name: 'LOCK SHOW — Bookability Passport',
-      url: SITE_URL,
-      applicationCategory: 'BusinessApplication',
-      operatingSystem: 'Web',
-      description:
-        'A verification tool for the live-music industry: independent artists build a standardized, method-labeled record of their live performance history, and booking managers (מזמיני הופעות) review it before booking — no scores, percentiles, or predictions, only labeled evidence.',
-      // 'en' only — see WebSite node above for the same HE-scope note.
-      inLanguage: ['en'],
+      inLanguage: ['en', 'he'],
     },
   ],
 }
@@ -130,16 +127,17 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} ${dmMono.variable} antialiased`}
+        className={`${rubik.variable} ${fraunces.variable} ${dmMono.variable} antialiased`}
         style={{
-          fontFamily: 'var(--font-heebo), Manrope, system-ui, sans-serif',
+          fontFamily: 'var(--font-body), Rubik, system-ui, sans-serif',
           backgroundColor: 'var(--color-night)',
           color: 'var(--color-paper)',
         }}
       >
         <LocaleProvider>
+          <a className="skip-link" href="#main-content">Skip to main content</a>
           <Nav />
-          {children}
+          <div id="main-content">{children}</div>
           <Footer />
           <ConsentBanner gaId={GA_ID} />
         </LocaleProvider>

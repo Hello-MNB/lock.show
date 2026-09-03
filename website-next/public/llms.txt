@@ -1,66 +1,40 @@
 # LOCK SHOW
 
-> Helps demand-side buyers — booking managers, promoters, event producers, planners, private and corporate clients (מזמיני הופעות) — evaluate an unfamiliar artist via standardized, method-labeled evidence before they risk their name.
-> Formerly known as GIGPROOF, rebranded to LOCK SHOW in 2026 — same product, same team.
+LOCK SHOW is a professional-evidence workspace for artists and acts.
 
-## What LOCK SHOW is
+## Publicly described workflow
 
-LOCK SHOW is a verification system for independent artists seeking to prove their live performance track record to booking managers. It is NOT a booking marketplace, NOT an EPK generator, NOT a guarantee of any outcome, and NOT a comparison or ranking tool.
+- RADAR: a private workspace for organizing professional evidence.
+- IMPROVE: private signals that help the artist choose what to strengthen.
+- PASSPORT: a contextual, permissioned view prepared for a selected recipient.
 
-## Three actors
+RADAR is not public. A PASSPORT is not a copy of RADAR and does not expose all
+private material.
 
-- **Artist (אמן)** — builds and controls their own proof. Uses the private Artist Radar workspace.
-- **Booking Manager (מזמין הופעות)** — the demand side: venue/club booker, festival programmer, promoter, talent buyer, or a private/corporate event client. Evaluates artists before booking. Views the public Passport. (Distinct from an אמרגן — the artist-side agent/management office, which manages a roster inside LOCK.)
-- **Producer (מפיק)** — confirms a single claim via a bounded magic link. No account required.
+## Professional boundaries
 
-These roles are distinct. Booking manager ≠ producer ≠ artist agent. They are never merged.
+- Each act keeps its own evidence context.
+- Representation works within artist permissions.
+- Recipients review selected context and make their own decisions.
+- Source, method, and date labels may appear where applicable.
 
-## Two surfaces
+## What LOCK SHOW does not claim
 
-- **Artist Radar** — private workspace for the artist. Shows evidence states, gaps, and one next action per dimension. Never visible to outsiders.
-- **Bookability Passport** — public, buyer-facing document. Shows verified strengths only. Method-labeled. WhatsApp-scannable. Never shows gaps, weaknesses, or unverified claims.
+- No public artist score, rank, percentile, or comparison.
+- No automated booking decision.
+- No guarantee of bookings, demand, income, or commercial outcomes.
+- No approved public pricing or access-timing promise.
 
-## Verification methodology
+## Canonical public pages
 
-Every claim on a Passport carries a method label and reviewed date. Method labels:
-- PRODUCER-CONFIRMED — strongest. A producer verified via magic link.
-- TICKET EXPORT · REVIEWED — document verified by the LOCK SHOW team.
-- PLATFORM DATA · REVIEWED — contextual data, not draw evidence.
-- SELF-REPORTED · UNVERIFIED — internal only, never public.
+- https://lock.show/
+- https://lock.show/how-it-works
+- https://lock.show/artists
+- https://lock.show/professionals
+- https://lock.show/trust
+- https://lock.show/faq
+- https://lock.show/early-access
+- https://lock.show/sample
 
-## What LOCK SHOW does not do
-
-- No score, rating, ranking, or prediction
-- No exact headcount (audience draw shown as a band: e.g. 70–150)
-- No artist-vs-artist comparison
-- No booking guarantee
-- No automated matching or recommendation engine (future feature, not live)
-- No score-like visual (no gauge, no fill bar, no polygon/spider chart, no progress ring)
-
-## Pages
-
-- https://lock.show/ — Homepage
-- https://lock.show/artists — For artists (אמן): how to build a Passport
-- https://lock.show/bookers — For booking managers (מזמיני הופעות): how to read a Passport
-- https://lock.show/producers — For producers (מפיק): the magic-link confirmation flow
-- https://lock.show/managers — For artist managers/agencies (משרד אמרגנות): roster signup
-- https://lock.show/production — For production offices (משרד הפקה): production signup
-- https://lock.show/passport/demo — A sample Passport showing verified evidence
-- https://lock.show/how-it-works — Three players, seven steps
-- https://lock.show/methodology — How evidence is verified; method labels explained
-- https://lock.show/radar — The Artist Radar feature explained
-- https://lock.show/faq — Frequently asked questions
-- https://lock.show/contact — Contact form and information
-
-Not indexed for AI retrieval: https://lock.show/app/* (the product application
-itself — private tool screens and auth-walled workspace, not marketing or
-reference content).
-
-## Language
-
-English and Hebrew (עברית). Hebrew copy is authored native-first, not translated from English.
-
-## Domain
-
-https://lock.show — marketing site
-https://app.lock.show — artist and operator app (not indexed here)
+The Product application at https://app.lock.show is a separate authenticated
+surface and is not described as public marketing content here.

@@ -1,12 +1,12 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@700&amp;family=Heebo:wght@400;600&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&amp;family=Space+Mono:wght@700&amp;display=swap');
     </style>
   </defs>
 
   <!-- Background: paper token -->
-  <rect width="1200" height="630" fill="#f3f5ef"/>
+  <rect width="1200" height="630" fill="#f4f3ef"/>
 
   <!-- Top stamp bar: lime token -->
   <rect x="0" y="0" width="1200" height="6" fill="#c8f04d"/>
@@ -15,7 +15,7 @@
   <rect x="80" y="80" width="3" height="470" fill="#c8f04d"/>
 
   <!-- LOCK SHOW Spotlight Lens symbol -->
-  <g transform="translate(104 96) scale(0.064)" fill="none" stroke="#0a0d0b" stroke-linecap="round" stroke-linejoin="round">
+  <g transform="translate(104 96) scale(0.064)" fill="none" stroke="#0a0b0f" stroke-linecap="round" stroke-linejoin="round">
     <path d="M500 122C710 122 878 290 878 500" stroke-width="78"/>
     <path d="M878 500C878 710 710 878 500 878" stroke-width="78"/>
     <path d="M500 878C290 878 122 710 122 500" stroke-width="78"/>
@@ -23,7 +23,7 @@
     <path d="M260 500C318 354 404 282 500 282C596 282 682 354 740 500C682 646 596 718 500 718C404 718 318 646 260 500Z" stroke-width="64"/>
     <path d="M500 282C570 370 570 630 500 718" stroke-width="58"/>
     <path d="M500 500L704 314" stroke-width="58"/>
-    <circle cx="500" cy="500" r="70" fill="#0a0d0b" stroke="none"/>
+    <circle cx="500" cy="500" r="70" fill="#0a0b0f" stroke="none"/>
   </g>
 
   <!-- LOCK SHOW wordmark -->
@@ -33,7 +33,7 @@
     font-family="'Space Mono', monospace"
     font-weight="700"
     font-size="52"
-    fill="#0a0d0b"
+    fill="#0a0b0f"
     letter-spacing="-1"
   >LOCK SHOW</text>
 
@@ -44,29 +44,29 @@
   <text
     x="113"
     y="340"
-    font-family="'Heebo', sans-serif"
+    font-family="'Rubik', sans-serif"
     font-weight="600"
     font-size="44"
-    fill="#0a0d0b"
-  >Booking proof for</text>
+    fill="#0a0b0f"
+  >Private RADAR.</text>
   <text
     x="113"
     y="398"
-    font-family="'Heebo', sans-serif"
+    font-family="'Rubik', sans-serif"
     font-weight="600"
     font-size="44"
-    fill="#0a0d0b"
-  >independent artists.</text>
+    fill="#0a0b0f"
+  >Permissioned PASSPORT.</text>
 
   <!-- Sub copy -->
   <text
     x="113"
     y="468"
-    font-family="'Heebo', sans-serif"
+    font-family="'Rubik', sans-serif"
     font-weight="400"
     font-size="24"
     fill="#5c655e"
-  >Standardized evidence. No score. No ranking. No guarantee.</text>
+  >Professional evidence, shared with context.</text>
 
   <!-- Domain -->
   <text
@@ -75,27 +75,18 @@
     font-family="'Space Mono', monospace"
     font-weight="700"
     font-size="18"
-    fill="#0a0d0b"
+    fill="#0a0b0f"
     letter-spacing="1"
   >lock.show</text>
 
-  <!-- Right decoration: proof unit example -->
-  <rect x="780" y="160" width="340" height="1" fill="rgba(10,13,11,0.15)"/>
-
-  <text x="780" y="210" font-family="'Space Mono', monospace" font-weight="700" font-size="11" fill="#5c6e12" letter-spacing="1.5">PRODUCER-CONFIRMED</text>
-  <text x="780" y="238" font-family="'Heebo', sans-serif" font-weight="600" font-size="22" fill="#0a0d0b">70–150</text>
-  <text x="780" y="262" font-family="'Heebo', sans-serif" font-size="16" fill="#5c655e">Audience draw · Tel Aviv</text>
-  <text x="780" y="284" font-family="'Space Mono', monospace" font-size="10" fill="#5c655e" letter-spacing="1">REVIEWED MAR 2025</text>
-
-  <rect x="780" y="312" width="340" height="1" fill="rgba(10,13,11,0.08)"/>
-
-  <text x="780" y="358" font-family="'Space Mono', monospace" font-weight="700" font-size="11" fill="#5c6e12" letter-spacing="1.5">TICKET EXPORT · REVIEWED</text>
-  <text x="780" y="386" font-family="'Heebo', sans-serif" font-weight="600" font-size="22" fill="#0a0d0b">200–300</text>
-  <text x="780" y="410" font-family="'Heebo', sans-serif" font-size="16" fill="#5c655e">Sold-out · Barby, Tel Aviv</text>
-  <text x="780" y="432" font-family="'Space Mono', monospace" font-size="10" fill="#5c655e" letter-spacing="1">REVIEWED JAN 2025</text>
-
-  <rect x="780" y="460" width="340" height="1" fill="rgba(10,13,11,0.08)"/>
+  <!-- Bounded public principles -->
+  <rect x="810" y="180" width="300" height="1" fill="#d9d8d2"/>
+  <text x="810" y="230" font-family="'Space Mono', monospace" font-weight="700" font-size="13" fill="#5c6e12" letter-spacing="1.5">PRIVATE BY DEFAULT</text>
+  <text x="810" y="290" font-family="'Space Mono', monospace" font-weight="700" font-size="13" fill="#5c6e12" letter-spacing="1.5">SHARED BY PERMISSION</text>
+  <text x="810" y="350" font-family="'Space Mono', monospace" font-weight="700" font-size="13" fill="#5c6e12" letter-spacing="1.5">NO SCORE · NO RANKING</text>
+  <text x="810" y="410" font-family="'Space Mono', monospace" font-weight="700" font-size="13" fill="#5c6e12" letter-spacing="1.5">NO BOOKING GUARANTEE</text>
+  <rect x="810" y="458" width="300" height="1" fill="#d9d8d2"/>
 
   <!-- Bottom border -->
-  <rect x="0" y="624" width="1200" height="6" fill="rgba(10,13,11,0.08)"/>
+  <rect x="0" y="624" width="1200" height="6" fill="#d9d8d2"/>
 </svg>

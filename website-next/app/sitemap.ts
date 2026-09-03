@@ -3,39 +3,26 @@ import type { MetadataRoute } from 'next'
 export const dynamic = 'force-static'
 
 const BASE = 'https://lock.show'
+const LAST_MODIFIED = new Date('2026-09-03T00:00:00Z')
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date()
-
-  const pages: Array<{
-    path: string
-    priority: number
-    changeFrequency: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'always' | 'hourly' | 'never'
-  }> = [
-    // Priorities per owner spec: home 1.0; personas 0.8; methodology/
-    // how-it-works 0.7; pricing 0.6; faq/radar/contact 0.5; legal 0.2.
-    // /passport/demo isn't in any named tier — it's the flagship proof
-    // artifact (closest thing to a product demo), so it sits with the
-    // personas at 0.8 rather than inventing an unlisted priority band.
-    { path: '',               priority: 1.0,  changeFrequency: 'weekly'  },
-    { path: '/passport/demo', priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/artists',       priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/bookers',       priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/producers',     priority: 0.8,  changeFrequency: 'monthly' },
-    { path: '/how-it-works',  priority: 0.7,  changeFrequency: 'monthly' },
-    { path: '/methodology',   priority: 0.7,  changeFrequency: 'monthly' },
-    { path: '/pricing',       priority: 0.6,  changeFrequency: 'monthly' },
-    { path: '/radar',         priority: 0.5,  changeFrequency: 'monthly' },
-    { path: '/faq',           priority: 0.5,  changeFrequency: 'monthly' },
-    { path: '/contact',       priority: 0.5,  changeFrequency: 'monthly' },
-    { path: '/privacy',       priority: 0.2,  changeFrequency: 'yearly'  },
-    { path: '/terms',         priority: 0.2,  changeFrequency: 'yearly'  },
-    { path: '/accessibility', priority: 0.2,  changeFrequency: 'yearly'  },
+  const pages = [
+    { path: '', priority: 1, changeFrequency: 'weekly' as const },
+    { path: '/how-it-works', priority: 0.8, changeFrequency: 'monthly' as const },
+    { path: '/artists', priority: 0.8, changeFrequency: 'monthly' as const },
+    { path: '/professionals', priority: 0.8, changeFrequency: 'monthly' as const },
+    { path: '/trust', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/faq', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/early-access', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/sample', priority: 0.4, changeFrequency: 'monthly' as const },
+    { path: '/privacy', priority: 0.2, changeFrequency: 'yearly' as const },
+    { path: '/terms', priority: 0.2, changeFrequency: 'yearly' as const },
+    { path: '/accessibility', priority: 0.2, changeFrequency: 'yearly' as const },
   ]
 
   return pages.map(({ path, priority, changeFrequency }) => ({
     url: `${BASE}${path}`,
-    lastModified: now,
+    lastModified: LAST_MODIFIED,
     changeFrequency,
     priority,
   }))
